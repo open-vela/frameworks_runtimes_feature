@@ -1,0 +1,36 @@
+module wifi
+
+callback connect_success()
+callback connect_fail(int code, string data)
+callback connect_complete()
+
+void connect(string SSID, string BSSID, string password, connect_success cb1, connect_fail cb2, connect_complete cb3)
+
+
+callback scan_success()
+callback scan_fail(int code, string data)
+callback scan_complete()
+
+void scan(scan_success cb1, scan_fail cb2, scan_complete cb3)
+
+
+callback getConnectedWifi_success(string SSID, string BSSID, boolean secure, float signalStrength)
+callback getConnectedWifi_fail(int code, string data)
+callback getConnectedWifi_complete()
+
+void getConnectedWifi(getConnectedWifi_success cb1, getConnectedWifi_fail cb2, getConnectedWifi_complete cb3)
+
+
+callback onscanned(string[] wifiList)
+
+callback onstatechanged(string[] data)
+
+
+
+
+
+
+
+
+
+

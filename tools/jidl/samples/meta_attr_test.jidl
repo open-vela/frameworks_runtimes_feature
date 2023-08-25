@@ -1,0 +1,34 @@
+
+module meta_test@1.0;
+
+[name="cb_test1"]
+callback cb1(int a);
+
+const TEST="hello";
+
+[mode="async", thread="worker"]
+void foo(int a, double b);
+
+[implement_class="P1"]
+property int[] p1;
+
+[label="div", widget_class="WidgetDiv"]
+interface Div {
+
+  [extern_value=true]
+  void focus();
+
+  [type="enum", options = ["left", "right", "middle"]]
+  property int align;
+
+  [type="event",
+   implement="EVENT"]
+  event click();
+}
+
+[enable_new = true]
+class MessageChannel {
+
+   [name = true]
+   property cb1 onopen writeonly;
+}

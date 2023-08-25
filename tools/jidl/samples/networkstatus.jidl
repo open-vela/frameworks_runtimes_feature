@@ -1,0 +1,22 @@
+module networkstatus
+
+callback getType_success()
+callback getType_fail(int code, string data)
+callback getType_complete()
+
+void getType(getType_success cb1, getType_fail cb2, getType_complete cb3)
+
+callback subscribe_success(boolean metered, string type)
+callback subscribe_fail()
+
+void subscribe(boolean reserved, subscribe_success cb1, subscribe_fail cb2)
+
+void unsubscribe()
+
+
+callback getSimOperators_success(string[] operators, int size)
+callback getSimOperators_fail(int code)
+callback getSimOperators_complete()
+
+void getSimOperators(getSimOperators_success cb1, getSimOperators_fail cb2, getSimOperators_complete cb3)
+

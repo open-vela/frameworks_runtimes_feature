@@ -1,0 +1,15 @@
+
+module interface_test@1.0;
+
+
+interface Foo {
+
+}
+
+interface Goo extends Foo {
+   property int a;
+}
+
+interface Bar extends Goo, Foo {
+
+}

@@ -1,0 +1,10 @@
+module Promise@1.0
+
+promise<int, int> foo(int a, string b)
+use use_foo(int a) = foo(a, "hello")
+promise<int, string> foo1(int a)
+promise<int, string> foo2()
+promise<int[], string[]> bar()
+promise<int[], string[]> bar1()
+promise<int[], string> bar2()
+void print(...)

@@ -1,0 +1,62 @@
+import TestSample@1.0
+import TestSample@2.0
+module Sample@1.0
+
+int foo(int a, double b=1.0, string c)
+void bar()
+void bar5(int a, ...)
+string bar6(int a, float b, boolean c)
+use ubar6(float a) = bar6(1, a, false)
+
+/**
+  * define the callback
+ */
+callback cb1(int x, string y, double z)
+callback cb2(int a, string b, ...)
+callback cb3()
+callback cb4(...)
+
+private void goo(int a, int b, cb1 cb)
+void goo2(cb2 cb, cb3 cb3, cb4 cb4)
+
+use goo3(cb1 cb) = goo(100,200, cb)
+
+async void foo2(int x, double y, cb1 cb, cb2 cb2)
+async(worker) void foo3(int x, double y, cb1 cb)
+
+async(100) void justTestNeverCall1()
+async("::test_js") void justTestNeverCall2()
+
+int bar2(int[] values)
+string[] bar3()
+
+void bar4(array arr, object obj);
+promise<int, string> hoo1(int a, double b = 2.1, string c)
+promise<string> hoo2(double a, string b)
+promise hoo3(float a, boolean b)
+use hoo4(string c) = hoo1(100, 3.14, c)
+
+void testContext(string info, jscontext context, jsvalue value)
+
+const x = 1
+const y = "hello world"
+const z = 9.8
+
+property string name
+const property string version
+const property string[] args
+
+event event1();
+event event2(int a);
+event event3(int a, string b, double c);
+event event4(...);
+
+class Doo {
+  constructor(int a, int b)
+  property int a
+  property double b readonly
+  property string c writeonly
+  void info(int f=1, double g, string x="hello")
+
+  event onchange(int a, double b, string c);
+}

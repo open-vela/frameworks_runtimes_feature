@@ -1,0 +1,8 @@
+{
+    "name": "feature-framework-unit",
+    "version": "1.0",
+    "dependencies":[
+        "libffi",
+        "rapidjson"
+    ]
+}
