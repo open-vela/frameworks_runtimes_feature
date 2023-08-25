@@ -1,0 +1,17 @@
+module Record@1.0
+
+callback success_cb(string uri);
+callback fail_cb(string code, string errorMsg);
+callback complete_cb();
+
+void start(long duration = 1000,
+           int sampleRate = 8000,
+           int numberOfChannels = 1,
+           int encodeBitRate = 16000,
+           string format = "aac",
+           success_cb s_cb,
+           fail_cb f_cb,
+           complete_cb c_cb);
+
+void stop();
+

@@ -1,0 +1,82 @@
+module device
+
+callback getType_success(string brand, string manufacturer, string model, string product, string osType, string osVersionName,
+                        int osVersionCode, string platformVersionName, int platformVersionCode, string language, string region,
+                        int screenWidth, int screenHeight, int windowWidth, int windowHeight, int statusBarHeight,
+                        float screenDensity, string vendorOsName, string vendorOsVersion, int[] cutout, string deviceType,
+                        float screenRefreshRate)
+callback getType_fail(int code, string data)
+callback getType_complete()
+
+void getInfo(getInfo_success cb1, getInfo_fail cb2, getInfo_complete cb3)
+
+
+callback getId_success(string device, string mac, string user, string advertising)
+callback getId_fail(int code, string data)
+
+void getId(string[] type, getId_success cb1, getId_fail cb2)
+
+
+callback getDeviceId_success(string deviceId)
+callback getDeviceId_fail(int code, string data)
+callback getDeviceId_complete()
+
+void getDeviceId(getDeviceId_success cb1, getDeviceId_fail cb2, getDeviceId_complete cb3)
+
+
+callback getUserId_success(string userId)
+callback getUserId_fail(int code, string data)
+callback getUserId_complete()
+
+void getUserId(getUserId_success cb1, getUserId_fail cb2, getUserId_complete cb3)
+
+
+callback getAdvertisingId_success(string advertisingId)
+callback getAdvertisingId_fail(int code, string data)
+callback getAdvertisingId_complete()
+
+void getAdvertisingId(getAdvertisingId_success cb1, getAdvertisingId_fail cb2, getAdvertisingId_complete cb3)
+
+
+callback getSerial_success(string serial)
+callback getSerial_fail(int code, string data)
+callback getSerial_complete()
+
+void getSerial(getSerial_success cb1, getSerial_fail cb2, getSerial_complete cb3)
+
+
+callback getTotalStorage_success(double totalStorage)
+callback getTotalStorage_fail(int code, string data)
+callback getTotalStorage_complete()
+
+void getTotalStorage(getTotalStorage_success cb1, getTotalStorage_fail cb2, getTotalStorage_complete cb3)
+
+
+callback getAvailableStorage_success(double availableStorage)
+callback getAvailableStorage_fail(int code, string data)
+callback getAvailableStorage_complete()
+
+void getAvailableStorage(getAvailableStorage_success cb1, getAvailableStorage_fail cb2, getAvailableStorage_complete cb3)
+
+
+callback getCpuInfo_success(string cpuInfo)
+callback getCpuInfo_fail(int code, string data)
+callback getCpuInfo_complete()
+
+void getCpuInfo(getCpuInfo_success cb1, getCpuInfo_fail cb2, getCpuInfo_complete cb3)
+
+
+callback getOAID_success(string oaid)
+callback getOAID_fail(int code, string data)
+callback getOAID_complete()
+
+void getOAID(getOAID_success cb1, getOAID_fail cb2, getOAID_complete cb3)
+
+
+property string[] platform
+
+
+boolean allowTrackOAID()
+
+
+property string[] host

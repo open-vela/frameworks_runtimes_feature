@@ -1,0 +1,15 @@
+module volume
+
+callback getMediaValue_success(double value)
+callback getMediaValue_fail(int code, string data)
+callback getMediaValue_complete()
+
+void getMediaValue(getMediaValue_success cb1, getMediaValue_fail cb2, getMediaValue_complete cb3)
+
+
+callback setMediaValue_success()
+callback setMediaValue_fail(int code, string data)
+callback setMediaValue_complete()
+
+void setMediaValue(double value, setMediaValue_success cb1, setMediaValue_fail cb2, setMediaValue_complete cb3)
+

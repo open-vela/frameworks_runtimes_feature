@@ -1,0 +1,36 @@
+module bluetooth
+
+callback openAdapter_success()
+callback openAdapter_fail(int code, string data)
+callback openAdapter_complete()
+
+void openAdapter(boolean operateAdapter, openAdapter_success cb1, openAdapter_fail cb2, openAdapter_complete cb3)
+
+
+callback closeAdapter_success()
+callback closeAdapter_fail(int code, string data)
+callback closeAdapter_complete()
+
+void closeAdapter(boolean operateAdapter, closeAdapter_success cb1, closeAdapter_fail cb2, closeAdapter_complete cb3)
+
+
+callback getAdapterState_success(boolean[] data)
+callback getAdapterState_fail(int code, string data)
+callback getAdapterState_complete()
+
+void getAdapterState(getAdapterState_success cb1, getAdapterState_fail cb2, getAdapterState_complete cb3)
+
+
+callback onscanned(string[] wifiList)
+
+callback onstatechanged(string[] data)
+
+
+
+
+
+
+
+
+
+

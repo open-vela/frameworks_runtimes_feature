@@ -1,0 +1,16 @@
+module alarm@1.0
+
+callback setAlarm_success()
+callback setAlarm_fail(int code, string data)
+callback setAlarm_complete()
+
+
+void setAlarm(int hour, int minute, string message, boolean vibrate, int[] days, string ringtone, setAlarm_success cb1, setAlarm_fail cb2, setAlarm_complete cb3)
+
+string getProvider()
+
+callback isAvailable_success(string data)
+callback isAvailable_fail(int code, string data)
+callback isAvailable_complete()
+
+boolean isAvailable(isAvailable_success cb1, isAvailable_fail cb2, isAvailable_complete cb3)

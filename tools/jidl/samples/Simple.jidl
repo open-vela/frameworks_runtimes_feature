@@ -1,0 +1,36 @@
+module Simple@1.0
+
+void printStr(string c)
+void print(...)
+int foo(int a, string c, double b=1.0)
+void bar()
+void bar5(int a, ...)
+string bar6(int a, float b, boolean c)
+use ubar6(float a) = bar6(1, a, false)
+
+callback cb1(int x, string y, double z)
+callback cb2(int a, string b, ...)
+callback cb3()
+callback cb4(...)
+
+void goo(int a, int b, cb1 cb)
+void goo2(cb2 cb, cb3 cb3, cb4 cb4)
+
+use goo3(cb1 cb) = goo(100, 200, cb)
+
+void foo2(int x, double y, cb1 cb, cb2 cb2)
+void foo3(int x, double y, cb1 cb)
+
+void justTestNeverCall1()
+void justTestNeverCall2()
+
+int bar2(int[] values)
+string[] bar3()
+
+const x = 1
+const y = "hello world"
+const z = 9.8
+
+property string name
+const property string version
+const property string[] args
