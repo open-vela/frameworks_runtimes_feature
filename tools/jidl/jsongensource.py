@@ -531,9 +531,9 @@ class CPPRender(Render):
       member_info['val_type'] = ''
       member_info['name'] = ''
     return member_info
-  
+
 def Usage():
-   print("usage %s <json-ast-file> -out-dir <outdir> [-options]" % sys.argv[0])
+   print("usage %s <jidl-file|json-ast-file> -out-dir <outdir> [-options]" % sys.argv[0])
 
 lang_keys = {
   'c++': ['header', 'source']
@@ -573,9 +573,39 @@ def ParseArgs():
   return configs
 
 if __name__ == '__main__':
-  Usage()
+  from jidl import JIDL
+  import jidlast
   configs = ParseArgs()
+  input_file = configs['input']
+  file_ext = os.path.splitext(input_file)[1]
+  if file_ext != '.json' and file_ext != '.jidl':
+    print("error! not a valid input file extension: '%s'" % (file_ext))
+    Usage()
+    sys.exit(0)
+  
+  file_path_name = os.path.splitext(input_file)[0]
+  json_file = file_path_name + ".json"
+  if file_ext == '.jidl':
+    print("generating json ast file: '%s' ..." % (json_file))
+    jidl_file = open(input_file)
+    jidl = JIDL()
+    jidl.parse(jidl_file.read())
+    jidl_file.close()
+    module = jidl.module
+    dump_out = jidlast.DumpOut()
+    module.Dump(dump_out)
+    context = jidlast.Context()
+    module.Resolve(context)
+    context.ResetTable()
+    module.Check(context)
+    context.ShowError(dump_out)
+    ast_json = {}
+    module.ToJson(ast_json)
+    json_out = json.dumps(ast_json)
+    WriteFile(json_out, json_file)
+
   if configs['lang'] == 'c++':
-    render = CPPRender(configs['input'], configs['header'], configs['source'], configs)
+    print("generating c/c++ glue files from: '%s' ..." % (json_file))
+    render = CPPRender(json_file, configs['header'], configs['source'], configs)
     render.Generate()
 
