@@ -7,7 +7,6 @@
 
 #include "feature_exports.h"
 #include "feature_log.h"
-#include "feature_framework.h"
 #include "feature_ffi.h"
 #include "feature.h"
 
@@ -33,10 +32,10 @@
 
   // Function wrappers to be implemented
   void Simple_1_0_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtString c);
-  void Simple_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters);
+  void Simple_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters vari_params);
   FtInt Simple_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b);
   void Simple_1_0_wrap_bar(FeatureInstanceHandle feature, AppendData data);
-  void Simple_1_0_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariadicParameters variadicParameters);
+  void Simple_1_0_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariadicParameters vari_params);
   FtString Simple_1_0_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c);
   void Simple_1_0_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FeatureCallbackId cb);
   void Simple_1_0_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FeatureCallbackId cb, FeatureCallbackId cb3, FeatureCallbackId cb4);

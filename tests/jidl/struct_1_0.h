@@ -7,7 +7,6 @@
 
 #include "feature_exports.h"
 #include "feature_log.h"
-#include "feature_framework.h"
 #include "feature_ffi.h"
 #include "feature.h"
 
@@ -53,7 +52,7 @@
   void Struct_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, Struct_1_0_Chapter * b);
   Struct_1_0_Chapter * Struct_1_0_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a);
   void Struct_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_1_0_Book * a);
-  void Struct_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters);
+  void Struct_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters vari_params);
 
   // Property getters and setters to be implemented
 
