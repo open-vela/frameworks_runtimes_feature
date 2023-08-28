@@ -87,7 +87,7 @@ class CPPRender(Render):
     'uint64' : 'FtUint64',
     'int64' : 'FtInt64',
     'void' : 'void',
-    'ellipse' : '...',
+    'ellipse' : 'FtVariadicParameters',
     'callback' : 'FeatureCallbackId',
     'Int8Array' : 'FTArray',
     'Uint8Array' : 'FTArray',
@@ -406,6 +406,8 @@ class CPPRender(Render):
       if 'name' in param:
         p_name = param["name"]
         param_str += f" {p_name}"
+      elif param_type == 'ellipse':
+        param_str += f" vari_params"
       param_list.append(param_str)
     return ", ".join(param_list)
 
@@ -465,8 +467,9 @@ class CPPRender(Render):
         is_first_param = False
 
       if p_call_type == 'ellipse':
-        p_call_str += "..."
-      p_call_str += f"{p_call_value}"
+        p_call_str += "vari_params"
+      else:
+        p_call_str += f"{p_call_value}"
     return p_call_str
 
   def TryCacheCallbackId(self, id):

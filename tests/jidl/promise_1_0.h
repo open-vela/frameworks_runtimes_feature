@@ -7,7 +7,6 @@
 
 #include "feature_exports.h"
 #include "feature_log.h"
-#include "feature_framework.h"
 #include "feature_ffi.h"
 #include "feature.h"
 
@@ -38,7 +37,7 @@
   void Promise_1_0_wrap_bar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle);
   void Promise_1_0_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle);
   void Promise_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle);
-  void Promise_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters);
+  void Promise_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters vari_params);
 
   // Property getters and setters to be implemented
 

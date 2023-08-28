@@ -1,6 +1,5 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
 

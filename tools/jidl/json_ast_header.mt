@@ -65,8 +65,8 @@
 #ifndef ${header_define}
 #define ${header_define}
 
-#include "ajs_log.h"
 #include "feature_exports.h"
+#include "feature_log.h"
 #include "feature_ffi.h"
 #include "feature.h"
 
@@ -77,7 +77,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-  using namespace AIOTJS;
+  using namespace FEATURE;
   using namespace ferry;
 
   // FeatureCallbacks to be implemented
