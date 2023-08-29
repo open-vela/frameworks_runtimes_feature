@@ -1,0 +1,36 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef __FEATURE_CONTEXT_QJS_H__
+#define __FEATURE_CONTEXT_QJS_H__
+
+#include "feature_context_private.h"
+#include "quickjs/quickjs.h"
+
+#define GET_QJS_CTX(ft_ctx) static_cast<JSContext*>(ft_ctx->data)
+#define FT_VAL_TO_QJS(val) (*((qjs_val_t*)(&(val))))
+#define QJS_VAL_TO_FT(val) (*((ft_value_t*)(&(val))))
+
+typedef struct qjs_val_t {
+    ft_type type;
+    JSValue js_val;
+} qjs_val_t;
+
+bool InitFeatureContextQjs(ft_context_ref ft_ctx);
+
+void UinitFeatureContextQjs(ft_context_ref ft_ctx);
+
+#endif // __FEATURE_CONTEXT_QJS_H__
+
