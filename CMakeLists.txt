@@ -87,6 +87,9 @@ add_library(feature-framework STATIC
     ${FEATURE_FRAMEWORK_INC}/feature_framework.h
     ${FEATURE_FRAMEWORK_SRC}/feature_framework.cpp
     ${FEATURE_FRAMEWORK_INC}/feature.h
+    ${FEATURE_FRAMEWORK_INC}/feature_context.h
+    ${FEATURE_FRAMEWORK_SRC}/feature_context.cpp
+    ${FEATURE_FRAMEWORK_SRC}/feature_context_qjs.cpp
 )
 
 target_include_directories(feature-framework PUBLIC
