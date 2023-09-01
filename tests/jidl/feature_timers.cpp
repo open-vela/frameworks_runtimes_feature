@@ -366,7 +366,7 @@ static struct FeatureCallbacks callbacks {
             FEATURE_LOG_INFO("onDetached");
         },
         [](FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-            Point* point_data = (Point*)GetFeatureObjectData(handle);
+            Point* point_data = (Point*)GetFeatureProtoData(handle);
             FreeFeatureValue(point_data);
             FEATURE_LOG_INFO("onDestroy");
         },

@@ -15,7 +15,7 @@
  */
 #ifndef __FEATURE_MANAGER_H__
 #define __FEATURE_MANAGER_H__
-#include "feature_framework.h"
+#include "feature.h"
 
 namespace ferry {
 

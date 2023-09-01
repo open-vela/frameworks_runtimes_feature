@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "feature_framework.h"
+#include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "feature.h"
@@ -228,7 +229,7 @@ void SetFeatureObjectData(FeatureInstanceHandle handle, void* data)
 
 ft_context_ref GetFeatureContext(FeatureInstanceHandle handle)
 {
-    return static_cast<ferry::FeatureInstance*>(handle)->proto->ft_ctx;
+    return static_cast<ferry::FeatureInstance*>(handle)->prototype()->ft_ctx;
 }
 
 //int InvokeFeatureCallback(FEATURE::FeatureRuntimeContext ctx, FEATURE::FeatureInstanceHandle handle, void** ret_value, int cid, ...)
@@ -237,15 +238,15 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
     auto ft_ctx = GetFeatureContext(handle);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     auto instance = static_cast<ferry::FeatureInstance*>(handle);
-    const auto& pair = instance->getCallback(cid);
-    if (feature_is_undefined(pair.first)) {
+    const auto& callback = instance->getCallback(cid);
+    if (feature_is_undefined(callback.cb)) {
         FEATURE_LOG_ERROR("callback with cid %d not found !", cid);
         return -1;
     }
 
     // get callback description.
     bool has_rest_param = false;
-    ferry::CallbackType& callbackType = *pair.second;
+    ferry::CallbackType& callbackType = *callback.cb_type;
     int method_param_count = get_param_count(callbackType.parameters, &has_rest_param);
     if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
@@ -255,7 +256,7 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
     va_list ap;
     va_start(ap, cid);
     // int ret = invokeFeatureCallback(js_ctx, instance, callbackType, pair.first, ap, method_param_count, 0, ret_value);
-    int ret = invokeFeatureCallback(js_ctx, instance, callbackType, pair.first, ap, method_param_count, 0);
+    int ret = invokeFeatureCallback(js_ctx, instance, callbackType, callback.cb, ap, method_param_count, 0);
     va_end(ap);
     return ret;
 }
@@ -266,15 +267,15 @@ int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCal
     auto ft_ctx = GetFeatureContext(handle);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     auto instance = static_cast<ferry::FeatureInstance*>(handle);
-    const auto& pair = instance->getCallback(cid);
-    if (feature_is_undefined(pair.first)) {
+    const auto& callback = instance->getCallback(cid);
+    if (feature_is_undefined(callback.cb)) {
         FEATURE_LOG_ERROR("callback with cid %d not found !", cid);
         return -1;
     }
 
     // get callback description.
     bool has_rest_param = false;
-    ferry::CallbackType* callbackType = pair.second;
+    ferry::CallbackType* callbackType = callback.cb_type;
     int method_param_count = get_param_count(callbackType->parameters, &has_rest_param);
     FEATURE_CHECK_EQ(has_rest_param, true);
     FEATURE_CHECK_GE(count, method_param_count);
@@ -282,7 +283,7 @@ int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCal
     va_list ap;
     va_start(ap, count);
     // int ret = invokeFeatureCallback(js_ctx, instance, *callbackType, pair.first, ap, method_param_count, count - method_param_count, ret_value);
-    int ret = invokeFeatureCallback(js_ctx, instance, *callbackType, pair.first, ap, method_param_count, count - method_param_count);
+    int ret = invokeFeatureCallback(js_ctx, instance, *callbackType, callback.cb, ap, method_param_count, count - method_param_count);
     va_end(ap);
     return ret;
 }
@@ -326,104 +327,6 @@ int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle prom
 
 namespace ferry {
 extern struct FeatureInstance* getInstance(feature_value_t val);
-
-/////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* featurePrototype)
-    : native(nullptr)
-    , proto(featurePrototype)
-    , iid(-1)
-{
-}
-
-FeatureInstance::~FeatureInstance()
-{
-    // remove opaque binding
-    feature_set_opaque(this->js_self.js_value, nullptr);
-    // release all callbacks
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
-    for (const auto& pair : callbacks) {
-        feature_free_value(js_ctx, pair.second.first);
-    }
-    callbacks.clear();
-
-    // release all promises
-    for (const auto& pair : promises) {
-        FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
-        feature_free_value(js_ctx, pair.second->promise);
-        feature_free_value(js_ctx, pair.second->resolveFuncs[0]);
-        feature_free_value(js_ctx, pair.second->resolveFuncs[1]);
-        free(pair.second);
-    }
-    promises.clear();
-
-    // check if all instances deleted, then clear proto object
-    if (!proto->hasInstanceAlive()) {
-        FEATURE_LOG_INFO("all instance freed, free proto object...");
-        proto->js_proto = FEATURE_VALUE_UNDEFINED;
-    }
-}
-
-std::pair<feature_value_t, CallbackType*> FeatureInstance::getCallback(FEATURE::FeatureCallbackId id)
-{
-    if (!callbacks.count(id)) {
-        return std::make_pair(FEATURE_VALUE_UNDEFINED, nullptr);
-    }
-    return callbacks[id];
-}
-
-FEATURE::FeatureCallbackId FeatureInstance::addCallback(feature_value_t value, CallbackType* callbackType)
-{
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
-    callbacks[curr_cid] = std::make_pair(feature_dup_value(js_ctx, value), callbackType);
-    return curr_cid++;
-}
-
-bool FeatureInstance::removeCallback(FEATURE::FeatureCallbackId id)
-{
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
-    if (!callbacks.count(id)) {
-        FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", id, this);
-        return false;
-    }
-    feature_free_value(js_ctx, callbacks[id].first);
-    callbacks.erase(id);
-    return true;
-}
-
-ferry::FeaturePromiseData* FeatureInstance::getPromise(FEATURE::FeaturePromiseHandle promiseHandle)
-{
-    if (!promises.count(promiseHandle)) {
-        return nullptr;
-    }
-    return promises[promiseHandle];
-}
-
-FEATURE::FeaturePromiseHandle FeatureInstance::addPromise(FeaturePromiseData* data)
-{
-    // auto ctx = proto->ctx;
-    FEATURE_CHECK_NE(data, nullptr);
-    FEATURE_CHECK_NE(feature_is_undefined(data->promise), true);
-    promises[curr_cid] = data;
-    return curr_cid++;
-}
-
-bool FeatureInstance::removePromise(FEATURE::FeaturePromiseHandle promiseHandle)
-{
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
-    if (!promises.count(promiseHandle)) {
-        FEATURE_LOG_ERROR("promiseHandle %d in instance: %p not exist !", promiseHandle, this);
-        return false;
-    }
-    FeaturePromiseData* data = promises[promiseHandle];
-    FEATURE_CHECK_NE(data, nullptr);
-    promises.erase(promiseHandle);
-    // free js values
-    feature_free_value(js_ctx, data->promise);
-    feature_free_value(js_ctx, data->resolveFuncs[0]);
-    feature_free_value(js_ctx, data->resolveFuncs[1]);
-    free(data);
-    return true;
-}
 
 /**
  * @brief FeaturePrototype constructor
@@ -547,7 +450,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     int index = magic;
     FeatureInstance* instance = ferry::getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(&instance->proto->description->members[index]);
+    Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto& method = member->method;
     auto currParam = method.parameters;
@@ -759,7 +662,7 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     int index = magic;
     FeatureInstance* instance = ferry::getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(&instance->proto->description->members[index]);
+    Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor* accessor = &member->accessor;
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
@@ -809,7 +712,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     int index = magic;
     FeatureInstance* instance = ferry::getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(&instance->proto->description->members[index]);
+    Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor* accessor = &member->accessor;
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
@@ -960,10 +863,10 @@ bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
         FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
         return false;
     }
-    auto proto = instance->proto;
+    auto proto = instance->prototype();
 
     // 创建WeakRef节点添加到proto->weak_ref_list链表中
-    WeakRef* node = &instance->js_self;
+    WeakRef* node = &instance->weak_self_;
     weakref_list_initialize(&node->link);
     weakref_list_add_tail(&node->link, &proto->weak_ref_list);
 
@@ -982,7 +885,7 @@ bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
         FEATURE_LOG_ERROR("WeakRefFree() get FeatureInstance failed");
         return false;
     }
-    auto proto = instance->proto;
+    auto proto = instance->prototype();
 
     // 遍历proto->weak_ref_list链表，将其中所有js_value为feature_object的节点删除
     WeakRef* node;
