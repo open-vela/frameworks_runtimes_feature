@@ -115,12 +115,13 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     }
 
     auto proto = instance->prototype();
+    FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
     // mark callbacks
-    for (auto& pair : ((FeatureInstanceQjs*)instance)->callbacks) {
+    for (auto& pair : instance_qjs->callbacks) {
         feature_mark_value(rt, pair.second.cb, mark_func);
     }
     // mark promies
-    for(auto& pair : ((FeatureInstanceQjs*)instance)->promises) {
+    for(auto& pair : instance_qjs->promises) {
         feature_mark_value(rt, pair.second->promise, mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
@@ -611,6 +612,8 @@ static bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
 {
     // 根据cid获取FeaturePrototype
     FeatureInstance* instance = getInstance(feature_object);
+    FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
+
     if (!instance || !instance->prototype()) {
         FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
         return false;
@@ -618,7 +621,7 @@ static bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
     auto proto = instance->prototype();
 
     // 创建WeakRef节点添加到proto->weak_ref_list链表中
-    WeakRef* node = &instance->weak_self_;
+    WeakRef* node = &instance_qjs->weak_self_;
     weakref_list_initialize(&node->link);
     weakref_list_add_tail(&node->link, &proto->weak_ref_list);
 

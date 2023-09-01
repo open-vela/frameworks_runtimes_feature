@@ -29,11 +29,6 @@ namespace ferry {
 
 class FeaturePrototype;
 
-typedef struct WeakRef {
-    ft_value_t ft_value;
-    struct weakref_list_node link;
-} WeakRef;
-
 class FeatureInstance {
 public:
     FeatureInstance(struct FeaturePrototype* prototype);
@@ -74,7 +69,6 @@ public:
     FeaturePrototype* prototype() { return proto_; }
 
     void* native;
-    WeakRef weak_self_;
     FEATURE::FeatureCallbackId curr_cid = 0;
 
 private:
