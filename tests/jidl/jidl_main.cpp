@@ -3,6 +3,7 @@
 #include "feature_framework.h"
 #include "feature_ffi.h"
 #include "feature_manager.h"
+#include "feature_registry.h"
 
 #include "simple_1_0.h"
 #include <assert.h>
@@ -16,6 +17,7 @@
 using namespace ferry;
 using namespace FEATURE;
 
+static ferry::FeatureRegistry* g_registry;
 static ferry::FeatureManager* g_manager;
 
 typedef struct feature_env_t {
@@ -102,8 +104,9 @@ int main(int argc, char** argv)
     js_env.rt = JS_NewRuntime();
     js_env.ctx = JS_NewContext(js_env.rt);    
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    g_manager = new ferry::FeatureManager(nullptr);
-    g_manager->init_feature(manifast_str);
+    g_registry =  new ferry::FeatureRegistry(nullptr);
+    g_registry->init(manifast_str);
+    g_manager = new ferry::FeatureManager(g_registry);
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
@@ -127,7 +130,7 @@ int main(int argc, char** argv)
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
 
-    g_manager->uninit();
+    g_registry->uninit();
     //释放manifast_str
     if (manifast_str != NULL) {
         free(manifast_str);

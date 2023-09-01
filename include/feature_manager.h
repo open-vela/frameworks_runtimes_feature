@@ -15,58 +15,11 @@
  */
 #ifndef __FEATURE_MANAGER_H__
 #define __FEATURE_MANAGER_H__
-#include "feature.h"
 #include "feature_framework.h"
-
-#include <rapidjson/document.h>
-#include <map>
-#include <string>
-
-typedef rapidjson::Document JSONDocument;
 
 namespace ferry {
 
-struct FeatureUnit;
-
-/**
- * @brief manifest reader
- *
- */
-class ManifestReader {
-public:
-    /**
-     * @brief Construct a new Manifest Reader object
-     *
-     * @param manifest
-     */
-    ManifestReader() = default;
-    /**
-     * @brief parse json string
-     *
-     * @param json
-     * @return true
-     * @return false
-     */
-    bool parse(char* json);
-
-    /**
-     * @brief
-     *
-     * @return size_t
-     */
-    size_t getFeaturesCount();
-
-    /**
-     * @brief Get feature name via index
-     *
-     * @param index
-     * @return const char*
-     */
-    const char* getFeatureName(size_t index);
-
-private:
-    JSONDocument doc_;
-};
+class FeatureRegistry;
 
 // feature require的实现，直接走FeatureManager，失败之后fallback回JS require
 // 需要考虑，无需require的全局函数怎么处理？如setInterval这类
@@ -81,32 +34,7 @@ private:
  */
 class FeatureManager {
 public:
-    FeatureManager(class IApplication* app);
-    /**
-     * @brief initialie FeatureManager
-     *
-     * @param manifest      manifest content to check
-     * @return true
-     * @return false
-     */
-    bool init_feature(char* manifest);
-
-    /**
-     * @brief register FeatureManager
-     *
-     * @param features      feature name array pointer
-     * @param description   registered feature description array pointer
-     * @return true
-     * @return false
-     */
-    bool registerFeature(std::vector<std::string>&features, const FeatureDescription* description);
-
-    /**
-     * @brief un-initialize manager
-     *
-     */
-    void uninit();
-
+    FeatureManager(FeatureRegistry* registry);
     /**
      * @brief featureRequire, return feature object by name
      *
@@ -115,12 +43,8 @@ public:
      * @return JSValue
      */
     feature_value_t featureRequire(context_ref ctx, const char* name);
-    std::map<std::string, FeatureUnit*> registeredFeatures_; // 已注册features
-    bool manifest_check_enable = true;
 private:
-    IApplication* app_;
-    std::vector<std::string> feature_names_;
-
+    FeatureRegistry* registry_;
 };// class FeatureManager
 
 }
