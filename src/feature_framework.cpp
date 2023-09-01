@@ -18,6 +18,8 @@
 #include "feature_utils.h"
 #include "feature.h"
 #include "feature_ffi.h"
+#include "feature_context_private.h"
+#include "feature_context_qjs.h"
 
 #include <algorithm>
 #include <cstdarg>
@@ -148,12 +150,13 @@ ferry::FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, Fe
     data->resolveTypes[0] = resolve_type;
     data->resolveTypes[1] = reject_type;
 
-    auto ctx = GetFeatureContext(handle);
-    feature_value_t promise = feature_promise_capability(ctx, data->resolveFuncs);
+    auto ft_ctx = GetFeatureContext(handle);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
+    feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
     if (feature_is_exception(promise)) {
-        feature_free_value(ctx, data->resolveFuncs[0]);
-        feature_free_value(ctx, data->resolveFuncs[1]);
-        feature_free_value(ctx, promise);
+        feature_free_value(js_ctx, data->resolveFuncs[0]);
+        feature_free_value(js_ctx, data->resolveFuncs[1]);
+        feature_free_value(js_ctx, promise);
         free(data);
         return nullptr;
     }
@@ -163,8 +166,9 @@ ferry::FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, Fe
 
 static int featurePromiseSettle(FeatureInstanceHandle handle, bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap)
 {
-    auto ctx = GetFeatureContext(handle);
-    FEATURE_CHECK_NE(ctx, nullptr);
+    auto ft_ctx = GetFeatureContext(handle);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
+    FEATURE_CHECK_NE(js_ctx, nullptr);
 
     // get feature instance
     ferry::FeaturePromiseData* promiseData = static_cast<ferry::FeatureInstance*>(handle)->getPromise(promiseHandle);
@@ -181,7 +185,7 @@ static int featurePromiseSettle(FeatureInstanceHandle handle, bool resolve, FEAT
     ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
     FEATURE_CHECK_NE(instance, nullptr);
     FeatureType param_types[2] = { promiseData->resolveTypes[idx], ferry::FT_VOID };
-    int ret = invokeFeatureCallback(ctx, instance, { .header = { .type = ferry::COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = ferry::FT_VOID }, promiseData->resolveFuncs[idx], ap, 1, 0);
+    int ret = invokeFeatureCallback(js_ctx, instance, { .header = { .type = ferry::COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = ferry::FT_VOID }, promiseData->resolveFuncs[idx], ap, 1, 0);
     return ret;
 }
 
@@ -222,15 +226,16 @@ void SetFeatureObjectData(FeatureInstanceHandle handle, void* data)
     instance->native = data;
 }
 
-context_ref GetFeatureContext(FeatureInstanceHandle handle)
+ft_context_ref GetFeatureContext(FeatureInstanceHandle handle)
 {
-    return static_cast<ferry::FeatureInstance*>(handle)->proto->ctx;
+    return static_cast<ferry::FeatureInstance*>(handle)->proto->ft_ctx;
 }
 
 //int InvokeFeatureCallback(FEATURE::FeatureRuntimeContext ctx, FEATURE::FeatureInstanceHandle handle, void** ret_value, int cid, ...)
 int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
 {
-    auto ctx = GetFeatureContext(handle);
+    auto ft_ctx = GetFeatureContext(handle);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     auto instance = static_cast<ferry::FeatureInstance*>(handle);
     const auto& pair = instance->getCallback(cid);
     if (feature_is_undefined(pair.first)) {
@@ -238,7 +243,6 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
         return -1;
     }
 
-    context_ref js_ctx = static_cast<context_ref>(ctx);
     // get callback description.
     bool has_rest_param = false;
     ferry::CallbackType& callbackType = *pair.second;
@@ -259,7 +263,8 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
 // int InvokeFeatureCallbackCount(FEATURE::FeatureRuntimeContext ctx, FEATURE::FeatureInstanceHandle handle, void** ret_value, FeatureCallbackId cid, int count, ...)
 int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
 {
-    auto ctx = GetFeatureContext(handle);
+    auto ft_ctx = GetFeatureContext(handle);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     auto instance = static_cast<ferry::FeatureInstance*>(handle);
     const auto& pair = instance->getCallback(cid);
     if (feature_is_undefined(pair.first)) {
@@ -267,7 +272,6 @@ int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCal
         return -1;
     }
 
-    context_ref js_ctx = static_cast<context_ref>(ctx);
     // get callback description.
     bool has_rest_param = false;
     ferry::CallbackType* callbackType = pair.second;
@@ -336,17 +340,18 @@ FeatureInstance::~FeatureInstance()
     // remove opaque binding
     feature_set_opaque(this->js_self.js_value, nullptr);
     // release all callbacks
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
     for (const auto& pair : callbacks) {
-        feature_free_value(proto->ctx, pair.second.first);
+        feature_free_value(js_ctx, pair.second.first);
     }
     callbacks.clear();
 
     // release all promises
     for (const auto& pair : promises) {
         FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
-        feature_free_value(proto->ctx, pair.second->promise);
-        feature_free_value(proto->ctx, pair.second->resolveFuncs[0]);
-        feature_free_value(proto->ctx, pair.second->resolveFuncs[1]);
+        feature_free_value(js_ctx, pair.second->promise);
+        feature_free_value(js_ctx, pair.second->resolveFuncs[0]);
+        feature_free_value(js_ctx, pair.second->resolveFuncs[1]);
         free(pair.second);
     }
     promises.clear();
@@ -368,19 +373,19 @@ std::pair<feature_value_t, CallbackType*> FeatureInstance::getCallback(FEATURE::
 
 FEATURE::FeatureCallbackId FeatureInstance::addCallback(feature_value_t value, CallbackType* callbackType)
 {
-    auto ctx = proto->ctx;
-    callbacks[curr_cid] = std::make_pair(feature_dup_value(ctx, value), callbackType);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
+    callbacks[curr_cid] = std::make_pair(feature_dup_value(js_ctx, value), callbackType);
     return curr_cid++;
 }
 
 bool FeatureInstance::removeCallback(FEATURE::FeatureCallbackId id)
 {
-    auto ctx = proto->ctx;
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
     if (!callbacks.count(id)) {
         FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", id, this);
         return false;
     }
-    feature_free_value(ctx, callbacks[id].first);
+    feature_free_value(js_ctx, callbacks[id].first);
     callbacks.erase(id);
     return true;
 }
@@ -404,7 +409,7 @@ FEATURE::FeaturePromiseHandle FeatureInstance::addPromise(FeaturePromiseData* da
 
 bool FeatureInstance::removePromise(FEATURE::FeaturePromiseHandle promiseHandle)
 {
-    auto ctx = proto->ctx;
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
     if (!promises.count(promiseHandle)) {
         FEATURE_LOG_ERROR("promiseHandle %d in instance: %p not exist !", promiseHandle, this);
         return false;
@@ -413,9 +418,9 @@ bool FeatureInstance::removePromise(FEATURE::FeaturePromiseHandle promiseHandle)
     FEATURE_CHECK_NE(data, nullptr);
     promises.erase(promiseHandle);
     // free js values
-    feature_free_value(ctx, data->promise);
-    feature_free_value(ctx, data->resolveFuncs[0]);
-    feature_free_value(ctx, data->resolveFuncs[1]);
+    feature_free_value(js_ctx, data->promise);
+    feature_free_value(js_ctx, data->resolveFuncs[0]);
+    feature_free_value(js_ctx, data->resolveFuncs[1]);
     free(data);
     return true;
 }
@@ -426,7 +431,7 @@ bool FeatureInstance::removePromise(FEATURE::FeaturePromiseHandle promiseHandle)
  * @param description
  */
 FeaturePrototype::FeaturePrototype(context_ref js_ctx, FeatureDescription* feature_desc)
-    : ctx(js_ctx)
+    : ft_ctx(CreateFeatureContext(js_ctx))
     , native(nullptr)
     , js_proto(FEATURE_VALUE_UNDEFINED)
     , description(feature_desc)
@@ -438,15 +443,17 @@ FeaturePrototype::FeaturePrototype(context_ref js_ctx, FeatureDescription* featu
 FeaturePrototype::~FeaturePrototype()
 {
     instances.clear();
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     // call onDestroy
     if (description->native_callbacks->onDestroy) {
         FEATURE_LOG_DEBUG("invoke onDestroy callback...");
-        description->native_callbacks->onDestroy(ctx, this);
+        description->native_callbacks->onDestroy(js_ctx, this);
     }
     if (!feature_is_undefined(js_proto)) {
-        feature_free_value(ctx, js_proto);
+        feature_free_value(js_ctx, js_proto);
         js_proto = FEATURE_VALUE_UNDEFINED;
     }
+    ReleaseFeatureContext(ft_ctx);
 }
 
 /**
@@ -557,6 +564,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     ffi_type* variadicParameters_type_element[3];
     // variadic parameter param
     FtVariadicParameters variadicParameters;
+    qjs_val_t* qjs_val_array = nullptr;
     memset(&variadicParameters, 0, sizeof(variadicParameters));
     // check argument count match.
     // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", method_param_count, argc);
@@ -627,13 +635,15 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             variadicParameters_type_element[1] = &ffi_type_pointer;
             variadicParameters_type_element[2] = nullptr;
             // prepare variadicParameters struct
-            variadicParameters.variadic_args = new feature_value_t*[variadicParameters.variadic_count];
+            variadicParameters.variadic_args = new ft_value_t[variadicParameters.variadic_count];
+            qjs_val_array = new qjs_val_t[variadicParameters.variadic_count];
             // pass param
             ffi_params[method_param_count + external_count] = &variadicParameters_type;
             ffi_arg_values[method_param_count + external_count] = &variadicParameters;
             for (int i = 0; i + method_param_count < argc; i++) {
                 // just passthrough guest param pointers
-                variadicParameters.variadic_args[i] = &argv[i + method_param_count];
+                qjs_val_array [i].js_val = argv[i + method_param_count];
+                variadicParameters.variadic_args[i] = *((ft_value_t*)(qjs_val_array + i));
             }
         } else if (optional_count) {
             for (int i = argc; i < method_param_count; i++) {
@@ -729,6 +739,9 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     delete[] ffi_params;
     if (variadicParameters.variadic_args) {
         delete[] variadicParameters.variadic_args;
+    }
+    if (qjs_val_array) {
+        delete[] qjs_val_array;
     }
 
     // if error occurred, throw internal error

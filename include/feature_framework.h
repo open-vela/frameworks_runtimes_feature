@@ -68,6 +68,12 @@ struct WeakRef {
     struct weakref_list_node link;
 };
 
+typedef struct FeaturePromiseData {
+   feature_value_t promise; // 保存promise对象
+   feature_value_t resolveFuncs[2]; //functions
+   FEATURE::FeatureType resolveTypes[2];
+} FeaturePromiseData;
+
 struct FeatureInstance {
     WeakRef js_self; //指向feature object的弱引用
     void* native; // 绑定的实例数据
@@ -123,7 +129,7 @@ struct FeatureInstance {
  *
  */
 struct FeaturePrototype {
-    context_ref ctx; // js context
+    ft_context_ref ft_ctx; // feature context
     std::vector<std::unique_ptr<FeatureInstance>> instances;
     void* native; // the native feature object instance pointer
     feature_value_t js_proto; // js prototype object, it's undefined at first

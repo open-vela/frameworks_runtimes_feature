@@ -120,21 +120,53 @@ void Struct_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct
 void Struct_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     printf("[jidl_feature] ");
-    auto ctx = static_cast<feature_context_ref>(GetFeatureContext(feature));
+    ft_context_ref ft_ctx = GetFeatureContext(feature);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        feature_value_t& param = *variadicParameters.variadic_args[i];
-        if (feature_is_object(param)) {
-            feature_value_t json_obj = feature_stringify(ctx, param);
-            const char* str_json = feature_to_cstring(ctx, json_obj);
-            printf("%s", str_json);
-            feature_free_cstring(ctx, str_json);
-            feature_free_value(ctx, json_obj);
+        ft_value_t param = variadicParameters.variadic_args[i];
+        ft_type param_type = ft_get_type(ft_ctx, param);
+        if (param_type == FT_TYPE_OBJECT) {
+            const char* param_obj = ft_to_string(ft_ctx, param);
+            printf("%s ", param_obj);
+            ft_free_string(ft_ctx, param_obj);
+        } else if (param_type == FT_TYPE_ARRAY) {
+            uint32_t array_size = ft_array_size(ft_ctx, param);
+            printf("[");
+            for (int i = 0; i < array_size; ++i) {
+                ft_value_t elem = ft_array_at(ft_ctx, param, i);
+                ft_type elem_type = ft_get_type(ft_ctx, elem);
+                if (elem_type == FT_TYPE_NUMBER) {
+                    double param_num;
+                    if (ft_to_double(ft_ctx, elem, &param_num))
+                        printf("%lf ", param_num);
+                } else if (elem_type == FT_TYPE_STRING) {
+                    const char* param_str = ft_to_string(ft_ctx, elem);
+                    printf("%s ", param_str);
+                    ft_free_string(ft_ctx, param_str);
+                } else if (elem_type == FT_TYPE_BOOL) {
+                    bool param_bool;
+                    bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+                    printf("%d ", param_bool);
+                } else {
+                    printf("invalid array element type!");
+                    return;
+                }
+            }
+            printf("] ");
+        } else if (param_type == FT_TYPE_STRING) {
+            const char* param_str = ft_to_string(ft_ctx, param);
+            printf("%s ", param_str);
+            ft_free_string(ft_ctx, param_str);
+        } else if (param_type == FT_TYPE_NUMBER) {
+            double param_num;
+            bool ret = ft_to_double(ft_ctx, param, &param_num);
+            printf("%lf ", param_num);
+        } else if (param_type == FT_TYPE_BOOL) {
+            bool param_bool;
+            bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+            printf("%d ", param_bool);
         } else {
-            feature_value_t str_obj = feature_to_string(ctx, param);
-            const char* str_json = feature_to_cstring(ctx, str_obj);
-            printf("%s", str_json);
-            feature_free_cstring(ctx, str_json);
-            feature_free_value(ctx, str_obj);
+            printf("invalid param type!");
+            return;
         }
     }
     printf("\n");

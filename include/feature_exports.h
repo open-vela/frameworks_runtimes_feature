@@ -20,7 +20,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <type_traits>
-#include "feature.h"
+#include "feature_context.h"
 
 #define FT_COMPLEX_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 1)))
 #define FT_REFERENCE_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 2)))
@@ -82,7 +82,7 @@ struct FTArray {
  */
 struct FtVariadicParameters {
     int32_t variadic_count; // variadic parameter count
-    feature_value_t** variadic_args; // variadic parameter pointer array
+    ft_value_t* variadic_args; // variadic parameter pointer array
 };
 
 struct FeatureCallbacks {
@@ -148,7 +148,7 @@ void SetFeatureObjectData(FeatureInstanceHandle handle, void* data);
  * @param handle
  * @return context_ref
  */
-context_ref GetFeatureContext(FeatureInstanceHandle handle);
+ft_context_ref GetFeatureContext(FeatureInstanceHandle handle);
 
 /**
  * @brief invoke callback via cid
@@ -365,12 +365,6 @@ typedef struct ArrayType {
 } ArrayType;
 
 /***/
-typedef struct FeaturePromiseData {
-   feature_value_t promise; // 保存promise对象
-   feature_value_t resolveFuncs[2]; //functions
-   FEATURE::FeatureType resolveTypes[2];
-} FeaturePromiseData;
-
 typedef struct PromiseType {
     ComplexTypeHeader header;
     const FEATURE::FeatureType resolveTypes[2];
