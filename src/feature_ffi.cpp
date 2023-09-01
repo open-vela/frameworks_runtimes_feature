@@ -18,6 +18,7 @@
 #include "feature_utils.h"
 #include "feature.h"
 #include "feature_framework.h"
+#include "feature_instance.h"
 
 #include <alloca.h>
 #include <cstdint>

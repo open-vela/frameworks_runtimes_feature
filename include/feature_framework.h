@@ -17,6 +17,7 @@
 #define __FEATURE_FRAMEWORK_H__
 
 #include "feature_exports.h"
+#include "feature_utils.h"
 #include "feature.h"
 
 #include <map>
@@ -25,110 +26,15 @@
 
 namespace ferry {
 
-#define weakref_container_of(ptr, type, member) \
-    ((type*)((uintptr_t)(ptr)-offsetof(type, member)))
-
-struct weakref_list_node {
-    struct weakref_list_node* prev;
-    struct weakref_list_node* next;
-};
-
-#define weakref_list_initialize(list)              \
-    do {                                           \
-        struct weakref_list_node* __list = (list); \
-        __list->prev = __list->next = __list;      \
-    } while (0)
-
-#define weakref_list_delete(item)                  \
-    do {                                           \
-        struct weakref_list_node* __item = (item); \
-        __item->next->prev = __item->prev;         \
-        __item->prev->next = __item->next;         \
-        __item->prev = __item->next = NULL;        \
-    } while (0)
-
-#define weakref_list_add_tail(list, item)          \
-    do {                                           \
-        struct weakref_list_node* __list = (list); \
-        struct weakref_list_node* __item = (item); \
-        __item->prev = __list->prev;               \
-        __item->next = __list;                     \
-        __list->prev->next = __item;               \
-        __list->prev = __item;                     \
-    } while (0)
-
-#define weakref_list_for_every_entry_safe(list, entry, temp, type, member) \
-    for (entry = weakref_container_of((list)->next, type, member),         \
-        temp = weakref_container_of(entry->member.next, type, member);     \
-         &entry->member != (list); entry = temp,                           \
-        temp = weakref_container_of(temp->member.next, type, member))
-
-struct WeakRef {
-    feature_value_t js_value; //引用一个对象的指针(纯C指针),将其指向proto
-    struct weakref_list_node link;
-};
-
-typedef struct FeaturePromiseData {
-   feature_value_t promise; // 保存promise对象
-   feature_value_t resolveFuncs[2]; //functions
-   FEATURE::FeatureType resolveTypes[2];
-} FeaturePromiseData;
-
-struct FeatureInstance {
-    WeakRef js_self; //指向feature object的弱引用
-    void* native; // 绑定的实例数据
-    struct FeaturePrototype* proto; //指向内部的proto信息
-    int iid; // the instance id, order in instances aray.
-    FEATURE::FeatureCallbackId curr_cid = 0;
-    std::map<FEATURE::FeatureCallbackId, std::pair<feature_value_t, CallbackType*>> callbacks; // instance should save feature resources
-    std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises;   // all promises created by native feature
-
-    FeatureInstance(struct FeaturePrototype* featurePrototype);
-
-    ~FeatureInstance();
-
-    std::pair<feature_value_t, CallbackType*> getCallback(FEATURE::FeatureCallbackId id);
-
-    /**
-     * @brief add callback to instance
-     *
-     * @param ctx
-     * @param value
-     * @param callbackType
-     * @return FEATURE::FeatureCallbackId
-     */
-    FEATURE::FeatureCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
-
-    /**
-     * @brief remove callback from instance vai FeatureCallbackId
-     *
-     & @param ctx
-     * @param id
-     * @return true
-     * @return false
-     */
-    bool removeCallback(FEATURE::FeatureCallbackId id);
-
-    /**
-     * @brief Get the Promise object
-     *
-     * @param promiseHandle
-     * @return FEATURE::FeaturePromiseData*
-     */
-    FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
-
-    FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data);
-
-    bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle);
-
-};
+class FeatureInstance;
 
 /**
  * @brief Feature Protoype struct
  * all informations needed by JS prototype is saved in it
  *
  */
-struct FeaturePrototype {
+class FeaturePrototype {
+public:
     ft_context_ref ft_ctx; // feature context
     std::vector<std::unique_ptr<FeatureInstance>> instances;
     void* native; // the native feature object instance pointer

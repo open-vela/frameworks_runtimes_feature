@@ -16,6 +16,8 @@
 
 #include "feature_manager.h"
 #include "feature_registry.h"
+#include "feature_framework.h"
+#include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 #if defined(CONFIG_QUICKAPP)
@@ -41,7 +43,7 @@ static thread_local feature_classdef_t class_def; // prototype class defination,
 
 // some static functions used by FeatureManager
 static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit);
-static bool createPrototypeClass(context_ref ctx, FeaturePrototype* featurePrototype);
+static bool createJsInstanceClass(context_ref ctx, const char* class_name);
 static context_ref getContext(feature_runtime_ref rt);
 
 FeatureManager::FeatureManager(FeatureRegistry* registry)
@@ -71,13 +73,15 @@ static context_ref getContext(feature_runtime_ref rt)
 static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
 {
     auto instance = getInstance(val);
-    if (!instance) {
-        FEATURE_LOG_INFO("instance is null...");
+    if (!instance || !instance->prototype()) {
+        FEATURE_LOG_INFO("instance or prototype is null...");
         return;
     }
+    auto proto = instance->prototype();
+
     feature_set_opaque(val, nullptr);
     // get proto pointer, it may not be deleted at this time
-    auto proto = instance->proto;
+
     //遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
     WeakRef* node;
     WeakRef* node_temp;
@@ -86,14 +90,14 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
         node->js_value = FEATURE_VALUE_UNDEFINED;
     }
 
-    auto iid = instance->iid;
+    auto iid = instance->instanceId();
     // invoke callback
     if (proto->description->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
         proto->description->native_callbacks->onDetached(getContext(rt), instance);
     }
     // delete instance by removing it from FeaturePrototype.
-    bool ret = instance->proto->removeInstance(instance->iid);
+    bool ret = proto->removeInstance(iid);
     FEATURE_LOG_DEBUG("deleting instance %p with iid %d ret %d", instance, iid, ret);
     if (!ret) {
         FEATURE_LOG_ERROR("delete iid %d failed !", iid);
@@ -108,13 +112,15 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     // TODO: for now，FeatureInstance saves callbacks only, mark it directly.
     // but it maybe insufficient, instance may manage other resource type, change it according to implementation.
     FeatureInstance* instance = getInstance(val);
-    if (!instance) {
-        FEATURE_LOG_INFO("instance is null...");
+    if (!instance || !instance->prototype()) {
+        FEATURE_LOG_INFO("instance or prototype is null...");
         return;
     }
+
+    auto proto = instance->prototype();
     // mark callbacks
     for (auto& pair : instance->callbacks) {
-        feature_mark_value(rt, pair.second.first, mark_func);
+        feature_mark_value(rt, pair.second.cb, mark_func);
     }
     // mark promies
     for(auto& pair : instance->promises) {
@@ -123,66 +129,47 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
         feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
     }
     // should mark prototype object.
-    feature_mark_value(rt, instance->proto->js_proto, mark_func);
+    feature_mark_value(rt, proto->js_proto, mark_func);
 }
 
-/**
- * @brief Create a Prototype Class Defination in C
- *
- * @param ctx
- * @param featurePrototype
- * @return true
- * @return false
- */
-static bool createPrototypeClass(context_ref ctx, FeaturePrototype* featurePrototype)
+static bool createJsInstanceClass(context_ref ctx, const char* class_name)
 {
-    FEATURE_LOG_DEBUG("createPrototypeClass with featurePrototype %p", featurePrototype);
-    FEATURE_CHECK_NE(featurePrototype, nullptr);
+    FEATURE_CHECK_NE(class_name, nullptr);
+    FEATURE_LOG_DEBUG("create PrototypeClass: %s.", class_name);
     // FEATURE_CHECK_EQ(featurePrototype->class_id, 0);
     JS_NewClassID(&class_id);
     FEATURE_CHECK_NE(class_id, 0); // it must not 0 now
     // fill the class_def structure
-    class_def = { .class_name = "FeatureInstanceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
+    class_def = { .class_name = class_name, .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
     // create native feature prototype class defination
     JS_NewClass(feature_get_runtime(static_cast<feature_context_ref>(ctx)), class_id, &class_def);
     return true;
 }
 
-/**
- * @brief create prototype from FeatureUnit
- *
- * @param ctx
- * @param unit
- * @return true
- * @return false
- */
-static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit)
+static FeaturePrototype* createFeaturePrototype(context_ref ctx, FeatureDescription* description)
 {
-    FEATURE_CHECK_NE(unit, nullptr);
-    FEATURE_LOG_DEBUG("unit: %p, description: %p, description->name: %s", unit, unit->description, unit->description->name);
-    FEATURE_CHECK_EQ(unit->proto, nullptr);
-    unit->proto = new FeaturePrototype(ctx, unit->description);
-    bool ret = createPrototypeClass(ctx, unit->proto);
-    if (!ret) {
-        FEATURE_LOG_ERROR("createPrototypeClass for feature %s with description %p failed !", unit->description->name, unit->description);
-        return false;
+    FEATURE_CHECK_NE(description, nullptr);
+    FEATURE_LOG_DEBUG("create FeaturePrototype for description: %s.", description->name);
+    if (!createJsInstanceClass(ctx, "FeatureInstanceObject")) {
+        FEATURE_LOG_ERROR("create js Instance class for feature %s.", description->name);
+        return nullptr;
     }
-    FEATURE_LOG_DEBUG("createPrototypeClass for feature %s with description %p success.", unit->description->name, unit->description);
-    return true;
+    return new FeaturePrototype(ctx, description);
 }
 
 feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name)
 {
-    FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
+    FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
     FeatureUnit* unit = registry_->findFeature(name);
-    if (!unit) {
-        FEATURE_LOG_WARN("can't find %s in FeatureRegistry, fallback to original JS module load", name);
+    if (!unit || !unit->description) {
+        FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
 
     if (!unit->proto) {
         // create proto
-        if (!createFeaturePrototype(ctx, unit) || !unit->proto) {
+        unit->proto = createFeaturePrototype(ctx, unit->description);
+        if (!unit->proto) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
         }
@@ -217,7 +204,7 @@ feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name
     WeakRefInit(ctx, feature_object);
     // insert into instances array, update iid
     int iid = proto->addInstance(std::move(featureInstance));
-    proto->instances[iid]->iid = iid;
+    proto->instances[iid]->setInstanceId(iid);
     if (proto->description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
         proto->description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
