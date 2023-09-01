@@ -15,6 +15,7 @@
  */
 #include "feature_framework.h"
 #include "feature_instance.h"
+#include "feature_context_private.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 
@@ -58,8 +59,8 @@ int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
  *
  * @param description
  */
-FeaturePrototype::FeaturePrototype(ft_context_ref ft_ctx, FeatureDescription* feature_desc)
-    : ft_ctx(ft_ctx)
+FeaturePrototype::FeaturePrototype(void* ctx, FeatureDescription* feature_desc)
+    : ft_ctx(CreateFeatureContext(ctx))
     , native(nullptr)
     , description(feature_desc)
 {
@@ -70,6 +71,8 @@ FeaturePrototype::FeaturePrototype(ft_context_ref ft_ctx, FeatureDescription* fe
 FeaturePrototype::~FeaturePrototype()
 {
     instances.clear();
+    ReleaseFeatureContext(ft_ctx);
+    ft_ctx = nullptr;
 }
 
 /**

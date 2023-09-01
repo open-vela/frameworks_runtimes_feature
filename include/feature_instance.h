@@ -20,7 +20,6 @@
 
 #include "feature_exports.h"
 #include "feature_utils.h"
-#include "feature.h"
 
 #include <map>
 #include <memory>
@@ -31,18 +30,18 @@ namespace ferry {
 class FeaturePrototype;
 
 struct WeakRef {
-    feature_value_t js_value;
+    ft_value_t ft_value;
     struct weakref_list_node link;
 };
 
 typedef struct FeaturePromiseData {
-   feature_value_t promise; // 保存promise对象
-   feature_value_t resolveFuncs[2]; //functions
+   ft_value_t promise; // 保存promise对象
+   ft_value_t resolveFuncs[2]; //functions
    FEATURE::FeatureType resolveTypes[2];
 } FeaturePromiseData;
 
 typedef struct FeatureCallbackData {
-   feature_value_t cb;
+   ft_value_t cb;
    CallbackType* cb_type;
 } FeatureCallbackData;
 
@@ -51,7 +50,7 @@ public:
     FeatureInstance(struct FeaturePrototype* prototype);
     virtual ~FeatureInstance();
 
-    FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
+    virtual FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id) = 0;
 
     /**
      * @brief add callback to instance
@@ -61,7 +60,7 @@ public:
      * @param callbackType
      * @return FEATURE::FeatureCallbackId
      */
-    FEATURE::FeatureCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
+    virtual FEATURE::FeatureCallbackId addCallback(ft_value_t value, CallbackType* callbackType) = 0;
 
     /**
      * @brief remove callback from instance vai FeatureCallbackId
@@ -71,7 +70,7 @@ public:
      * @return true
      * @return false
      */
-    bool removeCallback(FEATURE::FeatureCallbackId id);
+    virtual bool removeCallback(FEATURE::FeatureCallbackId id) = 0;
 
     /**
      * @brief Get the Promise object
@@ -79,34 +78,36 @@ public:
      * @param promiseHandle
      * @return FEATURE::FeaturePromiseData*
      */
-    FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
+    virtual FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle) = 0;
 
-    FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data);
+    virtual FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data) = 0;
 
-    bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle);
+    virtual bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle) = 0;
 
-    FeaturePrototype* prototype() { return proto_; }
+    virtual int settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap) = 0;
+
+    virtual int invokeCallback(
+                    const ferry::CallbackType& callbackType,
+                    ft_value_t callback,
+                    va_list& ap,
+                    int method_param_count,
+                    int rest_param_count) = 0;
 
     void setInstanceId(int instance_id) { instance_id_ =  instance_id; }
 
     int instanceId() { return instance_id_; }
 
-    virtual int invokeFeatureCallback(
-                    const ferry::CallbackType& callbackType,
-                    feature_value_t callback,
-                    va_list& ap,
-                    int method_param_count,
-                    int rest_param_count) = 0;
+    FeaturePrototype* prototype() { return proto_; }
 
     std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises;   // all promises created by native feature
     std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks; // instance should save feature resources
     void* native;
     WeakRef weak_self_;
+    FEATURE::FeatureCallbackId curr_cid = 0;
 
 private:
     FeaturePrototype* proto_;
     int instance_id_; // the instance id, order in instances aray.
-    FEATURE::FeatureCallbackId curr_cid = 0;
 };
 
 }

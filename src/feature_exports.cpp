@@ -24,27 +24,6 @@
 #include <cstdint>
 #include <string.h>
 
-static int featurePromiseSettle(FeatureInstanceHandle handle, bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap)
-{
-    // get feature instance
-    ferry::FeaturePromiseData* promiseData = static_cast<ferry::FeatureInstance*>(handle)->getPromise(promiseHandle);
-    if (!promiseData) {
-        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", promiseHandle);
-        return -1;
-    }
-    int idx = resolve ? 0 : 1;
-    if (feature_is_undefined(promiseData->resolveFuncs[idx])) {
-        FEATURE_LOG_ERROR("callback in undefined !");
-        return -1;
-    }
-
-    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
-    FEATURE_CHECK_NE(instance, nullptr);
-    FeatureType param_types[2] = { promiseData->resolveTypes[idx], ferry::FT_VOID };
-    int ret = instance->invokeFeatureCallback({ .header = { .type = ferry::COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = ferry::FT_VOID }, promiseData->resolveFuncs[idx], ap, 1, 0);
-    return ret;
-}
-
 namespace FEATURE {
 
 void DupFeatureValue(void* ptr)
@@ -92,10 +71,6 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
 {
     auto instance = static_cast<ferry::FeatureInstance*>(handle);
     const auto& callback = instance->getCallback(cid);
-    if (feature_is_undefined(callback.cb)) {
-        FEATURE_LOG_ERROR("callback with cid %d not found !", cid);
-        return -1;
-    }
 
     // get callback description.
     bool has_rest_param = false;
@@ -108,8 +83,8 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
 
     va_list ap;
     va_start(ap, cid);
-    // int ret = invokeFeatureCallback(js_ctx, instance, callbackType, pair.first, ap, method_param_count, 0, ret_value);
-    int ret = instance->invokeFeatureCallback(callbackType, callback.cb, ap, method_param_count, 0);
+    // int ret = invokeCallback(js_ctx, instance, callbackType, pair.first, ap, method_param_count, 0, ret_value);
+    int ret = instance->invokeCallback(callbackType, callback.cb, ap, method_param_count, 0);
     va_end(ap);
     return ret;
 }
@@ -119,10 +94,6 @@ int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCal
 {
     auto instance = static_cast<ferry::FeatureInstance*>(handle);
     const auto& callback = instance->getCallback(cid);
-    if (feature_is_undefined(callback.cb)) {
-        FEATURE_LOG_ERROR("callback with cid %d not found !", cid);
-        return -1;
-    }
 
     // get callback description.
     bool has_rest_param = false;
@@ -133,8 +104,8 @@ int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCal
 
     va_list ap;
     va_start(ap, count);
-    // int ret = invokeFeatureCallback(js_ctx, instance, *callbackType, pair.first, ap, method_param_count, count - method_param_count, ret_value);
-    int ret = instance->invokeFeatureCallback(*callbackType, callback.cb, ap, method_param_count, count - method_param_count);
+    // int ret = invokeCallback(js_ctx, instance, *callbackType, pair.first, ap, method_param_count, count - method_param_count, ret_value);
+    int ret = instance->invokeCallback(*callbackType, callback.cb, ap, method_param_count, count - method_param_count);
     va_end(ap);
     return ret;
 }
@@ -147,12 +118,12 @@ bool RemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id)
 
 int FeaturePromiseResolve(FeatureInstanceHandle handle, FEATURE::FeaturePromiseHandle promiseHandle, ...)
 {
+    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, promiseHandle);
-    int ret = featurePromiseSettle(handle, true, promiseHandle, ap);
+    int ret = instance->settlePromise(true, promiseHandle, ap);
     va_end(ap);
     // remove
-    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
     if (!instance->removePromise(promiseHandle)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", promiseHandle);
         ret = -2;
@@ -162,10 +133,10 @@ int FeaturePromiseResolve(FeatureInstanceHandle handle, FEATURE::FeaturePromiseH
 
 int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...)
 {
+    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, promiseHandle);
-    int ret = featurePromiseSettle(handle, false, promiseHandle, ap);
-    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
+    int ret = instance->settlePromise(false, promiseHandle, ap);
     if (!instance->removePromise(promiseHandle)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", promiseHandle);
         ret = -2;

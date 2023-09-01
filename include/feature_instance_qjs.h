@@ -29,9 +29,23 @@ public:
     FeatureInstanceQjs(struct FeaturePrototype* prototype);
     virtual ~FeatureInstanceQjs();
 
-    virtual int invokeFeatureCallback(
+    virtual FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
+
+    virtual FEATURE::FeatureCallbackId addCallback(ft_value_t value, CallbackType* callbackType);
+
+    virtual bool removeCallback(FEATURE::FeatureCallbackId id);
+
+    virtual FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
+
+    virtual FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data);
+
+    virtual bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle);
+
+    virtual int settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap);
+
+    virtual int invokeCallback(
                     const ferry::CallbackType& callbackType,
-                    feature_value_t callback,
+                    ft_value_t callback,
                     va_list& ap,
                     int method_param_count,
                     int rest_param_count);
