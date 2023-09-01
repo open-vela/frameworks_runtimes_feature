@@ -420,6 +420,8 @@ class CPPRender(Render):
     ret_type = self.GenerateReturnType(ret_type_node)
     self.func_ret_node_map[identifier] = ret_type_node
     prefix_params = 'FeatureInstanceHandle feature, AppendData data'
+    if ret_type == 'FTArray':
+      ret_type += '*'
     if ret_type == 'FeaturePromiseHandle':
       ret_type = 'void'
       prefix_params += ', FeaturePromiseHandle promiseHandle'
