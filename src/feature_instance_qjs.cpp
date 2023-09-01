@@ -225,6 +225,7 @@ int FeatureInstanceQjs::invokeCallback(
 
         ret = feature_call(js_ctx, js_cb, FEATURE_VALUE_UNDEFINED, method_param_count + rest_param_count, argv);
     } while (0);
+
     for (int i = 0; i < method_param_count + rest_param_count; i++) {
         feature_free_value(js_ctx, argv[i]);
     }

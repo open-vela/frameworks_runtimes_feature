@@ -570,53 +570,53 @@ namespace FeatureFFI {
         }
         if (FT_IS_PRIMITIVE(featureType)) {
             switch (FT_GET_VALUE(featureType)) {
-            case FT_VOID: {
-                FEATURE_LOG_ERROR("void not supported !");
-                return false;
-            } break;
-            case FT_INT: {
-                value = feature_int(ctx, *((int32_t*)ptr));
-            } break;
-            case FT_INT8: {
-                value = feature_int(ctx, *((int8_t*)ptr));
-            } break;
-            case FT_UINT8: {
-                value = feature_uint(ctx, *((uint8_t*)ptr));
-            } break;
-            case FT_INT16: {
-                value = feature_int(ctx, *((int16_t*)ptr));
-            } break;
-            case FT_UINT16: {
-                value = feature_uint(ctx, *((uint16_t*)ptr));
-            } break;
-            case FT_INT32: {
-                value = feature_int(ctx, *((int32_t*)ptr));
-            } break;
-            case FT_UINT32: {
-                value = feature_uint(ctx, *((uint32_t*)ptr));
-            } break;
-            case FT_INT64: {
-                value = feature_int64(ctx, *((int64_t*)ptr));
-            } break;
-            case FT_UINT64: {
-                value = feature_uint64(ctx, *((uint64_t*)ptr));
-            } break;
-            case FT_FLOAT: {
-                value = feature_double(ctx, *((float*)ptr));
-            } break;
-            case FT_DOUBLE: {
-                value = feature_double(ctx, *((double*)ptr));
-            } break;
-            case FT_BOOLEAN: {
-                value = feature_boolean(ctx, *((bool*)ptr));
-            } break;
-            case FT_CHAR: {
-                value = feature_string(ctx, (const char*)ptr);
-            } break;
-            default: {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return false;
-            }
+                case FT_VOID: {
+                    FEATURE_LOG_ERROR("void not supported !");
+                    return false;
+                } break;
+                case FT_INT: {
+                    value = feature_int(ctx, *((int32_t*)ptr));
+                } break;
+                case FT_INT8: {
+                    value = feature_int(ctx, *((int8_t*)ptr));
+                } break;
+                case FT_UINT8: {
+                    value = feature_uint(ctx, *((uint8_t*)ptr));
+                } break;
+                case FT_INT16: {
+                    value = feature_int(ctx, *((int16_t*)ptr));
+                } break;
+                case FT_UINT16: {
+                    value = feature_uint(ctx, *((uint16_t*)ptr));
+                } break;
+                case FT_INT32: {
+                    value = feature_int(ctx, *((int32_t*)ptr));
+                } break;
+                case FT_UINT32: {
+                    value = feature_uint(ctx, *((uint32_t*)ptr));
+                } break;
+                case FT_INT64: {
+                    value = feature_int64(ctx, *((int64_t*)ptr));
+                } break;
+                case FT_UINT64: {
+                    value = feature_uint64(ctx, *((uint64_t*)ptr));
+                } break;
+                case FT_FLOAT: {
+                    value = feature_double(ctx, *((float*)ptr));
+                } break;
+                case FT_DOUBLE: {
+                    value = feature_double(ctx, *((double*)ptr));
+                } break;
+                case FT_BOOLEAN: {
+                    value = feature_boolean(ctx, *((bool*)ptr));
+                } break;
+                case FT_CHAR: {
+                    value = feature_string(ctx, (const char*)ptr);
+                } break;
+                default: {
+                    FEATURE_LOG_WARN("unsupported type detected !");
+                    return false;
+                }
             }
         } else if (FT_IS_COMPLEX(featureType)) {
             ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
