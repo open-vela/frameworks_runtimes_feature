@@ -84,6 +84,7 @@ add_library(feature-framework STATIC
     ${FEATURE_FRAMEWORK_SRC}/feature_manager.cpp
     ${FEATURE_FRAMEWORK_SRC}/feature_registry.cpp
     ${FEATURE_FRAMEWORK_SRC}/feature_instance.cpp
+    ${FEATURE_FRAMEWORK_SRC}/feature_exports.cpp
     ${FEATURE_FRAMEWORK_INC}/feature_ffi.h
     ${FEATURE_FRAMEWORK_SRC}/feature_ffi.cpp
     ${FEATURE_FRAMEWORK_INC}/feature_framework.h

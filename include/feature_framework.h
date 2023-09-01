@@ -124,6 +124,8 @@ int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_value_t pro
 
 bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object);
 bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object);
+int getParamCount(const FeatureType* param, bool* hasRest = nullptr, int* optional_size = nullptr);
+
 }
 
 #endif
