@@ -19,6 +19,7 @@
 #include "feature.h"
 #include "feature_framework.h"
 #include "feature_instance.h"
+#include "feature_context_qjs.h"
 
 #include <alloca.h>
 #include <cstdint>
@@ -609,7 +610,10 @@ namespace FeatureFFI {
             case COMPLEX_CALLBACK: {
                 // save into instance
                 CallbackType* callbackType = (CallbackType*)complexType;
-                FEATURE::FeatureCallbackId id = instance->addCallback(value, callbackType);
+                ft_value_t ft_val;
+                auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(ft_val);
+               *js_val_ptr = value;
+                FEATURE::FeatureCallbackId id = instance->addCallback(ft_val, callbackType);
                 *(FeatureCallbackId*)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {
@@ -784,7 +788,8 @@ namespace FeatureFFI {
                     FEATURE_LOG_ERROR("get promise with promiseHandle: %" PRId32 " failed !", promiseHandle);
                     return false;
                 }
-                value = feature_dup_value(ctx, promiseData->promise);
+                auto js_val = FT_VAL_GET_JS_VAL(promiseData->promise);
+                value = feature_dup_value(ctx, js_val);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

@@ -29,7 +29,6 @@
 #define QJS_VAL_TO_FT(qjs_val) (*((ft_value_t*)(&(qjs_val))))
 #define QJS_VAL_TO_FT_PTR(qjs_val) ((ft_value_t*)(&(qjs_val)))
 
-
 typedef struct qjs_val_t {
     ft_type type;
     JSValue js_val;

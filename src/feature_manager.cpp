@@ -89,7 +89,8 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
     WeakRef* node_temp;
     weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
     {
-        node->js_value = FEATURE_VALUE_UNDEFINED;
+        auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
+        *js_val_ptr = FEATURE_VALUE_UNDEFINED;
     }
 
     auto iid = instance->instanceId();
@@ -122,13 +123,17 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     auto proto = instance->prototype();
     // mark callbacks
     for (auto& pair : instance->callbacks) {
-        feature_mark_value(rt, pair.second.cb, mark_func);
+        auto js_cb = FT_VAL_GET_JS_VAL(pair.second.cb);
+        feature_mark_value(rt, js_cb, mark_func);
     }
     // mark promies
     for(auto& pair : instance->promises) {
-        feature_mark_value(rt, pair.second->promise, mark_func);
-        feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
-        feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
+        auto js_prm = FT_VAL_GET_JS_VAL(pair.second->promise);
+        auto js_res_0 = FT_VAL_GET_JS_VAL(pair.second->resolveFuncs[0]);
+        auto js_res_1 = FT_VAL_GET_JS_VAL(pair.second->resolveFuncs[1]);
+        feature_mark_value(rt, js_prm, mark_func);
+        feature_mark_value(rt, js_res_0, mark_func);
+        feature_mark_value(rt, js_res_1, mark_func);
     }
     // should mark prototype object.
     auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto);
@@ -157,31 +162,36 @@ static FeaturePrototype* createFeaturePrototype(context_ref ctx, FeatureDescript
         FEATURE_LOG_ERROR("create js Instance class for feature %s.", description->name);
         return nullptr;
     }
-    auto ft_ctx = CreateFeatureContext(ctx);
-    return new FeaturePrototype(ft_ctx, description);
+    return new FeaturePrototype(ctx, description);
 }
 
 static ferry::FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, FeatureType resolve_type, FeatureType reject_type)
 {
     ferry::FeaturePromiseData* data = (ferry::FeaturePromiseData*)malloc(sizeof(ferry::FeaturePromiseData));
 
-    data->promise = FEATURE_VALUE_UNDEFINED;
-    data->resolveFuncs[0] = FEATURE_VALUE_UNDEFINED;
-    data->resolveFuncs[1] = FEATURE_VALUE_UNDEFINED;
+    auto js_prm_ptr = FT_VAL_GET_JS_VAL_PTR(data->promise);
+    auto js_res_0_ptr = FT_VAL_GET_JS_VAL_PTR(data->resolveFuncs[0]);
+    auto js_res_1_ptr = FT_VAL_GET_JS_VAL_PTR(data->resolveFuncs[1]);
+    *js_prm_ptr = FEATURE_VALUE_UNDEFINED;
+    *js_res_0_ptr = FEATURE_VALUE_UNDEFINED;
+    *js_res_1_ptr = FEATURE_VALUE_UNDEFINED;
     data->resolveTypes[0] = resolve_type;
     data->resolveTypes[1] = reject_type;
 
     auto ft_ctx = GetFeatureContext(handle);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
+    feature_value_t resolve_funcs[2];
+    feature_value_t promise = feature_promise_capability(js_ctx, resolve_funcs);
     if (feature_is_exception(promise)) {
-        feature_free_value(js_ctx, data->resolveFuncs[0]);
-        feature_free_value(js_ctx, data->resolveFuncs[1]);
+        feature_free_value(js_ctx, resolve_funcs[0]);
+        feature_free_value(js_ctx, resolve_funcs[1]);
         feature_free_value(js_ctx, promise);
         free(data);
         return nullptr;
     }
-    data->promise = promise;
+    *js_prm_ptr = promise;
+    *js_res_0_ptr = resolve_funcs[0];
+    *js_res_1_ptr = resolve_funcs[1];
     return data;
 }
 
@@ -364,7 +374,8 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             // pass promiseHandle to native function
             ffi_arg_values[2] = &promiseHandle;
             // dup and return promise object.
-            method_ret_value = feature_dup_value(ctx, promiseData->promise);
+            auto js_prm = FT_VAL_GET_JS_VAL(promiseData->promise);
+            method_ret_value = feature_dup_value(ctx, js_prm);
         }
         // invoke method
         ffi_call(&cif, method.callback, ffi_ret_value, ffi_arg_values);
@@ -616,7 +627,7 @@ bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
 {
     // 根据cid获取FeaturePrototype
     FeatureInstance* instance = getInstance(feature_object);
-    if (instance == nullptr) {
+    if (!instance || !instance->prototype()) {
         FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
         return false;
     }
@@ -627,7 +638,8 @@ bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
     weakref_list_initialize(&node->link);
     weakref_list_add_tail(&node->link, &proto->weak_ref_list);
 
-    node->js_value = feature_object;
+    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
+    *js_val_ptr = feature_object;
     proto->weak_ref_count++;
 
     return true;
@@ -638,7 +650,7 @@ bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
     // 获取feature_object的cid
     int ret = -1;
     FeatureInstance* instance = getInstance(feature_object);
-    if (instance == nullptr) {
+    if (!instance || !instance->prototype()) {
         FEATURE_LOG_ERROR("WeakRefFree() get FeatureInstance failed");
         return false;
     }
@@ -649,7 +661,8 @@ bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
     WeakRef* node_temp;
     weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
     {
-        ret = feature_is_same_value(static_cast<feature_context_ref>(js_ctx), node->js_value, feature_object);
+        auto js_val = FT_VAL_GET_JS_VAL(node->ft_value);
+        ret = feature_is_same_value(static_cast<feature_context_ref>(js_ctx), js_val, feature_object);
         if (ret == 1) {
             weakref_list_delete(&node->link);
             proto->weak_ref_count--;
@@ -739,7 +752,6 @@ void FeatureManager::featureRelease()
             feature_free_value(js_ctx, *js_proto_ptr);
             *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         }
-        ReleaseFeatureContext(proto->ft_ctx);
     }
 }
 

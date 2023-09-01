@@ -18,7 +18,6 @@
 #include "feature_utils.h"
 #include "feature.h"
 #include "feature_ffi.h"
-#include "feature_context_private.h"
 #include "feature_context_qjs.h"
 
 #include <algorithm>
@@ -42,11 +41,139 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
 
 FeatureInstanceQjs::~FeatureInstanceQjs()
 {
+    // remove opaque binding
+    auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
+    feature_set_opaque(js_val, nullptr);
+    // release all callbacks
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    for (const auto& callback : callbacks) {
+        auto js_cb = FT_VAL_GET_JS_VAL(callback.second.cb);
+        feature_free_value(js_ctx, js_cb);
+    }
+    callbacks.clear();
+
+    // release all promises
+    for (const auto& pair : promises) {
+        FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
+	auto js_prm = FT_VAL_GET_JS_VAL(pair.second->promise);
+	auto js_res_0 = FT_VAL_GET_JS_VAL(pair.second->resolveFuncs[0]);
+	auto js_res_1 = FT_VAL_GET_JS_VAL(pair.second->resolveFuncs[1]);
+        feature_free_value(js_ctx, js_prm);
+        feature_free_value(js_ctx, js_res_0);
+        feature_free_value(js_ctx, js_res_1);
+        free(pair.second);
+    }
+    promises.clear();
+
+    // check if all instances deleted, then clear proto object
+    if (prototype() && !prototype()->hasInstanceAlive()) {
+        FEATURE_LOG_INFO("all instance freed, free proto object...");
+
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype()->ft_proto);
+        if (!feature_is_undefined(*js_proto_ptr)) {
+            feature_free_value(js_ctx, *js_proto_ptr);
+            *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        }
+    }
 }
 
-int FeatureInstanceQjs::invokeFeatureCallback(
+FeatureCallbackData FeatureInstanceQjs::getCallback(FEATURE::FeatureCallbackId id)
+{
+    if (!callbacks.count(id)) {
+        FeatureCallbackData callback;
+        auto js_cb_ptr = FT_VAL_GET_JS_VAL_PTR(callback.cb);
+	*js_cb_ptr = FEATURE_VALUE_UNDEFINED;
+	callback.cb_type = nullptr;
+        return callback;
+    }
+    return callbacks[id];
+}
+
+FEATURE::FeatureCallbackId FeatureInstanceQjs::addCallback(ft_value_t value, CallbackType* callbackType)
+{
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    FeatureCallbackData callback;
+    auto js_cb_ptr = FT_VAL_GET_JS_VAL_PTR(callback.cb);
+    *js_cb_ptr = feature_dup_value(js_ctx, FT_VAL_GET_JS_VAL(value));
+    callback.cb_type = callbackType;
+    callbacks[curr_cid] = callback;
+    return curr_cid++;
+}
+
+
+bool FeatureInstanceQjs::removeCallback(FEATURE::FeatureCallbackId id)
+{
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    if (!callbacks.count(id)) {
+        FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", id, this);
+        return false;
+    }
+    auto js_cb = FT_VAL_GET_JS_VAL(callbacks[id].cb);
+    feature_free_value(js_ctx, js_cb);
+    callbacks.erase(id);
+    return true;
+}
+
+ferry::FeaturePromiseData* FeatureInstanceQjs::getPromise(FEATURE::FeaturePromiseHandle promiseHandle)
+{
+    if (!promises.count(promiseHandle)) {
+        return nullptr;
+    }
+    return promises[promiseHandle];
+}
+
+FEATURE::FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeaturePromiseData* data)
+{
+    FEATURE_CHECK_NE(data, nullptr);
+    auto js_prm = FT_VAL_GET_JS_VAL(data->promise);
+    FEATURE_CHECK_NE(feature_is_undefined(js_prm), true);
+    promises[curr_cid] = data;
+    return curr_cid++;
+}
+
+bool FeatureInstanceQjs::removePromise(FEATURE::FeaturePromiseHandle promiseHandle)
+{
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    if (!promises.count(promiseHandle)) {
+        FEATURE_LOG_ERROR("promiseHandle %d in instance: %p not exist !", promiseHandle, this);
+        return false;
+    }
+    FeaturePromiseData* data = promises[promiseHandle];
+    FEATURE_CHECK_NE(data, nullptr);
+    promises.erase(promiseHandle);
+    // free js values
+    auto js_prm = FT_VAL_GET_JS_VAL(data->promise);
+    auto js_res_0 = FT_VAL_GET_JS_VAL(data->resolveFuncs[0]);
+    auto js_res_1 = FT_VAL_GET_JS_VAL(data->resolveFuncs[1]);
+    feature_free_value(js_ctx, js_prm);
+    feature_free_value(js_ctx, js_res_0);
+    feature_free_value(js_ctx, js_res_1);
+    free(data);
+    return true;
+}
+
+int FeatureInstanceQjs::settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap)
+{
+    // get feature instance
+    ferry::FeaturePromiseData* promiseData = getPromise(promiseHandle);
+    if (!promiseData) {
+        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", promiseHandle);
+        return -1;
+    }
+    int idx = resolve ? 0 : 1;
+    auto js_res = FT_VAL_GET_JS_VAL(promiseData->resolveFuncs[idx]);
+    if (feature_is_undefined(js_res)) {
+        FEATURE_LOG_ERROR("callback in undefined !");
+        return -1;
+    }
+
+    FeatureType param_types[2] = { promiseData->resolveTypes[idx], ferry::FT_VOID };
+    return invokeCallback({ .header = { .type = ferry::COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = ferry::FT_VOID }, promiseData->resolveFuncs[idx], ap, 1, 0);
+}
+
+int FeatureInstanceQjs::invokeCallback(
                     const ferry::CallbackType& callbackType,
-                    feature_value_t callback,
+                    ft_value_t callback,
                     va_list& ap,
                     int method_param_count,
                     int rest_param_count)
@@ -54,8 +181,9 @@ int FeatureInstanceQjs::invokeFeatureCallback(
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     bool got_error = false;
     feature_value_t ret = FEATURE_VALUE_UNDEFINED;
-
-    if (feature_is_undefined(callback)) {
+	
+    auto js_cb = FT_VAL_GET_JS_VAL(callback);
+    if (feature_is_undefined(js_cb)) {
         FEATURE_LOG_ERROR("callback in undefined !");
         return -1;
     }
@@ -98,7 +226,7 @@ int FeatureInstanceQjs::invokeFeatureCallback(
             }
         }
 
-        ret = feature_call(js_ctx, callback, FEATURE_VALUE_UNDEFINED, method_param_count + rest_param_count, argv);
+        ret = feature_call(js_ctx, js_cb, FEATURE_VALUE_UNDEFINED, method_param_count + rest_param_count, argv);
     } while (0);
     for (int i = 0; i < method_param_count + rest_param_count; i++) {
         feature_free_value(js_ctx, argv[i]);

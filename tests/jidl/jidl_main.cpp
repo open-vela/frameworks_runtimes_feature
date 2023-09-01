@@ -129,9 +129,9 @@ int main(int argc, char** argv)
     feature_free_value(js_env.ctx, result);
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
-
     g_manager->featureRelease();
     g_registry->uninit();
+
     //释放manifast_str
     if (manifast_str != NULL) {
         free(manifast_str);
