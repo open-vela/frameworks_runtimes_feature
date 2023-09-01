@@ -16,6 +16,7 @@
 #ifndef __FEATURE_FFI_H__
 #define __FEATURE_FFI_H__
 #include "feature_exports.h"
+#include "feature.h"
 #include "feature_framework.h"
 
 #include <cstdarg>

@@ -16,8 +16,6 @@
 #include "feature_ffi.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature.h"
-#include "feature_framework.h"
 #include "feature_instance.h"
 #include "feature_context_qjs.h"
 

@@ -18,7 +18,6 @@
 #include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature_ffi.h"
 
 #include <cstdarg>
 #include <cstdint>
