@@ -56,7 +56,7 @@ public:
     * @param js_ctx
     * @param description
     */
-    FeaturePrototype(void* ctx, FeatureDescription* feature_desc);
+    FeaturePrototype(ft_context_ref ctx, FeatureDescription* feature_desc);
 
     /**
      * @brief Destroy the Feature Prototype object

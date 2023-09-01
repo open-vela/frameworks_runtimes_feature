@@ -16,7 +16,7 @@
 #include "feature_ffi.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature_instance.h"
+#include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
 
 #include <alloca.h>
@@ -685,13 +685,12 @@ namespace FeatureFFI {
                 }
                 FEATURE_CHECK_NE(instance, nullptr);
                 FeaturePromiseHandle promiseHandle = *(FeaturePromiseHandle*)ptr;
-                auto promiseData = instance->getPromise(promiseHandle);
+                auto promiseData = ((FeatureInstanceQjs*)instance)->getPromise(promiseHandle);
                 if (!promiseData) {
                     FEATURE_LOG_ERROR("get promise with promiseHandle: %" PRId32 " failed !", promiseHandle);
                     return false;
                 }
-                auto js_val = FT_VAL_GET_JS_VAL(promiseData->promise);
-                value = feature_dup_value(ctx, js_val);
+                value = feature_dup_value(ctx, promiseData->promise);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

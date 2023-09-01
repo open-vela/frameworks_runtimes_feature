@@ -159,21 +159,10 @@ ft_context_ref GetFeatureContext(FeatureInstanceHandle handle)
 int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
-    const auto& callback = instance->getCallback(cid);
-
-    // get callback description.
-    bool has_rest_param = false;
-    CallbackType& callbackType = *callback.cb_type;
-    int method_param_count = getParamCount(callbackType.parameters, &has_rest_param);
-    if (has_rest_param) {
-        FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
-        return -1;
-    }
 
     va_list ap;
     va_start(ap, cid);
-    // int ret = invokeCallback(js_ctx, instance, callbackType, pair.first, ap, method_param_count, 0, ret_value);
-    int ret = instance->invokeCallback(callbackType, callback.cb, ap, method_param_count, 0);
+    int ret = instance->invokeCallback(cid, ap);
     va_end(ap);
     return ret;
 }
@@ -182,19 +171,10 @@ int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...)
 int InvokeFeatureCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
-    const auto& callback = instance->getCallback(cid);
-
-    // get callback description.
-    bool has_rest_param = false;
-    CallbackType* callbackType = callback.cb_type;
-    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
-    FEATURE_CHECK_EQ(has_rest_param, true);
-    FEATURE_CHECK_GE(count, method_param_count);
 
     va_list ap;
     va_start(ap, count);
-    // int ret = invokeCallback(js_ctx, instance, *callbackType, pair.first, ap, method_param_count, count - method_param_count, ret_value);
-    int ret = instance->invokeCallback(*callbackType, callback.cb, ap, method_param_count, count - method_param_count);
+    int ret = instance->invokeCallbackCount(cid, ap, count);
     va_end(ap);
     return ret;
 }

@@ -16,6 +16,7 @@
 #ifndef __FEATURE_MANAGER_H__
 #define __FEATURE_MANAGER_H__
 #include "feature.h"
+#include "feature_context.h"
 
 namespace ferry {
 
@@ -48,6 +49,7 @@ public:
 private:
     FeatureRegistry* registry_;
     std::vector<std::string> required_features_;
+    ft_context_ref ft_ctx_;
 };// class FeatureManager
 
 }
