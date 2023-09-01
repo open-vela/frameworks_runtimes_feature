@@ -48,11 +48,6 @@ static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit);
 static bool createJsInstanceClass(context_ref ctx, const char* class_name);
 static context_ref getContext(feature_runtime_ref rt);
 
-FeatureManager::FeatureManager(FeatureRegistry* registry)
-    : registry_(registry)
-{
-}
-
 FeatureInstance* getInstance(feature_value_t val)
 {
     auto instance = static_cast<FeatureInstance*>(feature_get_opaque(val, class_id));
@@ -670,6 +665,11 @@ static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
     }
 
     return true;
+}
+
+FeatureManager::FeatureManager(FeatureRegistry* registry)
+    : registry_(registry)
+{
 }
 
 feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name)

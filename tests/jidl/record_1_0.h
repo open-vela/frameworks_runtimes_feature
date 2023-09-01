@@ -8,8 +8,6 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_framework.h"
-#include "feature_ffi.h"
-#include "feature.h"
 
 #include <ffi.h>
 #include <assert.h>

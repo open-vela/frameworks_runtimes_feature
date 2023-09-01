@@ -31,8 +31,6 @@ namespace ferry {
  */
 namespace FeatureFFI {
 
-    void* FTMalloc(size_t size, FEATURE::FeatureType featureType);
-
     /**
      * @brief create type declaration using FeatureType
      *

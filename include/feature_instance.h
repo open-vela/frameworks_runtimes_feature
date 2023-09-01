@@ -29,10 +29,10 @@ namespace ferry {
 
 class FeaturePrototype;
 
-struct WeakRef {
+typedef struct WeakRef {
     ft_value_t ft_value;
     struct weakref_list_node link;
-};
+} WeakRef;
 
 typedef struct FeaturePromiseData {
    ft_value_t promise; // 保存promise对象

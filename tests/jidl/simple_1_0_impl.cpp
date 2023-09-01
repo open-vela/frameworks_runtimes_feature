@@ -24,7 +24,7 @@ static const char* g_version = nullptr;
             DupFeatureValue((void*)g_##str); \
             return g_##str; \
         } \
-        char* prop_ret_str = (char*)FeatureFFI::FTMalloc(strlen(g_default_str) + 1, FT_CHAR); \
+        char* prop_ret_str = (char*)FTMalloc(strlen(g_default_str) + 1, FT_CHAR); \
         sprintf(prop_ret_str, "%s", g_default_str); \
         return prop_ret_str; \
     } while (false)
@@ -215,7 +215,7 @@ void Simple_1_0_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt 
 FtString Simple_1_0_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
 {
     printf("%s::%s(), a: %d, b: %f, c: %d\n", file_tag,  __FUNCTION__, a, b, c);
-    char* buf = (char*)FeatureFFI::FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FTMalloc(128, FT_CHAR);
     sprintf(buf, "returned string: %d, %f, %d", a, b, c);
     return buf;
 }
@@ -248,11 +248,11 @@ void Simple_1_0_wrap_goo2(FeatureInstanceHandle feature, AppendData data, Featur
 
     // callback cb4(...)
     printf("%s::%s(), will invoke cb4\n", file_tag,  __FUNCTION__);
-    int32_t* var1 = (int32_t*)FeatureFFI::FTMalloc(sizeof(int32_t), FT_INT32);
+    int32_t* var1 = (int32_t*)FTMalloc(sizeof(int32_t), FT_INT32);
     *var1 = 15;
-    char* var2 = (char*)FeatureFFI::FTMalloc(sizeof("hello") + 1, FT_CHAR);
+    char* var2 = (char*)FTMalloc(sizeof("hello") + 1, FT_CHAR);
     sprintf(var2, "%s", "hello");
-    char* var3 = (char*)FeatureFFI::FTMalloc(sizeof("world") + 1, FT_CHAR);
+    char* var3 = (char*)FTMalloc(sizeof("world") + 1, FT_CHAR);
     sprintf(var3, "%s", "world");
     ret = InvokeFeatureCallbackCount(feature, cb4, 3, var1, var2, var3);
     FreeFeatureValue(var1);
@@ -267,9 +267,9 @@ void Simple_1_0_wrap_goo2(FeatureInstanceHandle feature, AppendData data, Featur
 
     // callback cb2(int a, string b, ...)
     printf("%s::%s(), will invoke cb2\n", file_tag,  __FUNCTION__);
-    var1 = (int32_t*)FeatureFFI::FTMalloc(sizeof(int32_t), FT_INT32);
+    var1 = (int32_t*)FTMalloc(sizeof(int32_t), FT_INT32);
     *var1 = 50;
-    double* var4 = (double*)FeatureFFI::FTMalloc(sizeof(double), FT_DOUBLE);
+    double* var4 = (double*)FTMalloc(sizeof(double), FT_DOUBLE);
     *var4 = 4.5;
     ret = InvokeFeatureCallbackCount(feature, cb, 4, 20, "hello world", var1, var4);
 
@@ -295,7 +295,7 @@ void Simple_1_0_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt 
 
     // callback cb2(int a, string b, ...)
     printf("%s::%s(), will invoke cb2\n", file_tag,  __FUNCTION__);
-    char* strValue = (char*)FeatureFFI::FTMalloc(sizeof("you") + 1, FT_CHAR);
+    char* strValue = (char*)FTMalloc(sizeof("you") + 1, FT_CHAR);
     sprintf(strValue, "%s", "you");
     ret = InvokeFeatureCallbackCount(feature, cb2, 3, x, "love", strValue);
 

@@ -74,7 +74,7 @@ Struct_1_0_Chapter* Struct_1_0_wrap_bar(FeatureInstanceHandle feature, AppendDat
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
     Struct_1_0_Chapter* chap = mallocChapter();
     chap->_page_count = a;
-    char* title = (char*)FeatureFFI::FTMalloc(128, FT_CHAR);
+    char* title = (char*)FTMalloc(128, FT_CHAR);
     sprintf(title, "title is: %s", "hello world");
     chap->_title = title;
     return chap;

@@ -40,17 +40,6 @@ namespace FeatureFFI {
         }                                                                                 \
     }
 
-    void* FTMalloc(size_t size, FEATURE::FeatureType featureType)
-    {
-        void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
-        FTObjHeader* objHeader = (FTObjHeader*)ptr;
-        objHeader->ref_count = 1;
-        objHeader->featureType = featureType;
-        ptr = (char*)ptr + FT_OBJ_HEADER_SIZE;
-        memset(ptr, 0, size);
-        return ptr;
-    }
-
     namespace utils {
         inline int count_member(ObjectMember* member)
         {
@@ -63,7 +52,7 @@ namespace FeatureFFI {
         }
     } // namespace utils
 
-    int32_t getValueSize(FEATURE::FeatureType featureType)
+    int32_t getValueSize(FeatureType featureType)
     {
         if (FT_IS_REFERENCE(featureType)) {
             // alloc pointer pointed memory space
