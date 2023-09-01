@@ -32,7 +32,7 @@ public:
     virtual int invokeFeatureCallback(
                     const ferry::CallbackType& callbackType,
                     feature_value_t callback,
-                    va_list& ap, 
+                    va_list& ap,
                     int method_param_count,
                     int rest_param_count);
 

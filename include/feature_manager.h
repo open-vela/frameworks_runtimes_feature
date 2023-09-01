@@ -43,8 +43,11 @@ public:
      * @return JSValue
      */
     feature_value_t featureRequire(context_ref ctx, const char* name);
+
+    void featureRelease();
 private:
     FeatureRegistry* registry_;
+    std::vector<std::string> required_features_;
 };// class FeatureManager
 
 }
