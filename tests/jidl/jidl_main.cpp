@@ -1,5 +1,5 @@
 #include "feature_log.h"
-#include "feature_manager.h"
+#include "feature_manager_qjs.h"
 #include "feature_registry.h"
 
 #include <assert.h>
@@ -11,7 +11,7 @@ using namespace ferry;
 using namespace FEATURE;
 
 static ferry::FeatureRegistry* g_registry;
-static ferry::FeatureManager* g_manager;
+static ferry::FeatureManagerQjs* g_manager_qjs;
 
 typedef struct feature_env_t {
     JSRuntime* rt;
@@ -26,7 +26,7 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int
         return FEATURE_UNDEFINED;
     }
     const char* str_module_name = feature_to_cstring(ctx, argv[0]);
-    auto feature_obj = g_manager->featureRequire(ctx, str_module_name);
+    auto feature_obj = g_manager_qjs->featureRequire(ctx, str_module_name);
     feature_free_cstring(ctx, str_module_name);
     return feature_obj;
 }
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
     g_registry = new ferry::FeatureRegistry(nullptr);
     g_registry->init(manifast_str);
-    g_manager = new ferry::FeatureManager(g_registry);
+    g_manager_qjs = new ferry::FeatureManagerQjs(g_registry);
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     feature_free_value(js_env.ctx, result);
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
-    g_manager->featureRelease();
+    g_manager_qjs->featureRelease();
     g_registry->uninit();
 
     //释放manifast_str

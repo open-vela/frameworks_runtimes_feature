@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "feature_ffi.h"
+#include "feature_ffi_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "feature_instance_qjs.h"
@@ -30,7 +30,7 @@ using namespace FEATURE;
 using namespace ferry;
 
 namespace ferry {
-namespace FeatureFFI {
+namespace FeatureFFIQjs {
 
     bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
     {
