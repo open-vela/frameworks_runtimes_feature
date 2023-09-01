@@ -1,15 +1,8 @@
-#include "feature_exports.h"
 #include "feature_log.h"
-#include "feature_framework.h"
-#include "feature_ffi.h"
 #include "feature_manager.h"
 #include "feature_registry.h"
 
-#include "simple_1_0.h"
 #include <assert.h>
-#include <cstdarg>
-#include <ffi.h>
-#include <quickjs/quickjs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

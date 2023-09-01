@@ -62,11 +62,10 @@ public:
      */
     void uninit();
 
-    std::map<std::string, FeatureUnit*> registeredFeatures_; // 已注册features
-    bool manifest_check_enable = true;
 private:
     IApplication* app_;
-    std::vector<std::string> feature_names_;
+    std::map<std::string, FeatureUnit*> registeredFeatures_; // 已注册features
+    bool manifest_check_enable = true;
 };// class FeatureRegistry
 
 }

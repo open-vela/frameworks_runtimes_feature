@@ -73,6 +73,8 @@ private:
     FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int  rest_param_count);
+
+    FEATURE::FeatureCallbackId curr_cid_ = 0;
 };
 
 }
