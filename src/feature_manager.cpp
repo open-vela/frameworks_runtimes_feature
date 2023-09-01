@@ -17,7 +17,7 @@
 #include "feature_manager.h"
 #include "feature_registry.h"
 #include "feature_framework.h"
-#include "feature_instance.h"
+#include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 #if defined(CONFIG_QUICKAPP)
@@ -193,7 +193,7 @@ feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name
     }
 
     // create feature instance for the required object
-    auto featureInstance = std::make_unique<FeatureInstance>(proto);
+    auto featureInstance = std::make_unique<FeatureInstanceQjs>(proto);
     // create object with proto and set opaque refers to FeatureInstance
     feature_value_t feature_object = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), proto->js_proto, class_id);
     feature_set_opaque(feature_object, featureInstance.get());

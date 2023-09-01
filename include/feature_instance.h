@@ -49,7 +49,7 @@ typedef struct FeatureCallbackData {
 class FeatureInstance {
 public:
     FeatureInstance(struct FeaturePrototype* prototype);
-    ~FeatureInstance();
+    virtual ~FeatureInstance();
 
     FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
 
@@ -84,9 +84,19 @@ public:
     FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data);
 
     bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle);
+
     FeaturePrototype* prototype() { return proto_; }
+
     void setInstanceId(int instance_id) { instance_id_ =  instance_id; }
+
     int instanceId() { return instance_id_; }
+
+    virtual int invokeFeatureCallback(
+                    const ferry::CallbackType& callbackType,
+                    feature_value_t callback,
+                    va_list& ap, 
+                    int method_param_count,
+                    int rest_param_count) = 0;
 
     std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises;   // all promises created by native feature
     std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks; // instance should save feature resources
