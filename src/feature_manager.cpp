@@ -48,10 +48,9 @@ static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit);
 static bool createJsInstanceClass(context_ref ctx, const char* class_name);
 static context_ref getContext(feature_runtime_ref rt);
 
-FeatureInstance* getInstance(feature_value_t val)
+static inline FeatureInstance* getInstance(feature_value_t val)
 {
-    auto instance = static_cast<FeatureInstance*>(feature_get_opaque(val, class_id));
-    return instance;
+    return static_cast<FeatureInstance*>(feature_get_opaque(val, class_id));
 }
 
 static context_ref getContext(feature_runtime_ref rt)
@@ -160,9 +159,9 @@ static FeaturePrototype* createFeaturePrototype(context_ref ctx, FeatureDescript
     return new FeaturePrototype(ctx, description);
 }
 
-static ferry::FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, FeatureType resolve_type, FeatureType reject_type)
+static FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, FeatureType resolve_type, FeatureType reject_type)
 {
-    ferry::FeaturePromiseData* data = (ferry::FeaturePromiseData*)malloc(sizeof(ferry::FeaturePromiseData));
+    FeaturePromiseData* data = (FeaturePromiseData*)malloc(sizeof(FeaturePromiseData));
 
     auto js_prm_ptr = FT_VAL_GET_JS_VAL_PTR(data->promise);
     auto js_res_0_ptr = FT_VAL_GET_JS_VAL_PTR(data->resolveFuncs[0]);
@@ -210,7 +209,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     bool got_error = false;
     feature_value_t method_ret_value = FEATURE_VALUE_UNDEFINED;
     int index = magic;
-    FeatureInstance* instance = ferry::getInstance(this_val);
+    FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
     Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
@@ -276,12 +275,12 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 got_error = true;
                 break;
             }
-            if (!ferry::FeatureFFI::createTypeDeclaration(param, ffi_params[external_count + i])) {
+            if (!FeatureFFI::createTypeDeclaration(param, ffi_params[external_count + i])) {
                 FEATURE_LOG_ERROR("prepareType for type failed !");
                 got_error = true;
                 break;
             }
-            if (!ferry::FeatureFFI::convertValueToHost(instance, param, ffi_arg_values[external_count + i], ctx, currArg)) {
+            if (!FeatureFFI::convertValueToHost(instance, param, ffi_arg_values[external_count + i], ctx, currArg)) {
                 FEATURE_LOG_ERROR("convert argument %d failed !", i);
                 got_error = true;
                 break;
@@ -316,7 +315,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
                 OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param);
                 FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
-                if (!ferry::FeatureFFI::createTypeDeclaration(param, ffi_params[external_count + i])) {
+                if (!FeatureFFI::createTypeDeclaration(param, ffi_params[external_count + i])) {
                     FEATURE_LOG_ERROR("prepareType for type failed !");
                     got_error = true;
                     break;
@@ -329,14 +328,14 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             break;
 
         // prepeare return type
-        if (!ferry::FeatureFFI::createTypeDeclaration(method.return_type, ffi_ret)) {
+        if (!FeatureFFI::createTypeDeclaration(method.return_type, ffi_ret)) {
             FEATURE_LOG_ERROR("prepareType for complex type failed !");
             got_error = true;
             break;
         }
         // create return value pointer inneed.
         if (!isPromise && method.return_type != FT_VOID) {
-            if (!ferry::FeatureFFI::createHostValue(method.return_type, ffi_ret_value, true)) {
+            if (!FeatureFFI::createHostValue(method.return_type, ffi_ret_value, true)) {
                 FEATURE_LOG_ERROR("create return value failed !");
                 got_error = true;
                 break;
@@ -377,7 +376,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!isPromise && method.return_type != FT_VOID) {
             // process return value
-            if (!ferry::FeatureFFI::convertValueToGuest(instance, method.return_type, ffi_ret_value, ctx, method_ret_value)) {
+            if (!FeatureFFI::convertValueToGuest(instance, method.return_type, ffi_ret_value, ctx, method_ret_value)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(ctx, method_ret_value);
                 method_ret_value = FEATURE_EXCEPTION;
@@ -390,14 +389,14 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     for (int i = 0; i < method_param_count; i++) {
         // free type
         if (ffi_params[i + external_count]) {
-            ferry::FeatureFFI::freeTypeDeclaration(ffi_params[i + external_count]);
+            FeatureFFI::freeTypeDeclaration(ffi_params[i + external_count]);
         }
         // free value
         if (ffi_arg_values[i + external_count]) {
             FreeFeatureValue(ffi_arg_values[i + external_count]);
         }
     }
-    ferry::FeatureFFI::freeTypeDeclaration(ffi_ret);
+    FeatureFFI::freeTypeDeclaration(ffi_ret);
     if (ffi_ret_value) {
         FreeFeatureValue(ffi_ret_value);
     }
@@ -423,7 +422,7 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     // get info from this_val
     feature_value_t method_ret_value = FEATURE_VALUE_UNDEFINED;
     int index = magic;
-    FeatureInstance* instance = ferry::getInstance(this_val);
+    FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
     Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
@@ -437,11 +436,11 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     void* arg_values[2] = { &instance, &accessor->data };
     void* ret_value = nullptr;
     do {
-        if (!ferry::FeatureFFI::createTypeDeclaration(accessor->type, ffi_ret)) {
+        if (!FeatureFFI::createTypeDeclaration(accessor->type, ffi_ret)) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
-        if (!ferry::FeatureFFI::createHostValue(accessor->type, ret_value, true)) {
+        if (!FeatureFFI::createHostValue(accessor->type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
             break;
         }
@@ -456,14 +455,14 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
         // invoke
         ffi_call(&cif, accessor->getter, ret_value, arg_values);
         // process return value
-        if (!ferry::FeatureFFI::convertValueToGuest(instance, accessor->type, ret_value, ctx, method_ret_value)) {
+        if (!FeatureFFI::convertValueToGuest(instance, accessor->type, ret_value, ctx, method_ret_value)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, method_ret_value);
             method_ret_value = FEATURE_EXCEPTION;
         }
     } while (0);
     // free resources
-    ferry::FeatureFFI::freeTypeDeclaration(ffi_ret);
+    FeatureFFI::freeTypeDeclaration(ffi_ret);
     FreeFeatureValue(ret_value);
 
     return method_ret_value;
@@ -473,7 +472,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
 {
     // get info from this_val
     int index = magic;
-    FeatureInstance* instance = ferry::getInstance(this_val);
+    FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
     Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
@@ -487,12 +486,12 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     void* arg_values[3] = { &instance, &accessor->data, nullptr };
     do {
         // prepare third param type declaration, create by accessor type
-        if (!ferry::FeatureFFI::createTypeDeclaration(accessor->type, ffi_params[2])) {
+        if (!FeatureFFI::createTypeDeclaration(accessor->type, ffi_params[2])) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
         // fill third param using guest value and accesor type
-        if (!ferry::FeatureFFI::convertValueToHost(instance, accessor->type, arg_value_input, ctx, val)) {
+        if (!FeatureFFI::convertValueToHost(instance, accessor->type, arg_value_input, ctx, val)) {
             FEATURE_LOG_ERROR("convert to host value failed !");
             break;
         }
@@ -509,7 +508,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
         ffi_call(&cif, accessor->setter, arg_values[2], arg_values);
     } while (0);
     // free resources
-    ferry::FeatureFFI::freeTypeDeclaration(ffi_params[2]);
+    FeatureFFI::freeTypeDeclaration(ffi_params[2]);
     FreeFeatureValue(arg_value_input);
     return FEATURE_VALUE_UNDEFINED;
 }
@@ -525,12 +524,12 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         void* ret_value = nullptr;
         ffi_type* param_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
         void* arg_values[2] = { &prototype, (void*)&memberConst.data };
-        if (!ferry::FeatureFFI::createTypeDeclaration(memberConst.type, ret_type)) {
+        if (!FeatureFFI::createTypeDeclaration(memberConst.type, ret_type)) {
             FEATURE_LOG_ERROR("create type failed !");
             FeatureFFI::freeTypeDeclaration(ret_type);
             return val;
         }
-        if (!ferry::FeatureFFI::createHostValue(memberConst.type, ret_value, true)) {
+        if (!FeatureFFI::createHostValue(memberConst.type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
             FeatureFFI::freeTypeDeclaration(ret_type);
             FreeFeatureValue(ret_value);
@@ -548,7 +547,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         // invoke
         ffi_call(&cif, memberConst.callback, ret_value, arg_values);
         // process return value
-        if (!ferry::FeatureFFI::convertValueToGuest(nullptr, memberConst.type, ret_value, ctx, val)) {
+        if (!FeatureFFI::convertValueToGuest(nullptr, memberConst.type, ret_value, ctx, val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, val);
             val = FEATURE_VALUE_UNDEFINED;
@@ -560,7 +559,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         }
     } else {
         // check type
-        if (!ferry::FeatureFFI::convertValueToGuest(nullptr, memberConst.type, (void*)&memberConst.data, ctx, val)) {
+        if (!FeatureFFI::convertValueToGuest(nullptr, memberConst.type, (void*)&memberConst.data, ctx, val)) {
             FEATURE_LOG_ERROR("can not convert const value to guest!");
             feature_free_value(ctx, val);
             val = FEATURE_VALUE_UNDEFINED;

@@ -32,92 +32,7 @@ using namespace ferry;
 namespace ferry {
 namespace FeatureFFI {
 
-#define TRY_GET_REAL_TYPE(featureType)                                                    \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == COMPLEX_OPTIONAL) {                                      \
-            featureType = ((OptionalType*)complexType)->type;                             \
-        }                                                                                 \
-    }
-
-    namespace utils {
-        inline int count_member(ObjectMember* member)
-        {
-            int count = 0;
-            while (member->name) {
-                count++;
-                member++;
-            }
-            return count;
-        }
-    } // namespace utils
-
-    int32_t getValueSize(FeatureType featureType)
-    {
-        if (FT_IS_REFERENCE(featureType)) {
-            // alloc pointer pointed memory space
-            return sizeof(uintptr_t);
-        }
-        if (FT_IS_PRIMITIVE(featureType)) {
-            switch (FT_GET_VALUE(featureType)) {
-            case FT_VOID: {
-                return 0;
-            } break;
-            case FT_INT: {
-                return sizeof(int);
-            } break;
-            case FT_INT8: {
-                return sizeof(int8_t);
-            } break;
-            case FT_UINT8: {
-                return sizeof(uint8_t);
-            } break;
-            case FT_INT16: {
-                return sizeof(int16_t);
-            } break;
-            case FT_UINT16: {
-                return sizeof(uint16_t);
-            } break;
-            case FT_INT32: {
-                return sizeof(int32_t);
-            } break;
-            case FT_UINT32: {
-                return sizeof(uint32_t);
-            } break;
-            case FT_INT64: {
-                return sizeof(int64_t);
-            } break;
-            case FT_UINT64: {
-                return sizeof(uint64_t);
-            } break;
-            case FT_DOUBLE: {
-                return sizeof(double);
-            } break;
-            case FT_FLOAT: {
-                return sizeof(float);
-            } break;
-            case FT_BOOLEAN: {
-                return sizeof(int32_t);
-            } break;
-            case FT_CHAR: {
-                // return 0 for string buffer size.
-                return 0;
-            } break;
-            default: {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return 0;
-            }
-            }
-        } else if (FT_IS_COMPLEX(featureType)) {
-            // allocate complex type
-            ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-            return complexType->size;
-        } else {
-            return 0;
-        }
-    }
-
-    bool createHostValue(FEATURE::FeatureType featureType, void*& ptr, bool createPtrOnly)
+    bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
     {
         // special step: check if it is optional
         TRY_GET_REAL_TYPE(featureType);
@@ -200,14 +115,14 @@ namespace FeatureFFI {
             } break;
             case COMPLEX_CALLBACK: {
                 // callback means cid
-                ptr = FTMalloc(sizeof(FEATURE::FeatureCallbackId), FT_INT32);
+                ptr = FTMalloc(sizeof(FeatureCallbackId), FT_INT32);
             } break;
             case COMPLEX_ARRAY: {
                 // array element not created at this point.
                 ptr = FTMalloc(complexType->size, featureType);
             } break;
             case COMPLEX_PROMISE: {
-                ptr = FTMalloc(sizeof(FEATURE::FeaturePromiseHandle), FT_INT32);
+                ptr = FTMalloc(sizeof(FeaturePromiseHandle), FT_INT32);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -286,7 +201,7 @@ namespace FeatureFFI {
                 type->alignment = 0;
                 type->size = 0;
                 ObjectMember* member = objMapType.members;
-                auto member_count = utils::count_member(member);
+                auto member_count = countMember(member);
                 ffi_type** ffi_members = new ffi_type*[member_count + 1];
                 int i = 0;
                 for (; i < member_count; i++) {
@@ -352,7 +267,7 @@ namespace FeatureFFI {
         }
     }
 
-    bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureType, void*& ptr,
+    bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
         context_ref ctx, feature_value_t value)
     {
         // special step: get real type of complex type
@@ -550,7 +465,7 @@ namespace FeatureFFI {
             switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
-                auto member_count = utils::count_member(objMapType.members);
+                auto member_count = countMember(objMapType.members);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
                     auto member = &objMapType.members[i];
@@ -600,7 +515,7 @@ namespace FeatureFFI {
                 ft_value_t ft_val;
                 auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(ft_val);
                *js_val_ptr = value;
-                FEATURE::FeatureCallbackId id = instance->addCallback(ft_val, callbackType);
+                FeatureCallbackId id = instance->addCallback(ft_val, callbackType);
                 *(FeatureCallbackId*)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {
@@ -645,7 +560,7 @@ namespace FeatureFFI {
         return true;
     }
 
-    bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType featureType, void* ptr,
+    bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
         context_ref ctx, feature_value_t& value)
     {
         FEATURE_CHECK_NE(ptr, nullptr);
@@ -709,7 +624,7 @@ namespace FeatureFFI {
             case COMPLEX_STRUCT_MAP: {
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member = objMapType.members;
-                auto member_count = utils::count_member(member);
+                auto member_count = countMember(member);
                 value = feature_object(ctx);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
@@ -769,7 +684,7 @@ namespace FeatureFFI {
                     FEATURE_LOG_ERROR("convert promise need instance provided !");
                 }
                 FEATURE_CHECK_NE(instance, nullptr);
-                FEATURE::FeaturePromiseHandle promiseHandle = *(FEATURE::FeaturePromiseHandle*)ptr;
+                FeaturePromiseHandle promiseHandle = *(FeaturePromiseHandle*)ptr;
                 auto promiseData = instance->getPromise(promiseHandle);
                 if (!promiseData) {
                     FEATURE_LOG_ERROR("get promise with promiseHandle: %" PRId32 " failed !", promiseHandle);
@@ -787,7 +702,7 @@ namespace FeatureFFI {
         return true;
     }
 
-    void* exactVariadicParameter(va_list& ap, FEATURE::FeatureType featureType)
+    void* exactVariadicParameter(va_list& ap, FeatureType featureType)
     {
         void* result = nullptr;
         bool isPtr = FT_IS_REFERENCE(featureType);
@@ -909,13 +824,13 @@ namespace FeatureFFI {
                 FEATURE_CHECK(false && "do not support exact optional type !");
             } break;
             case COMPLEX_CALLBACK: {
-                *(FEATURE::FeatureCallbackId*)result = va_arg(ap, FEATURE::FeatureCallbackId);
+                *(FeatureCallbackId*)result = va_arg(ap, FeatureCallbackId);
             } break;
             case COMPLEX_ARRAY: {
 
             } break;
             case COMPLEX_PROMISE: {
-                *(FEATURE::FeaturePromiseHandle*)result = va_arg(ap, FEATURE::FeaturePromiseHandle);
+                *(FeaturePromiseHandle*)result = va_arg(ap, FeaturePromiseHandle);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -929,81 +844,5 @@ namespace FeatureFFI {
 } // namespace ferry
 
 namespace FEATURE {
-void FreeFeatureValue(void* ptr)
-{
-    if (!ptr)
-        return;
-    void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
-    ferry::FTObjHeader* header = (ferry::FTObjHeader*)header_ptr;
-    if (--header->ref_count > 0) {
-        // free
-        return;
-    }
-    FeatureType featureType = header->featureType;
-
-    // free pointer refers memory
-    if (FT_IS_REFERENCE(featureType)) {
-        // we do not support reference reference.
-        FreeFeatureValue(*(void**)ptr);
-        // ptr space is allocated outside, it's callers responsibility to free it
-        free(header);
-        return;
-    }
-    if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        switch (complexType1->type) {
-        case COMPLEX_STRUCT_MAP: {
-            ObjectMapType& objMapType = *(ObjectMapType*)complexType1;
-            auto member_count = ferry::FeatureFFI::utils::count_member(objMapType.members);
-            for (int i = 0; i < member_count; i++) {
-                ferry::ObjectMember* member = &objMapType.members[i];
-                //FEATURE::FeatureType member_type = member->type;
-                auto member_type = member->type;
-                TRY_GET_REAL_TYPE(member_type);
-                if (FT_IS_REFERENCE(member_type)) {
-                    void* member_ptr = (void*)((char*)ptr + member->offset);
-                    FreeFeatureValue(*(void**)member_ptr);
-                }
-            }
-            // TODO: if we can free the ptr? it may not be allocated by malloc().
-            // Maybe we can check the last bit of the pointer to determinte if it's allocated by us.
-            free(header);
-        } break;
-        case COMPLEX_OPTIONAL: {
-            FreeFeatureValue(ptr);
-        } break;
-        case COMPLEX_CALLBACK: {
-
-        } break;
-        case COMPLEX_ARRAY: {
-            // free array elements and ptr
-            ArrayType& arrayType = *(ArrayType*)complexType1;
-            auto element_type = arrayType.element_type;
-            FTArray* arrayData = (FEATURE::FTArray*)ptr;
-            // only support reference as element
-            if (FT_IS_REFERENCE(element_type)) {
-                size_t element_size = sizeof(uintptr_t);
-                for (int32_t i = 0; i < arrayData->_size; i++) {
-                    void* element_ptr = (char*)arrayData->_element + element_size * i;
-                    if (element_ptr) {
-                        // free it.
-                        FreeFeatureValue(*(void**)element_ptr);
-                    }
-                }
-            }
-            free(arrayData->_element);
-            free(header);
-        } break;
-        case COMPLEX_PROMISE: {
-
-        } break;
-        default: {
-            FEATURE_LOG_ERROR("unsupported type !");
-        } break;
-        }
-    } else {
-        free(header);
-    }
-}
 
 }
