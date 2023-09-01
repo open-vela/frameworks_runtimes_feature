@@ -15,12 +15,12 @@
  */
 
 #include "feature_manager_qjs.h"
-#include "feature_registry.h"
+#include "feature_context_qjs.h"
 #include "feature_ffi_qjs.h"
 #include "feature_framework.h"
 #include "feature_instance_qjs.h"
-#include "feature_context_qjs.h"
 #include "feature_log.h"
+#include "feature_registry.h"
 #include "feature_utils.h"
 #if defined(CONFIG_QUICKAPP)
 #include "aiotjs.h"
@@ -44,7 +44,6 @@ static thread_local feature_classid_t class_id; // prototype class id
 static thread_local feature_classdef_t class_def; // prototype class defination, contains finalizer
 
 // some static functions used by FeatureManagerQjs
-static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit);
 static bool createJsInstanceClass(context_ref ctx, const char* class_name);
 static context_ref getContext(feature_runtime_ref rt);
 
@@ -56,7 +55,7 @@ static inline FeatureInstance* getInstance(feature_value_t val)
 static context_ref getContext(feature_runtime_ref rt)
 {
 #if defined(CONFIG_QUICKAPP)
-//how to get context in nuttx? need check yaozong
+    // how to get context in nuttx? need check yaozong
     auto qrt = static_cast<AIOTJS::RuntimeContext*>(JS_GetRuntimeOpaque(rt));
     FEATURE_CHECK_NE(qrt, nullptr);
     return qrt->env.ctx;
@@ -70,29 +69,14 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
 {
     auto instance = getInstance(val);
     if (!instance || !instance->prototype()) {
-        FEATURE_LOG_INFO("instance or prototype is null...");
+        FEATURE_LOG_INFO("instance or prototype is null, skip resource free...");
         return;
     }
     auto proto = instance->prototype();
 
     feature_set_opaque(val, nullptr);
     // get proto pointer, it may not be deleted at this time
-
-    //遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
-    WeakRef* node;
-    WeakRef* node_temp;
-    weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
-    {
-        auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
-        *js_val_ptr = FEATURE_VALUE_UNDEFINED;
-    }
-
     auto iid = instance->instanceId();
-    // invoke callback
-    if (proto->description->native_callbacks->onDetached) {
-        FEATURE_LOG_DEBUG("invoke onDettached callback...");
-        proto->description->native_callbacks->onDetached(getContext(rt), instance);
-    }
     // delete instance by removing it from FeaturePrototype.
     bool ret = proto->removeInstance(iid);
     FEATURE_LOG_DEBUG("deleting instance %p with iid %d ret %d", instance, iid, ret);
@@ -110,7 +94,7 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     // but it maybe insufficient, instance may manage other resource type, change it according to implementation.
     FeatureInstance* instance = getInstance(val);
     if (!instance || !instance->prototype()) {
-        FEATURE_LOG_INFO("instance or prototype is null...");
+        FEATURE_LOG_INFO("instance or prototype is null, skip mark it ...");
         return;
     }
 
@@ -121,7 +105,7 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
         feature_mark_value(rt, pair.second.cb, mark_func);
     }
     // mark promies
-    for(auto& pair : instance_qjs->promises) {
+    for (auto& pair : instance_qjs->promises) {
         feature_mark_value(rt, pair.second->promise, mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
@@ -208,8 +192,8 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     const auto& method = member->method;
     auto currParam = method.parameters;
     FEATURE::FeaturePromiseHandle promiseHandle = -1;
-    //feature_value_t promise_obj = FEATURE_VALUE_UNDEFINED;
-    // count size
+    // feature_value_t promise_obj = FEATURE_VALUE_UNDEFINED;
+    //  count size
     bool has_rest_param = false;
     int optional_count = 0;
     int method_param_count = getParamCount(currParam, &has_rest_param, &optional_count);
@@ -298,7 +282,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             ffi_arg_values[method_param_count + external_count] = &variadicParameters;
             for (int i = 0; i + method_param_count < argc; i++) {
                 // just passthrough guest param pointers
-                qjs_val_array [i].js_val = argv[i + method_param_count];
+                qjs_val_array[i].js_val = argv[i + method_param_count];
                 variadicParameters.variadic_args[i] = *((ft_value_t*)(qjs_val_array + i));
             }
         } else if (optional_count) {
@@ -686,7 +670,6 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
         }
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(unit->proto->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-        required_features_.push_back(name);
     }
 
     auto proto = unit->proto;
@@ -728,17 +711,19 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
     return feature_object;
 }
 
-void FeatureManagerQjs::featureRelease()
+void FeatureManagerQjs::uninit()
 {
-    for (int i = 0; i < required_features_.size(); ++i) {
-        FeatureUnit* unit = registry_->findFeature(required_features_[i].data());
-        if (!unit)
+    for (const auto& pair : registry_->getRegisteredFeatures()) {
+        FeatureUnit* unit = pair.second;
+        if (!unit || !unit->proto)
             continue;
 
         auto proto = unit->proto;
         auto description = unit->description;
         JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
-        // call onDestroy
+        // clear all feature instance at first, it will free all feature instance and call onDetach for them
+        proto->clearAllInstances();
+        // call feature's onDestroy
         if (description->native_callbacks->onDestroy) {
             FEATURE_LOG_DEBUG("invoke onDestroy callback...");
             description->native_callbacks->onDestroy(js_ctx, proto);
@@ -748,7 +733,10 @@ void FeatureManagerQjs::featureRelease()
             feature_free_value(js_ctx, *js_proto_ptr);
             *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         }
+        delete unit;
     }
+    // uninit registery
+    delete registry_;
 
     if (ft_ctx_) {
         ReleaseFeatureContext(ft_ctx_);

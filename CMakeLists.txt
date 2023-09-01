@@ -77,23 +77,12 @@ else()
     message(FATAL_ERROR "unsupported backend !")
 endif()
 
+file(GLOB FRAMEWORK_SOURCES CONFIG_DEPENDS ${FEATURE_FRAMEWORK_SRC}/*.cpp ${FEATURE_FRAMEWORK_SRC}/*.h)
+file(GLOB FRAMEWORK_INC_HEADERS CONFIG_DEPENDS ${FEATURE_FRAMEWORK_INC}/*.h)
+
 add_library(feature-framework STATIC
-    ${FEATURE_FRAMEWORK_INC}/feature_exports.h
-    ${FEATURE_FRAMEWORK_INC}/feature_utils.h
-    ${FEATURE_FRAMEWORK_INC}/feature_log.h
-    ${FEATURE_FRAMEWORK_SRC}/feature_manager_qjs.cpp
-    ${FEATURE_FRAMEWORK_SRC}/feature_registry.cpp
-    ${FEATURE_FRAMEWORK_SRC}/feature_instance.cpp
-    ${FEATURE_FRAMEWORK_SRC}/feature_instance_qjs.cpp
-    ${FEATURE_FRAMEWORK_SRC}/feature_exports.cpp
-    ${FEATURE_FRAMEWORK_INC}/feature_ffi_qjs.h
-    ${FEATURE_FRAMEWORK_SRC}/feature_ffi_qjs.cpp
-    ${FEATURE_FRAMEWORK_INC}/feature_framework.h
-    ${FEATURE_FRAMEWORK_SRC}/feature_framework.cpp
-    ${FEATURE_FRAMEWORK_INC}/feature.h
-    ${FEATURE_FRAMEWORK_INC}/feature_context.h
-    ${FEATURE_FRAMEWORK_SRC}/feature_context.cpp
-    ${FEATURE_FRAMEWORK_SRC}/feature_context_qjs.cpp
+    ${FRAMEWORK_INC_HEADERS}
+    ${FRAMEWORK_SOURCES}
 )
 
 target_include_directories(feature-framework PUBLIC

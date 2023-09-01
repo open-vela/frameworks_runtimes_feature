@@ -57,10 +57,11 @@ public:
     FeatureUnit* findFeature(const char* name);
 
     /**
-     * @brief un-initialize manager
-     *
+     * @brief Get the Registered Features object
+     * 
+     * @return const std::map<std::string, FeatureUnit*>& 
      */
-    void uninit();
+    const std::map<std::string, FeatureUnit*>& getRegisteredFeatures() const { return registeredFeatures_; }
 
 private:
     IApplication* app_;
