@@ -574,7 +574,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
     return val;
 }
 
-int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_value_t proto)
+static int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_value_t proto)
 {
     assert(unit != nullptr);
     for (int i = 0; i < unit->description->member_count; i++) {
@@ -623,7 +623,7 @@ int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_value_t pro
     return 0;
 }
 
-bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
+static bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
 {
     // 根据cid获取FeaturePrototype
     FeatureInstance* instance = getInstance(feature_object);
@@ -645,7 +645,7 @@ bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
     return true;
 }
 
-bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
+static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
 {
     // 获取feature_object的cid
     int ret = -1;

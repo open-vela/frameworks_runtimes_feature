@@ -15,18 +15,9 @@
  */
 #include "feature_instance.h"
 #include "feature_log.h"
-#include "feature_utils.h"
-#include "feature.h"
-#include "feature_ffi.h"
 #include "feature_context.h"
 
-#include <algorithm>
-#include <cstdarg>
-#include <cstdint>
-#include <ffi.h>
 #include <string.h>
-#include <strings.h>
-#include <tuple>
 
 using namespace FEATURE;
 

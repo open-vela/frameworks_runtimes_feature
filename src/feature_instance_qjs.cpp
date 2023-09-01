@@ -20,13 +20,10 @@
 #include "feature_ffi.h"
 #include "feature_context_qjs.h"
 
-#include <algorithm>
 #include <cstdarg>
 #include <cstdint>
 #include <ffi.h>
 #include <string.h>
-#include <strings.h>
-#include <tuple>
 
 using namespace FEATURE;
 

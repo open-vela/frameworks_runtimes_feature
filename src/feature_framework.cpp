@@ -17,20 +17,14 @@
 #include "feature_instance.h"
 #include "feature_context_private.h"
 #include "feature_log.h"
-#include "feature_utils.h"
 
-#include <algorithm>
 #include <cstdarg>
 #include <cstdint>
-#include <ffi.h>
 #include <string.h>
-#include <strings.h>
-#include <tuple>
 
 using namespace FEATURE;
 
 namespace ferry {
-extern struct FeatureInstance* getInstance(feature_value_t val);
 
 int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
 {
