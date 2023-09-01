@@ -65,7 +65,8 @@ FeatureInstance::~FeatureInstance()
     // check if all instances deleted, then clear proto object
     if (!proto_->hasInstanceAlive()) {
         FEATURE_LOG_INFO("all instance freed, free proto object...");
-        proto_->js_proto = FEATURE_VALUE_UNDEFINED;
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto_->ft_proto);
+        *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
     }
 }
 

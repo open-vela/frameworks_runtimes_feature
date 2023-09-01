@@ -20,8 +20,15 @@
 #include "quickjs/quickjs.h"
 
 #define GET_QJS_CTX(ft_ctx) static_cast<JSContext*>(ft_ctx->data)
-#define FT_VAL_TO_QJS(val) (*((qjs_val_t*)(&(val))))
-#define QJS_VAL_TO_FT(val) (*((ft_value_t*)(&(val))))
+
+#define FT_VAL_TO_QJS(ft_val) (*((qjs_val_t*)(&(ft_val))))
+#define FT_VAL_TO_QJS_PTR(ft_val) ((qjs_val_t*)(&(ft_val)))
+#define FT_VAL_GET_JS_VAL(ft_val) (((qjs_val_t*)(&(ft_val)))->js_val)
+#define FT_VAL_GET_JS_VAL_PTR(ft_val) (&(((qjs_val_t*)(&(ft_val)))->js_val))
+
+#define QJS_VAL_TO_FT(qjs_val) (*((ft_value_t*)(&(qjs_val))))
+#define QJS_VAL_TO_FT_PTR(qjs_val) ((ft_value_t*)(&(qjs_val)))
+
 
 typedef struct qjs_val_t {
     ft_type type;

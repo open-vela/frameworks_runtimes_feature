@@ -102,9 +102,9 @@ int main(int argc, char** argv)
     feature_env_t js_env;
 
     js_env.rt = JS_NewRuntime();
-    js_env.ctx = JS_NewContext(js_env.rt);    
+    js_env.ctx = JS_NewContext(js_env.rt);
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    g_registry =  new ferry::FeatureRegistry(nullptr);
+    g_registry = new ferry::FeatureRegistry(nullptr);
     g_registry->init(manifast_str);
     g_manager = new ferry::FeatureManager(g_registry);
 
@@ -130,6 +130,7 @@ int main(int argc, char** argv)
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
 
+    g_manager->featureRelease();
     g_registry->uninit();
     //释放manifast_str
     if (manifast_str != NULL) {

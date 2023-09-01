@@ -38,7 +38,7 @@ public:
     ft_context_ref ft_ctx; // feature context
     std::vector<std::unique_ptr<FeatureInstance>> instances;
     void* native; // the native feature object instance pointer
-    feature_value_t js_proto; // js prototype object, it's undefined at first
+    ft_value_t ft_proto; // ft prototype object, it's undefined at first
     FeatureDescription* description; // description pointer, used for feature management logic
     struct weakref_list_node weak_ref_list; // weak ref list, used to release all weak ref when prototype is destroyed
     int weak_ref_count = 0; // weak ref count
@@ -49,7 +49,7 @@ public:
     * @param js_ctx
     * @param description
     */
-    FeaturePrototype(context_ref js_ctx, FeatureDescription* feature_desc);
+    FeaturePrototype(ft_context_ref ft_ctx, FeatureDescription* feature_desc);
 
     /**
      * @brief Destroy the Feature Prototype object
