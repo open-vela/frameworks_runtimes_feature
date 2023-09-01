@@ -10,7 +10,6 @@
 using namespace ferry;
 using namespace FEATURE;
 
-static ferry::FeatureRegistry* g_registry;
 static ferry::FeatureManagerQjs* g_manager_qjs;
 
 typedef struct feature_env_t {
@@ -43,21 +42,21 @@ bool load_file(char* file_name, char** file_content)
         printf("open file_name is %s failed!\n", file_name);
         return false;
     }
-    //获取文件长度
+    // 获取文件长度
     fseek(fp, 0, SEEK_END);
     int len = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     *file_content = (char*)malloc(len + 1);
     memset(*file_content, 0, len + 1);
-    //读取文件内容到file_content字符串中
+    // 读取文件内容到file_content字符串中
     fread(*file_content, len, 1, fp);
     fclose(fp);
 
     return true;
 }
 
-//支持cli来读取manitest.json以及js文件去执行，命令为：./feature_jidl_test ./test.js ../manifest.json
+// 支持cli来读取manitest.json以及js文件去执行，命令为：./feature_jidl_test ./test.js ../manifest.json
 int main(int argc, char** argv)
 {
     if (argc < 2) {
@@ -79,8 +78,8 @@ int main(int argc, char** argv)
         }
     }
 
-    //打开manifest.json文件,读取内容到一个字符串中
-    //打开js文件
+    // 打开manifest.json文件,读取内容到一个字符串中
+    // 打开js文件
     load_file(js_file, &js_str);
     if (js_str == NULL) {
         printf("malloc js file failed!\n");
@@ -97,9 +96,9 @@ int main(int argc, char** argv)
     js_env.rt = JS_NewRuntime();
     js_env.ctx = JS_NewContext(js_env.rt);
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    g_registry = new ferry::FeatureRegistry(nullptr);
-    g_registry->init(manifast_str);
-    g_manager_qjs = new ferry::FeatureManagerQjs(g_registry);
+    auto registry = new ferry::FeatureRegistry(nullptr);
+    registry->init(manifast_str);
+    g_manager_qjs = new ferry::FeatureManagerQjs(registry);
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
@@ -108,7 +107,7 @@ int main(int argc, char** argv)
     feature_free_value(js_env.ctx, global_obj);
 
     auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
-    
+
     int err;
     feature_context_ref ctx1;
     while (!!JS_IsJobPending(js_env.rt)) {
@@ -120,21 +119,23 @@ int main(int argc, char** argv)
         }
     }
     feature_free_value(js_env.ctx, result);
+    // release manager first
+    g_manager_qjs->uninit();
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
-    g_manager_qjs->featureRelease();
-    g_registry->uninit();
 
-    //释放manifast_str
+    // 释放manifast_str
     if (manifast_str != NULL) {
         free(manifast_str);
         manifast_str = NULL;
     }
-    //释放js_str
+    // 释放js_str
     if (js_str != NULL) {
         free(js_str);
         js_str = NULL;
     }
+    // free g_manager_qjs
+    delete g_manager_qjs;
 
     return 0;
 }

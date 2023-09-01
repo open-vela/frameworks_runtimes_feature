@@ -1,4 +1,3 @@
-let console = require('console');
 let struct = require('Struct_1_0');
 
 struct.foo(1,

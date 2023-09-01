@@ -88,6 +88,13 @@ public:
      * @return false
      */
     bool hasInstanceAlive();
+
+
+    /**
+     * @brief free instance that hold by this class
+     * 
+     */
+    void clearAllInstances();
 };
 
 /**

@@ -159,13 +159,4 @@ FeatureUnit* FeatureRegistry::findFeature(const char* name)
     return pos->second;
 }
 
-void FeatureRegistry::uninit()
-{
-    // delete all registered FeatureUnit
-    for (auto& unit : registeredFeatures_) {
-        delete unit.second;
-    }
-    registeredFeatures_.clear();
-}
-
 }

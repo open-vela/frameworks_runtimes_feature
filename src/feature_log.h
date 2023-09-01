@@ -1,6 +1,7 @@
 #ifndef FEATURE_LOG_H
 #define FEATURE_LOG_H
 
+#include <cstdio>
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -22,12 +23,22 @@ namespace FEATURE {
 static inline void featurelogPrintf(int level, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
+#ifdef __NuttX__
     static const int log_map[] =
         {LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERR, LOG_ALERT};
     if(level >= FEATURE_LOG_LEVEL){
         vsyslog(log_map[level], fmt, ap);
     }
+#else
+    static const char* log_map[] =
+        {"DEBUG", "INFO", "WARN", "ERROR", "ALERT"};
+        if(level >= FEATURE_LOG_LEVEL){
+            printf("[%s] ", log_map[level]);
+            vprintf(fmt, ap);
+        }
+#endif
     va_end(ap);
+
 }
 
 

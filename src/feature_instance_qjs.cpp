@@ -40,8 +40,24 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     // remove opaque binding
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
     feature_set_opaque(js_val, nullptr);
-    // release all callbacks
+    auto proto = prototype();
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+
+    //遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
+    WeakRef* node;
+    WeakRef* node_temp;
+    weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
+    {
+        auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
+        *js_val_ptr = FEATURE_VALUE_UNDEFINED;
+    }
+
+    // invoke callback
+    if (proto->description->native_callbacks->onDetached) {
+        FEATURE_LOG_DEBUG("invoke onDettached callback...");
+        proto->description->native_callbacks->onDetached(js_ctx, this);
+    }
+    // release all callbacks
     for (const auto& callback : callbacks) {
         feature_free_value(js_ctx, callback.second.cb);
     }

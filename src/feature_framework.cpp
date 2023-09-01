@@ -139,7 +139,7 @@ FeaturePrototype::FeaturePrototype(ft_context_ref ctx, FeatureDescription* featu
 
 FeaturePrototype::~FeaturePrototype()
 {
-    instances.clear();
+    clearAllInstances();
     ft_ctx = nullptr;
 }
 
@@ -189,6 +189,11 @@ bool FeaturePrototype::hasInstanceAlive()
     return false;
 }
 
+void FeaturePrototype::clearAllInstances()
+{
+    instances.clear();
+}
+
 FeatureUnit::FeatureUnit(const FeatureDescription* desc)
     : description(const_cast<FeatureDescription*>(desc))
     , proto(nullptr)
@@ -209,6 +214,7 @@ FeatureUnit::~FeatureUnit()
 {
     if (proto) {
         delete proto;
+        proto = nullptr;
     }
 }
 

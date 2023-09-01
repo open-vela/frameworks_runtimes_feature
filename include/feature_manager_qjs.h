@@ -46,10 +46,9 @@ public:
      */
     feature_value_t featureRequire(context_ref ctx, const char* name);
 
-    void featureRelease();
+    void uninit();
 private:
     FeatureRegistry* registry_;
-    std::vector<std::string> required_features_;
     ft_context_ref ft_ctx_;
 };
 
