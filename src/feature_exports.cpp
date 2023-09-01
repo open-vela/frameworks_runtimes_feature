@@ -23,13 +23,14 @@
 #include <cstdint>
 #include <string.h>
 
+using namespace ferry;
+
 namespace FEATURE {
 
-
-void* FTMalloc(size_t size, FEATURE::FeatureType featureType)
+void* FTMalloc(size_t size, FeatureType featureType)
 {
     void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
-    ferry::FTObjHeader* objHeader = (ferry::FTObjHeader*)ptr;
+    FTObjHeader* objHeader = (FTObjHeader*)ptr;
     objHeader->ref_count = 1;
     objHeader->featureType = featureType;
     ptr = (char*)ptr + FT_OBJ_HEADER_SIZE;
@@ -39,19 +40,96 @@ void* FTMalloc(size_t size, FEATURE::FeatureType featureType)
 
 void DupFeatureValue(void* ptr)
 {
-    ferry::FTObjHeader* header = (ferry::FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
+    FTObjHeader* header = (FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
     header->ref_count++;
+}
+
+void FreeFeatureValue(void* ptr)
+{
+    if (!ptr)
+        return;
+    void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
+    FTObjHeader* header = (FTObjHeader*)header_ptr;
+    if (--header->ref_count > 0) {
+        // free
+        return;
+    }
+    FeatureType featureType = header->featureType;
+
+    // free pointer refers memory
+    if (FT_IS_REFERENCE(featureType)) {
+        // we do not support reference reference.
+        FreeFeatureValue(*(void**)ptr);
+        // ptr space is allocated outside, it's callers responsibility to free it
+        free(header);
+        return;
+    }
+    if (FT_IS_COMPLEX(featureType)) {
+        ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+        switch (complexType1->type) {
+        case COMPLEX_STRUCT_MAP: {
+            ObjectMapType& objMapType = *(ObjectMapType*)complexType1;
+            auto member_count = countMember(objMapType.members);
+            for (int i = 0; i < member_count; i++) {
+                ObjectMember* member = &objMapType.members[i];
+                //FeatureType member_type = member->type;
+                auto member_type = member->type;
+                TRY_GET_REAL_TYPE(member_type);
+                if (FT_IS_REFERENCE(member_type)) {
+                    void* member_ptr = (void*)((char*)ptr + member->offset);
+                    FreeFeatureValue(*(void**)member_ptr);
+                }
+            }
+            // TODO: if we can free the ptr? it may not be allocated by malloc().
+            // Maybe we can check the last bit of the pointer to determinte if it's allocated by us.
+            free(header);
+        } break;
+        case COMPLEX_OPTIONAL: {
+            FreeFeatureValue(ptr);
+        } break;
+        case COMPLEX_CALLBACK: {
+
+        } break;
+        case COMPLEX_ARRAY: {
+            // free array elements and ptr
+            ArrayType& arrayType = *(ArrayType*)complexType1;
+            auto element_type = arrayType.element_type;
+            FTArray* arrayData = (FTArray*)ptr;
+            // only support reference as element
+            if (FT_IS_REFERENCE(element_type)) {
+                size_t element_size = sizeof(uintptr_t);
+                for (int32_t i = 0; i < arrayData->_size; i++) {
+                    void* element_ptr = (char*)arrayData->_element + element_size * i;
+                    if (element_ptr) {
+                        // free it.
+                        FreeFeatureValue(*(void**)element_ptr);
+                    }
+                }
+            }
+            free(arrayData->_element);
+            free(header);
+        } break;
+        case COMPLEX_PROMISE: {
+
+        } break;
+        default: {
+            FEATURE_LOG_ERROR("unsupported type !");
+        } break;
+        }
+    } else {
+        free(header);
+    }
 }
 
 void* GetFeatureProtoData(FeatureProtoHandle handle)
 {
-    ferry::FeaturePrototype* proto = static_cast<ferry::FeaturePrototype*>(handle);
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->native;
 }
 
 void SetFeatureProtoData(FeatureProtoHandle handle, void* data)
 {
-    ferry::FeaturePrototype* proto = static_cast<ferry::FeaturePrototype*>(handle);
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     proto->native = data;
 }
 
@@ -61,32 +139,32 @@ void SetFeatureProtoData(FeatureProtoHandle handle, void* data)
  * @param handle
  * @return void*
  */
-void* GetFeatureObjectData(FEATURE::FeatureInstanceHandle handle)
+void* GetFeatureObjectData(FeatureInstanceHandle handle)
 {
-    return static_cast<ferry::FeatureInstance*>(handle)->native;
+    return static_cast<FeatureInstance*>(handle)->native;
 }
 
 void SetFeatureObjectData(FeatureInstanceHandle handle, void* data)
 {
-    auto instance = static_cast<ferry::FeatureInstance*>(handle);
+    auto instance = static_cast<FeatureInstance*>(handle);
     instance->native = data;
 }
 
 ft_context_ref GetFeatureContext(FeatureInstanceHandle handle)
 {
-    return static_cast<ferry::FeatureInstance*>(handle)->prototype()->ft_ctx;
+    return static_cast<FeatureInstance*>(handle)->prototype()->ft_ctx;
 }
 
-//int InvokeFeatureCallback(FEATURE::FeatureRuntimeContext ctx, FEATURE::FeatureInstanceHandle handle, void** ret_value, int cid, ...)
-int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
+//int InvokeFeatureCallback(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, int cid, ...)
+int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...)
 {
-    auto instance = static_cast<ferry::FeatureInstance*>(handle);
+    auto instance = static_cast<FeatureInstance*>(handle);
     const auto& callback = instance->getCallback(cid);
 
     // get callback description.
     bool has_rest_param = false;
-    ferry::CallbackType& callbackType = *callback.cb_type;
-    int method_param_count = ferry::getParamCount(callbackType.parameters, &has_rest_param);
+    CallbackType& callbackType = *callback.cb_type;
+    int method_param_count = getParamCount(callbackType.parameters, &has_rest_param);
     if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
         return -1;
@@ -100,16 +178,16 @@ int InvokeFeatureCallback(FEATURE::FeatureInstanceHandle handle, int cid, ...)
     return ret;
 }
 
-// int InvokeFeatureCallbackCount(FEATURE::FeatureRuntimeContext ctx, FEATURE::FeatureInstanceHandle handle, void** ret_value, FeatureCallbackId cid, int count, ...)
-int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
+// int InvokeFeatureCallbackCount(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, FeatureCallbackId cid, int count, ...)
+int InvokeFeatureCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
 {
-    auto instance = static_cast<ferry::FeatureInstance*>(handle);
+    auto instance = static_cast<FeatureInstance*>(handle);
     const auto& callback = instance->getCallback(cid);
 
     // get callback description.
     bool has_rest_param = false;
-    ferry::CallbackType* callbackType = callback.cb_type;
-    int method_param_count = ferry::getParamCount(callbackType->parameters, &has_rest_param);
+    CallbackType* callbackType = callback.cb_type;
+    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
     FEATURE_CHECK_EQ(has_rest_param, true);
     FEATURE_CHECK_GE(count, method_param_count);
 
@@ -123,13 +201,13 @@ int InvokeFeatureCallbackCount(FEATURE::FeatureInstanceHandle handle, FeatureCal
 
 bool RemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id)
 {
-    auto instance = static_cast<ferry::FeatureInstance*>(handle);
+    auto instance = static_cast<FeatureInstance*>(handle);
     return instance->removeCallback(id);
 }
 
-int FeaturePromiseResolve(FeatureInstanceHandle handle, FEATURE::FeaturePromiseHandle promiseHandle, ...)
+int FeaturePromiseResolve(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...)
 {
-    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, promiseHandle);
     int ret = instance->settlePromise(true, promiseHandle, ap);
@@ -144,7 +222,7 @@ int FeaturePromiseResolve(FeatureInstanceHandle handle, FEATURE::FeaturePromiseH
 
 int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...)
 {
-    ferry::FeatureInstance* instance = static_cast<ferry::FeatureInstance*>(handle);
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, promiseHandle);
     int ret = instance->settlePromise(false, promiseHandle, ap);

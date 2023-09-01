@@ -48,6 +48,81 @@ int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
     return count;
 }
 
+int countMember(ObjectMember* member)
+{
+    int count = 0;
+    while (member->name) {
+        count++;
+        member++;
+    }
+    return count;
+}
+
+int getValueSize(FeatureType featureType)
+{
+    if (FT_IS_REFERENCE(featureType)) {
+        // alloc pointer pointed memory space
+        return sizeof(uintptr_t);
+    }
+    if (FT_IS_PRIMITIVE(featureType)) {
+        switch (FT_GET_VALUE(featureType)) {
+            case FT_VOID: {
+                return 0;
+            } break;
+            case FT_INT: {
+                return sizeof(int);
+            } break;
+            case FT_INT8: {
+                return sizeof(int8_t);
+            } break;
+            case FT_UINT8: {
+                return sizeof(uint8_t);
+            } break;
+            case FT_INT16: {
+                return sizeof(int16_t);
+            } break;
+            case FT_UINT16: {
+                return sizeof(uint16_t);
+            } break;
+            case FT_INT32: {
+                return sizeof(int32_t);
+            } break;
+            case FT_UINT32: {
+                return sizeof(uint32_t);
+            } break;
+            case FT_INT64: {
+                return sizeof(int64_t);
+            } break;
+            case FT_UINT64: {
+                return sizeof(uint64_t);
+            } break;
+            case FT_DOUBLE: {
+                return sizeof(double);
+            } break;
+            case FT_FLOAT: {
+                return sizeof(float);
+            } break;
+            case FT_BOOLEAN: {
+                return sizeof(int32_t);
+            } break;
+            case FT_CHAR: {
+            // return 0 for string buffer size.
+                return 0;
+            } break;
+            default: {
+                FEATURE_LOG_WARN("unsupported type detected !");
+                return 0;
+            }
+        }
+    } else if (FT_IS_COMPLEX(featureType)) {
+        // allocate complex type
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+        return complexType->size;
+    } else {
+        return 0;
+    }
+}
+
 /**
  * @brief FeaturePrototype constructor
  *

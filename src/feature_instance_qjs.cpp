@@ -74,7 +74,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     }
 }
 
-FeatureCallbackData FeatureInstanceQjs::getCallback(FEATURE::FeatureCallbackId id)
+FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
 {
     if (!callbacks.count(id)) {
         FeatureCallbackData callback;
@@ -86,7 +86,7 @@ FeatureCallbackData FeatureInstanceQjs::getCallback(FEATURE::FeatureCallbackId i
     return callbacks[id];
 }
 
-FEATURE::FeatureCallbackId FeatureInstanceQjs::addCallback(ft_value_t value, CallbackType* callbackType)
+FeatureCallbackId FeatureInstanceQjs::addCallback(ft_value_t value, CallbackType* callbackType)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     FeatureCallbackData callback;
@@ -98,7 +98,7 @@ FEATURE::FeatureCallbackId FeatureInstanceQjs::addCallback(ft_value_t value, Cal
 }
 
 
-bool FeatureInstanceQjs::removeCallback(FEATURE::FeatureCallbackId id)
+bool FeatureInstanceQjs::removeCallback(FeatureCallbackId id)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     if (!callbacks.count(id)) {
@@ -111,7 +111,7 @@ bool FeatureInstanceQjs::removeCallback(FEATURE::FeatureCallbackId id)
     return true;
 }
 
-ferry::FeaturePromiseData* FeatureInstanceQjs::getPromise(FEATURE::FeaturePromiseHandle promiseHandle)
+FeaturePromiseData* FeatureInstanceQjs::getPromise(FeaturePromiseHandle promiseHandle)
 {
     if (!promises.count(promiseHandle)) {
         return nullptr;
@@ -119,7 +119,7 @@ ferry::FeaturePromiseData* FeatureInstanceQjs::getPromise(FEATURE::FeaturePromis
     return promises[promiseHandle];
 }
 
-FEATURE::FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeaturePromiseData* data)
+FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeaturePromiseData* data)
 {
     FEATURE_CHECK_NE(data, nullptr);
     auto js_prm = FT_VAL_GET_JS_VAL(data->promise);
@@ -128,7 +128,7 @@ FEATURE::FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeaturePromiseData*
     return curr_cid++;
 }
 
-bool FeatureInstanceQjs::removePromise(FEATURE::FeaturePromiseHandle promiseHandle)
+bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     if (!promises.count(promiseHandle)) {
@@ -149,10 +149,10 @@ bool FeatureInstanceQjs::removePromise(FEATURE::FeaturePromiseHandle promiseHand
     return true;
 }
 
-int FeatureInstanceQjs::settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap)
+int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
 {
     // get feature instance
-    ferry::FeaturePromiseData* promiseData = getPromise(promiseHandle);
+    FeaturePromiseData* promiseData = getPromise(promiseHandle);
     if (!promiseData) {
         FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", promiseHandle);
         return -1;
@@ -164,12 +164,12 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FEATURE::FeaturePromiseHandl
         return -1;
     }
 
-    FeatureType param_types[2] = { promiseData->resolveTypes[idx], ferry::FT_VOID };
-    return invokeCallback({ .header = { .type = ferry::COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = ferry::FT_VOID }, promiseData->resolveFuncs[idx], ap, 1, 0);
+    FeatureType param_types[2] = { promiseData->resolveTypes[idx], FT_VOID };
+    return invokeCallback({ .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID }, promiseData->resolveFuncs[idx], ap, 1, 0);
 }
 
 int FeatureInstanceQjs::invokeCallback(
-                    const ferry::CallbackType& callbackType,
+                    const CallbackType& callbackType,
                     ft_value_t callback,
                     va_list& ap,
                     int method_param_count,
@@ -194,12 +194,12 @@ int FeatureInstanceQjs::invokeCallback(
         // convert parameters to feature_value_t
         for (int i = 0; i < method_param_count; i++) {
             FeatureType featureType = callbackType.parameters[i];
-            void* ptr = ferry::FeatureFFI::exactVariadicParameter(ap, featureType);
+            void* ptr = FeatureFFI::exactVariadicParameter(ap, featureType);
             if (!ptr) {
                 got_error = true;
                 break;
             }
-            if (!ferry::FeatureFFI::convertValueToGuest(this, featureType, ptr, js_ctx, argv[i])) {
+            if (!FeatureFFI::convertValueToGuest(this, featureType, ptr, js_ctx, argv[i])) {
                 FEATURE_LOG_ERROR("convert callback param failed !");
                 free(ptr);
                 got_error = true;
@@ -216,8 +216,8 @@ int FeatureInstanceQjs::invokeCallback(
             // it must be FtMalloced.
             void* arg = va_arg(ap, void*);
             void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
-            ferry::FTObjHeader* header = (ferry::FTObjHeader*)header_ptr;
-            if (!ferry::FeatureFFI::convertValueToGuest(this, header->featureType, arg, js_ctx, argv[i])) {
+            FTObjHeader* header = (FTObjHeader*)header_ptr;
+            if (!FeatureFFI::convertValueToGuest(this, header->featureType, arg, js_ctx, argv[i])) {
                 FEATURE_LOG_ERROR("convert callback rest param failed !");
                 argv[i] = FEATURE_VALUE_UNDEFINED;
             }
@@ -230,22 +230,22 @@ int FeatureInstanceQjs::invokeCallback(
     }
     delete[] argv;
     /*
-    if (callbackType.return_type != ferry::FT_VOID && ret_value && !jse_is_undefined(ret)) {
+    if (callbackType.return_type != FT_VOID && ret_value && !jse_is_undefined(ret)) {
         // allocate ret_value first
         ffi_type* ret_type = nullptr;
-        if (!ferry::FeatureFFI::createTypeDeclaration(callbackType.return_type, ret_type)) {
-            ferry::FeatureFFI::freeTypeDeclaration(ret_type);
+        if (!FeatureFFI::createTypeDeclaration(callbackType.return_type, ret_type)) {
+            FeatureFFI::freeTypeDeclaration(ret_type);
             FreeFeatureValue(*ret_value);
             *ret_value = nullptr;
             return -1;
         }
-        if (!ferry::FeatureFFI::convertValueToHost(instance, callbackType.return_type, *ret_value, js_ctx, ret)) {
-            ferry::FeatureFFI::freeTypeDeclaration(ret_type);
+        if (!FeatureFFI::convertValueToHost(instance, callbackType.return_type, *ret_value, js_ctx, ret)) {
+            FeatureFFI::freeTypeDeclaration(ret_type);
             FreeFeatureValue(*ret_value);
             *ret_value = nullptr;
             return -1;
         }
-        ferry::FeatureFFI::freeTypeDeclaration(ret_type);
+        FeatureFFI::freeTypeDeclaration(ret_type);
         // for reference type, remove the pointer's pointer.
         if (FT_IS_REFERENCE(callbackType.return_type)) {
             auto result = **(void***)ret_value;

@@ -23,6 +23,14 @@
 #include <memory>
 #include <vector>
 
+#define TRY_GET_REAL_TYPE(featureType)                                                    \
+    if (FT_IS_COMPLEX(featureType)) {                                                     \
+        ferry::ComplexTypeHeader* complexType = (ferry::ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        if (complexType->type == ferry::COMPLEX_OPTIONAL) {                                      \
+            featureType = ((ferry::OptionalType*)complexType)->type;                             \
+        }                                                                                 \
+    }
+
 namespace ferry {
 
 class FeatureInstance;
@@ -119,6 +127,10 @@ struct FeatureUnit {
  * @return int
  */
 int getParamCount(const FeatureType* param, bool* hasRest = nullptr, int* optional_size = nullptr);
+
+int getValueSize(FeatureType featureType);
+
+int countMember(ObjectMember* member);
 
 }
 
