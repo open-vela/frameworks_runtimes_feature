@@ -15,13 +15,13 @@
  */
 
 #include "feature_manager.h"
+#include "feature_registry.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature.h"
 #if defined(CONFIG_QUICKAPP)
 #include "aiotjs.h"
 #endif
-#include "ajs_features_init.h"
+#include "feature.h"
 #include <assert.h>
 #include <ffi.h>
 #include <memory>
@@ -44,125 +44,9 @@ static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit);
 static bool createPrototypeClass(context_ref ctx, FeaturePrototype* featurePrototype);
 static context_ref getContext(feature_runtime_ref rt);
 
-bool ManifestReader::parse(char* manifest)
+FeatureManager::FeatureManager(FeatureRegistry* registry)
+    : registry_(registry)
 {
-    doc_.ParseInsitu(manifest);
-    if (doc_.HasParseError()) {
-        FEATURE_LOG_ERROR("%s: parse json failed: %s", __func__, GetParseError_En(doc_.GetParseError()));
-        return false;
-    }
-    return true;
-}
-
-size_t ManifestReader::getFeaturesCount()
-{
-    if (!doc_.HasMember("features")) {
-        FEATURE_LOG_WARN("manifest do not have features variable !");
-        return 0;
-    }
-    const auto& features = doc_.GetObject()["features"];
-    if (!features.IsArray()) {
-        FEATURE_LOG_WARN("manifest.features is not array !");
-        return 0;
-    }
-    const auto& featuresArray = features.GetArray();
-    return featuresArray.Size();
-}
-
-const char* ManifestReader::getFeatureName(size_t index)
-{
-    const auto& count = getFeaturesCount();
-    if (!count) {
-        FEATURE_LOG_WARN("features count is 0 !");
-        return "";
-    }
-    if (index >= count) {
-        FEATURE_LOG_WARN("features count: %u, index %u out of bound !", count, index);
-        return "";
-    }
-    const auto& featureObj = doc_.GetObject()["features"].GetArray()[index].GetObject();
-    if (!featureObj.HasMember("name")) {
-        FEATURE_LOG_WARN("featureObj do not have name property !");
-        return "";
-    }
-    return featureObj["name"].GetString();
-}
-
-FeatureManager::FeatureManager(IApplication* app)
-    : app_(app)
-{
-}
-
-bool FeatureManager::init_feature(char* manifest)
-{
-    // register features
-    ManifestReader reader;
-    std::vector<std::string> features;
-
-    if (manifest != NULL) {
-        FEATURE_LOG_DEBUG("manifest is %s!", manifest);
-        if (!reader.parse(manifest)) {
-            FEATURE_LOG_ERROR("parse manifest failed !");
-            return false;
-        }
-        FEATURE_LOG_DEBUG("reader.getFeaturesCount() is %d!", reader.getFeaturesCount());
-        for (size_t i = 0; i < reader.getFeaturesCount(); i++) {
-            const char* featureName = reader.getFeatureName(i);
-            if (featureName && strlen(featureName)) {
-                features.emplace_back(featureName);
-            }
-        }
-    } else {
-        FEATURE_LOG_DEBUG("manifest is null!");
-        manifest_check_enable = false;
-    }
-
-    // register features
-    #include "ajs_features_list.h"
-
-    return true;
-}
-
-bool FeatureManager::registerFeature(std::vector<std::string>&features, const FeatureDescription* description)
-{
-    if (!description)
-        return false;
-
-    if (manifest_check_enable) {
-        for (const auto& feature_name : features) {
-            if (feature_name == description->name) {
-                auto unit = new FeatureUnit(description);
-                registeredFeatures_[description->name] = unit;
-                // invoke onRegister callback
-                FEATURE_LOG_DEBUG("description->name is %s...", description->name);
-                if (description->native_callbacks->onRegister) {
-                    FEATURE_LOG_DEBUG("invoke onRegister callback...");
-                    description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
-                }
-                return true;
-            }
-        }
-    } else {
-        auto unit = new FeatureUnit(description);
-        registeredFeatures_[description->name] = unit;
-        // invoke onRegister callback
-        FEATURE_LOG_DEBUG("description->name is %s...", description->name);
-        if (description->native_callbacks->onRegister) {
-            FEATURE_LOG_DEBUG("invoke onRegister callback...");
-            description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
-        }
-        return true;
-    }
-    return false;
-}
-
-void FeatureManager::uninit()
-{
-    // delete all registered FeatureUnit
-    for (auto& unit : registeredFeatures_) {
-        delete unit.second;
-    }
-    registeredFeatures_.clear();
 }
 
 FeatureInstance* getInstance(feature_value_t val)
@@ -290,53 +174,53 @@ static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit)
 feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
-    auto pos = registeredFeatures_.find(name);
-    if (pos == registeredFeatures_.end()) {
-        FEATURE_LOG_WARN("can't find %s in FeatureManager, fallback to original JS module load", name);
-        // TODO: fallback to classic js module loader
+    FeatureUnit* unit = registry_->findFeature(name);
+    if (!unit) {
+        FEATURE_LOG_WARN("can't find %s in FeatureRegistry, fallback to original JS module load", name);
         return FEATURE_VALUE_UNDEFINED;
     }
 
-    auto& unit = *pos->second;
-    if (!unit.proto) {
+    if (!unit->proto) {
         // create proto
-        if (!createFeaturePrototype(ctx, &unit)) {
+        if (!createFeaturePrototype(ctx, unit) || !unit->proto) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
         }
     }
+
+    auto proto = unit->proto;
     // create prototype class instance
-    if (feature_is_undefined(unit.proto->js_proto)) {
+    if (feature_is_undefined(proto->js_proto)) {
         feature_value_t js_proto_obj = feature_object(static_cast<feature_context_ref>(ctx));
         if (feature_is_exception(js_proto_obj)) {
             feature_dump_error(static_cast<feature_context_ref>(ctx));
             return FEATURE_VALUE_UNDEFINED;
         }
         // TODO: initialize js_proto using description
-        initialize_prototype(ctx, &unit, js_proto_obj);
-        unit.proto->js_proto = js_proto_obj;
-        if (unit.proto->description->native_callbacks->onCreate) {
+        initialize_prototype(ctx, unit, js_proto_obj);
+        proto->js_proto = js_proto_obj;
+        if (proto->description->native_callbacks->onCreate) {
             FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            unit.proto->description->native_callbacks->onCreate(ctx, unit.proto);
+            proto->description->native_callbacks->onCreate(ctx, proto);
         }
     }
 
     // create feature instance for the required object
-    auto featureInstance = std::make_unique<FeatureInstance>(unit.proto);
+    auto featureInstance = std::make_unique<FeatureInstance>(proto);
     // create object with proto and set opaque refers to FeatureInstance
-    feature_value_t feature_object = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), unit.proto->js_proto, class_id);
+    feature_value_t feature_object = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), proto->js_proto, class_id);
     feature_set_opaque(feature_object, featureInstance.get());
 
     // setup featureInstance WeakRef, refers to feature_object
-    // unit.proto->instances[iid]->js_self = WreakRef(feature_object);
+    // proto->instances[iid]->js_self = WreakRef(feature_object);
 
     WeakRefInit(ctx, feature_object);
     // insert into instances array, update iid
-    int iid = unit.proto->addInstance(std::move(featureInstance));
-    unit.proto->instances[iid]->iid = iid;
-    if (unit.proto->description->native_callbacks->onRequired) {
+    int iid = proto->addInstance(std::move(featureInstance));
+    proto->instances[iid]->iid = iid;
+    if (proto->description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        unit.proto->description->native_callbacks->onRequired(ctx, unit.proto->instances[iid].get());
+        proto->description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
     }
 
     return feature_object;
