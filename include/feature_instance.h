@@ -69,7 +69,6 @@ public:
     FeaturePrototype* prototype() { return proto_; }
 
     void* native;
-    FEATURE::FeatureCallbackId curr_cid = 0;
 
 private:
     FeaturePrototype* proto_;

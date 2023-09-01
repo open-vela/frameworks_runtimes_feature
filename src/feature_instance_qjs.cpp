@@ -86,8 +86,8 @@ FeatureCallbackId FeatureInstanceQjs::addCallback(ft_value_t value, CallbackType
     FeatureCallbackData callback;
     callback.cb = feature_dup_value(js_ctx, FT_VAL_GET_JS_VAL(value));
     callback.cb_type = callbackType;
-    callbacks[curr_cid] = callback;
-    return curr_cid++;
+    callbacks[curr_cid_] = callback;
+    return curr_cid_++;
 }
 
 
@@ -115,8 +115,8 @@ FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeaturePromiseData* data)
 {
     FEATURE_CHECK_NE(data, nullptr);
     FEATURE_CHECK_NE(feature_is_undefined(data->promise), true);
-    promises[curr_cid] = data;
-    return curr_cid++;
+    promises[curr_cid_] = data;
+    return curr_cid_++;
 }
 
 bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)

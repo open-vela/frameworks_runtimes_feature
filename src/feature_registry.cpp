@@ -18,13 +18,11 @@
 #include "feature_utils.h"
 #include "ajs_features_init.h"
 #include <assert.h>
-#include <ffi.h>
 #include <memory>
 #include <rapidjson/error/en.h>
 #include <rapidjson/document.h>
 #include <string.h>
 #include <string>
-#include <vector>
 
 typedef rapidjson::Document JSONDocument;
 
