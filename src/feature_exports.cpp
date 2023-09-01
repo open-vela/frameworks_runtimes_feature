@@ -25,6 +25,18 @@
 
 namespace FEATURE {
 
+
+void* FTMalloc(size_t size, FEATURE::FeatureType featureType)
+{
+    void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
+    ferry::FTObjHeader* objHeader = (ferry::FTObjHeader*)ptr;
+    objHeader->ref_count = 1;
+    objHeader->featureType = featureType;
+    ptr = (char*)ptr + FT_OBJ_HEADER_SIZE;
+    memset(ptr, 0, size);
+    return ptr;
+}
+
 void DupFeatureValue(void* ptr)
 {
     ferry::FTObjHeader* header = (ferry::FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);

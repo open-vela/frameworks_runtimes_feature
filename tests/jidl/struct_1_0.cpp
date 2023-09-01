@@ -38,7 +38,7 @@
   };
 
   Struct_1_0_Chapter* mallocChapter () {
-    return (Struct_1_0_Chapter*)FeatureFFI::FTMalloc(
+    return (Struct_1_0_Chapter*)FTMalloc(
       sizeof(Struct_1_0_Chapter), FT_MK_COMPLEX(&Struct_1_0_Chapter_struct_type));
   }
 
@@ -79,7 +79,7 @@
   };
 
   Struct_1_0_Book* mallocBook () {
-    return (Struct_1_0_Book*)FeatureFFI::FTMalloc(
+    return (Struct_1_0_Book*)FTMalloc(
       sizeof(Struct_1_0_Book), FT_MK_COMPLEX(&Struct_1_0_Book_struct_type));
   }
 

@@ -68,7 +68,7 @@
   };
 
   ${module_name}_${struct_name}* malloc${struct_name} () {
-    return (${module_name}_${struct_name}*)FeatureFFI::FTMalloc(
+    return (${module_name}_${struct_name}*)FTMalloc(
       sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type));
   }
 

@@ -3,7 +3,6 @@
 #include "ajs_features_init.h"
 #include "feature_log.h"
 #include "feature_framework.h"
-#include "feature_ffi.h"
 #include <ffi.h>
 
 using namespace ferry;
@@ -66,7 +65,7 @@ static Point* __printPoint(void* FeatureInstanceHandle, int64_t data, Point* poi
 static const char* __printString(void* FeatureInstanceHandle, int64_t data, const char* str)
 {
     printf("str is: %s\n", str);
-    char* buf = (char*)FeatureFFI::FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FTMalloc(128, FT_CHAR);
     sprintf(buf, "returned string: %s", str);
     return buf;
 }
@@ -206,9 +205,9 @@ void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::Feature
 
 void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
 {
-    char* arg1 = (char*)FeatureFFI::FTMalloc(sizeof("test1") + 1, FT_CHAR);
+    char* arg1 = (char*)FTMalloc(sizeof("test1") + 1, FT_CHAR);
     sprintf(arg1, "%s", "test1");
-    char* arg2 = (char*)FeatureFFI::FTMalloc(sizeof("test2") + 1, FT_CHAR);
+    char* arg2 = (char*)FTMalloc(sizeof("test2") + 1, FT_CHAR);
     sprintf(arg2, "%s", "test2");
     if (InvokeFeatureCallbackCount(handle, callback, 6, "hello world", 123.0, 456.0, 789.0, arg1, arg2)) {
         FEATURE_LOG_ERROR("invoke failed !");
@@ -315,15 +314,15 @@ static OptionalType recv_point_array_type {
     .str = "this is optional default string"
 };
 
-Point* g_point1 = new (ferry::FeatureFFI::FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);
+Point* g_point1 = new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);
 
 FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
 {
-    FTArray* strArray = static_cast<FTArray*>(FeatureFFI::FTMalloc(sizeof(FTArray), FT_MK_COMPLEX(&string_array_type)));
+    FTArray* strArray = static_cast<FTArray*>(FTMalloc(sizeof(FTArray), FT_MK_COMPLEX(&string_array_type)));
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureFFI::FTMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FTMalloc(100, FT_CHAR));
         sprintf(str, "hello%d", i);
         ((char**)strArray->_element)[i] = str;
     }
@@ -353,11 +352,11 @@ static struct FeatureCallbacks callbacks {
         FEATURE_LOG_INFO("onRegister");
     },
         [](FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-            SetFeatureProtoData(handle, new (FeatureFFI::FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
+            SetFeatureProtoData(handle, new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
             FEATURE_LOG_INFO("onCreate");
         },
         [](FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-            SetFeatureObjectData(handle, new (FeatureFFI::FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
+            SetFeatureObjectData(handle, new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
             FEATURE_LOG_INFO("onRequired");
         },
         [](FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {

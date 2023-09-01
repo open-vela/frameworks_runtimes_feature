@@ -94,6 +94,8 @@ struct FeatureCallbacks {
     void (*onUnregister)(FeatureRuntimeContext ctx); // 插件反注册
 };
 
+void* FTMalloc(size_t size, FeatureType featureType);
+
 /**
  * @brief dump feature value, add ref_count.
  *      ptr must be allocated using FTMalloc
