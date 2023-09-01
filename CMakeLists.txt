@@ -81,13 +81,13 @@ add_library(feature-framework STATIC
     ${FEATURE_FRAMEWORK_INC}/feature_exports.h
     ${FEATURE_FRAMEWORK_INC}/feature_utils.h
     ${FEATURE_FRAMEWORK_INC}/feature_log.h
-    ${FEATURE_FRAMEWORK_SRC}/feature_manager.cpp
+    ${FEATURE_FRAMEWORK_SRC}/feature_manager_qjs.cpp
     ${FEATURE_FRAMEWORK_SRC}/feature_registry.cpp
     ${FEATURE_FRAMEWORK_SRC}/feature_instance.cpp
     ${FEATURE_FRAMEWORK_SRC}/feature_instance_qjs.cpp
     ${FEATURE_FRAMEWORK_SRC}/feature_exports.cpp
-    ${FEATURE_FRAMEWORK_INC}/feature_ffi.h
-    ${FEATURE_FRAMEWORK_SRC}/feature_ffi.cpp
+    ${FEATURE_FRAMEWORK_INC}/feature_ffi_qjs.h
+    ${FEATURE_FRAMEWORK_SRC}/feature_ffi_qjs.cpp
     ${FEATURE_FRAMEWORK_INC}/feature_framework.h
     ${FEATURE_FRAMEWORK_SRC}/feature_framework.cpp
     ${FEATURE_FRAMEWORK_INC}/feature.h

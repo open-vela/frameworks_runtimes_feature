@@ -29,7 +29,7 @@ namespace ferry {
  * @brief the feature ffi functions
  *
  */
-namespace FeatureFFI {
+namespace FeatureFFIQjs {
 
     /**
      * @brief create type declaration using FeatureType

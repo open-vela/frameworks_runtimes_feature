@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "feature_manager.h"
+#include "feature_manager_qjs.h"
 #include "feature_registry.h"
-#include "feature_ffi.h"
+#include "feature_ffi_qjs.h"
 #include "feature_framework.h"
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
@@ -43,7 +43,7 @@ namespace ferry {
 static thread_local feature_classid_t class_id; // prototype class id
 static thread_local feature_classdef_t class_def; // prototype class defination, contains finalizer
 
-// some static functions used by FeatureManager
+// some static functions used by FeatureManagerQjs
 static bool createFeaturePrototype(context_ref ctx, FeatureUnit* unit);
 static bool createJsInstanceClass(context_ref ctx, const char* class_name);
 static context_ref getContext(feature_runtime_ref rt);
@@ -267,12 +267,12 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 got_error = true;
                 break;
             }
-            if (!FeatureFFI::createTypeDeclaration(param, ffi_params[external_count + i])) {
+            if (!FeatureFFIQjs::createTypeDeclaration(param, ffi_params[external_count + i])) {
                 FEATURE_LOG_ERROR("prepareType for type failed !");
                 got_error = true;
                 break;
             }
-            if (!FeatureFFI::convertValueToHost(instance, param, ffi_arg_values[external_count + i], ctx, currArg)) {
+            if (!FeatureFFIQjs::convertValueToHost(instance, param, ffi_arg_values[external_count + i], ctx, currArg)) {
                 FEATURE_LOG_ERROR("convert argument %d failed !", i);
                 got_error = true;
                 break;
@@ -307,7 +307,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
                 OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param);
                 FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
-                if (!FeatureFFI::createTypeDeclaration(param, ffi_params[external_count + i])) {
+                if (!FeatureFFIQjs::createTypeDeclaration(param, ffi_params[external_count + i])) {
                     FEATURE_LOG_ERROR("prepareType for type failed !");
                     got_error = true;
                     break;
@@ -320,14 +320,14 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             break;
 
         // prepeare return type
-        if (!FeatureFFI::createTypeDeclaration(method.return_type, ffi_ret)) {
+        if (!FeatureFFIQjs::createTypeDeclaration(method.return_type, ffi_ret)) {
             FEATURE_LOG_ERROR("prepareType for complex type failed !");
             got_error = true;
             break;
         }
         // create return value pointer inneed.
         if (!isPromise && method.return_type != FT_VOID) {
-            if (!FeatureFFI::createHostValue(method.return_type, ffi_ret_value, true)) {
+            if (!FeatureFFIQjs::createHostValue(method.return_type, ffi_ret_value, true)) {
                 FEATURE_LOG_ERROR("create return value failed !");
                 got_error = true;
                 break;
@@ -367,7 +367,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!isPromise && method.return_type != FT_VOID) {
             // process return value
-            if (!FeatureFFI::convertValueToGuest(instance, method.return_type, ffi_ret_value, ctx, method_ret_value)) {
+            if (!FeatureFFIQjs::convertValueToGuest(instance, method.return_type, ffi_ret_value, ctx, method_ret_value)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(ctx, method_ret_value);
                 method_ret_value = FEATURE_EXCEPTION;
@@ -380,14 +380,14 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     for (int i = 0; i < method_param_count; i++) {
         // free type
         if (ffi_params[i + external_count]) {
-            FeatureFFI::freeTypeDeclaration(ffi_params[i + external_count]);
+            FeatureFFIQjs::freeTypeDeclaration(ffi_params[i + external_count]);
         }
         // free value
         if (ffi_arg_values[i + external_count]) {
             FreeFeatureValue(ffi_arg_values[i + external_count]);
         }
     }
-    FeatureFFI::freeTypeDeclaration(ffi_ret);
+    FeatureFFIQjs::freeTypeDeclaration(ffi_ret);
     if (ffi_ret_value) {
         FreeFeatureValue(ffi_ret_value);
     }
@@ -427,11 +427,11 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     void* arg_values[2] = { &instance, &accessor->data };
     void* ret_value = nullptr;
     do {
-        if (!FeatureFFI::createTypeDeclaration(accessor->type, ffi_ret)) {
+        if (!FeatureFFIQjs::createTypeDeclaration(accessor->type, ffi_ret)) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
-        if (!FeatureFFI::createHostValue(accessor->type, ret_value, true)) {
+        if (!FeatureFFIQjs::createHostValue(accessor->type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
             break;
         }
@@ -446,14 +446,14 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
         // invoke
         ffi_call(&cif, accessor->getter, ret_value, arg_values);
         // process return value
-        if (!FeatureFFI::convertValueToGuest(instance, accessor->type, ret_value, ctx, method_ret_value)) {
+        if (!FeatureFFIQjs::convertValueToGuest(instance, accessor->type, ret_value, ctx, method_ret_value)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, method_ret_value);
             method_ret_value = FEATURE_EXCEPTION;
         }
     } while (0);
     // free resources
-    FeatureFFI::freeTypeDeclaration(ffi_ret);
+    FeatureFFIQjs::freeTypeDeclaration(ffi_ret);
     FreeFeatureValue(ret_value);
 
     return method_ret_value;
@@ -477,12 +477,12 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     void* arg_values[3] = { &instance, &accessor->data, nullptr };
     do {
         // prepare third param type declaration, create by accessor type
-        if (!FeatureFFI::createTypeDeclaration(accessor->type, ffi_params[2])) {
+        if (!FeatureFFIQjs::createTypeDeclaration(accessor->type, ffi_params[2])) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
         // fill third param using guest value and accesor type
-        if (!FeatureFFI::convertValueToHost(instance, accessor->type, arg_value_input, ctx, val)) {
+        if (!FeatureFFIQjs::convertValueToHost(instance, accessor->type, arg_value_input, ctx, val)) {
             FEATURE_LOG_ERROR("convert to host value failed !");
             break;
         }
@@ -499,7 +499,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
         ffi_call(&cif, accessor->setter, arg_values[2], arg_values);
     } while (0);
     // free resources
-    FeatureFFI::freeTypeDeclaration(ffi_params[2]);
+    FeatureFFIQjs::freeTypeDeclaration(ffi_params[2]);
     FreeFeatureValue(arg_value_input);
     return FEATURE_VALUE_UNDEFINED;
 }
@@ -515,14 +515,14 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         void* ret_value = nullptr;
         ffi_type* param_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
         void* arg_values[2] = { &prototype, (void*)&memberConst.data };
-        if (!FeatureFFI::createTypeDeclaration(memberConst.type, ret_type)) {
+        if (!FeatureFFIQjs::createTypeDeclaration(memberConst.type, ret_type)) {
             FEATURE_LOG_ERROR("create type failed !");
-            FeatureFFI::freeTypeDeclaration(ret_type);
+            FeatureFFIQjs::freeTypeDeclaration(ret_type);
             return val;
         }
-        if (!FeatureFFI::createHostValue(memberConst.type, ret_value, true)) {
+        if (!FeatureFFIQjs::createHostValue(memberConst.type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
-            FeatureFFI::freeTypeDeclaration(ret_type);
+            FeatureFFIQjs::freeTypeDeclaration(ret_type);
             FreeFeatureValue(ret_value);
             return val;
         }
@@ -531,26 +531,26 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ret_type, param_types);
         if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            FeatureFFI::freeTypeDeclaration(ret_type);
+            FeatureFFIQjs::freeTypeDeclaration(ret_type);
             FreeFeatureValue(ret_value);
             return val;
         }
         // invoke
         ffi_call(&cif, memberConst.callback, ret_value, arg_values);
         // process return value
-        if (!FeatureFFI::convertValueToGuest(nullptr, memberConst.type, ret_value, ctx, val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(nullptr, memberConst.type, ret_value, ctx, val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, val);
             val = FEATURE_VALUE_UNDEFINED;
         }
-        FeatureFFI::freeTypeDeclaration(ret_type);
+        FeatureFFIQjs::freeTypeDeclaration(ret_type);
         FreeFeatureValue(ret_value);
         if (FT_IS_REFERENCE(ret_value)) {
             free(ret_value);
         }
     } else {
         // check type
-        if (!FeatureFFI::convertValueToGuest(nullptr, memberConst.type, (void*)&memberConst.data, ctx, val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(nullptr, memberConst.type, (void*)&memberConst.data, ctx, val)) {
             FEATURE_LOG_ERROR("can not convert const value to guest!");
             feature_free_value(ctx, val);
             val = FEATURE_VALUE_UNDEFINED;
@@ -659,13 +659,13 @@ static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
     return true;
 }
 
-FeatureManager::FeatureManager(FeatureRegistry* registry)
+FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
     : registry_(registry)
     , ft_ctx_(nullptr)
 {
 }
 
-feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name)
+feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
     FeatureUnit* unit = registry_->findFeature(name);
@@ -728,7 +728,7 @@ feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name
     return feature_object;
 }
 
-void FeatureManager::featureRelease()
+void FeatureManagerQjs::featureRelease()
 {
     for (int i = 0; i < required_features_.size(); ++i) {
         FeatureUnit* unit = registry_->findFeature(required_features_[i].data());

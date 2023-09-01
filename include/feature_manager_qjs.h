@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FEATURE_MANAGER_H__
-#define __FEATURE_MANAGER_H__
+#ifndef __FEATURE_MANAGER_QJS_H__
+#define __FEATURE_MANAGER_QJS_H__
+
 #include "feature.h"
 #include "feature_context.h"
 
@@ -22,7 +23,7 @@ namespace ferry {
 
 class FeatureRegistry;
 
-// feature require的实现，直接走FeatureManager，失败之后fallback回JS require
+// feature require的实现，直接走FeatureManagerQjs，失败之后fallback回JS require
 // 需要考虑，无需require的全局函数怎么处理？如setInterval这类
 
 /**
@@ -33,9 +34,9 @@ class FeatureRegistry;
  * Application level or Page level.
  * ApplicationManager manages all feature instance and it's life cycles.
  */
-class FeatureManager {
+class FeatureManagerQjs {
 public:
-    FeatureManager(FeatureRegistry* registry);
+    FeatureManagerQjs(FeatureRegistry* registry);
     /**
      * @brief featureRequire, return feature object by name
      *
@@ -50,8 +51,7 @@ private:
     FeatureRegistry* registry_;
     std::vector<std::string> required_features_;
     ft_context_ref ft_ctx_;
-};// class FeatureManager
+};
 
 }
-
-#endif
+#endif // __FEATURE_MANAGER_QJS_H__
