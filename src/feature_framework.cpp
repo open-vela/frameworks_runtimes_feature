@@ -128,8 +128,8 @@ int getValueSize(FeatureType featureType)
  *
  * @param description
  */
-FeaturePrototype::FeaturePrototype(void* ctx, FeatureDescription* feature_desc)
-    : ft_ctx(CreateFeatureContext(ctx))
+FeaturePrototype::FeaturePrototype(ft_context_ref ctx, FeatureDescription* feature_desc)
+    : ft_ctx(ctx)
     , native(nullptr)
     , description(feature_desc)
 {
@@ -140,7 +140,6 @@ FeaturePrototype::FeaturePrototype(void* ctx, FeatureDescription* feature_desc)
 FeaturePrototype::~FeaturePrototype()
 {
     instances.clear();
-    ReleaseFeatureContext(ft_ctx);
     ft_ctx = nullptr;
 }
 

@@ -34,23 +34,10 @@ typedef struct WeakRef {
     struct weakref_list_node link;
 } WeakRef;
 
-typedef struct FeaturePromiseData {
-   ft_value_t promise; // 保存promise对象
-   ft_value_t resolveFuncs[2]; //functions
-   FEATURE::FeatureType resolveTypes[2];
-} FeaturePromiseData;
-
-typedef struct FeatureCallbackData {
-   ft_value_t cb;
-   CallbackType* cb_type;
-} FeatureCallbackData;
-
 class FeatureInstance {
 public:
     FeatureInstance(struct FeaturePrototype* prototype);
     virtual ~FeatureInstance();
-
-    virtual FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id) = 0;
 
     /**
      * @brief add callback to instance
@@ -72,26 +59,13 @@ public:
      */
     virtual bool removeCallback(FEATURE::FeatureCallbackId id) = 0;
 
-    /**
-     * @brief Get the Promise object
-     *
-     * @param promiseHandle
-     * @return FEATURE::FeaturePromiseData*
-     */
-    virtual FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle) = 0;
-
-    virtual FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data) = 0;
-
     virtual bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle) = 0;
 
     virtual int settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap) = 0;
 
-    virtual int invokeCallback(
-                    const ferry::CallbackType& callbackType,
-                    ft_value_t callback,
-                    va_list& ap,
-                    int method_param_count,
-                    int rest_param_count) = 0;
+    virtual int invokeCallback(int cid, va_list& ap) = 0;
+
+    virtual int invokeCallbackCount(int cid, va_list& ap, int count) = 0;
 
     void setInstanceId(int instance_id) { instance_id_ =  instance_id; }
 
@@ -99,8 +73,6 @@ public:
 
     FeaturePrototype* prototype() { return proto_; }
 
-    std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises;   // all promises created by native feature
-    std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks; // instance should save feature resources
     void* native;
     WeakRef weak_self_;
     FEATURE::FeatureCallbackId curr_cid = 0;

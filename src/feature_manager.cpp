@@ -116,18 +116,14 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
 
     auto proto = instance->prototype();
     // mark callbacks
-    for (auto& pair : instance->callbacks) {
-        auto js_cb = FT_VAL_GET_JS_VAL(pair.second.cb);
-        feature_mark_value(rt, js_cb, mark_func);
+    for (auto& pair : ((FeatureInstanceQjs*)instance)->callbacks) {
+        feature_mark_value(rt, pair.second.cb, mark_func);
     }
     // mark promies
-    for(auto& pair : instance->promises) {
-        auto js_prm = FT_VAL_GET_JS_VAL(pair.second->promise);
-        auto js_res_0 = FT_VAL_GET_JS_VAL(pair.second->resolveFuncs[0]);
-        auto js_res_1 = FT_VAL_GET_JS_VAL(pair.second->resolveFuncs[1]);
-        feature_mark_value(rt, js_prm, mark_func);
-        feature_mark_value(rt, js_res_0, mark_func);
-        feature_mark_value(rt, js_res_1, mark_func);
+    for(auto& pair : ((FeatureInstanceQjs*)instance)->promises) {
+        feature_mark_value(rt, pair.second->promise, mark_func);
+        feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
+        feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
     }
     // should mark prototype object.
     auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto);
@@ -148,44 +144,39 @@ static bool createJsInstanceClass(context_ref ctx, const char* class_name)
     return true;
 }
 
-static FeaturePrototype* createFeaturePrototype(context_ref ctx, FeatureDescription* description)
+static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, FeatureDescription* description)
 {
     FEATURE_CHECK_NE(description, nullptr);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
+    FEATURE_CHECK_NE(js_ctx, nullptr);
     FEATURE_LOG_DEBUG("create FeaturePrototype for description: %s.", description->name);
-    if (!createJsInstanceClass(ctx, "FeatureInstanceObject")) {
+    if (!createJsInstanceClass(js_ctx, "FeatureInstanceObject")) {
         FEATURE_LOG_ERROR("create js Instance class for feature %s.", description->name);
         return nullptr;
     }
-    return new FeaturePrototype(ctx, description);
+    return new FeaturePrototype(ft_ctx, description);
 }
 
 static FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, FeatureType resolve_type, FeatureType reject_type)
 {
     FeaturePromiseData* data = (FeaturePromiseData*)malloc(sizeof(FeaturePromiseData));
-
-    auto js_prm_ptr = FT_VAL_GET_JS_VAL_PTR(data->promise);
-    auto js_res_0_ptr = FT_VAL_GET_JS_VAL_PTR(data->resolveFuncs[0]);
-    auto js_res_1_ptr = FT_VAL_GET_JS_VAL_PTR(data->resolveFuncs[1]);
-    *js_prm_ptr = FEATURE_VALUE_UNDEFINED;
-    *js_res_0_ptr = FEATURE_VALUE_UNDEFINED;
-    *js_res_1_ptr = FEATURE_VALUE_UNDEFINED;
+    data->promise = FEATURE_VALUE_UNDEFINED;
+    data->resolveFuncs[0] = FEATURE_VALUE_UNDEFINED;
+    data->resolveFuncs[1] = FEATURE_VALUE_UNDEFINED;
     data->resolveTypes[0] = resolve_type;
     data->resolveTypes[1] = reject_type;
 
     auto ft_ctx = GetFeatureContext(handle);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    feature_value_t resolve_funcs[2];
-    feature_value_t promise = feature_promise_capability(js_ctx, resolve_funcs);
+    feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
     if (feature_is_exception(promise)) {
-        feature_free_value(js_ctx, resolve_funcs[0]);
-        feature_free_value(js_ctx, resolve_funcs[1]);
+        feature_free_value(js_ctx, data->resolveFuncs[0]);
+        feature_free_value(js_ctx, data->resolveFuncs[1]);
         feature_free_value(js_ctx, promise);
         free(data);
         return nullptr;
     }
-    *js_prm_ptr = promise;
-    *js_res_0_ptr = resolve_funcs[0];
-    *js_res_1_ptr = resolve_funcs[1];
+    data->promise = promise;
     return data;
 }
 
@@ -364,12 +355,11 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             // create promise and add to instance
             auto promiseData = FeatureCreatePromise(instance, promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
             FEATURE_CHECK_NE(promiseData, nullptr);
-            promiseHandle = instance->addPromise(promiseData);
+            promiseHandle = ((FeatureInstanceQjs*)instance)->addPromise(promiseData);
             // pass promiseHandle to native function
             ffi_arg_values[2] = &promiseHandle;
             // dup and return promise object.
-            auto js_prm = FT_VAL_GET_JS_VAL(promiseData->promise);
-            method_ret_value = feature_dup_value(ctx, js_prm);
+            method_ret_value = feature_dup_value(ctx, promiseData->promise);
         }
         // invoke method
         ffi_call(&cif, method.callback, ffi_ret_value, ffi_arg_values);
@@ -668,6 +658,7 @@ static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
 
 FeatureManager::FeatureManager(FeatureRegistry* registry)
     : registry_(registry)
+    , ft_ctx_(nullptr)
 {
 }
 
@@ -680,9 +671,12 @@ feature_value_t FeatureManager::featureRequire(context_ref ctx, const char* name
         return FEATURE_VALUE_UNDEFINED;
     }
 
+    if (!ft_ctx_)
+        ft_ctx_ = CreateFeatureContext(ctx);
+
     if (!unit->proto) {
         // create proto
-        unit->proto = createFeaturePrototype(ctx, unit->description);
+        unit->proto = createFeaturePrototype(ft_ctx_, unit->description);
         if (!unit->proto) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
@@ -751,6 +745,11 @@ void FeatureManager::featureRelease()
             feature_free_value(js_ctx, *js_proto_ptr);
             *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         }
+    }
+
+    if (ft_ctx_) {
+        ReleaseFeatureContext(ft_ctx_);
+        ft_ctx_ = nullptr;
     }
 }
 
