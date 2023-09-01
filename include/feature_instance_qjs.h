@@ -28,6 +28,11 @@ namespace ferry {
 
 class FeaturePrototype;
 
+typedef struct WeakRef {
+    ft_value_t ft_value;
+    struct weakref_list_node link;
+} WeakRef;
+
 typedef struct FeatureCallbackData {
    feature_value_t cb;
    CallbackType* cb_type;
@@ -62,6 +67,7 @@ public:
 
     std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks; // instance should save feature resources
     std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises;   // all promises created by native feature
+    WeakRef weak_self_;
 
 private:
     FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
