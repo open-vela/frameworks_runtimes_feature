@@ -32,7 +32,6 @@
 using namespace FEATURE;
 
 namespace ferry {
-extern struct FeatureInstance* getInstance(feature_value_t val);
 
 /////////////////////////////////////////////////
 FeatureInstance::FeatureInstance(FeaturePrototype* proto)
