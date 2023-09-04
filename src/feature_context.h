@@ -30,12 +30,8 @@ typedef enum ft_type {
 } ft_type;
 
 typedef struct ft_value_t {
-    ft_type type;
-# if __WORDSIZE == 64
     uint64_t val[2];
-#else
-    uint64_t val;
-#endif
+    ft_type type;
 } ft_value_t;
 
 typedef ft_value_t *ft_value_ref;

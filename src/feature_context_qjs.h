@@ -30,8 +30,8 @@
 #define QJS_VAL_TO_FT_PTR(qjs_val) ((ft_value_t*)(&(qjs_val)))
 
 typedef struct qjs_val_t {
-    ft_type type;
     JSValue js_val;
+    ft_type type;
 } qjs_val_t;
 
 bool InitFeatureContextQjs(ft_context_ref ft_ctx);
