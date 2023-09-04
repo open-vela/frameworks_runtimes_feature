@@ -38,10 +38,11 @@ void* FTMalloc(size_t size, FeatureType featureType)
     return ptr;
 }
 
-void DupFeatureValue(void* ptr)
+void* DupFeatureValue(void* ptr)
 {
     FTObjHeader* header = (FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
     header->ref_count++;
+    return ptr;
 }
 
 void FreeFeatureValue(void* ptr)

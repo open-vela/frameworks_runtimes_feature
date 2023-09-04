@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 #include "feature_instance_qjs.h"
+#include "feature_context_qjs.h"
+#include "feature_ffi_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature_ffi_qjs.h"
-#include "feature_context_qjs.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -30,8 +30,8 @@ using namespace FEATURE;
 
 namespace ferry {
 
-FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
-    : FeatureInstance(proto)
+FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, NativeFunc* vtable, int vtable_size)
+    : FeatureInstance(proto, vtable, vtable_size)
 {
 }
 
@@ -82,8 +82,8 @@ FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
 {
     if (!callbacks_.count(id)) {
         FeatureCallbackData callback;
-	callback.cb = FEATURE_VALUE_UNDEFINED;
-	callback.cb_type = nullptr;
+        callback.cb = FEATURE_VALUE_UNDEFINED;
+        callback.cb_type = nullptr;
         return callback;
     }
     return callbacks_[id];
@@ -233,7 +233,8 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promise
     return doInvokeCallback(&cb_type, promiseData->resolveFuncs[idx], ap, 1, 0);
 }
 
-int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap) {
+int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap)
+{
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
     CallbackType* callbackType = callback.cb_type;
@@ -246,7 +247,8 @@ int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap) {
     return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, 0);
 }
 
-int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count) {
+int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count)
+{
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
     CallbackType* callbackType = callback.cb_type;
@@ -259,7 +261,7 @@ int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count) {
     return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, count - method_param_count);
 }
 
-int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int  rest_param_count)
+int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     bool got_error = false;

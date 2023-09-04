@@ -88,7 +88,7 @@
   };
 
   static const MemberMethod Record_start_member_method = {
-    .callback = FFI_FN(Record_wrap_start),
+    .func = { .callback = FFI_FN(Record_wrap_start) },
     .parameters = Record_start_parameters,
     .return_type = FT_VOID,
   };
@@ -100,7 +100,7 @@
   };
 
   static const MemberMethod Record_stop_member_method = {
-    .callback = FFI_FN(Record_wrap_stop),
+    .func = { .callback = FFI_FN(Record_wrap_stop) },
     .parameters = Record_stop_parameters,
     .return_type = FT_VOID,
   };
@@ -135,6 +135,7 @@
     "Record",
     "Record",
     1,
+    false,
     &Record_callbacks,
     countof(Record_members),
     Record_members,

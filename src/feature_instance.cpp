@@ -24,10 +24,12 @@ using namespace FEATURE;
 namespace ferry {
 
 /////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* proto)
+FeatureInstance::FeatureInstance(FeaturePrototype* proto, NativeFunc* vtable, int vtable_size)
     : native(nullptr)
     , proto_(proto)
     , instance_id_(-1)
+    , vtable_(vtable)
+    , vtable_size_(vtable_size)
 {
 }
 

@@ -18,7 +18,7 @@
   };
 
   static const MemberMethod Promise_foo_member_method = {
-    .callback = FFI_FN(Promise_wrap_foo),
+    .func = { .callback = FFI_FN(Promise_wrap_foo) },
     .parameters = Promise_foo_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_INT_type),
   };
@@ -35,7 +35,7 @@
   };
 
   static const MemberMethod Promise_use_foo_member_method = {
-    .callback = FFI_FN(Promise_wrap_use_foo),
+    .func = { .callback = FFI_FN(Promise_wrap_use_foo) },
     .parameters = Promise_use_foo_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_INT_type),
   };
@@ -53,7 +53,7 @@
   };
 
   static const MemberMethod Promise_foo1_member_method = {
-    .callback = FFI_FN(Promise_wrap_foo1),
+    .func = { .callback = FFI_FN(Promise_wrap_foo1) },
     .parameters = Promise_foo1_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_STRING_type),
   };
@@ -65,7 +65,7 @@
   };
 
   static const MemberMethod Promise_foo2_member_method = {
-    .callback = FFI_FN(Promise_wrap_foo2),
+    .func = { .callback = FFI_FN(Promise_wrap_foo2) },
     .parameters = Promise_foo2_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_STRING_type),
   };
@@ -102,7 +102,7 @@
   };
 
   static const MemberMethod Promise_bar_member_method = {
-    .callback = FFI_FN(Promise_wrap_bar),
+    .func = { .callback = FFI_FN(Promise_wrap_bar) },
     .parameters = Promise_bar_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_int_array_string_array_type),
   };
@@ -114,7 +114,7 @@
   };
 
   static const MemberMethod Promise_bar1_member_method = {
-    .callback = FFI_FN(Promise_wrap_bar1),
+    .func = { .callback = FFI_FN(Promise_wrap_bar1) },
     .parameters = Promise_bar1_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_int_array_string_array_type),
   };
@@ -131,7 +131,7 @@
   };
 
   static const MemberMethod Promise_bar2_member_method = {
-    .callback = FFI_FN(Promise_wrap_bar2),
+    .func = { .callback = FFI_FN(Promise_wrap_bar2) },
     .parameters = Promise_bar2_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_int_array_FT_STRING_type),
   };
@@ -143,7 +143,7 @@
   };
 
   static const MemberMethod Promise_print_member_method = {
-    .callback = FFI_FN(Promise_wrap_print),
+    .func = { .callback = FFI_FN(Promise_wrap_print) },
     .parameters = Promise_print_parameters,
     .return_type = FT_VOID,
   };
@@ -208,6 +208,7 @@
     "Promise",
     "Promise",
     1,
+    false,
     &Promise_callbacks,
     countof(Promise_members),
     Promise_members,

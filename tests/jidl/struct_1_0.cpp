@@ -97,7 +97,7 @@
   };
 
   static const MemberMethod Struct_foo_member_method = {
-    .callback = FFI_FN(Struct_wrap_foo),
+    .func = { .callback = FFI_FN(Struct_wrap_foo) },
     .parameters = Struct_foo_parameters,
     .return_type = FT_VOID,
   };
@@ -110,7 +110,7 @@
   };
 
   static const MemberMethod Struct_bar_member_method = {
-    .callback = FFI_FN(Struct_wrap_bar),
+    .func = { .callback = FFI_FN(Struct_wrap_bar) },
     .parameters = Struct_bar_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Struct_Chapter_struct_type),
   };
@@ -123,7 +123,7 @@
   };
 
   static const MemberMethod Struct_bar2_member_method = {
-    .callback = FFI_FN(Struct_wrap_bar2),
+    .func = { .callback = FFI_FN(Struct_wrap_bar2) },
     .parameters = Struct_bar2_parameters,
     .return_type = FT_VOID,
   };
@@ -135,7 +135,7 @@
   };
 
   static const MemberMethod Struct_print_member_method = {
-    .callback = FFI_FN(Struct_wrap_print),
+    .func = { .callback = FFI_FN(Struct_wrap_print) },
     .parameters = Struct_print_parameters,
     .return_type = FT_VOID,
   };
@@ -180,6 +180,7 @@
     "Struct",
     "Struct",
     1,
+    false,
     &Struct_callbacks,
     countof(Struct_members),
     Struct_members,

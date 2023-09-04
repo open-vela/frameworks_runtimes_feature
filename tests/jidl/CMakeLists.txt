@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 
 # Note: need pass CMAKE_TOOLCHAIN_FILE refer to vcpkg in cmdline
-set(CMAKE_TOOLCHAIN_FILE /home/daichuan/workspace/vcpkg/scripts/buildsystems/vcpkg.cmake)
+set(CMAKE_TOOLCHAIN_FILE /home/peng/workspace/vcpkg/scripts/buildsystems/vcpkg.cmake)
 set(VCPKG_MANIFEST_MODE ON CACHE BOOL "" FORCE)
 set(VCPKG_BINARY_CACHE ON CACHE BOOL "" FORCE)
 
