@@ -715,23 +715,25 @@ void FeatureManagerQjs::uninit()
 {
     for (const auto& pair : registry_->getRegisteredFeatures()) {
         FeatureUnit* unit = pair.second;
-        if (!unit || !unit->proto)
+        if (!unit)
             continue;
 
         auto proto = unit->proto;
-        auto description = unit->description;
-        JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
-        // clear all feature instance at first, it will free all feature instance and call onDetach for them
-        proto->clearAllInstances();
-        // call feature's onDestroy
-        if (description->native_callbacks->onDestroy) {
-            FEATURE_LOG_DEBUG("invoke onDestroy callback...");
-            description->native_callbacks->onDestroy(js_ctx, proto);
-        }
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
-        if (!feature_is_undefined(*js_proto_ptr)) {
-            feature_free_value(js_ctx, *js_proto_ptr);
-            *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        if(proto) {
+            auto description = unit->description;
+            JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
+            // clear all feature instance at first, it will free all feature instance and call onDetach for them
+            proto->clearAllInstances();
+            // call feature's onDestroy
+            if (description->native_callbacks->onDestroy) {
+                FEATURE_LOG_DEBUG("invoke onDestroy callback...");
+                description->native_callbacks->onDestroy(js_ctx, proto);
+            }
+            auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
+            if (!feature_is_undefined(*js_proto_ptr)) {
+                feature_free_value(js_ctx, *js_proto_ptr);
+                *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+            }
         }
         delete unit;
     }
