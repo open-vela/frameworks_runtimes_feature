@@ -16,11 +16,11 @@
 #ifndef FEATURE_EXPORT_H
 #define FEATURE_EXPORT_H
 
+#include "feature_context.h"
 #include <cstdint>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <type_traits>
-#include "feature_context.h"
 
 #define FT_COMPLEX_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 1)))
 #define FT_REFERENCE_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 2)))
@@ -33,8 +33,6 @@
 #define FT_SET_REFERENCE(type) ((uintptr_t)(type) | FT_REFERENCE_BIT)
 #define FT_REMOVE_REFERENCE(type) ((uintptr_t)(type) & ~FT_REFERENCE_BIT)
 
-#define FT_IS_REST FT_IS_REFERENCE
-
 #define FT_GET_VALUE(type) (((uintptr_t)type) & FT_VALUE_MASK)
 #define FT_MK_COMPLEX(ptr) ((uintptr_t)((((uintptr_t)ptr) >> 2) | FT_COMPLEX_BIT))
 #define FT_MK_COMPLEX_REF(ptr) (FT_SET_REFERENCE(FT_MK_COMPLEX(ptr)))
@@ -45,7 +43,7 @@
 #define FT_PARAM_END (0)
 #define FT_GET_COMPLEX(ptr) (((uintptr_t)ptr) << 2)
 
-#define FT_IS_PROMISE(ptr)    (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
+#define FT_IS_PROMISE(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
 
 namespace FEATURE {
 
@@ -102,7 +100,7 @@ void* FTMalloc(size_t size, FeatureType featureType);
  *
  * @param ptr
  */
-void DupFeatureValue(void* ptr);
+void* DupFeatureValue(void* ptr);
 
 /**
  * @brief free feature value, decrease ref_count
@@ -297,23 +295,30 @@ union AppendData {
     const char* str;
 };
 
+using NativeFunc = void (*)(void);
+
+union FuncData {
+    NativeFunc callback; // 最终实现函数
+    int32_t vtable_idx; // vtable index
+};
+
 typedef struct MemberMethod {
-    void (*callback)(void); // 最终实现函数
+    FuncData func;
     const FEATURE::FeatureType* parameters; // 参数描述数组, 以空结束
     FEATURE::FeatureType return_type;
     AppendData data; //附加数据
 } MemberMethod;
 
 typedef struct MemberAccessor {
-    void (*getter)(void); // getter & setter可以有一个为空
-    void (*setter)(void);
+    FuncData getter; // getter & setter可以有一个为空
+    FuncData setter;
     FEATURE::FeatureType type;
     AppendData data; //附加数据
 } MemberAccessor;
 
 typedef struct MemberConst {
     FEATURE::FeatureType type;
-    void (*callback)(void); // initializer callback.
+    FuncData func;
     AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
 } MemberConst;
 
@@ -377,6 +382,7 @@ typedef struct FeatureDescription {
     const char* name; // feature名字, 在require时提供的
     const char* description; // feature的描述, 可以为null
     int flags; // 配置信息, 暂时不用
+    bool dynamic; // if dynamic type
     const FEATURE::FeatureCallbacks* native_callbacks; // native对象接口
     int member_count; // 成员数量
     const Member* members; //定义成员数量, 后面详细介绍

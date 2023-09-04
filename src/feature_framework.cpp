@@ -43,7 +43,7 @@ int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
         param++;
     }
     if (hasRest) {
-        *hasRest = param ? FT_IS_REST(*param) : false;
+        *hasRest = param ? (*param == FT_PARAM_REST_END) : false;
     }
     return count;
 }

@@ -1,8 +1,8 @@
 
-#include "feature_exports.h"
 #include "ajs_features_init.h"
-#include "feature_log.h"
+#include "feature_exports.h"
 #include "feature_framework.h"
+#include "feature_log.h"
 #include <ffi.h>
 
 using namespace ferry;
@@ -126,7 +126,10 @@ void __return_promise(FeatureInstanceHandle handle, AppendData data, FeatureProm
 void __set_myPoint(FeatureInstanceHandle handle, int64_t data, Point* point)
 {
     Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
-    *p = *point;
+    if(p) {
+        FreeFeatureValue(p);
+    }
+    SetFeatureObjectData(handle, DupFeatureValue(point));
 }
 
 Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
@@ -330,20 +333,20 @@ FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
 }
 
 static Member g_members[] = {
-    { .type = MEMBER_METHOD, .name = "printPoint", .method = { .callback = FFI_FN(__printPoint), .parameters = printPoint_parameters, .return_type = FT_MK_COMPLEX_REF(&Point_type), .data = { 12 } } },
-    { .type = MEMBER_METHOD, .name = "printString", .method = { .callback = FFI_FN(__printString), .parameters = printString_parameters, .return_type = FT_STRING, .data = { 123 } } },
-    { .type = MEMBER_ACCESSOR, .name = "myPoint", .accessor = { .getter = FFI_FN(__get_myPoint), .setter = FFI_FN(__set_myPoint), .type = FT_MK_COMPLEX_REF(&Point_type), .data = { 100 } } },
-    { .type = MEMBER_CONST, .name = "myConstant", .value = { .type = FT_MK_COMPLEX_REF(&Point_type), .callback = nullptr, .data = { .ptr = g_point1 } } },
-    { .type = MEMBER_CONST, .name = "myConstant1", .value = { .type = FT_MK_COMPLEX_REF(&Point_type), .callback = FFI_FN(__init_const1), .data = { .ptr = g_point1 } } },
-    { .type = MEMBER_CONST, .name = "myConstant2", .value = { .type = FT_INT, .callback = nullptr, .data = { 12345 } } },
-    { .type = MEMBER_METHOD, .name = "print", .method = { .callback = FFI_FN(__print), .parameters = print_parameters, .return_type = FT_VOID, .data = { 0 } } },
-    { .type = MEMBER_METHOD, .name = "func_with_cb", .method = { .callback = FFI_FN(__func_with_cb), .parameters = func_with_cb_parameters, .return_type = FT_VOID, .data = { 0 } } },
-    { .type = MEMBER_METHOD, .name = "func_with_cb2", .method = { .callback = FFI_FN(__func_with_cb2), .parameters = func_with_cb2_parameters, .return_type = FT_VOID, .data = { 0 } } },
-    { .type = MEMBER_METHOD, .name = "withOptional", .method = { .callback = FFI_FN(__with_optional), .parameters = with_optional_parameters, .return_type = FT_MK_COMPLEX_REF(&Point_type), .data = { .i32 = 0 } } },
-    { .type = MEMBER_METHOD, .name = "recv_point_ptr_array_ptr", .method = { .callback = FFI_FN(__recv_point_ptr_array_ptr), .parameters = recv_point_ptr_array_parameters, .return_type = FT_VOID, .data = { .i64 = 1789 } } },
-    { .type = MEMBER_METHOD, .name = "recv_string_array_ptr", .method = { .callback = FFI_FN(__recv_string_array_ptr), .parameters = recv_string_array_parameters, .return_type = FT_VOID, .data = { .i64 = 123456 } } },
-    { .type = MEMBER_METHOD, .name = "return_promise", .method = { .callback = FFI_FN(__return_promise), .parameters = return_promise_parameters, .return_type = FT_MK_COMPLEX_REF(&Promise_type), .data = { .i64 = 0 } } },
-    { .type = MEMBER_METHOD, .name = "return_array", .method = { .callback = FFI_FN(__return_array), .parameters = NULL, .return_type = FT_MK_COMPLEX_REF(&string_array_type), .data = { .i64 = 0 } } },
+    { .type = MEMBER_METHOD, .name = "printPoint", .method = { .func = { .callback = FFI_FN(__printPoint) }, .parameters = printPoint_parameters, .return_type = FT_MK_COMPLEX_REF(&Point_type), .data = { 12 } } },
+    { .type = MEMBER_METHOD, .name = "printString", .method = { .func = { .callback = FFI_FN(__printString) }, .parameters = printString_parameters, .return_type = FT_STRING, .data = { 123 } } },
+    { .type = MEMBER_ACCESSOR, .name = "myPoint", .accessor = { .getter = { .callback = FFI_FN(__get_myPoint) }, .setter = { .callback = FFI_FN(__set_myPoint) }, .type = FT_MK_COMPLEX_REF(&Point_type), .data = { 100 } } },
+    { .type = MEMBER_CONST, .name = "myConstant", .value = { .type = FT_MK_COMPLEX_REF(&Point_type), .func = { .callback = nullptr }, .data = { .ptr = g_point1 } } },
+    { .type = MEMBER_CONST, .name = "myConstant1", .value = { .type = FT_MK_COMPLEX_REF(&Point_type), .func = { .callback = FFI_FN(__init_const1) }, .data = { .ptr = g_point1 } } },
+    { .type = MEMBER_CONST, .name = "myConstant2", .value = { .type = FT_INT, .func = { .callback = nullptr }, .data = { 12345 } } },
+    { .type = MEMBER_METHOD, .name = "print", .method = { .func = { .callback = FFI_FN(__print) }, .parameters = print_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_METHOD, .name = "func_with_cb", .method = { .func = { .callback = FFI_FN(__func_with_cb) }, .parameters = func_with_cb_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_METHOD, .name = "func_with_cb2", .method = { .func = { .callback = FFI_FN(__func_with_cb2) }, .parameters = func_with_cb2_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_METHOD, .name = "withOptional", .method = { .func = { .callback = FFI_FN(__with_optional) }, .parameters = with_optional_parameters, .return_type = FT_MK_COMPLEX_REF(&Point_type), .data = { .i32 = 0 } } },
+    { .type = MEMBER_METHOD, .name = "recv_point_ptr_array_ptr", .method = { .func = { .callback = FFI_FN(__recv_point_ptr_array_ptr) }, .parameters = recv_point_ptr_array_parameters, .return_type = FT_VOID, .data = { .i64 = 1789 } } },
+    { .type = MEMBER_METHOD, .name = "recv_string_array_ptr", .method = { .func = { .callback = FFI_FN(__recv_string_array_ptr) }, .parameters = recv_string_array_parameters, .return_type = FT_VOID, .data = { .i64 = 123456 } } },
+    { .type = MEMBER_METHOD, .name = "return_promise", .method = { .func = { .callback = FFI_FN(__return_promise) }, .parameters = return_promise_parameters, .return_type = FT_MK_COMPLEX_REF(&Promise_type), .data = { .i64 = 0 } } },
+    { .type = MEMBER_METHOD, .name = "return_array", .method = { .func = { .callback = FFI_FN(__return_array) }, .parameters = NULL, .return_type = FT_MK_COMPLEX_REF(&string_array_type), .data = { .i64 = 0 } } },
 };
 
 // callbacks
@@ -374,7 +377,7 @@ static struct FeatureCallbacks callbacks {
         }
 };
 
-static FeatureDescription timers_description = { 1, "Timer", "js timer feature, for setTimeout and setInterval and so on", 1, &callbacks, countof(g_members), g_members };
+static FeatureDescription timers_description = { 1, "Timer", "js timer feature, for setTimeout and setInterval and so on", 1, false, &callbacks, countof(g_members), g_members };
 
 QAPPFEATURE_INIT(timers)
 {

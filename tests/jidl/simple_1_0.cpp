@@ -12,7 +12,7 @@
   };
 
   static const MemberMethod Simple_printStr_member_method = {
-    .callback = FFI_FN(Simple_wrap_printStr),
+    .func = { .callback = FFI_FN(Simple_wrap_printStr) },
     .parameters = Simple_printStr_parameters,
     .return_type = FT_VOID,
   };
@@ -24,7 +24,7 @@
   };
 
   static const MemberMethod Simple_print_member_method = {
-    .callback = FFI_FN(Simple_wrap_print),
+    .func = { .callback = FFI_FN(Simple_wrap_print) },
     .parameters = Simple_print_parameters,
     .return_type = FT_VOID,
   };
@@ -45,7 +45,7 @@
   };
 
   static const MemberMethod Simple_foo_member_method = {
-    .callback = FFI_FN(Simple_wrap_foo),
+    .func = { .callback = FFI_FN(Simple_wrap_foo) },
     .parameters = Simple_foo_parameters,
     .return_type = FT_INT,
   };
@@ -57,7 +57,7 @@
   };
 
   static const MemberMethod Simple_bar_member_method = {
-    .callback = FFI_FN(Simple_wrap_bar),
+    .func = { .callback = FFI_FN(Simple_wrap_bar) },
     .parameters = Simple_bar_parameters,
     .return_type = FT_VOID,
   };
@@ -70,7 +70,7 @@
   };
 
   static const MemberMethod Simple_bar5_member_method = {
-    .callback = FFI_FN(Simple_wrap_bar5),
+    .func = { .callback = FFI_FN(Simple_wrap_bar5) },
     .parameters = Simple_bar5_parameters,
     .return_type = FT_VOID,
   };
@@ -85,7 +85,7 @@
   };
 
   static const MemberMethod Simple_bar6_member_method = {
-    .callback = FFI_FN(Simple_wrap_bar6),
+    .func = { .callback = FFI_FN(Simple_wrap_bar6) },
     .parameters = Simple_bar6_parameters,
     .return_type = FT_STRING,
   };
@@ -102,7 +102,7 @@
   };
 
   static const MemberMethod Simple_ubar6_member_method = {
-    .callback = FFI_FN(Simple_wrap_ubar6),
+    .func = { .callback = FFI_FN(Simple_wrap_ubar6) },
     .parameters = Simple_ubar6_parameters,
     .return_type = FT_STRING,
   };
@@ -170,7 +170,7 @@
   };
 
   static const MemberMethod Simple_goo_member_method = {
-    .callback = FFI_FN(Simple_wrap_goo),
+    .func = { .callback = FFI_FN(Simple_wrap_goo) },
     .parameters = Simple_goo_parameters,
     .return_type = FT_VOID,
   };
@@ -185,7 +185,7 @@
   };
 
   static const MemberMethod Simple_goo2_member_method = {
-    .callback = FFI_FN(Simple_wrap_goo2),
+    .func = { .callback = FFI_FN(Simple_wrap_goo2) },
     .parameters = Simple_goo2_parameters,
     .return_type = FT_VOID,
   };
@@ -202,7 +202,7 @@
   };
 
   static const MemberMethod Simple_goo3_member_method = {
-    .callback = FFI_FN(Simple_wrap_goo3),
+    .func = { .callback = FFI_FN(Simple_wrap_goo3) },
     .parameters = Simple_goo3_parameters,
     .return_type = FT_VOID,
   };
@@ -218,7 +218,7 @@
   };
 
   static const MemberMethod Simple_foo2_member_method = {
-    .callback = FFI_FN(Simple_wrap_foo2),
+    .func = { .callback = FFI_FN(Simple_wrap_foo2) },
     .parameters = Simple_foo2_parameters,
     .return_type = FT_VOID,
   };
@@ -233,7 +233,7 @@
   };
 
   static const MemberMethod Simple_foo3_member_method = {
-    .callback = FFI_FN(Simple_wrap_foo3),
+    .func = { .callback = FFI_FN(Simple_wrap_foo3) },
     .parameters = Simple_foo3_parameters,
     .return_type = FT_VOID,
   };
@@ -245,7 +245,7 @@
   };
 
   static const MemberMethod Simple_justTestNeverCall1_member_method = {
-    .callback = FFI_FN(Simple_wrap_justTestNeverCall1),
+    .func = { .callback = FFI_FN(Simple_wrap_justTestNeverCall1) },
     .parameters = Simple_justTestNeverCall1_parameters,
     .return_type = FT_VOID,
   };
@@ -257,7 +257,7 @@
   };
 
   static const MemberMethod Simple_justTestNeverCall2_member_method = {
-    .callback = FFI_FN(Simple_wrap_justTestNeverCall2),
+    .func = { .callback = FFI_FN(Simple_wrap_justTestNeverCall2) },
     .parameters = Simple_justTestNeverCall2_parameters,
     .return_type = FT_VOID,
   };
@@ -280,7 +280,7 @@
   };
 
   static const MemberMethod Simple_bar2_member_method = {
-    .callback = FFI_FN(Simple_wrap_bar2),
+    .func = { .callback = FFI_FN(Simple_wrap_bar2) },
     .parameters = Simple_bar2_parameters,
     .return_type = FT_INT,
   };
@@ -302,7 +302,7 @@
   }
 
   static const MemberMethod Simple_bar3_member_method = {
-    .callback = FFI_FN(Simple_wrap_bar3),
+    .func = { .callback = FFI_FN(Simple_wrap_bar3) },
     .parameters = Simple_bar3_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Simple_string_array),
   };
@@ -315,7 +315,7 @@
   static const MemberConst Simple_x_member_const = {
     .type = FT_INT,
     //.callback = FFI_FN(Simple_init_const_x),
-    .callback = nullptr,
+    .func = { .callback = nullptr },
     .data = { .i32 = Simple_g_const_x }
   };
 
@@ -326,7 +326,7 @@
   static const MemberConst Simple_y_member_const = {
     .type = FT_STRING,
     //.callback = FFI_FN(Simple_init_const_y),
-    .callback = nullptr,
+    .func = { .callback = nullptr },
     .data = { .str = Simple_g_const_y }
   };
 
@@ -337,26 +337,26 @@
   static const MemberConst Simple_z_member_const = {
     .type = FT_DOUBLE,
     //.callback = FFI_FN(Simple_init_const_z),
-    .callback = nullptr,
+    .func = { .callback = nullptr },
     .data = { .f64 = Simple_g_const_z }
   };
 
   /****** for JIDL property 'name' ******/
   static const MemberAccessor Simple_name_member_accessor = {
-    .getter = FFI_FN(Simple_get_name),
-    .setter = FFI_FN(Simple_set_name),
+    .getter = { .callback = FFI_FN(Simple_get_name) },
+    .setter = {.callback = FFI_FN(Simple_set_name) },
     .type = FT_STRING,
   };
 
   /****** for JIDL property 'version' ******/
   static const MemberAccessor Simple_version_member_accessor = {
-    .setter = FFI_FN(Simple_set_version),
+    .setter= { .callback = FFI_FN(Simple_set_version) },
     .type = FT_STRING,
   };
 
   /****** for JIDL property 'args' ******/
   static const MemberAccessor Simple_args_member_accessor = {
-    .setter = FFI_FN(Simple_set_args),
+    .setter= { .callback = FFI_FN(Simple_set_args) },
     .type = FT_MK_COMPLEX_REF(&Simple_string_array),
   };
 
@@ -489,6 +489,7 @@
     "Simple",
     "Simple",
     1,
+    false,
     &Simple_callbacks,
     countof(Simple_members),
     Simple_members,
