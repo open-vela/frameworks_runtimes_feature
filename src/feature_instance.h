@@ -35,16 +35,6 @@ public:
     virtual ~FeatureInstance();
 
     /**
-     * @brief add callback to instance
-     *
-     * @param ctx
-     * @param value
-     * @param callbackType
-     * @return FEATURE::FeatureCallbackId
-     */
-    virtual FEATURE::FeatureCallbackId addCallback(ft_value_t value, CallbackType* callbackType) = 0;
-
-    /**
      * @brief remove callback from instance vai FeatureCallbackId
      *
      & @param ctx

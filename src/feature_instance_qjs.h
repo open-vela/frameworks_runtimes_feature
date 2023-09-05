@@ -49,8 +49,6 @@ public:
     FeatureInstanceQjs(struct FeaturePrototype* prototype);
     virtual ~FeatureInstanceQjs();
 
-    virtual FEATURE::FeatureCallbackId addCallback(ft_value_t value, CallbackType* callbackType);
-
     virtual bool removeCallback(FEATURE::FeatureCallbackId id);
 
     virtual bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle);
@@ -60,6 +58,8 @@ public:
     virtual int invokeCallback(int cid, va_list& ap);
 
     virtual int invokeCallbackCount(int cid, va_list& ap, int count);
+
+    FEATURE::FeatureCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
 
     FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
 

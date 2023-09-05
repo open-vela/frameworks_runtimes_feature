@@ -278,10 +278,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
             case COMPLEX_CALLBACK: {
                 // save into instance
                 CallbackType* callbackType = (CallbackType*)complexType;
-                ft_value_t ft_val;
-                auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(ft_val);
-               *js_val_ptr = value;
-                FeatureCallbackId id = instance->addCallback(ft_val, callbackType);
+                FeatureCallbackId id = ((FeatureInstanceQjs*)instance)->addCallback(value, callbackType);
                 *(FeatureCallbackId*)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {
