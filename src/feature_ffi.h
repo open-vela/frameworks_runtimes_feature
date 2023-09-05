@@ -13,46 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FEATURE_FFI_QJS_H__
-#define __FEATURE_FFI_QJS_H__
+#ifndef __FEATURE_FFI_H__
+#define __FEATURE_FFI_H__
 #include "feature_exports.h"
-#include "feature.h"
-#include "feature_ffi.h"
+#include "feature_framework.h"
+
+#include <cstdarg>
+#include <ffi.h>
+#include <stdalign.h>
 
 namespace ferry {
 
-/**
- * @brief the feature ffi functions
- *
- */
-namespace FeatureFFIQjs {
-
     /**
-     * @brief convert value from guest to host
+     * @brief create type declaration using FeatureType
      *
-     * @param instance
      * @param featureType
-     * @param ptr the ptr will allocated in this function
-     * @param ctx
-     * @param value
+     * @param type
      * @return true
      * @return false
      */
-    bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureType, void*& ptr, context_ref ctx, feature_value_t value);
+    bool createTypeDeclaration(FEATURE::FeatureType featureType, ffi_type*& type);
 
     /**
-     * @brief convert value from host to guest
+     * @brief free ffi type declaration
+     *
+     * @param type
+     */
+    void freeTypeDeclaration(ffi_type*& type);
+
+    /**
+     * @brief Create a Host Value object
      *
      * @param featureType
      * @param ptr
-     * @param ctx
-     * @param value
+     * @param createPtrOnly
      * @return true
      * @return false
      */
-    bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType featureType, void* ptr, context_ref ctx, feature_value_t& value);
+    bool createHostValue(FEATURE::FeatureType featureType, void*& ptr, bool createPtrOnly = false);
 
-}
-
-}
+    /**
+     * @brief exact variadic parameter using va_list
+     *
+     * @param ap
+     * @param featureType
+     * @return void*
+     */
+    void* exactVariadicParameter(va_list& ap, FEATURE::FeatureType featureType);
+};
 #endif
