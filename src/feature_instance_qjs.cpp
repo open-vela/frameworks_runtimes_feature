@@ -96,16 +96,15 @@ FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
     return callbacks[id];
 }
 
-FeatureCallbackId FeatureInstanceQjs::addCallback(ft_value_t value, CallbackType* callbackType)
+FeatureCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     FeatureCallbackData callback;
-    callback.cb = feature_dup_value(js_ctx, FT_VAL_GET_JS_VAL(value));
+    callback.cb = feature_dup_value(js_ctx, value);
     callback.cb_type = callbackType;
     callbacks[curr_cid_] = callback;
     return curr_cid_++;
 }
-
 
 bool FeatureInstanceQjs::removeCallback(FeatureCallbackId id)
 {
