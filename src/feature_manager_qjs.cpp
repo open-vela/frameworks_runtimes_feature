@@ -251,7 +251,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 got_error = true;
                 break;
             }
-            if (!FeatureFFIQjs::createTypeDeclaration(param, ffi_params[external_count + i])) {
+            if (!createTypeDeclaration(param, ffi_params[external_count + i])) {
                 FEATURE_LOG_ERROR("prepareType for type failed !");
                 got_error = true;
                 break;
@@ -291,7 +291,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
                 OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param);
                 FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
-                if (!FeatureFFIQjs::createTypeDeclaration(param, ffi_params[external_count + i])) {
+                if (!createTypeDeclaration(param, ffi_params[external_count + i])) {
                     FEATURE_LOG_ERROR("prepareType for type failed !");
                     got_error = true;
                     break;
@@ -304,14 +304,14 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             break;
 
         // prepeare return type
-        if (!FeatureFFIQjs::createTypeDeclaration(method.return_type, ffi_ret)) {
+        if (!createTypeDeclaration(method.return_type, ffi_ret)) {
             FEATURE_LOG_ERROR("prepareType for complex type failed !");
             got_error = true;
             break;
         }
         // create return value pointer inneed.
         if (!isPromise && method.return_type != FT_VOID) {
-            if (!FeatureFFIQjs::createHostValue(method.return_type, ffi_ret_value, true)) {
+            if (!createHostValue(method.return_type, ffi_ret_value, true)) {
                 FEATURE_LOG_ERROR("create return value failed !");
                 got_error = true;
                 break;
@@ -364,14 +364,14 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     for (int i = 0; i < method_param_count; i++) {
         // free type
         if (ffi_params[i + external_count]) {
-            FeatureFFIQjs::freeTypeDeclaration(ffi_params[i + external_count]);
+            freeTypeDeclaration(ffi_params[i + external_count]);
         }
         // free value
         if (ffi_arg_values[i + external_count]) {
             FreeFeatureValue(ffi_arg_values[i + external_count]);
         }
     }
-    FeatureFFIQjs::freeTypeDeclaration(ffi_ret);
+    freeTypeDeclaration(ffi_ret);
     if (ffi_ret_value) {
         FreeFeatureValue(ffi_ret_value);
     }
@@ -411,11 +411,11 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     void* arg_values[2] = { &instance, &accessor->data };
     void* ret_value = nullptr;
     do {
-        if (!FeatureFFIQjs::createTypeDeclaration(accessor->type, ffi_ret)) {
+        if (!createTypeDeclaration(accessor->type, ffi_ret)) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
-        if (!FeatureFFIQjs::createHostValue(accessor->type, ret_value, true)) {
+        if (!createHostValue(accessor->type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
             break;
         }
@@ -437,7 +437,7 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
         }
     } while (0);
     // free resources
-    FeatureFFIQjs::freeTypeDeclaration(ffi_ret);
+    freeTypeDeclaration(ffi_ret);
     FreeFeatureValue(ret_value);
 
     return method_ret_value;
@@ -461,7 +461,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     void* arg_values[3] = { &instance, &accessor->data, nullptr };
     do {
         // prepare third param type declaration, create by accessor type
-        if (!FeatureFFIQjs::createTypeDeclaration(accessor->type, ffi_params[2])) {
+        if (!createTypeDeclaration(accessor->type, ffi_params[2])) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
@@ -483,7 +483,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
         ffi_call(&cif, accessor->setter, arg_values[2], arg_values);
     } while (0);
     // free resources
-    FeatureFFIQjs::freeTypeDeclaration(ffi_params[2]);
+    freeTypeDeclaration(ffi_params[2]);
     FreeFeatureValue(arg_value_input);
     return FEATURE_VALUE_UNDEFINED;
 }
@@ -499,14 +499,14 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         void* ret_value = nullptr;
         ffi_type* param_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
         void* arg_values[2] = { &prototype, (void*)&memberConst.data };
-        if (!FeatureFFIQjs::createTypeDeclaration(memberConst.type, ret_type)) {
+        if (!createTypeDeclaration(memberConst.type, ret_type)) {
             FEATURE_LOG_ERROR("create type failed !");
-            FeatureFFIQjs::freeTypeDeclaration(ret_type);
+            freeTypeDeclaration(ret_type);
             return val;
         }
-        if (!FeatureFFIQjs::createHostValue(memberConst.type, ret_value, true)) {
+        if (!createHostValue(memberConst.type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
-            FeatureFFIQjs::freeTypeDeclaration(ret_type);
+            freeTypeDeclaration(ret_type);
             FreeFeatureValue(ret_value);
             return val;
         }
@@ -515,7 +515,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ret_type, param_types);
         if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            FeatureFFIQjs::freeTypeDeclaration(ret_type);
+            freeTypeDeclaration(ret_type);
             FreeFeatureValue(ret_value);
             return val;
         }
@@ -527,7 +527,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
             feature_free_value(ctx, val);
             val = FEATURE_VALUE_UNDEFINED;
         }
-        FeatureFFIQjs::freeTypeDeclaration(ret_type);
+        freeTypeDeclaration(ret_type);
         FreeFeatureValue(ret_value);
         if (FT_IS_REFERENCE(ret_value)) {
             free(ret_value);

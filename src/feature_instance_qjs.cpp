@@ -218,7 +218,7 @@ int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, featu
         // convert parameters to feature_value_t
         for (int i = 0; i < method_param_count; i++) {
             FeatureType featureType = callbackType->parameters[i];
-            void* ptr = FeatureFFIQjs::exactVariadicParameter(ap, featureType);
+            void* ptr = exactVariadicParameter(ap, featureType);
             if (!ptr) {
                 got_error = true;
                 break;
@@ -258,19 +258,19 @@ int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, featu
     if (callbackType->return_type != FT_VOID && ret_value && !jse_is_undefined(ret)) {
         // allocate ret_value first
         ffi_type* ret_type = nullptr;
-        if (!FeatureFFIQjs::createTypeDeclaration(callbackType->return_type, ret_type)) {
-            FeatureFFIQjs::freeTypeDeclaration(ret_type);
+        if (!createTypeDeclaration(callbackType->return_type, ret_type)) {
+            freeTypeDeclaration(ret_type);
             FreeFeatureValue(*ret_value);
             *ret_value = nullptr;
             return -1;
         }
         if (!FeatureFFIQjs::convertValueToHost(instance, callbackType->return_type, *ret_value, js_ctx, ret)) {
-            FeatureFFIQjs::freeTypeDeclaration(ret_type);
+            freeTypeDeclaration(ret_type);
             FreeFeatureValue(*ret_value);
             *ret_value = nullptr;
             return -1;
         }
-        FeatureFFIQjs::freeTypeDeclaration(ret_type);
+        freeTypeDeclaration(ret_type);
         // for reference type, remove the pointer's pointer.
         if (FT_IS_REFERENCE(callbackType->return_type)) {
             auto result = **(void***)ret_value;
