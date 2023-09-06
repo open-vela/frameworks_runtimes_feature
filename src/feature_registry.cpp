@@ -133,7 +133,7 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
 
                 // invoke onRegister callback
                 FEATURE_LOG_DEBUG("description->name is %s...", description->name);
-                if (description->native_callbacks->onRegister) {
+                if (description->native_callbacks && description->native_callbacks->onRegister) {
                     FEATURE_LOG_DEBUG("invoke onRegister callback...");
                     description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
                 }
@@ -145,7 +145,7 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
         registeredFeatures_[description->name] = unit;
         // invoke onRegister callback
         FEATURE_LOG_DEBUG("description->name is %s...", description->name);
-        if (description->native_callbacks->onRegister) {
+        if (description->native_callbacks && description->native_callbacks->onRegister) {
             FEATURE_LOG_DEBUG("invoke onRegister callback...");
             description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
         }

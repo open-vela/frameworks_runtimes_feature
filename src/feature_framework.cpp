@@ -128,10 +128,10 @@ int getValueSize(FeatureType featureType)
  *
  * @param description
  */
-FeaturePrototype::FeaturePrototype(ft_context_ref ctx, FeatureDescription* feature_desc)
+FeaturePrototype::FeaturePrototype(ft_context_ref ctx, const FeatureDescription* feature_desc)
     : ft_ctx(ctx)
     , native(nullptr)
-    , description(feature_desc)
+    , description(const_cast<FeatureDescription*>(feature_desc))
 {
     // default capacity as 10 element
     instances.reserve(10);

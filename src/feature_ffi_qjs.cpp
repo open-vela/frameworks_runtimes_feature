@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 #include "feature_ffi_qjs.h"
+#include "feature_context_qjs.h"
+#include "feature_framework.h"
+#include "feature_instance.h"
+#include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature_instance_qjs.h"
-#include "feature_context_qjs.h"
 
 #include <alloca.h>
 #include <cstdint>
@@ -31,29 +33,34 @@ using namespace ferry;
 
 namespace ferry {
 
+extern thread_local feature_classid_t interface_class_id; // prototype class id
+extern FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description);
+extern feature_value_t createFeatureObject(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance);
+extern bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object);
+
 namespace FeatureFFIQjs {
 
-bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
-    context_ref ctx, feature_value_t value)
-{
-    // special step: get real type of complex type
-    TRY_GET_REAL_TYPE(featureType);
-    if (!ptr) {
-        if (!createHostValue(featureType, ptr)) {
-            FEATURE_LOG_ERROR("create host value failed !");
-            return false;
+    bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
+        context_ref ctx, feature_value_t value)
+    {
+        // special step: get real type of complex type
+        TRY_GET_REAL_TYPE(featureType);
+        if (!ptr) {
+            if (!createHostValue(featureType, ptr)) {
+                FEATURE_LOG_ERROR("create host value failed !");
+                return false;
+            }
         }
-    }
-    if (FT_IS_REFERENCE(featureType)) {
-        void*& value_ptr = *(void**)ptr;
-        if (!convertValueToHost(instance, FT_REMOVE_REFERENCE(featureType), value_ptr, ctx, value)) {
-            FEATURE_LOG_ERROR("convert value to host failed !");
-            return false;
+        if (FT_IS_REFERENCE(featureType)) {
+            void*& value_ptr = *(void**)ptr;
+            if (!convertValueToHost(instance, FT_REMOVE_REFERENCE(featureType), value_ptr, ctx, value)) {
+                FEATURE_LOG_ERROR("convert value to host failed !");
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+        if (FT_IS_PRIMITIVE(featureType)) {
+            switch (FT_GET_VALUE(featureType)) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -99,7 +106,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 (*(uint8_t*)ptr) = d;
                 free(uint32_ptr);
                 uint32_ptr = nullptr;
-                //打印uint8_t类型的值
+                // 打印uint8_t类型的值
                 FEATURE_LOG_DEBUG("ptr is %d !", *(uint8_t*)ptr);
             } break;
             case FT_INT16: {
@@ -225,10 +232,10 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return false;
             }
-        }
-    } else if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        switch (complexType->type) {
+            }
+        } else if (FT_IS_COMPLEX(featureType)) {
+            ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+            switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member_count = countMember(objMapType.members);
@@ -238,7 +245,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                     bool ret;
                     void* member_ptr = (void*)((char*)ptr + member->offset);
                     feature_value_t propValue = feature_get_object_property(ctx, value, member->name);
-                    //check propValue is js_undefined or not
+                    // check propValue is js_undefined or not
                     if (feature_is_undefined(propValue)) {
                         if (FT_IS_COMPLEX(member->type)) {
                             ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
@@ -318,21 +325,21 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 FEATURE_LOG_ERROR("unsupported complex type !");
                 return false;
             }
+            }
         }
+        return true;
     }
-    return true;
-}
 
-bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
-    context_ref ctx, feature_value_t& value)
-{
-    FEATURE_CHECK_NE(ptr, nullptr);
-    bool isRef = FT_IS_REFERENCE(featureType);
-    if (isRef) {
-        ptr = *(void**)ptr;
-    }
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+    bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
+        context_ref ctx, feature_value_t& value)
+    {
+        FEATURE_CHECK_NE(ptr, nullptr);
+        bool isRef = FT_IS_REFERENCE(featureType);
+        if (isRef) {
+            ptr = *(void**)ptr;
+        }
+        if (FT_IS_PRIMITIVE(featureType)) {
+            switch (FT_GET_VALUE(featureType)) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -380,10 +387,10 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, voi
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return false;
             }
-        }
-    } else if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        switch (complexType->type) {
+            }
+        } else if (FT_IS_COMPLEX(featureType)) {
+            ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+            switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member = objMapType.members;
@@ -441,7 +448,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, voi
             } break;
             case COMPLEX_PROMISE: {
                 // convert to guest means return promise object back.
-                //PromiseType* promiseType = (PromiseType*)complexType;
+                // PromiseType* promiseType = (PromiseType*)complexType;
                 // get promise data back.
                 if (!instance) {
                     FEATURE_LOG_ERROR("convert promise need instance provided !");
@@ -455,14 +462,44 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, voi
                 }
                 value = feature_dup_value(ctx, promise);
             } break;
+            case COMPLEX_INTERFACE: {
+                InterfaceType* interfaceType = (InterfaceType*)complexType;
+                // get interface description
+                const FeatureDescription* interfaceDesc = interfaceType->desc;
+                FEATURE_CHECK_NE(interfaceDesc, nullptr);
+                FEATURE_CHECK_NE(ptr, nullptr);
+                auto interfaceInstancePtr = static_cast<FeatureInstanceQjs*>(ptr);
+                // save interface prototype in parent instance
+                auto interfaceInstance = std::unique_ptr<FeatureInstance>(interfaceInstancePtr);
+                const char* name = interfaceDesc->name;
+                FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
+                if (!interfacePrototype) {
+                    interfacePrototype = createInterfacePrototype(instance->prototype()->ft_ctx, interfaceDesc);
+                    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(interfacePrototype->ft_proto);
+                    *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+                    FEATURE_CHECK_NE(interfacePrototype, nullptr);
+                    // add interface prototype to parent instance
+                    ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
+                }
+                // setup prototype
+                interfaceInstancePtr->setPrototype(interfacePrototype);
+
+                //
+                int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
+                interfacePrototype->instances[iid]->setInstanceId(iid);
+                // create prototype class instance
+                value = createFeatureObject(interfacePrototype, interface_class_id, interfaceInstancePtr);
+                // setup featureInstance WeakRef, refers to feature_object
+                WeakRefInit(ctx, value);
+            } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
                 return false;
             }
+            }
         }
+        return true;
     }
-    return true;
-}
 
 }
 } // namespace ferry

@@ -35,7 +35,10 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
     // handle type
     if (FT_IS_REFERENCE(featureType)) {
         if (!ptr) {
-            ptr = FTMalloc(sizeof(uintptr_t), FT_POINTER);
+            // create raw pointer for interface
+            bool isInterface = false;
+            IS_INTERFACE_TYPE(featureType, isInterface);
+            ptr = FTMalloc(sizeof(uintptr_t), isInterface ? FT_RAWPOINTER : FT_POINTER);
             if (createPtrOnly)
                 return true;
             return createHostValue(FT_REMOVE_REFERENCE(featureType), *(void**)ptr);

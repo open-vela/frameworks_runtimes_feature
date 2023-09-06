@@ -23,12 +23,20 @@
 #include <memory>
 #include <vector>
 
-#define TRY_GET_REAL_TYPE(featureType)                                                    \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
+#define TRY_GET_REAL_TYPE(featureType)                                                                  \
+    if (FT_IS_COMPLEX(featureType)) {                                                                   \
         ferry::ComplexTypeHeader* complexType = (ferry::ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == ferry::COMPLEX_OPTIONAL) {                                      \
-            featureType = ((ferry::OptionalType*)complexType)->type;                             \
-        }                                                                                 \
+        if (complexType->type == ferry::COMPLEX_OPTIONAL) {                                             \
+            featureType = ((ferry::OptionalType*)complexType)->type;                                    \
+        }                                                                                               \
+    }
+
+#define IS_INTERFACE_TYPE(featureType, ret)                                                             \
+    if (FT_IS_COMPLEX(featureType)) {                                                                   \
+        ferry::ComplexTypeHeader* complexType = (ferry::ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        ret = complexType->type == ferry::COMPLEX_INTERFACE;                                            \
+    } else {                                                                                            \
+        ret = false;                                                                                    \
     }
 
 namespace ferry {
@@ -52,12 +60,12 @@ public:
     int weak_ref_count = 0; // weak ref count
 
     /**
-    * @brief FeaturePrototype constructor
-    *
-    * @param js_ctx
-    * @param description
-    */
-    FeaturePrototype(ft_context_ref ctx, FeatureDescription* feature_desc);
+     * @brief FeaturePrototype constructor
+     *
+     * @param js_ctx
+     * @param description
+     */
+    FeaturePrototype(ft_context_ref ctx, const FeatureDescription* feature_desc);
 
     /**
      * @brief Destroy the Feature Prototype object
@@ -66,20 +74,20 @@ public:
     ~FeaturePrototype();
 
     /**
-    * @brief add FeatureInstance
-    *
-    * @param inst
-    * @return int
-    */
+     * @brief add FeatureInstance
+     *
+     * @param inst
+     * @return int
+     */
     int addInstance(std::unique_ptr<FeatureInstance>&& inst);
 
     /**
-       * @brief Remove FeatureInstance by index
-       *
-       * @param pos
-       * @return true
-       * @return false
-       */
+     * @brief Remove FeatureInstance by index
+     *
+     * @param pos
+     * @return true
+     * @return false
+     */
     bool removeInstance(size_t pos);
 
     /**
@@ -90,10 +98,9 @@ public:
      */
     bool hasInstanceAlive();
 
-
     /**
      * @brief free instance that hold by this class
-     * 
+     *
      */
     void clearAllInstances();
 };
@@ -103,26 +110,26 @@ public:
  *
  */
 struct FeatureUnit {
-    FeatureDescription* description;
+    const FeatureDescription* description;
     FeaturePrototype* proto;
 
     /**
-    * @brief Construct a new Feature Unit object
-    *
-    * @param desc
-    */
+     * @brief Construct a new Feature Unit object
+     *
+     * @param desc
+     */
     FeatureUnit(const FeatureDescription* desc);
 
     /**
-    * @brief we need the default constructor to support put into containers
-    *
-    */
+     * @brief we need the default constructor to support put into containers
+     *
+     */
     FeatureUnit();
 
     /**
-    * @brief Destroy the Feature Unit object
-    *
-    */
+     * @brief Destroy the Feature Unit object
+     *
+     */
     ~FeatureUnit();
 };
 

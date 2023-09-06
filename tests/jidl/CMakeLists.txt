@@ -86,6 +86,7 @@ add_executable(${PROJECT_NAME}
     ATest_1_0_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
+    feature_interface.cpp
     ajs_features_list.h
     ajs_features_init.h
     ${LIBDYNTYPE_SOURCE}

@@ -229,7 +229,7 @@ inline void* FT_GET_OBJ(void* ptr)
 }
 
 enum MemberType {
-    MEMBER_NULL, //代表结束，定义为0
+    MEMBER_NULL, // 代表结束，定义为0
     MEMBER_METHOD,
     MEMBER_ACCESSOR,
     MEMBER_CONST
@@ -252,6 +252,7 @@ enum FeaturePrimitiveType {
     FT_CHAR, // char
     FT_PRIMITIVE_END = FT_REFERENCE_BIT - 1,
     FT_POINTER, // pointer
+    FT_RAWPOINTER, // raw pointer point to a native C struct which has no ref count header
     FT_STRING = FT_REFERENCE_BIT | FT_CHAR, // string
     FT_ANY, // any means guest value
     // FT_OBJECT,
@@ -275,13 +276,14 @@ enum ComplexType {
     COMPLEX_CALLBACK, // callback object
     COMPLEX_ARRAY, // array
     COMPLEX_PROMISE, // promise
+    COMPLEX_INTERFACE, // interface
 };
 
 typedef struct ObjectMember {
     const char* name;
     const FEATURE::FeatureType type;
     int offset; // 在对象中的偏移
-    int size; //所占空间大小
+    int size; // 所占空间大小
 } ObjectMember;
 
 union AppendData {
@@ -306,14 +308,14 @@ typedef struct MemberMethod {
     FuncData func;
     const FEATURE::FeatureType* parameters; // 参数描述数组, 以空结束
     FEATURE::FeatureType return_type;
-    AppendData data; //附加数据
+    AppendData data; // 附加数据
 } MemberMethod;
 
 typedef struct MemberAccessor {
     FuncData getter; // getter & setter可以有一个为空
     FuncData setter;
     FEATURE::FeatureType type;
-    AppendData data; //附加数据
+    AppendData data; // 附加数据
 } MemberAccessor;
 
 typedef struct MemberConst {
@@ -377,15 +379,24 @@ typedef struct PromiseType {
     const FEATURE::FeatureType resolveTypes[2];
 } PromiseType;
 
+typedef struct InterfaceType {
+    ComplexTypeHeader header;
+    const struct FeatureDescription* desc;
+} InterfaceType;
+
 typedef struct FeatureDescription {
     int version; // 待后面扩展使用. 目前可以统一为1
     const char* name; // feature名字, 在require时提供的
     const char* description; // feature的描述, 可以为null
-    int flags; // 配置信息, 暂时不用
-    bool dynamic; // if dynamic type
+    union {
+        int flags; // 配置信息，通过位域定义
+        struct {
+            bool dynamic : 1; // if dynamic type
+        };
+    };
     const FEATURE::FeatureCallbacks* native_callbacks; // native对象接口
     int member_count; // 成员数量
-    const Member* members; //定义成员数量, 后面详细介绍
+    const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
 
 }

@@ -59,8 +59,10 @@ void FreeFeatureValue(void* ptr)
 
     // free pointer refers memory
     if (FT_IS_REFERENCE(featureType)) {
-        // we do not support reference reference.
-        FreeFeatureValue(*(void**)ptr);
+        if (FT_RAWPOINTER != featureType) {
+            // we do not support reference reference.
+            FreeFeatureValue(*(void**)ptr);
+        }
         // ptr space is allocated outside, it's callers responsibility to free it
         free(header);
         return;
@@ -73,7 +75,7 @@ void FreeFeatureValue(void* ptr)
             auto member_count = countMember(objMapType.members);
             for (int i = 0; i < member_count; i++) {
                 ObjectMember* member = &objMapType.members[i];
-                //FeatureType member_type = member->type;
+                // FeatureType member_type = member->type;
                 auto member_type = member->type;
                 TRY_GET_REAL_TYPE(member_type);
                 if (FT_IS_REFERENCE(member_type)) {
@@ -156,7 +158,7 @@ ft_context_ref GetFeatureContext(FeatureInstanceHandle handle)
     return static_cast<FeatureInstance*>(handle)->prototype()->ft_ctx;
 }
 
-//int InvokeFeatureCallback(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, int cid, ...)
+// int InvokeFeatureCallback(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, int cid, ...)
 int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);

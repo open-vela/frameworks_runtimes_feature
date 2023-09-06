@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 #include "feature_instance.h"
-#include "feature_log.h"
 #include "feature_context.h"
+#include "feature_log.h"
 
 #include <string.h>
 
