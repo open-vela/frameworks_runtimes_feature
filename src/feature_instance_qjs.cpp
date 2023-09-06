@@ -58,20 +58,13 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
         proto->description->native_callbacks->onDetached(js_ctx, this);
     }
     // release all callbacks
-    for (const auto& callback : callbacks) {
+    for (const auto& callback : callbacks_) {
         feature_free_value(js_ctx, callback.second.cb);
     }
-    callbacks.clear();
+    callbacks_.clear();
 
     // release all promises
-    for (const auto& pair : promises) {
-        FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
-        feature_free_value(js_ctx, pair.second->promise);
-        feature_free_value(js_ctx, pair.second->resolveFuncs[0]);
-        feature_free_value(js_ctx, pair.second->resolveFuncs[1]);
-        free(pair.second);
-    }
-    promises.clear();
+    releasePromises();
 
     // check if all instances deleted, then clear proto object
     if (prototype() && !prototype()->hasInstanceAlive()) {
@@ -87,13 +80,13 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
 
 FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
 {
-    if (!callbacks.count(id)) {
+    if (!callbacks_.count(id)) {
         FeatureCallbackData callback;
 	callback.cb = FEATURE_VALUE_UNDEFINED;
 	callback.cb_type = nullptr;
         return callback;
     }
-    return callbacks[id];
+    return callbacks_[id];
 }
 
 FeatureCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
@@ -102,48 +95,72 @@ FeatureCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, Callbac
     FeatureCallbackData callback;
     callback.cb = feature_dup_value(js_ctx, value);
     callback.cb_type = callbackType;
-    callbacks[curr_cid_] = callback;
+    callbacks_[curr_cid_] = callback;
     return curr_cid_++;
 }
 
 bool FeatureInstanceQjs::removeCallback(FeatureCallbackId id)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
-    if (!callbacks.count(id)) {
+    if (!callbacks_.count(id)) {
         FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", id, this);
         return false;
     }
-    feature_free_value(js_ctx, callbacks[id].cb);
-    callbacks.erase(id);
+    feature_free_value(js_ctx, callbacks_[id].cb);
+    callbacks_.erase(id);
     return true;
 }
 
-FeaturePromiseData* FeatureInstanceQjs::getPromise(FeaturePromiseHandle promiseHandle)
+FeaturePromiseData* FeatureInstanceQjs::getPromiseData(FeaturePromiseHandle promiseHandle)
 {
-    if (!promises.count(promiseHandle)) {
+    if (!promises_.count(promiseHandle)) {
         return nullptr;
     }
-    return promises[promiseHandle];
+    return promises_[promiseHandle];
 }
 
-FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeaturePromiseData* data)
+feature_value_t FeatureInstanceQjs::getPromise(FeaturePromiseHandle promiseHandle)
 {
-    FEATURE_CHECK_NE(data, nullptr);
-    FEATURE_CHECK_NE(feature_is_undefined(data->promise), true);
-    promises[curr_cid_] = data;
+    FeaturePromiseData* data = getPromiseData(promiseHandle);
+    if (!data)
+        return FEATURE_VALUE_UNDEFINED;
+
+    return data->promise;
+}
+
+FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeatureType resolve_type, FeatureType reject_type)
+{
+    FeaturePromiseData* data = (FeaturePromiseData*)malloc(sizeof(FeaturePromiseData));
+    data->promise = FEATURE_VALUE_UNDEFINED;
+    data->resolveFuncs[0] = FEATURE_VALUE_UNDEFINED;
+    data->resolveFuncs[1] = FEATURE_VALUE_UNDEFINED;
+    data->resolveTypes[0] = resolve_type;
+    data->resolveTypes[1] = reject_type;
+
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);  // to be fixed
+    feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
+    if (feature_is_exception(promise)) {
+        feature_free_value(js_ctx, data->resolveFuncs[0]);
+        feature_free_value(js_ctx, data->resolveFuncs[1]);
+        feature_free_value(js_ctx, promise);
+        free(data);
+        return -1;
+    }
+    data->promise = promise;
+    promises_[curr_cid_] = data;
     return curr_cid_++;
 }
 
 bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
-    if (!promises.count(promiseHandle)) {
+    if (!promises_.count(promiseHandle)) {
         FEATURE_LOG_ERROR("promiseHandle %d in instance: %p not exist !", promiseHandle, this);
         return false;
     }
-    FeaturePromiseData* data = promises[promiseHandle];
+    FeaturePromiseData* data = promises_[promiseHandle];
     FEATURE_CHECK_NE(data, nullptr);
-    promises.erase(promiseHandle);
+    promises_.erase(promiseHandle);
     // free js values
     feature_free_value(js_ctx, data->promise);
     feature_free_value(js_ctx, data->resolveFuncs[0]);
@@ -152,10 +169,55 @@ bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)
     return true;
 }
 
+void FeatureInstanceQjs::releasePromises() {
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    for (const auto& pair : promises_) {
+        FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
+        feature_free_value(js_ctx, pair.second->promise);
+        feature_free_value(js_ctx, pair.second->resolveFuncs[0]);
+        feature_free_value(js_ctx, pair.second->resolveFuncs[1]);
+        free(pair.second);
+    }
+    promises_.clear();
+}
+
+void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func) {
+    // mark callbacks
+    for (auto& pair : callbacks_) {
+        feature_mark_value(rt, pair.second.cb, mark_func);
+    }
+
+    // mark promies
+    for (auto& pair : promises_) {
+        feature_mark_value(rt, pair.second->promise, mark_func);
+        feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
+        feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
+    }
+}
+
+bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
+{
+    if (!prototype()) {
+        FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
+        return false;
+    }
+
+    auto proto = prototype();
+    WeakRef* node = &weak_self_;
+    weakref_list_initialize(&node->link);
+    weakref_list_add_tail(&node->link, &proto->weak_ref_list);
+
+    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
+    *js_val_ptr = feature_object;
+    proto->weak_ref_count++;
+
+    return true;
+}
+
 int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
 {
     // get feature instance
-    FeaturePromiseData* promiseData = getPromise(promiseHandle);
+    FeaturePromiseData* promiseData = getPromiseData(promiseHandle);
     if (!promiseData) {
         FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", promiseHandle);
         return -1;
@@ -253,35 +315,9 @@ int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, featu
         feature_free_value(js_ctx, argv[i]);
     }
     delete[] argv;
-    /*
-    if (callbackType->return_type != FT_VOID && ret_value && !jse_is_undefined(ret)) {
-        // allocate ret_value first
-        ffi_type* ret_type = nullptr;
-        if (!createTypeDeclaration(callbackType->return_type, ret_type)) {
-            freeTypeDeclaration(ret_type);
-            FreeFeatureValue(*ret_value);
-            *ret_value = nullptr;
-            return -1;
-        }
-        if (!FeatureFFIQjs::convertValueToHost(instance, callbackType->return_type, *ret_value, js_ctx, ret)) {
-            freeTypeDeclaration(ret_type);
-            FreeFeatureValue(*ret_value);
-            *ret_value = nullptr;
-            return -1;
-        }
-        freeTypeDeclaration(ret_type);
-        // for reference type, remove the pointer's pointer.
-        if (FT_IS_REFERENCE(callbackType->return_type)) {
-            auto result = **(void***)ret_value;
-            free(*ret_value);
-            *ret_value = result;
-        }
-    }
-*/
     feature_free_value(js_ctx, ret);
 
     return 0;
 }
 
 }
-

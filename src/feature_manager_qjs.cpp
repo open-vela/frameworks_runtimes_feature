@@ -100,16 +100,8 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
 
     auto proto = instance->prototype();
     FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
-    // mark callbacks
-    for (auto& pair : instance_qjs->callbacks) {
-        feature_mark_value(rt, pair.second.cb, mark_func);
-    }
-    // mark promies
-    for (auto& pair : instance_qjs->promises) {
-        feature_mark_value(rt, pair.second->promise, mark_func);
-        feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
-        feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
-    }
+    instance_qjs->markValues(rt, mark_func);
+
     // should mark prototype object.
     auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto);
     feature_mark_value(rt, js_proto, mark_func);
@@ -140,29 +132,6 @@ static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, FeatureDe
         return nullptr;
     }
     return new FeaturePrototype(ft_ctx, description);
-}
-
-static FeaturePromiseData* FeatureCreatePromise(FeatureInstanceHandle handle, FeatureType resolve_type, FeatureType reject_type)
-{
-    FeaturePromiseData* data = (FeaturePromiseData*)malloc(sizeof(FeaturePromiseData));
-    data->promise = FEATURE_VALUE_UNDEFINED;
-    data->resolveFuncs[0] = FEATURE_VALUE_UNDEFINED;
-    data->resolveFuncs[1] = FEATURE_VALUE_UNDEFINED;
-    data->resolveTypes[0] = resolve_type;
-    data->resolveTypes[1] = reject_type;
-
-    auto ft_ctx = GetFeatureContext(handle);
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
-    if (feature_is_exception(promise)) {
-        feature_free_value(js_ctx, data->resolveFuncs[0]);
-        feature_free_value(js_ctx, data->resolveFuncs[1]);
-        feature_free_value(js_ctx, promise);
-        free(data);
-        return nullptr;
-    }
-    data->promise = promise;
-    return data;
 }
 
 /**
@@ -338,13 +307,12 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             // create promise
             PromiseType* promiseType = (PromiseType*)complexType;
             // create promise and add to instance
-            auto promiseData = FeatureCreatePromise(instance, promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
-            FEATURE_CHECK_NE(promiseData, nullptr);
-            promiseHandle = ((FeatureInstanceQjs*)instance)->addPromise(promiseData);
+            promiseHandle = ((FeatureInstanceQjs*)instance)->addPromise(promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
+            feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(promiseHandle);
             // pass promiseHandle to native function
             ffi_arg_values[2] = &promiseHandle;
             // dup and return promise object.
-            method_ret_value = feature_dup_value(ctx, promiseData->promise);
+            method_ret_value = feature_dup_value(ctx, promise);
         }
         // invoke method
         ffi_call(&cif, method.callback, ffi_ret_value, ffi_arg_values);
@@ -596,24 +564,13 @@ static bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
 {
     // 根据cid获取FeaturePrototype
     FeatureInstance* instance = getInstance(feature_object);
-    FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
-
     if (!instance || !instance->prototype()) {
         FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
         return false;
     }
-    auto proto = instance->prototype();
 
-    // 创建WeakRef节点添加到proto->weak_ref_list链表中
-    WeakRef* node = &instance_qjs->weak_self_;
-    weakref_list_initialize(&node->link);
-    weakref_list_add_tail(&node->link, &proto->weak_ref_list);
-
-    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
-    *js_val_ptr = feature_object;
-    proto->weak_ref_count++;
-
-    return true;
+    FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
+    return instance_qjs->initWeakRef(feature_object);
 }
 
 static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
@@ -659,7 +616,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
     }
 
     if (!ft_ctx_)
-        ft_ctx_ = CreateFeatureContext(ctx);
+        ft_ctx_ = CreateFeatureContextQjs(ctx);
 
     if (!unit->proto) {
         // create proto
@@ -741,7 +698,7 @@ void FeatureManagerQjs::uninit()
     delete registry_;
 
     if (ft_ctx_) {
-        ReleaseFeatureContext(ft_ctx_);
+        ReleaseFeatureContextQjs(ft_ctx_);
         ft_ctx_ = nullptr;
     }
 }

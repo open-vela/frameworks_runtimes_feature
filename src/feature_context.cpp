@@ -16,23 +16,22 @@
 
 #include "feature_context_private.h"
 #include "feature_context_qjs.h"
-
 #include <stdio.h>
 #include <cstring>
 #include <malloc.h>
 
-ft_context_ref CreateFeatureContext(void* data) {
+ft_context_ref CreateFeatureContextQjs(void* data) {
     FeatureContext* ft_ctx = (FeatureContext*)malloc(sizeof(FeatureContext));
     memset(ft_ctx, 0, sizeof(FeatureContext));
-    ft_ctx->data = data;
-    InitFeatureContextQjs(ft_ctx);
+    InitFeatureContextQjs(ft_ctx, data);
     return ft_ctx;
 }
+void ReleaseFeatureContextQjs(ft_context_ref ft_ctx) {
+    if (!ft_ctx)
+        return;
 
-void ReleaseFeatureContext(ft_context_ref ft_ctx) {
-    UinitFeatureContextQjs(ft_ctx);
-    if (ft_ctx)
-        free(ft_ctx);
+    UninitFeatureContextQjs(ft_ctx);
+    free(ft_ctx);
 }
 
 void* ft_context_get_data (ft_context_ref ft_ctx) {

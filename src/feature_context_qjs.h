@@ -34,9 +34,9 @@ typedef struct qjs_val_t {
     ft_type type;
 } qjs_val_t;
 
-bool InitFeatureContextQjs(ft_context_ref ft_ctx);
+bool InitFeatureContextQjs(ft_context_ref ft_ctx, void* data);
 
-void UinitFeatureContextQjs(ft_context_ref ft_ctx);
+void UninitFeatureContextQjs(ft_context_ref ft_ctx);
 
 #endif // __FEATURE_CONTEXT_QJS_H__
 

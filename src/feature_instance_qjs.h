@@ -61,20 +61,26 @@ public:
 
     FEATURE::FeatureCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
 
-    FeaturePromiseData* getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
+    feature_value_t getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
 
-    FEATURE::FeaturePromiseHandle addPromise(FeaturePromiseData* data);
+    FEATURE::FeaturePromiseHandle addPromise(FeatureType resolve_type, FeatureType reject_type);
 
-    std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks; // instance should save feature resources
-    std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises;   // all promises created by native feature
-    WeakRef weak_self_;
+    void releasePromises();
+
+    void markValues(feature_runtime_ref rt, feature_mark_func mark_func);
+
+    bool initWeakRef(feature_value_t feature_object);
 
 private:
     FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
+    FeaturePromiseData* getPromiseData(FEATURE::FeaturePromiseHandle promiseHandle);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int  rest_param_count);
 
+    WeakRef weak_self_;
     FEATURE::FeatureCallbackId curr_cid_ = 0;
+    std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
+    std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises_;   // all promises created by native feature
 };
 
 }
