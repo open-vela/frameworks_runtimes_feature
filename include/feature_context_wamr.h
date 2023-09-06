@@ -17,15 +17,22 @@
 #define __FEATURE_CONTEXT_QJS_H__
 
 #include "feature_context_private.h"
+#include "wasm_export.h"
+
+#define GET_WAMR_ENV(ft_ctx) static_cast<wasm_exec_env_t>(ft_ctx->data)
+
+#define FT_VAL_TO_WM(ft_val) (*((wamr_val_t*)(&(ft_val))))
+#define FT_VAL_TO_WM_PTR(ft_val) ((wamr_val_t*)(&(ft_val)))
+#define FT_VAL_GET_WM_VAL(ft_val) (((wamr_val_t*)(&(ft_val)))->wm_val)
+#define FT_VAL_GET_WM_VAL_PTR(ft_val) (&(((wamr_val_t*)(&(ft_val)))->wm_val))
+
+#define WM_VAL_TO_FT(wm_val) (*((ft_value_t*)(&(wm_val))))
+#define WM_VAL_TO_FT_PTR(wm_val) ((ft_value_t*)(&(wm_val)))
 
 typedef struct wamr_val_t {
+    wasm_val_t wm_val;
     ft_type type;
-# if __WORDSIZE == 64
-    uint64_t val[2];
-#else
-    uint64_t val;
-#endif
-} qjs_val_t;
+} wamr_val_t;
 
 bool InitFeatureContextWamr(ft_context_ref ft_ctx);
 
