@@ -43,7 +43,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     auto proto = prototype();
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
 
-    //遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
+    // 遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
     WeakRef* node;
     WeakRef* node_temp;
     weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
@@ -53,7 +53,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     }
 
     // invoke callback
-    if (proto->description->native_callbacks->onDetached) {
+    if (proto->description->native_callbacks && proto->description->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
         proto->description->native_callbacks->onDetached(js_ctx, this);
     }
@@ -65,16 +65,20 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
 
     // release all promises
     releasePromises();
-
-    // check if all instances deleted, then clear proto object
-    if (prototype() && !prototype()->hasInstanceAlive()) {
-        FEATURE_LOG_INFO("all instance freed, free proto object...");
-
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype()->ft_proto);
-        if (!feature_is_undefined(*js_proto_ptr)) {
-            feature_free_value(js_ctx, *js_proto_ptr);
-            *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+    auto free_instance = [js_ctx](FeaturePrototype* proto) {
+        if (proto && !proto->hasInstanceAlive()) {
+            FEATURE_LOG_INFO("all instance freed, free proto object...");
+            auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
+            if (!feature_is_undefined(*js_proto_ptr)) {
+                feature_free_value(js_ctx, *js_proto_ptr);
+                *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+            }
         }
+    };
+    // check if all instances deleted, then clear proto object
+    free_instance(prototype());
+    for (auto& pair : prototypes) {
+        free_instance(pair.second);
     }
 }
 

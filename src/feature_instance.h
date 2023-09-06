@@ -29,7 +29,6 @@ namespace ferry {
 
 class FeaturePrototype;
 
-
 class FeatureInstance {
 public:
     FeatureInstance(struct FeaturePrototype* prototype, ferry::NativeFunc* vtable, int vtable_size);
@@ -58,6 +57,8 @@ public:
     int instanceId() { return instance_id_; }
 
     FeaturePrototype* prototype() { return proto_; }
+
+    void setPrototype(FeaturePrototype* proto) { proto_ = proto; }
 
     ferry::NativeFunc getVirtualFunction(int index) const
     {

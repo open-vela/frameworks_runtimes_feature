@@ -15,6 +15,7 @@
  */
 
 #include "feature_manager_qjs.h"
+#include "feature_context.h"
 #include "feature_context_qjs.h"
 #include "feature_ffi_qjs.h"
 #include "feature_framework.h"
@@ -40,16 +41,23 @@ using namespace AIOTJS;
 #endif
 namespace ferry {
 
-static thread_local feature_classid_t class_id; // prototype class id
-static thread_local feature_classdef_t class_def; // prototype class defination, contains finalizer
+thread_local feature_classid_t feature_class_id; // prototype class id
+thread_local feature_classdef_t feature_class_def; // prototype class defination, contains finalizer
+
+thread_local feature_classid_t interface_class_id; // prototype class id
+thread_local feature_classdef_t interface_class_def; // prototype class defination, contains finalizer
 
 // some static functions used by FeatureManagerQjs
-static bool createJsInstanceClass(context_ref ctx, const char* class_name);
+static bool createJsInstanceClass(context_ref ctx, feature_classid_t& class_id, feature_classdef_t& class_def);
 static context_ref getContext(feature_runtime_ref rt);
 
 static inline FeatureInstance* getInstance(feature_value_t val)
 {
-    return static_cast<FeatureInstance*>(feature_get_opaque(val, class_id));
+    void* ptr = feature_get_opaque(val, feature_class_id);
+    if (!ptr) {
+        ptr = feature_get_opaque(val, interface_class_id);
+    }
+    return static_cast<FeatureInstance*>(ptr);
 }
 
 static context_ref getContext(feature_runtime_ref rt)
@@ -107,28 +115,41 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     feature_mark_value(rt, js_proto, mark_func);
 }
 
-static bool createJsInstanceClass(context_ref ctx, const char* class_name)
+static bool createJsInstanceClass(context_ref ctx, feature_classid_t& class_id, feature_classdef_t& class_def)
 {
-    FEATURE_CHECK_NE(class_name, nullptr);
-    FEATURE_LOG_DEBUG("create PrototypeClass: %s.", class_name);
     // FEATURE_CHECK_EQ(featurePrototype->class_id, 0);
     JS_NewClassID(&class_id);
     FEATURE_CHECK_NE(class_id, 0); // it must not 0 now
-    // fill the class_def structure
-    class_def = { .class_name = class_name, .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
     // create native feature prototype class defination
     JS_NewClass(feature_get_runtime(static_cast<feature_context_ref>(ctx)), class_id, &class_def);
     return true;
 }
 
-static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, FeatureDescription* description)
+static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
 {
     FEATURE_CHECK_NE(description, nullptr);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     FEATURE_CHECK_NE(js_ctx, nullptr);
-    FEATURE_LOG_DEBUG("create FeaturePrototype for description: %s.", description->name);
-    if (!createJsInstanceClass(js_ctx, "FeatureInstanceObject")) {
+    FEATURE_LOG_DEBUG("create feature FeaturePrototype for description: %s.", description->name);
+    // fill the class_def structure
+    feature_class_def = { .class_name = "FeatureInstanceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
+    if (!createJsInstanceClass(js_ctx, feature_class_id, feature_class_def)) {
         FEATURE_LOG_ERROR("create js Instance class for feature %s.", description->name);
+        return nullptr;
+    }
+    return new FeaturePrototype(ft_ctx, description);
+}
+
+FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
+{
+    FEATURE_CHECK_NE(description, nullptr);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
+    FEATURE_CHECK_NE(js_ctx, nullptr);
+    FEATURE_LOG_DEBUG("create interface FeaturePrototype for description: %s.", description->name);
+    // fill the class_def structure
+    interface_class_def = { .class_name = "FeatureInterfaceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
+    if (!createJsInstanceClass(js_ctx, interface_class_id, interface_class_def)) {
+        FEATURE_LOG_ERROR("create js interface class for feature %s.", description->name);
         return nullptr;
     }
     return new FeaturePrototype(ft_ctx, description);
@@ -151,6 +172,7 @@ static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, FeatureDe
 static feature_value_t method_call(feature_context_ref ctx, feature_value_t this_val,
     int argc, feature_value_t* argv, int magic)
 {
+    std::vector<bool> freeFlags;
     bool got_error = false;
     feature_value_t method_ret_value = FEATURE_VALUE_UNDEFINED;
     int index = magic;
@@ -213,6 +235,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     }
 
     do {
+        freeFlags.resize(method_param_count, false);
         for (int i = 0; i < method_param_count && i < argc; i++) {
             feature_value_t currArg = argv[i];
             auto param = currParam[i];
@@ -221,6 +244,9 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 got_error = true;
                 break;
             }
+            bool isInterface = false;
+            IS_INTERFACE_TYPE(param, isInterface);
+            freeFlags[i] = isInterface;
             if (!createTypeDeclaration(param, ffi_params[external_count + i])) {
                 FEATURE_LOG_ERROR("prepareType for type failed !");
                 got_error = true;
@@ -339,7 +365,9 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         }
         // free value
         if (ffi_arg_values[i + external_count]) {
-            FreeFeatureValue(ffi_arg_values[i + external_count]);
+            if (freeFlags[i]) {
+                FreeFeatureValue(ffi_arg_values[i + external_count]);
+            }
         }
     }
     freeTypeDeclaration(ffi_ret);
@@ -425,6 +453,12 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     // free resources
     freeTypeDeclaration(ffi_ret);
     FreeFeatureValue(ret_value);
+
+    if (member->type == MEMBER_CONST) {
+        // for const value, redefine the property with result value
+        JS_DefinePropertyValueStr(static_cast<feature_context_ref>(ctx), this_val, member->name,
+            feature_dup_value(ctx, method_ret_value), FEATURE_PROP_CONFIGURABLE);
+    }
 
     return method_ret_value;
 }
@@ -534,11 +568,11 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
     return val;
 }
 
-static int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_value_t proto)
+static int initialize_prototype(context_ref ctx, FeatureDescription* description, FeaturePrototype* featurePrototype, feature_value_t proto)
 {
-    assert(unit != nullptr);
-    for (int i = 0; i < unit->description->member_count; i++) {
-        const Member& member = unit->description->members[i];
+    FEATURE_CHECK(description != nullptr && featurePrototype != nullptr);
+    for (int i = 0; i < description->member_count; i++) {
+        const Member& member = description->members[i];
         switch (member.type) {
         case MEMBER_NULL: {
             // not allowed
@@ -575,8 +609,8 @@ static int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_valu
             // handle member const
             const MemberConst& constMember = member.value;
             // if not interface or constant defined value, use const_variable_initialize
-            if (!unit->description->dynamic || constMember.func.vtable_idx == -1) {
-                feature_value_t constantVal = const_variable_initialize(ctx, unit->proto, constMember);
+            if (!description->dynamic || constMember.func.vtable_idx == -1) {
+                feature_value_t constantVal = const_variable_initialize(ctx, featurePrototype, constMember);
                 feature_define_object_property(ctx, proto, member.name, constantVal, FEATURE_PROP_ENUMERABLE);
             } else {
                 // add a getter function for interface initializer sitution
@@ -596,7 +630,7 @@ static int initialize_prototype(context_ref ctx, FeatureUnit* unit, feature_valu
     return 0;
 }
 
-static bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
+bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
 {
     // 根据cid获取FeaturePrototype
     FeatureInstance* instance = getInstance(feature_object);
@@ -642,6 +676,31 @@ FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
 {
 }
 
+feature_value_t createFeatureObject(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance)
+{
+    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
+    auto ctx = ft_context_get_data(featurePrototype->ft_ctx);
+    if (feature_is_undefined(*js_proto_ptr)) {
+        feature_value_t js_proto_obj = feature_object(static_cast<feature_context_ref>(ctx));
+        if (feature_is_exception(js_proto_obj)) {
+            feature_dump_error(static_cast<feature_context_ref>(ctx));
+            return FEATURE_VALUE_UNDEFINED;
+        }
+        // TODO: initialize js_proto using description
+        initialize_prototype(ctx, featurePrototype->description, featurePrototype, js_proto_obj);
+        *js_proto_ptr = js_proto_obj;
+        if (featurePrototype->description->native_callbacks && featurePrototype->description->native_callbacks->onCreate) {
+            FEATURE_LOG_DEBUG("invoke onCreate callback...");
+            featurePrototype->description->native_callbacks->onCreate(ctx, featurePrototype);
+        }
+    }
+
+    // create object with proto and set opaque refers to FeatureInstance
+    feature_value_t feature_object = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), *js_proto_ptr, class_id);
+    feature_set_opaque(feature_object, featureInstance);
+    return feature_object;
+}
+
 feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
@@ -650,13 +709,15 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
         FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
+    const FeatureDescription* description = unit->description;
 
-    if (!ft_ctx_)
+    if (!ft_ctx_) {
         ft_ctx_ = CreateFeatureContextQjs(ctx);
+    }
 
     if (!unit->proto) {
         // create proto
-        unit->proto = createFeaturePrototype(ft_ctx_, unit->description);
+        unit->proto = createFeaturePrototype(ft_ctx_, description);
         if (!unit->proto) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
@@ -664,43 +725,24 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(unit->proto->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
     }
-
-    auto proto = unit->proto;
-    // create prototype class instance
-    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
-    if (feature_is_undefined(*js_proto_ptr)) {
-        feature_value_t js_proto_obj = feature_object(static_cast<feature_context_ref>(ctx));
-        if (feature_is_exception(js_proto_obj)) {
-            feature_dump_error(static_cast<feature_context_ref>(ctx));
-            return FEATURE_VALUE_UNDEFINED;
-        }
-        // TODO: initialize js_proto using description
-        initialize_prototype(ctx, unit, js_proto_obj);
-        *js_proto_ptr = js_proto_obj;
-        if (proto->description->native_callbacks->onCreate) {
-            FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            proto->description->native_callbacks->onCreate(ctx, proto);
-        }
-    }
+    auto featurePrototype = unit->proto;
 
     // create feature instance for the required object
-    auto featureInstance = std::make_unique<FeatureInstanceQjs>(proto, nullptr, 0);
-    // create object with proto and set opaque refers to FeatureInstance
-    feature_value_t feature_object = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), *js_proto_ptr, class_id);
-    feature_set_opaque(feature_object, featureInstance.get());
-
-    // setup featureInstance WeakRef, refers to feature_object
-    // proto->instances[iid]->js_self = WreakRef(feature_object);
-
-    WeakRefInit(ctx, feature_object);
+    auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr, 0);
+    auto featureInstancePtr = featureInstance.get();
     // insert into instances array, update iid
-    int iid = proto->addInstance(std::move(featureInstance));
-    proto->instances[iid]->setInstanceId(iid);
-    if (proto->description->native_callbacks->onRequired) {
+    int iid = featurePrototype->addInstance(std::move(featureInstance));
+    featurePrototype->instances[iid]->setInstanceId(iid);
+    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
+    *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+    // create prototype class instance
+    auto feature_object = createFeatureObject(featurePrototype, feature_class_id, featureInstancePtr);
+    // setup featureInstance WeakRef, refers to feature_object
+    WeakRefInit(ctx, feature_object);
+    if (description->native_callbacks && description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        proto->description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
+        description->native_callbacks->onRequired(ctx, featurePrototype->instances[iid].get());
     }
-
     return feature_object;
 }
 
@@ -718,7 +760,7 @@ void FeatureManagerQjs::uninit()
             // clear all feature instance at first, it will free all feature instance and call onDetach for them
             proto->clearAllInstances();
             // call feature's onDestroy
-            if (description->native_callbacks->onDestroy) {
+            if (proto->description->native_callbacks && description->native_callbacks->onDestroy) {
                 FEATURE_LOG_DEBUG("invoke onDestroy callback...");
                 description->native_callbacks->onDestroy(js_ctx, proto);
             }

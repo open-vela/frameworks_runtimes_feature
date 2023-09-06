@@ -70,16 +70,16 @@ static const char* __printString(void* FeatureInstanceHandle, int64_t data, cons
     return buf;
 }
 
-Point g_point = { 100.0, 200.0, 300.0 };
+static Point g_point = { 100.0, 200.0, 300.0 };
 
-Point* __get_myPoint(FeatureInstanceHandle handle, int64_t data)
+static Point* __get_myPoint(FeatureInstanceHandle handle, int64_t data)
 {
     Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
     DupFeatureValue(p);
     return p;
 }
 
-Point* __with_optional(FeatureInstanceHandle handle, int64_t data, const char* str)
+static Point* __with_optional(FeatureInstanceHandle handle, int64_t data, const char* str)
 {
     Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
     DupFeatureValue(p);
@@ -87,7 +87,7 @@ Point* __with_optional(FeatureInstanceHandle handle, int64_t data, const char* s
     return p;
 }
 
-void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t data, FTArray& array)
+static void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t data, FTArray& array)
 {
     FTArrayHelper<Point*> point_array(&array);
     printf("%s: point_array size: %d\n", __func__, point_array.size());
@@ -99,7 +99,7 @@ void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t data, FTAr
     printf("]\n");
 }
 
-void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData data, FTArray& array)
+static void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData data, FTArray& array)
 {
     FTArrayHelper<const char*> point_array(&array);
     printf("%s: point_array size: %d\n", __func__, point_array.size());
@@ -110,7 +110,7 @@ void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData data, FTAr
     printf("]\n");
 }
 
-void __return_promise(FeatureInstanceHandle handle, AppendData data, FeaturePromiseHandle promiseHandle, bool isReject)
+static void __return_promise(FeatureInstanceHandle handle, AppendData data, FeaturePromiseHandle promiseHandle, bool isReject)
 {
     Point p;
     p._x = 1.0;
@@ -123,16 +123,16 @@ void __return_promise(FeatureInstanceHandle handle, AppendData data, FeatureProm
     }
 }
 
-void __set_myPoint(FeatureInstanceHandle handle, int64_t data, Point* point)
+static void __set_myPoint(FeatureInstanceHandle handle, int64_t data, Point* point)
 {
     Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
-    if(p) {
+    if (p) {
         FreeFeatureValue(p);
     }
     SetFeatureObjectData(handle, DupFeatureValue(point));
 }
 
-Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
+static Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
 {
     Point* p = (Point*)data;
     // add reference count.
@@ -143,7 +143,7 @@ Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
     return p;
 }
 
-void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters variadicParameters)
+static void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters variadicParameters)
 {
     ft_context_ref ft_ctx = GetFeatureContext(handle);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
@@ -197,7 +197,7 @@ void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters va
     printf("\n");
 }
 
-void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
+static void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
 {
     if (InvokeFeatureCallback(handle, callback, "hello world", 123.0, 456.0, 789.0)) {
         FEATURE_LOG_ERROR("invoke failed !");
@@ -206,7 +206,7 @@ void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::Feature
     RemoveCallback(handle, callback);
 }
 
-void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
+static void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
 {
     char* arg1 = (char*)FTMalloc(sizeof("test1") + 1, FT_CHAR);
     sprintf(arg1, "%s", "test1");
@@ -319,7 +319,7 @@ static OptionalType recv_point_array_type {
 
 Point* g_point1 = new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);
 
-FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
+static FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
 {
     FTArray* strArray = static_cast<FTArray*>(FTMalloc(sizeof(FTArray), FT_MK_COMPLEX(&string_array_type)));
     strArray->_size = 4;
@@ -332,7 +332,7 @@ FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
     return strArray;
 }
 
-static Member g_members[] = {
+static const Member g_members[] = {
     { .type = MEMBER_METHOD, .name = "printPoint", .method = { .func = { .callback = FFI_FN(__printPoint) }, .parameters = printPoint_parameters, .return_type = FT_MK_COMPLEX_REF(&Point_type), .data = { 12 } } },
     { .type = MEMBER_METHOD, .name = "printString", .method = { .func = { .callback = FFI_FN(__printString) }, .parameters = printString_parameters, .return_type = FT_STRING, .data = { 123 } } },
     { .type = MEMBER_ACCESSOR, .name = "myPoint", .accessor = { .getter = { .callback = FFI_FN(__get_myPoint) }, .setter = { .callback = FFI_FN(__set_myPoint) }, .type = FT_MK_COMPLEX_REF(&Point_type), .data = { 100 } } },
@@ -350,7 +350,7 @@ static Member g_members[] = {
 };
 
 // callbacks
-static struct FeatureCallbacks callbacks {
+static const struct FeatureCallbacks callbacks {
     [](FeatureRuntimeContext ctx) {
         FEATURE_LOG_INFO("onRegister");
     },
@@ -377,7 +377,8 @@ static struct FeatureCallbacks callbacks {
         }
 };
 
-static FeatureDescription timers_description = { 1, "Timer", "js timer feature, for setTimeout and setInterval and so on", 1, false, &callbacks, countof(g_members), g_members };
+static const FeatureDescription timers_description = { 1, "Timer", "js timer feature, for setTimeout and setInterval and so on", 0, &callbacks, countof(g_members), g_members };
+
 
 QAPPFEATURE_INIT(timers)
 {
