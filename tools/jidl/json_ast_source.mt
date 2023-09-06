@@ -42,6 +42,7 @@
 <%def name="GenStruct(struct_node)">\
 <%
   struct_name = struct_node['name']
+  render.CacheStructName(struct_name)
   for member in struct_node['members']:
     if render.IsStruct(member['type']):
       GenStruct(member['type'])
@@ -83,6 +84,11 @@
     .element_type = ${ft_type}
 %endif
   };
+
+  FTArray* ${module_name}_malloc_${array_type}_array() {
+    return (FTArray*)FTMalloc(
+      sizeof(FTArray), FT_MK_COMPLEX(&${module_name}_${array_type}_array));
+  }
 
 </%def>\
 <%!
@@ -169,6 +175,7 @@
 <%
   identifier = func_node['identifier']
   ret_type = func_node['return_type']
+  render.CacheFuncReturnNode(identifier, ret_type)
 %>\
   /****** for JIDL function '${identifier}' ******/
 ${GenParamsFeatureType(func_node)}

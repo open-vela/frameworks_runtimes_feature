@@ -10,16 +10,16 @@
   ],
   "features": [
       {
-          "name": "Simple_1_0"
+          "name": "Simple"
       },
       {
-          "name": "Record_1_0"
+          "name": "Record"
       },
       {
-          "name": "Struct_1_0"
+          "name": "Struct"
       },
       {
-          "name": "Promise_1_0"
+          "name": "Promise"
       },
       {
           "name": "Timer"
