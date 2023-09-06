@@ -18,9 +18,9 @@
 
 #include "feature_context.h"
 
-ft_context_ref CreateFeatureContext(void* data);
+ft_context_ref CreateFeatureContextQjs(void* data);
 
-void ReleaseFeatureContext(ft_context_ref ft_ctx);
+void ReleaseFeatureContextQjs(ft_context_ref ft_ctx);
 
 typedef struct FeatureContext {
     void * data;

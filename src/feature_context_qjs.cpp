@@ -256,13 +256,13 @@ static void _ft_free_value(ft_context_ref ft_ctx, ft_value_t f_val) {
     JS_FreeValue(js_ctx, q_val.js_val);
 }
 
-void _ft_free_string (ft_context_ref ft_ctx, const char* str)  {
+static void _ft_free_string (ft_context_ref ft_ctx, const char* str)  {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     JS_FreeCString(js_ctx, str);
 }
 
-bool InitFeatureContextQjs(ft_context_ref rt_ctx){
-
+bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data){
+    rt_ctx->data = data;
     rt_ctx->ft_get_type = _ft_get_type;
     // value creation
     rt_ctx->ft_from_int = _ft_int;
@@ -302,7 +302,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx){
 }
 
 
-void UinitFeatureContextQjs(ft_context_ref context) {
+void UninitFeatureContextQjs(ft_context_ref context) {
 }
 
 

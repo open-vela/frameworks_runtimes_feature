@@ -448,12 +448,12 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, voi
                 }
                 FEATURE_CHECK_NE(instance, nullptr);
                 FeaturePromiseHandle promiseHandle = *(FeaturePromiseHandle*)ptr;
-                auto promiseData = ((FeatureInstanceQjs*)instance)->getPromise(promiseHandle);
-                if (!promiseData) {
+                feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(promiseHandle);
+                if (feature_is_undefined(promise)) {
                     FEATURE_LOG_ERROR("get promise with promiseHandle: %" PRId32 " failed !", promiseHandle);
                     return false;
                 }
-                value = feature_dup_value(ctx, promiseData->promise);
+                value = feature_dup_value(ctx, promise);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
