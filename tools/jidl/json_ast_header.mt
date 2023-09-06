@@ -47,7 +47,6 @@
 <%def name="GenStructDefine(struct_node)">\
 <%
   struct_name = struct_node['name']
-  render.CacheStructName(struct_name)
   for member in struct_node['members']:
     if render.IsStruct(member['type']):
       GenStructDefine(member['type'])
@@ -60,6 +59,15 @@
 
   ${module_name}_${struct_name}* malloc${struct_name}();
 
+</%def>\
+
+<%def name="GenArrayMallocFuncDefines()">\
+<%
+  malloc_defines = render.GetArrayMallocFuncDefines()
+%>\
+%for malloc_def in malloc_defines:
+  ${malloc_def};
+%endfor
 </%def>\
 
 #ifndef ${header_define}
@@ -107,4 +115,6 @@ ${GenPropertyDefines(block)}\
 %endif
 %endfor
 
+  // Array malloc functions
+${GenArrayMallocFuncDefines()}
 #endif // ${header_define}

@@ -62,44 +62,44 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Simple_1_0_onRegister(FeatureRuntimeContext ctx)
+void Simple_onRegister(FeatureRuntimeContext ctx)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void Simple_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void Simple_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void Simple_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void Simple_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_onUnregister(FeatureRuntimeContext ctx)
+void Simple_onUnregister(FeatureRuntimeContext ctx)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     FREE_PROP_CHAR_PTR(name);
     FREE_PROP_CHAR_PTR(version);
 }
 
-void Simple_1_0_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtString str)
+void Simple_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtString str)
 {
     printf("%s::%s(), str: %s\n", file_tag,  __FUNCTION__, str);
 }
 
-void Simple_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     ft_context_ref ft_ctx = GetFeatureContext(feature);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
@@ -154,17 +154,17 @@ void Simple_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVar
 }
 
 // Function wrappers to be implemented
-int Simple_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b) {
+int Simple_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b) {
     printf("%s::%s(), a: %d, c: %s, b: %f\n", file_tag,  __FUNCTION__, a, c, b);
     return 0;
 }
 
-void Simple_1_0_wrap_bar(FeatureInstanceHandle feature, AppendData data)
+void Simple_wrap_bar(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariadicParameters variadicParameters)
+void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariadicParameters variadicParameters)
 {
     printf("%s::%s(), ", file_tag,  __FUNCTION__);
     ft_context_ref ft_ctx = GetFeatureContext(feature);
@@ -219,7 +219,7 @@ void Simple_1_0_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt 
     printf("\n");
 }
 
-FtString Simple_1_0_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
+FtString Simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
 {
     printf("%s::%s(), a: %d, b: %f, c: %d\n", file_tag,  __FUNCTION__, a, b, c);
     char* buf = (char*)FTMalloc(128, FT_CHAR);
@@ -227,7 +227,7 @@ FtString Simple_1_0_wrap_bar6(FeatureInstanceHandle feature, AppendData data, Ft
     return buf;
 }
 
-void Simple_1_0_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FeatureCallbackId cb)
+void Simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FeatureCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), a: %d, b: %d, will invoke cb\n", file_tag,  __FUNCTION__, a, b);
@@ -240,7 +240,7 @@ void Simple_1_0_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a
     RemoveCallback(feature, cb);
 }
 
-void Simple_1_0_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FeatureCallbackId cb, FeatureCallbackId cb3, FeatureCallbackId cb4)
+void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FeatureCallbackId cb, FeatureCallbackId cb3, FeatureCallbackId cb4)
 {
 
     // callback cb3()
@@ -289,7 +289,7 @@ void Simple_1_0_wrap_goo2(FeatureInstanceHandle feature, AppendData data, Featur
     RemoveCallback(feature, cb);
 }
 
-void Simple_1_0_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FeatureCallbackId cb, FeatureCallbackId cb2)
+void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FeatureCallbackId cb, FeatureCallbackId cb2)
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
@@ -314,7 +314,7 @@ void Simple_1_0_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt 
     RemoveCallback(feature, cb2);
 }
 
-void Simple_1_0_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FeatureCallbackId cb)
+void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FeatureCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
@@ -327,17 +327,17 @@ void Simple_1_0_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt 
     RemoveCallback(feature, cb);
 }
 
-void Simple_1_0_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData data)
+void Simple_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_1_0_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData data)
+void Simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-FtInt Simple_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FTArray& values)
+FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FTArray& values)
 {
     FTArrayHelper<int> int_array(&values);
     printf("%s::%s(), int_array size: %d\n", file_tag,  __FUNCTION__, int_array.size());
@@ -349,33 +349,39 @@ FtInt Simple_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FTArr
     return -1;
 }
 
-FTArray Simple_1_0_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
+FTArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
-    FTArray ret = { 0 };
-    return ret;
+    FTArray* strArray = Simple_malloc_string_array();
+    strArray->_size = 4;
+    strArray->_element = malloc(sizeof(char*) * 4);
+    for (int i = 0; i < 4; i++) {
+        char* str = static_cast<char*>(FTMalloc(100, FT_CHAR));
+        sprintf(str, "hello%d", i);
+        ((char**)strArray->_element)[i] = str;
+    }
+    return strArray;
 }
 
 // Property getters and setters to be implemented
-const char* Simple_1_0_get_name(FeatureInstanceHandle feature, AppendData data)
+const char* Simple_get_name(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     GET_PROP_CHAR_PTR(name);
 }
 
-void Simple_1_0_set_name(FeatureInstanceHandle feature, AppendData data, FtString name)
+void Simple_set_name(FeatureInstanceHandle feature, AppendData data, FtString name)
 {
     printf("%s::%s(), name: %s\n", file_tag,  __FUNCTION__, name);
     SET_PROP_CHAR_PTR(name);
 }
 
-void Simple_1_0_set_version(FeatureInstanceHandle feature, AppendData data, FtString version)
+void Simple_set_version(FeatureInstanceHandle feature, AppendData data, FtString version)
 {
     printf("%s::%s(), version: %s\n", file_tag,  __FUNCTION__, version);
     SET_PROP_CHAR_PTR(version);
 }
 
-void Simple_1_0_set_args(FeatureInstanceHandle feature, AppendData data, FTArray& args)
+void Simple_set_args(FeatureInstanceHandle feature, AppendData data, FTArray& args)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }

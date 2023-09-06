@@ -29,38 +29,38 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Promise_1_0_onRegister(FeatureRuntimeContext ctx)
+void Promise_onRegister(FeatureRuntimeContext ctx)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void Promise_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void Promise_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void Promise_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void Promise_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_onUnregister(FeatureRuntimeContext ctx)
+void Promise_onUnregister(FeatureRuntimeContext ctx)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
 // Function wrappers to be implemented
-void Promise_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a, FtString b)
+void Promise_wrap_foo(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a, FtString b)
 {
     printf("%s::%s(), a: %d, b: %s\n", file_tag,  __FUNCTION__, a, b);
     int rs = a;
@@ -72,7 +72,7 @@ void Promise_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, Featur
     }
 }
 
-void Promise_1_0_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a)
+void Promise_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a)
 {
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
     int rs = a;
@@ -84,7 +84,7 @@ void Promise_1_0_wrap_foo1(FeatureInstanceHandle feature, AppendData data, Featu
     }
 }
 
-void Promise_1_0_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     int rs = 0;
@@ -96,22 +96,22 @@ void Promise_1_0_wrap_foo2(FeatureInstanceHandle feature, AppendData data, Featu
     }
 }
 
-void Promise_1_0_wrap_bar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_bar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Promise_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = GetFeatureContext(feature);

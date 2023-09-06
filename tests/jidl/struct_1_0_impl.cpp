@@ -29,38 +29,38 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Struct_1_0_onRegister(FeatureRuntimeContext ctx)
+void Struct_onRegister(FeatureRuntimeContext ctx)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Struct_1_0_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void Struct_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Struct_1_0_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void Struct_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Struct_1_0_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void Struct_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Struct_1_0_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void Struct_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Struct_1_0_onUnregister(FeatureRuntimeContext ctx)
+void Struct_onUnregister(FeatureRuntimeContext ctx)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
 // Function wrappers to be implemented
-void Struct_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, Struct_1_0_Chapter* b) {
+void Struct_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, Struct_Chapter* b) {
     if (!b) {
         printf("%s::%s(), chapter ptr is null!\n", file_tag,  __FUNCTION__);
         return;
@@ -70,9 +70,9 @@ void Struct_1_0_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a
         file_tag,  __FUNCTION__, b->_page_count, b->_title);
 }
 
-Struct_1_0_Chapter* Struct_1_0_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a) {
+Struct_Chapter* Struct_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a) {
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
-    Struct_1_0_Chapter* chap = mallocChapter();
+    Struct_Chapter* chap = mallocChapter();
     chap->_page_count = a;
     char* title = (char*)FTMalloc(128, FT_CHAR);
     sprintf(title, "title is: %s", "hello world");
@@ -80,7 +80,7 @@ Struct_1_0_Chapter* Struct_1_0_wrap_bar(FeatureInstanceHandle feature, AppendDat
     return chap;
 }
 
-void Struct_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_1_0_Book* a) {
+void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_Book* a) {
     if (!a) {
         printf("%s::%s(), book ptr is null!\n", file_tag,  __FUNCTION__);
         return;
@@ -117,7 +117,7 @@ void Struct_1_0_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct
     RemoveCallback(feature, a->_chap_changed);
 }
 
-void Struct_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Struct_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = GetFeatureContext(feature);

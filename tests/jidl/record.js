@@ -1,5 +1,5 @@
 let console = require('console');
-let record = require('Record_1_0');
+let record = require('Record');
 
 record.start(200000, 16000, 2, 16000, 'aac',
   function(uri) {console.log(uri);},

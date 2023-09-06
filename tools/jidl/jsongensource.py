@@ -56,7 +56,7 @@ class Render:
     return json_module
 
   def GetModuleName(self):
-    return self.module['name'].replace('@','_').replace('.','_')
+    return self.module['name'].split("@")[0]
 
   def MakeOutPath(self, filename):
     if self.outdir:
@@ -205,11 +205,12 @@ class CPPRender(Render):
     self.promise_type_set = set()
     self.struct_name_set = set()
     self.feature_type_set = set()
+    self.array_malloc_func_set = set()
     Render.__init__(self, json_file, configs)
 
   def Generate(self):
-    self._GenerateFromTemplate(self.header_tmpl, self.GetHeaderFilePath())
     self._GenerateFromTemplate(self.source_tmpl, self.GetCppFilePath())
+    self._GenerateFromTemplate(self.header_tmpl, self.GetHeaderFilePath())
 
   def _GenerateFromTemplate(self, tmpl, out):
     WriteFile(tmpl.render(render=self), out)
@@ -292,6 +293,12 @@ class CPPRender(Render):
       return True
     return False
 
+  def _TryCacheArrayMallocFunc(self, array_malloc_func):
+    if not array_malloc_func in self.array_malloc_func_set:
+      self.array_malloc_func_set.add(array_malloc_func)
+      return True
+    return False
+
   def SetArrayTypeGenerator(self, ArrayTypeGenerator):
     self.ArrayTypeGenerator = ArrayTypeGenerator
 
@@ -306,7 +313,13 @@ class CPPRender(Render):
     ft_info = self._GenComplexRefFeatureInfo(array_type, 'array')
     if self._TryCacheFeatureType(ft_info['type']):
       self.ArrayTypeGenerator.Generate(array_type, is_complex)
+      module_name = self.GetModuleName()
+      array_malloc_func_str = f"FTArray* {module_name}_malloc_{array_type}_array()"
+      self._TryCacheArrayMallocFunc(array_malloc_func_str)
     return ft_info
+
+  def GetArrayMallocFuncDefines(self):
+    return self.array_malloc_func_set
 
   def ToBaseFeatureType(self, ast_type):
     feature_type = self._MapType(ast_type, self.base_feature_type_map)
@@ -418,7 +431,6 @@ class CPPRender(Render):
     identifier = node["identifier"]
     ret_type_node = node["return_type"]
     ret_type = self.GenerateReturnType(ret_type_node)
-    self.func_ret_node_map[identifier] = ret_type_node
     prefix_params = 'FeatureInstanceHandle feature, AppendData data'
     if ret_type == 'FTArray':
       ret_type += '*'
@@ -485,6 +497,9 @@ class CPPRender(Render):
       self.promise_type_set.add(type)
       return True
     return False
+
+  def CacheFuncReturnNode(self, id, node):
+    self.func_ret_node_map[id] = node
 
   def CacheStructName(self, name):
     if not name in self.struct_name_set:
