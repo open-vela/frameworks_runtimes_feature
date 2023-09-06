@@ -43,6 +43,7 @@ class FeatureInstance;
 class FeaturePrototype {
 public:
     ft_context_ref ft_ctx; // feature context
+    void* wamr_env;  //wamr_env
     std::vector<std::unique_ptr<FeatureInstance>> instances;
     void* native; // the native feature object instance pointer
     ft_value_t ft_proto; // ft prototype object, it's undefined at first

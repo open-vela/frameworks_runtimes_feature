@@ -17,19 +17,27 @@
 #include "feature_context_wamr.h"
 
 #include "gc_object.h"
+#include "quickjs/quickjs.h"
 
 #include <stdio.h>
 #include <malloc.h>
+
+#define GET_WAMR_ENV(ft_ctx) (((WamrContext*)(ft_ctx->data))->exec_env)
 
 extern "C" int32_t get_string_struct_type(wasm_module_t wasm_module,
                                           wasm_struct_type_t *p_struct_type);
 
 extern "C" int32_t get_string_array_type(wasm_module_t wasm_module,
                                          wasm_array_type_t *p_array_type_t);
-                                         
+
 extern "C" int get_array_length(wasm_struct_obj_t obj);
 
 extern "C" wasm_array_obj_t get_array_ref(wasm_struct_obj_t obj);
+
+typedef struct WamrContext {
+	wasm_exec_env_t exec_env;
+	JSContext* js_cxt;
+} WamrContext;
 
 static ft_type _ft_get_type (ft_context_ref ft_ctx, ft_value_t ft_val) {
     wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
@@ -284,12 +292,17 @@ static void _ft_free_value(ft_context_ref ft_ctx, ft_value_t f_val) {
     // to be implemented
 }
 
-void _ft_free_string (ft_context_ref ft_ctx, const char* str)  {
+static void _ft_free_string (ft_context_ref ft_ctx, const char* str)  {
     wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
 }
 
-bool InitFeatureContextWamr(ft_context_ref rt_ctx){
+bool InitFeatureContextWamr(ft_context_ref rt_ctx, void* data0, void* data1){
+
+    WamrContext* wamr_context = (WamrContext*)malloc(sizeof(WamrContext));
+    wamr_context->exec_env = (wasm_exec_env_t)data0;
+    wamr_context->js_cxt = (JSContext*)data1;
+    rt_ctx->data = (void*)wamr_context;
 
     rt_ctx->ft_get_type = _ft_get_type;
     // value creation
@@ -329,8 +342,8 @@ bool InitFeatureContextWamr(ft_context_ref rt_ctx){
     return true;
 }
 
-
-void UninitFeatureContextWamr(ft_context_ref context) {
+void UninitFeatureContextWamr(ft_context_ref rt_ctx) {
+    free(rt_ctx->data);
 }
 
 

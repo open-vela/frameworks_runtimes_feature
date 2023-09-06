@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FEATURE_CONTEXT_QJS_H__
-#define __FEATURE_CONTEXT_QJS_H__
+#ifndef __FEATURE_CONTEXT_WAMR_H__
+#define __FEATURE_CONTEXT_WAMR_H__
 
 #include "feature_context_private.h"
 #include "wasm_export.h"
-
-#define GET_WAMR_ENV(ft_ctx) static_cast<wasm_exec_env_t>(ft_ctx->data)
 
 #define FT_VAL_TO_WM(ft_val) (*((wamr_val_t*)(&(ft_val))))
 #define FT_VAL_TO_WM_PTR(ft_val) ((wamr_val_t*)(&(ft_val)))
@@ -34,9 +32,9 @@ typedef struct wamr_val_t {
     ft_type type;
 } wamr_val_t;
 
-bool InitFeatureContextWamr(ft_context_ref ft_ctx);
+bool InitFeatureContextWamr(ft_context_ref ft_ctx, void* data0, void* data1);
 
-void UinitFeatureContextWamr(ft_context_ref ft_ctx);
+void UninitFeatureContextWamr(ft_context_ref ft_ctx);
 
-#endif // __FEATURE_CONTEXT_QJS_H__
+#endif // __FEATURE_CONTEXT_WAMR_H__
 

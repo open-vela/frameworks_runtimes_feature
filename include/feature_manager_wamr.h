@@ -17,23 +17,45 @@
 #define __FEATURE_MANAGER_WAMR_H__
 
 #include "feature_context.h"
+#include "wasm_export.h"
+#include "gc_object.h"
 
-#include <memory>
+#include <map>
+#include <vector>
 #include <vector>
 
 namespace ferry {
 
+class FeatureInstance;
 class FeatureRegistry;
+class FeatureManagerWamr;
+class FeatureUnit;
+struct Member;
+
+typedef struct WarmAttachment {
+    FeatureManagerWamr* manager;
+    NativeSymbol* symbol;
+    FeatureUnit* unit;
+    int index;
+} WarmAttachment;
 
 class FeatureManagerWamr {
 public:
     FeatureManagerWamr(FeatureRegistry* registry);
-
     void featureRelease();
+    int register_wamr_module(const char* module_name);
+    bool require_wamr(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name);
+    Member* get_unit_member(FeatureUnit*unit, int index);
+    FeatureInstance* get_feature_instance(wasm_obj_t obj);
+
 private:
+    bool make_attachment(NativeSymbol* symbol, FeatureUnit* unit, int index);
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
     std::vector<std::string> required_features_;
+    std::map<wasm_obj_t, FeatureInstance*> wasmFeatureInstance_;
+    std::map<NativeSymbol*, WarmAttachment> symbol_attachment_map_;
+
 };
 
 }

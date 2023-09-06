@@ -19,6 +19,9 @@
 #define __FEATURE_INSTANCE_WAMR_H__
 
 #include "feature_instance.h"
+#include "wasm_export.h"
+#include "gc_object.h"
+#include "feature.h"
 
 #include <map>
 #include <memory>
@@ -26,13 +29,17 @@
 namespace ferry {
 
 class FeaturePrototype;
+class FeatureInstanceQjs;
+
+typedef struct WamrCallbackData {
+   wasm_obj_t cb;
+   CallbackType* cb_type;
+} WamrCallbackData;
 
 class FeatureInstanceWamr : public FeatureInstance {
 public:
     FeatureInstanceWamr(struct FeaturePrototype* prototype);
     virtual ~FeatureInstanceWamr();
-
-    virtual FEATURE::FeatureCallbackId addCallback(ft_value_t value, CallbackType* callbackType);
 
     virtual bool removeCallback(FEATURE::FeatureCallbackId id);
 
@@ -44,8 +51,20 @@ public:
 
     virtual int invokeCallbackCount(int cid, va_list& ap, int count);
 
+    WamrCallbackData getCallback(FEATURE::FeatureCallbackId id);
+
+    FEATURE::FeatureCallbackId addCallback(wasm_obj_t value, CallbackType* callbackType);
+
+    FEATURE::FeaturePromiseHandle addPromise(FeatureType resolve_type, FeatureType reject_type);
+
+    feature_value_t getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
+
+    void release();
+
 private:
     FEATURE::FeatureCallbackId curr_cid_ = 0;
+    std::unique_ptr<FeatureInstanceQjs> instance_qjs_;
+    std::map<FEATURE::FeatureCallbackId, WamrCallbackData> callbacks_;
 };
 
 }

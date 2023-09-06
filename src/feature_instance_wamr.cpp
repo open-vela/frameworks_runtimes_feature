@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 #include "feature_instance_wamr.h"
+#include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
+#include "feature_framework.h"
+#include "feature_ffi_wamr.h"
 #include "feature_context_wamr.h"
 
 #include <cstdarg>
@@ -29,6 +32,7 @@ namespace ferry {
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
     : FeatureInstance(proto)
+    , instance_qjs_(new FeatureInstanceQjs(proto))
 {
 }
 
@@ -37,27 +41,75 @@ FeatureInstanceWamr::~FeatureInstanceWamr()
 
 }
 
-FeatureCallbackId FeatureInstanceWamr::addCallback(ft_value_t value, CallbackType* callbackType)
+bool FeatureInstanceWamr::removeCallback(FEATURE::FeatureCallbackId id)
 {
-    return curr_cid_++;
-}
-
-bool FeatureInstanceWamr::removeCallback(FeatureCallbackId id)
-{
+    if (!callbacks_.count(id)) {
+        FEATURE_LOG_ERROR("callback_wamr id %d in instance: %p not exist !", id, this);
+        return false;
+    }
+    callbacks_.erase(id);
     return true;
-}
-
-bool FeatureInstanceWamr::removePromise(FeaturePromiseHandle promiseHandle)
-{
-    return true;
-}
-
-int FeatureInstanceWamr::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
-{
-    return 0;
 }
 
 int FeatureInstanceWamr::invokeCallback(int cid, va_list& ap) {
+    const auto callback = getCallback(cid);
+    bool has_rest_param = false;
+    CallbackType* callbackType = callback.cb_type;
+    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
+    if (has_rest_param) {
+        FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
+        return -1;
+    }
+    wasm_exec_env_t exec_env = (wasm_exec_env_t)(prototype()->wamr_env);
+
+    wasm_value_t context = { 0 }, func_obj = { 0 };
+
+    if (callback.cb == NULL) {
+        FEATURE_LOG_ERROR("callback in undefined !");
+        return -1;
+    }
+
+    /* get closure context and func ref */
+    wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 0, false, &context);
+    wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 1, false, &func_obj);
+
+    uint32 argv[64];
+    uint32 occupied_slots = 0;
+    bh_memcpy_s(argv, sizeof(argv), &context.gc_obj, sizeof(void *));
+    occupied_slots += sizeof(void *) / sizeof(uint32);
+
+    do {
+        // convert parameters to feature_value_t
+        for (int i = 0; i < method_param_count; i++) {
+            FeatureType featureType = callbackType->parameters[i];
+            void* ptr = exactVariadicParameter(ap, featureType);
+            if (!ptr) {
+                //got_error = true;
+                break;
+            }
+            wasm_val_t val;
+            if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, val)) {
+                FEATURE_LOG_ERROR("convert callback param failed !");
+                free(ptr);
+                break;
+            }
+            switch (val.kind)
+            {
+                case WASM_I32:{
+                    *(double *)(argv + occupied_slots) = val.of.i32;
+                    occupied_slots += sizeof(double) / sizeof(uint32);
+                }
+                    break;
+                default:
+                    break;
+            }
+            free(ptr);
+        }
+        bool ret = wasm_runtime_call_func_ref(exec_env, (wasm_func_obj_t)func_obj.gc_obj,
+                                   occupied_slots, argv);
+        printf("call back ret:%d\n",ret);
+    } while (0);
+
     return 0;
 }
 
@@ -65,5 +117,51 @@ int FeatureInstanceWamr::invokeCallbackCount(int cid, va_list& ap, int count) {
     return 0;
 }
 
+WamrCallbackData FeatureInstanceWamr::getCallback(FEATURE::FeatureCallbackId id)
+{
+    if (!callbacks_.count(id)) {
+        WamrCallbackData callback;
+        callback.cb = nullptr;
+        callback.cb_type = nullptr;
+        return callback;
+    }
+    return callbacks_[id];
 }
 
+FEATURE::FeatureCallbackId FeatureInstanceWamr::addCallback(wasm_obj_t value, CallbackType* callbackType)
+{
+    //auto ctx = proto->ctx;
+    WamrCallbackData callback;
+    callback.cb = value;
+    callback.cb_type = callbackType;
+    callbacks_[curr_cid_] = callback;
+    return curr_cid_++;
+}
+
+// to be fixed
+bool FeatureInstanceWamr::removePromise(FeaturePromiseHandle promiseHandle)
+{
+    return instance_qjs_->removePromise(promiseHandle);
+}
+
+int FeatureInstanceWamr::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
+{
+    return instance_qjs_->settlePromise(resolve, promiseHandle, ap);
+}
+
+FEATURE::FeaturePromiseHandle FeatureInstanceWamr::addPromise(FeatureType resolve_type, FeatureType reject_type)
+{
+    return instance_qjs_->addPromise(resolve_type, reject_type);
+}
+
+feature_value_t FeatureInstanceWamr::getPromise(FEATURE::FeaturePromiseHandle promiseHandle)
+{
+    return instance_qjs_->getPromise(promiseHandle);
+}
+
+void FeatureInstanceWamr::release() {
+    callbacks_.clear();
+    instance_qjs_->releasePromises();
+}
+
+}
