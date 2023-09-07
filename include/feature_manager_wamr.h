@@ -19,6 +19,7 @@
 #include "feature_context.h"
 #include "wasm_export.h"
 #include "gc_object.h"
+#include "feature_registry.h"
 
 #include <map>
 #include <vector>
@@ -27,7 +28,6 @@
 namespace ferry {
 
 class FeatureInstance;
-class FeatureRegistry;
 class FeatureManagerWamr;
 class FeatureUnit;
 struct Member;
@@ -39,14 +39,16 @@ typedef struct WarmAttachment {
     int index;
 } WarmAttachment;
 
-class FeatureManagerWamr {
+class FeatureManagerWamr : public FeatureRegistry::Observer {
 public:
     FeatureManagerWamr(FeatureRegistry* registry);
+    bool init();
     void featureRelease();
     int register_wamr_module(const char* module_name);
     bool require_wamr(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name);
     Member* get_unit_member(FeatureUnit*unit, int index);
     FeatureInstance* get_feature_instance(wasm_obj_t obj);
+    virtual void onFeatureParsed(const char* feature_name);
 
 private:
     bool make_attachment(NativeSymbol* symbol, FeatureUnit* unit, int index);

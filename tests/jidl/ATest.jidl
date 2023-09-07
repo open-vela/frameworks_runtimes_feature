@@ -1,0 +1,3 @@
+module ATest@1.0
+
+string test1(string a, int b);

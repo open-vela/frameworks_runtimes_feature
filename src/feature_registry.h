@@ -34,6 +34,11 @@ struct FeatureUnit;
  */
 class FeatureRegistry {
 public:
+    class Observer {
+    public:
+        virtual void onFeatureParsed(const char *feature_name) = 0;
+    };
+
     FeatureRegistry(class IApplication* app);
     /**
      * @brief initialie FeatureRegistry
@@ -56,6 +61,8 @@ public:
 
     FeatureUnit* findFeature(const char* name);
 
+    void setObserver(Observer *observer) { observer_ = observer; }
+
     /**
      * @brief Get the Registered Features object
      * 
@@ -67,6 +74,7 @@ private:
     IApplication* app_;
     std::map<std::string, FeatureUnit*> registeredFeatures_; // 已注册features
     bool manifest_check_enable = true;
+    Observer *observer_ = nullptr;
 };// class FeatureRegistry
 
 }

@@ -50,6 +50,23 @@ namespace ferry {
 extern "C" feature_value_t*
 dyntype_dup_value(feature_context_ref ctx, feature_value_t value);
 
+/* wasm runtime lib */
+extern "C" uint32_t
+get_libdyntype_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+
+extern "C" uint32_t
+get_lib_console_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+
+extern "C" uint32_t
+get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+
+extern "C" uint32_t
+get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+
+extern "C" uint32_t
+get_struct_dyn_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+
+
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
     FeatureManagerWamr* manager = (FeatureManagerWamr*)data;
@@ -573,6 +590,11 @@ int FeatureManagerWamr::register_wamr_module(const char* module_name){
         return -1;
     }
 
+    if (strcmp(module_name, "ATest_1_0") != 0) {
+        FEATURE_LOG_WARN("others Feature not implemented at wasmr!!!");
+        return -1;
+    }
+
     // 注册class_initNative函数
     NativeSymbol* init_symbol = new NativeSymbol();
     init_symbol->func_ptr = (void*)init_native;
@@ -703,7 +725,52 @@ FeatureManagerWamr::FeatureManagerWamr(FeatureRegistry* registry)
     : registry_(registry)
     , ft_ctx_(nullptr)
 {
+    registry->setObserver(this);
+}
 
+bool FeatureManagerWamr::init()
+{
+    /* Register APIs required by ts2wasm */
+    NativeSymbol *native_symbols;
+    char *module_name;
+    uint32_t symbol_count;
+
+    symbol_count = get_libdyntype_symbols(&module_name, &native_symbols);
+    if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
+        printf("Register libdyntype APIs failed.\n");
+        return false;
+    }
+
+    symbol_count = get_lib_console_symbols(&module_name, &native_symbols);
+    if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
+        printf("Register stdlib APIs failed.\n");
+        return false;
+    }
+
+    symbol_count = get_lib_array_symbols(&module_name, &native_symbols);
+    if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
+        printf("Register stdlib APIs failed.\n");
+        return false;
+    }
+
+    symbol_count = get_lib_timer_symbols(&module_name, &native_symbols);
+    if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
+        printf("Register stdlib APIs failed.\n");
+        return false;
+    }
+
+    symbol_count = get_struct_dyn_symbols(&module_name, &native_symbols);
+    if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
+        printf("Register struct-dyn APIs failed.\n");
+        return false;
+    }
+
+    return true;
+}
+
+void FeatureManagerWamr::onFeatureParsed(const char *feature_name)
+{
+    register_wamr_module(feature_name);
 }
 
 void FeatureManagerWamr::featureRelease()

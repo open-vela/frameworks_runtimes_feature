@@ -23,6 +23,9 @@
       },
       {
           "name": "Timer"
+      },
+      {
+          "name": "ATest_1_0"
       }
   ],
   "config": {
