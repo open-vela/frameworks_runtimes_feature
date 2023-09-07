@@ -16,13 +16,11 @@
 
 #include "feature_manager_wamr.h"
 #include "feature.h"
-#include "feature_ffi.h"
-#include "feature_registry.h"
-#include "feature_framework.h"
-#include "feature_instance_wamr.h"
 #include "feature_context_wamr.h"
 #include "feature_context_qjs.h"
+#include "feature_instance_wamr.h"
 #include "feature_ffi_wamr.h"
+#include "feature_framework.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 
@@ -31,7 +29,6 @@
 #include <assert.h>
 #include <ffi.h>
 #include <memory>
-#include <string.h>
 #include <string>
 
 typedef struct DynTypeContext {
@@ -45,32 +42,27 @@ typedef struct DynTypeContext {
 } DynTypeContext;
 
 using namespace FEATURE;
+
 namespace ferry {
 
 extern "C" feature_value_t*
 dyntype_dup_value(feature_context_ref ctx, feature_value_t value);
-
 /* wasm runtime lib */
 extern "C" uint32_t
 get_libdyntype_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
 extern "C" uint32_t
 get_lib_console_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
 extern "C" uint32_t
 get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
 extern "C" uint32_t
 get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
 extern "C" uint32_t
 get_struct_dyn_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
 
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
     FeatureManagerWamr* manager = (FeatureManagerWamr*)data;
-    FeatureInstance *instance = manager->get_feature_instance(obj);
+    FeatureInstance *instance = manager->getFeatureInstance(obj);
     printf("module object finalizer:%p, featureinstance:%p\n",obj,instance);
 
     ((FeatureInstanceWamr*)instance)->release();
@@ -92,21 +84,21 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
     WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
 
-    manager->require_wamr(exec_env, (wasm_obj_t)thiz_ptr, p_src);
+    manager->require(exec_env, (wasm_obj_t)thiz_ptr, p_src);
 
     // set object destructor func
     bool ret = wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)thiz_ptr,(wasm_obj_finalizer_t)module_object_finalizer, manager);
 }
 
-static void accessor_get_wamr(wasm_exec_env_t exec_env, uint64_t *args)
+static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t *tmp_args = args;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     wasm_val_t method_ret_value;
     WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
-    FeatureInstance *instance = manager->get_feature_instance((wasm_obj_t)thiz_ptr);
-    Member* member = manager->get_unit_member(attachment->unit, attachment->index);
+    FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
+    Member* member = manager->getUnitMember(attachment->unit, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor *accessor = &member->accessor;
     // handle parameter
@@ -118,13 +110,11 @@ static void accessor_get_wamr(wasm_exec_env_t exec_env, uint64_t *args)
     void *ret_value = nullptr;
     do
     {
-        if (!createTypeDeclaration(accessor->type, ffi_ret))
-        {
+        if (!createTypeDeclaration(accessor->type, ffi_ret)) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
-        if (!createHostValue(accessor->type, ret_value, true))
-        {
+        if (!createHostValue(accessor->type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
             break;
         }
@@ -132,56 +122,52 @@ static void accessor_get_wamr(wasm_exec_env_t exec_env, uint64_t *args)
         // prepare and call method
         ffi_cif cif;
         ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret, ffi_params);
-        if (ret)
-        {
+        if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
             break;
         }
         // invoke
         ffi_call(&cif, accessor->getter, ret_value, arg_values);
         // process return value
-        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, method_ret_value))
-        {
+        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, method_ret_value)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             // feature_free_value(instance->prototype()->ctx, method_ret_value);
             // method_ret_value = JSE_EXCEPTION;
         }
-        switch (method_ret_value.kind)
-        {
-        case WASM_I32:
-        {
-            native_raw_return_type(double, tmp_args);
-            native_raw_set_return(method_ret_value.of.i32);
-        }
-        break;
-        case WASM_ANYREF:
-        {
-            native_raw_return_type(void *, tmp_args);
-            const char *str = (char *)method_ret_value.of.foreign;
-            wasm_struct_obj_t obj = FeatureFFIWamr::get_wasm_string(exec_env, str);
-            native_raw_set_return(obj);
-        }
-        break;
-        default:
-            break;
+        switch (method_ret_value.kind) {
+            case WASM_I32:
+            {
+                native_raw_return_type(double, tmp_args);
+                native_raw_set_return(method_ret_value.of.i32);
+                break;
+            }
+            case WASM_ANYREF:
+            {
+                native_raw_return_type(void *, tmp_args);
+                const char *str = (char *)method_ret_value.of.foreign;
+                wasm_struct_obj_t obj = FeatureFFIWamr::getWasmString(exec_env, str);
+                native_raw_set_return(obj);
+                break;
+            }
+            default:
+                break;
         }
 
     } while (0);
+
     // free resources
     freeTypeDeclaration(ffi_ret);
     FreeFeatureValue(ret_value);
-
-    return;
 }
 
-static void accessor_set_wamr(wasm_exec_env_t exec_env, uint64_t *args)
+static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
 {
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     wasm_val_t method_ret_value;
     WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
-    FeatureInstance *instance = manager->get_feature_instance((wasm_obj_t)thiz_ptr);
-    Member* member = manager->get_unit_member(attachment->unit, attachment->index);
+    FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
+    Member* member = manager->getUnitMember(attachment->unit, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor *accessor = &member->accessor;
     // handle parameter
@@ -190,17 +176,14 @@ static void accessor_set_wamr(wasm_exec_env_t exec_env, uint64_t *args)
     ffi_type *ffi_params[3] = {&ffi_type_pointer, &ffi_type_sint64, nullptr};
     void *arg_value_input = nullptr;
     void *arg_values[3] = {&instance, &accessor->data, nullptr};
-    do
-    {
+    do {
         // prepare third param type declaration, create by accessor type
-        if (!createTypeDeclaration(accessor->type, ffi_params[2]))
-        {
+        if (!createTypeDeclaration(accessor->type, ffi_params[2])) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
         // fill third param using guest value and accesor type
-        if (!FeatureFFIWamr::convertValueToHost(instance, accessor->type, arg_value_input, exec_env, args++))
-        {
+        if (!FeatureFFIWamr::convertValueToHost(instance, accessor->type, arg_value_input, exec_env, args++)) {
             FEATURE_LOG_ERROR("convert to host value failed !");
             break;
         }
@@ -209,32 +192,27 @@ static void accessor_set_wamr(wasm_exec_env_t exec_env, uint64_t *args)
         // prepare and call method
         ffi_cif cif;
         ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_params);
-        if (ret)
-        {
+        if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
             break;
         }
         // invoke
         ffi_call(&cif, accessor->setter, arg_values[2], arg_values);
     } while (0);
+
     // free resources
     freeTypeDeclaration(ffi_params[2]);
     FreeFeatureValue(arg_value_input);
-    return;
 }
 
-static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
+static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
     bool got_error = false;
     wasm_val_t method_ret_value;
     feature_value_t* promise_ret_value;
 
-    //int index = magic;
-    //FeatureInstance* instance = ferry::getInstance(this_val);
     uint64_t *tmp_args = args;
-
     native_raw_get_arg(void*, thiz_ptr, args);
-    //uint64_t * p = args;
     size_t argc = 0;
 
     wasm_value_t wasm_array_data = { 0 }, wasm_array_len = { 0 };
@@ -242,12 +220,11 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
     wasm_array_obj_t arr_ref;
     feature_value_t **js_value = NULL;
 
-    //Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
     WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
-    FeatureInstance *instance = manager->get_feature_instance((wasm_obj_t)thiz_ptr);
+    FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(instance->prototype()->ft_ctx);
-    Member* member = manager->get_unit_member(attachment->unit, attachment->index);
+    Member* member = manager->getUnitMember(attachment->unit, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto& method = member->method;
     auto currParam = method.parameters;
@@ -322,10 +299,7 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
 
         // process rest parameters
         if (has_rest_param) {
-
-
             native_raw_get_arg(wasm_obj_t, obj_ref, args);
-
             assert(wasm_obj_is_struct_obj(obj_ref));
             arr_struct_ref = (wasm_struct_obj_t)obj_ref;
             wasm_struct_obj_get_field(arr_struct_ref, 0, false, &wasm_array_data);
@@ -334,8 +308,7 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
             arr_ref = (wasm_array_obj_t)(wasm_array_data.gc_obj);
             variadic_count = wasm_array_len.i32;
 
-            if(variadic_count > 0)
-            {
+            if(variadic_count > 0) {
                 ffi_type** ffi_params_new = new ffi_type*[argc + optional_count + 5 + variadic_count]; // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
                 //ffi_type* ffi_ret = nullptr;
                 memset(ffi_params_new, 0, sizeof(ffi_type*) * (argc + optional_count + 5 + variadic_count));
@@ -356,7 +329,6 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
                 ffi_arg_values[method_param_count + external_count] = &variadic_count;
                 js_value = new feature_value_t*[variadic_count];
                 for (int i = 0; i < variadic_count; i++) {
-
                     void *addr = wasm_array_obj_elem_addr(arr_ref, i);
                     wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
                     feature_value_t *tmp = (feature_value_t *)wasm_anyref_obj_get_value(anyref);
@@ -380,7 +352,6 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
                 ffi_arg_values[external_count + i] = &optionalType->fval;
             }
         }
-
         // if (got_error)
         //     break;
 
@@ -413,15 +384,14 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
             got_error = true;
             break;
         }
+
         // special handle for promise
         feature_value_t tmp_p;
         //instance->prototype()->ctx =  dyntype_get_context()->js_ctx;
-
         if (isPromise) {
             ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
             // create promise
             PromiseType* promiseType = (PromiseType*)complexType;
-
             // create promise and add to instance
             promiseHandle = ((FeatureInstanceWamr*)instance)->addPromise(promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
             feature_value_t promise = ((FeatureInstanceWamr*)instance)->getPromise(promiseHandle);
@@ -432,6 +402,7 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
             feature_value_t tmp_p = feature_dup_value(js_ctx, promise);
             promise_ret_value = dyntype_dup_value(js_ctx, tmp_p);
         }
+
         // invoke method
         ffi_call(&cif, method.callback, ffi_ret_value, ffi_arg_values);
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
@@ -443,27 +414,25 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
                 // method_ret_value = FEATURE_EXCEPTION;
                 // got_error = true;
             }
-            switch (method_ret_value.kind)
-            {
-            case WASM_I32:
-            {
-                native_raw_return_type(double, tmp_args);
-                native_raw_set_return(method_ret_value.of.i32);
+            switch (method_ret_value.kind) {
+                case WASM_I32:
+                {
+                    native_raw_return_type(double, tmp_args);
+                    native_raw_set_return(method_ret_value.of.i32);
+                    break;
+                }
+                case WASM_ANYREF:
+                {
+                    native_raw_return_type(void *, tmp_args);
+                    const char *str = (char *)method_ret_value.of.foreign;
+                    wasm_struct_obj_t obj = FeatureFFIWamr::getWasmString(exec_env, str);
+                    native_raw_set_return(obj);
+                    break;
+                }
+                default:
+                    break;
             }
-            break;
-            case WASM_ANYREF:
-            {
-                native_raw_return_type(void *, tmp_args);
-                const char *str = (char *)method_ret_value.of.foreign;
-                wasm_struct_obj_t obj = FeatureFFIWamr::get_wasm_string(exec_env, str);
-                native_raw_set_return(obj);
-            }
-            break;
-            default:
-                break;
-            }
-        }
-        else if(isPromise){
+        } else if (isPromise) {
             //把promise返回给ts层
             native_raw_return_type(void*, tmp_args);
             wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, promise_ret_value);
@@ -483,6 +452,7 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
             FreeFeatureValue(ffi_arg_values[i + external_count]);
         }
     }
+
     freeTypeDeclaration(ffi_ret);
     // ffi_ret_value will cause "segmentation fault " when reture string to ts
     // if (ffi_ret_value) {
@@ -501,11 +471,9 @@ static void method_call_wamr(wasm_exec_env_t exec_env, uint64_t *args)
     // if (got_error) {
     //     FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native method failed !");
     // }
-
-    return;
 }
 
-static bool createFeaturePrototype_wamr(ft_context_ref ft_ctx, wasm_exec_env_t ctx, FeatureUnit* unit)
+static bool create_feature_prototype(ft_context_ref ft_ctx, wasm_exec_env_t ctx, FeatureUnit* unit)
 {
     FEATURE_CHECK_NE(unit, nullptr);
     FEATURE_LOG_DEBUG("unit: %p, description: %p, description->name: %s", unit, unit->description, unit->description->name);
@@ -515,215 +483,9 @@ static bool createFeaturePrototype_wamr(ft_context_ref ft_ctx, wasm_exec_env_t c
     return true;
 }
 
-FeatureInstance* FeatureManagerWamr::get_feature_instance(wasm_obj_t obj) {
-    auto pos = wasmFeatureInstance_.find(obj);
-    if (pos == wasmFeatureInstance_.end())
-        return NULL;
-
-    return pos->second;
-}
-
-bool FeatureManagerWamr::require_wamr(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
-{
-    FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
-    FeatureUnit* unit = registry_->findFeature(name);
-    if (!unit || !unit->description) {
-        FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
-        return false;
-    }
-
-    if (!ft_ctx_)
-        ft_ctx_ = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
-
-    if (!unit->proto) {
-        // create proto
-        if (!createFeaturePrototype_wamr(ft_ctx_, ctx, unit)) {
-            FEATURE_LOG_ERROR("createFeaturePrototype failed !");
-            return false;
-        }
-
-        // initialize_prototype_wamr(ctx, &unit);
-        if (unit->proto->description->native_callbacks->onCreate) {
-            FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            unit->proto->description->native_callbacks->onCreate(ctx, unit->proto);
-        }
-    }
-
-    // create feature instance for the required object
-    auto featureInstance = std::make_unique<FeatureInstanceWamr>(unit->proto);
-    wasmFeatureInstance_[thiz] = featureInstance.get();
-
-    // insert into instances array, update iid
-    int iid = unit->proto->addInstance(std::move(featureInstance));
-    unit->proto->instances[iid]->setInstanceId(iid);
-    if (unit->proto->description->native_callbacks->onRequired) {
-        FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        unit->proto->description->native_callbacks->onRequired(ctx, unit->proto->instances[iid].get());
-    }
-
-    return true;
-}
-
-bool FeatureManagerWamr::make_attachment(NativeSymbol* symbol, FeatureUnit* unit, int index) {
-    if (symbol->attachment)
-        return false;
-
-    WarmAttachment attachment = { this, symbol, unit, index};
-    symbol_attachment_map_[symbol] = attachment;
-    symbol->attachment = &(symbol_attachment_map_[symbol]);
-    return true;
-}
-
-Member* FeatureManagerWamr::get_unit_member(FeatureUnit*unit, int index) {
-    if (!unit || !unit->description) {
-        FEATURE_LOG_WARN("can't find native feature!");
-        return nullptr;
-    }
-
-    return const_cast<Member*>(&(unit->description->members[index]));
-}
-
-int FeatureManagerWamr::register_wamr_module(const char* module_name){
-    FeatureUnit* unit = registry_->findFeature(module_name);
-    if (!unit || !unit->description) {
-        FEATURE_LOG_WARN("can't find native feature '%s'!", module_name);
-        return -1;
-    }
-
-    if (strcmp(module_name, "ATest_1_0") != 0) {
-        FEATURE_LOG_WARN("others Feature not implemented at wasmr!!!");
-        return -1;
-    }
-
-    // 注册class_initNative函数
-    NativeSymbol* init_symbol = new NativeSymbol();
-    init_symbol->func_ptr = (void*)init_native;
-    char* name = new char[128];
-    strcpy(name, unit->description->name);
-    strcat(name,"_init_native");
-    init_symbol->symbol = name;
-    init_symbol->signature = "(rr)";
-    make_attachment(init_symbol, unit, -1);
-
-    if (!wasm_runtime_register_natives_raw("env", init_symbol, 1)) {
-        printf("register failed !\n");
-        return false;
-    }
-
-    for (int i = 0; i < unit->description->member_count; i++) {
-        const Member* const_p = &(unit->description->members[i]);
-        Member* modifier = const_cast<Member*>(const_p);
-        Member& member = *modifier;
-
-        switch (member.type) {
-            case MEMBER_NULL: {
-                // not allowed
-                FEATURE_CHECK(false && "invalid member type!");
-            } break;
-            case MEMBER_METHOD: {
-                // register different type
-                MemberMethod* method = &member.method;
-                NativeSymbol* native_symbol = new NativeSymbol();
-                native_symbol->func_ptr = (void*)method_call_wamr;
-                char* name1 = new char[128];
-                strcpy(name1, unit->description->name);
-                strcat(name1,"_");
-                strcat(name1,const_p->name);
-                native_symbol->symbol = name1;
-                char* param = new char[64];
-                memset(param,0,64);
-                strcpy(param,"(r");
-                FEATURE::FeatureType* pars = (FEATURE::FeatureType*)method->parameters;
-                while((*pars)!=0){
-                    if(FT_PARAM_REST_END == *pars)
-                    {
-                        param[strlen(param)] = 'r';
-                        break;
-                    }
-                    char sig = FeatureFFIWamr::getFeatureSignature(*pars);
-                    if(sig!=0)
-                        param[strlen(param)] = sig;
-                    pars += 1;
-                }
-                strcat(param,")");
-                char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
-                if(retc!=0)
-                    param[strlen(param)] = retc;
-                printf("param is %s\n",param);
-                native_symbol->signature = param;
-                make_attachment(native_symbol, unit, i);
-                if (!wasm_runtime_register_natives_raw("env", native_symbol, 1))
-                {
-                    printf("register failed !\n");
-                    return false;
-                }
-            } break;
-            case MEMBER_ACCESSOR: {
-                // register accessor_get_wamr and accessor_set_wamr
-                MemberAccessor *accessor = &member.accessor;
-                if (accessor->getter)
-                {
-                    NativeSymbol *native_symbol = new NativeSymbol();
-                    native_symbol->func_ptr = (void *)accessor_get_wamr;
-                    char *buf = new char[128];
-                    strcpy(buf, unit->description->name);
-                    strcat(buf, "_get_");
-                    strcat(buf, member.name);
-                    strcat(buf, "_0");
-                    printf("buf is %s\n", buf);
-                    native_symbol->symbol = buf;
-                    char *signature = new char[64];
-                    memset(signature, 0, 64);
-                    strcpy(signature, "(r");
-                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
-                    strcat(signature, ")");
-                    if (type != 0)
-                        signature[strlen(signature)] = type;
-                    printf("signature is %s\n", signature);
-                    native_symbol->signature = signature;
-                    make_attachment(native_symbol, unit, i);
-                    if (!wasm_runtime_register_natives_raw("env", native_symbol, 1))
-                    {
-                        printf("register failed !\n");
-                        return false;
-                    }
-                }
-                if (accessor->setter)
-                {
-                    NativeSymbol *native_symbol = new NativeSymbol();
-                    native_symbol->func_ptr = (void *)accessor_set_wamr;
-                    char *buf = new char[128];
-                    strcpy(buf, unit->description->name);
-                    strcat(buf, "_set_");
-                    strcat(buf, member.name);
-                    strcat(buf, "_0");
-                    printf("buf is %s\n", buf);
-                    native_symbol->symbol = buf;
-                    char *signature = new char[64];
-                    memset(signature, 0, 64);
-                    strcpy(signature, "(r");
-                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
-                    if (type != 0)
-                        signature[strlen(signature)] = type;
-                    strcat(signature, ")");
-                    printf("signature is %s\n", signature);
-                    native_symbol->signature = signature;
-                    make_attachment(native_symbol, unit, i);
-                    if (!wasm_runtime_register_natives_raw("env", native_symbol, 1))
-                    {
-                        printf("register failed !\n");
-                        return false;
-                    }
-                }
-            } break;
-        }
-    }
-    return 0;
-}
-
 FeatureManagerWamr::FeatureManagerWamr(FeatureRegistry* registry)
-    : registry_(registry)
-    , ft_ctx_(nullptr)
+  : registry_(registry)
+  , ft_ctx_(nullptr)
 {
     registry->setObserver(this);
 }
@@ -768,17 +530,226 @@ bool FeatureManagerWamr::init()
     return true;
 }
 
-void FeatureManagerWamr::onFeatureParsed(const char *feature_name)
-{
-    register_wamr_module(feature_name);
-}
-
-void FeatureManagerWamr::featureRelease()
+void FeatureManagerWamr::release()
 {
     if (ft_ctx_) {
         ReleaseFeatureContextQjs(ft_ctx_);
         ft_ctx_ = nullptr;
     }
+}
+
+Member* FeatureManagerWamr::getUnitMember(FeatureUnit*unit, int index)
+{
+    if (!unit || !unit->description) {
+        FEATURE_LOG_WARN("can't find native feature!");
+        return nullptr;
+    }
+
+    return const_cast<Member*>(&(unit->description->members[index]));
+}
+
+FeatureInstance* FeatureManagerWamr::getFeatureInstance(wasm_obj_t obj)
+{
+    auto pos = feature_instance_map_.find(obj);
+    if (pos == feature_instance_map_.end())
+        return NULL;
+
+    return pos->second;
+}
+
+bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
+{
+    FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
+    FeatureUnit* unit = registry_->findFeature(name);
+    if (!unit || !unit->description) {
+        FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
+        return false;
+    }
+
+    if (!ft_ctx_)
+        ft_ctx_ = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
+
+    if (!unit->proto) {
+        // create proto
+        if (!create_feature_prototype(ft_ctx_, ctx, unit)) {
+            FEATURE_LOG_ERROR("createFeaturePrototype failed !");
+            return false;
+        }
+
+        // initialize_prototype_wamr(ctx, &unit);
+        if (unit->proto->description->native_callbacks->onCreate) {
+            FEATURE_LOG_DEBUG("invoke onCreate callback...");
+            unit->proto->description->native_callbacks->onCreate(ctx, unit->proto);
+        }
+    }
+
+    // create feature instance for the required object
+    auto featureInstance = std::make_unique<FeatureInstanceWamr>(unit->proto);
+    feature_instance_map_[thiz] = featureInstance.get();
+
+    // insert into instances array, update iid
+    int iid = unit->proto->addInstance(std::move(featureInstance));
+    unit->proto->instances[iid]->setInstanceId(iid);
+    if (unit->proto->description->native_callbacks->onRequired) {
+        FEATURE_LOG_DEBUG("invoke onRequired callback...");
+        unit->proto->description->native_callbacks->onRequired(ctx, unit->proto->instances[iid].get());
+    }
+
+    return true;
+}
+
+bool FeatureManagerWamr::makeAttachment(NativeSymbol* symbol, FeatureUnit* unit, int index)
+{
+    if (symbol->attachment)
+        return false;
+
+    WarmAttachment attachment = { this, symbol, unit, index};
+    symbol_attachment_map_[symbol] = attachment;
+    symbol->attachment = &(symbol_attachment_map_[symbol]);
+    return true;
+}
+
+int FeatureManagerWamr::registerModule(const char* module_name)
+{
+    FeatureUnit* unit = registry_->findFeature(module_name);
+    if (!unit || !unit->description) {
+        FEATURE_LOG_WARN("can't find native feature '%s'!", module_name);
+        return -1;
+    }
+
+    if (strcmp(module_name, "ATest_1_0") != 0) {
+        FEATURE_LOG_WARN("others Feature not implemented at wasmr!!!");
+        return -1;
+    }
+
+    // 注册class_initNative函数
+    NativeSymbol* init_symbol = new NativeSymbol();
+    init_symbol->func_ptr = (void*)init_native;
+    char* name = new char[128];
+    strcpy(name, unit->description->name);
+    strcat(name,"_init_native");
+    init_symbol->symbol = name;
+    init_symbol->signature = "(rr)";
+    makeAttachment(init_symbol, unit, -1);
+
+    if (!wasm_runtime_register_natives_raw("env", init_symbol, 1)) {
+        printf("register failed !\n");
+        return false;
+    }
+
+    for (int i = 0; i < unit->description->member_count; i++) {
+        const Member* const_p = &(unit->description->members[i]);
+        Member* modifier = const_cast<Member*>(const_p);
+        Member& member = *modifier;
+
+        switch (member.type) {
+            case MEMBER_NULL: {
+                // not allowed
+                FEATURE_CHECK(false && "invalid member type!");
+                break;
+            }
+            case MEMBER_METHOD: {
+                // register different type
+                MemberMethod* method = &member.method;
+                NativeSymbol* native_symbol = new NativeSymbol();
+                native_symbol->func_ptr = (void*)method_call;
+                char* name1 = new char[128];
+                strcpy(name1, unit->description->name);
+                strcat(name1,"_");
+                strcat(name1,const_p->name);
+                native_symbol->symbol = name1;
+                char* param = new char[64];
+                memset(param,0,64);
+                strcpy(param,"(r");
+                FEATURE::FeatureType* pars = (FEATURE::FeatureType*)method->parameters;
+                while((*pars)!=0) {
+                    if(FT_PARAM_REST_END == *pars) {
+                        param[strlen(param)] = 'r';
+                        break;
+                    }
+                    char sig = FeatureFFIWamr::getFeatureSignature(*pars);
+                    if (sig!=0) {
+                        param[strlen(param)] = sig;
+                    }
+                    pars += 1;
+                }
+                strcat(param,")");
+                char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
+                if(retc!=0) {
+                    param[strlen(param)] = retc;
+                }
+                printf("param is %s\n",param);
+                native_symbol->signature = param;
+                makeAttachment(native_symbol, unit, i);
+                if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
+                    printf("register failed !\n");
+                    return false;
+                }
+                break;
+            }
+            case MEMBER_ACCESSOR: {
+                // register accessor_get and accessor_set
+                MemberAccessor *accessor = &member.accessor;
+                if (accessor->getter) {
+                    NativeSymbol *native_symbol = new NativeSymbol();
+                    native_symbol->func_ptr = (void *)accessor_get;
+                    char *buf = new char[128];
+                    strcpy(buf, unit->description->name);
+                    strcat(buf, "_get_");
+                    strcat(buf, member.name);
+                    strcat(buf, "_0");
+                    printf("buf is %s\n", buf);
+                    native_symbol->symbol = buf;
+                    char *signature = new char[64];
+                    memset(signature, 0, 64);
+                    strcpy(signature, "(r");
+                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
+                    strcat(signature, ")");
+                    if (type != 0)
+                        signature[strlen(signature)] = type;
+                    printf("signature is %s\n", signature);
+                    native_symbol->signature = signature;
+                    makeAttachment(native_symbol, unit, i);
+                    if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
+                        printf("register failed !\n");
+                        return false;
+                    }
+                }
+                if (accessor->setter) {
+                    NativeSymbol *native_symbol = new NativeSymbol();
+                    native_symbol->func_ptr = (void *)accessor_set;
+                    char *buf = new char[128];
+                    strcpy(buf, unit->description->name);
+                    strcat(buf, "_set_");
+                    strcat(buf, member.name);
+                    strcat(buf, "_0");
+                    printf("buf is %s\n", buf);
+                    native_symbol->symbol = buf;
+                    char *signature = new char[64];
+                    memset(signature, 0, 64);
+                    strcpy(signature, "(r");
+                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
+                    if (type != 0)
+                        signature[strlen(signature)] = type;
+                    strcat(signature, ")");
+                    printf("signature is %s\n", signature);
+                    native_symbol->signature = signature;
+                    makeAttachment(native_symbol, unit, i);
+                    if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
+                        printf("register failed !\n");
+                        return false;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+void FeatureManagerWamr::onFeatureParsed(const char *feature_name)
+{
+    registerModule(feature_name);
 }
 
 }

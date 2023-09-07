@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 #include "feature_instance_wamr.h"
+
+#include "feature_framework.h"
+#include "feature_ffi_wamr.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
-#include "feature_framework.h"
-#include "feature_ffi_wamr.h"
-#include "feature_context_wamr.h"
+#include "wasm_export.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -38,7 +39,6 @@ FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
 
 FeatureInstanceWamr::~FeatureInstanceWamr()
 {
-
 }
 
 bool FeatureInstanceWamr::removeCallback(FEATURE::FeatureCallbackId id)
@@ -60,8 +60,8 @@ int FeatureInstanceWamr::invokeCallback(int cid, va_list& ap) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
         return -1;
     }
-    wasm_exec_env_t exec_env = (wasm_exec_env_t)(prototype()->wamr_env);
 
+    wasm_exec_env_t exec_env = (wasm_exec_env_t)(prototype()->wamr_env);
     wasm_value_t context = { 0 }, func_obj = { 0 };
 
     if (callback.cb == NULL) {
@@ -93,8 +93,7 @@ int FeatureInstanceWamr::invokeCallback(int cid, va_list& ap) {
                 free(ptr);
                 break;
             }
-            switch (val.kind)
-            {
+            switch (val.kind) {
                 case WASM_I32:{
                     *(double *)(argv + occupied_slots) = val.of.i32;
                     occupied_slots += sizeof(double) / sizeof(uint32);
@@ -114,6 +113,7 @@ int FeatureInstanceWamr::invokeCallback(int cid, va_list& ap) {
 }
 
 int FeatureInstanceWamr::invokeCallbackCount(int cid, va_list& ap, int count) {
+    // to be fixed
     return 0;
 }
 
