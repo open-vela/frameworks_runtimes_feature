@@ -138,7 +138,6 @@ FEATURE::FeatureCallbackId FeatureInstanceWamr::addCallback(wasm_obj_t value, Ca
     return curr_cid_++;
 }
 
-// to be fixed
 bool FeatureInstanceWamr::removePromise(FeaturePromiseHandle promiseHandle)
 {
     return instance_qjs_->removePromise(promiseHandle);
