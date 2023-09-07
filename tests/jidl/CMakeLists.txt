@@ -82,6 +82,8 @@ add_executable(${PROJECT_NAME}
     struct_1_0_impl.cpp
     promise_1_0.cpp
     promise_1_0_impl.cpp
+    ATest_1_0.cpp
+    ATest_1_0_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
     ajs_features_list.h
