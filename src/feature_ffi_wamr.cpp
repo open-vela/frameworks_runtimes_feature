@@ -17,7 +17,6 @@
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "feature_instance_wamr.h"
-#include "feature_context_wamr.h"
 
 #include <alloca.h>
 #include <cstdint>
@@ -32,7 +31,6 @@ using namespace ferry;
 namespace ferry {
 
 namespace FeatureFFIWamr {
-
 
 extern "C" int32_t get_string_struct_type(wasm_module_t wasm_module,
                                           wasm_struct_type_t *p_struct_type);
@@ -71,13 +69,12 @@ char getFeatureSignature(FEATURE::FeatureType featureType)
                 return 0;
             }
         }
-    }
-    else if (FT_IS_COMPLEX(featureType)) {
+    } else if (FT_IS_COMPLEX(featureType)) {
         return 'r';
     }
 }
 
-wasm_struct_obj_t get_wasm_string(wasm_exec_env_t exec_env, const char *str)
+wasm_struct_obj_t getWasmString(wasm_exec_env_t exec_env, const char *str)
 {
     char *p, *p_end;
     wasm_value_t value = {0};
@@ -96,8 +93,7 @@ wasm_struct_obj_t get_wasm_string(wasm_exec_env_t exec_env, const char *str)
     bh_assert(wasm_defined_type_is_struct_type((wasm_defined_type_t)string_struct_type));
     /* wrap with string struct */
     new_string_struct = wasm_struct_obj_new_with_type(exec_env, string_struct_type);
-    if (!new_string_struct)
-    {
+    if (!new_string_struct) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env), "alloc memory failed");
         goto fail;
     }
@@ -111,8 +107,7 @@ wasm_struct_obj_t get_wasm_string(wasm_exec_env_t exec_env, const char *str)
     get_string_array_type(module, &string_array_type);
     new_arr = wasm_array_obj_new_with_type(exec_env, string_array_type, len, &value);
 
-    if (!new_arr)
-    {
+    if (!new_arr) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env), "alloc memory failed");
         goto fail;
     }
@@ -134,8 +129,7 @@ wasm_struct_obj_t get_wasm_string(wasm_exec_env_t exec_env, const char *str)
     return new_string_struct;
 
 fail:
-    if (local_ref.val)
-    {
+    if (local_ref.val) {
         wasm_runtime_pop_local_object_ref(exec_env);
     }
     return nullptr;
@@ -151,61 +145,65 @@ bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType feature
     }
     if (FT_IS_PRIMITIVE(featureType)) {
         switch (FT_GET_VALUE(featureType)) {
-        case FT_VOID: {
-            FEATURE_LOG_ERROR("void not supported !");
-            return false;
-        } break;
-        case FT_INT: {
-            //value = feature_int(ctx, *((int32_t*)ptr));
-            value.of.i32 = *((int32_t*)ptr);
-            value.kind = WASM_I32;
-        } break;
-        // case FT_INT8: {
-        //     value = feature_int(ctx, *((int8_t*)ptr));
-        // } break;
-        // case FT_UINT8: {
-        //     value = feature_uint(ctx, *((uint8_t*)ptr));
-        // } break;
-        // case FT_INT16: {
-        //     value = feature_int(ctx, *((int16_t*)ptr));
-        // } break;
-        // case FT_UINT16: {
-        //     value = feature_uint(ctx, *((uint16_t*)ptr));
-        // } break;
-        case FT_INT32: {
-            //value = feature_int(ctx, *((int32_t*)ptr));
-            value.of.i32 = *((int32_t*)ptr);
-            value.kind = WASM_I32;
-        } break;
-        case FT_UINT32: {
-            //value = feature_uint(ctx, *((uint32_t*)ptr));
-            value.of.i32 = *((int32_t*)ptr);
-            value.kind = WASM_I32;
-        } break;
-        // case FT_INT64: {
-        //     value = feature_int64(ctx, *((int64_t*)ptr));
-        // } break;
-        // case FT_UINT64: {
-        //     value = feature_uint64(ctx, *((uint64_t*)ptr));
-        // } break;
-        // case FT_FLOAT: {
-        //     value = feature_double(ctx, *((float*)ptr));
-        // } break;
-        // case FT_DOUBLE: {
-        //     value = feature_double(ctx, *((double*)ptr));
-        // } break;
-        // case FT_BOOLEAN: {
-        //     value = feature_boolean(ctx, *((bool*)ptr));
-        // } break;
-        case FT_CHAR: {
-            value.of.foreign = (uintptr_t)ptr;
-            value.kind = WASM_ANYREF;
-            // value = feature_string(ctx, (const char*)ptr);
-        } break;
-        default: {
-            FEATURE_LOG_WARN("unsupported type detected !");
-            return false;
-        }
+            case FT_VOID: {
+                FEATURE_LOG_ERROR("void not supported !");
+                return false;
+            }
+            case FT_INT: {
+                //value = feature_int(ctx, *((int32_t*)ptr));
+                value.of.i32 = *((int32_t*)ptr);
+                value.kind = WASM_I32;
+                break;
+            }
+            // case FT_INT8: {
+            //     value = feature_int(ctx, *((int8_t*)ptr));
+            // } break;
+            // case FT_UINT8: {
+            //     value = feature_uint(ctx, *((uint8_t*)ptr));
+            // } break;
+            // case FT_INT16: {
+            //     value = feature_int(ctx, *((int16_t*)ptr));
+            // } break;
+            // case FT_UINT16: {
+            //     value = feature_uint(ctx, *((uint16_t*)ptr));
+            // } break;
+            case FT_INT32: {
+                //value = feature_int(ctx, *((int32_t*)ptr));
+                value.of.i32 = *((int32_t*)ptr);
+                value.kind = WASM_I32;
+                break;
+            }
+            case FT_UINT32: {
+                //value = feature_uint(ctx, *((uint32_t*)ptr));
+                value.of.i32 = *((int32_t*)ptr);
+                value.kind = WASM_I32;
+                break;
+            }
+            // case FT_INT64: {
+            //     value = feature_int64(ctx, *((int64_t*)ptr));
+            // } break;
+            // case FT_UINT64: {
+            //     value = feature_uint64(ctx, *((uint64_t*)ptr));
+            // } break;
+            // case FT_FLOAT: {
+            //     value = feature_double(ctx, *((float*)ptr));
+            // } break;
+            // case FT_DOUBLE: {
+            //     value = feature_double(ctx, *((double*)ptr));
+            // } break;
+            // case FT_BOOLEAN: {
+            //     value = feature_boolean(ctx, *((bool*)ptr));
+            // } break;
+            case FT_CHAR: {
+                value.of.foreign = (uintptr_t)ptr;
+                value.kind = WASM_ANYREF;
+                // value = feature_string(ctx, (const char*)ptr);
+                break;
+            }
+            default: {
+                FEATURE_LOG_WARN("unsupported type detected !");
+                return false;
+            }
         }
     }
     return true;
@@ -235,7 +233,7 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
-            } break;
+            }
             case FT_INT: {
                 native_raw_get_arg(double, number_value, value);
                 // if (!feature_to_int(ctx, (int32_t*)ptr, value)) {
@@ -243,7 +241,8 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
                 //	   return false;
                 // }
                 *(int32_t*)ptr = (int32_t)number_value;
-            } break;
+                break;
+            }
             case FT_INT32: {
                 native_raw_get_arg(double, number_value, value);
                 // if (!feature_to_int(ctx, (int32_t*)ptr, value)) {
@@ -251,11 +250,13 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
                 //	   return false;
                 // }
                 *(int32_t*)ptr = (int32_t)number_value;
-            } break;
+                break;
+            }
             case FT_UINT32: {
                 native_raw_get_arg(double, number_value, value);
                 *(uint32_t*)ptr = (uint32_t)number_value;
-            } break;
+                break;
+            }
             case FT_CHAR: {
                 native_raw_get_arg(void *, str, value);
                 wasm_value_t arr_obj = { 0 };
@@ -268,15 +269,15 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
                 char* alloc_ptr = (char*)FTMalloc(strlen(p_str) + 1, FT_CHAR);
                 strcpy(alloc_ptr, p_str);
                 ptr = alloc_ptr;
-            // feature_free_cstring(ctx, str);
-            } break;
+                // feature_free_cstring(ctx, str);
+                break;
+            }
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return false;
             }
         }
-    } 
-    else if (FT_IS_COMPLEX(featureType)) {
+    } else if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexType->type) {
             case COMPLEX_CALLBACK:
@@ -287,8 +288,8 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
                 //*(int32_t*)ptr = (int32_t)number_value;
                 FEATURE::FeatureCallbackId id = ((FeatureInstanceWamr*)instance)->addCallback(cb_value, callbackType);
                 *(FeatureCallbackId *)ptr = id; // write callback id to pointer.
+                break;
             }
-            break;
             case COMPLEX_ARRAY:
             {
                 uint32_t len;
@@ -300,21 +301,18 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
                 len = get_array_length(arrayValue);
                 FTArray *arrayData = (FTArray *)ptr;
                 arrayData->_size = len;
-                if (len)
-                {
+                if (len) {
                     // we support reference and primitive types
                     size_t element_size = FT_IS_REFERENCE(element_type) ? sizeof(uintptr_t) : getValueSize(element_type);
                     auto size = element_size * len;
                     FEATURE_CHECK_NE(size, 0);
                     arrayData->_element = malloc(size);
                     memset(arrayData->_element, 0, size);
-                    for (size_t i = 0; i < len; i++)
-                    {
+                    for (size_t i = 0; i < len; i++) {
                         // fill it
                         wasm_array_obj_get_elem(arr_ref, i, false, &value1);
                         void *element_ptr = ((char *)arrayData->_element + element_size * i);
-                        if (!convertValueToHost(instance, element_type, element_ptr, exec_env, (uint64_t *)&value1))
-                        {
+                        if (!convertValueToHost(instance, element_type, element_ptr, exec_env, (uint64_t *)&value1)) {
                             FEATURE_LOG_ERROR("convert array element failed ");
                             // feature_free_value(ctx, elementValue);
                         break;
@@ -322,8 +320,8 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
                     // feature_free_value(ctx, elementValue);
                     }
                 }
+                break;
             }
-            break;
             //	   case COMPLEX_PROMISE: {
             //		   FEATURE_LOG_ERROR("do not support convert promise to guest !");
             //		   return false;

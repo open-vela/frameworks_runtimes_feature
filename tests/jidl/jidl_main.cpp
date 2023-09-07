@@ -239,7 +239,7 @@ int main(int argc, char **argv)
         wasm_runtime_deinstantiate(wasm_module_inst);
         wasm_runtime_unload(wasm_module);
 
-        g_manager_wamr->featureRelease();
+        g_manager_wamr->release();
 
         /* destroy dynamic ctx */
         dyntype_context_destroy(dyn_ctx);

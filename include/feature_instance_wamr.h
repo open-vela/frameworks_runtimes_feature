@@ -18,10 +18,9 @@
 #ifndef __FEATURE_INSTANCE_WAMR_H__
 #define __FEATURE_INSTANCE_WAMR_H__
 
-#include "feature_instance.h"
-#include "wasm_export.h"
-#include "gc_object.h"
 #include "feature.h"
+#include "feature_instance.h"
+#include "gc_object.h"
 
 #include <map>
 #include <memory>
