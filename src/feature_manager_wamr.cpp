@@ -20,8 +20,8 @@
 #include "feature_registry.h"
 #include "feature_framework.h"
 #include "feature_instance_wamr.h"
-#include "feature_instance_qjs.h" // to be fixed
 #include "feature_context_wamr.h"
+#include "feature_context_qjs.h"
 #include "feature_ffi_wamr.h"
 #include "feature_log.h"
 #include "feature_utils.h"
@@ -533,7 +533,7 @@ bool FeatureManagerWamr::require_wamr(wasm_exec_env_t ctx, wasm_obj_t thiz, cons
     }
 
     if (!ft_ctx_)
-        ft_ctx_ = CreateFeatureContextWamr(ctx, dyntype_get_context()->js_ctx);
+        ft_ctx_ = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
 
     if (!unit->proto) {
         // create proto
@@ -775,16 +775,8 @@ void FeatureManagerWamr::onFeatureParsed(const char *feature_name)
 
 void FeatureManagerWamr::featureRelease()
 {
-    for (int i = 0; i < required_features_.size(); ++i) {
-        FeatureUnit* unit = registry_->findFeature(required_features_[i].data());
-        if (!unit)
-            continue;
-        auto description = unit->description;
-    }
-    required_features_.clear();
-
     if (ft_ctx_) {
-        ReleaseFeatureContextWamr(ft_ctx_);
+        ReleaseFeatureContextQjs(ft_ctx_);
         ft_ctx_ = nullptr;
     }
 }

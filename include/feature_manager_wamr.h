@@ -54,7 +54,6 @@ private:
     bool make_attachment(NativeSymbol* symbol, FeatureUnit* unit, int index);
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
-    std::vector<std::string> required_features_;
     std::map<wasm_obj_t, FeatureInstance*> wasmFeatureInstance_;
     std::map<NativeSymbol*, WarmAttachment> symbol_attachment_map_;
 
