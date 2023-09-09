@@ -43,14 +43,8 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     auto proto = prototype();
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
 
-    // 遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
-    WeakRef* node;
-    WeakRef* node_temp;
-    weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
-    {
-        auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
-        *js_val_ptr = FEATURE_VALUE_UNDEFINED;
-    }
+    // free weakRef
+    freeWeakRef();
 
     // invoke callback
     if (proto->description->native_callbacks && proto->description->native_callbacks->onDetached) {
@@ -77,9 +71,13 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     };
     // check if all instances deleted, then clear proto object
     free_instance(prototype());
-    for (auto& pair : prototypes) {
+    for (auto& pair : prototypes_) {
+        // clear all interface instances belongs to this instance.
+        pair.second->clearAllInstances();
         free_instance(pair.second);
+        delete pair.second;
     }
+    prototypes_.clear();
 }
 
 FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
@@ -141,7 +139,7 @@ FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeatureType resolve_type, Fe
     data->resolveTypes[0] = resolve_type;
     data->resolveTypes[1] = reject_type;
 
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);  // to be fixed
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx); // to be fixed
     feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
     if (feature_is_exception(promise)) {
         feature_free_value(js_ctx, data->resolveFuncs[0]);
@@ -173,7 +171,8 @@ bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)
     return true;
 }
 
-void FeatureInstanceQjs::releasePromises() {
+void FeatureInstanceQjs::releasePromises()
+{
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     for (const auto& pair : promises_) {
         FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
@@ -185,7 +184,8 @@ void FeatureInstanceQjs::releasePromises() {
     promises_.clear();
 }
 
-void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func) {
+void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
+{
     // mark callbacks
     for (auto& pair : callbacks_) {
         feature_mark_value(rt, pair.second.cb, mark_func);
@@ -196,6 +196,11 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
         feature_mark_value(rt, pair.second->promise, mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
+    }
+
+    for (auto& pair : prototypes_) {
+        auto js_proto = FT_VAL_GET_JS_VAL(pair.second->ft_proto);
+        feature_mark_value(rt, js_proto, mark_func);
     }
 }
 
@@ -216,6 +221,26 @@ bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
     proto->weak_ref_count++;
 
     return true;
+}
+
+void FeatureInstanceQjs::freeWeakRef()
+{
+    if (!prototype()) {
+        FEATURE_LOG_ERROR("freeWeakRef() get FeatureInstance failed");
+        return;
+    }
+
+    auto proto = prototype();
+    // 遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
+    WeakRef* node;
+    WeakRef* node_temp;
+    if (--proto->weak_ref_count <= 0) {
+        weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
+        {
+            auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
+            *js_val_ptr = FEATURE_VALUE_UNDEFINED;
+        }
+    }
 }
 
 int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
