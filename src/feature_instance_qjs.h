@@ -71,27 +71,29 @@ public:
 
     bool initWeakRef(feature_value_t feature_object);
 
+    void freeWeakRef();
+
     FeaturePrototype* getInterfacePrototype(const char* name)
     {
-        if (!prototypes.count(name)) {
+        if (!prototypes_.count(name)) {
             return nullptr;
         }
-        return prototypes[name];
+        return prototypes_[name];
     }
 
     void addInterfacePrototype(const char* name, FeaturePrototype* featurePrototype)
     {
-        FEATURE_CHECK_EQ(prototypes.count(name), 0);
-        prototypes[name] = featurePrototype;
+        FEATURE_CHECK_EQ(prototypes_.count(name), 0);
+        prototypes_[name] = featurePrototype;
     }
 
     FeaturePrototype* removeInterfacePrototype(const char* name)
     {
-        if(!prototypes.count(name)) {
+        if(!prototypes_.count(name)) {
             return nullptr;
         }
-        FeaturePrototype* featurePrototype = prototypes[name];
-        prototypes.erase(name);
+        FeaturePrototype* featurePrototype = prototypes_[name];
+        prototypes_.erase(name);
         return featurePrototype;
     }
 
@@ -105,7 +107,7 @@ private:
     FEATURE::FeatureCallbackId curr_cid_ = 0;
     std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
     std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises_;   // all promises created by native feature
-    std::map<const char*, FeaturePrototype*> prototypes; // all interface instance prototype
+    std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype
 };
 
 }

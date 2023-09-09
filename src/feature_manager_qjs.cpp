@@ -98,8 +98,6 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
 
 static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_mark_func mark_func)
 {
-    // TODO: for now，FeatureInstance saves callbacks only, mark it directly.
-    // but it maybe insufficient, instance may manage other resource type, change it according to implementation.
     FeatureInstance* instance = getInstance(val);
     if (!instance || !instance->prototype()) {
         FEATURE_LOG_INFO("instance or prototype is null, skip mark it ...");
@@ -108,9 +106,10 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
 
     auto proto = instance->prototype();
     FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
+    // mark all instance values
     instance_qjs->markValues(rt, mark_func);
 
-    // should mark prototype object.
+    // should mark feature prototype object.
     auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto);
     feature_mark_value(rt, js_proto, mark_func);
 }
