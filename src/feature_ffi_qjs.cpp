@@ -321,6 +321,14 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_ERROR("do not support convert promise to guest !");
                 return false;
             } break;
+            case COMPLEX_INTERFACE: {
+                InterfaceType& interfaceType = *(InterfaceType*)complexType;
+                // get interface ptr from js object
+                auto opaque_ptr = feature_get_opaque(value, interface_class_id);
+                FEATURE_LOG_DEBUG("value: %p, get opaque_ptr: %p", JS_VALUE_GET_PTR(value), opaque_ptr);
+                FEATURE_CHECK_NE(opaque_ptr, nullptr);
+                ptr = opaque_ptr;
+            } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
                 return false;
