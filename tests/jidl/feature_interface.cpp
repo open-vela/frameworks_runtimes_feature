@@ -11,10 +11,10 @@ using namespace FEATURE;
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
-FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, int64_t data);
-FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, int64_t data);
+FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, AppendData data);
+FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, AppendData data);
 
-void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters variadicParameters)
+void __print(FeatureInstanceHandle handle, AppendData data, FtVariadicParameters variadicParameters)
 {
     ft_context_ref ft_ctx = GetFeatureContext(handle);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
@@ -68,20 +68,48 @@ void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters va
     printf("\n");
 }
 
-void __printNameCat(FeatureInstanceHandle handle, int64_t data)
+void __printNameCat(FeatureInstanceHandle handle, AppendData data)
 {
     ft_context_ref ft_ctx = GetFeatureContext(handle);
     printf("I'm a cat !\n");
 }
 
-void __printNameDog(FeatureInstanceHandle handle, int64_t data)
+void __printNameDog(FeatureInstanceHandle handle, AppendData data)
 {
     ft_context_ref ft_ctx = GetFeatureContext(handle);
     printf("I'm a dog !\n");
 }
 
+void __receiveInterface(FeatureInstanceHandle handle, AppendData data, FeatureInstance* instance)
+{
+    printf("%s: handle: %p, data: %ld, instance: %p\n", __func__, handle, data.i64, instance);
+}
+
+static char* __init_nameCat(FeatureInstanceHandle handle, int64_t data)
+{
+    printf("%s: enter...\n", __func__);
+    char* name = static_cast<char*>(FTMalloc(strlen("cat mimi") + 1, FT_CHAR));
+    strcpy(name, "cat mimi");
+    return name;
+}
+
+static char* __init_nameDog(FeatureInstanceHandle handle, int64_t data)
+{
+    printf("%s: enter...\n", __func__);
+    char* name = static_cast<char*>(FTMalloc(strlen("dog wangwang") + 1, FT_CHAR));
+    strcpy(name, "dog wangwang");
+    return name;
+}
+
 static FeatureType print_parameters[] = {
     FT_PARAM_REST_END
+};
+
+extern const InterfaceType animal_interface_type;
+
+static FeatureType receive_interface_parameters[] = {
+    FT_MK_COMPLEX_REF(&animal_interface_type),
+    FT_PARAM_END
 };
 
 static FeatureType create_dog_parameters[] = {
@@ -94,6 +122,8 @@ static FeatureType create_cat_parameters[] = {
 
 static const Member g_interface_members[] = {
     { .type = MEMBER_METHOD, .name = "printName", .method = { .func = { .vtable_idx = 1 }, .parameters = print_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_METHOD, .name = "receiveInterface", .method = { .func = { .vtable_idx = 2 }, .parameters = receive_interface_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_CONST, .name = "name", .value = { .type = FT_STRING, .func = { .vtable_idx = 3 }, .data = { .ptr = nullptr } } },
 };
 
 static const FeatureDescription animal_description = {
@@ -106,7 +136,7 @@ static const FeatureDescription animal_description = {
     g_interface_members,
 };
 
-static const InterfaceType animal_interface_type {
+const InterfaceType animal_interface_type {
     .header = { .type = ferry::COMPLEX_INTERFACE, .size = 0 },
     .desc = &animal_description
 };
@@ -141,22 +171,30 @@ static const struct FeatureCallbacks callbacks {
 
 static FeatureDescription interface_description = { .version = 1, .name = "interface", .description = "interface demo description", { .dynamic = false }, .native_callbacks = &callbacks, .member_count = countof(g_members), .members = g_members };
 
-FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, int64_t data)
+FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, AppendData data)
 {
     // we should combine the vtable
-    static NativeFunc dog_vtable[2];
-    dog_vtable[0] = nullptr;
-    dog_vtable[1] = NativeFunc(__printNameDog);
-    return new FeatureInstanceQjs(nullptr, dog_vtable, 2);
+    static NativeFunc dog_vtable[] = {
+        nullptr,
+        NativeFunc(__printNameDog),
+        NativeFunc(__receiveInterface),
+        NativeFunc(__init_nameDog)
+    };
+    return new FeatureInstanceQjs(nullptr, dog_vtable, countof(dog_vtable));
 }
 
-FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, int64_t data)
+FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, AppendData data)
 {
     // we should combine the vtable
-    static NativeFunc cat_vtable[2];
-    cat_vtable[0] = nullptr;
+    static NativeFunc cat_vtable[] = {
+        nullptr,
+        NativeFunc(__printNameCat),
+        NativeFunc(__receiveInterface),
+        NativeFunc(__init_nameCat)
+    };
     cat_vtable[1] = NativeFunc(__printNameCat);
-    return new FeatureInstanceQjs(nullptr, cat_vtable, 2);
+    cat_vtable[2] = NativeFunc(__receiveInterface);
+    return new FeatureInstanceQjs(nullptr, cat_vtable, countof(cat_vtable));
 }
 
 QAPPFEATURE_INIT(interface)

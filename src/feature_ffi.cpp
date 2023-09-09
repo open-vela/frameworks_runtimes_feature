@@ -123,6 +123,10 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
             case COMPLEX_PROMISE: {
                 ptr = FTMalloc(sizeof(FeaturePromiseHandle), FT_INT32);
             } break;
+            case COMPLEX_INTERFACE: {
+                // interface do not need create
+                ptr = nullptr;
+            } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
                 return false;
