@@ -177,8 +177,7 @@ int main(int argc, char **argv)
         }
         // free g_manager_qjs
         delete g_manager_qjs;
-    }
-    else { /* file is wasm file */
+    } else { /* file is wasm file */
         wasm_module_t wasm_module = NULL;
         wasm_module_inst_t wasm_module_inst = NULL;
         wasm_exec_env_t exec_env = NULL;
@@ -203,13 +202,12 @@ int main(int argc, char **argv)
 
         /* init feature about wasm */
         auto registry = new ferry::FeatureRegistry(nullptr);
+        registry->init(manifast_str);
         g_manager_wamr = new ferry::FeatureManagerWamr(registry);
 	if (!g_manager_wamr->init()) {
             printf(" wamr init error!\n");
             return 0;
         }
-
-        registry->init(manifast_str);
 
         if (!(wasm_module = wasm_runtime_load((uint8_t *)js_str, js_filelen,
                                               error_buf, sizeof(error_buf)))) {

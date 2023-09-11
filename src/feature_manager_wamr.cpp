@@ -22,6 +22,7 @@
 #include "feature_ffi_wamr.h"
 #include "feature_framework.h"
 #include "feature_log.h"
+#include "feature_registry.h"
 #include "feature_utils.h"
 
 #include "dyntype.h"
@@ -487,7 +488,6 @@ FeatureManagerWamr::FeatureManagerWamr(FeatureRegistry* registry)
   : registry_(registry)
   , ft_ctx_(nullptr)
 {
-    registry->setObserver(this);
 }
 
 bool FeatureManagerWamr::init()
@@ -525,6 +525,21 @@ bool FeatureManagerWamr::init()
     if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
         printf("Register struct-dyn APIs failed.\n");
         return false;
+    }
+
+    for (const auto& pair : registry_->getRegisteredFeatures()) {
+        FeatureUnit* unit = pair.second;
+        if (!unit || !unit->description) {
+            FEATURE_LOG_WARN("can't find native feature '%s'!", module_name);
+            continue;
+        }
+
+        if (strcmp(pair.first.data(), "ATest_1_0") != 0) {
+            FEATURE_LOG_WARN("other Features are not for wamr!!!");
+            continue;
+        }
+
+        registerUnit(unit);
     }
 
     return true;
@@ -609,19 +624,8 @@ bool FeatureManagerWamr::makeAttachment(NativeSymbol* symbol, FeatureUnit* unit,
     return true;
 }
 
-int FeatureManagerWamr::registerModule(const char* module_name)
+int FeatureManagerWamr::registerUnit(FeatureUnit* unit)
 {
-    FeatureUnit* unit = registry_->findFeature(module_name);
-    if (!unit || !unit->description) {
-        FEATURE_LOG_WARN("can't find native feature '%s'!", module_name);
-        return -1;
-    }
-
-    if (strcmp(module_name, "ATest_1_0") != 0) {
-        FEATURE_LOG_WARN("others Feature not implemented at wasmr!!!");
-        return -1;
-    }
-
     // 注册class_initNative函数
     NativeSymbol* init_symbol = new NativeSymbol();
     init_symbol->func_ptr = (void*)init_native;
@@ -746,11 +750,5 @@ int FeatureManagerWamr::registerModule(const char* module_name)
     }
     return 0;
 }
-
-void FeatureManagerWamr::onFeatureParsed(const char *feature_name)
-{
-    registerModule(feature_name);
-}
-
 }
 

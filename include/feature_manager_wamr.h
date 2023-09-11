@@ -16,9 +16,9 @@
 #ifndef __FEATURE_MANAGER_WAMR_H__
 #define __FEATURE_MANAGER_WAMR_H__
 
-#include "feature_registry.h"
 #include "gc_object.h"
 #include "wasm_export.h"
+#include "feature_context.h"
 
 #include <map>
 #include <vector>
@@ -38,7 +38,7 @@ typedef struct WarmAttachment {
     int index;
 } WarmAttachment;
 
-class FeatureManagerWamr : public FeatureRegistry::Observer {
+class FeatureManagerWamr {
 public:
     FeatureManagerWamr(FeatureRegistry* registry);
     bool init();
@@ -48,8 +48,7 @@ public:
     bool require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name);
 
 private:
-    virtual void onFeatureParsed(const char* feature_name);
-    int registerModule(const char* module_name);
+    int registerUnit(FeatureUnit* unit);
     bool makeAttachment(NativeSymbol* symbol, FeatureUnit* unit, int index);
 
     ft_context_ref ft_ctx_;
