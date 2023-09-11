@@ -29,7 +29,9 @@ using namespace FEATURE;
 using namespace ferry;
 
 namespace ferry {
+extern "C" int get_array_length(wasm_struct_obj_t obj);
 
+extern "C" wasm_array_obj_t get_array_ref(wasm_struct_obj_t obj);
 namespace FeatureFFIWamr {
 
 char getFeatureSignature(FEATURE::FeatureType featureType)

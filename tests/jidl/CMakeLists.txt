@@ -50,11 +50,11 @@ set(STDLIB_SOURCE
     ${STDLIB_DIR}/lib_array.c
     ${STDLIB_DIR}/lib_timer.c
 )
-# struct-dyn
-set(STRUCT_DYN_DIR ${UNITE_PATH}/wamr/wamr/runtime-library/struct-dyn)
-include_directories(${STRUCT_DYN_DIR})
-set(STRUCT_DYN_SOURCE
-    ${STRUCT_DYN_DIR}/lib_structdyn.c
+# struct-indirect
+set(STRUCT_INDIRECT_DIR ${UNITE_PATH}/wamr/wamr/runtime-library/struct-indirect)
+include_directories(${STRUCT_INDIRECT_DIR})
+set(STRUCT_INDIRECT_SOURCE
+    ${STRUCT_INDIRECT_DIR}/lib_struct_indirect.c
 )
 # utils
 set(UTILS_DIR ${UNITE_PATH}/wamr/wamr/runtime-library/utils)
@@ -91,7 +91,7 @@ add_executable(${PROJECT_NAME}
     ajs_features_init.h
     ${LIBDYNTYPE_SOURCE}
     ${STDLIB_SOURCE}
-    ${STRUCT_DYN_SOURCE}
+    ${STRUCT_INDIRECT_SOURCE}
     ${UTILS_SOURCE}
     ${WAMR_UTILS_SOURCE}
 )

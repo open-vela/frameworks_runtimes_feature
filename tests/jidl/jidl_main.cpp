@@ -24,21 +24,6 @@ typedef struct feature_env_t
     JSContext *ctx;
 } feature_env_t;
 
-extern "C" uint32_t
-get_libdyntype_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
-extern "C" uint32_t
-get_lib_console_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
-extern "C" uint32_t
-get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
-extern "C" uint32_t
-get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
-extern "C" uint32_t
-get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-
 extern "C" dyn_value_t
 dyntype_callback_wasm_dispatcher(void *exec_env_v, dyn_ctx_t ctx, void *vfunc,
                                  dyn_value_t this_obj, int argc,
@@ -214,46 +199,6 @@ int main(int argc, char **argv)
         /* initialize dyntype context and set callback dispatcher */
         dyn_ctx_t dyn_ctx = dyntype_context_init();
         dyntype_set_callback_dispatcher(dyn_ctx, dyntype_callback_wasm_dispatcher);
-
-        /* Register APIs required by ts2wasm */
-        NativeSymbol *native_symbols;
-        char *module_name;
-        uint32_t symbol_count;
-
-        symbol_count = get_libdyntype_symbols(&module_name, &native_symbols);
-        if (!wasm_runtime_register_natives(module_name, native_symbols,
-                                        symbol_count)) {
-            printf("Register libdyntype APIs failed.\n");
-            return -1;
-        }
-
-        symbol_count = get_lib_console_symbols(&module_name, &native_symbols);
-        if (!wasm_runtime_register_natives(module_name, native_symbols,
-                                        symbol_count)) {
-            printf("Register stdlib APIs failed.\n");
-            return -1;
-        }
-
-        symbol_count = get_lib_array_symbols(&module_name, &native_symbols);
-        if (!wasm_runtime_register_natives(module_name, native_symbols,
-                                        symbol_count)) {
-            printf("Register stdlib APIs failed.\n");
-            return -1;
-        }
-
-        symbol_count = get_lib_timer_symbols(&module_name, &native_symbols);
-        if (!wasm_runtime_register_natives(module_name, native_symbols,
-                                        symbol_count)) {
-            printf("Register stdlib APIs failed.\n");
-            return -1;
-        }
-
-        symbol_count = get_struct_indirect_symbols(&module_name, &native_symbols);
-        if (!wasm_runtime_register_natives(module_name, native_symbols,
-                                        symbol_count)) {
-            printf("Register struct-dyn APIs failed.\n");
-            return -1;
-        }
 
         /* init feature about wasm */
         auto registry = new ferry::FeatureRegistry(nullptr);
