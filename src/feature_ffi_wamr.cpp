@@ -32,16 +32,6 @@ namespace ferry {
 
 namespace FeatureFFIWamr {
 
-extern "C" int32_t get_string_struct_type(wasm_module_t wasm_module,
-                                          wasm_struct_type_t *p_struct_type);
-
-extern "C" int32_t get_string_array_type(wasm_module_t wasm_module,
-                                         wasm_array_type_t *p_array_type_t);
-
-extern "C" int get_array_length(wasm_struct_obj_t obj);
-
-extern "C" wasm_array_obj_t get_array_ref(wasm_struct_obj_t obj);
-
 char getFeatureSignature(FEATURE::FeatureType featureType)
 {
     if (FT_IS_PRIMITIVE(featureType)) {
@@ -72,67 +62,6 @@ char getFeatureSignature(FEATURE::FeatureType featureType)
     } else if (FT_IS_COMPLEX(featureType)) {
         return 'r';
     }
-}
-
-wasm_struct_obj_t getWasmString(wasm_exec_env_t exec_env, const char *str)
-{
-    char *p, *p_end;
-    wasm_value_t value = {0};
-    wasm_array_obj_t new_arr;
-    wasm_struct_type_t string_struct_type = nullptr;
-    wasm_struct_obj_t new_string_struct = nullptr;
-    wasm_array_type_t string_array_type = nullptr;
-    wasm_local_obj_ref_t local_ref = {0};
-    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
-    wasm_module_t module = wasm_runtime_get_module(module_inst);
-    uint32 len = strlen(str);
-    /* get struct_string_type */
-    int32_t id = get_string_struct_type(module, &string_struct_type);
-
-    bh_assert(string_struct_type != nullptr);
-    bh_assert(wasm_defined_type_is_struct_type((wasm_defined_type_t)string_struct_type));
-    /* wrap with string struct */
-    new_string_struct = wasm_struct_obj_new_with_type(exec_env, string_struct_type);
-    if (!new_string_struct) {
-        wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env), "alloc memory failed");
-        goto fail;
-    }
-
-    /* Push object to local ref to avoid being freed at next allocation */
-    wasm_runtime_push_local_object_ref(exec_env, &local_ref);
-    local_ref.val = (wasm_obj_t)new_string_struct;
-
-    /* Create new array for holding string contents */
-    value.i32 = 0;
-    get_string_array_type(module, &string_array_type);
-    new_arr = wasm_array_obj_new_with_type(exec_env, string_array_type, len, &value);
-
-    if (!new_arr) {
-        wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env), "alloc memory failed");
-        goto fail;
-    }
-
-    p = (char *)wasm_array_obj_first_elem_addr(new_arr);
-    p_end = p + len;
-    bh_assert(p);
-    bh_assert(p_end);
-
-    bh_memcpy_s(p, len, str, len);
-    p += len;
-    bh_assert(p == p_end);
-
-    value.gc_obj = (wasm_obj_t)new_arr;
-    wasm_struct_obj_set_field(new_string_struct, 1, &value);
-    /* pop local ref before return */
-    wasm_runtime_pop_local_object_ref(exec_env);
-    (void)p_end;
-    return new_string_struct;
-
-fail:
-    if (local_ref.val) {
-        wasm_runtime_pop_local_object_ref(exec_env);
-    }
-    return nullptr;
 }
 
 bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType featureType, void* ptr,
@@ -204,6 +133,26 @@ bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType feature
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return false;
             }
+        }
+    } else if (FT_IS_COMPLEX(featureType))
+    {
+        ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(featureType);
+        switch (complexType->type)
+        {
+        case COMPLEX_STRUCT_MAP:
+        {
+            value.of.foreign = (uintptr_t)ptr;
+            value.kind = WASM_ANYREF;
+        }
+        break;
+        case COMPLEX_ARRAY:
+        {
+            // convert to guest
+            // FTArray* arrayData = (FTArray*)ptr;
+            value.of.foreign = (uintptr_t)ptr;
+            value.kind = WASM_ANYREF;
+        }
+        break;
         }
     }
     return true;
