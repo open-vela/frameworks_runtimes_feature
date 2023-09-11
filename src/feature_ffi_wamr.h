@@ -27,8 +27,6 @@ namespace FeatureFFIWamr {
 
     char getFeatureSignature(FEATURE::FeatureType featureType);
 
-    wasm_struct_obj_t getWasmString(wasm_exec_env_t exec_env, const char *str);
-
     bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureType, void*& ptr,
         wasm_exec_env_t exec_env, uint64_t* value);
 

@@ -60,6 +60,9 @@ get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 extern "C" uint32_t
 get_struct_dyn_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 
+extern "C" wasm_struct_obj_t create_wasm_string(wasm_exec_env_t exec_env, const char *value);
+extern "C" wasm_struct_obj_t create_wasm_array_with_string(wasm_exec_env_t exec_env, void *ptr, uint32_t arrlen);
+
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
     FeatureManagerWamr* manager = (FeatureManagerWamr*)data;
@@ -146,7 +149,7 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
             {
                 native_raw_return_type(void *, tmp_args);
                 const char *str = (char *)method_ret_value.of.foreign;
-                wasm_struct_obj_t obj = FeatureFFIWamr::getWasmString(exec_env, str);
+                wasm_struct_obj_t obj = create_wasm_string(exec_env, str);
                 native_raw_set_return(obj);
                 break;
             }
@@ -420,16 +423,39 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                 {
                     native_raw_return_type(double, tmp_args);
                     native_raw_set_return(method_ret_value.of.i32);
-                    break;
-                }
+                } break;
                 case WASM_ANYREF:
                 {
                     native_raw_return_type(void *, tmp_args);
-                    const char *str = (char *)method_ret_value.of.foreign;
-                    wasm_struct_obj_t obj = FeatureFFIWamr::getWasmString(exec_env, str);
+                    wasm_struct_obj_t obj = nullptr;
+                    if (FT_IS_PRIMITIVE(method.return_type))
+                    {
+                        const char *str = (char *)method_ret_value.of.foreign;
+                        obj = create_wasm_string(exec_env, str);
+                    } 
+                    // if return type is array or struct type and is complex
+                    else if (FT_IS_COMPLEX(method.return_type))
+                    {
+                        ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
+                        switch (complexType->type)
+                        {
+                        case COMPLEX_STRUCT_MAP:
+                        {
+                            // need to do later.
+                        }
+                        break;
+                        case COMPLEX_ARRAY:
+                        {
+                            FTArray *array = (FTArray *)method_ret_value.of.foreign;
+                            uint32_t len = array->_size;
+                            obj = create_wasm_array_with_string(exec_env, array->_element, len);
+                        }
+                        break;
+                        }
+                    }
                     native_raw_set_return(obj);
-                    break;
                 }
+                break;
                 default:
                     break;
             }

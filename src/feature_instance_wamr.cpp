@@ -29,6 +29,7 @@
 
 using namespace FEATURE;
 
+extern "C" wasm_struct_obj_t create_wasm_string(wasm_exec_env_t exec_env, const char *value);
 namespace ferry {
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
@@ -97,6 +98,15 @@ int FeatureInstanceWamr::invokeCallback(int cid, va_list& ap) {
                 case WASM_I32:{
                     *(double *)(argv + occupied_slots) = val.of.i32;
                     occupied_slots += sizeof(double) / sizeof(uint32);
+                }
+                    break;
+                case WASM_ANYREF:
+                {
+                    const char *str = (char *)val.of.foreign;
+                    wasm_struct_obj_t obj = create_wasm_string(exec_env, str);
+                    b_memcpy_s(argv + occupied_slots, sizeof(argv) - occupied_slots, &(obj),
+                               sizeof(wasm_struct_obj_t));
+                    occupied_slots += sizeof(wasm_struct_obj_t) / sizeof(uint32);
                 }
                     break;
                 default:
