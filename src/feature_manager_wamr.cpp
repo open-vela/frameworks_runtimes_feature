@@ -58,7 +58,7 @@ get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 extern "C" uint32_t
 get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 extern "C" uint32_t
-get_struct_dyn_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 
 extern "C" wasm_struct_obj_t create_wasm_string(wasm_exec_env_t exec_env, const char *value);
 extern "C" wasm_struct_obj_t create_wasm_array_with_string(wasm_exec_env_t exec_env, void *ptr, uint32_t arrlen);
@@ -547,7 +547,7 @@ bool FeatureManagerWamr::init()
         return false;
     }
 
-    symbol_count = get_struct_dyn_symbols(&module_name, &native_symbols);
+    symbol_count = get_struct_indirect_symbols(&module_name, &native_symbols);
     if (!wasm_runtime_register_natives(module_name, native_symbols, symbol_count)) {
         printf("Register struct-dyn APIs failed.\n");
         return false;
