@@ -32,11 +32,20 @@
   // Function wrappers to be implemented
   void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtInt distance);
   FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data);
-  FeatureInstanceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type);
   void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal);
   void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters vari_params);
 
   // Property getters and setters to be implemented
+
+  // interface vtable functions to be implemented
+  // vtable functions for interface constructor function 'createDog'
+  FtString Interface_Animal_interface_dog_get_name(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Animal_interface_dog_set_name(FeatureInstanceHandle feature, AppendData data, FtString name);
+  FtInt Interface_Animal_interface_dog_get_legCount(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Animal_interface_dog_run(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, AppendData data);
+
 
   // Array malloc functions
 
