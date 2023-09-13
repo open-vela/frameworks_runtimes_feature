@@ -219,18 +219,57 @@ ${GenMembers(members, parent_prefix)}\
     .return_type = ${ret_ft},
   };
 </%def>\
+<%def name="GenInterfaceCtorFunction(func_node, ctor_info)">\
+<%
+  identifier = func_node['identifier']
+  func_def = render.GenerateFunctionDefine(func_node)
+  ctor_target = ctor_info['target']
+  ctor_interface = ctor_info['interface']
+  parent_prefix = f"{ctor_interface}_interface_"
+  vtable = render.GetVTable(parent_prefix)
+%>\
+  /****** for JIDL Interface constructor function '${identifier}' ******/
+static ${func_def} {
+    static NativeFunc ${ctor_target}_vtable[] = {
+        nullptr,
+%for vtable_item in vtable:
+<%
+  item_name = vtable_item['name']
+  item_type = vtable_item['type']
+  item_content = f"{module_name}_{parent_prefix}{ctor_target}"
+  if item_type == 0:
+    item_content = f"{item_content}_{item_name}"
+  elif item_type == 1:
+    item_content = f"{item_content}_get_{item_name}"
+  elif item_type == 2:
+    item_content = f"{item_content}_set_{item_name}"
+  if item_content != '':
+    item_content = f"NativeFunc({item_content})"
+%>\
+        ${item_content},
+%endfor
+    };
+    return FeatureCreateInterface(feature, ${ctor_target}_vtable, countof(${ctor_target}_vtable));
+}
+</%def>\
 <%def name="GenFunction(func_node, parent_prefix = '')">\
 <%
   identifier = func_node['identifier']
   ret_type = func_node['return_type']
+  ctor_info = {}
   index = -1
   if parent_prefix != '':
-    index = render.CacheVTableItem(parent_prefix, identifier, 0) + 1
-  # JIDL use not allowed as a member of interface
+    # for interface member function
+    index = render.CacheVTableItem(parent_prefix, func_node, 0) + 1
   else:
     render.CacheFuncReturnNode(identifier, ret_type)
+    # for interface constructor function
+    ctor_info = render.GetInterfaceCtorInfo(func_node)
 %>\
   /****** for JIDL function '${parent_prefix}${identifier}' ******/
+%if ctor_info:
+${GenInterfaceCtorFunction(func_node, ctor_info)}
+%endif
 ${GenParamsFeatureType(func_node, parent_prefix)}
 ${GenMemberMethod(identifier, ret_type, parent_prefix, index)}
 </%def>\
@@ -303,14 +342,14 @@ ${GenParamsFeatureType(cb_node)}
   getter_info = ''
   if has_getter:
     if parent_prefix != '':
-      index = render.CacheVTableItem(parent_prefix, prop_name, 1) + 1
+      index = render.CacheVTableItem(parent_prefix, prop_node, 1) + 1
       getter_info = f".vtable_idx = {index}"
     else:
       getter_info = f".callback = FFI_FN({module_name}_get_{prop_name})"
   setter_info = ''
   if has_setter:
     if parent_prefix != '':
-      index = render.CacheVTableItem(parent_prefix, prop_name, 2) + 1
+      index = render.CacheVTableItem(parent_prefix, prop_node, 2) + 1
       setter_info = f".vtable_idx = {index}"
     else:
       setter_info = f".callback = FFI_FN({module_name}_set_{prop_name})"

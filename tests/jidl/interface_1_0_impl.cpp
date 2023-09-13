@@ -48,7 +48,7 @@ static void _Interface_cat_fly(FeatureInstanceHandle handle, AppendData data)
 }
 
 // vtalble functions implemented for dog
-static FtString _Interface_dog_get_name(FeatureInstanceHandle handle, AppendData data)
+FtString Interface_Animal_interface_dog_get_name(FeatureInstanceHandle handle, AppendData data)
 {
     printf("%s::%s(),\n", file_tag, __FUNCTION__);
     ft_context_ref ft_ctx = GetFeatureContext(handle);
@@ -57,32 +57,32 @@ static FtString _Interface_dog_get_name(FeatureInstanceHandle handle, AppendData
     return buf;
 }
 
-static void _Interface_dog_set_name(FeatureInstanceHandle handle, AppendData data, FtString name)
+void Interface_Animal_interface_dog_set_name(FeatureInstanceHandle handle, AppendData data, FtString name)
 {
     printf("%s::%s(): set dog name: %s,\n", file_tag, __FUNCTION__, name);
     ft_context_ref ft_ctx = GetFeatureContext(handle);
 }
 
-static FtInt _Interface_dog_get_legCount(FeatureInstanceHandle handle, AppendData data)
+FtInt Interface_Animal_interface_dog_get_legCount(FeatureInstanceHandle handle, AppendData data)
 {
     printf("%s::%s(): %s,\n", file_tag, __FUNCTION__, "dog leg count is 4");
     ft_context_ref ft_ctx = GetFeatureContext(handle);
     return 4;
 }
 
-static void _Interface_dog_eatFood(FeatureInstanceHandle handle, AppendData data)
+void Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle handle, AppendData data)
 {
     printf("%s::%s(): %s,\n", file_tag, __FUNCTION__, "dog eat a lot of food");
     ft_context_ref ft_ctx = GetFeatureContext(handle);
 }
 
-static void _Interface_dog_run(FeatureInstanceHandle handle, AppendData data)
+void Interface_Animal_interface_dog_run(FeatureInstanceHandle handle, AppendData data)
 {
     printf("%s::%s(): %s,\n", file_tag, __FUNCTION__, "dog run fastly");
     ft_context_ref ft_ctx = GetFeatureContext(handle);
 }
 
-static void _Interface_dog_fly(FeatureInstanceHandle handle, AppendData data)
+void Interface_Animal_interface_dog_fly(FeatureInstanceHandle handle, AppendData data)
 {
     printf("%s::%s(): %s,\n", file_tag, __FUNCTION__, "dog can not fly");
     ft_context_ref ft_ctx = GetFeatureContext(handle);
@@ -138,21 +138,6 @@ FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, Ap
         NativeFunc(_Interface_cat_fly)
     };
     return FeatureCreateInterface(feature, cat_vtable, countof(cat_vtable));
-}
-
-FeatureInstanceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type) {
-    printf("%s::%s(),\n", file_tag, __FUNCTION__);
-    // we should combine the vtable
-    static NativeFunc dog_vtable[] = {
-        nullptr,
-        NativeFunc(_Interface_dog_get_name),
-        NativeFunc(_Interface_dog_set_name),
-        NativeFunc(_Interface_dog_get_legCount),
-        NativeFunc(_Interface_dog_eatFood),
-        NativeFunc(_Interface_dog_run),
-        NativeFunc(_Interface_dog_fly)
-    };
-    return FeatureCreateInterface(feature, dog_vtable, countof(dog_vtable));
 }
 
 void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal) {

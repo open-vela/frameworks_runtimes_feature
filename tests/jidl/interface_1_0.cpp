@@ -145,6 +145,20 @@ extern const InterfaceType Interface_Animal_interface_type;
 
 
   /****** for JIDL function 'createDog' ******/
+  /****** for JIDL Interface constructor function 'createDog' ******/
+static FeatureInstanceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type) {
+    static NativeFunc dog_vtable[] = {
+        nullptr,
+        NativeFunc(Interface_Animal_interface_dog_get_name),
+        NativeFunc(Interface_Animal_interface_dog_set_name),
+        NativeFunc(Interface_Animal_interface_dog_get_legCount),
+        NativeFunc(Interface_Animal_interface_dog_eatFood),
+        NativeFunc(Interface_Animal_interface_dog_run),
+        NativeFunc(Interface_Animal_interface_dog_fly),
+    };
+    return FeatureCreateInterface(feature, dog_vtable, countof(dog_vtable));
+}
+
   static const FeatureType Interface_createDog_parameters[] = {
     FT_INT,
     FT_PARAM_END
