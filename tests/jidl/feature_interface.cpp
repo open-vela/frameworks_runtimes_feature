@@ -1,8 +1,6 @@
 
 #include "ajs_features_init.h"
 #include "feature_exports.h"
-#include "feature_framework.h"
-#include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include <ffi.h>
 
@@ -171,7 +169,7 @@ static const struct FeatureCallbacks callbacks {
 
 static FeatureDescription interface_description = { .version = 1, .name = "interface", .description = "interface demo description", { .dynamic = false }, .native_callbacks = &callbacks, .member_count = countof(g_members), .members = g_members };
 
-FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, AppendData data)
+FeatureInterfaceHandle __createDog(FeatureInstanceHandle handle, AppendData data)
 {
     // we should combine the vtable
     static NativeFunc dog_vtable[] = {
@@ -180,10 +178,10 @@ FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, AppendData data)
         NativeFunc(__receiveInterface),
         NativeFunc(__init_nameDog)
     };
-    return new FeatureInstanceQjs(nullptr, dog_vtable, countof(dog_vtable));
+    return FeatureCreateInterface(handle, dog_vtable, countof(dog_vtable));
 }
 
-FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, AppendData data)
+FeatureInterfaceHandle __createCat(FeatureInstanceHandle handle, AppendData data)
 {
     // we should combine the vtable
     static NativeFunc cat_vtable[] = {
@@ -194,7 +192,7 @@ FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, AppendData data)
     };
     cat_vtable[1] = NativeFunc(__printNameCat);
     cat_vtable[2] = NativeFunc(__receiveInterface);
-    return new FeatureInstanceQjs(nullptr, cat_vtable, countof(cat_vtable));
+    return FeatureCreateInterface(handle, cat_vtable, countof(cat_vtable));
 }
 
 QAPPFEATURE_INIT(interface)

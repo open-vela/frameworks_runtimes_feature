@@ -30,9 +30,15 @@ using namespace FEATURE;
 
 namespace ferry {
 
-FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, NativeFunc* vtable, int vtable_size)
+FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, FEATURE::VTable vtable, int vtable_size)
     : FeatureInstance(proto, vtable, vtable_size)
 {
+}
+
+FeatureInstance* FeatureInstanceQjs::createInterface(FEATURE::VTable vtable, int vtable_size)
+{
+    // null param proto to be fixed
+    return new FeatureInstanceQjs(nullptr, vtable, vtable_size);
 }
 
 FeatureInstanceQjs::~FeatureInstanceQjs()

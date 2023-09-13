@@ -10,4 +10,3 @@ bool jse_Simple_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string
 bool jse_Record_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string>&features);
 bool jse_Struct_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string>&features);
 bool jse_Promise_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string>&features);
-bool jse_ATest_1_0_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string>&features);

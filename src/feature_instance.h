@@ -31,9 +31,10 @@ class FeaturePrototype;
 
 class FeatureInstance {
 public:
-    FeatureInstance(struct FeaturePrototype* prototype, ferry::NativeFunc* vtable, int vtable_size);
+    FeatureInstance(struct FeaturePrototype* prototype, FEATURE::VTable vtable, int vtable_size);
     virtual ~FeatureInstance();
 
+    virtual FeatureInstance* createInterface(FEATURE::VTable vtable, int vtable_size) = 0;
     /**
      * @brief remove callback from instance vai FeatureCallbackId
      *
@@ -60,7 +61,7 @@ public:
 
     void setPrototype(FeaturePrototype* proto) { proto_ = proto; }
 
-    ferry::NativeFunc getVirtualFunction(int index) const
+    FEATURE::NativeFunc getVirtualFunction(int index) const
     {
         if (index < 0 || index >= vtable_size_)
             return nullptr;
@@ -72,7 +73,7 @@ public:
 private:
     FeaturePrototype* proto_;
     int instance_id_; // the instance id, order in instances aray.
-    ferry::NativeFunc* vtable_; // vtable array
+    FEATURE::VTable vtable_; // vtable array
     int32_t vtable_size_;
 };
 
