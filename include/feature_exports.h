@@ -50,6 +50,7 @@ namespace FEATURE {
 typedef void* FeatureRuntimeContext; // guest runtime context, e.g qucikjs RuntimeContext
 typedef void* FeatureProtoHandle; // feature prototype handle.
 typedef void* FeatureInstanceHandle; // feature instance handle.
+typedef void* FeatureInterfaceHandle; // feature interface handle.
 typedef uintptr_t FeatureType; // feature type flag
 typedef int32_t FeatureCallbackId; // feature callback id
 typedef int32_t FeaturePromiseHandle; // feature promise handle
@@ -203,6 +204,12 @@ int FeaturePromiseResolve(FeatureInstanceHandle handle, FeaturePromiseHandle pro
  */
 int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...);
 
+typedef void (*NativeFunc)(void);
+
+typedef NativeFunc* VTable;
+
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable vtable, int vtable_size);
+
 }
 
 using namespace FEATURE;
@@ -296,8 +303,6 @@ union AppendData {
     void* ptr;
     const char* str;
 };
-
-using NativeFunc = void (*)(void);
 
 union FuncData {
     NativeFunc callback; // 最终实现函数

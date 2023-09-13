@@ -46,8 +46,10 @@ typedef struct FeaturePromiseData {
 
 class FeatureInstanceQjs : public FeatureInstance {
 public:
-    FeatureInstanceQjs(struct FeaturePrototype* prototype, NativeFunc* vtable, int vtable_size);
+    FeatureInstanceQjs(struct FeaturePrototype* prototype, FEATURE::VTable vtable, int vtable_size);
     virtual ~FeatureInstanceQjs();
+
+    virtual FeatureInstance* createInterface(FEATURE::VTable vtable, int vtable_size);
 
     virtual bool removeCallback(FEATURE::FeatureCallbackId id);
 

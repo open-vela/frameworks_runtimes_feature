@@ -217,4 +217,10 @@ int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle prom
     return ret;
 }
 
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, FEATURE::VTable vtable, int vtable_size)
+{
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->createInterface(vtable, vtable_size);
+}
+
 }

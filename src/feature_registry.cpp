@@ -83,8 +83,7 @@ const char* ManifestParser::getFeatureName(size_t index)
 }
 
 FeatureRegistry::FeatureRegistry(IApplication* app)
-    : app_(app), observer_(nullptr) {
-}
+    : app_(app) {}
 
 bool FeatureRegistry::init(char* manifest)
 {
@@ -126,11 +125,6 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
             if (feature_name == description->name) {
                 auto unit = new FeatureUnit(description);
                 registeredFeatures_[description->name] = unit;
-
-                if (observer_) {
-                    observer_->onFeatureParsed(description->name);
-                }
-
                 // invoke onRegister callback
                 FEATURE_LOG_DEBUG("description->name is %s...", description->name);
                 if (description->native_callbacks && description->native_callbacks->onRegister) {
