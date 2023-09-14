@@ -15,6 +15,7 @@
  */
 
 #include "feature_registry.h"
+#include "feature_framework.h"
 #include "feature_utils.h"
 #include "ajs_features_init.h"
 #include <assert.h>
@@ -82,10 +83,6 @@ const char* ManifestParser::getFeatureName(size_t index)
     return featureObj["name"].GetString();
 }
 
-FeatureRegistry::FeatureRegistry(IApplication* app)
-    : app_(app), observer_(nullptr) {
-}
-
 bool FeatureRegistry::init(char* manifest)
 {
     // register features
@@ -124,16 +121,10 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
     if (manifest_check_enable) {
         for (const auto& feature_name : features) {
             if (feature_name == description->name) {
-                auto unit = new FeatureUnit(description);
-                registeredFeatures_[description->name] = unit;
-
-                if (observer_) {
-                    observer_->onFeatureParsed(description->name);
-                }
-
+                registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description, nullptr);
                 // invoke onRegister callback
                 FEATURE_LOG_DEBUG("description->name is %s...", description->name);
-                if (description->native_callbacks->onRegister) {
+                if (description->native_callbacks && description->native_callbacks->onRegister) {
                     FEATURE_LOG_DEBUG("invoke onRegister callback...");
                     description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
                 }
@@ -141,11 +132,10 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
             }
         }
     } else {
-        auto unit = new FeatureUnit(description);
-        registeredFeatures_[description->name] = unit;
+        registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description, nullptr);
         // invoke onRegister callback
         FEATURE_LOG_DEBUG("description->name is %s...", description->name);
-        if (description->native_callbacks->onRegister) {
+        if (description->native_callbacks && description->native_callbacks->onRegister) {
             FEATURE_LOG_DEBUG("invoke onRegister callback...");
             description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
         }
@@ -154,7 +144,7 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
     return false;
 }
 
-FeatureUnit* FeatureRegistry::findFeature(const char* name)
+FeatureRegistry::FeatureRegistryPair* FeatureRegistry::findFeature(const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
     auto pos = registeredFeatures_.find(name);
@@ -162,7 +152,7 @@ FeatureUnit* FeatureRegistry::findFeature(const char* name)
         FEATURE_LOG_WARN("can't find %s in FeatureManager, fallback to original JS module load", name);
         return nullptr;
     }
-    return pos->second;
+    return &pos->second;
 }
 
 }

@@ -16,11 +16,11 @@
 #ifndef FEATURE_EXPORT_H
 #define FEATURE_EXPORT_H
 
+#include "feature_context.h"
 #include <cstdint>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <type_traits>
-#include "feature_context.h"
 
 #define FT_COMPLEX_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 1)))
 #define FT_REFERENCE_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 2)))
@@ -33,8 +33,6 @@
 #define FT_SET_REFERENCE(type) ((uintptr_t)(type) | FT_REFERENCE_BIT)
 #define FT_REMOVE_REFERENCE(type) ((uintptr_t)(type) & ~FT_REFERENCE_BIT)
 
-#define FT_IS_REST FT_IS_REFERENCE
-
 #define FT_GET_VALUE(type) (((uintptr_t)type) & FT_VALUE_MASK)
 #define FT_MK_COMPLEX(ptr) ((uintptr_t)((((uintptr_t)ptr) >> 2) | FT_COMPLEX_BIT))
 #define FT_MK_COMPLEX_REF(ptr) (FT_SET_REFERENCE(FT_MK_COMPLEX(ptr)))
@@ -45,13 +43,14 @@
 #define FT_PARAM_END (0)
 #define FT_GET_COMPLEX(ptr) (((uintptr_t)ptr) << 2)
 
-#define FT_IS_PROMISE(ptr)    (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
+#define FT_IS_PROMISE(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
 
 namespace FEATURE {
 
 typedef void* FeatureRuntimeContext; // guest runtime context, e.g qucikjs RuntimeContext
 typedef void* FeatureProtoHandle; // feature prototype handle.
 typedef void* FeatureInstanceHandle; // feature instance handle.
+typedef void* FeatureInterfaceHandle; // feature interface handle.
 typedef uintptr_t FeatureType; // feature type flag
 typedef int32_t FeatureCallbackId; // feature callback id
 typedef int32_t FeaturePromiseHandle; // feature promise handle
@@ -71,6 +70,10 @@ typedef double FtDouble;
 typedef char FtBool;
 typedef const char* FtString;
 
+/**
+ * @brief Feature Array struct defination
+ * 
+ */
 struct FTArray {
     int32_t _size;
     void* _element;
@@ -85,6 +88,10 @@ struct FtVariadicParameters {
     ft_value_t* variadic_args; // variadic parameter pointer array
 };
 
+/**
+ * @brief Feature Lifecycle callbacks
+ * 
+ */
 struct FeatureCallbacks {
     void (*onRegister)(FeatureRuntimeContext ctx); // 插件注册
     void (*onCreate)(FeatureRuntimeContext ctx, FeatureProtoHandle handle); // 插件原型创建
@@ -94,23 +101,23 @@ struct FeatureCallbacks {
     void (*onUnregister)(FeatureRuntimeContext ctx); // 插件反注册
 };
 
-void* FTMalloc(size_t size, FeatureType featureType);
+void* FeatureMalloc(size_t size, FeatureType featureType);
 
 /**
  * @brief dump feature value, add ref_count.
- *      ptr must be allocated using FTMalloc
+ *      ptr must be allocated using FeatureMalloc
  *
  * @param ptr
  */
-void DupFeatureValue(void* ptr);
+void* FeatureDupValue(void* ptr);
 
 /**
  * @brief free feature value, decrease ref_count
  *
- *      ptr must be allocated using FTMalloc
+ *      ptr must be allocated using FeatureMalloc
  * @param ptr
  */
-void FreeFeatureValue(void* ptr);
+void FeatureFreeValue(void* ptr);
 
 /**
  * @brief get the native object pointer bind to feature proto(global object for all feature instance)
@@ -118,7 +125,7 @@ void FreeFeatureValue(void* ptr);
  * @param handle
  * @return void*
  */
-void* GetFeatureProtoData(FeatureProtoHandle handle);
+void* FeatureGetProtoData(FeatureProtoHandle handle);
 
 /**
  * @brief Set the Feature Proto Data object
@@ -126,7 +133,7 @@ void* GetFeatureProtoData(FeatureProtoHandle handle);
  * @param handle
  * @param data
  */
-void SetFeatureProtoData(FeatureProtoHandle handle, void* data);
+void FeatureSetProtoData(FeatureProtoHandle handle, void* data);
 
 /**
  * @brief get the native object pointer bind to feature instance
@@ -134,7 +141,7 @@ void SetFeatureProtoData(FeatureProtoHandle handle, void* data);
  * @param handle
  * @return void*
  */
-void* GetFeatureObjectData(FeatureInstanceHandle handle);
+void* FeatureGetObjectData(FeatureInstanceHandle handle);
 
 /**
  * @brief Set the Feature Object Data object
@@ -142,7 +149,7 @@ void* GetFeatureObjectData(FeatureInstanceHandle handle);
  * @param handle
  * @param data
  */
-void SetFeatureObjectData(FeatureInstanceHandle handle, void* data);
+void FeatureSetObjectData(FeatureInstanceHandle handle, void* data);
 
 /**
  * @brief get feature context from FeatureInstanceHandle, feature context is guest context.
@@ -150,7 +157,7 @@ void SetFeatureObjectData(FeatureInstanceHandle handle, void* data);
  * @param handle
  * @return context_ref
  */
-ft_context_ref GetFeatureContext(FeatureInstanceHandle handle);
+ft_context_ref FeatureGetContext(FeatureInstanceHandle handle);
 
 /**
  * @brief invoke callback via cid
@@ -160,8 +167,7 @@ ft_context_ref GetFeatureContext(FeatureInstanceHandle handle);
  * @param ...
  * @return int 0: success, 1: failed
  */
-// int InvokeFeatureCallback(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, int cid, ...);
-int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...);
+int FeatureInvokeCallback(FeatureInstanceHandle handle, int cid, ...);
 
 /**
  * @brief invoke callback via cid with variadic parameter
@@ -173,8 +179,7 @@ int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...);
  * @param ...
  * @return int
  */
-// int InvokeFeatureCallbackCount(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, int cid, int count, ...);
-int InvokeFeatureCallbackCount(FeatureInstanceHandle handle, int cid, int count, ...);
+int FeatureInvokeCallbackCount(FeatureInstanceHandle handle, int cid, int count, ...);
 
 /**
  * @brief remove callback from instance via cid.
@@ -184,7 +189,7 @@ int InvokeFeatureCallbackCount(FeatureInstanceHandle handle, int cid, int count,
  * @return true
  * @return false
  */
-bool RemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id);
+bool FeatureRemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id);
 
 /**
  * @brief promise resolve, only support one param
@@ -204,6 +209,12 @@ int FeaturePromiseResolve(FeatureInstanceHandle handle, FeaturePromiseHandle pro
  * @return int
  */
 int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...);
+
+typedef void (*NativeFunc)(void);
+
+typedef NativeFunc* VTable;
+
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable vtable, int vtable_size);
 
 }
 
@@ -231,7 +242,7 @@ inline void* FT_GET_OBJ(void* ptr)
 }
 
 enum MemberType {
-    MEMBER_NULL, //代表结束，定义为0
+    MEMBER_NULL, // 代表结束，定义为0
     MEMBER_METHOD,
     MEMBER_ACCESSOR,
     MEMBER_CONST
@@ -254,16 +265,9 @@ enum FeaturePrimitiveType {
     FT_CHAR, // char
     FT_PRIMITIVE_END = FT_REFERENCE_BIT - 1,
     FT_POINTER, // pointer
+    FT_RAWPOINTER, // raw pointer point to a native C struct which has no ref count header
     FT_STRING = FT_REFERENCE_BIT | FT_CHAR, // string
     FT_ANY, // any means guest value
-    // FT_OBJECT,
-    // FT_ARRY, // fixed array
-    // FT_ARRAY_INT,
-    // FT_ARRAY_FLOAT,
-    // FT_ARRAY_BOOLEAN,
-    // FT_ARRAY_STRING,
-    // FT_ARRAY_OBJECT,
-    // FT_ARRAY_ANY,
 };
 
 inline bool isPrimitiveType(FEATURE::FeatureType type)
@@ -277,13 +281,14 @@ enum ComplexType {
     COMPLEX_CALLBACK, // callback object
     COMPLEX_ARRAY, // array
     COMPLEX_PROMISE, // promise
+    COMPLEX_INTERFACE, // interface
 };
 
 typedef struct ObjectMember {
     const char* name;
     const FEATURE::FeatureType type;
     int offset; // 在对象中的偏移
-    int size; //所占空间大小
+    int size; // 所占空间大小
 } ObjectMember;
 
 union AppendData {
@@ -297,23 +302,28 @@ union AppendData {
     const char* str;
 };
 
+union FuncData {
+    NativeFunc callback; // 最终实现函数
+    int32_t vtable_idx; // vtable index
+};
+
 typedef struct MemberMethod {
-    void (*callback)(void); // 最终实现函数
+    FuncData func;
     const FEATURE::FeatureType* parameters; // 参数描述数组, 以空结束
     FEATURE::FeatureType return_type;
-    AppendData data; //附加数据
+    AppendData data; // 附加数据
 } MemberMethod;
 
 typedef struct MemberAccessor {
-    void (*getter)(void); // getter & setter可以有一个为空
-    void (*setter)(void);
+    FuncData getter; // getter & setter可以有一个为空
+    FuncData setter;
     FEATURE::FeatureType type;
-    AppendData data; //附加数据
+    AppendData data; // 附加数据
 } MemberAccessor;
 
 typedef struct MemberConst {
     FEATURE::FeatureType type;
-    void (*callback)(void); // initializer callback.
+    FuncData func;
     AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
 } MemberConst;
 
@@ -372,14 +382,24 @@ typedef struct PromiseType {
     const FEATURE::FeatureType resolveTypes[2];
 } PromiseType;
 
+typedef struct InterfaceType {
+    ComplexTypeHeader header;
+    const struct FeatureDescription* desc;
+} InterfaceType;
+
 typedef struct FeatureDescription {
     int version; // 待后面扩展使用. 目前可以统一为1
     const char* name; // feature名字, 在require时提供的
     const char* description; // feature的描述, 可以为null
-    int flags; // 配置信息, 暂时不用
+    union {
+        int flags; // 配置信息，通过位域定义
+        struct {
+            bool dynamic : 1; // if dynamic type
+        };
+    };
     const FEATURE::FeatureCallbacks* native_callbacks; // native对象接口
     int member_count; // 成员数量
-    const Member* members; //定义成员数量, 后面详细介绍
+    const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
 
 }

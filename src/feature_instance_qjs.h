@@ -18,8 +18,8 @@
 #ifndef __FEATURE_INSTANCE_QJS_H__
 #define __FEATURE_INSTANCE_QJS_H__
 
-#include "feature_instance.h"
 #include "feature.h"
+#include "feature_instance.h"
 
 #include <map>
 #include <memory>
@@ -34,20 +34,22 @@ typedef struct WeakRef {
 } WeakRef;
 
 typedef struct FeatureCallbackData {
-   feature_value_t cb;
-   CallbackType* cb_type;
+    feature_value_t cb;
+    CallbackType* cb_type;
 } FeatureCallbackData;
 
 typedef struct FeaturePromiseData {
-   feature_value_t promise; // 保存promise对象
-   feature_value_t resolveFuncs[2]; //functions
-   FEATURE::FeatureType resolveTypes[2];
+    feature_value_t promise; // 保存promise对象
+    feature_value_t resolveFuncs[2]; //functions
+    FEATURE::FeatureType resolveTypes[2];
 } FeaturePromiseData;
 
 class FeatureInstanceQjs : public FeatureInstance {
 public:
-    FeatureInstanceQjs(struct FeaturePrototype* prototype);
+    FeatureInstanceQjs(struct FeaturePrototype* prototype, FEATURE::VTable vtable, int vtable_size);
     virtual ~FeatureInstanceQjs();
+
+    virtual FeatureInstance* createInterface(FEATURE::VTable vtable, int vtable_size);
 
     virtual bool removeCallback(FEATURE::FeatureCallbackId id);
 
@@ -71,18 +73,44 @@ public:
 
     bool initWeakRef(feature_value_t feature_object);
 
+    void freeWeakRef();
+
+    FeaturePrototype* getInterfacePrototype(const char* name)
+    {
+        if (!prototypes_.count(name)) {
+            return nullptr;
+        }
+        return prototypes_[name];
+    }
+
+    void addInterfacePrototype(const char* name, FeaturePrototype* featurePrototype)
+    {
+        FEATURE_CHECK_EQ(prototypes_.count(name), 0);
+        prototypes_[name] = featurePrototype;
+    }
+
+    FeaturePrototype* removeInterfacePrototype(const char* name)
+    {
+        if(!prototypes_.count(name)) {
+            return nullptr;
+        }
+        FeaturePrototype* featurePrototype = prototypes_[name];
+        prototypes_.erase(name);
+        return featurePrototype;
+    }
+
 private:
     FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
     FeaturePromiseData* getPromiseData(FEATURE::FeaturePromiseHandle promiseHandle);
 
-    int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int  rest_param_count);
+    int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
     WeakRef weak_self_;
     FEATURE::FeatureCallbackId curr_cid_ = 0;
     std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
     std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises_;   // all promises created by native feature
+    std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype
 };
 
 }
 #endif // __FEATURE_INSTANCE_QJS_H__
-

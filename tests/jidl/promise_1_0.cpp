@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "promise_1_0.h"
 #include "ajs_features_init.h"
 
@@ -18,7 +21,7 @@
   };
 
   static const MemberMethod Promise_foo_member_method = {
-    .callback = FFI_FN(Promise_wrap_foo),
+    .func = { .callback = FFI_FN(Promise_wrap_foo) },
     .parameters = Promise_foo_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_INT_type),
   };
@@ -35,7 +38,7 @@
   };
 
   static const MemberMethod Promise_use_foo_member_method = {
-    .callback = FFI_FN(Promise_wrap_use_foo),
+    .func = { .callback = FFI_FN(Promise_wrap_use_foo) },
     .parameters = Promise_use_foo_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_INT_type),
   };
@@ -53,7 +56,7 @@
   };
 
   static const MemberMethod Promise_foo1_member_method = {
-    .callback = FFI_FN(Promise_wrap_foo1),
+    .func = { .callback = FFI_FN(Promise_wrap_foo1) },
     .parameters = Promise_foo1_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_STRING_type),
   };
@@ -65,7 +68,7 @@
   };
 
   static const MemberMethod Promise_foo2_member_method = {
-    .callback = FFI_FN(Promise_wrap_foo2),
+    .func = { .callback = FFI_FN(Promise_wrap_foo2) },
     .parameters = Promise_foo2_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_FT_INT_FT_STRING_type),
   };
@@ -82,7 +85,7 @@
   };
 
   FTArray* Promise_malloc_int_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Promise_int_array));
   }
 
@@ -92,7 +95,7 @@
   };
 
   FTArray* Promise_malloc_string_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Promise_string_array));
   }
 
@@ -102,7 +105,7 @@
   };
 
   static const MemberMethod Promise_bar_member_method = {
-    .callback = FFI_FN(Promise_wrap_bar),
+    .func = { .callback = FFI_FN(Promise_wrap_bar) },
     .parameters = Promise_bar_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_int_array_string_array_type),
   };
@@ -114,7 +117,7 @@
   };
 
   static const MemberMethod Promise_bar1_member_method = {
-    .callback = FFI_FN(Promise_wrap_bar1),
+    .func = { .callback = FFI_FN(Promise_wrap_bar1) },
     .parameters = Promise_bar1_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_int_array_string_array_type),
   };
@@ -131,7 +134,7 @@
   };
 
   static const MemberMethod Promise_bar2_member_method = {
-    .callback = FFI_FN(Promise_wrap_bar2),
+    .func = { .callback = FFI_FN(Promise_wrap_bar2) },
     .parameters = Promise_bar2_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Promise_promise_int_array_FT_STRING_type),
   };
@@ -143,7 +146,7 @@
   };
 
   static const MemberMethod Promise_print_member_method = {
-    .callback = FFI_FN(Promise_wrap_print),
+    .func = { .callback = FFI_FN(Promise_wrap_print) },
     .parameters = Promise_print_parameters,
     .return_type = FT_VOID,
   };
@@ -204,13 +207,13 @@
   };
 
   static const FeatureDescription Promise_desc = {
-    1,
-    "Promise",
-    "Promise",
-    1,
-    &Promise_callbacks,
-    countof(Promise_members),
-    Promise_members,
+    .version = 1,
+    .name = "Promise",
+    .description = "Promise",
+    { .dynamic = false },
+    .native_callbacks = &Promise_callbacks,
+    .member_count = countof(Promise_members),
+    .members = Promise_members,
   };
 
 QAPPFEATURE_INIT(Promise)

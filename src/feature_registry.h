@@ -23,6 +23,7 @@
 namespace ferry {
 
 struct FeatureUnit;
+class FeaturePrototype;
 
 /**
  * @brief Feature Registry, Manage all feature instance.
@@ -34,12 +35,8 @@ struct FeatureUnit;
  */
 class FeatureRegistry {
 public:
-    class Observer {
-    public:
-        virtual void onFeatureParsed(const char *feature_name) = 0;
-    };
-
-    FeatureRegistry(class IApplication* app);
+    using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
+    FeatureRegistry() = default;
     /**
      * @brief initialie FeatureRegistry
      *
@@ -59,22 +56,18 @@ public:
      */
     bool registerFeature(std::vector<std::string>&features, const FeatureDescription* description);
 
-    FeatureUnit* findFeature(const char* name);
-
-    void setObserver(Observer *observer) { observer_ = observer; }
+    FeatureRegistryPair* findFeature(const char* name);
 
     /**
      * @brief Get the Registered Features object
      * 
      * @return const std::map<std::string, FeatureUnit*>& 
      */
-    const std::map<std::string, FeatureUnit*>& getRegisteredFeatures() const { return registeredFeatures_; }
+    const std::map<std::string, FeatureRegistryPair>& getRegisteredFeatures() const { return registeredFeatures_; }
 
 private:
-    IApplication* app_;
-    std::map<std::string, FeatureUnit*> registeredFeatures_; // 已注册features
+    std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features
     bool manifest_check_enable = true;
-    Observer *observer_ = nullptr;
 };// class FeatureRegistry
 
 }
