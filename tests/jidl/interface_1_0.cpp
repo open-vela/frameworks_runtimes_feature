@@ -24,25 +24,38 @@ extern const InterfaceType Interface_Animal_interface_type;
   };
 
   /****** for JIDL function 'Animal_interface_eatFood' ******/
+  static const ArrayType Interface_string_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .element_type = FT_STRING
+  };
+
+  FTArray* Interface_malloc_string_array() {
+    return (FTArray*)FTMalloc(
+      sizeof(FTArray), FT_MK_COMPLEX(&Interface_string_array));
+  }
+
   static const FeatureType Interface_Animal_interface_eatFood_parameters[] = {
+    FT_MK_COMPLEX_REF(&Interface_string_array),
     FT_PARAM_END
   };
 
   static const MemberMethod Interface_Animal_interface_eatFood_member_method = {
     .func = { .vtable_idx = 4 },
     .parameters = Interface_Animal_interface_eatFood_parameters,
-    .return_type = FT_VOID,
+    .return_type = FT_INT,
   };
 
   /****** for JIDL function 'Animal_interface_run' ******/
   static const FeatureType Interface_Animal_interface_run_parameters[] = {
+    FT_INT,
+    FT_STRING,
     FT_PARAM_END
   };
 
   static const MemberMethod Interface_Animal_interface_run_member_method = {
     .func = { .vtable_idx = 5 },
     .parameters = Interface_Animal_interface_run_parameters,
-    .return_type = FT_VOID,
+    .return_type = FT_STRING,
   };
 
   /****** for JIDL function 'Animal_interface_fly' ******/
@@ -53,7 +66,23 @@ extern const InterfaceType Interface_Animal_interface_type;
   static const MemberMethod Interface_Animal_interface_fly_member_method = {
     .func = { .vtable_idx = 6 },
     .parameters = Interface_Animal_interface_fly_parameters,
-    .return_type = FT_VOID,
+    .return_type = FT_MK_COMPLEX_REF(&Interface_string_array),
+  };
+
+  /****** for JIDL function 'Animal_interface_walk' ******/
+  static const FeatureType Interface_Animal_interface_walk_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const PromiseType Interface_promise_string_array_FT_INT_type = {
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .resolveTypes = { FT_MK_COMPLEX_REF(&Interface_string_array), FT_INT }
+  };
+
+  static const MemberMethod Interface_Animal_interface_walk_member_method = {
+    .func = { .vtable_idx = 7 },
+    .parameters = Interface_Animal_interface_walk_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&Interface_promise_string_array_FT_INT_type),
   };
 
   // Interface members
@@ -82,6 +111,11 @@ extern const InterfaceType Interface_Animal_interface_type;
       .type = MEMBER_METHOD,
       .name = "fly",
       .method = Interface_Animal_interface_fly_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "walk",
+      .method = Interface_Animal_interface_walk_member_method,
     },
   };
 
@@ -112,13 +146,13 @@ extern const InterfaceType Interface_Animal_interface_type;
   static const MemberMethod Interface_flyFar_member_method = {
     .func = { .callback = FFI_FN(Interface_wrap_flyFar) },
     .parameters = Interface_flyFar_parameters,
-    .return_type = FT_VOID,
+    .return_type = FT_MK_COMPLEX_REF(&Interface_promise_string_array_FT_INT_type),
   };
 
 
   /****** for JIDL use 'flyAway' ******/
-  static void Interface_wrap_flyAway (FeatureInstanceHandle feature, AppendData data) {
-    Interface_wrap_flyFar (feature, data, 100);
+  static void Interface_wrap_flyAway (FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle) {
+    Interface_wrap_flyFar (feature, data, promiseHandle, 100);
   }
 
   static const FeatureType Interface_flyAway_parameters[] = {
@@ -128,7 +162,7 @@ extern const InterfaceType Interface_Animal_interface_type;
   static const MemberMethod Interface_flyAway_member_method = {
     .func = { .callback = FFI_FN(Interface_wrap_flyAway) },
     .parameters = Interface_flyAway_parameters,
-    .return_type = FT_VOID,
+    .return_type = FT_MK_COMPLEX_REF(&Interface_promise_string_array_FT_INT_type),
   };
 
 
@@ -155,6 +189,7 @@ static FeatureInstanceHandle Interface_wrap_createDog(FeatureInstanceHandle feat
         NativeFunc(Interface_Animal_interface_dog_eatFood),
         NativeFunc(Interface_Animal_interface_dog_run),
         NativeFunc(Interface_Animal_interface_dog_fly),
+        NativeFunc(Interface_Animal_interface_dog_walk),
     };
     return FeatureCreateInterface(feature, dog_vtable, countof(dog_vtable));
 }
