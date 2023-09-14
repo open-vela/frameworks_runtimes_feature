@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
 
@@ -314,7 +317,7 @@
 
   static const MemberConst Simple_x_member_const = {
     .type = FT_INT,
-    //.callback = FFI_FN(Simple_init_const_x),
+    //.func = { .callback = FFI_FN(Simple_init_const_x) },
     .func = { .callback = nullptr },
     .data = { .i32 = Simple_g_const_x }
   };
@@ -325,7 +328,7 @@
 
   static const MemberConst Simple_y_member_const = {
     .type = FT_STRING,
-    //.callback = FFI_FN(Simple_init_const_y),
+    //.func = { .callback = FFI_FN(Simple_init_const_y) },
     .func = { .callback = nullptr },
     .data = { .str = Simple_g_const_y }
   };
@@ -336,7 +339,7 @@
 
   static const MemberConst Simple_z_member_const = {
     .type = FT_DOUBLE,
-    //.callback = FFI_FN(Simple_init_const_z),
+    //.func = { .callback = FFI_FN(Simple_init_const_z) },
     .func = { .callback = nullptr },
     .data = { .f64 = Simple_g_const_z }
   };
@@ -344,21 +347,24 @@
   /****** for JIDL property 'name' ******/
   static const MemberAccessor Simple_name_member_accessor = {
     .getter = { .callback = FFI_FN(Simple_get_name) },
-    .setter = {.callback = FFI_FN(Simple_set_name) },
+    .setter = { .callback = FFI_FN(Simple_set_name) },
     .type = FT_STRING,
   };
+
 
   /****** for JIDL property 'version' ******/
   static const MemberAccessor Simple_version_member_accessor = {
-    .setter= { .callback = FFI_FN(Simple_set_version) },
+    .getter = { .callback = FFI_FN(Simple_get_version) },
     .type = FT_STRING,
   };
 
+
   /****** for JIDL property 'args' ******/
   static const MemberAccessor Simple_args_member_accessor = {
-    .setter= { .callback = FFI_FN(Simple_set_args) },
+    .getter = { .callback = FFI_FN(Simple_get_args) },
     .type = FT_MK_COMPLEX_REF(&Simple_string_array),
   };
+
 
   // members
   static const Member Simple_members[] = {
@@ -485,13 +491,13 @@
   };
 
   static const FeatureDescription Simple_desc = {
-    1,
-    "Simple",
-    "Simple",
-    0,
-    &Simple_callbacks,
-    countof(Simple_members),
-    Simple_members,
+    .version = 1,
+    .name = "Simple",
+    .description = "Simple",
+    { .dynamic = false },
+    .native_callbacks = &Simple_callbacks,
+    .member_count = countof(Simple_members),
+    .members = Simple_members,
   };
 
 QAPPFEATURE_INIT(Simple)

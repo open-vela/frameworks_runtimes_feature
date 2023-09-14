@@ -2,8 +2,9 @@ module Struct@1.0
 
 // Declare a simple struct
 struct Chapter {
-  int page_count
-  string title
+  int page_count = 10
+  string title = "hello world"
+  boolean is_end = false
 }
 
 // Declare a callback

@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "struct_1_0.h"
 #include "ajs_features_init.h"
 
@@ -176,13 +179,13 @@
   };
 
   static const FeatureDescription Struct_desc = {
-    1,
-    "Struct",
-    "Struct",
-    0,
-    &Struct_callbacks,
-    countof(Struct_members),
-    Struct_members,
+    .version = 1,
+    .name = "Struct",
+    .description = "Struct",
+    { .dynamic = false },
+    .native_callbacks = &Struct_callbacks,
+    .member_count = countof(Struct_members),
+    .members = Struct_members,
   };
 
 QAPPFEATURE_INIT(Struct)
