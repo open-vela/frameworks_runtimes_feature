@@ -369,12 +369,17 @@ class JIDL(Parser):
     interface_define : INTERFACE ID interface_extends LBRACE interface_body RBRACE
               | meta_attributes_define INTERFACE ID interface_extends LBRACE interface_body RBRACE
     """
+    extends = None
     if len(p) == 8:
-      CreateASTNode(p, ast.InterfaceDefine, p[3], 'interface', p[6])
+      CreateASTNode(p, ast.InterfaceDefine, p[3], 30, p[6]) # 30 represents INTERFACE_DEFINE
       p[0].SetMetaAttributes(p[1])
+      extends = p[4]
     else:
-      CreateASTNode(p, ast.InterfaceDefine, p[2], 'interface', p[5])
-    if (p[3]): p[0].SetExtends(p[3])
+      CreateASTNode(p, ast.InterfaceDefine, p[2], 30, p[5]) # 30 represents INTERFACE_DEFINE
+      extends = p[3]
+
+    if extends:
+      p[0].SetExtends(extends)
 
   def p_interface_extends(self, p):
     """
