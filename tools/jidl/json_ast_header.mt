@@ -17,6 +17,8 @@
 %if has_getter:
 <%
   cpp_type = render.GenerateCppType(prop_type)
+  if cpp_type == 'FTArray':
+    cpp_type += '*'
   getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, AppendData data)"
 %>\
   ${getter_def};
