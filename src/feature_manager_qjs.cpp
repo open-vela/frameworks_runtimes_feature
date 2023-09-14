@@ -171,7 +171,6 @@ FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureD
 static feature_value_t method_call(feature_context_ref ctx, feature_value_t this_val,
     int argc, feature_value_t* argv, int magic)
 {
-    std::vector<bool> freeFlags;
     bool got_error = false;
     feature_value_t method_ret_value = FEATURE_VALUE_UNDEFINED;
     int index = magic;
@@ -234,7 +233,6 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     }
 
     do {
-        freeFlags.resize(method_param_count, false);
         for (int i = 0; i < method_param_count && i < argc; i++) {
             feature_value_t currArg = argv[i];
             auto param = currParam[i];
@@ -243,9 +241,6 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 got_error = true;
                 break;
             }
-            bool isInterface = false;
-            IS_INTERFACE_TYPE(param, isInterface);
-            freeFlags[i] = isInterface;
             if (!createTypeDeclaration(param, ffi_params[external_count + i])) {
                 FEATURE_LOG_ERROR("prepareType for type failed !");
                 got_error = true;
@@ -364,9 +359,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         }
         // free value
         if (ffi_arg_values[i + external_count]) {
-            if (freeFlags[i]) {
-                FreeFeatureValue(ffi_arg_values[i + external_count]);
-            }
+            FreeFeatureValue(ffi_arg_values[i + external_count]);
         }
     }
     freeTypeDeclaration(ffi_ret);
