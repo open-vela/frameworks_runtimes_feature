@@ -512,12 +512,12 @@ class CPPRender(Render):
       return True
     return False
 
-  def PropertyHasSetter(self, node):
+  def PropertyHasGetter(self, node):
     if 'readable' in node or 'const' in node:
       return True
     return False
 
-  def PropertyHasGetter(self, node):
+  def PropertyHasSetter(self, node):
     if ('writeable' in node) and ('const' not in node):
       return True
     return False
