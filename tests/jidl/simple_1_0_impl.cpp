@@ -375,13 +375,22 @@ void Simple_set_name(FeatureInstanceHandle feature, AppendData data, FtString na
     SET_PROP_CHAR_PTR(name);
 }
 
-void Simple_set_version(FeatureInstanceHandle feature, AppendData data, FtString version)
-{
-    printf("%s::%s(), version: %s\n", file_tag,  __FUNCTION__, version);
-    SET_PROP_CHAR_PTR(version);
-}
-
-void Simple_set_args(FeatureInstanceHandle feature, AppendData data, FTArray& args)
+const char* Simple_get_version(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    GET_PROP_CHAR_PTR(version);
+}
+
+FTArray* Simple_get_args(FeatureInstanceHandle feature, AppendData data)
+{
+    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    FTArray* strArray = Simple_malloc_string_array();
+    strArray->_size = 4;
+    strArray->_element = malloc(sizeof(char*) * 4);
+    for (int i = 0; i < 4; i++) {
+        char* str = static_cast<char*>(FTMalloc(100, FT_CHAR));
+        sprintf(str, "hello%d", i);
+        ((char**)strArray->_element)[i] = str;
+    }
+    return strArray;
 }

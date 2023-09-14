@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "promise_1_0.h"
 #include "ajs_features_init.h"
 
@@ -204,13 +207,13 @@
   };
 
   static const FeatureDescription Promise_desc = {
-    1,
-    "Promise",
-    "Promise",
-    0,
-    &Promise_callbacks,
-    countof(Promise_members),
-    Promise_members,
+    .version = 1,
+    .name = "Promise",
+    .description = "Promise",
+    { .dynamic = false },
+    .native_callbacks = &Promise_callbacks,
+    .member_count = countof(Promise_members),
+    .members = Promise_members,
   };
 
 QAPPFEATURE_INIT(Promise)

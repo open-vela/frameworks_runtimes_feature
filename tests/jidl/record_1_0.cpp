@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "record_1_0.h"
 #include "ajs_features_init.h"
 
@@ -131,13 +134,13 @@
   };
 
   static const FeatureDescription Record_desc = {
-    1,
-    "Record",
-    "Record",
-    0,
-    &Record_callbacks,
-    countof(Record_members),
-    Record_members,
+    .version = 1,
+    .name = "Record",
+    .description = "Record",
+    { .dynamic = false },
+    .native_callbacks = &Record_callbacks,
+    .member_count = countof(Record_members),
+    .members = Record_members,
   };
 
 QAPPFEATURE_INIT(Record)
