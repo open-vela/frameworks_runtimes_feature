@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "record_1_0.h"
 #include "ajs_features_init.h"
 
@@ -88,7 +91,7 @@
   };
 
   static const MemberMethod Record_start_member_method = {
-    .callback = FFI_FN(Record_wrap_start),
+    .func = { .callback = FFI_FN(Record_wrap_start) },
     .parameters = Record_start_parameters,
     .return_type = FT_VOID,
   };
@@ -100,7 +103,7 @@
   };
 
   static const MemberMethod Record_stop_member_method = {
-    .callback = FFI_FN(Record_wrap_stop),
+    .func = { .callback = FFI_FN(Record_wrap_stop) },
     .parameters = Record_stop_parameters,
     .return_type = FT_VOID,
   };
@@ -131,13 +134,13 @@
   };
 
   static const FeatureDescription Record_desc = {
-    1,
-    "Record",
-    "Record",
-    1,
-    &Record_callbacks,
-    countof(Record_members),
-    Record_members,
+    .version = 1,
+    .name = "Record",
+    .description = "Record",
+    { .dynamic = false },
+    .native_callbacks = &Record_callbacks,
+    .member_count = countof(Record_members),
+    .members = Record_members,
   };
 
 QAPPFEATURE_INIT(Record)

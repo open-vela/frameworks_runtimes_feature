@@ -31,9 +31,10 @@ class FeaturePrototype;
 
 class FeatureInstance {
 public:
-    FeatureInstance(struct FeaturePrototype* prototype);
+    FeatureInstance(struct FeaturePrototype* prototype, FEATURE::VTable vtable, int vtable_size);
     virtual ~FeatureInstance();
 
+    virtual FeatureInstance* createInterface(FEATURE::VTable vtable, int vtable_size) = 0;
     /**
      * @brief remove callback from instance vai FeatureCallbackId
      *
@@ -52,17 +53,28 @@ public:
 
     virtual int invokeCallbackCount(int cid, va_list& ap, int count) = 0;
 
-    void setInstanceId(int instance_id) { instance_id_ =  instance_id; }
+    void setInstanceId(int instance_id) { instance_id_ = instance_id; }
 
     int instanceId() { return instance_id_; }
 
     FeaturePrototype* prototype() { return proto_; }
+
+    void setPrototype(FeaturePrototype* proto) { proto_ = proto; }
+
+    FEATURE::NativeFunc getVirtualFunction(int index) const
+    {
+        if (index < 0 || index >= vtable_size_)
+            return nullptr;
+        return vtable_[index];
+    }
 
     void* native;
 
 private:
     FeaturePrototype* proto_;
     int instance_id_; // the instance id, order in instances aray.
+    FEATURE::VTable vtable_; // vtable array
+    int32_t vtable_size_;
 };
 
 }

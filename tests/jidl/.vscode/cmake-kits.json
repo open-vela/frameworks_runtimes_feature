@@ -1,0 +1,6 @@
+[
+    {
+        "name": "GCC X86_32-linux-gnu",
+        "toolchainFile": "${workspaceFolder}/toolchain/cross-m32.cmake"
+    }
+]

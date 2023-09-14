@@ -1,5 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
+
+
+
 #include "struct_1_0.h"
 #include "ajs_features_init.h"
 
@@ -38,7 +41,7 @@
   };
 
   Struct_Chapter* mallocChapter () {
-    return (Struct_Chapter*)FTMalloc(
+    return (Struct_Chapter*)FeatureMalloc(
       sizeof(Struct_Chapter), FT_MK_COMPLEX(&Struct_Chapter_struct_type));
   }
 
@@ -63,7 +66,7 @@
   };
 
   FTArray* Struct_malloc_string_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Struct_string_array));
   }
 
@@ -84,7 +87,7 @@
   };
 
   Struct_Book* mallocBook () {
-    return (Struct_Book*)FTMalloc(
+    return (Struct_Book*)FeatureMalloc(
       sizeof(Struct_Book), FT_MK_COMPLEX(&Struct_Book_struct_type));
   }
 
@@ -97,7 +100,7 @@
   };
 
   static const MemberMethod Struct_foo_member_method = {
-    .callback = FFI_FN(Struct_wrap_foo),
+    .func = { .callback = FFI_FN(Struct_wrap_foo) },
     .parameters = Struct_foo_parameters,
     .return_type = FT_VOID,
   };
@@ -110,7 +113,7 @@
   };
 
   static const MemberMethod Struct_bar_member_method = {
-    .callback = FFI_FN(Struct_wrap_bar),
+    .func = { .callback = FFI_FN(Struct_wrap_bar) },
     .parameters = Struct_bar_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Struct_Chapter_struct_type),
   };
@@ -123,7 +126,7 @@
   };
 
   static const MemberMethod Struct_bar2_member_method = {
-    .callback = FFI_FN(Struct_wrap_bar2),
+    .func = { .callback = FFI_FN(Struct_wrap_bar2) },
     .parameters = Struct_bar2_parameters,
     .return_type = FT_VOID,
   };
@@ -135,7 +138,7 @@
   };
 
   static const MemberMethod Struct_print_member_method = {
-    .callback = FFI_FN(Struct_wrap_print),
+    .func = { .callback = FFI_FN(Struct_wrap_print) },
     .parameters = Struct_print_parameters,
     .return_type = FT_VOID,
   };
@@ -176,13 +179,13 @@
   };
 
   static const FeatureDescription Struct_desc = {
-    1,
-    "Struct",
-    "Struct",
-    1,
-    &Struct_callbacks,
-    countof(Struct_members),
-    Struct_members,
+    .version = 1,
+    .name = "Struct",
+    .description = "Struct",
+    { .dynamic = false },
+    .native_callbacks = &Struct_callbacks,
+    .member_count = countof(Struct_members),
+    .members = Struct_members,
   };
 
 QAPPFEATURE_INIT(Struct)
