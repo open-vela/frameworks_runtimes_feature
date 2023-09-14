@@ -204,6 +204,8 @@ class CPPRender(Render):
     self.callback_id_set = set()
     self.promise_type_set = set()
     self.struct_name_set = set()
+    self.interface_name_set = set()
+    self.vtable_map = {}
     self.feature_type_set = set()
     self.array_malloc_func_set = set()
     Render.__init__(self, json_file, configs)
@@ -249,16 +251,18 @@ class CPPRender(Render):
     if not isinstance(ast_type, dict):
       raise Exception('not a valid complex type: {}'.format(ast_type))
 
+    module_name = self.GetModuleName()
     if 'element' in ast_type:
       return 'FTArray'
     elif 'referred_type' in ast_type:
       referred_type = ast_type['referred_type']
-      module_name = self.GetModuleName()
       if referred_type == 'callback':
         return self.GenerateCppType(referred_type)
       elif referred_type == 'struct':
-        struct_name = ast_type['referred_name']
-        return f"{module_name}_{struct_name} *"
+        referred_name = ast_type['referred_name']
+        return f"{module_name}_{referred_name} *"
+      elif referred_type == 'interface':
+        return "FeatureInstanceHandle"
     elif ast_type['type'] == 'struct':
         struct_name = ast_type['name']
         return f"{module_name}_{struct_name} *"
@@ -363,6 +367,11 @@ class CPPRender(Render):
         if not struct_name in self.struct_name_set:
           raise Exception('undefined struct: {}'.format(struct_name))
         ft_info = self._GenComplexRefFeatureInfo(struct_name, 'struct_type')
+      elif ast_type['referred_type'] == 'interface':
+        interface_name = ast_type['referred_name']
+        if not interface_name in self.interface_name_set:
+          raise Exception('undefined interface: {}'.format(interface_name))
+        ft_info = self._GenComplexRefFeatureInfo(interface_name, 'interface_type')
     elif ast_type['type'] == 'struct':
       ft_info = self._GenComplexRefFeatureInfo(ast_type['name'], 'struct_type')
     elif ast_type['type'] == 'promise':
@@ -486,7 +495,7 @@ class CPPRender(Render):
         p_call_str += f"{p_call_value}"
     return p_call_str
 
-  def TryCacheCallbackId(self, id):
+  def TryCacheCallbackId(self, id):                                                                                                                                                                                                             
     if not id in self.callback_id_set:
       self.callback_id_set.add(id)
       return True
@@ -504,6 +513,31 @@ class CPPRender(Render):
   def CacheStructName(self, name):
     if not name in self.struct_name_set:
       self.struct_name_set.add(name)
+
+  def TryCacheInterface(self, name):
+    if not name in self.interface_name_set:
+      self.interface_name_set.add(name)
+      return True
+    return False
+
+  def CacheVTableItem(self, parent_prefix, identifier, func_type):
+    if parent_prefix in self.vtable_map:
+      item_list = self.vtable_map[parent_prefix]
+    else:
+      item_list = []
+      self.vtable_map[parent_prefix] = item_list
+
+    func_item = {
+       'name': identifier,
+       'type': func_type # 0 for method, 1 for getter, 2 for setter
+    }
+    item_list.append(func_item)
+    return item_list.index(func_item)
+
+  def GetVTable(self, parent_prefix):
+    if not parent_prefix in self.vtable_map:
+      raise Exception('cannot find vtable for name: {}'.format(parent_prefix))
+    return self.vtable_map[parent_prefix]
 
   def IsStruct(self, ast_node):
     if not isinstance(ast_node, dict):
