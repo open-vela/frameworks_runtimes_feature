@@ -27,6 +27,8 @@ add_executable(${PROJECT_NAME}
     struct_1_0_impl.cpp
     promise_1_0.cpp
     promise_1_0_impl.cpp
+    interface_1_0.cpp
+    interface_1_0_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
     feature_interface.cpp

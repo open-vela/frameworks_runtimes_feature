@@ -1,0 +1,19 @@
+module Interface@1.0
+
+interface Animal {
+  property string name;
+  property int legCount readonly;
+  void eatFood();
+  void run();
+  void fly();
+}
+
+void flyFar(int distance);
+use flyAway() = flyFar(100);
+
+Animal createCat();
+[ctor="true", target="dog"] Animal createDog(int type);
+void setAnimal(Animal animal);
+
+void print(...);
+
