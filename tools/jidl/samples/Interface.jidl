@@ -3,12 +3,13 @@ module Interface@1.0
 interface Animal {
   property string name;
   property int legCount readonly;
-  void eatFood();
-  void run();
-  void fly();
+  int eatFood(string[] foods);
+  string run(int distance, string destination);
+  string[] fly();
+  promise<string[], int> walk();
 }
 
-void flyFar(int distance);
+promise<string[], int> flyFar(int distance);
 use flyAway() = flyFar(100);
 
 Animal createCat();
