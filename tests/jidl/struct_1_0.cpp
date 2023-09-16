@@ -41,7 +41,7 @@
   };
 
   Struct_Chapter* mallocChapter () {
-    return (Struct_Chapter*)FTMalloc(
+    return (Struct_Chapter*)FeatureMalloc(
       sizeof(Struct_Chapter), FT_MK_COMPLEX(&Struct_Chapter_struct_type));
   }
 
@@ -66,7 +66,7 @@
   };
 
   FTArray* Struct_malloc_string_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Struct_string_array));
   }
 
@@ -87,7 +87,7 @@
   };
 
   Struct_Book* mallocBook () {
-    return (Struct_Book*)FTMalloc(
+    return (Struct_Book*)FeatureMalloc(
       sizeof(Struct_Book), FT_MK_COMPLEX(&Struct_Book_struct_type));
   }
 

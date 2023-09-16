@@ -223,7 +223,7 @@ namespace FeatureFFIQjs {
                     return false;
                 }
                 const char* str = feature_to_cstring(ctx, value);
-                char* alloc_ptr = (char*)FTMalloc(strlen(str) + 1, FT_CHAR);
+                char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
                 strcpy(alloc_ptr, str);
                 ptr = alloc_ptr;
                 feature_free_cstring(ctx, str);

@@ -33,8 +33,8 @@ public:
 static FtString _Interface_cat_get_name(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag, __FUNCTION__);
-    ft_context_ref ft_ctx = GetFeatureContext(feature);
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "cat name is: %s", "mimi");
     return buf;
 }
@@ -65,7 +65,7 @@ static FtInt _Interface_cat_eatFood(FeatureInstanceHandle feature, AppendData da
 static FtString _Interface_cat_run(FeatureInstanceHandle feature, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s() cat run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, distance, destination);
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "cat run swiftly!");
     return buf;
 }
@@ -77,7 +77,7 @@ static FTArray* _Interface_cat_fly(FeatureInstanceHandle feature, AppendData dat
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FTMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
         sprintf(str, "cat flip wings %d", i);
         ((char**)strArray->_element)[i] = str;
     }
@@ -87,7 +87,7 @@ static FTArray* _Interface_cat_fly(FeatureInstanceHandle feature, AppendData dat
 void _Interface_cat_walk(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
 {
     printf("%s::%s() %s\n", file_tag, __FUNCTION__, "cat walk slowly");
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "cat walk resolved!");
     FeaturePromiseResolve(feature, promiseHandle, buf);
 }
@@ -96,7 +96,7 @@ void _Interface_cat_walk(FeatureInstanceHandle feature, AppendData data, Feature
 FtString Interface_Animal_interface_dog_get_name(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag, __FUNCTION__);
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "dog name is: %s", "tommy");
     return buf;
 }
@@ -127,7 +127,7 @@ FtInt Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, Appe
 FtString Interface_Animal_interface_dog_run(FeatureInstanceHandle feature, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s() dog run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, distance, destination);
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "dog run swiftly!");
     return buf;
 }
@@ -139,7 +139,7 @@ FTArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, Appen
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FTMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
         sprintf(str, "dog flip wings %d", i+4);
         ((char**)strArray->_element)[i] = str;
     }
@@ -187,7 +187,7 @@ void Interface_onUnregister(FeatureRuntimeContext ctx)
 
 void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt distance) {
     printf("%s::%s() distance: %d\n", file_tag, __FUNCTION__, distance);
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "flyFar resolved!");
     FeaturePromiseResolve(feature, promiseHandle, buf);
 }
@@ -215,7 +215,7 @@ void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, Fe
 void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     printf("[jidl_feature] ");
-    ft_context_ref ft_ctx = GetFeatureContext(feature);
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
         ft_value_t param = variadicParameters.variadic_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
