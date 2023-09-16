@@ -1,0 +1,6 @@
+SET(CMAKE_C_FLAGS             "-m32" CACHE STRING "C compiler flags"   FORCE)
+SET(CMAKE_CXX_FLAGS           "-m32" CACHE STRING "C++ compiler flags" FORCE)
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+SET(CMAKE_LIBRARY_PATH "/usr/lib/i386-linux-gnu")
+include_directories(BEFORE /usr/include/i386-linux-gnu)
