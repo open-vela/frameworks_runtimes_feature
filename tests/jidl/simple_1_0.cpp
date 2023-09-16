@@ -273,7 +273,7 @@
   };
 
   FTArray* Simple_malloc_int_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Simple_int_array));
   }
 
@@ -300,7 +300,7 @@
   };
 
   FTArray* Simple_malloc_string_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Simple_string_array));
   }
 

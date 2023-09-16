@@ -56,7 +56,7 @@ struct Point {
 static Point* __printPoint(void* FeatureInstanceHandle, int64_t data, Point* point)
 {
     printf("point {x: %f, y: %f, z: %f}\n", point->_x, point->_y, point->_z);
-    DupFeatureValue(point);
+    FeatureDupValue(point);
     point->_x += 1;
     point->_y += 2;
     return point;
@@ -65,7 +65,7 @@ static Point* __printPoint(void* FeatureInstanceHandle, int64_t data, Point* poi
 static const char* __printString(void* FeatureInstanceHandle, int64_t data, const char* str)
 {
     printf("str is: %s\n", str);
-    char* buf = (char*)FTMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "returned string: %s", str);
     return buf;
 }
@@ -74,15 +74,15 @@ static Point g_point = { 100.0, 200.0, 300.0 };
 
 static Point* __get_myPoint(FeatureInstanceHandle handle, int64_t data)
 {
-    Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
-    DupFeatureValue(p);
+    Point* p = static_cast<Point*>(FeatureGetObjectData(handle));
+    FeatureDupValue(p);
     return p;
 }
 
 static Point* __with_optional(FeatureInstanceHandle handle, int64_t data, const char* str)
 {
-    Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
-    DupFeatureValue(p);
+    Point* p = static_cast<Point*>(FeatureGetObjectData(handle));
+    FeatureDupValue(p);
     printf("with optional receive str: %s\n", str);
     return p;
 }
@@ -125,18 +125,18 @@ static void __return_promise(FeatureInstanceHandle handle, AppendData data, Feat
 
 static void __set_myPoint(FeatureInstanceHandle handle, int64_t data, Point* point)
 {
-    Point* p = static_cast<Point*>(GetFeatureObjectData(handle));
+    Point* p = static_cast<Point*>(FeatureGetObjectData(handle));
     if (p) {
-        FreeFeatureValue(p);
+        FeatureFreeValue(p);
     }
-    SetFeatureObjectData(handle, DupFeatureValue(point));
+    FeatureSetObjectData(handle, FeatureDupValue(point));
 }
 
 static Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
 {
     Point* p = (Point*)data;
     // add reference count.
-    DupFeatureValue(p);
+    FeatureDupValue(p);
     p->_x += 1;
     p->_y += 1;
     p->_z += 1;
@@ -145,7 +145,7 @@ static Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
 
 static void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters variadicParameters)
 {
-    ft_context_ref ft_ctx = GetFeatureContext(handle);
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
         ft_value_t param = variadicParameters.variadic_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
@@ -199,26 +199,26 @@ static void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParame
 
 static void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
 {
-    if (InvokeFeatureCallback(handle, callback, "hello world", 123.0, 456.0, 789.0)) {
+    if (FeatureInvokeCallback(handle, callback, "hello world", 123.0, 456.0, 789.0)) {
         FEATURE_LOG_ERROR("invoke failed !");
     }
 
-    RemoveCallback(handle, callback);
+    FeatureRemoveCallback(handle, callback);
 }
 
 static void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
 {
-    char* arg1 = (char*)FTMalloc(sizeof("test1") + 1, FT_CHAR);
+    char* arg1 = (char*)FeatureMalloc(sizeof("test1") + 1, FT_CHAR);
     sprintf(arg1, "%s", "test1");
-    char* arg2 = (char*)FTMalloc(sizeof("test2") + 1, FT_CHAR);
+    char* arg2 = (char*)FeatureMalloc(sizeof("test2") + 1, FT_CHAR);
     sprintf(arg2, "%s", "test2");
-    if (InvokeFeatureCallbackCount(handle, callback, 6, "hello world", 123.0, 456.0, 789.0, arg1, arg2)) {
+    if (FeatureInvokeCallbackCount(handle, callback, 6, "hello world", 123.0, 456.0, 789.0, arg1, arg2)) {
         FEATURE_LOG_ERROR("invoke failed !");
     }
-    FreeFeatureValue(arg1);
-    FreeFeatureValue(arg2);
+    FeatureFreeValue(arg1);
+    FeatureFreeValue(arg2);
 
-    RemoveCallback(handle, callback);
+    FeatureRemoveCallback(handle, callback);
 }
 
 static ObjectMember Point_member[] = {
@@ -317,15 +317,15 @@ static OptionalType recv_point_array_type {
     .str = "this is optional default string"
 };
 
-Point* g_point1 = new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);
+Point* g_point1 = new (FeatureMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);
 
 static FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
 {
-    FTArray* strArray = static_cast<FTArray*>(FTMalloc(sizeof(FTArray), FT_MK_COMPLEX(&string_array_type)));
+    FTArray* strArray = static_cast<FTArray*>(FeatureMalloc(sizeof(FTArray), FT_MK_COMPLEX(&string_array_type)));
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FTMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
         sprintf(str, "hello%d", i);
         ((char**)strArray->_element)[i] = str;
     }
@@ -355,21 +355,21 @@ static const struct FeatureCallbacks callbacks {
         FEATURE_LOG_INFO("onRegister");
     },
         [](FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-            SetFeatureProtoData(handle, new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
+            FeatureSetProtoData(handle, new (FeatureMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
             FEATURE_LOG_INFO("onCreate");
         },
         [](FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-            SetFeatureObjectData(handle, new (FTMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
+            FeatureSetObjectData(handle, new (FeatureMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point());
             FEATURE_LOG_INFO("onRequired");
         },
         [](FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-            Point* point_data = (Point*)GetFeatureObjectData(handle);
-            FreeFeatureValue(point_data);
+            Point* point_data = (Point*)FeatureGetObjectData(handle);
+            FeatureFreeValue(point_data);
             FEATURE_LOG_INFO("onDetached");
         },
         [](FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-            Point* point_data = (Point*)GetFeatureProtoData(handle);
-            FreeFeatureValue(point_data);
+            Point* point_data = (Point*)FeatureGetProtoData(handle);
+            FeatureFreeValue(point_data);
             FEATURE_LOG_INFO("onDestroy");
         },
         [](FeatureRuntimeContext ctx) {

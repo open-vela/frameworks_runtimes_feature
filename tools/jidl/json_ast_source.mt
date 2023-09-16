@@ -69,7 +69,7 @@
   };
 
   ${module_name}_${struct_name}* malloc${struct_name} () {
-    return (${module_name}_${struct_name}*)FTMalloc(
+    return (${module_name}_${struct_name}*)FeatureMalloc(
       sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type));
   }
 
@@ -130,7 +130,7 @@ ${GenMembers(members, parent_prefix)}\
   };
 
   FTArray* ${module_name}_malloc_${array_type}_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&${module_name}_${array_type}_array));
   }
 

@@ -14,7 +14,7 @@ FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, AppendData data)
 
 void __print(FeatureInstanceHandle handle, AppendData data, FtVariadicParameters variadicParameters)
 {
-    ft_context_ref ft_ctx = GetFeatureContext(handle);
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
         ft_value_t param = variadicParameters.variadic_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
@@ -68,13 +68,13 @@ void __print(FeatureInstanceHandle handle, AppendData data, FtVariadicParameters
 
 void __printNameCat(FeatureInstanceHandle handle, AppendData data)
 {
-    ft_context_ref ft_ctx = GetFeatureContext(handle);
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
     printf("I'm a cat !\n");
 }
 
 void __printNameDog(FeatureInstanceHandle handle, AppendData data)
 {
-    ft_context_ref ft_ctx = GetFeatureContext(handle);
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
     printf("I'm a dog !\n");
 }
 
@@ -86,7 +86,7 @@ void __receiveInterface(FeatureInstanceHandle handle, AppendData data, FeatureIn
 static char* __init_nameCat(FeatureInstanceHandle handle, int64_t data)
 {
     printf("%s: enter...\n", __func__);
-    char* name = static_cast<char*>(FTMalloc(strlen("cat mimi") + 1, FT_CHAR));
+    char* name = static_cast<char*>(FeatureMalloc(strlen("cat mimi") + 1, FT_CHAR));
     strcpy(name, "cat mimi");
     return name;
 }
@@ -94,7 +94,7 @@ static char* __init_nameCat(FeatureInstanceHandle handle, int64_t data)
 static char* __init_nameDog(FeatureInstanceHandle handle, int64_t data)
 {
     printf("%s: enter...\n", __func__);
-    char* name = static_cast<char*>(FTMalloc(strlen("dog wangwang") + 1, FT_CHAR));
+    char* name = static_cast<char*>(FeatureMalloc(strlen("dog wangwang") + 1, FT_CHAR));
     strcpy(name, "dog wangwang");
     return name;
 }

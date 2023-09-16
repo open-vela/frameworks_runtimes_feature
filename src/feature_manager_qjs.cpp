@@ -359,12 +359,12 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         }
         // free value
         if (ffi_arg_values[i + external_count]) {
-            FreeFeatureValue(ffi_arg_values[i + external_count]);
+            FeatureFreeValue(ffi_arg_values[i + external_count]);
         }
     }
     freeTypeDeclaration(ffi_ret);
     if (ffi_ret_value) {
-        FreeFeatureValue(ffi_ret_value);
+        FeatureFreeValue(ffi_ret_value);
     }
     delete[] ffi_arg_values;
     delete[] ffi_params;
@@ -444,7 +444,7 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     } while (0);
     // free resources
     freeTypeDeclaration(ffi_ret);
-    FreeFeatureValue(ret_value);
+    FeatureFreeValue(ret_value);
 
     if (member->type == MEMBER_CONST) {
         // for const value, redefine the property with result value
@@ -499,7 +499,7 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     } while (0);
     // free resources
     freeTypeDeclaration(ffi_params[2]);
-    FreeFeatureValue(arg_value_input);
+    FeatureFreeValue(arg_value_input);
     return FEATURE_VALUE_UNDEFINED;
 }
 
@@ -524,7 +524,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         if (!createHostValue(memberConst.type, ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed !");
             freeTypeDeclaration(ret_type);
-            FreeFeatureValue(ret_value);
+            FeatureFreeValue(ret_value);
             return val;
         }
         // prepare and call
@@ -533,7 +533,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
             freeTypeDeclaration(ret_type);
-            FreeFeatureValue(ret_value);
+            FeatureFreeValue(ret_value);
             return val;
         }
         // invoke
@@ -545,7 +545,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
             val = FEATURE_VALUE_UNDEFINED;
         }
         freeTypeDeclaration(ret_type);
-        FreeFeatureValue(ret_value);
+        FeatureFreeValue(ret_value);
         if (FT_IS_REFERENCE(ret_value)) {
             free(ret_value);
         }

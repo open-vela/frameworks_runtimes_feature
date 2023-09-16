@@ -30,7 +30,7 @@ extern const InterfaceType Interface_Animal_interface_type;
   };
 
   FTArray* Interface_malloc_string_array() {
-    return (FTArray*)FTMalloc(
+    return (FTArray*)FeatureMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Interface_string_array));
   }
 

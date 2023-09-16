@@ -275,7 +275,7 @@ int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap)
     CallbackType* callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
     if (has_rest_param) {
-        FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
+        FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
         return -1;
     }
 
@@ -289,7 +289,7 @@ int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count)
     CallbackType* callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
     if (!has_rest_param || count < method_param_count) {
-        FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
+        FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
         return -1;
     }
 
