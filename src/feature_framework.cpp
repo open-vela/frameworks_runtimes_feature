@@ -194,28 +194,4 @@ void FeaturePrototype::clearAllInstances()
     instances.clear();
 }
 
-FeatureUnit::FeatureUnit(const FeatureDescription* desc)
-    : description(const_cast<FeatureDescription*>(desc))
-    , proto(nullptr)
-{
-}
-
-/**
- * @brief we need the default constructor to support put into containers
- *
- */
-FeatureUnit::FeatureUnit()
-    : description(nullptr)
-    , proto(nullptr)
-{
-}
-
-FeatureUnit::~FeatureUnit()
-{
-    if (proto) {
-        delete proto;
-        proto = nullptr;
-    }
-}
-
 }

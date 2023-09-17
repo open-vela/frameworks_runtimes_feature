@@ -105,34 +105,6 @@ public:
 };
 
 /**
- * @brief FeatureUnint is the register information for features
- *
- */
-struct FeatureUnit {
-    const FeatureDescription* description;
-    FeaturePrototype* proto;
-
-    /**
-     * @brief Construct a new Feature Unit object
-     *
-     * @param desc
-     */
-    FeatureUnit(const FeatureDescription* desc);
-
-    /**
-     * @brief we need the default constructor to support put into containers
-     *
-     */
-    FeatureUnit();
-
-    /**
-     * @brief Destroy the Feature Unit object
-     *
-     */
-    ~FeatureUnit();
-};
-
-/**
  * @brief initialize prototype
  *
  * @param ctx

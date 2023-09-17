@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     js_env.rt = JS_NewRuntime();
     js_env.ctx = JS_NewContext(js_env.rt);
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    auto registry = new ferry::FeatureRegistry(nullptr);
+    auto registry = new ferry::FeatureRegistry();
     registry->init(manifast_str);
     g_manager_qjs = new ferry::FeatureManagerQjs(registry);
 

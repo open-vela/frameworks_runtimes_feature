@@ -696,28 +696,28 @@ feature_value_t createFeatureObject(FeaturePrototype* featurePrototype, feature_
 feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
-    FeatureUnit* unit = registry_->findFeature(name);
-    if (!unit || !unit->description) {
+    auto featurePair = registry_->findFeature(name);
+    if (!featurePair || !featurePair->first->description) {
         FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
-    const FeatureDescription* description = unit->description;
+    const FeatureDescription* description = featurePair->first;
 
     if (!ft_ctx_) {
         ft_ctx_ = CreateFeatureContextQjs(ctx);
     }
 
-    if (!unit->proto) {
+    if (!featurePair->second) {
         // create proto
-        unit->proto = createFeaturePrototype(ft_ctx_, description);
-        if (!unit->proto) {
+        featurePair->second = createFeaturePrototype(ft_ctx_, description);
+        if (!featurePair->second) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
         }
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(unit->proto->ft_proto);
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePair->second->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
     }
-    auto featurePrototype = unit->proto;
+    auto featurePrototype = featurePair->second;
 
     // create feature instance for the required object
     auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr, 0);
@@ -741,13 +741,10 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
 void FeatureManagerQjs::uninit()
 {
     for (const auto& pair : registry_->getRegisteredFeatures()) {
-        FeatureUnit* unit = pair.second;
-        if (!unit)
-            continue;
-
-        auto proto = unit->proto;
+        auto proto = pair.second.second;
+        auto description = pair.second.first;
+        FEATURE_CHECK_NE(description, nullptr);
         if (proto) {
-            auto description = unit->description;
             JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
             // clear all feature instance at first, it will free all feature instance and call onDetach for them
             proto->clearAllInstances();
@@ -762,7 +759,8 @@ void FeatureManagerQjs::uninit()
                 *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
             }
         }
-        delete unit;
+        // delete prototype
+        delete pair.second.second;
     }
     // uninit registery
     delete registry_;
