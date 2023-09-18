@@ -1,8 +1,5 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-
-
-
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
 
@@ -15,7 +12,7 @@
   };
 
   static const MemberMethod Simple_printStr_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_printStr) },
+    .callback = FFI_FN(Simple_wrap_printStr),
     .parameters = Simple_printStr_parameters,
     .return_type = FT_VOID,
   };
@@ -27,7 +24,7 @@
   };
 
   static const MemberMethod Simple_print_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_print) },
+    .callback = FFI_FN(Simple_wrap_print),
     .parameters = Simple_print_parameters,
     .return_type = FT_VOID,
   };
@@ -48,7 +45,7 @@
   };
 
   static const MemberMethod Simple_foo_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_foo) },
+    .callback = FFI_FN(Simple_wrap_foo),
     .parameters = Simple_foo_parameters,
     .return_type = FT_INT,
   };
@@ -60,7 +57,7 @@
   };
 
   static const MemberMethod Simple_bar_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar) },
+    .callback = FFI_FN(Simple_wrap_bar),
     .parameters = Simple_bar_parameters,
     .return_type = FT_VOID,
   };
@@ -73,7 +70,7 @@
   };
 
   static const MemberMethod Simple_bar5_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar5) },
+    .callback = FFI_FN(Simple_wrap_bar5),
     .parameters = Simple_bar5_parameters,
     .return_type = FT_VOID,
   };
@@ -88,7 +85,7 @@
   };
 
   static const MemberMethod Simple_bar6_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar6) },
+    .callback = FFI_FN(Simple_wrap_bar6),
     .parameters = Simple_bar6_parameters,
     .return_type = FT_STRING,
   };
@@ -105,7 +102,7 @@
   };
 
   static const MemberMethod Simple_ubar6_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_ubar6) },
+    .callback = FFI_FN(Simple_wrap_ubar6),
     .parameters = Simple_ubar6_parameters,
     .return_type = FT_STRING,
   };
@@ -173,7 +170,7 @@
   };
 
   static const MemberMethod Simple_goo_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_goo) },
+    .callback = FFI_FN(Simple_wrap_goo),
     .parameters = Simple_goo_parameters,
     .return_type = FT_VOID,
   };
@@ -188,7 +185,7 @@
   };
 
   static const MemberMethod Simple_goo2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_goo2) },
+    .callback = FFI_FN(Simple_wrap_goo2),
     .parameters = Simple_goo2_parameters,
     .return_type = FT_VOID,
   };
@@ -205,7 +202,7 @@
   };
 
   static const MemberMethod Simple_goo3_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_goo3) },
+    .callback = FFI_FN(Simple_wrap_goo3),
     .parameters = Simple_goo3_parameters,
     .return_type = FT_VOID,
   };
@@ -221,7 +218,7 @@
   };
 
   static const MemberMethod Simple_foo2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_foo2) },
+    .callback = FFI_FN(Simple_wrap_foo2),
     .parameters = Simple_foo2_parameters,
     .return_type = FT_VOID,
   };
@@ -236,7 +233,7 @@
   };
 
   static const MemberMethod Simple_foo3_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_foo3) },
+    .callback = FFI_FN(Simple_wrap_foo3),
     .parameters = Simple_foo3_parameters,
     .return_type = FT_VOID,
   };
@@ -248,7 +245,7 @@
   };
 
   static const MemberMethod Simple_justTestNeverCall1_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_justTestNeverCall1) },
+    .callback = FFI_FN(Simple_wrap_justTestNeverCall1),
     .parameters = Simple_justTestNeverCall1_parameters,
     .return_type = FT_VOID,
   };
@@ -260,7 +257,7 @@
   };
 
   static const MemberMethod Simple_justTestNeverCall2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_justTestNeverCall2) },
+    .callback = FFI_FN(Simple_wrap_justTestNeverCall2),
     .parameters = Simple_justTestNeverCall2_parameters,
     .return_type = FT_VOID,
   };
@@ -273,7 +270,7 @@
   };
 
   FTArray* Simple_malloc_int_array() {
-    return (FTArray*)FeatureMalloc(
+    return (FTArray*)FTMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Simple_int_array));
   }
 
@@ -283,7 +280,7 @@
   };
 
   static const MemberMethod Simple_bar2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar2) },
+    .callback = FFI_FN(Simple_wrap_bar2),
     .parameters = Simple_bar2_parameters,
     .return_type = FT_INT,
   };
@@ -300,12 +297,12 @@
   };
 
   FTArray* Simple_malloc_string_array() {
-    return (FTArray*)FeatureMalloc(
+    return (FTArray*)FTMalloc(
       sizeof(FTArray), FT_MK_COMPLEX(&Simple_string_array));
   }
 
   static const MemberMethod Simple_bar3_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar3) },
+    .callback = FFI_FN(Simple_wrap_bar3),
     .parameters = Simple_bar3_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Simple_string_array),
   };
@@ -317,8 +314,8 @@
 
   static const MemberConst Simple_x_member_const = {
     .type = FT_INT,
-    //.func = { .callback = FFI_FN(Simple_init_const_x) },
-    .func = { .callback = nullptr },
+    //.callback = FFI_FN(Simple_init_const_x),
+    .callback = nullptr,
     .data = { .i32 = Simple_g_const_x }
   };
 
@@ -328,8 +325,8 @@
 
   static const MemberConst Simple_y_member_const = {
     .type = FT_STRING,
-    //.func = { .callback = FFI_FN(Simple_init_const_y) },
-    .func = { .callback = nullptr },
+    //.callback = FFI_FN(Simple_init_const_y),
+    .callback = nullptr,
     .data = { .str = Simple_g_const_y }
   };
 
@@ -339,32 +336,29 @@
 
   static const MemberConst Simple_z_member_const = {
     .type = FT_DOUBLE,
-    //.func = { .callback = FFI_FN(Simple_init_const_z) },
-    .func = { .callback = nullptr },
+    //.callback = FFI_FN(Simple_init_const_z),
+    .callback = nullptr,
     .data = { .f64 = Simple_g_const_z }
   };
 
   /****** for JIDL property 'name' ******/
   static const MemberAccessor Simple_name_member_accessor = {
-    .getter = { .callback = FFI_FN(Simple_get_name) },
-    .setter = { .callback = FFI_FN(Simple_set_name) },
+    .getter = FFI_FN(Simple_get_name),
+    .setter = FFI_FN(Simple_set_name),
     .type = FT_STRING,
   };
-
 
   /****** for JIDL property 'version' ******/
   static const MemberAccessor Simple_version_member_accessor = {
-    .getter = { .callback = FFI_FN(Simple_get_version) },
+    .setter = FFI_FN(Simple_set_version),
     .type = FT_STRING,
   };
 
-
   /****** for JIDL property 'args' ******/
   static const MemberAccessor Simple_args_member_accessor = {
-    .getter = { .callback = FFI_FN(Simple_get_args) },
+    .setter = FFI_FN(Simple_set_args),
     .type = FT_MK_COMPLEX_REF(&Simple_string_array),
   };
-
 
   // members
   static const Member Simple_members[] = {
@@ -491,13 +485,13 @@
   };
 
   static const FeatureDescription Simple_desc = {
-    .version = 1,
-    .name = "Simple",
-    .description = "Simple",
-    { .dynamic = false },
-    .native_callbacks = &Simple_callbacks,
-    .member_count = countof(Simple_members),
-    .members = Simple_members,
+    1,
+    "Simple",
+    "Simple",
+    1,
+    &Simple_callbacks,
+    countof(Simple_members),
+    Simple_members,
   };
 
 QAPPFEATURE_INIT(Simple)

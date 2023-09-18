@@ -35,10 +35,7 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
     // handle type
     if (FT_IS_REFERENCE(featureType)) {
         if (!ptr) {
-            // create raw pointer for interface
-            bool isInterface = false;
-            IS_INTERFACE_TYPE(featureType, isInterface);
-            ptr = FeatureMalloc(sizeof(uintptr_t), isInterface ? FT_RAWPOINTER : FT_POINTER);
+            ptr = FTMalloc(sizeof(uintptr_t), FT_POINTER);
             if (createPtrOnly)
                 return true;
             return createHostValue(FT_REMOVE_REFERENCE(featureType), *(void**)ptr);
@@ -51,40 +48,40 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
                 return true;
             } break;
             case FT_INT: {
-                ptr = FeatureMalloc(sizeof(int), featureType);
+                ptr = FTMalloc(sizeof(int), featureType);
             } break;
             case FT_INT8: {
-                ptr = FeatureMalloc(sizeof(int8_t), featureType);
+                ptr = FTMalloc(sizeof(int8_t), featureType);
             } break;
             case FT_UINT8: {
-                ptr = FeatureMalloc(sizeof(uint8_t), featureType);
+                ptr = FTMalloc(sizeof(uint8_t), featureType);
             } break;
             case FT_INT16: {
-                ptr = FeatureMalloc(sizeof(int16_t), featureType);
+                ptr = FTMalloc(sizeof(int16_t), featureType);
             } break;
             case FT_UINT16: {
-                ptr = FeatureMalloc(sizeof(uint16_t), featureType);
+                ptr = FTMalloc(sizeof(uint16_t), featureType);
             } break;
             case FT_INT32: {
-                ptr = FeatureMalloc(sizeof(int32_t), featureType);
+                ptr = FTMalloc(sizeof(int32_t), featureType);
             } break;
             case FT_UINT32: {
-                ptr = FeatureMalloc(sizeof(uint32_t), featureType);
+                ptr = FTMalloc(sizeof(uint32_t), featureType);
             } break;
             case FT_INT64: {
-                ptr = FeatureMalloc(sizeof(int64_t), featureType);
+                ptr = FTMalloc(sizeof(int64_t), featureType);
             } break;
             case FT_UINT64: {
-                ptr = FeatureMalloc(sizeof(uint64_t), featureType);
+                ptr = FTMalloc(sizeof(uint64_t), featureType);
             } break;
             case FT_DOUBLE: {
-                ptr = FeatureMalloc(sizeof(double), featureType);
+                ptr = FTMalloc(sizeof(double), featureType);
             } break;
             case FT_FLOAT: {
-                ptr = FeatureMalloc(sizeof(float), featureType);
+                ptr = FTMalloc(sizeof(float), featureType);
             } break;
             case FT_BOOLEAN: {
-                ptr = FeatureMalloc(sizeof(int), featureType);
+                ptr = FTMalloc(sizeof(int), featureType);
             } break;
             case FT_CHAR: {
                 // skip string space allocation, delay to value copy6
@@ -99,13 +96,13 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
-                ptr = FeatureMalloc(complexType->size, featureType);
+                ptr = FTMalloc(complexType->size, featureType);
             } break;
             case COMPLEX_OPTIONAL: {
                 OptionalType* optionalType = (OptionalType*)complexType;
                 if (!ptr) {
                     FEATURE_CHECK_EQ(FT_IS_REFERENCE(optionalType->type), true);
-                    ptr = FeatureMalloc(sizeof(uintptr_t), FT_REMOVE_REFERENCE(optionalType->type));
+                    ptr = FTMalloc(sizeof(uintptr_t), FT_REMOVE_REFERENCE(optionalType->type));
                 }
                 if (!createHostValue(optionalType->type, ptr)) {
                     FEATURE_LOG_ERROR("create member pointered memory failed !");
@@ -114,18 +111,14 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
             } break;
             case COMPLEX_CALLBACK: {
                 // callback means cid
-                ptr = FeatureMalloc(sizeof(FeatureCallbackId), FT_INT32);
+                ptr = FTMalloc(sizeof(FeatureCallbackId), FT_INT32);
             } break;
             case COMPLEX_ARRAY: {
                 // array element not created at this point.
-                ptr = FeatureMalloc(complexType->size, featureType);
+                ptr = FTMalloc(complexType->size, featureType);
             } break;
             case COMPLEX_PROMISE: {
-                ptr = FeatureMalloc(sizeof(FeaturePromiseHandle), FT_INT32);
-            } break;
-            case COMPLEX_INTERFACE: {
-                // interface do not need create
-                ptr = nullptr;
+                ptr = FTMalloc(sizeof(FeaturePromiseHandle), FT_INT32);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -383,7 +376,7 @@ void* exactVariadicParameter(va_list& ap, FeatureType featureType)
         }
     } else if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        result = FeatureMalloc(complexType->size, featureType);
+        result = FTMalloc(complexType->size, featureType);
         switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
                 *(ObjectMapType*)result = va_arg(ap, ObjectMapType);

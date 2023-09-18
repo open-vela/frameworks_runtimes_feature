@@ -74,7 +74,7 @@ Struct_Chapter* Struct_wrap_bar(FeatureInstanceHandle feature, AppendData data, 
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
     Struct_Chapter* chap = mallocChapter();
     chap->_page_count = a;
-    char* title = (char*)FeatureMalloc(128, FT_CHAR);
+    char* title = (char*)FTMalloc(128, FT_CHAR);
     sprintf(title, "title is: %s", "hello world");
     chap->_title = title;
     return chap;
@@ -109,18 +109,18 @@ void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_Boo
           file_tag,  __FUNCTION__, a->_first_chap->_page_count, a->_first_chap->_title);
     }
 
-    int ret = FeatureInvokeCallback(feature, a->_chap_changed, 0, a->_title);
+    int ret = InvokeFeatureCallback(feature, a->_chap_changed, 0, a->_title);
     if (ret) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
-    FeatureRemoveCallback(feature, a->_chap_changed);
+    RemoveCallback(feature, a->_chap_changed);
 }
 
 void Struct_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     printf("[jidl_feature] ");
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
+    ft_context_ref ft_ctx = GetFeatureContext(feature);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
         ft_value_t param = variadicParameters.variadic_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);

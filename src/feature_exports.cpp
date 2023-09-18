@@ -27,7 +27,7 @@ using namespace ferry;
 
 namespace FEATURE {
 
-void* FeatureMalloc(size_t size, FeatureType featureType)
+void* FTMalloc(size_t size, FeatureType featureType)
 {
     void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
     FTObjHeader* objHeader = (FTObjHeader*)ptr;
@@ -38,14 +38,13 @@ void* FeatureMalloc(size_t size, FeatureType featureType)
     return ptr;
 }
 
-void* FeatureDupValue(void* ptr)
+void DupFeatureValue(void* ptr)
 {
     FTObjHeader* header = (FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
     header->ref_count++;
-    return ptr;
 }
 
-void FeatureFreeValue(void* ptr)
+void FreeFeatureValue(void* ptr)
 {
     if (!ptr)
         return;
@@ -59,11 +58,9 @@ void FeatureFreeValue(void* ptr)
 
     // free pointer refers memory
     if (FT_IS_REFERENCE(featureType)) {
-        // only free non raw pointer
-        if (FT_RAWPOINTER != featureType) {
-            FeatureFreeValue(*(void**)ptr);
-        }
-        // free object header
+        // we do not support reference reference.
+        FreeFeatureValue(*(void**)ptr);
+        // ptr space is allocated outside, it's callers responsibility to free it
         free(header);
         return;
     }
@@ -75,17 +72,20 @@ void FeatureFreeValue(void* ptr)
             auto member_count = countMember(objMapType.members);
             for (int i = 0; i < member_count; i++) {
                 ObjectMember* member = &objMapType.members[i];
+                //FeatureType member_type = member->type;
                 auto member_type = member->type;
                 TRY_GET_REAL_TYPE(member_type);
                 if (FT_IS_REFERENCE(member_type)) {
                     void* member_ptr = (void*)((char*)ptr + member->offset);
-                    FeatureFreeValue(*(void**)member_ptr);
+                    FreeFeatureValue(*(void**)member_ptr);
                 }
             }
+            // TODO: if we can free the ptr? it may not be allocated by malloc().
+            // Maybe we can check the last bit of the pointer to determinte if it's allocated by us.
             free(header);
         } break;
         case COMPLEX_OPTIONAL: {
-            FeatureFreeValue(ptr);
+            FreeFeatureValue(ptr);
         } break;
         case COMPLEX_CALLBACK: {
 
@@ -95,14 +95,14 @@ void FeatureFreeValue(void* ptr)
             ArrayType& arrayType = *(ArrayType*)complexType1;
             auto element_type = arrayType.element_type;
             FTArray* arrayData = (FTArray*)ptr;
-            // free elements one by one if it's reference.
+            // only support reference as element
             if (FT_IS_REFERENCE(element_type)) {
                 size_t element_size = sizeof(uintptr_t);
                 for (int32_t i = 0; i < arrayData->_size; i++) {
                     void* element_ptr = (char*)arrayData->_element + element_size * i;
                     if (element_ptr) {
-                        // free element.
-                        FeatureFreeValue(*(void**)element_ptr);
+                        // free it.
+                        FreeFeatureValue(*(void**)element_ptr);
                     }
                 }
             }
@@ -121,35 +121,42 @@ void FeatureFreeValue(void* ptr)
     }
 }
 
-void* FeatureGetProtoData(FeatureProtoHandle handle)
+void* GetFeatureProtoData(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->native;
 }
 
-void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
+void SetFeatureProtoData(FeatureProtoHandle handle, void* data)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     proto->native = data;
 }
 
-void* FeatureGetObjectData(FeatureInstanceHandle handle)
+/**
+ * @brief get the native object pointer bind to feature instance
+ *
+ * @param handle
+ * @return void*
+ */
+void* GetFeatureObjectData(FeatureInstanceHandle handle)
 {
     return static_cast<FeatureInstance*>(handle)->native;
 }
 
-void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
+void SetFeatureObjectData(FeatureInstanceHandle handle, void* data)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
     instance->native = data;
 }
 
-ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
+ft_context_ref GetFeatureContext(FeatureInstanceHandle handle)
 {
     return static_cast<FeatureInstance*>(handle)->prototype()->ft_ctx;
 }
 
-int FeatureInvokeCallback(FeatureInstanceHandle handle, int cid, ...)
+//int InvokeFeatureCallback(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, int cid, ...)
+int InvokeFeatureCallback(FeatureInstanceHandle handle, int cid, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
 
@@ -160,7 +167,8 @@ int FeatureInvokeCallback(FeatureInstanceHandle handle, int cid, ...)
     return ret;
 }
 
-int FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
+// int InvokeFeatureCallbackCount(FeatureRuntimeContext ctx, FeatureInstanceHandle handle, void** ret_value, FeatureCallbackId cid, int count, ...)
+int InvokeFeatureCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
 
@@ -171,7 +179,7 @@ int FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId c
     return ret;
 }
 
-bool FeatureRemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id)
+bool RemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
     return instance->removeCallback(id);
@@ -204,12 +212,6 @@ int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle prom
     }
     va_end(ap);
     return ret;
-}
-
-FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, FEATURE::VTable vtable, int vtable_size)
-{
-    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    return instance->createInterface(vtable, vtable_size);
 }
 
 }

@@ -141,6 +141,7 @@ class Type(Node):
         a.ToJson(meta_attrs)
       out['meta'] = meta_attrs
 
+
 class PrimaryType(Type):
   def __init__(self, name):
     Type.__init__(self, name, PRIMARY_TYPE)
@@ -257,9 +258,9 @@ class ParamDefine(Node):
 
   def ToJson(self, out):
     param_def = {}
-    if self.type.Is(CALLBACK_DEFINE) \
-        or self.type.Is(STRUCT_DEFINE) \
-        or self.type.Is(INTERFACE_DEFINE):
+    if self.type.Is(CALLBACK_DEFINE):
+      param_def['type'] = self.type.GetReferenceJson()
+    elif self.type.Is(STRUCT_DEFINE):
       param_def['type'] = self.type.GetReferenceJson()
     elif self.type.Is(PRIMARY_TYPE):
       param_def['type'] = self.type.name
@@ -595,9 +596,9 @@ class FunctionDefine(Type):
         self.async_info.ToJson(async_def)
         qualifiers.append(async_def)
 
-    if self.return_type.Is(CLASS_DEFINE) or \
-      self.return_type.Is(STRUCT_DEFINE) or \
-      self.return_type.Is(INTERFACE_DEFINE):
+    if self.return_type.Is(CLASS_DEFINE):
+      func_def['return_type'] = self.return_type.GetReferenceJson()
+    elif self.return_type.Is(STRUCT_DEFINE):
       func_def['return_type'] = self.return_type.GetReferenceJson()
     elif self.return_type.Is(PRIMARY_TYPE):
       func_def['return_type'] = self.return_type.name
@@ -690,6 +691,7 @@ class BlockList(ListNode):
     for block in self.content:
       block.Dump(out)
 
+
 class InterfaceDefine(Type):
   def __init__(self, name, tp, block_list = None):
     Type.__init__(self, name, tp)
@@ -699,6 +701,9 @@ class InterfaceDefine(Type):
 
   def SetExtends(self, extends):
     self.extends = extends
+
+  def SetContent(self, content):
+    self.content = content
 
   def toString(self, type_name):
     return '%s %s { ... }' % (type_name, self.name)
@@ -741,14 +746,6 @@ class InterfaceDefine(Type):
   def ToJson(self, out):
     out.append(self.GetJson())
 
-  def GetReferenceJson(self):
-    reference_type = {
-       'type': 'reference',
-       'referred_type': self.GetClassType(),
-       'referred_name': self.name,
-    }
-    return reference_type
-
   def Dump(self, out):
     out.Write('%s %s {' % (self.GetClassType(), self.GetDumpName()))
     out.Shift()
@@ -770,6 +767,13 @@ class StructDefine(InterfaceDefine):
   def ToJson(self, out):
     struct_type = self.GetJson()
     out.append(struct_type)
+
+  def GetReferenceJson(self):
+    struct_type = {}
+    struct_type['type'] = 'reference'
+    struct_type['referred_type'] = 'struct'
+    struct_type['referred_name'] = self.name
+    return struct_type
 
 class StructMemberBase(Node):
   def __init__(self, member_type, member_name):
@@ -878,6 +882,13 @@ class ClassDefine(InterfaceDefine):
     class_def = InterfaceDefine.GetJson(self)
     class_def['type'] = 'class'
     out.append(class_def)
+
+  def GetReferenceJson(self):
+    class_t = {}
+    class_t['type'] = 'reference'
+    class_t['referred_type'] = 'class'
+    class_t['referred_name'] = self.name
+    return class_t
 
 class ImportDefine(Node):
   def __init__(self, name, version):
@@ -1015,7 +1026,7 @@ param_accepted_types = (
   PrimaryType,
   PrimaryArrayType,
   CallbackDefine,
-  InterfaceDefine,
+  StructDefine,
   EllipseType
 )
 

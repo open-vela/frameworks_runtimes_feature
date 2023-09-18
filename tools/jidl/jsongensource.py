@@ -204,8 +204,6 @@ class CPPRender(Render):
     self.callback_id_set = set()
     self.promise_type_set = set()
     self.struct_name_set = set()
-    self.interface_name_set = set()
-    self.vtable_map = {}
     self.feature_type_set = set()
     self.array_malloc_func_set = set()
     Render.__init__(self, json_file, configs)
@@ -251,18 +249,16 @@ class CPPRender(Render):
     if not isinstance(ast_type, dict):
       raise Exception('not a valid complex type: {}'.format(ast_type))
 
-    module_name = self.GetModuleName()
     if 'element' in ast_type:
       return 'FTArray'
     elif 'referred_type' in ast_type:
       referred_type = ast_type['referred_type']
+      module_name = self.GetModuleName()
       if referred_type == 'callback':
         return self.GenerateCppType(referred_type)
       elif referred_type == 'struct':
-        referred_name = ast_type['referred_name']
-        return f"{module_name}_{referred_name} *"
-      elif referred_type == 'interface':
-        return "FeatureInstanceHandle"
+        struct_name = ast_type['referred_name']
+        return f"{module_name}_{struct_name} *"
     elif ast_type['type'] == 'struct':
         struct_name = ast_type['name']
         return f"{module_name}_{struct_name} *"
@@ -367,11 +363,6 @@ class CPPRender(Render):
         if not struct_name in self.struct_name_set:
           raise Exception('undefined struct: {}'.format(struct_name))
         ft_info = self._GenComplexRefFeatureInfo(struct_name, 'struct_type')
-      elif ast_type['referred_type'] == 'interface':
-        interface_name = ast_type['referred_name']
-        if not interface_name in self.interface_name_set:
-          raise Exception('undefined interface: {}'.format(interface_name))
-        ft_info = self._GenComplexRefFeatureInfo(interface_name, 'interface_type')
     elif ast_type['type'] == 'struct':
       ft_info = self._GenComplexRefFeatureInfo(ast_type['name'], 'struct_type')
     elif ast_type['type'] == 'promise':
@@ -405,7 +396,7 @@ class CPPRender(Render):
     reject_type = self.GenerateCppType(ret_type['reject_type'])
     return f"promise<{resolve_type}, {reject_type}>"
 
-  def _GenerateReturnType(self, ret_type):
+  def GenerateReturnType(self, ret_type):
     if isinstance(ret_type, str):
       return self._MapType(ret_type, self.cpp_type_map)
     elif isinstance(ret_type, dict):
@@ -414,12 +405,6 @@ class CPPRender(Render):
       else:
         return self.GenerateCppType(ret_type)
     return 'void'
-
-  def GenerateReturnType(self, ret_type):
-    ret_type = self._GenerateReturnType(ret_type)
-    if ret_type == 'FTArray':
-      ret_type += '*'
-    return ret_type
 
   def GenerateParamList(self, params):
     param_list = []
@@ -447,6 +432,8 @@ class CPPRender(Render):
     ret_type_node = node["return_type"]
     ret_type = self.GenerateReturnType(ret_type_node)
     prefix_params = 'FeatureInstanceHandle feature, AppendData data'
+    if ret_type == 'FTArray':
+      ret_type += '*'
     if ret_type == 'FeaturePromiseHandle':
       ret_type = 'void'
       prefix_params += ', FeaturePromiseHandle promiseHandle'
@@ -455,7 +442,7 @@ class CPPRender(Render):
     if 'params' in node:
       params_str = self.GenerateParamList(node["params"])
       func_define += f", {params_str}"
-    func_define += ")"
+    func_define += ");"
     return func_define
 
   def HasEllipseParam(self, node):
@@ -499,7 +486,7 @@ class CPPRender(Render):
         p_call_str += f"{p_call_value}"
     return p_call_str
 
-  def TryCacheCallbackId(self, id):                                                                                                                                                                                                             
+  def TryCacheCallbackId(self, id):
     if not id in self.callback_id_set:
       self.callback_id_set.add(id)
       return True
@@ -518,80 +505,6 @@ class CPPRender(Render):
     if not name in self.struct_name_set:
       self.struct_name_set.add(name)
 
-  def TryCacheInterface(self, name):
-    if not name in self.interface_name_set:
-      self.interface_name_set.add(name)
-      return True
-    return False
-
-  def CacheVTableItem(self, parent_prefix, node, func_type):
-    if parent_prefix in self.vtable_map:
-      item_list = self.vtable_map[parent_prefix]
-    else:
-      item_list = []
-      self.vtable_map[parent_prefix] = item_list
-
-    params = ''
-    ret_type = 'void'
-    if node['type'] == 'function':
-      if func_type != 0:
-        raise Exception('interface member function with wrong type: {}'.format(func_type))
-      name = node['identifier']
-      ret_type = self.GenerateReturnType(node["return_type"])
-      has_params = 'params' in node
-      if ret_type == 'FeaturePromiseHandle':
-        ret_type = 'void'
-        params += 'FeaturePromiseHandle promiseHandle'
-        if has_params:
-          params += ', '
-      if has_params:
-        params += self.GenerateParamList(node["params"])
-    elif node['type'] == 'property':
-      name = node['name']
-      prop_type = node["value_type"]
-      cpp_type = self.GenerateCppType(prop_type)
-      if func_type == 1:
-        if cpp_type == 'FTArray':
-          cpp_type += '*'
-        ret_type = cpp_type
-      elif func_type == 2:
-        if self.IsParamRefType(cpp_type):
-          cpp_type += '&'
-        params = f"{cpp_type} {name}"
-      else:
-        raise Exception('interface member property with wrong type: {}'.format(func_type))
-    else:
-      raise Exception('not a valid interface member type: {}'.format(node))
-
-    func_item = {
-       'name': name,
-       'params': params,
-       'return_type': ret_type,
-       'type': func_type # 0 for method, 1 for getter, 2 for setter
-    }
-    item_list.append(func_item)
-    return item_list.index(func_item)
-
-  def GetVTable(self, parent_prefix):
-    if not parent_prefix in self.vtable_map:
-      raise Exception('cannot find vtable for name: {}'.format(parent_prefix))
-    return self.vtable_map[parent_prefix]
-
-  def GetInterfaceCtorInfo(self, ast_node):
-    ctor_info = {}
-    if isinstance(ast_node, dict) \
-        and ast_node['type'] == 'function' \
-        and 'meta' in ast_node \
-        and 'ctor' in ast_node['meta'] \
-        and 'target' in ast_node['meta'] \
-        and ast_node['meta']['ctor'] == 'true' \
-        and isinstance(ast_node['return_type'], dict) \
-        and 'referred_type' in ast_node['return_type'] \
-        and ast_node['return_type']['referred_type'] == 'interface':
-      ctor_info['target'] = ast_node['meta']['target']
-      ctor_info['interface'] = ast_node['return_type']['referred_name']
-    return ctor_info
-
   def IsStruct(self, ast_node):
     if not isinstance(ast_node, dict):
       return False
@@ -599,12 +512,12 @@ class CPPRender(Render):
       return True
     return False
 
-  def PropertyHasGetter(self, node):
+  def PropertyHasSetter(self, node):
     if 'readable' in node or 'const' in node:
       return True
     return False
 
-  def PropertyHasSetter(self, node):
+  def PropertyHasGetter(self, node):
     if ('writeable' in node) and ('const' not in node):
       return True
     return False
