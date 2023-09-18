@@ -5,16 +5,23 @@ interface Animal {
   property int legCount readonly;
   int eatFood(string[] foods);
   string run(int distance, string destination);
+}
+[ctor="true", target="dog"] Animal createDog(int type);
+
+interface Bird {
   string[] fly();
+  property string breed;
+}
+[ctor="true", target="pigeon"] Bird createPigeon();
+
+interface Chicken extends Animal, Bird {
+  property int weight;
   promise<string[], int> walk();
 }
-
-promise<string[], int> flyFar(int distance);
-use flyAway() = flyFar(100);
+[ctor="true", target="cock"] Chicken createCock();
 
 Animal createCat();
-[ctor="true", target="dog"] Animal createDog(int type);
 void setAnimal(Animal animal);
-
+promise<string[], int> flyFar(int distance);
+use flyAway() = flyFar(100);
 void print(...);
-
