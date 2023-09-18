@@ -206,6 +206,8 @@ class CPPRender(Render):
     self.struct_name_set = set()
     self.interface_name_set = set()
     self.vtable_map = {}
+    self.interface_extends_map = {}
+    self.interface_members_map = {}
     self.feature_type_set = set()
     self.array_malloc_func_set = set()
     Render.__init__(self, json_file, configs)
@@ -524,12 +526,45 @@ class CPPRender(Render):
       return True
     return False
 
-  def CacheVTableItem(self, parent_prefix, node, func_type):
-    if parent_prefix in self.vtable_map:
-      item_list = self.vtable_map[parent_prefix]
+  def CacheInterfaceExtend(self, name, extend):
+    if name in self.interface_extends_map:
+      extend_list = self.interface_extends_map[name]
+    else:
+      extend_list = []
+      self.interface_extends_map[name] = extend_list
+    extend_list.append(extend)
+
+  def GetInterfaceExtends(self, name):
+    if not name in self.interface_extends_map:
+      return []
+    return self.interface_extends_map[name]
+
+  def CacheInterfaceMember(self, name, member_info):
+    if name in self.interface_members_map:
+      member_list = self.interface_members_map[name]
+    else:
+      member_list = []
+      self.interface_members_map[name] = member_list
+    # print('cache interface: {}, member_info: {}'.format(name, member_info))
+    member_list.append(member_info)
+
+  def GetFinalInterfaceMembers(self, name):
+    parent_members = []
+    extends = self.GetInterfaceExtends(name)
+    for extend in extends:
+      # print('get parent member, parent: {}'.format(extend))
+      parent_members.extend(self.GetFinalInterfaceMembers(extend))
+
+    if name in self.interface_members_map:
+      parent_members.extend(self.interface_members_map[name])
+    return parent_members
+
+  def CacheVTableItem(self, interface_name, node, func_type):
+    if interface_name in self.vtable_map:
+      item_list = self.vtable_map[interface_name]
     else:
       item_list = []
-      self.vtable_map[parent_prefix] = item_list
+      self.vtable_map[interface_name] = item_list
 
     params = ''
     ret_type = 'void'
@@ -564,18 +599,38 @@ class CPPRender(Render):
       raise Exception('not a valid interface member type: {}'.format(node))
 
     func_item = {
+       'index': 0,
        'name': name,
        'params': params,
        'return_type': ret_type,
        'type': func_type # 0 for method, 1 for getter, 2 for setter
     }
     item_list.append(func_item)
-    return item_list.index(func_item)
+    index = item_list.index(func_item)
+    func_item['index'] = index
+    return index
 
-  def GetVTable(self, parent_prefix):
-    if not parent_prefix in self.vtable_map:
-      raise Exception('cannot find vtable for name: {}'.format(parent_prefix))
-    return self.vtable_map[parent_prefix]
+  def GetFinalVTable(self, interface_name):
+    final_vtable = []
+    extends = self.GetInterfaceExtends(interface_name)
+    for extend in extends:
+      final_vtable.extend(self.GetFinalVTable(extend))
+
+    if not interface_name in self.vtable_map:
+      raise Exception('cannot find vtable for name: {}'.format(interface_name))
+    final_vtable.extend(self.vtable_map[interface_name])
+    return final_vtable
+
+  def GetFinalVTableSize(self, interface_name):
+    final_size = 0
+    extends = self.GetInterfaceExtends(interface_name)
+    for extend in extends:
+      final_size += self.GetFinalVTableSize(extend)
+
+    if not interface_name in self.vtable_map:
+      raise Exception('cannot find vtable for name: {}'.format(interface_name))
+    final_size += len(self.vtable_map[interface_name])
+    return final_size
 
   def GetInterfaceCtorInfo(self, ast_node):
     ctor_info = {}

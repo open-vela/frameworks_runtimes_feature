@@ -74,29 +74,245 @@
   }
 
 </%def>\
+<%def name="GenInterfaceMemberMethod(func_node, parent_name, index)">\
+<%
+  identifier = func_node['identifier']
+  ret_type = func_node['return_type']
+  parent_prefix = f"{parent_name}_interface_"
+  if isinstance(ret_type, dict) and ret_type['type'] == 'promise':
+    p_ft = {}
+    GenPromiseType(ret_type, p_ft)
+    ret_ft = p_ft['feature_type']
+    ret_ft = f"FT_MK_COMPLEX_REF(&{ret_ft})"
+  else:
+    ret_info = render.GenerateFeatureInfo(ret_type)
+    ret_ft = render.GenerateFtExpression(ret_info)
 
+  params_ft = f"{module_name}_{parent_prefix}{identifier}_parameters"
+
+  member_info = render.GetMemberInfo(func_node)
+  member_type = member_info['type']
+  member_name = member_info['name']
+  member_suffix = member_info['suffix']
+  member_val_type = member_info['val_type']
+  member_val = f"{parent_prefix}{member_name}{member_suffix}"
+  is_valid_member = member_type != 'MEMBER_NULL'
+  if is_valid_member:
+    member_info = {
+      'type': 0, # 0 for MemberMethod, 1 for MemberAccessor
+      'member_type': member_type,
+      'member_name': member_name,
+      'member_val_type': member_val_type,
+      'member_val': member_val,
+      'params_ft': params_ft,
+      'ret_ft': ret_ft
+    }
+    render.CacheInterfaceMember(parent_name, member_info)
+%>\
+  static const MemberMethod ${module_name}_${member_val} = {
+    .func = { .vtable_idx = ${index} },
+    .parameters = ${params_ft},
+    .return_type = ${ret_ft},
+  };
+</%def>\
+<%def name="GenInterfaceFunction(func_node, parent_name)">\
+<%
+  # for interface member method
+  identifier = func_node['identifier']
+  return_type = func_node['return_type']
+  parent_prefix = f"{parent_name}_interface_"
+
+  index_offset = 0
+  extends = render.GetInterfaceExtends(parent_name)
+  for extend in extends:
+    index_offset += render.GetFinalVTableSize(extend)
+  index = render.CacheVTableItem(parent_name, func_node, 0)
+  index += index_offset + 1
+%>\
+  // for member method '${identifier}'
+${GenParamsFeatureType(func_node, parent_prefix)}
+${GenInterfaceMemberMethod(func_node, parent_name, index)}
+</%def>\
+<%def name="GenInterfaceProperty(prop_node, parent_name)">\
+<%
+  prop_name = prop_node['name']
+  value_type = prop_node['value_type']
+  prop_info = render.GenerateFeatureInfo(value_type)
+  prop_ft = render.GenerateFtExpression(prop_info)
+  has_getter = render.PropertyHasGetter(prop_node)
+  has_setter = render.PropertyHasSetter(prop_node)
+  parent_prefix = f"{parent_name}_interface_"
+
+  index_offset = 0
+  extends = render.GetInterfaceExtends(parent_name)
+  for extend in extends:
+    index_offset += render.GetFinalVTableSize(extend)
+
+  getter_info = ''
+  setter_info = ''
+  if has_getter:
+    index = render.CacheVTableItem(parent_name, prop_node, 1)
+    index += index_offset + 1
+    getter_info = f".vtable_idx = {index}"
+  if has_setter:
+    index = render.CacheVTableItem(parent_name, prop_node, 2)
+    index += index_offset + 1
+    setter_info = f".vtable_idx = {index}"
+
+  member_info = render.GetMemberInfo(prop_node)
+  member_type = member_info['type']
+  member_name = member_info['name']
+  member_suffix = member_info['suffix']
+  member_val_type = member_info['val_type']
+  member_val = f"{parent_prefix}{member_name}{member_suffix}"
+  is_valid_member = member_type != 'MEMBER_NULL'
+  if is_valid_member:
+    member_info = {
+      'type': 1, # 0 for MemberMethod, 1 for MemberAccessor
+      'member_type': member_type,
+      'member_name': member_name,
+      'member_val_type': member_val_type,
+      'member_val': member_val,
+      'has_getter': has_getter,
+      'has_setter': has_setter,
+      'prop_ft': prop_ft
+    }
+    render.CacheInterfaceMember(parent_name, member_info)
+%>\
+  // for member property '${prop_name}'
+  static const MemberAccessor ${module_name}_${member_val} = {
+%if has_getter:
+    .getter = { ${getter_info} },
+%endif
+%if has_setter:
+    .setter = { ${setter_info} },
+%endif
+    .type = ${prop_ft},
+  };
+
+</%def>\
+<%def name="GenParentInterFaceMemberDefs(iname, members)">\
+<%
+  vtable_idx = 1
+%>\
+  // Overrided parent member defines
+%for member in members:
+<%
+  type = member['type'] # 0 for MemberMethod, 1 for MemberAccessor
+  member_type = member['member_type']
+  member_name = member['member_name']
+  member_val_type = member['member_val_type']
+  member_val = member['member_val']
+  if type == 0:
+    params_ft = member['params_ft']
+    ret_ft = member['ret_ft']
+    func_idx = vtable_idx
+    vtable_idx += 1
+  elif type == 1:
+    has_getter = member['has_getter']
+    has_setter = member['has_setter']
+    prop_ft = member['prop_ft']
+    if has_getter:
+      getter_idx = vtable_idx
+      if has_setter:
+        vtable_idx += 1
+        setter_idx = vtable_idx
+      vtable_idx += 1
+    elif has_setter:
+      setter_idx = vtable_idx
+      vtable_idx += 1
+%>\
+%if type == 0:
+  static const MemberMethod ${module_name}_${iname}_${member_val} = {
+    .func = { .vtable_idx = ${func_idx} },
+    .parameters = ${params_ft},
+    .return_type = ${ret_ft},
+  };
+%elif type == 1:
+  static const MemberAccessor ${module_name}_${iname}_${member_val} = {
+%if has_getter:
+    .getter = { .vtable_idx = ${getter_idx} },
+%endif
+%if has_setter:
+    .setter = { .vtable_idx = ${setter_idx} },
+%endif
+    .type = ${prop_ft},
+  };
+%endif
+
+%endfor
+</%def>\
+<%def name="GenParentInterFaceMembers(iname, members)">\
+    // overrided parent members
+%for member in members:
+<%
+  type = member['type'] # 0 for MemberMethod, 1 for MemberAccessor
+  member_type = member['member_type']
+  member_name = member['member_name']
+  member_val_type = member['member_val_type']
+  member_val = member['member_val']
+  member_val = f"{module_name}_{iname}_{member_val}"
+%>\
+    {
+      .type = ${member_type},
+      .name = "${member_name}",
+      .${member_val_type} = ${member_val},
+    },
+%endfor
+</%def>\
+<%def name="GenInterFaceMembers(iname, members)">\
+%for member in members:
+<%
+  member_info = render.GetMemberInfo(member)
+  member_type = member_info['type']
+  member_name = member_info['name']
+  member_suffix = member_info['suffix']
+  member_val_type = member_info['val_type']
+  parent_prefix = f"{iname}_interface_"
+  member_val = f"{module_name}_{parent_prefix}{member_name}{member_suffix}"
+  is_valid_member = member_type != 'MEMBER_NULL'
+%>\
+%if is_valid_member:
+    {
+      .type = ${member_type},
+      .name = "${member_name}",
+      .${member_val_type} = ${member_val},
+    },
+%endif
+%endfor
+</%def>\
 <%def name="GenInterface(interface_node)">\
 <%
   iname = interface_node['name']
   render.TryCacheInterface(iname)
   members = interface_node['members']
+  for extend in interface_node['extends']:
+    render.CacheInterfaceExtend(iname, extend)
   parent_prefix = f"{iname}_interface_"
+  parent_members = render.GetFinalInterfaceMembers(iname)
 %>\
   /****** JIDL interface '${iname}' glue code begin ******/
-extern const InterfaceType ${module_name}_${parent_prefix}type;
+  extern const InterfaceType ${module_name}_${parent_prefix}type;
+%if parent_members:
+${GenParentInterFaceMemberDefs(iname, parent_members)}\
+%endif
 <%
   for member in members:
     if member['type'] == 'function':
-      GenFunction(member, parent_prefix)
+      GenInterfaceFunction(member, iname)
     elif member['type'] == 'property':
-      GenProperty(member, parent_prefix)
+      GenInterfaceProperty(member, iname)
     else:
       raise Exception('wrong interface member type: {}'.format(member))
   endfor
 %>\
   // Interface members
   static const Member ${module_name}_${parent_prefix}members[] = {
-${GenMembers(members, parent_prefix)}\
+%if parent_members:
+${GenParentInterFaceMembers(iname, parent_members)}\
+%endif
+    // ${iname} interface members
+${GenInterFaceMembers(iname, members)}\
   };
 
   // Interface description
@@ -198,7 +414,7 @@ ${GenMembers(members, parent_prefix)}\
 
 %endif
 </%def>\
-<%def name="GenMemberMethod(identifier, ret_type, parent_prefix = '', index = -1)">\
+<%def name="GenMemberMethod(identifier, ret_type)">\
 <%
   if isinstance(ret_type, dict) and ret_type['type'] == 'promise':
     p_ft = {}
@@ -208,14 +424,11 @@ ${GenMembers(members, parent_prefix)}\
   else:
     ret_info = render.GenerateFeatureInfo(ret_type)
     ret_ft = render.GenerateFtExpression(ret_info)
-  if index >= 0:
-    func_info = f".vtable_idx = {index}"
-  else:
-    func_info = f".callback = FFI_FN({module_name}_wrap_{identifier})"
+  func_info = f".callback = FFI_FN({module_name}_wrap_{identifier})"
 %>\
-  static const MemberMethod ${module_name}_${parent_prefix}${identifier}_member_method = {
+  static const MemberMethod ${module_name}_${identifier}_member_method = {
     .func = { ${func_info} },
-    .parameters = ${module_name}_${parent_prefix}${identifier}_parameters,
+    .parameters = ${module_name}_${identifier}_parameters,
     .return_type = ${ret_ft},
   };
 </%def>\
@@ -226,13 +439,12 @@ ${GenMembers(members, parent_prefix)}\
   ctor_target = ctor_info['target']
   ctor_interface = ctor_info['interface']
   parent_prefix = f"{ctor_interface}_interface_"
-  vtable = render.GetVTable(parent_prefix)
+  final_vtable = render.GetFinalVTable(ctor_interface)
 %>\
-  /****** for JIDL Interface constructor function '${identifier}' ******/
-static ${func_def} {
+  static ${func_def} {
     static NativeFunc ${ctor_target}_vtable[] = {
         nullptr,
-%for vtable_item in vtable:
+%for vtable_item in final_vtable:
 <%
   item_name = vtable_item['name']
   item_type = vtable_item['type']
@@ -250,28 +462,24 @@ static ${func_def} {
 %endfor
     };
     return FeatureCreateInterface(feature, ${ctor_target}_vtable, countof(${ctor_target}_vtable));
-}
+  }
 </%def>\
-<%def name="GenFunction(func_node, parent_prefix = '')">\
+<%def name="GenFunction(func_node)">\
 <%
   identifier = func_node['identifier']
   ret_type = func_node['return_type']
-  ctor_info = {}
-  index = -1
-  if parent_prefix != '':
-    # for interface member function
-    index = render.CacheVTableItem(parent_prefix, func_node, 0) + 1
-  else:
-    render.CacheFuncReturnNode(identifier, ret_type)
-    # for interface constructor function
-    ctor_info = render.GetInterfaceCtorInfo(func_node)
+  render.CacheFuncReturnNode(identifier, ret_type)
+  # for interface constructor function
+  ctor_info = render.GetInterfaceCtorInfo(func_node)
 %>\
-  /****** for JIDL function '${parent_prefix}${identifier}' ******/
 %if ctor_info:
+  /****** for JIDL Interface constructor function '${identifier}' ******/
 ${GenInterfaceCtorFunction(func_node, ctor_info)}
+%else:
+  /****** for JIDL function '${identifier}' ******/
 %endif
-${GenParamsFeatureType(func_node, parent_prefix)}
-${GenMemberMethod(identifier, ret_type, parent_prefix, index)}
+${GenParamsFeatureType(func_node)}
+${GenMemberMethod(identifier, ret_type)}
 </%def>\
 <%def name="GenUse(use_node)">\
 <%
@@ -330,8 +538,7 @@ ${GenParamsFeatureType(cb_node)}
 
 %endif
 </%def>\
-
-<%def name="GenProperty(prop_node, parent_prefix = '')">\
+<%def name="GenProperty(prop_node)">\
 <%
   prop_name = prop_node['name']
   value_type = prop_node['value_type']
@@ -339,23 +546,16 @@ ${GenParamsFeatureType(cb_node)}
   prop_ft = render.GenerateFtExpression(prop_info)
   has_getter = render.PropertyHasGetter(prop_node)
   has_setter = render.PropertyHasSetter(prop_node)
+
   getter_info = ''
-  if has_getter:
-    if parent_prefix != '':
-      index = render.CacheVTableItem(parent_prefix, prop_node, 1) + 1
-      getter_info = f".vtable_idx = {index}"
-    else:
-      getter_info = f".callback = FFI_FN({module_name}_get_{prop_name})"
   setter_info = ''
+  if has_getter:
+    getter_info = f".callback = FFI_FN({module_name}_get_{prop_name})"
   if has_setter:
-    if parent_prefix != '':
-      index = render.CacheVTableItem(parent_prefix, prop_node, 2) + 1
-      setter_info = f".vtable_idx = {index}"
-    else:
-      setter_info = f".callback = FFI_FN({module_name}_set_{prop_name})"
+    setter_info = f".callback = FFI_FN({module_name}_set_{prop_name})"
 %>\
-  /****** for JIDL property '${parent_prefix}${prop_name}' ******/
-  static const MemberAccessor ${module_name}_${parent_prefix}${prop_name}_member_accessor = {
+  /****** for JIDL property '${prop_name}' ******/
+  static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
 %if has_getter:
     .getter = { ${getter_info} },
 %endif
@@ -401,7 +601,7 @@ ${GenParamsFeatureType(cb_node)}
     .data = { .${val_name} = ${module_name}_g_const_${const_name} }
   };
 </%def>\
-<%def name="GenMembers(members, parent_prefix)">\
+<%def name="GenMembers(members)">\
 %for member in members:
 <%
   member_info = render.GetMemberInfo(member)
@@ -417,7 +617,7 @@ ${GenParamsFeatureType(cb_node)}
     {
       .type = ${member_type},
       .name = "${member_name}",
-      .${member_val_type} = ${module_name}_${parent_prefix}${member_name}${member_suffix},
+      .${member_val_type} = ${module_name}_${member_name}${member_suffix},
     },
 %endif
 %endfor
@@ -447,7 +647,7 @@ ${GenInterface(block)}
 %endfor
   // members
   static const Member ${module_name}_members[] = {
-${GenMembers(module['members'], '')}\
+${GenMembers(module['members'])}\
   };
 
   // callbacks
