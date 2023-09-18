@@ -33,6 +33,19 @@ void ATest_1_0_wrap_print(FeatureInstanceHandle feature, AppendData data, ...);
 void ATest_1_0_wrap_test5(FeatureInstanceHandle feature, AppendData data, FTArray &values);
 FTArray *ATest_1_0_wrap_test6(FeatureInstanceHandle feature, AppendData data, FtInt a);
 
+// Struct defines ../ATest_1_0.h
+typedef struct _Person
+{
+    FtString _name;
+    FtString _gender;
+    FtInt _age;
+} ATest_1_0_Person;
+
+ATest_1_0_Person* mallocPerson();
+
+void ATest_1_0_wrap_test7(FeatureInstanceHandle feature, AppendData data, FtInt a, ATest_1_0_Person * b);
+ATest_1_0_Person * ATest_1_0_wrap_test8(FeatureInstanceHandle feature, AppendData data, FtInt a);
+
 // Property getters and setters to be implemented
 FtInt ATest_1_0_get_idx(void *feature, AppendData data);
 void ATest_1_0_set_idx(void *feature, AppendData data, FtInt idx);

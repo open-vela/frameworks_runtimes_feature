@@ -146,6 +146,57 @@ FTArray *ATest_1_0_wrap_test6(FeatureInstanceHandle feature, AppendData data, Ft
     return strArray;
 }
 
+void ATest_1_0_wrap_test7(FeatureInstanceHandle feature, AppendData data, FtInt a, ATest_1_0_Person *b)
+{
+    printf("ATest_1_0_wrap_test7 %d\n", a);
+    if (!b)
+    {
+        printf("%s::%s(), Person ptr is null!\n", file_tag1, __FUNCTION__);
+        return;
+    }
+    if (!b->_name)
+    {
+        printf("%s::%s(), Person name is null!\n", file_tag1, __FUNCTION__);
+    }
+    else
+    {
+        printf("%s::%s(), Person: [name: %s]\n",
+               file_tag1, __FUNCTION__, b->_name);
+    }
+    if (!b->_gender)
+    {
+        printf("%s::%s(), Person gender is null!\n", file_tag1, __FUNCTION__);
+    }
+    else
+    {
+        printf("%s::%s(), Person: [gender: %s]\n",
+               file_tag1, __FUNCTION__, b->_gender);
+    }
+    if (!b->_age)
+    {
+        printf("%s::%s(), Person age is null!\n", file_tag1, __FUNCTION__);
+    }
+    else
+    {
+        printf("%s::%s(), Person: [age: %d]\n",
+               file_tag1, __FUNCTION__, b->_age);
+    }
+}
+
+ATest_1_0_Person *ATest_1_0_wrap_test8(FeatureInstanceHandle feature, AppendData data, FtInt a)
+{
+    printf("%s::%s(), a: %d\n", file_tag1,  __FUNCTION__, a);
+    ATest_1_0_Person* per = mallocPerson();
+    char* name = (char*)FTMalloc(128, FT_CHAR);
+    sprintf(name, "%s", "level");
+    per->_name = name;
+    char* gender = (char*)FTMalloc(128, FT_CHAR);
+    sprintf(gender, "%s", "male");
+    per->_gender = gender;
+    per->_age = a;
+    return per;
+}
+
 // Property getters and setters to be implemented
 FtInt ATest_1_0_get_idx(void *feature, AppendData data)
 {

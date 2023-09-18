@@ -1,6 +1,7 @@
-declare interface Person {
-    age: number;
+declare class Person {
     name: string;
+    gender: string;
+    age: number;
 }
 
 export class ATest_1_0 {
@@ -21,9 +22,9 @@ export class ATest_1_0 {
 
     declare test6(num: number):string[];
     
-//     declare test7(num:number, p:Person): void;
+    declare test7(num:number, p:Person): void;
     
-//     declare test8(num:number): Person;
+    declare test8(num:number): Person;
 
     declare print(...a:any[]):void;
 

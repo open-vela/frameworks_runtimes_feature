@@ -231,16 +231,45 @@ bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureT
     } else if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexType->type) {
-            case COMPLEX_CALLBACK:
+        case COMPLEX_STRUCT_MAP:
+        {
+            wasm_value_t val = {0};
+            ObjectMapType &objMapType = *(ObjectMapType *)complexType;
+            ObjectMember *member = (ObjectMember *)objMapType.members;
+            int member_count = 0;
+            while (member->name)
             {
-                // save into instance
-                CallbackType *callbackType = (CallbackType *)complexType;
-                native_raw_get_arg(wasm_obj_t, cb_value, value);
-                //*(int32_t*)ptr = (int32_t)number_value;
-                FEATURE::FeatureCallbackId id = ((FeatureInstanceWamr*)instance)->addCallback(cb_value, callbackType);
-                *(FeatureCallbackId *)ptr = id; // write callback id to pointer.
-                break;
+                member_count++;
+                member++;
             }
+
+            native_raw_get_arg(wasm_struct_obj_t, wasm_obj, value);
+            for (int i = 0; i < member_count; i++)
+            {
+                // fill it
+                auto member = &objMapType.members[i];
+                wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
+                void *member_ptr = (void *)((char *)ptr + member->offset);
+                bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, (uint64_t *)&val);
+                // feature_free_value(ctx, propValue);
+                if (!ret)
+                {
+                    printf("get property value for key: %s failed !",
+                           member->name);
+                    return false;
+                }
+            }
+        }
+        break;
+        case COMPLEX_CALLBACK:
+        {
+            // save into instance
+            CallbackType *callbackType = (CallbackType *)complexType;
+            native_raw_get_arg(wasm_obj_t, cb_value, value);
+            //*(int32_t*)ptr = (int32_t)number_value;
+            FEATURE::FeatureCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(cb_value, callbackType);
+            *(FeatureCallbackId *)ptr = id; // write callback id to pointer.
+            } break;
             case COMPLEX_ARRAY:
             {
                 uint32_t len;
