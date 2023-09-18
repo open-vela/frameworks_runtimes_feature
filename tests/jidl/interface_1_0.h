@@ -27,9 +27,9 @@
   // Struct defines
 
   // Function wrappers to be implemented
-  void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance);
   FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data);
   void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal);
+  void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance);
   void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params);
 
   // Property getters and setters to be implemented
@@ -41,8 +41,24 @@
   FtInt Interface_Animal_interface_dog_get_legCount(FeatureInstanceHandle feature, AppendData data);
   FtInt Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, AppendData data, FtArray& foods);
   FtString Interface_Animal_interface_dog_run(FeatureInstanceHandle feature, AppendData data, FtInt distance, FtString destination);
-  FtArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, AppendData data);
-  void Interface_Animal_interface_dog_walk(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
+
+  // vtable functions for interface constructor function 'createPigeon'
+  FtArray* Interface_Bird_interface_pigeon_fly(FeatureInstanceHandle feature, AppendData data);
+  FtString Interface_Bird_interface_pigeon_get_breed(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Bird_interface_pigeon_set_breed(FeatureInstanceHandle feature, AppendData data, FtString breed);
+
+  // vtable functions for interface constructor function 'createCock'
+  FtString Interface_Chicken_interface_cock_get_name(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Chicken_interface_cock_set_name(FeatureInstanceHandle feature, AppendData data, FtString name);
+  FtInt Interface_Chicken_interface_cock_get_legCount(FeatureInstanceHandle feature, AppendData data);
+  FtInt Interface_Chicken_interface_cock_eatFood(FeatureInstanceHandle feature, AppendData data, FtArray& foods);
+  FtString Interface_Chicken_interface_cock_run(FeatureInstanceHandle feature, AppendData data, FtInt distance, FtString destination);
+  FtArray* Interface_Chicken_interface_cock_fly(FeatureInstanceHandle feature, AppendData data);
+  FtString Interface_Chicken_interface_cock_get_breed(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Chicken_interface_cock_set_breed(FeatureInstanceHandle feature, AppendData data, FtString breed);
+  FtInt Interface_Chicken_interface_cock_get_weight(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Chicken_interface_cock_set_weight(FeatureInstanceHandle feature, AppendData data, FtInt weight);
+  void Interface_Chicken_interface_cock_walk(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
 
 
   // Array malloc functions
