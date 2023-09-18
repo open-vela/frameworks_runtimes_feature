@@ -10,11 +10,11 @@
   func_def = render.GenerateFunctionDefine(func_node)
   ctor_target = ctor_info['target']
   ctor_interface = ctor_info['interface']
+  final_vtable = render.GetFinalVTable(ctor_interface)
   parent_prefix = f"{ctor_interface}_interface_"
-  vtable = render.GetVTable(parent_prefix)
 %>\
 // vtable functions for interface constructor function '${identifier}'
-%for vtable_item in vtable:
+%for vtable_item in final_vtable:
 <%
   i_name = vtable_item['name']
   i_type = vtable_item['type']
