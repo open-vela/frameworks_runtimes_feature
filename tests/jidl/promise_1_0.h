@@ -41,7 +41,7 @@
   // Property getters and setters to be implemented
 
   // Array malloc functions
-  FTArray* Promise_malloc_string_array();
   FTArray* Promise_malloc_int_array();
+  FTArray* Promise_malloc_string_array();
 
 #endif // JSON_AST_GEN_MODULE_PROMISE_H_

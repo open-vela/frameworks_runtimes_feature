@@ -43,7 +43,7 @@ int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
         param++;
     }
     if (hasRest) {
-        *hasRest = param ? (*param == FT_PARAM_REST_END) : false;
+        *hasRest = param ? FT_IS_REST(*param) : false;
     }
     return count;
 }
@@ -128,10 +128,10 @@ int getValueSize(FeatureType featureType)
  *
  * @param description
  */
-FeaturePrototype::FeaturePrototype(ft_context_ref ctx, const FeatureDescription* feature_desc)
+FeaturePrototype::FeaturePrototype(ft_context_ref ctx, FeatureDescription* feature_desc)
     : ft_ctx(ctx)
     , native(nullptr)
-    , description(const_cast<FeatureDescription*>(feature_desc))
+    , description(feature_desc)
 {
     // default capacity as 10 element
     instances.reserve(10);
@@ -192,6 +192,30 @@ bool FeaturePrototype::hasInstanceAlive()
 void FeaturePrototype::clearAllInstances()
 {
     instances.clear();
+}
+
+FeatureUnit::FeatureUnit(const FeatureDescription* desc)
+    : description(const_cast<FeatureDescription*>(desc))
+    , proto(nullptr)
+{
+}
+
+/**
+ * @brief we need the default constructor to support put into containers
+ *
+ */
+FeatureUnit::FeatureUnit()
+    : description(nullptr)
+    , proto(nullptr)
+{
+}
+
+FeatureUnit::~FeatureUnit()
+{
+    if (proto) {
+        delete proto;
+        proto = nullptr;
+    }
 }
 
 }

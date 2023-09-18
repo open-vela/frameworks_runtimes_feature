@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 #include "feature_instance_qjs.h"
-#include "feature_context_qjs.h"
-#include "feature_ffi_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
+#include "feature_ffi_qjs.h"
+#include "feature_context_qjs.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -30,15 +30,9 @@ using namespace FEATURE;
 
 namespace ferry {
 
-FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, FEATURE::VTable vtable, int vtable_size)
-    : FeatureInstance(proto, vtable, vtable_size)
+FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
+    : FeatureInstance(proto)
 {
-}
-
-FeatureInstance* FeatureInstanceQjs::createInterface(FEATURE::VTable vtable, int vtable_size)
-{
-    // null param proto to be fixed
-    return new FeatureInstanceQjs(nullptr, vtable, vtable_size);
 }
 
 FeatureInstanceQjs::~FeatureInstanceQjs()
@@ -49,11 +43,17 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     auto proto = prototype();
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
 
-    // free weakRef
-    freeWeakRef();
+    //遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
+    WeakRef* node;
+    WeakRef* node_temp;
+    weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
+    {
+        auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
+        *js_val_ptr = FEATURE_VALUE_UNDEFINED;
+    }
 
     // invoke callback
-    if (proto->description->native_callbacks && proto->description->native_callbacks->onDetached) {
+    if (proto->description->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
         proto->description->native_callbacks->onDetached(js_ctx, this);
     }
@@ -65,33 +65,25 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
 
     // release all promises
     releasePromises();
-    auto free_instance = [js_ctx](FeaturePrototype* proto) {
-        if (proto && !proto->hasInstanceAlive()) {
-            FEATURE_LOG_INFO("all instance freed, free proto object...");
-            auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
-            if (!feature_is_undefined(*js_proto_ptr)) {
-                feature_free_value(js_ctx, *js_proto_ptr);
-                *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-            }
-        }
-    };
+
     // check if all instances deleted, then clear proto object
-    free_instance(prototype());
-    for (auto& pair : prototypes_) {
-        // clear all interface instances belongs to this instance.
-        pair.second->clearAllInstances();
-        free_instance(pair.second);
-        delete pair.second;
+    if (prototype() && !prototype()->hasInstanceAlive()) {
+        FEATURE_LOG_INFO("all instance freed, free proto object...");
+
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype()->ft_proto);
+        if (!feature_is_undefined(*js_proto_ptr)) {
+            feature_free_value(js_ctx, *js_proto_ptr);
+            *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        }
     }
-    prototypes_.clear();
 }
 
 FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
 {
     if (!callbacks_.count(id)) {
         FeatureCallbackData callback;
-        callback.cb = FEATURE_VALUE_UNDEFINED;
-        callback.cb_type = nullptr;
+	callback.cb = FEATURE_VALUE_UNDEFINED;
+	callback.cb_type = nullptr;
         return callback;
     }
     return callbacks_[id];
@@ -145,7 +137,7 @@ FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeatureType resolve_type, Fe
     data->resolveTypes[0] = resolve_type;
     data->resolveTypes[1] = reject_type;
 
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx); // to be fixed
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);  // to be fixed
     feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
     if (feature_is_exception(promise)) {
         feature_free_value(js_ctx, data->resolveFuncs[0]);
@@ -177,8 +169,7 @@ bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)
     return true;
 }
 
-void FeatureInstanceQjs::releasePromises()
-{
+void FeatureInstanceQjs::releasePromises() {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     for (const auto& pair : promises_) {
         FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
@@ -190,8 +181,7 @@ void FeatureInstanceQjs::releasePromises()
     promises_.clear();
 }
 
-void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
-{
+void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func) {
     // mark callbacks
     for (auto& pair : callbacks_) {
         feature_mark_value(rt, pair.second.cb, mark_func);
@@ -202,11 +192,6 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
         feature_mark_value(rt, pair.second->promise, mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
         feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
-    }
-
-    for (auto& pair : prototypes_) {
-        auto js_proto = FT_VAL_GET_JS_VAL(pair.second->ft_proto);
-        feature_mark_value(rt, js_proto, mark_func);
     }
 }
 
@@ -229,26 +214,6 @@ bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
     return true;
 }
 
-void FeatureInstanceQjs::freeWeakRef()
-{
-    if (!prototype()) {
-        FEATURE_LOG_ERROR("freeWeakRef() get FeatureInstance failed");
-        return;
-    }
-
-    auto proto = prototype();
-    // 遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
-    WeakRef* node;
-    WeakRef* node_temp;
-    if (--proto->weak_ref_count <= 0) {
-        weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
-        {
-            auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
-            *js_val_ptr = FEATURE_VALUE_UNDEFINED;
-        }
-    }
-}
-
 int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
 {
     // get feature instance
@@ -268,35 +233,33 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promise
     return doInvokeCallback(&cb_type, promiseData->resolveFuncs[idx], ap, 1, 0);
 }
 
-int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap)
-{
+int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap) {
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
     CallbackType* callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
     if (has_rest_param) {
-        FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
+        FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
         return -1;
     }
 
     return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, 0);
 }
 
-int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count)
-{
+int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count) {
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
     CallbackType* callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
     if (!has_rest_param || count < method_param_count) {
-        FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
+        FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
         return -1;
     }
 
     return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, count - method_param_count);
 }
 
-int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count)
+int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int  rest_param_count)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     bool got_error = false;

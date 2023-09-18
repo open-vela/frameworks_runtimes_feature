@@ -48,11 +48,11 @@
   // Property getters and setters to be implemented
   FtString Simple_get_name(void* feature, AppendData data);
   void Simple_set_name(void* feature, AppendData data, FtString name);
-  FtString Simple_get_version(void* feature, AppendData data);
-  FTArray* Simple_get_args(void* feature, AppendData data);
+  void Simple_set_version(void* feature, AppendData data, FtString version);
+  void Simple_set_args(void* feature, AppendData data, FTArray& args);
 
   // Array malloc functions
-  FTArray* Simple_malloc_int_array();
   FTArray* Simple_malloc_string_array();
+  FTArray* Simple_malloc_int_array();
 
 #endif // JSON_AST_GEN_MODULE_SIMPLE_H_

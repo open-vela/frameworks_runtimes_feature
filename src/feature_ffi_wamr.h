@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "feature_instance.h"
-#include "feature_log.h"
-#include "feature_context.h"
-
-#include <string.h>
-
-using namespace FEATURE;
+#ifndef __FEATURE_FFI_WAMR_H__
+#define __FEATURE_FFI_WAMR_H__
+#include "feature_exports.h"
+#include "feature.h"
+#include "feature_ffi.h"
+#include "wasm_export.h"
+#include "gc_object.h"
 
 namespace ferry {
 
-/////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* proto)
-    : native(nullptr)
-    , proto_(proto)
-    , instance_id_(-1)
-{
+namespace FeatureFFIWamr {
+
+    char getFeatureSignature(FEATURE::FeatureType featureType);
+
+    bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureType, void*& ptr,
+        wasm_exec_env_t exec_env, uint64_t* value);
+
+    bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType featureType, void* ptr,
+        wasm_exec_env_t exec_env, wasm_val_t& value);
 }
 
-FeatureInstance::~FeatureInstance()
-{
 }
-
-}
+#endif

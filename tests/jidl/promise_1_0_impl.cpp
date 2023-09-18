@@ -114,7 +114,7 @@ void Promise_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FeaturePr
 void Promise_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
 {
     printf("[jidl_feature] ");
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
+    ft_context_ref ft_ctx = GetFeatureContext(feature);
     for (int i = 0; i < variadicParameters.variadic_count; i++) {
         ft_value_t param = variadicParameters.variadic_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
