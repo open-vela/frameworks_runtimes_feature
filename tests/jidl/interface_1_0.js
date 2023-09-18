@@ -18,14 +18,6 @@ let cat_eated = cat.eatFood(cat_foods)
 interface.print('cat eated: ', cat_eated)
 let cat_ran = cat.run(50, "home")
 interface.print('cat ran: ', cat_ran)
-let cat_fly = cat.fly()
-show_array(cat_fly, 'cat fly:');
-cat.walk().then(a => {
-    interface.print("cat walk resolve: ");
-    show_array(a, 'cat walk:');
-}, b => {
-    interface.print("cat walk reject: ", b);
-})
 interface.setAnimal(cat)
 interface.print('\n')
 
@@ -38,15 +30,39 @@ let dog_eated = dog.eatFood(dog_foods)
 interface.print('dog eated: ', dog_eated)
 let dog_ran = dog.run(200, "wild")
 interface.print('dog ran: ', dog_ran)
-let dog_fly = dog.fly()
-show_array(dog_fly, 'dog fly:');
-dog.walk().then(a => {
-    interface.print("dog walk resolve: ");
-    show_array(a, 'dog walk:');
-}, b => {
-    interface.print("dog walk reject: ", b);
-})
 interface.setAnimal(dog)
+interface.print('\n')
+
+let pigeon = interface.createPigeon()
+interface.print('pigeon breed: ', pigeon.breed)
+pigeon.breed = "King Pigeon"
+let pigeon_fly = pigeon.fly()
+show_array(pigeon_fly, 'pigeon fly:')
+interface.print('\n')
+
+let cock = interface.createCock()
+interface.print('cock name: ', cock.name)
+cock.name = "gaga"
+interface.print('cock legCount: ', cock.legCount)
+let cock_foods = ['wheat', 'grain', 'corn', 'earthworm', 'beetle']
+let cock_eated = cock.eatFood(cock_foods)
+interface.print('cock eated: ', cock_eated)
+let cock_ran = cock.run(50, "garden")
+interface.print('cock ran: ', cock_ran)
+interface.print('cock breed: ', cock.breed)
+cock.breed = "Malay"
+let cock_fly = cock.fly()
+show_array(cock_fly, 'cock fly:')
+interface.print('cock weight: ', cock.weight)
+cock.weight = 5
+
+cock.walk().then(a => {
+    interface.print("cock walk resolve: ");
+    show_array(a, 'cock walk:');
+}, b => {
+    interface.print("cock walk reject: ", b);
+})
+interface.print('\n')
 
 interface.flyFar(150).then(a => {
     interface.print("flyFar resolve: ");
@@ -60,6 +76,5 @@ interface.flyAway().then(a => {
 }, b => {
     interface.print("flyFar reject: ", b);
 })
-interface.print('\n')
 
 interface.print('test ended\n')
