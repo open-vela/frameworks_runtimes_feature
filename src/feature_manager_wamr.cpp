@@ -24,6 +24,7 @@
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
+#include "feature_wamr_utils.h"
 
 #include "dyntype.h"
 
@@ -60,8 +61,6 @@ get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 extern "C" uint32_t
 get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 
-extern "C" wasm_struct_obj_t create_wasm_string(wasm_exec_env_t exec_env, const char *value);
-extern "C" wasm_struct_obj_t create_wasm_array_with_string(wasm_exec_env_t exec_env, void *ptr, uint32_t arrlen);
 
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
@@ -448,7 +447,18 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                         {
                         case COMPLEX_STRUCT_MAP:
                         {
-                            // need to do later.
+                            Person *per = (Person *)method_ret_value.of.foreign;
+                            uint32_t member_count = sizeof(Person) / sizeof(per->name);
+                            ts_value_t obj_field1, obj_field2, obj_field3;
+                            obj_field1.of.ref = per->name;
+                            obj_field1.type = TS_STRING;
+                            obj_field2.of.ref = per->gender;
+                            obj_field2.type = TS_STRING;
+                            obj_field3.of.f64 = (double)per->age;
+                            obj_field3.type = TS_NUMBER;
+                            ts_value_t obj_arr[member_count] = { obj_field1, obj_field2, obj_field3 };
+                            /* call create_wasm_class_struct from feature_wamr_utils.h */
+                            obj = create_wasm_class_struct(exec_env, obj_arr, member_count);
                         }
                         break;
                         case COMPLEX_ARRAY:

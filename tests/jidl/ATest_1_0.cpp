@@ -130,6 +130,50 @@ static const MemberMethod ATest_1_0_test6_member_method = {
     .return_type = FT_MK_COMPLEX_REF(&ATest_1_0_string_array),
 };
 
+  /****** for JIDL struct 'Person' ******/
+  static ObjectMember ATest_1_0_Person_struct_members[] = {
+    { "name", FT_STRING, offsetof(ATest_1_0_Person, _name), sizeof(FtString) },
+    { "gender", FT_STRING, offsetof(ATest_1_0_Person, _gender), sizeof(FtString) },
+    { "age", FT_INT, offsetof(ATest_1_0_Person, _age), sizeof(FtInt) },
+    { nullptr },
+  };
+
+  // complex defination
+  static const ObjectMapType ATest_1_0_Person_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(ATest_1_0_Person) },
+    .members = ATest_1_0_Person_struct_members
+  };
+
+  ATest_1_0_Person* mallocPerson () {
+    return (ATest_1_0_Person*)FTMalloc(
+      sizeof(ATest_1_0_Person), FT_MK_COMPLEX(&ATest_1_0_Person_struct_type));
+  }
+
+  /****** for JIDL function 'test7' ******/
+  static const FeatureType ATest_1_0_test7_parameters[] = {
+    FT_INT,
+    FT_MK_COMPLEX_REF(&ATest_1_0_Person_struct_type),
+    FT_PARAM_END
+  };
+
+  static const MemberMethod ATest_1_0_test7_member_method = {
+    .callback = FFI_FN(ATest_1_0_wrap_test7),
+    .parameters = ATest_1_0_test7_parameters,
+    .return_type = FT_VOID,
+  };
+
+  /****** for JIDL function 'test8' ******/
+  static const FeatureType ATest_1_0_test8_parameters[] = {
+    FT_INT,
+    FT_PARAM_END
+  };
+
+  static const MemberMethod ATest_1_0_test8_member_method = {
+    .callback = FFI_FN(ATest_1_0_wrap_test8),
+    .parameters = ATest_1_0_test8_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&ATest_1_0_Person_struct_type),
+  };
+
 // members
 static const Member ATest_1_0_members[] = {
     {
@@ -171,7 +215,18 @@ static const Member ATest_1_0_members[] = {
         .type = MEMBER_METHOD,
         .name = "test6",
         .method = ATest_1_0_test6_member_method,
-    }};
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "test7",
+      .method = ATest_1_0_test7_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "test8",
+      .method = ATest_1_0_test8_member_method,
+    }
+    };
 
 // callbacks
 static const struct FeatureCallbacks ATest_1_0_callbacks

@@ -1,5 +1,4 @@
-// import { ATest_1_0 , Person} from "./ATest.d";
-import { ATest_1_0 } from "./ATest.d";
+import { ATest_1_0 , Person} from "./ATest.d";
 export function main(){
     //create feature module object
     let a = new ATest_1_0();
@@ -38,11 +37,12 @@ export function main(){
     console.log("test6 return array[0] ",arr[0]);         // hello
     console.log("test6 return array[1] ",arr[1]);         // world
 
-    // let p: Person = { age: 20, name: "zhangsan" };
-    // a.test7(12, p);
+    let p: Person = { name: "zhangsan", gender: "male", age: 23};
+    a.test7(1024, p);
 
-    // let per: Person = a.test8(123);
-    // console.log("call test8 end")
-    // console.log("test8 return value Person per.age", per.age);
-    // console.log("test8 return value Person per.name", per.name);
+    let per: Person = a.test8(123);
+    console.log("call test8 end")
+    console.log("test8 return value Person per.name", per.name);
+    console.log("test8 return value Person per.gender", per.gender);
+    console.log("test8 return value Person per.age", per.age);
 }
