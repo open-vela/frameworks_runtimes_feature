@@ -103,7 +103,7 @@ int getValueSize(FeatureType featureType)
                 return sizeof(float);
             } break;
             case FT_BOOLEAN: {
-                return sizeof(int32_t);
+                return sizeof(bool);
             } break;
             case FT_CHAR: {
             // return 0 for string buffer size.
