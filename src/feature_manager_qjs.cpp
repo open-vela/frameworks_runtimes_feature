@@ -181,7 +181,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto& method = member->method;
     auto currParam = method.parameters;
-    FEATURE::FeaturePromiseHandle promiseHandle = -1;
+    FtPromiseId pid = -1;
     // feature_value_t promise_obj = FEATURE_VALUE_UNDEFINED;
     //  count size
     bool has_rest_param = false;
@@ -190,18 +190,18 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     // optional and rest parameters must not set together.
     FEATURE_CHECK_NE(has_rest_param && optional_count, true);
     // variadic parameters type
-    ffi_type variadicParameters_type;
-    ffi_type* variadicParameters_type_element[3];
+    ffi_type vari_params_type;
+    ffi_type* vari_params_type_element[3];
     // variadic parameter param
-    FtVariadicParameters variadicParameters;
+    FtVariParams vari_params;
     qjs_val_t* qjs_val_array = nullptr;
-    memset(&variadicParameters, 0, sizeof(variadicParameters));
+    memset(&vari_params, 0, sizeof(vari_params));
     // check argument count match.
     // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", method_param_count, argc);
     // beacuse we support rest parameters, so argc is greater or equal to method_param_count.
     if (has_rest_param) {
         FEATURE_CHECK_GE(argc, method_param_count);
-        variadicParameters.variadic_count = argc - method_param_count;
+        vari_params.vari_count = argc - method_param_count;
     } else if (optional_count) {
         // for optional parameters, argc + optional must grater or equal to method_param_count
         FEATURE_CHECK_GE(argc + optional_count, method_param_count);
@@ -211,7 +211,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     }
     // if has rest parameter, we will pack all variadic parameters together as a param pack
     // use packed_argc instead of argc for ffi call.
-    int32_t packed_argc = has_rest_param ? argc - variadicParameters.variadic_count + 1 : argc;
+    int32_t packed_argc = has_rest_param ? argc - vari_params.vari_count + 1 : argc;
     // if return value is a promise
     bool isPromise = FT_IS_PROMISE(method.return_type);
     int external_count = isPromise ? 3 : 2;
@@ -257,23 +257,23 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
 
         // process rest parameters
         if (has_rest_param) {
-            // prepare variadicParameters type
-            variadicParameters_type.size = 0;
-            variadicParameters_type.type = FFI_TYPE_STRUCT;
-            variadicParameters_type.elements = variadicParameters_type_element;
-            variadicParameters_type_element[0] = &ffi_type_sint32;
-            variadicParameters_type_element[1] = &ffi_type_pointer;
-            variadicParameters_type_element[2] = nullptr;
-            // prepare variadicParameters struct
-            variadicParameters.variadic_args = new ft_value_t[variadicParameters.variadic_count];
-            qjs_val_array = new qjs_val_t[variadicParameters.variadic_count];
+            // prepare vari_params type
+            vari_params_type.size = 0;
+            vari_params_type.type = FFI_TYPE_STRUCT;
+            vari_params_type.elements = vari_params_type_element;
+            vari_params_type_element[0] = &ffi_type_sint32;
+            vari_params_type_element[1] = &ffi_type_pointer;
+            vari_params_type_element[2] = nullptr;
+            // prepare vari_params struct
+            vari_params.vari_args = new ft_value_t[vari_params.vari_count];
+            qjs_val_array = new qjs_val_t[vari_params.vari_count];
             // pass param
-            ffi_params[method_param_count + external_count] = &variadicParameters_type;
-            ffi_arg_values[method_param_count + external_count] = &variadicParameters;
+            ffi_params[method_param_count + external_count] = &vari_params_type;
+            ffi_arg_values[method_param_count + external_count] = &vari_params;
             for (int i = 0; i + method_param_count < argc; i++) {
                 // just passthrough guest param pointers
                 qjs_val_array[i].js_val = argv[i + method_param_count];
-                variadicParameters.variadic_args[i] = *((ft_value_t*)(qjs_val_array + i));
+                vari_params.vari_args[i] = *((ft_value_t*)(qjs_val_array + i));
             }
         } else if (optional_count) {
             for (int i = argc; i < method_param_count; i++) {
@@ -328,10 +328,10 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             // create promise
             PromiseType* promiseType = (PromiseType*)complexType;
             // create promise and add to instance
-            promiseHandle = ((FeatureInstanceQjs*)instance)->addPromise(promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
-            feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(promiseHandle);
-            // pass promiseHandle to native function
-            ffi_arg_values[2] = &promiseHandle;
+            pid = ((FeatureInstanceQjs*)instance)->addPromise(promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
+            feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
+            // pass pid to native function
+            ffi_arg_values[2] = &pid;
             // dup and return promise object.
             method_ret_value = feature_dup_value(ctx, promise);
         }
@@ -368,8 +368,8 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     }
     delete[] ffi_arg_values;
     delete[] ffi_params;
-    if (variadicParameters.variadic_args) {
-        delete[] variadicParameters.variadic_args;
+    if (vari_params.vari_args) {
+        delete[] vari_params.vari_args;
     }
     if (qjs_val_array) {
         delete[] qjs_val_array;

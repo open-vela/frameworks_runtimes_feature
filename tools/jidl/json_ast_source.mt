@@ -21,7 +21,7 @@
     member_item['name'] = member['name']
     member_type = member['type']
     cpp_type = render.GenerateCppType(member_type)
-    if cpp_type == 'FTArray':
+    if cpp_type == 'FtArray':
       cpp_type += '*'
     member_item['cpp_type'] = cpp_type
 
@@ -112,7 +112,7 @@ ${GenMembers(members, parent_prefix)}\
 
   // InterfaceType
   const InterfaceType ${module_name}_${parent_prefix}type {
-    .header = { .type = ferry::COMPLEX_INTERFACE, .size = 0 },
+    .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &${module_name}_${parent_prefix}desc
   };
   /****** JIDL interface '${iname}' glue code end ******/
@@ -120,7 +120,7 @@ ${GenMembers(members, parent_prefix)}\
 
 <%def name="GenerateArrayType(array_type, is_complex)">\
   static const ArrayType ${module_name}_${array_type}_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
 %if is_complex:
     .element_type = FT_MK_COMPLEX(&${array_type})
 %else:
@@ -129,9 +129,9 @@ ${GenMembers(members, parent_prefix)}\
 %endif
   };
 
-  FTArray* ${module_name}_malloc_${array_type}_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&${module_name}_${array_type}_array));
+  FtArray* ${module_name}_malloc_${array_type}_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&${module_name}_${array_type}_array));
   }
 
 </%def>\
@@ -192,7 +192,7 @@ ${GenMembers(members, parent_prefix)}\
 %>\
 %if success:
   static const PromiseType ${p_feature_type} = {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { ${resolve_ft_expr}, ${reject_ft_expr} }
   };
 
@@ -286,7 +286,7 @@ ${GenMemberMethod(identifier, ret_type, parent_prefix, index)}
     param_list = render.GenerateParamList(func_node["params"])
     params += f", {param_list}"
 
-  is_promise = (ret_type == 'FeaturePromiseHandle')
+  is_promise = (ret_type == 'FtPromiseId')
   if is_promise:
     ret_type = 'void'
 
@@ -295,7 +295,7 @@ ${GenMemberMethod(identifier, ret_type, parent_prefix, index)}
     func_call += 'return '
   func_call += f"{module_name}_wrap_{func_call_id} (feature, data"
   if is_promise:
-    func_call += ', promiseHandle'
+    func_call += ', pid'
 
   if 'param_calls' in func_call_node:
     params_call_list = render.GenerateParamCallList(func_call_node["param_calls"])
@@ -304,7 +304,7 @@ ${GenMemberMethod(identifier, ret_type, parent_prefix, index)}
 
   prefix_params = 'FeatureInstanceHandle feature, AppendData data'
   if is_promise:
-    prefix_params += ', FeaturePromiseHandle promiseHandle'
+    prefix_params += ', FtPromiseId pid'
 %>\
   /****** for JIDL use '${identifier}' ******/
   static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params}) {
@@ -323,7 +323,7 @@ ${GenMemberMethod(identifier, ret_type_node)}
   /****** for JIDL callback '${identifier}' ******/
 ${GenParamsFeatureType(cb_node)}
   static const CallbackType ${module_name}_${identifier}_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = ${module_name}_${identifier}_parameters,
     .return_type = FT_VOID
   };
@@ -376,7 +376,7 @@ ${GenParamsFeatureType(cb_node)}
     raise Exception('wrong const type: {}'.format(const_info['type']))
   val_name = render.GetAppendDataName(const_info['type'])
   cpp_type = render.GenerateCppType(const_type)
-  is_array = cpp_type == 'FTArray'
+  is_array = cpp_type == 'FtArray'
   if is_array:
     cpp_type = render.GenerateArrayCppType(const_type)
   if cpp_type != 'FtString':
@@ -424,6 +424,7 @@ ${GenParamsFeatureType(cb_node)}
 </%def>\
 #include "${header_name}"
 #include "ajs_features_init.h"
+#include "feature_description.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 

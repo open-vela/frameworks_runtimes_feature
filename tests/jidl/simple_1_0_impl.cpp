@@ -41,10 +41,10 @@ static const char* g_version = nullptr;
 template <typename T>
 class FTArrayHelper {
 private:
-    FTArray* _data;
+    FtArray* _data;
 
 public:
-    FTArrayHelper(FTArray* data)
+    FTArrayHelper(FtArray* data)
     {
         _data = data;
     }
@@ -99,11 +99,11 @@ void Simple_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtStri
     printf("%s::%s(), str: %s\n", file_tag,  __FUNCTION__, str);
 }
 
-void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < vari_params.vari_count; i++) {
+        ft_value_t param = vari_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);
@@ -164,12 +164,12 @@ void Simple_wrap_bar(FeatureInstanceHandle feature, AppendData data)
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariadicParameters variadicParameters)
+void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariParams vari_params)
 {
     printf("%s::%s(), ", file_tag,  __FUNCTION__);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < vari_params.vari_count; i++) {
+        ft_value_t param = vari_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);
@@ -227,7 +227,7 @@ FtString Simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt 
     return buf;
 }
 
-void Simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FeatureCallbackId cb)
+void Simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FtCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), a: %d, b: %d, will invoke cb\n", file_tag,  __FUNCTION__, a, b);
@@ -240,7 +240,7 @@ void Simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, Ft
     FeatureRemoveCallback(feature, cb);
 }
 
-void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FeatureCallbackId cb, FeatureCallbackId cb3, FeatureCallbackId cb4)
+void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallbackId cb, FtCallbackId cb3, FtCallbackId cb4)
 {
 
     // callback cb3()
@@ -289,7 +289,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FeatureCal
     FeatureRemoveCallback(feature, cb);
 }
 
-void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FeatureCallbackId cb, FeatureCallbackId cb2)
+void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb, FtCallbackId cb2)
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
@@ -314,7 +314,7 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
     FeatureRemoveCallback(feature, cb2);
 }
 
-void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FeatureCallbackId cb)
+void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
@@ -337,7 +337,7 @@ void Simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData da
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FTArray& values)
+FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray& values)
 {
     FTArrayHelper<int> int_array(&values);
     printf("%s::%s(), int_array size: %d\n", file_tag,  __FUNCTION__, int_array.size());
@@ -349,9 +349,9 @@ FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FTArray& 
     return -1;
 }
 
-FTArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
+FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 {
-    FTArray* strArray = Simple_malloc_string_array();
+    FtArray* strArray = Simple_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -381,10 +381,10 @@ const char* Simple_get_version(FeatureInstanceHandle feature, AppendData data)
     GET_PROP_CHAR_PTR(version);
 }
 
-FTArray* Simple_get_args(FeatureInstanceHandle feature, AppendData data)
+FtArray* Simple_get_args(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
-    FTArray* strArray = Simple_malloc_string_array();
+    FtArray* strArray = Simple_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {

@@ -24,7 +24,7 @@ using namespace FEATURE;
 namespace ferry {
 
 /////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* proto, FEATURE::VTable vtable, int vtable_size)
+FeatureInstance::FeatureInstance(FeaturePrototype* proto, VTable vtable, int vtable_size)
     : native(nullptr)
     , proto_(proto)
     , instance_id_(-1)

@@ -8,10 +8,10 @@ static const char* file_tag = "[jidl_feature] promise_1_0_impl";
 template <typename T>
 class FTArrayHelper {
 private:
-    FTArray* _data;
+    FtArray* _data;
 
 public:
-    FTArrayHelper(FTArray* data)
+    FTArrayHelper(FtArray* data)
     {
         _data = data;
     }
@@ -60,63 +60,63 @@ void Promise_onUnregister(FeatureRuntimeContext ctx)
 }
 
 // Function wrappers to be implemented
-void Promise_wrap_foo(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a, FtString b)
+void Promise_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a, FtString b)
 {
     printf("%s::%s(), a: %d, b: %s\n", file_tag,  __FUNCTION__, a, b);
     int rs = a;
     int rj = 10;
     if (rs != 0) {
-        FeaturePromiseResolve(feature, promiseHandle, rs);
+        FeaturePromiseResolve(feature, pid, rs);
     } else {
-        FeaturePromiseReject(feature, promiseHandle, rj);
+        FeaturePromiseReject(feature, pid, rj);
     }
 }
 
-void Promise_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a)
+void Promise_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a)
 {
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
     int rs = a;
     const char* rj = "hello";
     if (rs != 0) {
-        FeaturePromiseResolve(feature, promiseHandle, rs);
+        FeaturePromiseResolve(feature, pid, rs);
     } else {
-        FeaturePromiseReject(feature, promiseHandle, rj);
+        FeaturePromiseReject(feature, pid, rj);
     }
 }
 
-void Promise_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     int rs = 0;
     const char* rj = "world";
     if (rs != 0) {
-        FeaturePromiseResolve(feature, promiseHandle, rs);
+        FeaturePromiseResolve(feature, pid, rs);
     } else {
-        FeaturePromiseReject(feature, promiseHandle, rj);
+        FeaturePromiseReject(feature, pid, rj);
     }
 }
 
-void Promise_wrap_bar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Promise_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Promise_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < vari_params.vari_count; i++) {
+        ft_value_t param = vari_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);

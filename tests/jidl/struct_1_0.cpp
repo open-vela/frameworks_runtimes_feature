@@ -5,6 +5,7 @@
 
 #include "struct_1_0.h"
 #include "ajs_features_init.h"
+#include "feature_description.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -54,29 +55,29 @@
   };
 
   static const CallbackType Struct_ChapChanged_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Struct_ChapChanged_parameters,
     .return_type = FT_VOID
   };
 
 
   static const ArrayType Struct_string_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_STRING
   };
 
-  FTArray* Struct_malloc_string_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&Struct_string_array));
+  FtArray* Struct_malloc_string_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&Struct_string_array));
   }
 
   /****** for JIDL struct 'Book' ******/
   static ObjectMember Struct_Book_struct_members[] = {
     { "page_count", FT_INT, offsetof(Struct_Book, _page_count), sizeof(FtInt) },
     { "title", FT_STRING, offsetof(Struct_Book, _title), sizeof(FtString) },
-    { "chap_titles", FT_MK_COMPLEX_REF(&Struct_string_array), offsetof(Struct_Book, _chap_titles), sizeof(FTArray*) },
+    { "chap_titles", FT_MK_COMPLEX_REF(&Struct_string_array), offsetof(Struct_Book, _chap_titles), sizeof(FtArray*) },
     { "first_chap", FT_MK_COMPLEX_REF(&Struct_Chapter_struct_type), offsetof(Struct_Book, _first_chap), sizeof(Struct_Chapter *) },
-    { "chap_changed", FT_MK_COMPLEX(&Struct_ChapChanged_callback_type), offsetof(Struct_Book, _chap_changed), sizeof(FeatureCallbackId) },
+    { "chap_changed", FT_MK_COMPLEX(&Struct_ChapChanged_callback_type), offsetof(Struct_Book, _chap_changed), sizeof(FtCallbackId) },
     { nullptr },
   };
 

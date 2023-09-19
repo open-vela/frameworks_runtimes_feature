@@ -5,6 +5,7 @@
 
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
+#include "feature_description.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -120,7 +121,7 @@
   };
 
   static const CallbackType Simple_cb1_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb1_parameters,
     .return_type = FT_VOID
   };
@@ -134,7 +135,7 @@
   };
 
   static const CallbackType Simple_cb2_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb2_parameters,
     .return_type = FT_VOID
   };
@@ -146,7 +147,7 @@
   };
 
   static const CallbackType Simple_cb3_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb3_parameters,
     .return_type = FT_VOID
   };
@@ -158,7 +159,7 @@
   };
 
   static const CallbackType Simple_cb4_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb4_parameters,
     .return_type = FT_VOID
   };
@@ -195,7 +196,7 @@
 
 
   /****** for JIDL use 'goo3' ******/
-  static void Simple_wrap_goo3 (FeatureInstanceHandle feature, AppendData data, FeatureCallbackId cb) {
+  static void Simple_wrap_goo3 (FeatureInstanceHandle feature, AppendData data, FtCallbackId cb) {
     Simple_wrap_goo (feature, data, 100, 200, cb);
   }
 
@@ -268,13 +269,13 @@
 
   /****** for JIDL function 'bar2' ******/
   static const ArrayType Simple_int_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_INT
   };
 
-  FTArray* Simple_malloc_int_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&Simple_int_array));
+  FtArray* Simple_malloc_int_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&Simple_int_array));
   }
 
   static const FeatureType Simple_bar2_parameters[] = {
@@ -295,13 +296,13 @@
   };
 
   static const ArrayType Simple_string_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_STRING
   };
 
-  FTArray* Simple_malloc_string_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&Simple_string_array));
+  FtArray* Simple_malloc_string_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&Simple_string_array));
   }
 
   static const MemberMethod Simple_bar3_member_method = {

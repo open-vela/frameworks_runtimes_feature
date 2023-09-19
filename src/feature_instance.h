@@ -18,7 +18,7 @@
 #ifndef __FEATURE_INSTANCE_H__
 #define __FEATURE_INSTANCE_H__
 
-#include "feature_exports.h"
+#include "feature_description.h"
 #include "feature_utils.h"
 
 #include <map>
@@ -31,27 +31,27 @@ class FeaturePrototype;
 
 class FeatureInstance {
 public:
-    FeatureInstance(struct FeaturePrototype* prototype, FEATURE::VTable vtable, int vtable_size);
+    FeatureInstance(struct FeaturePrototype* prototype, VTable vtable, int vtable_size);
     virtual ~FeatureInstance();
 
-    virtual FeatureInstance* createInterface(FEATURE::VTable vtable, int vtable_size) = 0;
+    virtual FeatureInstance* createInterface(VTable vtable, int vtable_size) = 0;
     /**
-     * @brief remove callback from instance vai FeatureCallbackId
+     * @brief remove callback from instance vai FtCallbackId
      *
      & @param ctx
      * @param id
      * @return true
      * @return false
      */
-    virtual bool removeCallback(FEATURE::FeatureCallbackId id) = 0;
+    virtual bool removeCallback(FtCallbackId cid) = 0;
 
-    virtual bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle) = 0;
+    virtual bool removePromise(FtPromiseId pid) = 0;
 
-    virtual int settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap) = 0;
+    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap) = 0;
 
-    virtual int invokeCallback(int cid, va_list& ap) = 0;
+    virtual int invokeCallback(FtCallbackId cid, va_list& ap) = 0;
 
-    virtual int invokeCallbackCount(int cid, va_list& ap, int count) = 0;
+    virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count) = 0;
 
     void setInstanceId(int instance_id) { instance_id_ = instance_id; }
 
@@ -61,7 +61,7 @@ public:
 
     void setPrototype(FeaturePrototype* proto) { proto_ = proto; }
 
-    FEATURE::NativeFunc getVirtualFunction(int index) const
+    NativeFunc getVirtualFunction(int index) const
     {
         if (index < 0 || index >= vtable_size_)
             return nullptr;
@@ -73,7 +73,7 @@ public:
 private:
     FeaturePrototype* proto_;
     int instance_id_; // the instance id, order in instances aray.
-    FEATURE::VTable vtable_; // vtable array
+    VTable vtable_; // vtable array
     int32_t vtable_size_;
 };
 

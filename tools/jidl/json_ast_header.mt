@@ -50,7 +50,7 @@
 %if has_getter:
 <%
   cpp_type = render.GenerateCppType(prop_type)
-  if cpp_type == 'FTArray':
+  if cpp_type == 'FtArray':
     cpp_type += '*'
   getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, AppendData data)"
 %>\
@@ -72,7 +72,7 @@
   member_name = member_node['name']
   member_type = member_node['type']
   cpp_type = render.GenerateCppType(member_type)
-  if cpp_type == 'FTArray':
+  if cpp_type == 'FtArray':
     cpp_type += '*'
   member_def = f"{cpp_type} _{member_name}"
 %>\
@@ -117,9 +117,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-  using namespace FEATURE;
-  using namespace ferry;
 
   // FeatureCallbacks to be implemented
   void ${module_name}_onRegister(FeatureRuntimeContext ctx);

@@ -16,9 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-  using namespace FEATURE;
-  using namespace ferry;
-
   // FeatureCallbacks to be implemented
   void Interface_onRegister(FeatureRuntimeContext ctx);
   void Interface_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
@@ -30,10 +27,10 @@
   // Struct defines
 
   // Function wrappers to be implemented
-  void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt distance);
+  void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance);
   FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data);
   void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal);
-  void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters vari_params);
+  void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params);
 
   // Property getters and setters to be implemented
 
@@ -42,13 +39,13 @@
   FtString Interface_Animal_interface_dog_get_name(FeatureInstanceHandle feature, AppendData data);
   void Interface_Animal_interface_dog_set_name(FeatureInstanceHandle feature, AppendData data, FtString name);
   FtInt Interface_Animal_interface_dog_get_legCount(FeatureInstanceHandle feature, AppendData data);
-  FtInt Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, AppendData data, FTArray& foods);
+  FtInt Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, AppendData data, FtArray& foods);
   FtString Interface_Animal_interface_dog_run(FeatureInstanceHandle feature, AppendData data, FtInt distance, FtString destination);
-  FTArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, AppendData data);
-  void Interface_Animal_interface_dog_walk(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle);
+  FtArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, AppendData data);
+  void Interface_Animal_interface_dog_walk(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
 
 
   // Array malloc functions
-  FTArray* Interface_malloc_string_array();
+  FtArray* Interface_malloc_string_array();
 
 #endif // JSON_AST_GEN_MODULE_INTERFACE_H_

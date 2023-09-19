@@ -5,6 +5,7 @@
 
 #include "record_1_0.h"
 #include "ajs_features_init.h"
+#include "feature_description.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -15,7 +16,7 @@
   };
 
   static const CallbackType Record_success_cb_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Record_success_cb_parameters,
     .return_type = FT_VOID
   };
@@ -29,7 +30,7 @@
   };
 
   static const CallbackType Record_fail_cb_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Record_fail_cb_parameters,
     .return_type = FT_VOID
   };
@@ -41,7 +42,7 @@
   };
 
   static const CallbackType Record_complete_cb_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Record_complete_cb_parameters,
     .return_type = FT_VOID
   };

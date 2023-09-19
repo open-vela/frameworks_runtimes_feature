@@ -41,31 +41,31 @@ typedef struct FeatureCallbackData {
 typedef struct FeaturePromiseData {
     feature_value_t promise; // 保存promise对象
     feature_value_t resolveFuncs[2]; //functions
-    FEATURE::FeatureType resolveTypes[2];
+    FeatureType resolveTypes[2];
 } FeaturePromiseData;
 
 class FeatureInstanceQjs : public FeatureInstance {
 public:
-    FeatureInstanceQjs(struct FeaturePrototype* prototype, FEATURE::VTable vtable, int vtable_size);
+    FeatureInstanceQjs(struct FeaturePrototype* prototype, VTable vtable, int vtable_size);
     virtual ~FeatureInstanceQjs();
 
-    virtual FeatureInstance* createInterface(FEATURE::VTable vtable, int vtable_size);
+    virtual FeatureInstance* createInterface(VTable vtable, int vtable_size);
 
-    virtual bool removeCallback(FEATURE::FeatureCallbackId id);
+    virtual bool removeCallback(FtCallbackId cid);
 
-    virtual bool removePromise(FEATURE::FeaturePromiseHandle promiseHandle);
+    virtual bool removePromise(FtPromiseId pid);
 
-    virtual int settlePromise(bool resolve, FEATURE::FeaturePromiseHandle promiseHandle, va_list& ap);
+    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap);
 
-    virtual int invokeCallback(int cid, va_list& ap);
+    virtual int invokeCallback(FtCallbackId cid, va_list& ap);
 
-    virtual int invokeCallbackCount(int cid, va_list& ap, int count);
+    virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    FEATURE::FeatureCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
+    FtCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
 
-    feature_value_t getPromise(FEATURE::FeaturePromiseHandle promiseHandle);
+    feature_value_t getPromise(FtPromiseId pid);
 
-    FEATURE::FeaturePromiseHandle addPromise(FeatureType resolve_type, FeatureType reject_type);
+    FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 
     void releasePromises();
 
@@ -100,15 +100,15 @@ public:
     }
 
 private:
-    FeatureCallbackData getCallback(FEATURE::FeatureCallbackId id);
-    FeaturePromiseData* getPromiseData(FEATURE::FeaturePromiseHandle promiseHandle);
+    FeatureCallbackData getCallback(FtCallbackId cid);
+    FeaturePromiseData* getPromiseData(FtPromiseId pid);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
     WeakRef weak_self_;
-    FEATURE::FeatureCallbackId curr_cid_ = 0;
-    std::map<FEATURE::FeatureCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
-    std::map<FEATURE::FeaturePromiseHandle, FeaturePromiseData*> promises_;   // all promises created by native feature
+    FtCallbackId curr_cid_ = 0;
+    std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
+    std::map<FtPromiseId, FeaturePromiseData*> promises_;   // all promises created by native feature
     std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype
 };
 

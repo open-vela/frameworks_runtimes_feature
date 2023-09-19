@@ -23,9 +23,6 @@
 #include <functional>
 #include <stdlib.h>
 
-using namespace FEATURE;
-using namespace ferry;
-
 namespace ferry {
 
 bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
@@ -114,14 +111,14 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
             } break;
             case COMPLEX_CALLBACK: {
                 // callback means cid
-                ptr = FeatureMalloc(sizeof(FeatureCallbackId), FT_INT32);
+                ptr = FeatureMalloc(sizeof(FtCallbackId), FT_INT32);
             } break;
             case COMPLEX_ARRAY: {
                 // array element not created at this point.
                 ptr = FeatureMalloc(complexType->size, featureType);
             } break;
             case COMPLEX_PROMISE: {
-                ptr = FeatureMalloc(sizeof(FeaturePromiseHandle), FT_INT32);
+                ptr = FeatureMalloc(sizeof(FtPromiseId), FT_INT32);
             } break;
             case COMPLEX_INTERFACE: {
                 // interface do not need create
@@ -392,13 +389,13 @@ void* exactVariadicParameter(va_list& ap, FeatureType featureType)
                 FEATURE_CHECK(false && "do not support exact optional type !");
             } break;
             case COMPLEX_CALLBACK: {
-                *(FeatureCallbackId*)result = va_arg(ap, FeatureCallbackId);
+                *(FtCallbackId*)result = va_arg(ap, FtCallbackId);
             } break;
             case COMPLEX_ARRAY: {
 
             } break;
             case COMPLEX_PROMISE: {
-                *(FeaturePromiseHandle*)result = va_arg(ap, FeaturePromiseHandle);
+                *(FtPromiseId*)result = va_arg(ap, FtPromiseId);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
