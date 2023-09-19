@@ -103,7 +103,6 @@ namespace FeatureFFIQjs {
                 (*(uint8_t*)ptr) = d;
                 free(uint32_ptr);
                 uint32_ptr = nullptr;
-                // 打印uint8_t类型的值
                 FEATURE_LOG_DEBUG("ptr is %d !", *(uint8_t*)ptr);
             } break;
             case FT_INT16: {
@@ -224,6 +223,15 @@ namespace FeatureFFIQjs {
                 strcpy(alloc_ptr, str);
                 ptr = alloc_ptr;
                 feature_free_cstring(ctx, str);
+            } break;
+            case FT_ANY: {
+                // copy value
+                ft_value_t* f_val = (ft_value_t*)malloc(sizeof(ft_value_t));
+                qjs_val_t* q_val = (qjs_val_t*)f_val;
+                q_val->js_val = value;
+                q_val->type = FT_TYPE_OBJECT;
+                memcpy((void*)ptr, (void*)f_val, sizeof(ft_value_t));
+                free(f_val);
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
@@ -387,6 +395,9 @@ namespace FeatureFFIQjs {
             } break;
             case FT_CHAR: {
                 value = feature_string(ctx, (const char*)ptr);
+            } break;
+            case FT_ANY: {
+                // any type not need convert to guest
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");

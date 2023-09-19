@@ -73,6 +73,7 @@
 
   /****** for JIDL struct 'Book' ******/
   static ObjectMember Struct_Book_struct_members[] = {
+    { "anyparameter", FT_ANY, offsetof(Struct_Book, _anyparameter), sizeof(FtAny) },
     { "page_count", FT_INT, offsetof(Struct_Book, _page_count), sizeof(FtInt) },
     { "title", FT_STRING, offsetof(Struct_Book, _title), sizeof(FtString) },
     { "chap_titles", FT_MK_COMPLEX_REF(&Struct_string_array), offsetof(Struct_Book, _chap_titles), sizeof(FtArray*) },
