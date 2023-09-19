@@ -5,7 +5,7 @@
 const char* file_tag = "[jidl_feature] record_1_0_impl";
 
 // FeatureCallbacks to be implemented
-void Record_onRegister(FeatureRuntimeContext ctx)
+void Record_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
@@ -30,7 +30,7 @@ void Record_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Record_onUnregister(FeatureRuntimeContext ctx)
+void Record_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }

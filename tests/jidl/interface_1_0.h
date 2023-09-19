@@ -17,12 +17,12 @@
 #include <string.h>
 
   // FeatureCallbacks to be implemented
-  void Interface_onRegister(FeatureRuntimeContext ctx);
+  void Interface_onRegister(const char* feature_name);
   void Interface_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
   void Interface_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void Interface_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void Interface_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-  void Interface_onUnregister(FeatureRuntimeContext ctx);
+  void Interface_onUnregister(const char* feature_name);
 
   // Struct defines
 

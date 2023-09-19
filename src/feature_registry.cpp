@@ -126,7 +126,7 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
                 FEATURE_LOG_DEBUG("description->name is %s...", description->name);
                 if (description->native_callbacks && description->native_callbacks->onRegister) {
                     FEATURE_LOG_DEBUG("invoke onRegister callback...");
-                    description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
+                    description->native_callbacks->onRegister(description->name);
                 }
                 return true;
             }
@@ -137,7 +137,7 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const F
         FEATURE_LOG_DEBUG("description->name is %s...", description->name);
         if (description->native_callbacks && description->native_callbacks->onRegister) {
             FEATURE_LOG_DEBUG("invoke onRegister callback...");
-            description->native_callbacks->onRegister(const_cast<FeatureDescription*>(description));
+            description->native_callbacks->onRegister(description->name);
         }
         return true;
     }

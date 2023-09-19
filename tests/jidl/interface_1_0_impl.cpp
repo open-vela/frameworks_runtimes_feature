@@ -153,7 +153,7 @@ void Interface_Animal_interface_dog_walk(FeatureInstanceHandle feature, AppendDa
 }
 
 // FeatureCallbacks to be implemented
-void Interface_onRegister(FeatureRuntimeContext ctx)
+void Interface_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
@@ -178,7 +178,7 @@ void Interface_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Interface_onUnregister(FeatureRuntimeContext ctx)
+void Interface_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }

@@ -29,7 +29,7 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Promise_onRegister(FeatureRuntimeContext ctx)
+void Promise_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
@@ -54,7 +54,7 @@ void Promise_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_onUnregister(FeatureRuntimeContext ctx)
+void Promise_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }

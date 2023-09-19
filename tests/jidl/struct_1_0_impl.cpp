@@ -29,7 +29,7 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Struct_onRegister(FeatureRuntimeContext ctx)
+void Struct_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
@@ -54,7 +54,7 @@ void Struct_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Struct_onUnregister(FeatureRuntimeContext ctx)
+void Struct_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
