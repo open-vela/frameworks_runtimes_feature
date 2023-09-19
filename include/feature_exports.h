@@ -47,6 +47,14 @@ void* FeatureDupValue(void* ptr);
 void FeatureFreeValue(void* ptr);
 
 /**
+ * @brief get feature proto handle from feature instance
+ *
+ * @param handle
+ * @return FeatureProtoHandle
+ */
+FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle);
+
+/**
  * @brief get the native object pointer bind to feature proto(global object for all feature instance)
  *
  * @param handle

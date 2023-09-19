@@ -119,6 +119,11 @@ void FeatureFreeValue(void* ptr)
     }
 }
 
+FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
+{
+    return (FeatureProtoHandle)static_cast<FeatureInstance*>(handle)->prototype();
+}
+
 void* FeatureGetProtoData(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
