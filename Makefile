@@ -52,7 +52,6 @@ FEATURELIST += Struct_1_0
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feature_timers.cpp
 FEATURELIST += timers
 
-include $(APPDIR)/frameworks/base/feature/Module.mk
 endif
 
 
@@ -60,24 +59,6 @@ endif
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 
 context::
-ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h),)
-ifeq ($(FEATURELIST),)
-	@echo "ajs_features_init.h is empty, need create it"
-	@echo "#include \"feature_manager.h\"" > $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h
-	@echo "" >> $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h
-	@echo "using namespace ferry;" >> $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h
-	@echo "#undef QAPPFEATURE_INIT" >> $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h
-	@echo "#define QAPPFEATURE_INIT(module) bool jse_##module##_initFeature(ferry::FeatureManager *mgr, std::vector<std::string>&features)" >> $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h
-	@echo "" >> $(APPDIR)/frameworks/base/feature/include/ajs_features_init.h
-endif
-endif
-
-ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/include/ajs_features_list.h),)
-ifeq ($(FEATURELIST),)
-	@echo "ajs_features_list.h is empty, need create it"
-	@echo "" > $(APPDIR)/frameworks/base/feature/include/ajs_features_list.h
-endif
-endif
 
 
 clean::
@@ -93,4 +74,5 @@ clean_context::
 	$(call DELFILE, $(PDATLIST))
 endif
 
+include $(APPDIR)/frameworks/base/feature/Module.mk
 include $(APPDIR)/Application.mk
