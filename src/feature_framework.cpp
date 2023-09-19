@@ -109,6 +109,9 @@ int getValueSize(FeatureType featureType)
             // return 0 for string buffer size.
                 return 0;
             } break;
+            case FT_ANY: {
+                return sizeof(ft_value_t);
+            } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return 0;

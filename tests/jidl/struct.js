@@ -7,10 +7,16 @@ struct.foo(1,
     })
 
 struct.bar2(
-   {
-       'page_count' : 500,
+    {
+        anyparameter: {
+            any1: 100,
+            any2: 'chapter one',
+            any3: [500, 'chapter 2', '0.5px'],
+        },
+
+        'page_count' : 500,
         'title': 'my book',
-        'chap_titles': ['chapter 1', 'chapter 2', 'chapter 3'],
+        chap_titles : ['chapter 1', 'chapter 2', 'chapter 3'],
         'first_chap': {
             'page_count' : 100,
             'title': 'chapter one'
@@ -28,6 +34,11 @@ let first_chapter = {
 struct.foo(5, first_chapter);
 
 let book = {
+    anyparameter: {
+        any1: 340000,
+        any2: 'chapter one by one',
+        any3: [500, 'chapter 220', '0.5px'],
+    },
     'page_count' : 600,
     'title': 'your book',
     'chap_titles': ['section 1', 'section 2', 'section 3'],
