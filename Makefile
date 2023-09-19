@@ -68,6 +68,9 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
 FEATURELIST += jumpApp
 endif
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest_impl.cpp
+FEATURELIST += mockatest
 endif
 
 
