@@ -13,10 +13,10 @@ using namespace FEATURE;
 template <typename T>
 class FTArrayHelper {
 private:
-    FTArray* _data;
+    FtArray* _data;
 
 public:
-    FTArrayHelper(FTArray* data)
+    FTArrayHelper(FtArray* data)
     {
         _data = data;
     }
@@ -87,7 +87,7 @@ static Point* __with_optional(FeatureInstanceHandle handle, int64_t data, const 
     return p;
 }
 
-static void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t data, FTArray& array)
+static void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t data, FtArray& array)
 {
     FTArrayHelper<Point*> point_array(&array);
     printf("%s: point_array size: %d\n", __func__, point_array.size());
@@ -99,7 +99,7 @@ static void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t dat
     printf("]\n");
 }
 
-static void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData data, FTArray& array)
+static void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData data, FtArray& array)
 {
     FTArrayHelper<const char*> point_array(&array);
     printf("%s: point_array size: %d\n", __func__, point_array.size());
@@ -110,16 +110,16 @@ static void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData dat
     printf("]\n");
 }
 
-static void __return_promise(FeatureInstanceHandle handle, AppendData data, FeaturePromiseHandle promiseHandle, bool isReject)
+static void __return_promise(FeatureInstanceHandle handle, AppendData data, FtPromiseId pid, bool isReject)
 {
     Point p;
     p._x = 1.0;
     p._y = 2.0;
     p._z = 3.0;
     if (isReject) {
-        FeaturePromiseReject(handle, promiseHandle, &p);
+        FeaturePromiseReject(handle, pid, &p);
     } else {
-        FeaturePromiseResolve(handle, promiseHandle, &p);
+        FeaturePromiseResolve(handle, pid, &p);
     }
 }
 
@@ -143,11 +143,11 @@ static Point* __init_const1(FeatureInstanceHandle handle, int64_t data)
     return p;
 }
 
-static void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParameters variadicParameters)
+static void __print(FeatureInstanceHandle handle, int64_t data, FtVariParams vari_params)
 {
     ft_context_ref ft_ctx = FeatureGetContext(handle);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < vari_params.vari_count; i++) {
+        ft_value_t param = vari_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);
@@ -197,7 +197,7 @@ static void __print(FeatureInstanceHandle handle, int64_t data, FtVariadicParame
     printf("\n");
 }
 
-static void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
+static void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FtCallbackId callback)
 {
     if (FeatureInvokeCallback(handle, callback, "hello world", 123.0, 456.0, 789.0)) {
         FEATURE_LOG_ERROR("invoke failed !");
@@ -206,7 +206,7 @@ static void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FEATURE::
     FeatureRemoveCallback(handle, callback);
 }
 
-static void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FEATURE::FeatureCallbackId callback)
+static void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FtCallbackId callback)
 {
     char* arg1 = (char*)FeatureMalloc(sizeof("test1") + 1, FT_CHAR);
     sprintf(arg1, "%s", "test1");
@@ -235,7 +235,7 @@ static ObjectMapType Point_type {
 };
 
 static PromiseType Promise_type {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { FT_MK_COMPLEX_REF(&Point_type), FT_MK_COMPLEX_REF(&Point_type) }
 };
 
@@ -260,7 +260,7 @@ static FeatureType cb1_parameters[] = {
 };
 
 static CallbackType cb1_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = cb1_parameters,
     .return_type = FT_MK_COMPLEX(&Point_type)
 };
@@ -274,7 +274,7 @@ static FeatureType cb2_parameters[] = {
 };
 
 static CallbackType cb2_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FeatureCallbackId) },
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = cb2_parameters,
     .return_type = FT_MK_COMPLEX(&Point_type)
 };
@@ -284,7 +284,7 @@ static FeatureType func_with_cb2_parameters[] = {
 };
 
 static OptionalType with_optional_type {
-    .header = { .type = ferry::COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "this is optional default string"
 };
@@ -294,7 +294,7 @@ static FeatureType with_optional_parameters[] = {
 };
 
 static ArrayType point_ptr_array_type = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_MK_COMPLEX_REF(&Point_type)
 };
 
@@ -303,7 +303,7 @@ static FeatureType recv_point_ptr_array_parameters[] = {
 };
 
 static ArrayType string_array_type = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_STRING
 };
 
@@ -312,16 +312,16 @@ static FeatureType recv_string_array_parameters[] = {
 };
 
 static OptionalType recv_point_array_type {
-    .header = { .type = ferry::COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "this is optional default string"
 };
 
 Point* g_point1 = new (FeatureMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);
 
-static FTArray* __return_array(FeatureInstanceHandle handle, int64_t data)
+static FtArray* __return_array(FeatureInstanceHandle handle, int64_t data)
 {
-    FTArray* strArray = static_cast<FTArray*>(FeatureMalloc(sizeof(FTArray), FT_MK_COMPLEX(&string_array_type)));
+    FtArray* strArray = static_cast<FtArray*>(FeatureMalloc(sizeof(FtArray), FT_MK_COMPLEX(&string_array_type)));
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {

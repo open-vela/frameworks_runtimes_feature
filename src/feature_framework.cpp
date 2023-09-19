@@ -35,8 +35,8 @@ int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
     while (param && FT_GET_VALUE(*param)) {
         count++;
         if (optional_size && FT_IS_COMPLEX(*param)) {
-            ferry::ComplexTypeHeader* complexHeader = (ferry::ComplexTypeHeader*)FT_GET_COMPLEX(*param);
-            if (complexHeader->type == ferry::COMPLEX_OPTIONAL) {
+            ComplexTypeHeader* complexHeader = (ComplexTypeHeader*)FT_GET_COMPLEX(*param);
+            if (complexHeader->type == COMPLEX_OPTIONAL) {
                 *optional_size = *optional_size + 1;
             }
         }

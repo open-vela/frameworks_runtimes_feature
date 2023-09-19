@@ -32,7 +32,7 @@ namespace ferry {
      * @return true
      * @return false
      */
-    bool createTypeDeclaration(FEATURE::FeatureType featureType, ffi_type*& type);
+    bool createTypeDeclaration(FeatureType featureType, ffi_type*& type);
 
     /**
      * @brief free ffi type declaration
@@ -50,7 +50,7 @@ namespace ferry {
      * @return true
      * @return false
      */
-    bool createHostValue(FEATURE::FeatureType featureType, void*& ptr, bool createPtrOnly = false);
+    bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly = false);
 
     /**
      * @brief exact variadic parameter using va_list
@@ -59,6 +59,6 @@ namespace ferry {
      * @param featureType
      * @return void*
      */
-    void* exactVariadicParameter(va_list& ap, FEATURE::FeatureType featureType);
+    void* exactVariadicParameter(va_list& ap, FeatureType featureType);
 };
 #endif

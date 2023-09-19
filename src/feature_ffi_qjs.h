@@ -38,7 +38,7 @@ namespace FeatureFFIQjs {
      * @return true
      * @return false
      */
-    bool convertValueToHost(FeatureInstance* instance, FEATURE::FeatureType featureType, void*& ptr, context_ref ctx, feature_value_t value);
+    bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr, context_ref ctx, feature_value_t value);
 
     /**
      * @brief convert value from host to guest
@@ -50,7 +50,7 @@ namespace FeatureFFIQjs {
      * @return true
      * @return false
      */
-    bool convertValueToGuest(FeatureInstance* instance, FEATURE::FeatureType featureType, void* ptr, context_ref ctx, feature_value_t& value);
+    bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr, context_ref ctx, feature_value_t& value);
 
 }
 

@@ -18,7 +18,6 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 typedef enum ft_type {
   FT_TYPE_NONE = 0,

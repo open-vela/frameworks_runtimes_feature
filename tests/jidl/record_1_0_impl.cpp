@@ -42,9 +42,9 @@ void Record_wrap_start(FeatureInstanceHandle feature,
                    FtInt numberOfChannels,
                    FtInt encodeBitRate,
                    FtString format,
-                   FeatureCallbackId s_cb,
-                   FeatureCallbackId f_cb,
-                   FeatureCallbackId c_cb) {
+                   FtCallbackId s_cb,
+                   FtCallbackId f_cb,
+                   FtCallbackId c_cb) {
     printf("%s::%s(), duration: %ld, sampleRate: %d, numberOfChannels: %d, encodeBitRate: %d, format: %s\n",
           file_tag,  __FUNCTION__, duration, sampleRate, numberOfChannels, encodeBitRate, format);
 }

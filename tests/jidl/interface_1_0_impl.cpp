@@ -9,10 +9,10 @@ static const char* file_tag = "[jidl_feature] interface_1_0_impl";
 template <typename T>
 class FTArrayHelper {
 private:
-    FTArray* _data;
+    FtArray* _data;
 
 public:
-    FTArrayHelper(FTArray* data)
+    FTArrayHelper(FtArray* data)
     {
         _data = data;
     }
@@ -50,7 +50,7 @@ static FtInt _Interface_cat_get_legCount(FeatureInstanceHandle feature, AppendDa
     return 4;
 }
 
-static FtInt _Interface_cat_eatFood(FeatureInstanceHandle feature, AppendData data, FTArray& foods)
+static FtInt _Interface_cat_eatFood(FeatureInstanceHandle feature, AppendData data, FtArray& foods)
 {
     FTArrayHelper<const char*> string_array(&foods);
     printf("%s::%s() cat eat food, array_size: %d\n", file_tag,  __FUNCTION__, string_array.size());
@@ -70,10 +70,10 @@ static FtString _Interface_cat_run(FeatureInstanceHandle feature, AppendData dat
     return buf;
 }
 
-static FTArray* _Interface_cat_fly(FeatureInstanceHandle feature, AppendData data)
+static FtArray* _Interface_cat_fly(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s() %s\n", file_tag, __FUNCTION__, "cat can not fly");
-    FTArray* strArray = Interface_malloc_string_array();
+    FtArray* strArray = Interface_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -84,12 +84,12 @@ static FTArray* _Interface_cat_fly(FeatureInstanceHandle feature, AppendData dat
     return strArray;
 }
 
-void _Interface_cat_walk(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void _Interface_cat_walk(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s() %s\n", file_tag, __FUNCTION__, "cat walk slowly");
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "cat walk resolved!");
-    FeaturePromiseResolve(feature, promiseHandle, buf);
+    FeaturePromiseResolve(feature, pid, buf);
 }
 
 // vtalble functions implemented for dog
@@ -112,7 +112,7 @@ FtInt Interface_Animal_interface_dog_get_legCount(FeatureInstanceHandle feature,
     return 4;
 }
 
-FtInt Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, AppendData data, FTArray& foods)
+FtInt Interface_Animal_interface_dog_eatFood(FeatureInstanceHandle feature, AppendData data, FtArray& foods)
 {
     FTArrayHelper<const char*> string_array(&foods);
     printf("%s::%s() dog eat food array_size: %d\n", file_tag,  __FUNCTION__, string_array.size());
@@ -132,10 +132,10 @@ FtString Interface_Animal_interface_dog_run(FeatureInstanceHandle feature, Appen
     return buf;
 }
 
-FTArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, AppendData data)
+FtArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, AppendData data)
 {
     printf("%s::%s() %s\n", file_tag, __FUNCTION__, "dog can not fly");
-    FTArray* strArray = Interface_malloc_string_array();
+    FtArray* strArray = Interface_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -146,10 +146,10 @@ FTArray* Interface_Animal_interface_dog_fly(FeatureInstanceHandle feature, Appen
     return strArray;
 }
 
-void Interface_Animal_interface_dog_walk(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle)
+void Interface_Animal_interface_dog_walk(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s() %s\n", file_tag, __FUNCTION__, "dog walk fastly");
-    FeaturePromiseReject(feature, promiseHandle, 5);
+    FeaturePromiseReject(feature, pid, 5);
 }
 
 // FeatureCallbacks to be implemented
@@ -185,11 +185,11 @@ void Interface_onUnregister(FeatureRuntimeContext ctx)
 
 // Function wrappers to be implemented
 
-void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt distance) {
+void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance) {
     printf("%s::%s() distance: %d\n", file_tag, __FUNCTION__, distance);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "flyFar resolved!");
-    FeaturePromiseResolve(feature, promiseHandle, buf);
+    FeaturePromiseResolve(feature, pid, buf);
 }
 
 FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data) {
@@ -212,12 +212,12 @@ void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, Fe
     printf("%s::%s() animal: %p\n", file_tag, __FUNCTION__, animal);
 }
 
-void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < vari_params.vari_count; i++) {
+        ft_value_t param = vari_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);

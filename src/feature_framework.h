@@ -16,7 +16,7 @@
 #ifndef __FEATURE_FRAMEWORK_H__
 #define __FEATURE_FRAMEWORK_H__
 
-#include "feature_exports.h"
+#include "feature_description.h"
 #include "feature_utils.h"
 
 #include <map>
@@ -25,16 +25,16 @@
 
 #define TRY_GET_REAL_TYPE(featureType)                                                                  \
     if (FT_IS_COMPLEX(featureType)) {                                                                   \
-        ferry::ComplexTypeHeader* complexType = (ferry::ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == ferry::COMPLEX_OPTIONAL) {                                             \
-            featureType = ((ferry::OptionalType*)complexType)->type;                                    \
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        if (complexType->type == COMPLEX_OPTIONAL) {                                             \
+            featureType = ((OptionalType*)complexType)->type;                                    \
         }                                                                                               \
     }
 
 #define IS_INTERFACE_TYPE(featureType, ret)                                                             \
     if (FT_IS_COMPLEX(featureType)) {                                                                   \
-        ferry::ComplexTypeHeader* complexType = (ferry::ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        ret = complexType->type == ferry::COMPLEX_INTERFACE;                                            \
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        ret = complexType->type == COMPLEX_INTERFACE;                                            \
     } else {                                                                                            \
         ret = false;                                                                                    \
     }

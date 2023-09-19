@@ -65,7 +65,7 @@ namespace FEATURE {
  */
 #define FEATURE_ERROR_AND_ABORT(expr)  \
     do { \
-        static const struct FeatureAssertionInfo args__ = { __FILE__ ":" FEATURE_STRINGIFY(__LINE__), #expr, FEATURE_PRETTY_FUNCTION_NAME }; \
+        static const struct FEATURE::FeatureAssertionInfo args__ = { __FILE__ ":" FEATURE_STRINGIFY(__LINE__), #expr, FEATURE_PRETTY_FUNCTION_NAME }; \
         FEATURE_LOG_ERROR("%s:%s%s Assertion `%s' failed.", args__.fileLine, args__.function, *args__.function ? ":" : "", args__.message); \
         assert(0); \
     } while (0)

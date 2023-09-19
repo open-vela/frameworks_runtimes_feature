@@ -25,8 +25,6 @@
 
 using namespace ferry;
 
-namespace FEATURE {
-
 void* FeatureMalloc(size_t size, FeatureType featureType)
 {
     void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
@@ -94,7 +92,7 @@ void FeatureFreeValue(void* ptr)
             // free array elements and ptr
             ArrayType& arrayType = *(ArrayType*)complexType1;
             auto element_type = arrayType.element_type;
-            FTArray* arrayData = (FTArray*)ptr;
+            FtArray* arrayData = (FtArray*)ptr;
             // free elements one by one if it's reference.
             if (FT_IS_REFERENCE(element_type)) {
                 size_t element_size = sizeof(uintptr_t);
@@ -149,7 +147,7 @@ ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
     return static_cast<FeatureInstance*>(handle)->prototype()->ft_ctx;
 }
 
-int FeatureInvokeCallback(FeatureInstanceHandle handle, int cid, ...)
+bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
 
@@ -157,10 +155,10 @@ int FeatureInvokeCallback(FeatureInstanceHandle handle, int cid, ...)
     va_start(ap, cid);
     int ret = instance->invokeCallback(cid, ap);
     va_end(ap);
-    return ret;
+    return ret == 0;
 }
 
-int FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId cid, int count, ...)
+bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid, int count, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
 
@@ -168,48 +166,46 @@ int FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FeatureCallbackId c
     va_start(ap, count);
     int ret = instance->invokeCallbackCount(cid, ap, count);
     va_end(ap);
-    return ret;
+    return ret == 0;
 }
 
-bool FeatureRemoveCallback(FeatureInstanceHandle handle, FeatureCallbackId id)
+bool FeatureRemoveCallback(FeatureInstanceHandle handle, FtCallbackId cid)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
-    return instance->removeCallback(id);
+    return instance->removeCallback(cid);
 }
 
-int FeaturePromiseResolve(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...)
+bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
-    va_start(ap, promiseHandle);
-    int ret = instance->settlePromise(true, promiseHandle, ap);
+    va_start(ap, pid);
+    int ret = instance->settlePromise(true, pid, ap);
     va_end(ap);
     // remove
-    if (!instance->removePromise(promiseHandle)) {
-        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", promiseHandle);
+    if (!instance->removePromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
         ret = -2;
     }
-    return ret;
+    return ret == 0;
 }
 
-int FeaturePromiseReject(FeatureInstanceHandle handle, FeaturePromiseHandle promiseHandle, ...)
+bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
-    va_start(ap, promiseHandle);
-    int ret = instance->settlePromise(false, promiseHandle, ap);
-    if (!instance->removePromise(promiseHandle)) {
-        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", promiseHandle);
+    va_start(ap, pid);
+    int ret = instance->settlePromise(false, pid, ap);
+    if (!instance->removePromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
         ret = -2;
     }
     va_end(ap);
-    return ret;
+    return ret == 0;
 }
 
-FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, FEATURE::VTable vtable, int vtable_size)
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable vtable, int vtable_size)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->createInterface(vtable, vtable_size);
-}
-
 }

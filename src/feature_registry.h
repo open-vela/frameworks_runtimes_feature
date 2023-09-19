@@ -15,10 +15,12 @@
  */
 #ifndef __FEATURE_REGISTRY_H__
 #define __FEATURE_REGISTRY_H__
-#include "feature_framework.h"
 
 #include <map>
 #include <string>
+#include <vector>
+
+struct FeatureDescription;
 
 namespace ferry {
 

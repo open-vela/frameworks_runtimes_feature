@@ -66,7 +66,7 @@ class Render:
 ### CPP Render
 class CPPRender(Render):
   param_ref_types = (
-    'FTArray',
+    'FtArray',
   )
 
   cpp_type_map = {
@@ -87,22 +87,22 @@ class CPPRender(Render):
     'uint64' : 'FtUint64',
     'int64' : 'FtInt64',
     'void' : 'void',
-    'ellipse' : 'FtVariadicParameters',
-    'callback' : 'FeatureCallbackId',
-    'Int8Array' : 'FTArray',
-    'Uint8Array' : 'FTArray',
-    'Int16Array' : 'FTArray',
-    'Uint16Array' : 'FTArray',
-    'Int32Array' : 'FTArray',
-    'Uint32Array' : 'FTArray',
-    'Int64Array' : 'FTArray',
-    'Uint64Array' : 'FTArray',
-    'IntArray' : 'FTArray',
-    'UintArray' : 'FTArray',
-    'LongArray' : 'FTArray',
-    'UlongArray' : 'FTArray',
-    'FloatArray' : 'FTArray',
-    'DoubleArray' : 'FTArray',
+    'ellipse' : 'FtVariParams',
+    'callback' : 'FtCallbackId',
+    'Int8Array' : 'FtArray',
+    'Uint8Array' : 'FtArray',
+    'Int16Array' : 'FtArray',
+    'Uint16Array' : 'FtArray',
+    'Int32Array' : 'FtArray',
+    'Uint32Array' : 'FtArray',
+    'Int64Array' : 'FtArray',
+    'Uint64Array' : 'FtArray',
+    'IntArray' : 'FtArray',
+    'UintArray' : 'FtArray',
+    'LongArray' : 'FtArray',
+    'UlongArray' : 'FtArray',
+    'FloatArray' : 'FtArray',
+    'DoubleArray' : 'FtArray',
   }
 
   array_cpp_type_map = {
@@ -253,7 +253,7 @@ class CPPRender(Render):
 
     module_name = self.GetModuleName()
     if 'element' in ast_type:
-      return 'FTArray'
+      return 'FtArray'
     elif 'referred_type' in ast_type:
       referred_type = ast_type['referred_type']
       if referred_type == 'callback':
@@ -318,7 +318,7 @@ class CPPRender(Render):
     if self._TryCacheFeatureType(ft_info['type']):
       self.ArrayTypeGenerator.Generate(array_type, is_complex)
       module_name = self.GetModuleName()
-      array_malloc_func_str = f"FTArray* {module_name}_malloc_{array_type}_array()"
+      array_malloc_func_str = f"FtArray* {module_name}_malloc_{array_type}_array()"
       self._TryCacheArrayMallocFunc(array_malloc_func_str)
     return ft_info
 
@@ -410,14 +410,14 @@ class CPPRender(Render):
       return self._MapType(ret_type, self.cpp_type_map)
     elif isinstance(ret_type, dict):
       if ret_type['type'] == 'promise':
-        return 'FeaturePromiseHandle'
+        return 'FtPromiseId'
       else:
         return self.GenerateCppType(ret_type)
     return 'void'
 
   def GenerateReturnType(self, ret_type):
     ret_type = self._GenerateReturnType(ret_type)
-    if ret_type == 'FTArray':
+    if ret_type == 'FtArray':
       ret_type += '*'
     return ret_type
 
@@ -447,9 +447,9 @@ class CPPRender(Render):
     ret_type_node = node["return_type"]
     ret_type = self.GenerateReturnType(ret_type_node)
     prefix_params = 'FeatureInstanceHandle feature, AppendData data'
-    if ret_type == 'FeaturePromiseHandle':
+    if ret_type == 'FtPromiseId':
       ret_type = 'void'
-      prefix_params += ', FeaturePromiseHandle promiseHandle'
+      prefix_params += ', FtPromiseId pid'
     module_name = self.GetModuleName()
     func_define = f"{ret_type} {module_name}_wrap_{identifier}({prefix_params}"
     if 'params' in node:
@@ -539,9 +539,9 @@ class CPPRender(Render):
       name = node['identifier']
       ret_type = self.GenerateReturnType(node["return_type"])
       has_params = 'params' in node
-      if ret_type == 'FeaturePromiseHandle':
+      if ret_type == 'FtPromiseId':
         ret_type = 'void'
-        params += 'FeaturePromiseHandle promiseHandle'
+        params += 'FtPromiseId pid'
         if has_params:
           params += ', '
       if has_params:
@@ -551,7 +551,7 @@ class CPPRender(Render):
       prop_type = node["value_type"]
       cpp_type = self.GenerateCppType(prop_type)
       if func_type == 1:
-        if cpp_type == 'FTArray':
+        if cpp_type == 'FtArray':
           cpp_type += '*'
         ret_type = cpp_type
       elif func_type == 2:

@@ -16,9 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-  using namespace FEATURE;
-  using namespace ferry;
-
   // FeatureCallbacks to be implemented
   void Struct_onRegister(FeatureRuntimeContext ctx);
   void Struct_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
@@ -39,9 +36,9 @@
   typedef struct _Book {
     FtInt _page_count;
     FtString _title;
-    FTArray* _chap_titles;
+    FtArray* _chap_titles;
     Struct_Chapter * _first_chap;
-    FeatureCallbackId _chap_changed;
+    FtCallbackId _chap_changed;
   } Struct_Book;
 
   Struct_Book* mallocBook();
@@ -51,11 +48,13 @@
   void Struct_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, Struct_Chapter * b);
   Struct_Chapter * Struct_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a);
   void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_Book * a);
-  void Struct_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters vari_params);
+  void Struct_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params);
 
   // Property getters and setters to be implemented
 
+  // interface vtable functions to be implemented
+
   // Array malloc functions
-  FTArray* Struct_malloc_string_array();
+  FtArray* Struct_malloc_string_array();
 
 #endif // JSON_AST_GEN_MODULE_STRUCT_H_

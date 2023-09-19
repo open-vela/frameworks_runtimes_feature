@@ -28,9 +28,6 @@
 #include <functional>
 #include <stdlib.h>
 
-using namespace FEATURE;
-using namespace ferry;
-
 namespace ferry {
 
 extern thread_local feature_classid_t interface_class_id; // prototype class id
@@ -285,15 +282,15 @@ namespace FeatureFFIQjs {
             case COMPLEX_CALLBACK: {
                 // save into instance
                 CallbackType* callbackType = (CallbackType*)complexType;
-                FeatureCallbackId id = ((FeatureInstanceQjs*)instance)->addCallback(value, callbackType);
-                *(FeatureCallbackId*)ptr = id; // write callback id to pointer.
+                FtCallbackId id = ((FeatureInstanceQjs*)instance)->addCallback(value, callbackType);
+                *(FtCallbackId*)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {
                 ArrayType& arrayType = *(ArrayType*)complexType;
                 auto element_type = arrayType.element_type;
                 FEATURE_CHECK_EQ(feature_is_array(ctx, value), true);
                 auto len = feature_get_array_length(ctx, value);
-                FTArray* arrayData = (FTArray*)ptr;
+                FtArray* arrayData = (FtArray*)ptr;
                 arrayData->_size = len;
                 if (len) {
                     // we support reference and primitive types
@@ -435,7 +432,7 @@ namespace FeatureFFIQjs {
             case COMPLEX_ARRAY: {
                 // convert to guest
                 ArrayType* arrayType = (ArrayType*)complexType;
-                FTArray* arrayData = (FTArray*)ptr;
+                FtArray* arrayData = (FtArray*)ptr;
                 auto element_type = arrayType->element_type;
                 FEATURE_CHECK_EQ(FT_IS_REFERENCE(element_type), true);
                 size_t element_size = sizeof(uintptr_t);
@@ -462,10 +459,10 @@ namespace FeatureFFIQjs {
                     FEATURE_LOG_ERROR("convert promise need instance provided !");
                 }
                 FEATURE_CHECK_NE(instance, nullptr);
-                FeaturePromiseHandle promiseHandle = *(FeaturePromiseHandle*)ptr;
-                feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(promiseHandle);
+                FtPromiseId pid = *(FtPromiseId*)ptr;
+                feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
                 if (feature_is_undefined(promise)) {
-                    FEATURE_LOG_ERROR("get promise with promiseHandle: %" PRId32 " failed !", promiseHandle);
+                    FEATURE_LOG_ERROR("get promise with pid: %" PRId32 " failed !", pid);
                     return false;
                 }
                 value = feature_dup_value(ctx, promise);

@@ -5,6 +5,7 @@
 
 #include "promise_1_0.h"
 #include "ajs_features_init.h"
+#include "feature_description.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -16,7 +17,7 @@
   };
 
   static const PromiseType Promise_promise_FT_INT_FT_INT_type = {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { FT_INT, FT_INT }
   };
 
@@ -28,8 +29,8 @@
 
 
   /****** for JIDL use 'use_foo' ******/
-  static void Promise_wrap_use_foo (FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle, FtInt a) {
-    Promise_wrap_foo (feature, data, promiseHandle, a, "hello");
+  static void Promise_wrap_use_foo (FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a) {
+    Promise_wrap_foo (feature, data, pid, a, "hello");
   }
 
   static const FeatureType Promise_use_foo_parameters[] = {
@@ -51,7 +52,7 @@
   };
 
   static const PromiseType Promise_promise_FT_INT_FT_STRING_type = {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { FT_INT, FT_STRING }
   };
 
@@ -80,27 +81,27 @@
   };
 
   static const ArrayType Promise_int_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_INT
   };
 
-  FTArray* Promise_malloc_int_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&Promise_int_array));
+  FtArray* Promise_malloc_int_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&Promise_int_array));
   }
 
   static const ArrayType Promise_string_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_STRING
   };
 
-  FTArray* Promise_malloc_string_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&Promise_string_array));
+  FtArray* Promise_malloc_string_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&Promise_string_array));
   }
 
   static const PromiseType Promise_promise_int_array_string_array_type = {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { FT_MK_COMPLEX_REF(&Promise_int_array), FT_MK_COMPLEX_REF(&Promise_string_array) }
   };
 
@@ -129,7 +130,7 @@
   };
 
   static const PromiseType Promise_promise_int_array_FT_STRING_type = {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { FT_MK_COMPLEX_REF(&Promise_int_array), FT_STRING }
   };
 

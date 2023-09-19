@@ -5,6 +5,7 @@
 
 #include "interface_1_0.h"
 #include "ajs_features_init.h"
+#include "feature_description.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -25,13 +26,13 @@ extern const InterfaceType Interface_Animal_interface_type;
 
   /****** for JIDL function 'Animal_interface_eatFood' ******/
   static const ArrayType Interface_string_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FTArray) },
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_STRING
   };
 
-  FTArray* Interface_malloc_string_array() {
-    return (FTArray*)FeatureMalloc(
-      sizeof(FTArray), FT_MK_COMPLEX(&Interface_string_array));
+  FtArray* Interface_malloc_string_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&Interface_string_array));
   }
 
   static const FeatureType Interface_Animal_interface_eatFood_parameters[] = {
@@ -75,7 +76,7 @@ extern const InterfaceType Interface_Animal_interface_type;
   };
 
   static const PromiseType Interface_promise_string_array_FT_INT_type = {
-    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FeaturePromiseHandle) },
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveTypes = { FT_MK_COMPLEX_REF(&Interface_string_array), FT_INT }
   };
 
@@ -132,7 +133,7 @@ extern const InterfaceType Interface_Animal_interface_type;
 
   // InterfaceType
   const InterfaceType Interface_Animal_interface_type {
-    .header = { .type = ferry::COMPLEX_INTERFACE, .size = 0 },
+    .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &Interface_Animal_interface_desc
   };
   /****** JIDL interface 'Animal' glue code end ******/
@@ -151,8 +152,8 @@ extern const InterfaceType Interface_Animal_interface_type;
 
 
   /****** for JIDL use 'flyAway' ******/
-  static void Interface_wrap_flyAway (FeatureInstanceHandle feature, AppendData data, FeaturePromiseHandle promiseHandle) {
-    Interface_wrap_flyFar (feature, data, promiseHandle, 100);
+  static void Interface_wrap_flyAway (FeatureInstanceHandle feature, AppendData data, FtPromiseId pid) {
+    Interface_wrap_flyFar (feature, data, pid, 100);
   }
 
   static const FeatureType Interface_flyAway_parameters[] = {

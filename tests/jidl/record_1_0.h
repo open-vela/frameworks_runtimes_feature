@@ -16,9 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-  using namespace FEATURE;
-  using namespace ferry;
-
   // FeatureCallbacks to be implemented
   void Record_onRegister(FeatureRuntimeContext ctx);
   void Record_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
@@ -30,10 +27,12 @@
   // Struct defines
 
   // Function wrappers to be implemented
-  void Record_wrap_start(FeatureInstanceHandle feature, AppendData data, long duration, FtInt sampleRate, FtInt numberOfChannels, FtInt encodeBitRate, FtString format, FeatureCallbackId s_cb, FeatureCallbackId f_cb, FeatureCallbackId c_cb);
+  void Record_wrap_start(FeatureInstanceHandle feature, AppendData data, long duration, FtInt sampleRate, FtInt numberOfChannels, FtInt encodeBitRate, FtString format, FtCallbackId s_cb, FtCallbackId f_cb, FtCallbackId c_cb);
   void Record_wrap_stop(FeatureInstanceHandle feature, AppendData data);
 
   // Property getters and setters to be implemented
+
+  // interface vtable functions to be implemented
 
   // Array malloc functions
 

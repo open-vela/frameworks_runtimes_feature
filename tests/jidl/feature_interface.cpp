@@ -1,8 +1,10 @@
 
 #include "ajs_features_init.h"
 #include "feature_exports.h"
+#include "feature_description.h"
 #include "feature_log.h"
 #include <ffi.h>
+#include <string.h>
 
 using namespace ferry;
 using namespace FEATURE;
@@ -12,11 +14,11 @@ using namespace FEATURE;
 FeatureInstanceHandle __createDog(FeatureInstanceHandle handle, AppendData data);
 FeatureInstanceHandle __createCat(FeatureInstanceHandle handle, AppendData data);
 
-void __print(FeatureInstanceHandle handle, AppendData data, FtVariadicParameters variadicParameters)
+void __print(FeatureInstanceHandle handle, AppendData data, FtVariParams vari_params)
 {
     ft_context_ref ft_ctx = FeatureGetContext(handle);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < vari_params.vari_count; i++) {
+        ft_value_t param = vari_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);
@@ -78,7 +80,7 @@ void __printNameDog(FeatureInstanceHandle handle, AppendData data)
     printf("I'm a dog !\n");
 }
 
-void __receiveInterface(FeatureInstanceHandle handle, AppendData data, FeatureInstance* instance)
+void __receiveInterface(FeatureInstanceHandle handle, AppendData data, FeatureInstanceHandle instance)
 {
     printf("%s: handle: %p, data: %ld, instance: %p\n", __func__, handle, data.i64, instance);
 }
@@ -135,7 +137,7 @@ static const FeatureDescription animal_description = {
 };
 
 const InterfaceType animal_interface_type {
-    .header = { .type = ferry::COMPLEX_INTERFACE, .size = 0 },
+    .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &animal_description
 };
 

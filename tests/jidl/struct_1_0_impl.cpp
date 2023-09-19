@@ -8,10 +8,10 @@ static const char* file_tag = "[jidl_feature] struct_1_0_impl";
 template <typename T>
 class FTArrayHelper {
 private:
-    FTArray* _data;
+    FtArray* _data;
 
 public:
-    FTArrayHelper(FTArray* data)
+    FTArrayHelper(FtArray* data)
     {
         _data = data;
     }
@@ -117,12 +117,12 @@ void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_Boo
     FeatureRemoveCallback(feature, a->_chap_changed);
 }
 
-void Struct_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariadicParameters variadicParameters)
+void Struct_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams var_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < variadicParameters.variadic_count; i++) {
-        ft_value_t param = variadicParameters.variadic_args[i];
+    for (int i = 0; i < var_params.vari_count; i++) {
+        ft_value_t param = var_params.vari_args[i];
         ft_type param_type = ft_get_type(ft_ctx, param);
         if (param_type == FT_TYPE_OBJECT) {
             const char* param_obj = ft_to_string(ft_ctx, param);

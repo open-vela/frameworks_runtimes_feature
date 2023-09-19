@@ -30,12 +30,12 @@ using namespace FEATURE;
 
 namespace ferry {
 
-FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, FEATURE::VTable vtable, int vtable_size)
+FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, VTable vtable, int vtable_size)
     : FeatureInstance(proto, vtable, vtable_size)
 {
 }
 
-FeatureInstance* FeatureInstanceQjs::createInterface(FEATURE::VTable vtable, int vtable_size)
+FeatureInstance* FeatureInstanceQjs::createInterface(VTable vtable, int vtable_size)
 {
     // null param proto to be fixed
     return new FeatureInstanceQjs(nullptr, vtable, vtable_size);
@@ -86,18 +86,18 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     prototypes_.clear();
 }
 
-FeatureCallbackData FeatureInstanceQjs::getCallback(FeatureCallbackId id)
+FeatureCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
 {
-    if (!callbacks_.count(id)) {
+    if (!callbacks_.count(cid)) {
         FeatureCallbackData callback;
         callback.cb = FEATURE_VALUE_UNDEFINED;
         callback.cb_type = nullptr;
         return callback;
     }
-    return callbacks_[id];
+    return callbacks_[cid];
 }
 
-FeatureCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
+FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
     FeatureCallbackData callback;
@@ -107,36 +107,36 @@ FeatureCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, Callbac
     return curr_cid_++;
 }
 
-bool FeatureInstanceQjs::removeCallback(FeatureCallbackId id)
+bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
-    if (!callbacks_.count(id)) {
-        FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", id, this);
+    if (!callbacks_.count(cid)) {
+        FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", cid, this);
         return false;
     }
-    feature_free_value(js_ctx, callbacks_[id].cb);
-    callbacks_.erase(id);
+    feature_free_value(js_ctx, callbacks_[cid].cb);
+    callbacks_.erase(cid);
     return true;
 }
 
-FeaturePromiseData* FeatureInstanceQjs::getPromiseData(FeaturePromiseHandle promiseHandle)
+FeaturePromiseData* FeatureInstanceQjs::getPromiseData(FtPromiseId pid)
 {
-    if (!promises_.count(promiseHandle)) {
+    if (!promises_.count(pid)) {
         return nullptr;
     }
-    return promises_[promiseHandle];
+    return promises_[pid];
 }
 
-feature_value_t FeatureInstanceQjs::getPromise(FeaturePromiseHandle promiseHandle)
+feature_value_t FeatureInstanceQjs::getPromise(FtPromiseId pid)
 {
-    FeaturePromiseData* data = getPromiseData(promiseHandle);
+    FeaturePromiseData* data = getPromiseData(pid);
     if (!data)
         return FEATURE_VALUE_UNDEFINED;
 
     return data->promise;
 }
 
-FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeatureType resolve_type, FeatureType reject_type)
+FtPromiseId FeatureInstanceQjs::addPromise(FeatureType resolve_type, FeatureType reject_type)
 {
     FeaturePromiseData* data = (FeaturePromiseData*)malloc(sizeof(FeaturePromiseData));
     data->promise = FEATURE_VALUE_UNDEFINED;
@@ -159,16 +159,16 @@ FeaturePromiseHandle FeatureInstanceQjs::addPromise(FeatureType resolve_type, Fe
     return curr_cid_++;
 }
 
-bool FeatureInstanceQjs::removePromise(FeaturePromiseHandle promiseHandle)
+bool FeatureInstanceQjs::removePromise(FtPromiseId pid)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
-    if (!promises_.count(promiseHandle)) {
-        FEATURE_LOG_ERROR("promiseHandle %d in instance: %p not exist !", promiseHandle, this);
+    if (!promises_.count(pid)) {
+        FEATURE_LOG_ERROR("pid %d in instance: %p not exist !", pid, this);
         return false;
     }
-    FeaturePromiseData* data = promises_[promiseHandle];
+    FeaturePromiseData* data = promises_[pid];
     FEATURE_CHECK_NE(data, nullptr);
-    promises_.erase(promiseHandle);
+    promises_.erase(pid);
     // free js values
     feature_free_value(js_ctx, data->promise);
     feature_free_value(js_ctx, data->resolveFuncs[0]);
@@ -249,12 +249,12 @@ void FeatureInstanceQjs::freeWeakRef()
     }
 }
 
-int FeatureInstanceQjs::settlePromise(bool resolve, FeaturePromiseHandle promiseHandle, va_list& ap)
+int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
     // get feature instance
-    FeaturePromiseData* promiseData = getPromiseData(promiseHandle);
+    FeaturePromiseData* promiseData = getPromiseData(pid);
     if (!promiseData) {
-        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", promiseHandle);
+        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
         return -1;
     }
     int idx = resolve ? 0 : 1;
