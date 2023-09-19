@@ -33,7 +33,7 @@ typedef int64_t FtInt64;
 typedef uint64_t FtUint64;
 typedef float FtFloat;
 typedef double FtDouble;
-typedef char FtBool;
+typedef bool FtBool;
 typedef const char* FtString;
 typedef ft_value_t FtAny;
 typedef int32_t FtCallbackId; // feature callback id

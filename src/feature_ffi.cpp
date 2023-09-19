@@ -81,7 +81,7 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
                 ptr = FeatureMalloc(sizeof(float), featureType);
             } break;
             case FT_BOOLEAN: {
-                ptr = FeatureMalloc(sizeof(int), featureType);
+                ptr = FeatureMalloc(sizeof(bool), featureType);
             } break;
             case FT_CHAR: {
                 // skip string space allocation, delay to value copy6
@@ -182,7 +182,7 @@ bool createTypeDeclaration(FeatureType featureType, ffi_type*& type)
                 type = &ffi_type_double;
             } break;
             case FT_BOOLEAN: {
-                type = &ffi_type_sint;
+                type = &ffi_type_sint8;
             } break;
             case FT_CHAR: {
                 type = &ffi_type_pointer;
@@ -372,8 +372,16 @@ void* exactVariadicParameter(va_list& ap, FeatureType featureType)
                 *(double*)result = va_arg(ap, double);
             } break;
             case FT_BOOLEAN: {
-                result = malloc(sizeof(int));
-                *(bool*)result = (bool)va_arg(ap, int);
+                void* result_int = nullptr;
+                result_int = malloc(sizeof(int));
+                (*(int*)result_int) = va_arg(ap, int);
+                // back to bool
+                bool d = static_cast<bool>(*(int*)result_int);
+                result = malloc(sizeof(bool));
+                (*(bool*)result) = d;
+                free(result_int);
+                result_int = nullptr;
+                FEATURE_LOG_DEBUG("result is %d !", *(bool*)result);
             } break;
             case FT_CHAR: {
                 result = malloc(sizeof(uintptr_t));
