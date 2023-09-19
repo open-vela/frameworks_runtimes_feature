@@ -173,12 +173,12 @@ typedef struct InterfaceType {
 } InterfaceType;
 
 typedef struct FeatureCallbacks {
-    void (*onRegister)(FeatureRuntimeContext ctx); // 插件注册
+    void (*onRegister)(const char* feature_name); // 插件注册
     void (*onCreate)(FeatureRuntimeContext ctx, FeatureProtoHandle handle); // 插件原型创建
     void (*onRequired)(FeatureRuntimeContext ctx, FeatureInstanceHandle handle); // 插件实例化
     void (*onDetached)(FeatureRuntimeContext ctx, FeatureInstanceHandle handle); // 插件实例销毁
     void (*onDestroy)(FeatureRuntimeContext ctx, FeatureProtoHandle handle); // 插件原型销毁
-    void (*onUnregister)(FeatureRuntimeContext ctx); // 插件反注册
+    void (*onUnregister)(const char* feature_name); // 插件反注册
 } FeatureCallbacks;
 
 typedef struct FeatureDescription {

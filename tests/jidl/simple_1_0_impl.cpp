@@ -62,7 +62,7 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Simple_onRegister(FeatureRuntimeContext ctx)
+void Simple_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
@@ -87,7 +87,7 @@ void Simple_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Simple_onUnregister(FeatureRuntimeContext ctx)
+void Simple_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     FREE_PROP_CHAR_PTR(name);

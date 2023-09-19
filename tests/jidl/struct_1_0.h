@@ -17,12 +17,12 @@
 #include <string.h>
 
   // FeatureCallbacks to be implemented
-  void Struct_onRegister(FeatureRuntimeContext ctx);
+  void Struct_onRegister(const char* feature_name);
   void Struct_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
   void Struct_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void Struct_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void Struct_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-  void Struct_onUnregister(FeatureRuntimeContext ctx);
+  void Struct_onUnregister(const char* feature_name);
 
   // Struct defines
   typedef struct _Chapter {

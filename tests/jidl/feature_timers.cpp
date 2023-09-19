@@ -351,7 +351,7 @@ static const Member g_members[] = {
 
 // callbacks
 static const struct FeatureCallbacks callbacks {
-    [](FeatureRuntimeContext ctx) {
+    [](const char* feature_name) {
         FEATURE_LOG_INFO("onRegister");
     },
         [](FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
@@ -372,7 +372,7 @@ static const struct FeatureCallbacks callbacks {
             FeatureFreeValue(point_data);
             FEATURE_LOG_INFO("onDestroy");
         },
-        [](FeatureRuntimeContext ctx) {
+        [](const char* feature_name) {
             FEATURE_LOG_INFO("onUnregister");
         }
 };

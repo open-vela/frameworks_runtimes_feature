@@ -17,12 +17,12 @@
 #include <string.h>
 
   // FeatureCallbacks to be implemented
-  void Promise_onRegister(FeatureRuntimeContext ctx);
+  void Promise_onRegister(const char* feature_name);
   void Promise_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
   void Promise_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void Promise_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void Promise_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-  void Promise_onUnregister(FeatureRuntimeContext ctx);
+  void Promise_onUnregister(const char* feature_name);
 
   // Struct defines
 
