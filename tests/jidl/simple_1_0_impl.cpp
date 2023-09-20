@@ -231,9 +231,7 @@ void Simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, Ft
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), a: %d, b: %d, will invoke cb\n", file_tag,  __FUNCTION__, a, b);
-
-    int ret = FeatureInvokeCallback(feature, cb, a, "hello", (double)b);
-    if (ret) {
+    if (!FeatureInvokeCallback(feature, cb, a, "hello", (double)b)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -245,9 +243,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
 
     // callback cb3()
     printf("%s::%s(), will invoke cb3\n", file_tag,  __FUNCTION__);
-    int ret = FeatureInvokeCallback(feature, cb3);
-
-    if (ret) {
+    if (!FeatureInvokeCallback(feature, cb3)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -261,12 +257,12 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
     sprintf(var2, "%s", "hello");
     char* var3 = (char*)FeatureMalloc(sizeof("world") + 1, FT_CHAR);
     sprintf(var3, "%s", "world");
-    ret = FeatureInvokeCallbackCount(feature, cb4, 3, var1, var2, var3);
+    bool ret = FeatureInvokeCallbackCount(feature, cb4, 3, var1, var2, var3);
     FeatureFreeValue(var1);
     FeatureFreeValue(var2);
     FeatureFreeValue(var3);
 
-    if (ret) {
+    if (!ret) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -282,7 +278,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
 
     FeatureFreeValue(var1);
     FeatureFreeValue(var4);
-    if (ret) {
+    if (!ret) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -293,8 +289,7 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
-    int ret = FeatureInvokeCallback(feature, cb, x, "greeting", y);
-    if (ret) {
+    if (!FeatureInvokeCallback(feature, cb, x, "greeting", y)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -304,10 +299,10 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
     printf("%s::%s(), will invoke cb2\n", file_tag,  __FUNCTION__);
     char* strValue = (char*)FeatureMalloc(sizeof("you") + 1, FT_CHAR);
     sprintf(strValue, "%s", "you");
-    ret = FeatureInvokeCallbackCount(feature, cb2, 3, x, "love", strValue);
+    bool ret = FeatureInvokeCallbackCount(feature, cb2, 3, x, "love", strValue);
 
     FeatureFreeValue(strValue);
-    if (ret) {
+    if (!ret) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -318,9 +313,7 @@ void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, F
 {
     // callback cb1(int x, string y, double z)
     printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
-    int ret = FeatureInvokeCallback(feature, cb, x, "greeting", y);
-
-    if (ret) {
+    if (!FeatureInvokeCallback(feature, cb, x, "greeting", y)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }

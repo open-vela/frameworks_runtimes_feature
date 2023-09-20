@@ -199,7 +199,7 @@ static void __print(FeatureInstanceHandle handle, int64_t data, FtVariParams var
 
 static void __func_with_cb(FeatureInstanceHandle handle, int64_t data, FtCallbackId callback)
 {
-    if (FeatureInvokeCallback(handle, callback, "hello world", 123.0, 456.0, 789.0)) {
+    if (!FeatureInvokeCallback(handle, callback, "hello world", 123.0, 456.0, 789.0)) {
         FEATURE_LOG_ERROR("invoke failed !");
     }
 
@@ -212,7 +212,7 @@ static void __func_with_cb2(FeatureInstanceHandle handle, int64_t data, FtCallba
     sprintf(arg1, "%s", "test1");
     char* arg2 = (char*)FeatureMalloc(sizeof("test2") + 1, FT_CHAR);
     sprintf(arg2, "%s", "test2");
-    if (FeatureInvokeCallbackCount(handle, callback, 6, "hello world", 123.0, 456.0, 789.0, arg1, arg2)) {
+    if (!FeatureInvokeCallbackCount(handle, callback, 6, "hello world", 123.0, 456.0, 789.0, arg1, arg2)) {
         FEATURE_LOG_ERROR("invoke failed !");
     }
     FeatureFreeValue(arg1);

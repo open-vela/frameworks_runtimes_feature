@@ -120,8 +120,7 @@ void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_Boo
           file_tag,  __FUNCTION__, a->_first_chap->_page_count, a->_first_chap->_title);
     }
 
-    int ret = FeatureInvokeCallback(feature, a->_chap_changed, 0, a->_title);
-    if (ret) {
+    if (!FeatureInvokeCallback(feature, a->_chap_changed, 0, a->_title)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
