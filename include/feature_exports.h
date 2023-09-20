@@ -17,6 +17,7 @@
 #ifndef FEATURE_EXPORTS_H
 #define FEATURE_EXPORTS_H
 
+#include <stdbool.h>
 #include "feature_types.h"
 
 /**

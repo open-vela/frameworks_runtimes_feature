@@ -17,6 +17,7 @@
 #ifndef FEATURE_TYPES_H
 #define FEATURE_TYPES_H
 
+#include <stdbool.h>
 #include "feature_context.h"
 
 #define FT_REFERENCE_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 2)))
