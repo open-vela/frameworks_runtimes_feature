@@ -119,12 +119,12 @@
 #include <string.h>
 
   // FeatureCallbacks to be implemented
-  void ${module_name}_onRegister(FeatureRuntimeContext ctx);
+  void ${module_name}_onRegister(const char* feature_name);
   void ${module_name}_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
   void ${module_name}_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void ${module_name}_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
   void ${module_name}_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-  void ${module_name}_onUnregister(FeatureRuntimeContext ctx);
+  void ${module_name}_onUnregister(const char* feature_name);
 
   // Struct defines
 %for block in module['members']:
