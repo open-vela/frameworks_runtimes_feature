@@ -8,7 +8,7 @@ struct.foo(1,
 
 struct.bar2(
     {
-        anyparameter: {
+        any_param: {
             any1: 100,
             any2: 'chapter one',
             any3: [500, 'chapter 2', '0.5px'],
@@ -34,7 +34,7 @@ let first_chapter = {
 struct.foo(5, first_chapter);
 
 let book = {
-    anyparameter: {
+    any_param: {
         any1: 340000,
         any2: 'chapter one by one',
         any3: [500, 'chapter 220', '0.5px'],

@@ -12,6 +12,7 @@ callback ChapChanged(int index, string title)
 
 // Declare a complex struct
 struct Book {
+  object any_param
   int page_count // primary type member
   string title // primary type member
   string[] chap_titles // array type member

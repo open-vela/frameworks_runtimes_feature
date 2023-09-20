@@ -34,7 +34,7 @@
   Struct_Chapter* mallocChapter();
 
   typedef struct _Book {
-    FtAny _anyparameter;
+    FtAny _any_param;
     FtInt _page_count;
     FtString _title;
     FtArray* _chap_titles;

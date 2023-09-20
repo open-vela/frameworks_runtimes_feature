@@ -85,13 +85,12 @@ void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData data, Struct_Boo
         printf("%s::%s(), book ptr is null!\n", file_tag,  __FUNCTION__);
         return;
     }
-    if (!&(a->_anyparameter)) {
-        printf("%s::%s(), anyparameter ptr is null!\n", file_tag,  __FUNCTION__);
+    if (!&(a->_any_param)) {
+        printf("%s::%s(), any_param ptr is null!\n", file_tag,  __FUNCTION__);
     } else {
-        printf("%s::%s(), anyparameter: ", file_tag, __FUNCTION__);
+        printf("%s::%s(), any_param: ", file_tag, __FUNCTION__);
         ft_context_ref ft_ctx = FeatureGetContext(feature);
-        ft_value_t& param = *((ft_value_t *)(&(a->_anyparameter)));
-        const char* str_json = ft_to_string(ft_ctx, param);
+        const char* str_json = ft_to_string(ft_ctx, a->_any_param);
         printf("%s", str_json);
         ft_free_string(ft_ctx, str_json);
         printf("\n");
