@@ -707,17 +707,17 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
         ft_ctx_ = CreateFeatureContextQjs(ctx);
     }
 
-    if (!featurePair->second) {
+    auto& featurePrototype = featurePair->second;
+    if (!featurePrototype) {
         // create proto
-        featurePair->second = createFeaturePrototype(ft_ctx_, description);
-        if (!featurePair->second) {
+        featurePrototype = createFeaturePrototype(ft_ctx_, description);
+        if (!featurePrototype) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
         }
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePair->second->ft_proto);
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
     }
-    auto featurePrototype = featurePair->second;
 
     // create feature instance for the required object
     auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr, 0);
@@ -725,8 +725,6 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
     // insert into instances array, update iid
     int iid = featurePrototype->addInstance(std::move(featureInstance));
     featurePrototype->instances[iid]->setInstanceId(iid);
-    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
-    *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
     // create prototype class instance
     auto feature_object = createFeatureObject(featurePrototype, feature_class_id, featureInstancePtr);
     // setup featureInstance WeakRef, refers to feature_object
