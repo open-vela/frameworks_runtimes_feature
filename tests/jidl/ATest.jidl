@@ -1,0 +1,23 @@
+module ATest@1.0
+
+string test1(string a, int b);
+
+callback cb1(int x, int y);
+void test2(int a,cb1 cb);
+
+callback cb2(string x);
+void test3(string a, cb2 cb);
+
+promise<int, int> test4(int a)
+
+void print(...)
+
+property int idx;
+
+void test5(int[] values)
+
+string[] test6(int a);
+
+void test7(int a, Person b)
+
+Person test8(int a)
