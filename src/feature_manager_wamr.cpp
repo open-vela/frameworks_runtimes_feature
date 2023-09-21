@@ -609,28 +609,28 @@ FeatureInstance* FeatureManagerWamr::getFeatureInstance(wasm_obj_t obj)
 bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
-    FeatureRegistry::FeatureRegistryPair* feature = registry_->findFeature(name);
-    if (!feature || !feature->first) {
+    FeatureRegistry::FeatureRegistryPair* feature_pair = registry_->findFeature(name);
+    if (!feature_pair || !feature_pair->first) {
         FEATURE_LOG_WARN("can't find native feature '%s'!", name);
         return false;
     }
-    auto description = feature->first;
+    auto description = feature_pair->first;
 
     if (!ft_ctx_)
         ft_ctx_ = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
 
-    if (!feature->second) {
+    auto& proto = feature_pair->second;
+    if (!proto) {
         // create proto
-        feature->second = new FeaturePrototype(ft_ctx_, feature->first);
-        feature->second->wamr_env = ctx;
+        proto = new FeaturePrototype(ft_ctx_, feature_pair->first);
+        proto->wamr_env = ctx;
 
         if (description->native_callbacks->onCreate) {
             FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            description->native_callbacks->onCreate(ctx, feature->second);
+            description->native_callbacks->onCreate(ctx, proto);
         }
     }
 
-    auto proto = feature->second;
     // create feature instance for the required object
     auto featureInstance = std::make_unique<FeatureInstanceWamr>(proto, nullptr, 0);
     feature_instance_map_[thiz] = featureInstance.get();
