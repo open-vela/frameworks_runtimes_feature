@@ -52,6 +52,14 @@ FEATURELIST += Struct_1_0
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feature_timers.cpp
 FEATURELIST += timers
 
+ifeq ($(CONFIG_MIWEAR_APPS),y)
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
+FEATURELIST += jumpApp
+endif
+
 endif
 
 
