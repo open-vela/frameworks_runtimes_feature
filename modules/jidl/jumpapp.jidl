@@ -1,3 +1,0 @@
-module jumpApp@1.0
-
-void jumpApp(string uri, string arg)
