@@ -1,7 +1,7 @@
-import { ATest_1_0 , Person} from "./ATest.d";
+import { ATest , Person} from "./ATest.d";
 export function main(){
     //create feature module object
-    let a = new ATest_1_0();
+    let a = new ATest();
     
     //normal function call
     let c: string = a.test1("wasm", 1024);

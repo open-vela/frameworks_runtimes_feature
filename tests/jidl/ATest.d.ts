@@ -4,7 +4,7 @@ declare class Person {
     age: number;
 }
 
-export class ATest_1_0 {
+export class ATest {
     
     constructor(){
         this.init_native(this.clazz_name);
@@ -36,7 +36,7 @@ export class ATest_1_0 {
     }
     
 // private:
-    readonly clazz_name = "ATest_1_0";
+    readonly clazz_name = "ATest";
     declare init_native(name: string): void;
     declare get_idx_0(): number;
     declare set_idx_0(num: number): void;
