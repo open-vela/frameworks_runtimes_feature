@@ -90,7 +90,7 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
     int arrlen = wasm_array_obj_length(arr_ref);
     char *p_src = (char *)wasm_array_obj_first_elem_addr(arr_ref);
 
-    printf("class name:%s\n",p_src);
+    FEATURE_LOG_INFO("class name: %s", p_src);
     WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
 
@@ -567,13 +567,8 @@ bool FeatureManagerWamr::init()
         auto proto = pair.second.second;
         FEATURE_CHECK_NE(description, nullptr);
 
-        if (!description) {
-            FEATURE_LOG_WARN("can't find native feature '%s'!", name.data());
-            continue;
-        }
-
         if (strcmp(name.data(), "ATest") != 0) {
-            FEATURE_LOG_WARN("other Features are not for wamr!!!");
+            FEATURE_LOG_WARN("Feature '%s' is not for wamr!", name.data());
             continue;
         }
 
@@ -643,9 +638,9 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
     // insert into instances array, update iid
     int iid = proto->addInstance(std::move(featureInstance));
     proto->instances[iid]->setInstanceId(iid);
-    if (proto->description->native_callbacks->onRequired) {
+    if (description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        proto->description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
+        description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
     }
 
     return true;
@@ -675,7 +670,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
     makeAttachment(init_symbol, description, -1);
 
     if (!wasm_runtime_register_natives_raw("env", init_symbol, 1)) {
-        printf("register failed !\n");
+        FEATURE_LOG_ERROR("register method: '%s' failed !", name);
         return false;
     }
 
@@ -720,11 +715,11 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 if(retc!=0) {
                     param[strlen(param)] = retc;
                 }
-                printf("param is %s\n",param);
+                FEATURE_LOG_INFO("register method, name: %s, param: %s", name1, param);
                 native_symbol->signature = param;
                 makeAttachment(native_symbol, description, i);
                 if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
-                    printf("register failed !\n");
+                    FEATURE_LOG_ERROR("register memthod: '%s' failed !", name1);
                     return false;
                 }
                 break;
@@ -740,7 +735,6 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     strcat(buf, "_get_");
                     strcat(buf, member.name);
                     strcat(buf, "_0");
-                    printf("buf is %s\n", buf);
                     native_symbol->symbol = buf;
                     char *signature = new char[64];
                     memset(signature, 0, 64);
@@ -749,11 +743,11 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     strcat(signature, ")");
                     if (type != 0)
                         signature[strlen(signature)] = type;
-                    printf("signature is %s\n", signature);
+                    FEATURE_LOG_INFO("register getter, name: %s, signature: %s", buf, signature);
                     native_symbol->signature = signature;
                     makeAttachment(native_symbol, description, i);
                     if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
-                        printf("register failed !\n");
+                        FEATURE_LOG_ERROR("register getter: '%s' failed !", buf);
                         return false;
                     }
                 }
@@ -765,7 +759,6 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     strcat(buf, "_set_");
                     strcat(buf, member.name);
                     strcat(buf, "_0");
-                    printf("buf is %s\n", buf);
                     native_symbol->symbol = buf;
                     char *signature = new char[64];
                     memset(signature, 0, 64);
@@ -774,11 +767,11 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     if (type != 0)
                         signature[strlen(signature)] = type;
                     strcat(signature, ")");
-                    printf("signature is %s\n", signature);
+                    FEATURE_LOG_INFO("register setter, name: %s, signature: %s", buf, signature);
                     native_symbol->signature = signature;
                     makeAttachment(native_symbol, description, i);
                     if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
-                        printf("register failed !\n");
+                        FEATURE_LOG_ERROR("register setter: '%s' failed !", buf);
                         return false;
                     }
                 }

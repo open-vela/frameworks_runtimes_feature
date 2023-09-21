@@ -61,15 +61,15 @@ void ATest_onUnregister(const char* feature_name)
 FtString ATest_wrap_test1(FeatureInstanceHandle feature, AppendData data, FtString a, FtInt b)
 {
     printf("ATest_wrap_test1: %s, %d\n", a, b);
-    const char *res = "hello, world!";
-    return res;
+    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    sprintf(buf, "hello, world: %s, %d", a, b);
+    return buf;
 }
 
 void ATest_wrap_test2(FeatureInstanceHandle feature, AppendData data, FtInt a, FtCallbackId cb)
 {
     printf("ATest_wrap_test2 %d,%d\n", a, cb);
-    if (!FeatureInvokeCallback(feature, cb, a, 666))
-    {
+    if (!FeatureInvokeCallback(feature, cb, a, 666)) {
         printf("invoke failed !");
         return;
     }
@@ -79,8 +79,7 @@ void ATest_wrap_test2(FeatureInstanceHandle feature, AppendData data, FtInt a, F
 void ATest_wrap_test3(FeatureInstanceHandle feature, AppendData data, FtString a, FtCallbackId cb)
 {
     printf("ATest_wrap_test3 %s,%d\n", a, cb);
-    if (!FeatureInvokeCallback(feature, cb, a))
-    {
+    if (!FeatureInvokeCallback(feature, cb, a)) {
         printf("invoke failed !");
         return;
     }
@@ -89,12 +88,9 @@ void ATest_wrap_test3(FeatureInstanceHandle feature, AppendData data, FtString a
 
 void ATest_wrap_test4(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a)
 {
-    if (a != 0)
-    {
+    if (a != 0) {
         FeaturePromiseResolve(feature, pid, a);
-    }
-    else
-    {
+    } else {
         FeaturePromiseReject(feature, pid, a + 100);
     }
 }
@@ -158,8 +154,7 @@ void ATest_wrap_test5(FeatureInstanceHandle feature, AppendData data, FtArray &v
     FTArrayHelper<int> int_array(&values);
     printf("%s::%s(), int_array size: %d\n", file_tag1, __FUNCTION__, int_array.size());
     printf("int_array = [\n");
-    for (size_t i = 0; i < int_array.size(); i++)
-    {
+    for (size_t i = 0; i < int_array.size(); i++) {
         printf(" index %lu: %d\n", i, int_array[i]);
     }
     printf("]\n");
@@ -172,9 +167,8 @@ FtArray *ATest_wrap_test6(FeatureInstanceHandle feature, AppendData data, FtInt 
     FtArray *strArray = ATest_malloc_string_array();
     strArray->_size = 2;
     strArray->_element = malloc(sizeof(char *) * 2);
-    for (int i = 0; i < 2; i++)
-    {
-		char* str = (char*)FeatureMalloc(100, FT_CHAR);
+    for (int i = 0; i < 2; i++) {
+        char* str = (char*)FeatureMalloc(100, FT_CHAR);
         sprintf(str, "hello%d", i);
         ((char **)strArray->_element)[i] = str;
     }
@@ -184,37 +178,24 @@ FtArray *ATest_wrap_test6(FeatureInstanceHandle feature, AppendData data, FtInt 
 void ATest_wrap_test7(FeatureInstanceHandle feature, AppendData data, FtInt a, ATest_Person *b)
 {
     printf("ATest_wrap_test7 %d\n", a);
-    if (!b)
-    {
+    if (!b) {
         printf("%s::%s(), Person ptr is null!\n", file_tag1, __FUNCTION__);
         return;
     }
-    if (!b->_name)
-    {
+    if (!b->_name) {
         printf("%s::%s(), Person name is null!\n", file_tag1, __FUNCTION__);
+    } else {
+        printf("%s::%s(), Person: [name: %s]\n", file_tag1, __FUNCTION__, b->_name);
     }
-    else
-    {
-        printf("%s::%s(), Person: [name: %s]\n",
-               file_tag1, __FUNCTION__, b->_name);
-    }
-    if (!b->_gender)
-    {
+    if (!b->_gender) {
         printf("%s::%s(), Person gender is null!\n", file_tag1, __FUNCTION__);
+    } else {
+        printf("%s::%s(), Person: [gender: %s]\n", file_tag1, __FUNCTION__, b->_gender);
     }
-    else
-    {
-        printf("%s::%s(), Person: [gender: %s]\n",
-               file_tag1, __FUNCTION__, b->_gender);
-    }
-    if (!b->_age)
-    {
+    if (!b->_age) {
         printf("%s::%s(), Person age is null!\n", file_tag1, __FUNCTION__);
-    }
-    else
-    {
-        printf("%s::%s(), Person: [age: %d]\n",
-               file_tag1, __FUNCTION__, b->_age);
+    } else {
+        printf("%s::%s(), Person: [age: %d]\n", file_tag1, __FUNCTION__, b->_age);
     }
 }
 
