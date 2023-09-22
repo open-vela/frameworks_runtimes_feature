@@ -25,6 +25,9 @@
           "name": "Timer"
       },
       {
+          "name": "ATest"
+      },
+      {
           "name": "interface"
       },
       {
