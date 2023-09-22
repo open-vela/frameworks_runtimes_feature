@@ -60,14 +60,6 @@ FEATURELIST += Struct
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feature_timers.cpp
 FEATURELIST += timers
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale_impl.cpp
-FEATURELIST += locale
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
-FEATURELIST += Error
-
 ifeq ($(CONFIG_MIWEAR_APPS),y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
