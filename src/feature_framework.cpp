@@ -138,6 +138,7 @@ FeaturePrototype::FeaturePrototype(ft_context_ref ctx, const FeatureDescription*
 {
     // default capacity as 10 element
     instances.reserve(10);
+    weakref_list_initialize(&weak_ref_list);
 }
 
 FeaturePrototype::~FeaturePrototype()
