@@ -44,7 +44,7 @@ public:
      * @param ctx
      * @return JSValue
      */
-    feature_value_t featureRequire(context_ref ctx, const char* name);
+    feature_value_t featureRequire(context_ref ctx, feature_value_t vm_object, const char* name);
 
     void uninit();
 private:

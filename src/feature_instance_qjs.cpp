@@ -32,6 +32,7 @@ namespace ferry {
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, VTable vtable, int vtable_size)
     : FeatureInstance(proto, vtable, vtable_size)
+    , vm_object_(FEATURE_VALUE_UNDEFINED)
 {
 }
 
@@ -39,6 +40,16 @@ FeatureInstance* FeatureInstanceQjs::createInterface(VTable vtable, int vtable_s
 {
     // null param proto to be fixed
     return new FeatureInstanceQjs(nullptr, vtable, vtable_size);
+}
+
+void FeatureInstanceQjs::setVmObject(feature_value_t vm_object)
+{
+    vm_object_ = vm_object;
+}
+
+feature_value_t FeatureInstanceQjs::getVmObject() const
+{
+    return vm_object_;
 }
 
 FeatureInstanceQjs::~FeatureInstanceQjs()

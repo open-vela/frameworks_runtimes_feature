@@ -688,7 +688,7 @@ feature_value_t createFeatureObject(FeaturePrototype* featurePrototype, feature_
     return feature_object;
 }
 
-feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* name)
+feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value_t vm_object, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
     auto featurePair = registry_->findFeature(name);
@@ -716,6 +716,8 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, const char* n
 
     // create feature instance for the required object
     auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr, 0);
+    // save vm_object into instance
+    featureInstance->setVmObject(vm_object);
     auto featureInstancePtr = featureInstance.get();
     // insert into instances array, update iid
     int iid = featurePrototype->addInstance(std::move(featureInstance));
