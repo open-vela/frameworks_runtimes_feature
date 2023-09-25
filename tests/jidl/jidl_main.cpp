@@ -24,8 +24,13 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int
         FEATURE_THROW_INTERNAL_ERROR(ctx, "require need module name!");
         return FEATURE_UNDEFINED;
     }
+    if (argc < 2) {
+        FEATURE_THROW_INTERNAL_ERROR(ctx, "require need vm object !");
+        return FEATURE_UNDEFINED;
+    }
     const char* str_module_name = feature_to_cstring(ctx, argv[0]);
-    auto feature_obj = g_manager_qjs->featureRequire(ctx, str_module_name);
+    feature_value_t vm_object = argv[1];
+    auto feature_obj = g_manager_qjs->featureRequire(ctx, vm_object, str_module_name);
     feature_free_cstring(ctx, str_module_name);
     return feature_obj;
 }

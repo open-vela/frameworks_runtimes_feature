@@ -46,8 +46,12 @@ typedef struct FeaturePromiseData {
 
 class FeatureInstanceQjs : public FeatureInstance {
 public:
-    FeatureInstanceQjs(struct FeaturePrototype* prototype, VTable vtable, int vtable_size);
+    FeatureInstanceQjs(FeaturePrototype* prototype, VTable vtable, int vtable_size);
     virtual ~FeatureInstanceQjs();
+
+    void setVmObject(feature_value_t vm_object);
+
+    feature_value_t getVmObject() const;
 
     virtual FeatureInstance* createInterface(VTable vtable, int vtable_size);
 
@@ -105,6 +109,7 @@ private:
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
+    feature_value_t vm_object_;
     WeakRef weak_self_;
     FtCallbackId curr_cid_ = 0;
     std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
