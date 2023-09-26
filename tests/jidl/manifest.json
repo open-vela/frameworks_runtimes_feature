@@ -22,9 +22,6 @@
           "name": "Promise"
       },
       {
-          "name": "mockatest"
-      },
-      {
           "name": "Timer"
       },
       {

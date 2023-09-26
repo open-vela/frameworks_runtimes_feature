@@ -6,4 +6,3 @@ jse_Struct_initFeature(this, features);
 jse_Promise_initFeature(this, features);
 jse_ATest_initFeature(this, features);
 jse_Interface_initFeature(this, features);
-//jse_mockatest_initFeature(this, features);
