@@ -86,9 +86,6 @@ add_executable(${PROJECT_NAME}
     ATest_1_0_impl.cpp
     interface_1_0.cpp
     interface_1_0_impl.cpp
-#    mockatest.h  # need install cmocka first
-#    mockatest_impl.cpp
-#    mockatest.cpp
     jidl_main.cpp
     feature_timers.cpp
     feature_interface.cpp
@@ -106,8 +103,3 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     vmlib
     -lpthread
 )
-
-# need install cmocka first
-#target_link_libraries(${PROJECT_NAME} PRIVATE
-#  cmocka
-#)
