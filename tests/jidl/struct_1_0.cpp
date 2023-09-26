@@ -39,7 +39,7 @@
     .members = Struct_Chapter_struct_members
   };
 
-  Struct_Chapter* mallocChapter () {
+  Struct_Chapter* StructMallocChapter () {
     return (Struct_Chapter*)FeatureMalloc(
       sizeof(Struct_Chapter), FT_MK_COMPLEX(&Struct_Chapter_struct_type));
   }
@@ -86,7 +86,7 @@
     .members = Struct_Book_struct_members
   };
 
-  Struct_Book* mallocBook () {
+  Struct_Book* StructMallocBook () {
     return (Struct_Book*)FeatureMalloc(
       sizeof(Struct_Book), FT_MK_COMPLEX(&Struct_Book_struct_type));
   }

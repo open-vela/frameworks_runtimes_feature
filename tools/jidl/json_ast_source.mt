@@ -68,7 +68,7 @@
     .members = ${module_name}_${struct_name}_struct_members
   };
 
-  ${module_name}_${struct_name}* malloc${struct_name} () {
+  ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
     return (${module_name}_${struct_name}*)FeatureMalloc(
       sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type));
   }

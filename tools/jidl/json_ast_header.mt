@@ -92,7 +92,7 @@
 %endfor
   } ${module_name}_${struct_name};
 
-  ${module_name}_${struct_name}* malloc${struct_name}();
+  ${module_name}_${struct_name}* ${module_name}Malloc${struct_name}();
 
 </%def>\
 

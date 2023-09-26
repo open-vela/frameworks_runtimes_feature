@@ -72,7 +72,7 @@ void Struct_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, St
 
 Struct_Chapter* Struct_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a) {
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
-    Struct_Chapter* chap = mallocChapter();
+    Struct_Chapter* chap = StructMallocChapter();
     chap->_page_count = a;
     char* title = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(title, "title is: %s", "hello world");
