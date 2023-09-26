@@ -31,7 +31,7 @@
     FtBool _is_end;
   } Struct_Chapter;
 
-  Struct_Chapter* mallocChapter();
+  Struct_Chapter* StructMallocChapter();
 
   typedef struct _Book {
     FtAny _any_param;
@@ -42,7 +42,7 @@
     FtCallbackId _chap_changed;
   } Struct_Book;
 
-  Struct_Book* mallocBook();
+  Struct_Book* StructMallocBook();
 
 
   // Function wrappers to be implemented
