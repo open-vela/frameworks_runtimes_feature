@@ -1,7 +1,5 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-
-
 export class Simple {
   constructor(){
     this.init_native(this.clazz_name);
@@ -13,18 +11,20 @@ export class Simple {
   declare bar5(a: number, ...rest: any[]): void;
   declare bar6(a: number, b: number, c: boolean): string;
   ubar6 (a: number): string {
-    return bar6 (1, a, false);
+    return this.bar6 (1, a, false);
   }
+
   declare goo(a: number, b: number, cb: (x: number, y: string, z: number) => void): void;
+
   declare goo2(cb: (a: number, b: string, ...rest: any[]) => void, cb3: () => void, cb4: (...rest: any[]) => void): void;
   goo3 (cb: (x: number, y: string, z: number) => void): void {
-    goo (100, 200, cb);
+    this.goo (100, 200, cb);
   }
   declare foo2(x: number, y: number, cb: (x: number, y: string, z: number) => void, cb2: (a: number, b: string, ...rest: any[]) => void): void;
   declare foo3(x: number, y: number, cb: (x: number, y: string, z: number) => void): void;
   declare justTestNeverCall1(): void;
   declare justTestNeverCall2(): void;
-  declare bar2(values: number[]): number;
+  declare bar2(arr: number[]): void;
   declare bar3(): string[];
   get name(): string {
     return this.get_name_0();
