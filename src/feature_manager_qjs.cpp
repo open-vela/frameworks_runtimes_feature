@@ -194,7 +194,6 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     ffi_type* vari_params_type_element[3];
     // variadic parameter param
     FtVariParams vari_params;
-    qjs_val_t* qjs_val_array = nullptr;
     memset(&vari_params, 0, sizeof(vari_params));
     // check argument count match.
     // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", method_param_count, argc);
@@ -266,14 +265,13 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             vari_params_type_element[2] = nullptr;
             // prepare vari_params struct
             vari_params.vari_args = new ft_value_t[vari_params.vari_count];
-            qjs_val_array = new qjs_val_t[vari_params.vari_count];
             // pass param
             ffi_params[method_param_count + external_count] = &vari_params_type;
             ffi_arg_values[method_param_count + external_count] = &vari_params;
             for (int i = 0; i + method_param_count < argc; i++) {
                 // just passthrough guest param pointers
-                qjs_val_array[i].js_val = argv[i + method_param_count];
-                vari_params.vari_args[i] = *((ft_value_t*)(qjs_val_array + i));
+                auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
+                *js_val_ptr = argv[i + method_param_count];
             }
         } else if (optional_count) {
             for (int i = argc; i < method_param_count; i++) {
@@ -370,9 +368,6 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     delete[] ffi_params;
     if (vari_params.vari_args) {
         delete[] vari_params.vari_args;
-    }
-    if (qjs_val_array) {
-        delete[] qjs_val_array;
     }
 
     // if error occurred, throw internal error
