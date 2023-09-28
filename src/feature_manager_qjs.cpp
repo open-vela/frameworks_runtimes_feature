@@ -718,6 +718,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr, 0);
     // save vm_object into instance
     featureInstance->setVmObject(vm_object);
+    featureInstance->setPackageName(registry_->getFeaturePackageName());
     auto featureInstancePtr = featureInstance.get();
     // insert into instances array, update iid
     int iid = featurePrototype->addInstance(std::move(featureInstance));
