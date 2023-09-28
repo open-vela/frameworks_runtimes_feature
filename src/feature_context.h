@@ -29,7 +29,7 @@ typedef enum ft_type {
 } ft_type;
 
 typedef struct ft_value_t {
-    uint64_t val[2];
+    uint64_t val;
     ft_type type;
 } ft_value_t;
 
