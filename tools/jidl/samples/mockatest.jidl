@@ -1,0 +1,9 @@
+module mockatest@1.0;
+
+callback test_body();
+
+void test(string test_suit_name, string test_case_name, test_body body);
+
+void expect_true(boolean result, string message_info = "");
+
+void runAllOnce();
