@@ -18,6 +18,7 @@
 #include "feature_ffi_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
+#include "promise_manager.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -34,12 +35,13 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, VTable vtable, i
     : FeatureInstance(proto, vtable, vtable_size)
     , vm_object_(FEATURE_VALUE_UNDEFINED)
 {
+    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(proto->ft_ctx));
 }
 
 FeatureInstance* FeatureInstanceQjs::createInterface(VTable vtable, int vtable_size)
 {
     // null param proto to be fixed
-    return new FeatureInstanceQjs(nullptr, vtable, vtable_size);
+    return new FeatureInstanceQjs(prototype(), vtable, vtable_size);
 }
 
 void FeatureInstanceQjs::setVmObject(feature_value_t vm_object)
@@ -91,7 +93,9 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     callbacks_.clear();
 
     // release all promises
-    releasePromises();
+    promise_manager_->releasePromises();
+    delete promise_manager_;
+
     auto free_instance = [js_ctx](FeaturePrototype* proto) {
         if (proto && !proto->hasInstanceAlive()) {
             FEATURE_LOG_INFO("all instance freed, free proto object...");
@@ -146,75 +150,14 @@ bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
     return true;
 }
 
-FeaturePromiseData* FeatureInstanceQjs::getPromiseData(FtPromiseId pid)
-{
-    if (!promises_.count(pid)) {
-        return nullptr;
-    }
-    return promises_[pid];
-}
-
 feature_value_t FeatureInstanceQjs::getPromise(FtPromiseId pid)
 {
-    FeaturePromiseData* data = getPromiseData(pid);
-    if (!data)
-        return FEATURE_VALUE_UNDEFINED;
-
-    return data->promise;
+    return promise_manager_->getPromise(pid);
 }
 
 FtPromiseId FeatureInstanceQjs::addPromise(FeatureType resolve_type, FeatureType reject_type)
 {
-    FeaturePromiseData* data = (FeaturePromiseData*)malloc(sizeof(FeaturePromiseData));
-    data->promise = FEATURE_VALUE_UNDEFINED;
-    data->resolveFuncs[0] = FEATURE_VALUE_UNDEFINED;
-    data->resolveFuncs[1] = FEATURE_VALUE_UNDEFINED;
-    data->resolveTypes[0] = resolve_type;
-    data->resolveTypes[1] = reject_type;
-
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx); // to be fixed
-    feature_value_t promise = feature_promise_capability(js_ctx, data->resolveFuncs);
-    if (feature_is_exception(promise)) {
-        feature_free_value(js_ctx, data->resolveFuncs[0]);
-        feature_free_value(js_ctx, data->resolveFuncs[1]);
-        feature_free_value(js_ctx, promise);
-        free(data);
-        return -1;
-    }
-    data->promise = promise;
-    promises_[curr_cid_] = data;
-    return curr_cid_++;
-}
-
-bool FeatureInstanceQjs::removePromise(FtPromiseId pid)
-{
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
-    if (!promises_.count(pid)) {
-        FEATURE_LOG_ERROR("pid %d in instance: %p not exist !", pid, this);
-        return false;
-    }
-    FeaturePromiseData* data = promises_[pid];
-    FEATURE_CHECK_NE(data, nullptr);
-    promises_.erase(pid);
-    // free js values
-    feature_free_value(js_ctx, data->promise);
-    feature_free_value(js_ctx, data->resolveFuncs[0]);
-    feature_free_value(js_ctx, data->resolveFuncs[1]);
-    free(data);
-    return true;
-}
-
-void FeatureInstanceQjs::releasePromises()
-{
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
-    for (const auto& pair : promises_) {
-        FEATURE_LOG_DEBUG("promise: %" PRId32 " freed !", pair.first);
-        feature_free_value(js_ctx, pair.second->promise);
-        feature_free_value(js_ctx, pair.second->resolveFuncs[0]);
-        feature_free_value(js_ctx, pair.second->resolveFuncs[1]);
-        free(pair.second);
-    }
-    promises_.clear();
+    return promise_manager_->addPromise(resolve_type, reject_type);
 }
 
 void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
@@ -225,11 +168,7 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
     }
 
     // mark promies
-    for (auto& pair : promises_) {
-        feature_mark_value(rt, pair.second->promise, mark_func);
-        feature_mark_value(rt, pair.second->resolveFuncs[0], mark_func);
-        feature_mark_value(rt, pair.second->resolveFuncs[1], mark_func);
-    }
+    promise_manager_->markValues(rt, mark_func);
 
     for (auto& pair : prototypes_) {
         auto js_proto = FT_VAL_GET_JS_VAL(pair.second->ft_proto);
@@ -279,7 +218,7 @@ void FeatureInstanceQjs::freeWeakRef()
 int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
     // get feature instance
-    FeaturePromiseData* promiseData = getPromiseData(pid);
+    FeaturePromiseData* promiseData = promise_manager_->getPromiseData(pid);
     if (!promiseData) {
         FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
         return -1;
@@ -292,7 +231,13 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap
 
     FeatureType param_types[2] = { promiseData->resolveTypes[idx], FT_VOID };
     CallbackType cb_type = { .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID };
-    return doInvokeCallback(&cb_type, promiseData->resolveFuncs[idx], ap, 1, 0);
+    int ret = doInvokeCallback(&cb_type, promiseData->resolveFuncs[idx], ap, 1, 0);
+    if (!promise_manager_->removePromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
+        ret = -2;
+    }
+
+    return ret;
 }
 
 int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap)

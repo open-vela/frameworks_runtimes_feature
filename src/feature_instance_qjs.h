@@ -27,6 +27,7 @@
 namespace ferry {
 
 class FeaturePrototype;
+class PromiseManager;
 
 typedef struct WeakRef {
     ft_value_t ft_value;
@@ -37,12 +38,6 @@ typedef struct FeatureCallbackData {
     feature_value_t cb;
     CallbackType* cb_type;
 } FeatureCallbackData;
-
-typedef struct FeaturePromiseData {
-    feature_value_t promise; // 保存promise对象
-    feature_value_t resolveFuncs[2]; //functions
-    FeatureType resolveTypes[2];
-} FeaturePromiseData;
 
 class FeatureInstanceQjs : public FeatureInstance {
 public:
@@ -63,8 +58,6 @@ public:
 
     virtual bool removeCallback(FtCallbackId cid);
 
-    virtual bool removePromise(FtPromiseId pid);
-
     virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap);
 
     virtual int invokeCallback(FtCallbackId cid, va_list& ap);
@@ -76,8 +69,6 @@ public:
     feature_value_t getPromise(FtPromiseId pid);
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
-
-    void releasePromises();
 
     void markValues(feature_runtime_ref rt, feature_mark_func mark_func);
 
@@ -111,7 +102,6 @@ public:
 
 private:
     FeatureCallbackData getCallback(FtCallbackId cid);
-    FeaturePromiseData* getPromiseData(FtPromiseId pid);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
@@ -119,8 +109,8 @@ private:
     WeakRef weak_self_;
     FtCallbackId curr_cid_ = 0;
     char* package_name_ = nullptr;
+    PromiseManager* promise_manager_ = nullptr;
     std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
-    std::map<FtPromiseId, FeaturePromiseData*> promises_;   // all promises created by native feature
     std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype
 };
 
