@@ -32,6 +32,7 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
 
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
@@ -60,6 +61,14 @@ FEATURELIST += Struct
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feature_timers.cpp
 FEATURELIST += timers
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale_impl.cpp
+FEATURELIST += locale
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
+FEATURELIST += Error
+
 ifeq ($(CONFIG_MIWEAR_APPS),y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
@@ -68,8 +77,13 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
 FEATURELIST += jumpApp
 endif
 
+ifeq ($(CONFIG_TESTING_CMOCKA),y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest_impl.cpp
+FEATURELIST += mockatest
 endif
 
+endif
 
 
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))

@@ -27,6 +27,7 @@
 namespace ferry {
 
 class FeaturePrototype;
+class PromiseManager;
 
 typedef struct WeakRef {
     ft_value_t ft_value;
@@ -38,22 +39,26 @@ typedef struct FeatureCallbackData {
     CallbackType* cb_type;
 } FeatureCallbackData;
 
-typedef struct FeaturePromiseData {
-    feature_value_t promise; // 保存promise对象
-    feature_value_t resolveFuncs[2]; //functions
-    FeatureType resolveTypes[2];
-} FeaturePromiseData;
-
 class FeatureInstanceQjs : public FeatureInstance {
 public:
-    FeatureInstanceQjs(struct FeaturePrototype* prototype, VTable vtable, int vtable_size);
+    FeatureInstanceQjs(FeaturePrototype* prototype, VTable vtable, int vtable_size);
     virtual ~FeatureInstanceQjs();
+
+    void setVmObject(feature_value_t vm_object);
+
+    feature_value_t getVmObject() const;
+
+    feature_value_t getFeatureJsvalue(ft_value_t ft_value);
+
+    void setPackageName(char* package_name);
+
+    char* getPackageName() const;
+
+    uv_loop_t* uvloop() { return &loop; }
 
     virtual FeatureInstance* createInterface(VTable vtable, int vtable_size);
 
     virtual bool removeCallback(FtCallbackId cid);
-
-    virtual bool removePromise(FtPromiseId pid);
 
     virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap);
 
@@ -66,8 +71,6 @@ public:
     feature_value_t getPromise(FtPromiseId pid);
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
-
-    void releasePromises();
 
     void markValues(feature_runtime_ref rt, feature_mark_func mark_func);
 
@@ -101,14 +104,17 @@ public:
 
 private:
     FeatureCallbackData getCallback(FtCallbackId cid);
-    FeaturePromiseData* getPromiseData(FtPromiseId pid);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
+    feature_value_t vm_object_;
     WeakRef weak_self_;
     FtCallbackId curr_cid_ = 0;
+    char* package_name_ = nullptr;
+    PromiseManager* promise_manager_ = nullptr;
+    uv_loop_t loop;
+
     std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
-    std::map<FtPromiseId, FeaturePromiseData*> promises_;   // all promises created by native feature
     std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype
 };
 
