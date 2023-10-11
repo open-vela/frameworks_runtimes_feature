@@ -135,7 +135,7 @@ class JIDL(Parser):
     'AT', 'LPAREN', 'RPAREN', 'COMMA', 'ELLIPSIS', 'COLON',
     'LBRACE', 'RBRACE', 'LBRACKET', 'RBRACKET', 'EQUALS',
     'LANGULARBRACKET', 'RANGULARBRACKET',
-    'LITERAL', 'ID',
+    'LITERAL', 'DOTTED_ID', 'ID',
     'INTEGER', 'NUMBER'
   )
 
@@ -169,6 +169,11 @@ class JIDL(Parser):
     r'(/\*(.|\n)*?\*/)|(//.*\n)'
     t.lexer.lineno += t.value.count('\n')
 
+  def t_DOTTED_ID(self, t):
+    r'[A-Za-z_][\w_]*\.[\w_]+'
+    t.type = self.reserved_map.get(t.value, "DOTTED_ID")
+    return t
+
   def t_ID(self, t):
     r'[A-Za-z_][\w_]*'
     t.type = self.reserved_map.get(t.value, "ID")
@@ -198,14 +203,21 @@ class JIDL(Parser):
 
   def p_module_head(self, p):
     """
-    module_head : MODULE ID AT NUMBER
-                | imports MODULE ID AT NUMBER
+    module_head : MODULE module_name AT NUMBER
+                | imports MODULE module_name AT NUMBER
     """
     count = len(p)
     if count == 6:
       p[0] = {'imports' : p[1], 'name': p[3], 'version': p[5]}
     else:
       p[0] = {'name': p[2], 'version': p[4]}
+
+  def p_module_name(self, p):
+    """
+    module_name : ID
+                | DOTTED_ID
+    """
+    p[0] = p[1]
 
   def p_module_blocks(self, p):
     """
@@ -246,7 +258,7 @@ class JIDL(Parser):
       CreateASTNode(p, ast.ImportList.Append, p[1], p[2])
 
   def p_import(self, p):
-    'import : IMPORT ID AT NUMBER'
+    'import : IMPORT module_name AT NUMBER'
     CreateASTNode(p, ast.ImportDefine, p[2], p[4])
 
   def p_struct_define(self, p):
