@@ -63,6 +63,13 @@ class Render:
       return os.path.join(self.outdir, filename)
     return os.path.join(script_dir, filename)
 
+  def _MapType(self, ast_type, type_map):
+    if not isinstance(ast_type, str):
+      raise Exception('not a valid str type: {}'.format(ast_type))
+    if ast_type not in type_map:
+      raise Exception('can not map type: {}'.format(ast_type))
+    return type_map[ast_type]
+
 ### CPP Render
 class CPPRender(Render):
   param_ref_types = (
@@ -240,13 +247,6 @@ class CPPRender(Render):
       return self.MakeOutPath(self.source_file)
     file_name = '%s.cpp' % (self.GetModuleName())
     return self.MakeOutPath(file_name)
-
-  def _MapType(self, ast_type, type_map):
-    if not isinstance(ast_type, str):
-      raise Exception('not a valid str type: {}'.format(ast_type))
-    if ast_type not in type_map:
-      raise Exception('can not map type: {}'.format(ast_type))
-    return type_map[ast_type]
 
   def GenerateCppType(self, ast_type):
     if isinstance(ast_type, str):
@@ -696,6 +696,42 @@ class CPPRender(Render):
 ### TS Render
 class TSRender(Render):
 
+  ts_type_map = {
+    'int' : 'number',
+    'int' : 'number',
+    'long' : 'number',
+    'ulong' : 'number',
+    'float' : 'number',
+    'double' : 'number',
+    'boolean' : 'boolean',
+    'string': 'string',
+    'uint8' : 'number',
+    'int8'  : 'number',
+    'uint16' : 'number',
+    'int16' : 'number',
+    'uint32' : 'number',
+    'int32' : 'number',
+    'uint64' : 'number',
+    'int64' : 'number',
+    'void' : 'void',
+    'ellipse' : '...rest:any[]',
+    'callback' : 'callback',
+    'Int8Array' : 'array',
+    'Uint8Array' : 'array',
+    'Int16Array' : 'array',
+    'Uint16Array' : 'array',
+    'Int32Array' : 'array',
+    'Uint32Array' : 'array',
+    'Int64Array' : 'array',
+    'Uint64Array' : 'array',
+    'IntArray' : 'array',
+    'UintArray' : 'array',
+    'LongArray' : 'array',
+    'UlongArray' : 'array',
+    'FloatArray' : 'array',
+    'DoubleArray' : 'array',
+  }
+
   def __init__(self, json_file, d_ts_file, configs):
     self.d_ts_tmpl = GetTemplate('json_ast_d_ts.mt')
     self.d_ts_file = d_ts_file
@@ -721,12 +757,77 @@ class TSRender(Render):
     file_name = '%s.d.ts' % (self.GetModuleName())
     return self.MakeOutPath(file_name)
 
+  def GenerateTsType(self, ast_type):
+    if isinstance(ast_type, str):
+      return self._MapType(ast_type, self.ts_type_map)
+
+    if not isinstance(ast_type, dict):
+      raise Exception('not a valid complex type: {}'.format(ast_type))
+
+    if 'element' in ast_type:
+      return 'FTArray'
+    elif 'referred_type' in ast_type:
+      referred_type = ast_type['referred_type']
+      if referred_type == 'callback':
+        return self.GenerateTsType(referred_type)
+    else:
+      raise Exception('not a valid complex type: {}'.format(ast_type))
+
+  def GeneratePromiseType(self, ret_type):
+    if not isinstance(ret_type, dict) \
+      or ret_type['type'] != 'promise':
+        raise Exception('not a valid promise type: {}'.format(ret_type))
+
+    if not ('resolve_type' in ret_type and 'reject_type' in ret_type):
+      raise Exception('not a complete promise type: {}'.format(ret_type))
+
+    resolve_type = self.GenerateTsType(ret_type['resolve_type'])
+    reject_type = self.GenerateTsType(ret_type['reject_type'])
+    return f"promise<{resolve_type}, {reject_type}>"
+
+  def GenerateReturnType(self, ret_type):
+    if isinstance(ret_type, str):
+      return self._MapType(ret_type, self.ts_type_map)
+    elif isinstance(ret_type, dict):
+      if ret_type['type'] == 'promise':
+        return self.GeneratePromiseType(ret_type)
+      else:
+        return self.GenerateTsType(ret_type)
+    return 'void'
+
+  def GenerateParamList(self, params):
+    param_list = []
+    param_count = len(params)
+    for index, param in enumerate(params):
+      param_type = param["type"]
+      if index < param_count -1 and param_type == 'ellipse':
+        raise Exception('wrong ellipse param position: {}'.format(params))
+      param_str = self.GenerateTsType(param_type)
+      if 'name' in param:
+        p_name = param["name"]
+        param_str = f"{p_name}:{param_str}"
+      param_list.append(param_str)
+    return ", ".join(param_list)
+
+  def GenerateFunctionDefine(self, node):
+    if node['type'] != 'function':
+      return None
+
+    identifier = node["identifier"]
+    ret_type = self.GenerateReturnType(node["return_type"])
+    params = ''
+    if 'params' in node:
+      params = self.GenerateParamList(node["params"])
+    func_define = f"{identifier}({params}):{ret_type};"
+    return func_define
+
 ### Usage and main entry point
 def Usage():
    print("usage %s <jidl-file|json-ast-file> -out-dir <outdir> [-options]" % sys.argv[0])
 
 lang_keys = {
-  'c++': ['header', 'source']
+  'c++': ['header', 'source'],
+  'ts': ['dts']
 }
 
 def CheckArgs(configs):
@@ -798,6 +899,6 @@ if __name__ == '__main__':
     print("generating c/c++ glue files from: '%s' ..." % (json_file))
     render = CPPRender(json_file, configs['header'], configs['source'], configs)
   elif configs['lang'] == 'ts':
-    render = TSRender(configs['input'], configs['header'], configs['source'], configs)
+    render = TSRender(json_file, configs['dts'], configs)
     render.Generate()
 
