@@ -693,6 +693,35 @@ class CPPRender(Render):
       member_info['name'] = ''
     return member_info
 
+### TS Render
+class TSRender(Render):
+
+  def __init__(self, json_file, d_ts_file, configs):
+    self.d_ts_tmpl = GetTemplate('json_ast_d_ts.mt')
+    self.d_ts_file = d_ts_file
+    Render.__init__(self, json_file, configs)
+
+  def Generate(self):
+    self._GenerateFromTemplate(self.d_ts_tmpl, self.GetDTSFilePath())
+
+  def _GenerateFromTemplate(self, tmpl, out):
+    WriteFile(tmpl.render(render=self), out)
+
+  def GenHeaderDefine(self):
+    return 'JSON_AST_GEN_MODULE_%s_H_' % (self.GetModuleName().upper())
+
+  def GetDTSFileName(self):
+    if self.d_ts_file:
+      return GetFileName(self.d_ts_file)
+    return '%s.d.ts' % (self.GetModuleName())
+
+  def GetDTSFilePath(self):
+    if self.d_ts_file:
+      return self.MakeOutPath(self.d_ts_file)
+    file_name = '%s.d.ts' % (self.GetModuleName())
+    return self.MakeOutPath(file_name)
+
+### Usage and main entry point
 def Usage():
    print("usage %s <jidl-file|json-ast-file> -out-dir <outdir> [-options]" % sys.argv[0])
 
@@ -768,5 +797,7 @@ if __name__ == '__main__':
   if configs['lang'] == 'c++':
     print("generating c/c++ glue files from: '%s' ..." % (json_file))
     render = CPPRender(json_file, configs['header'], configs['source'], configs)
+  elif configs['lang'] == 'ts':
+    render = TSRender(configs['input'], configs['header'], configs['source'], configs)
     render.Generate()
 
