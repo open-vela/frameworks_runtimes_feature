@@ -7,42 +7,76 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* about wasmr api */
+#include "feature_manager_wamr.h"
+#include "wasm_export.h"
+#include "libdyntype_export.h"
+
 using namespace ferry;
 using namespace FEATURE;
 
-static ferry::FeatureManagerQjs* g_manager_qjs;
+static ferry::FeatureManagerQjs *g_manager_qjs;
+static ferry::FeatureManagerWamr *g_manager_wamr;
 
-typedef struct feature_env_t {
-    JSRuntime* rt;
-    JSContext* ctx;
+typedef struct feature_env_t
+{
+    JSRuntime *rt;
+    JSContext *ctx;
 } feature_env_t;
 
+extern "C" dyn_value_t
+dyntype_callback_wasm_dispatcher(void *exec_env_v, dyn_ctx_t ctx, void *vfunc,
+                                 dyn_value_t this_obj, int argc,
+                                 dyn_value_t *args);
+
+int events_poll(wasm_exec_env_t exec_env)
+{
+    /* TODO: not detect macro tasks yet */
+    return -1;
+}
+
+void execute_micro_tasks(wasm_exec_env_t exec_env, dyn_ctx_t ctx)
+{
+    int err;
+
+    for (;;) {
+        /* execute the pending jobs */
+        for (;;) {
+            err = dyntype_execute_pending_jobs(ctx);
+            if (err <= 0) {
+                if (err < 0) {
+                    dyntype_dump_error(ctx);
+                }
+                break;
+            }
+        }
+
+        if (events_poll(exec_env))
+            break;
+    }
+}
+
 // __require
-feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
+feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t *argv)
 {
     if (argc < 1) {
         FEATURE_THROW_INTERNAL_ERROR(ctx, "require need module name!");
         return FEATURE_UNDEFINED;
     }
-    if (argc < 2) {
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "require need vm object !");
-        return FEATURE_UNDEFINED;
-    }
-    const char* str_module_name = feature_to_cstring(ctx, argv[0]);
-    feature_value_t vm_object = argv[1];
-    auto feature_obj = g_manager_qjs->featureRequire(ctx, vm_object, str_module_name);
+    const char *str_module_name = feature_to_cstring(ctx, argv[0]);
+    auto feature_obj = g_manager_qjs->featureRequire(ctx, str_module_name);
     feature_free_cstring(ctx, str_module_name);
     return feature_obj;
 }
 
-bool load_file(char* file_name, char** file_content)
+int load_file(char *file_name, char **file_content)
 {
     if (file_name == NULL || file_content == NULL) {
         printf("file_name or file_content is NULL!\n");
         return false;
     }
 
-    FILE* fp = fopen(file_name, "r");
+    FILE *fp = fopen(file_name, "r");
     if (fp == NULL) {
         printf("open file_name is %s failed!\n", file_name);
         return false;
@@ -52,29 +86,29 @@ bool load_file(char* file_name, char** file_content)
     int len = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    *file_content = (char*)malloc(len + 1);
+    *file_content = (char *)malloc(len + 1);
     memset(*file_content, 0, len + 1);
     // 读取文件内容到file_content字符串中
     fread(*file_content, len, 1, fp);
     fclose(fp);
 
-    return true;
+    return len;
 }
 
 // 支持cli来读取manitest.json以及js文件去执行，命令为：./feature_jidl_test ./test.js ../manifest.json
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     if (argc < 2) {
         printf("please input manifest.json file and js file, like ./jidl_main ./test.js!\n");
         return 0;
     }
 
-    char* js_file = argv[1];
-    char* js_str = NULL;
-    char* manifast_str = NULL;
+    char *js_file = argv[1];
+    char *js_str = NULL;
+    char *manifast_str = NULL;
 
     if (argc == 3) {
-        char* manifest_file = argv[2];
+        char *manifest_file = argv[2];
         load_file(manifest_file, &manifast_str);
 
         if (manifast_str == NULL) {
@@ -85,7 +119,7 @@ int main(int argc, char** argv)
 
     // 打开manifest.json文件,读取内容到一个字符串中
     // 打开js文件
-    load_file(js_file, &js_str);
+    int js_filelen = load_file(js_file, &js_str);
     if (js_str == NULL) {
         printf("malloc js file failed!\n");
         if (manifast_str != NULL) {
@@ -95,52 +129,135 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    // initialize quickjs engine
-    feature_env_t js_env;
+    uint32_t len = strlen(js_file);
+    if (js_file[len - 1] == 's') { // file is js file
+        // initialize quickjs engine
+        feature_env_t js_env;
 
-    js_env.rt = JS_NewRuntime();
-    js_env.ctx = JS_NewContext(js_env.rt);
-    JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    auto registry = new ferry::FeatureRegistry();
-    registry->init(manifast_str);
-    g_manager_qjs = new ferry::FeatureManagerQjs(registry);
+        js_env.rt = JS_NewRuntime();
+        js_env.ctx = JS_NewContext(js_env.rt);
+        JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
+        auto registry = new ferry::FeatureRegistry();
+        registry->init(manifast_str);
+        g_manager_qjs = new ferry::FeatureManagerQjs(registry);
 
-    // register global require
-    feature_value_t global_obj = feature_global_object(js_env.ctx);
-    feature_value_t require = feature_cfunction(js_env.ctx, __require, "require", 0);
-    feature_set_object_property(js_env.ctx, global_obj, "require", require);
-    feature_free_value(js_env.ctx, global_obj);
+        // register global require
+        feature_value_t global_obj = feature_global_object(js_env.ctx);
+        feature_value_t require = feature_cfunction(js_env.ctx, __require, "require", 0);
+        feature_set_object_property(js_env.ctx, global_obj, "require", require);
+        feature_free_value(js_env.ctx, global_obj);
 
-    auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
+        auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
 
-    int err;
-    feature_context_ref ctx1;
-    while (!!JS_IsJobPending(js_env.rt)) {
-        err = JS_ExecutePendingJob(js_env.rt, &ctx1);
-        if (err <= 0) {
-            if (err < 0)
-                feature_dump_error(ctx1);
-            break;
+        int err;
+        feature_context_ref ctx1;
+        while (!!JS_IsJobPending(js_env.rt)) {
+            err = JS_ExecutePendingJob(js_env.rt, &ctx1);
+            if (err <= 0) {
+                if (err < 0)
+                    feature_dump_error(ctx1);
+                break;
+            }
         }
-    }
-    feature_free_value(js_env.ctx, result);
-    // release manager first
-    g_manager_qjs->uninit();
-    JS_FreeContext(js_env.ctx);
-    JS_FreeRuntime(js_env.rt);
+        feature_free_value(js_env.ctx, result);
+        // release manager first
+        g_manager_qjs->uninit();
+        JS_FreeContext(js_env.ctx);
+        JS_FreeRuntime(js_env.rt);
 
-    // 释放manifast_str
-    if (manifast_str != NULL) {
-        free(manifast_str);
-        manifast_str = NULL;
+        // 释放manifast_str
+        if (manifast_str != NULL) {
+            free(manifast_str);
+            manifast_str = NULL;
+        }
+        // 释放js_str
+        if (js_str != NULL) {
+            free(js_str);
+            js_str = NULL;
+        }
+        // free g_manager_qjs
+        delete g_manager_qjs;
+    } else { /* file is wasm file */
+        wasm_module_t wasm_module = NULL;
+        wasm_module_inst_t wasm_module_inst = NULL;
+        wasm_exec_env_t exec_env = NULL;
+        uint stack_size = 64 * 1024, heap_size = 16 * 1024;
+        char error_buf[128] = {0};
+        RuntimeInitArgs init_args;
+        memset(&init_args, 0, sizeof(RuntimeInitArgs));
+        init_args.mem_alloc_type = Alloc_With_Allocator;
+        init_args.mem_alloc_option.allocator.malloc_func = (void *)malloc;
+        init_args.mem_alloc_option.allocator.realloc_func = (void *)realloc;
+        init_args.mem_alloc_option.allocator.free_func = (void *)free;
+        init_args.gc_heap_size = 16 * 1024;
+
+        if (!wasm_runtime_full_init(&init_args)) {
+            printf("Init runtime environment failed.\n");
+            return -1;
+        }
+
+        /* initialize dyntype context and set callback dispatcher */
+        dyn_ctx_t dyn_ctx = dyntype_context_init();
+        dyntype_set_callback_dispatcher(dyntype_callback_wasm_dispatcher);
+
+        /* init feature about wasm */
+        auto registry = new ferry::FeatureRegistry();
+        registry->init(manifast_str);
+        g_manager_wamr = new ferry::FeatureManagerWamr(registry);
+        if (!g_manager_wamr->init())
+        {
+            printf(" wamr init error!\n");
+            return 0;
+        }
+
+        if (!(wasm_module = wasm_runtime_load((uint8_t *)js_str, js_filelen,
+                                              error_buf, sizeof(error_buf)))) {
+            printf("%s\n", error_buf);
+            return 0;
+        }
+        if (!(wasm_module_inst =
+                  wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
+                                           error_buf, sizeof(error_buf)))) {
+            printf("%s\n", error_buf);
+            return 0;
+        }
+
+        exec_env = wasm_runtime_get_exec_env_singleton(wasm_module_inst);
+        if (exec_env == NULL) {
+            printf("%s\n", wasm_runtime_get_exception(wasm_module_inst));
+        }
+
+        const char *exception;
+        wasm_application_execute_main(wasm_module_inst, 0, NULL);
+        if ((exception = wasm_runtime_get_exception(wasm_module_inst)))
+            printf("%s\n", exception);
+
+        /* run micro tasks */
+        execute_micro_tasks(exec_env, dyn_ctx);
+
+        wasm_runtime_deinstantiate(wasm_module_inst);
+        wasm_runtime_unload(wasm_module);
+
+        g_manager_wamr->release();
+
+        /* destroy dynamic ctx */
+        dyntype_context_destroy(dyn_ctx);
+
+        /* destroy runtime environment */
+        wasm_runtime_destroy();
+
+        // 释放manifast_str
+        if (manifast_str != NULL) {
+            free(manifast_str);
+            manifast_str = NULL;
+        }
+        // 释放js_str
+        if (js_str != NULL) {
+            free(js_str);
+            js_str = NULL;
+        }
+        delete g_manager_wamr;
     }
-    // 释放js_str
-    if (js_str != NULL) {
-        free(js_str);
-        js_str = NULL;
-    }
-    // free g_manager_qjs
-    delete g_manager_qjs;
 
     return 0;
 }
