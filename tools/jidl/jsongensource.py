@@ -714,7 +714,7 @@ class TSRender(Render):
     'uint64' : 'number',
     'int64' : 'number',
     'void' : 'void',
-    'ellipse' : '...rest:any[]',
+    'ellipse' : '...rest: any[]',
     'callback' : 'callback',
     'Int8Array' : 'array',
     'Uint8Array' : 'array',
@@ -735,6 +735,7 @@ class TSRender(Render):
   def __init__(self, json_file, d_ts_file, configs):
     self.d_ts_tmpl = GetTemplate('json_ast_d_ts.mt')
     self.d_ts_file = d_ts_file
+    self.callback_map = {}
     Render.__init__(self, json_file, configs)
 
   def Generate(self):
@@ -761,43 +762,39 @@ class TSRender(Render):
     if isinstance(ast_type, str):
       return self._MapType(ast_type, self.ts_type_map)
 
-    if not isinstance(ast_type, dict):
-      raise Exception('not a valid complex type: {}'.format(ast_type))
+    if not (isinstance(ast_type, dict) and 'type' in ast_type):
+      raise Exception('invalid complex type: {}'.format(ast_type))
 
+    print("wjf ast_type: {}".format(ast_type))
     if 'element' in ast_type:
-      return 'FTArray'
+      ts_type = self.GenerateTsType(ast_type['element'])
+      return ts_type + '[]'
     elif 'referred_type' in ast_type:
       referred_type = ast_type['referred_type']
       if referred_type == 'callback':
-        return self.GenerateTsType(referred_type)
+        referred_name = ast_type['referred_name']
+        if referred_name not in self.callback_map:
+          raise Exception('invalid callback type: {}'.format(referred_name))
+        return self.callback_map[referred_name]
+      elif referred_type == 'struct':
+        return ast_type['referred_name']
+    elif ast_type['type'] == 'promise':
+      return 'any'
     else:
-      raise Exception('not a valid complex type: {}'.format(ast_type))
-
-  def GeneratePromiseType(self, ret_type):
-    if not isinstance(ret_type, dict) \
-      or ret_type['type'] != 'promise':
-        raise Exception('not a valid promise type: {}'.format(ret_type))
-
-    if not ('resolve_type' in ret_type and 'reject_type' in ret_type):
-      raise Exception('not a complete promise type: {}'.format(ret_type))
-
-    resolve_type = self.GenerateTsType(ret_type['resolve_type'])
-    reject_type = self.GenerateTsType(ret_type['reject_type'])
-    return f"promise<{resolve_type}, {reject_type}>"
+      raise Exception('invalid complex type: {}'.format(ast_type))
 
   def GenerateReturnType(self, ret_type):
     if isinstance(ret_type, str):
       return self._MapType(ret_type, self.ts_type_map)
     elif isinstance(ret_type, dict):
-      if ret_type['type'] == 'promise':
-        return self.GeneratePromiseType(ret_type)
-      else:
-        return self.GenerateTsType(ret_type)
+      return self.GenerateTsType(ret_type)
     return 'void'
 
   def GenerateParamList(self, params):
     param_list = []
     param_count = len(params)
+    if param_count == 0:
+      return ''
     for index, param in enumerate(params):
       param_type = param["type"]
       if index < param_count -1 and param_type == 'ellipse':
@@ -805,7 +802,7 @@ class TSRender(Render):
       param_str = self.GenerateTsType(param_type)
       if 'name' in param:
         p_name = param["name"]
-        param_str = f"{p_name}:{param_str}"
+        param_str = f"{p_name}: {param_str}"
       param_list.append(param_str)
     return ", ".join(param_list)
 
@@ -818,8 +815,22 @@ class TSRender(Render):
     params = ''
     if 'params' in node:
       params = self.GenerateParamList(node["params"])
-    func_define = f"{identifier}({params}):{ret_type};"
+    func_define = f"{identifier}({params}): {ret_type};"
     return func_define
+
+  def TryCacheCallback(self, ast_type):
+    if not (isinstance(ast_type, dict) and \
+        'type' in ast_type and ast_type['type'] == 'callback'):
+      raise Exception('invalid callback node: {}'.format(ast_type))
+    id = ast_type['identifier']
+    if id in self.callback_map:
+      return False
+    params = ''
+    if 'params' in ast_type:
+      params = self.GenerateParamList(ast_type['params'])
+    cb_def = f"({params}) => void"
+    self.callback_map[id] = cb_def
+    return True
 
 ### Usage and main entry point
 def Usage():
