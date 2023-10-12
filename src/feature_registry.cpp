@@ -35,7 +35,6 @@ public:
     bool parse(char* json);
     size_t getFeaturesCount();
     const char* getFeatureName(size_t index);
-    const char* getPackageName();
 private:
     JSONDocument doc_;
 };
@@ -84,20 +83,6 @@ const char* ManifestParser::getFeatureName(size_t index)
     return featureObj["name"].GetString();
 }
 
-const char* ManifestParser::getPackageName()
-{
-    if (!doc_.HasMember("package")) {
-        FEATURE_LOG_WARN("manifest do not have package variable !");
-        return "";
-    }
-    const auto& package = doc_.GetObject()["package"];
-    if (!package.IsString()) {
-        FEATURE_LOG_WARN("manifest.package is not string !");
-        return "";
-    }
-    return package.GetString();
-}
-
 bool FeatureRegistry::init(char* manifest)
 {
     // register features
@@ -117,8 +102,6 @@ bool FeatureRegistry::init(char* manifest)
                 features.emplace_back(featureName);
             }
         }
-        FeaturePackageName_ = strdup(parser.getPackageName());
-        FEATURE_LOG_ERROR("FeaturePackageName_ is %s!", FeaturePackageName_);
     } else {
         FEATURE_LOG_DEBUG("manifest is null!");
         manifest_check_enable = false;

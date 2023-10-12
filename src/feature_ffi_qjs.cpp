@@ -327,6 +327,7 @@ namespace FeatureFFIQjs {
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
+                InterfaceType& interfaceType = *(InterfaceType*)complexType;
                 // get interface ptr from js object
                 auto opaque_ptr = feature_get_opaque(value, interface_class_id);
                 FEATURE_LOG_DEBUG("value: %p, get opaque_ptr: %p", JS_VALUE_GET_PTR(value), opaque_ptr);
