@@ -22,10 +22,10 @@
           "name": "Promise"
       },
       {
-          "name": "mockatest"
+          "name": "Timer"
       },
       {
-          "name": "Timer"
+          "name": "ATest"
       },
       {
           "name": "interface"

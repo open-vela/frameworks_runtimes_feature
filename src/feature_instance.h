@@ -45,6 +45,8 @@ public:
      */
     virtual bool removeCallback(FtCallbackId cid) = 0;
 
+    virtual bool removePromise(FtPromiseId pid) = 0;
+
     virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap) = 0;
 
     virtual int invokeCallback(FtCallbackId cid, va_list& ap) = 0;

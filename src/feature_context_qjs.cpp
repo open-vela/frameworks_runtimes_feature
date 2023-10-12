@@ -34,7 +34,7 @@
         qjs_val_t ret;  \
         ret.js_val = JS_UNDEFINED;  \
         JSValue array = JS_NewArray(js_ctx);   \
-        for (uint32_t i = 0; i < argc; ++i) {    \
+        for (int i = 0; i < argc; ++i) {    \
             JSValue elem = func(js_ctx, argv[i]);   \
             if (!JS_SetPropertyUint32(js_ctx, array, i, elem)) \
                 return QJS_VAL_TO_FT(ret);  \
