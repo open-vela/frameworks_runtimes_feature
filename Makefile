@@ -124,6 +124,12 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/am/include/app
 endif
 FEATURELIST += jumpApp
 
+ifeq ($(CONFIG_MIPLAY),y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0_impl.cpp
+FEATURELIST += Miplay
+endif
+
 ifeq ($(GCCVER),12)
 CXXFLAGS += -DGTEST_HAS_POSIX_RE=0
 CXXFLAGS += -Wno-maybe-uninitialized
