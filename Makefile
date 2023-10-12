@@ -34,6 +34,7 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
 
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs

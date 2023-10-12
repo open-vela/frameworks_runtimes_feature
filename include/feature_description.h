@@ -17,6 +17,11 @@
 #ifndef FEATURE_DESCRIPTION_H
 #define FEATURE_DESCRIPTION_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "feature_types.h"
 #include <cstdint>
 #include <inttypes.h>
@@ -195,5 +200,9 @@ typedef struct FeatureDescription {
     int member_count; // 成员数量
     const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //FEATURE_DESCRIPTION_H
