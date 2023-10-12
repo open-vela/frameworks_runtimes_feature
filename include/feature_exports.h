@@ -17,6 +17,11 @@
 #ifndef FEATURE_EXPORTS_H
 #define FEATURE_EXPORTS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdbool.h>
 #include "feature_types.h"
 
@@ -156,5 +161,9 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  * @return FeatureInterfaceHandle
  */
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable vtable, int vtable_size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FEATURE_EXPORTS_H

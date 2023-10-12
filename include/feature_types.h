@@ -17,6 +17,11 @@
 #ifndef FEATURE_TYPES_H
 #define FEATURE_TYPES_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdbool.h>
 #include "feature_context.h"
 
@@ -100,5 +105,9 @@ typedef struct FtVariParams {
     int32_t vari_count; // variadic parameter count
     ft_value_t* vari_args; // variadic parameter pointer array
 } FtVariParams;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FEATURE_TYPES_H
