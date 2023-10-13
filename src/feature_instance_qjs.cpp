@@ -268,7 +268,7 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap
     return doInvokeCallback(&cb_type, promiseData->resolveFuncs[idx], ap, 1, 0);
 }
 
-int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap)
+int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
 {
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
@@ -282,7 +282,7 @@ int FeatureInstanceQjs::invokeCallback(int cid, va_list& ap)
     return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, 0);
 }
 
-int FeatureInstanceQjs::invokeCallbackCount(int cid, va_list& ap, int count)
+int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int count)
 {
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
