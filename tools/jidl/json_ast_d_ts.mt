@@ -24,7 +24,7 @@
 <%
   struct_name = struct_node['name']
 %>\
-declare class ${struct_name} {
+export declare class ${struct_name} {
 %for member in struct_node['members']:
 ${GenStructMember(member)}\
 %endfor
@@ -32,7 +32,27 @@ ${GenStructMember(member)}\
 
 </%def>\
 
-module ${module_name};
+<%def name="GenPropertyDefines(prop_node)">\
+<%
+  prop_name = prop_node["name"]
+  prop_type = prop_node["value_type"]
+  ts_type = render.GenerateTsType(prop_type)
+  has_getter = render.PropertyHasGetter(prop_node)
+  has_setter = render.PropertyHasSetter(prop_node)
+%>\
+%if has_getter:
+  get ${prop_name}(): ${ts_type} {
+    return this.get_${prop_name}_0();
+  }
+  declare get_${prop_name}_0(): ${ts_type};
+%endif
+%if has_setter:
+  set ${prop_name}(v: ${ts_type}) {
+    this.set_${prop_name}_0(v);
+  }
+  declare set_${prop_name}_0(v: ${ts_type}): void;
+%endif
+</%def>\
 
 %for block in module['members']:
 %if block['type'] == 'struct':
@@ -40,7 +60,7 @@ ${GenStructDefine(block)}\
 %endif
 %endfor
 
-export declare class ${module_name} {
+export class ${module_name} {
   constructor(){
     this.init_native(this.clazz_name);
   }
@@ -49,6 +69,8 @@ export declare class ${module_name} {
 ${GenFunctionDefine(block)}\
 %elif block['type'] == 'callback':
 ${CacheCallback(block)}\
+%elif block['type'] == 'property':
+${GenPropertyDefines(block)}\
 %endif
 %endfor
 

@@ -71,6 +71,29 @@ class Render:
       raise Exception('can not map type: {}'.format(ast_type))
     return type_map[ast_type]
 
+  def IsStruct(self, ast_node):
+    if not isinstance(ast_node, dict):
+      return False
+    if ast_node['type'] == 'struct':
+      return True
+    return False
+
+  def PropertyHasGetter(self, ast_type):
+    if not (isinstance(ast_type, dict) \
+        and 'type' in ast_type and ast_type['type'] == 'property'):
+      raise Exception('invalid property type: {}'.format(ast_type))
+    if 'readable' in ast_type or 'const' in ast_type:
+      return True
+    return False
+
+  def PropertyHasSetter(self, ast_type):
+    if not (isinstance(ast_type, dict) \
+        and 'type' in ast_type and ast_type['type'] == 'property'):
+      raise Exception('invalid property type: {}'.format(ast_type))
+    if ('writeable' in ast_type) and ('const' not in ast_type):
+      return True
+    return False
+
 ### CPP Render
 class CPPRender(Render):
   param_ref_types = (
@@ -650,23 +673,6 @@ class CPPRender(Render):
       ctor_info['interface'] = ast_node['return_type']['referred_name']
     return ctor_info
 
-  def IsStruct(self, ast_node):
-    if not isinstance(ast_node, dict):
-      return False
-    if ast_node['type'] == 'struct':
-      return True
-    return False
-
-  def PropertyHasGetter(self, node):
-    if 'readable' in node or 'const' in node:
-      return True
-    return False
-
-  def PropertyHasSetter(self, node):
-    if ('writeable' in node) and ('const' not in node):
-      return True
-    return False
-
   def GetMemberInfo(self, member):
     member_info = {}
     if member['type'] == 'function' or member['type'] == 'use':
@@ -816,7 +822,7 @@ class TSRender(Render):
     params = ''
     if 'params' in node:
       params = self.GenerateParamList(node["params"])
-    func_define = f"{identifier}({params}): {ret_type};"
+    func_define = f"declare {identifier}({params}): {ret_type};"
     return func_define
 
   def TryCacheCallback(self, ast_type):
