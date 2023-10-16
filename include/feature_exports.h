@@ -24,6 +24,7 @@ extern "C"
 
 #include <stdbool.h>
 #include "feature_types.h"
+#include <uv.h>
 
 /**
  * @brief malloc a memory by featureType
@@ -101,6 +102,22 @@ void FeatureSetObjectData(FeatureInstanceHandle handle, void* data);
  * @return context_ref
  */
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle);
+
+/**
+ * @brief get feature package name from FeatureInstanceHandle
+ *
+ * @param handle
+ * @return char*
+ */
+char* FeatureGetPackageName(FeatureInstanceHandle handle);
+
+/**
+ * @brief get feature uvloop from FeatureInstanceHandle
+ *
+ * @param handle
+ * @return uv_loop_t*
+ */
+uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle);
 
 /**
  * @brief invoke callback via cid

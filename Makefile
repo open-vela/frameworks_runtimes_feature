@@ -40,9 +40,6 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src
 
-
-$(warning "dc ===== CONFIG_ARCH = $(CONFIG_ARCH)")
-
 ifeq ($(CONFIG_ARCH), arm)
 TARGETDIR := arm
 else ifeq ($(CONFIG_ARCH), arm64)

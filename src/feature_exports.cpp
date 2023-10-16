@@ -18,6 +18,7 @@
 #include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_utils.h"
+#include "feature_instance_qjs.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -150,6 +151,18 @@ void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 {
     return static_cast<FeatureInstance*>(handle)->prototype()->ft_ctx;
+}
+
+char* FeatureGetPackageName(FeatureInstanceHandle handle)
+{
+    FeatureInstanceQjs* instance = static_cast<ferry::FeatureInstanceQjs*>(handle);
+    return instance->getPackageName();
+}
+
+uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle)
+{
+    FeatureInstanceQjs* instance = static_cast<ferry::FeatureInstanceQjs*>(handle);
+    return instance->uvloop();
 }
 
 bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
