@@ -4,6 +4,11 @@
   module_name = render.GetModuleName()
 %>\
 <%def name="GenFunctionDefine(func_node)">\
+<%
+  identifier = func_node['identifier']
+  ret_type = func_node['return_type']
+  render.CacheFuncReturnNode(identifier, ret_type)
+%>\
   ${render.GenerateFunctionDefine(func_node)}
 </%def>\
 <%def name="CacheCallback(cb_node)">\
@@ -31,7 +36,6 @@ ${GenStructMember(member)}\
 }
 
 </%def>\
-
 <%def name="GenPropertyDefines(prop_node)">\
 <%
   prop_name = prop_node["name"]
@@ -54,6 +58,33 @@ ${GenStructMember(member)}\
 %endif
 </%def>\
 
+<%def name="GenUse(use_node)">\
+<%
+  func_node = use_node['function']
+  identifier = func_node['identifier']
+  func_call_node = use_node['function_call']
+  func_call_id = func_call_node['identifier']
+  ret_node = render.GetUseReturnNode(func_call_id)
+  ret_type = render.GenerateTsType(ret_node)
+  params = ''
+  if 'params' in func_node:
+    params += render.GenerateParamList(func_node["params"])
+
+  func_call = ''
+  if ret_type != 'void':
+    func_call += 'return '
+  func_call += f"this.{func_call_id} ("
+
+  if 'param_calls' in func_call_node:
+    params_calls = render.GenerateParamCallList(func_call_node["param_calls"])
+    func_call += f"{params_calls}"
+  func_call += ")"
+%>\
+  ${identifier} (${params}): ${ret_type} {
+    ${func_call};
+  }
+</%def>\
+
 %for block in module['members']:
 %if block['type'] == 'struct':
 ${GenStructDefine(block)}\
@@ -67,6 +98,8 @@ export class ${module_name} {
 %for block in module['members']:
 %if block['type'] == 'function':
 ${GenFunctionDefine(block)}\
+%elif block['type'] == 'use':
+${GenUse(block)}\
 %elif block['type'] == 'callback':
 ${CacheCallback(block)}\
 %elif block['type'] == 'property':

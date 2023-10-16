@@ -511,21 +511,21 @@ class CPPRender(Render):
     raise Exception('cannot find the called function for the use node: {}'.format(node))
 
   def GenerateParamCallList(self, param_calls):
-    p_call_str = ''
+    call_list = ''
     is_first_param = True
     for param_call in param_calls:
-      p_call_type = param_call["type"]
-      p_call_value = param_call["value"]
+      call_type = param_call["type"]
+      call_value = param_call["value"]
       if not is_first_param:
-        p_call_str += ", "
+        call_list += ", "
       else:
         is_first_param = False
 
-      if p_call_type == 'ellipse':
-        p_call_str += "vari_params"
+      if call_type == 'ellipse':
+        call_list += "vari_params"
       else:
-        p_call_str += f"{p_call_value}"
-    return p_call_str
+        call_list += f"{call_value}"
+    return call_list
 
   def TryCacheCallbackId(self, id):                                                                                                                                                                                                             
     if not id in self.callback_id_set:
@@ -743,6 +743,7 @@ class TSRender(Render):
     self.d_ts_tmpl = GetTemplate('json_ast_d_ts.mt')
     self.d_ts_file = d_ts_file
     self.callback_map = {}
+    self.func_ret_node_map = {}
     Render.__init__(self, json_file, configs)
 
   def Generate(self):
@@ -790,13 +791,6 @@ class TSRender(Render):
     else:
       raise Exception('invalid complex type: {}'.format(ast_type))
 
-  def GenerateReturnType(self, ret_type):
-    if isinstance(ret_type, str):
-      return self._MapType(ret_type, self.ts_type_map)
-    elif isinstance(ret_type, dict):
-      return self.GenerateTsType(ret_type)
-    return 'void'
-
   def GenerateParamList(self, params):
     param_list = []
     param_count = len(params)
@@ -818,7 +812,7 @@ class TSRender(Render):
       return None
 
     identifier = node["identifier"]
-    ret_type = self.GenerateReturnType(node["return_type"])
+    ret_type = self.GenerateTsType(node["return_type"])
     params = ''
     if 'params' in node:
       params = self.GenerateParamList(node["params"])
@@ -838,6 +832,37 @@ class TSRender(Render):
     cb_def = f"({params}) => void"
     self.callback_map[id] = cb_def
     return True
+
+  def CacheFuncReturnNode(self, id, node):
+    self.func_ret_node_map[id] = node
+
+  def GetUseReturnNode(self, identifier):
+    if identifier in self.func_ret_node_map:
+      return self.func_ret_node_map[identifier]
+    raise Exception('cannot find the called function for the use node: {}'.format(node))
+
+  def GenerateParamCallList(self, param_calls):
+    call_list = ''
+    is_first_param = True
+    for param_call in param_calls:
+      call_type = param_call["type"]
+      call_value = ''
+      if 'value' not in param_call:
+        if call_type != 'ellipse':
+          raise Exception('invalid param_call param: {}'.format(param_call))
+      else:
+        call_value = param_call["value"]
+
+      if not is_first_param:
+        call_list += ", "
+      else:
+        is_first_param = False
+
+      if call_type == 'ellipse':
+        call_list += '...rest'
+      else:
+        call_list += f"{call_value}"
+    return call_list
 
 ### Usage and main entry point
 def Usage():
