@@ -4,33 +4,33 @@
 
 module bluetooth_adapter@1.0
 
-callback OnDevicePaired(boolean result, jsvalue device, string message);
+callback OnDevicePaired(boolean result, object device, string message);
 callback OnTimeout();
 
 promise<void, string> startDiscovery();
 promise<void, string> stopDiscovery();
-promise<void, string> setDiscoveryFilter(jsvalue dict_value);
+promise<void, string> setDiscoveryFilter(object dict_value);
 promise<string[], string> getDiscoveryFilters();
-promise<jsvalue, string> connectDevice(jsvalue properties);
+promise<object, string> connectDevice(object properties);
 promise<void, string> removeDevice(string device_path);
 promise<string[], string> getBondedDevice();
 
-promise<jsvalue, string> getDevices();
-jsvalue getPairedDevices();
-jsvalue getConnectedDevices();
+promise<object, string> getDevices();
+object getPairedDevices();
+object getConnectedDevices();
 // callback boolean filter_cb(device)
-jsvalue getDevicesFilter(jsvalue filter_cb);
+object getDevicesFilter(object filter_cb);
 
 // pair ble device
-// boolean filter_cb(jsvalue device)
+// boolean filter_cb(object device)
 // this function shall not be called in formal code. It's only for test.
-void tryPairBLEDevices(jsvalue filter_cb, OnDevicePaired paired_cb, OnTimeout timeout_cb, int timeout_ms);
+void tryPairBLEDevices(object filter_cb, OnDevicePaired paired_cb, OnTimeout timeout_cb, int timeout_ms);
 
 event opened();
-event deviceAdded(jsvalue device);
-event deviceRemoved(jsvalue device);
-event propertiesChanged(jsvalue props);
-event deviceisConnected(jsvalue props);
+event deviceAdded(object device);
+event deviceRemoved(object device);
+event propertiesChanged(object props);
+event deviceisConnected(object props);
 
 
 
@@ -76,8 +76,8 @@ interface device {
   property string modalias readonly;
   property int RSSI readonly;
   property int txPower readonly;
-  property jsvalue manufactureData readonly;
-  property jsvalue serviceData readonly;
+  property object manufactureData readonly;
+  property object serviceData readonly;
   property boolean servicesResolved readonly;
-  property jsvalue advertisingFlags readonly;
+  property object advertisingFlags readonly;
 }

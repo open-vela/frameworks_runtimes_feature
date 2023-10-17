@@ -191,6 +191,11 @@ ${GenInterfaceMemberMethod(func_node, parent_name, index)}
   };
 
 </%def>\
+<%def name="GenInterfaceEvent(event_node, parent_name)">\
+  // don't support event ${parent_name}.${event_node['identifier']}
+  // ${event_node}
+#endif
+</%def>\
 <%def name="GenParentInterFaceMemberDefs(iname, members)">\
 <%
   vtable_idx = 1
@@ -302,6 +307,8 @@ ${GenParentInterFaceMemberDefs(iname, parent_members)}\
       GenInterfaceFunction(member, iname)
     elif member['type'] == 'property':
       GenInterfaceProperty(member, iname)
+    elif member['type'] == 'event':
+      GenInterfaceEvent(member, iname)
     else:
       raise Exception('wrong interface member type: {}'.format(member))
   endfor

@@ -8,7 +8,7 @@ callback getType_success(string brand, string manufacturer, string model, string
 callback getType_fail(int code, string data)
 callback getType_complete()
 
-void getInfo(getInfo_success cb1, getInfo_fail cb2, getInfo_complete cb3)
+void getInfo(getType_success cb1, getType_fail cb2, getType_complete cb3)
 
 
 callback getId_success(string device, string mac, string user, string advertising)

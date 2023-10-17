@@ -1,0 +1,53 @@
+{
+    "includes": [
+        "lvgl/lvgl.h",
+        "js/qjs_help.h",
+        "js/js_meta.h"
+    ],
+
+    "from_native": {
+      "int" : "JS_NewInt32",
+      "uint" : "JS_NewUint32",
+      "long" : "JS_NewInt64",
+      "ulong" : "JS_NewUint64",
+      "float" : "JS_NewFloat64",
+      "double" : "JS_NewFloat64",
+      "boolean" : "JS_NewBool",
+      "string" : "JS_NewString",
+      "int8" : "JS_NewInt32",
+      "uint8" : "JS_NewUint32",
+      "uint32" : "JS_NewUint32",
+      "int32" : "JS_NewInt32",
+      "uint64" : "JS_NewUint64",
+      "int64" : "JS_NewInt64",
+      "void" : "",
+      "object" : ""
+    },
+
+    "to_native": {
+      "int" : "JS_ToInt32",
+      "uint" : "JS_ToUint32",
+      "long" : "JS_ToInt64",
+      "ulong" : "JS_ToIndex",
+      "float" : "js_tofloat32",
+      "double" : "JS_ToFloat64",
+      "boolean" : "JS_ToInt32",
+      "string" : "js_tocstring",
+      "int8" : "js_toint8",
+      "uint8" : "js_touint8",
+      "uint32" : "JS_ToUint32",
+      "int32" : "JS_ToInt32",
+      "uint64" : "JS_ToIndex",
+      "int64" : "JS_ToInt64"
+    },
+
+    "free_native": {
+      "string" : "JS_FreeCString"
+    },
+
+    "cppType": {
+
+    },
+
+    "event-call": "lv_add_event((%(native_type)s)%(native_self)s, build_event(%(context)s, %(param_value)s, &_%(module_name)s_%(event_type)s_class), %(code)s)"
+}
