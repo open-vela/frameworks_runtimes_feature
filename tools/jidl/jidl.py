@@ -121,6 +121,7 @@ class JIDL(Parser):
     'PRIVATE',
     'PROPERTY',
     'EVENT',
+    'ENUM',
     'WRITEONLY',
     'READONLY',
     'CONSTRUCTOR',
@@ -203,14 +204,26 @@ class JIDL(Parser):
 
   def p_module_head(self, p):
     """
-    module_head : MODULE module_name AT NUMBER
-                | imports MODULE module_name AT NUMBER
+    module_head : module_define
+                | imports module_define
     """
     count = len(p)
-    if count == 6:
-      p[0] = {'imports' : p[1], 'name': p[3], 'version': p[5]}
+    if count == 2:
+      p[0] = p[1]
     else:
+      p[0] = p[2]
+      p[0]['imports'] = p[1]
+
+  def p_module_define(self, p):
+    """
+    module_define : MODULE module_name AT NUMBER
+                  | MODULE module_name
+    """
+    count = len(p)
+    if count == 5:
       p[0] = {'name': p[2], 'version': p[4]}
+    else:
+      p[0] = {'name': p[2], 'version' : '1.0'}
 
   def p_module_name(self, p):
     """
@@ -239,10 +252,9 @@ class JIDL(Parser):
     """
     module_block : base_define_with_meta
            | callback_define
-           | const_define
            | class_define
-           | struct_define
            | interface_define
+           | struct_define
     """
     p[0] = p[1]
 
@@ -289,29 +301,21 @@ class JIDL(Parser):
 
   def p_struct_block(self, p):
     """
-    struct_block : struct_member_primary
-               | struct_member_array
+    struct_block : struct_member_define
                | struct_member_struct
                | struct_member_callback
     """
     p[0] = p[1]
 
-  def p_struct_member_primary(self, p):
+  def p_struct_member_define(self, p):
     """
-    struct_member_primary : primary_type ID
-                      | primary_type ID EQUALS literal_value
+    struct_member_define : value_type ID
+                      | value_type ID EQUALS literal_value
     """
     count = len(p)
     CreateASTNode(p, ast.StructMemberBase, p[1], p[2])
     if count == 5:
       p[0].SetDefault(p[4])
-
-  def p_struct_member_array(self, p):
-    """
-    struct_member_array : array_object_type ID
-                      | typed_array_type ID
-    """
-    CreateASTNode(p, ast.StructMemberBase, p[1], p[2])
 
   def p_struct_member_struct(self, p):
     """
@@ -362,6 +366,8 @@ class JIDL(Parser):
           | property_define
           | use_define
           | event_define
+          | const_define
+          | enum_define
     """
     p[0] = p[1]
 
@@ -383,12 +389,11 @@ class JIDL(Parser):
     """
     extends = None
     if len(p) == 8:
-      CreateASTNode(p, ast.InterfaceDefine, p[3], 30, p[6]) # 30 represents INTERFACE_DEFINE
+      CreateASTNode(p, ast.InterfaceDefine, p[3], ast.INTERFACE_DEFINE, p[6])
       p[0].SetMetaAttributes(p[1])
       extends = p[4]
     else:
-      CreateASTNode(p, ast.InterfaceDefine, p[2], 30, p[5]) # 30 represents INTERFACE_DEFINE
-      extends = p[3]
+      CreateASTNode(p, ast.InterfaceDefine, p[2], ast.INTERFACE_DEFINE, p[5])
 
     if extends:
       p[0].SetExtends(extends)
@@ -545,6 +550,49 @@ class JIDL(Parser):
     """
     CreateASTNode(p, ast.ConstDefine, p[2], p[4])
 
+  def p_enum_define(self, p):
+    """
+    enum_define : ENUM ID LBRACE enum_members RBRACE
+                | ENUM ID LBRACE RBRACE
+    """
+    if len(p) == 5:
+      CreateASTNode(p, ast.EnumDefine, p[2], [])
+    else:
+      CreateASTNode(p, ast.EnumDefine, p[2], p[4])
+
+  def p_enum_members(self, p):
+    """
+    enum_members : enum_member_meta
+                 | enum_members COMMA
+                 | enum_members COMMA enum_member_meta
+    """
+    if len(p) == 1:
+      p[0] = []
+    elif len(p) == 2:
+      p[0] = [p[1]]
+    elif len(p) == 3:
+      p[0] = p[1]
+    else:
+      p[1].append(p[3])
+      p[0] = p[1]
+
+  def p_enum_member_meta(self, p):
+    """
+    enum_member_meta : meta_attributes_define enum_member
+    """
+    p[0] = p[2]
+    p[0].SetMetaAttributes(p[1])
+
+  def p_enum_member(self, p):
+    """
+    enum_member : ID
+                | ID EQUALS literal_value
+    """
+    if len(p) == 2:
+      CreateASTNode(p, ast.ConstDefine, p[1], None)
+    else:
+      CreateASTNode(p, ast.ConstDefine, p[1], p[3])
+
   def p_async_define(self, p):
     """
     async_define : ASYNC
@@ -663,8 +711,13 @@ class JIDL(Parser):
   def p_param_define(self, p):
     """
     param_define : value_type ID
+                 | meta_attributes_define value_type ID
     """
-    CreateASTNode(p, ast.ParamDefine, p[1], p[2])
+    if len(p) == 3:
+      CreateASTNode(p, ast.ParamDefine, p[1], p[2])
+    else:
+      CreateASTNode(p, ast.ParamDefine, p[2], p[3])
+      p[0].SetMetaAttributes(p[1])
 
   def p_return_type(self, p):
     """

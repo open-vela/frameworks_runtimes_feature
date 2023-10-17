@@ -121,6 +121,7 @@ class CPPRender(Render):
     'ellipse' : 'FtVariParams',
     'callback' : 'FtCallbackId',
     'object' : 'FtAny',
+    'array'  : 'FtArray',
     'Int8Array' : 'FtArray',
     'Uint8Array' : 'FtArray',
     'Int16Array' : 'FtArray',
@@ -174,6 +175,7 @@ class CPPRender(Render):
     'void' : 'FT_VOID',
     'ellipse' : 'FT_PARAM_REST_END',
     'object' : 'FT_ANY',
+    'array' : 'FT_ARRAY',
     'Int8Array' : 'FT_ARRAY',
     'Uint8Array' : 'FT_ARRAY',
     'Int16Array' : 'FT_ARRAY',
@@ -244,6 +246,19 @@ class CPPRender(Render):
     self.feature_type_set = set()
     self.array_malloc_func_set = set()
     Render.__init__(self, json_file, configs)
+    # cache types
+    self._cacheTypes()
+
+  def _cacheTypes(self):
+    for child in self.module["members"]:
+      if not "type" in child: continue
+      t = child["type"]
+      if t == "interface":
+        name = child["name"]
+        self.interface_name_set.add(name)
+      elif t == "struct":
+        name = child["name"]
+        self.struct_name_set.add(name)
 
   def Generate(self):
     self._GenerateFromTemplate(self.source_tmpl, self.GetCppFilePath())
@@ -367,7 +382,8 @@ class CPPRender(Render):
     if isinstance(ast_type, str):
       feature_type = self._MapType(ast_type, self.base_feature_type_map)
       if feature_type == 'FT_ARRAY':
-        ft_info = self._GenArrayFeatureInfo(ast_type, True)
+        # void bar(array arr); // same as object[]
+        ft_info = self._GenArrayFeatureInfo("object", True)
       else:
         ft_info['type'] = feature_type
       return ft_info
@@ -400,6 +416,8 @@ class CPPRender(Render):
         if not interface_name in self.interface_name_set:
           raise Exception('undefined interface: {}'.format(interface_name))
         ft_info = self._GenComplexRefFeatureInfo(interface_name, 'interface_type')
+      elif ast_type['referred_type'] == 'enum':
+        ft_info['type'] = 'FT_INT';
     elif ast_type['type'] == 'struct':
       ft_info = self._GenComplexRefFeatureInfo(ast_type['name'], 'struct_type')
     elif ast_type['type'] == 'promise':

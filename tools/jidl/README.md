@@ -16,3 +16,6 @@ examples:
 python3 ./jsongensource.py ./samples/Simple.json -out-dir ./samples/ -header simple_1_0.h -source simple_1_0.cpp
 python3 ./jsongensource.py ./samples/Simple.json -header simple_1_0.h -source simple_1_0.cpp
 ````
+
+run the test
+./run_all_test.sh

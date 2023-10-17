@@ -36,7 +36,7 @@ promise<string> hoo2(double a, string b)
 promise hoo3(float a, boolean b)
 use hoo4(string c) = hoo1(100, 3.14, c)
 
-void testContext(string info, jscontext context, jsvalue value)
+void testContext(string info, object value)
 
 const x = 1
 const y = "hello world"

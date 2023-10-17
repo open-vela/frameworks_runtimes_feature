@@ -1,0 +1,264 @@
+# Copyright 2023 Xiaomi, Inc. All rights reserved.
+
+import sys
+import os
+import re
+import json
+import jsonpath
+import argparse
+from mako.template import Template
+
+DESCRIPTION='''
+  source_render generate the source code
+'''
+
+COPYRIGHT='''
+Copyright 2023 Xiaomi, Inc. All rights reserved.
+'''
+
+cpp_type_map = {
+  'int' : 'int',
+  'uint' : 'unsigned int',
+  'long' : 'long',
+  'ulong' : 'unsigned long',
+  'float' : 'float',
+  'double' : 'double',
+  'boolean' : 'bool',
+  'string': 'const char*',
+  'uint8' : 'uint8_t',
+  'int8'  : 'int8_t',
+  'uint16' : 'uint16_t',
+  'int16' : 'int16_t',
+  'uint32' : 'uint32_t',
+  'int32' : 'int32_t',
+  'uint64' : 'uint64_t',
+  'int64' : 'int64_t',
+  'void' : 'void',
+  'object' : 'xs_value_type',
+}
+
+def copyDict(d, s, prefix = None):
+  for k,v in s.items():
+    if prefix:
+      d['%s_%s'%(prefix, str(k))] = v
+    else:
+      d[k] = v
+
+def readFile(filename):
+  f = open(filename)
+  content = f.read()
+  f.close()
+  return content
+
+
+def writeFile(content, filename):
+  f = open(filename, 'wt')
+  f.write(content)
+  f.close()
+
+
+def loadJSONFile(json_file):
+    with open(json_file, 'r', encoding='UTF-8') as f:
+        json_module = json.load(f)
+    return json_module
+
+
+def parseArgs():
+    parser = argparse.ArgumentParser(prog='source_render', description=DESCRIPTION, epilog=COPYRIGHT)
+    parser.add_argument('-t', '--template', help='give the template to render data', required=True)
+    parser.add_argument('-i', '--input', help='the input file of json', required=True)
+    parser.add_argument('-o', '--output', help="set the ouput file", required=True)
+    parser.add_argument('-c', '--config', help='the input config file', required=False)
+    parser.add_argument('-v', '--vars', help='set the input vars [NAME]=[VALUE]', nargs='*')
+    return parser.parse_args()
+
+
+class Utils:
+  def __init__(self, doc, args, vars):
+    self.doc = doc
+    self.args = args
+    self.vars = vars
+
+  def findType(self, rtype, rname):
+    found = self.select(self.doc, '$.members[?(@.type=="%s" && @.name=="%s")]'%(rtype, rname));
+    if found:
+      return found[0]
+    return None
+
+  def findTypeMeta(self, rtype, rname, meta_name, need_extends):
+    tp = self.findType(rtype, rname)
+    if tp:
+      if 'meta' in tp and meta_name in tp['meta']:
+        return tp['meta'][meta_name]
+      if need_extends and 'extends' in tp:
+        for e in tp['extends']:
+          v = self.findTypeMeta(rtype, e, meta_name, need_extends)
+          if v: return v
+    return None
+
+  def findReferenceNativeType(self, tp):
+    nt = self.findTypeMeta(tp['referred_type'], tp['referred_name'], 'native_type', True)
+    if nt: return nt
+    if tp['referred_type'] == 'callback':
+      return self.cppTypeCallback(tp)
+    return self.cppTypeDefault(tp)
+
+  def cppTypeCallback(self, tp):
+    return self.cppTypeDefault(tp['referred_type'])
+
+  def cppTypeDefault(self, tp):
+    if isinstance(tp,str):
+        if 'cppType' in self.vars:
+          cppType = self.vars['cppType']
+          if tp in cppType:
+            return cppType
+        new_tp = cpp_type_map[tp]
+        return new_tp and new_tp or tp
+    elif isinstance(tp, dict):
+        if tp['type'] == 'reference' and tp['referred_type'] == 'enum':
+            return self.cppTypeDefault('int')
+    return str(tp)
+
+  def isPromiseType(self, tp):
+    return isinstance(tp, dict) and tp['type'] == 'promise'
+
+  def isCallbackType(self, tp):
+    return isinstance(tp, dict) and tp['type'] == 'reference' and tp['referred_type'] == 'callback'
+
+  def getPromiseType(self, tp):
+    return 'xs_promise_type<%s, %s>' % (tp['resolve_type'], tp['reject_type'])
+
+  def cppType(self, tp):
+    if isinstance(tp, dict):
+        if tp['type'] == 'reference':
+          return self.findReferenceNativeType(tp)
+        elif self.isPromiseType(tp):
+          return self.getPromiseType(tp)
+    return self.cppTypeDefault(tp)
+
+  def getValueType(self, m):
+    if 'meta' in m and 'value_type' in m['meta']:
+      return m['meta']['value_type']
+    return 'value_type' in m and m['value_type'] or 'xs_value_type'
+
+  def getConstValue(self, m):
+    if 'meta' in m and 'value' in m['meta']:
+      return m['meta']['value']
+    if 'value' in m:
+      if 'value_type' in m and m['value_type'] == 'string':
+        return '"%s"' % m['value']
+      return m['value']
+    return '"%s"' % m['name']
+
+  def getConstValueType(self, m):
+    if 'meta' in m and 'value_type' in m['meta']:
+      return m['meta']['value_type']
+    if 'value_type' in m:
+      return m['value_type']
+    t = type(m['value'])
+    if t == int:
+      return 'int'
+    elif t == float:
+      return 'float'
+    elif t == bool:
+      return 'bool'
+    else:
+      return 'string'
+
+  def toNativeDefault(self, tp):
+    return 'xs_value_to'
+
+  def transNative(self, tp, meta_name):
+    if isinstance(tp, dict):
+      if tp['type'] == 'reference':
+        trans_native = self.findTypeMeta(tp['referred_type'], tp['referred_name'], meta_name, True)
+        if trans_native: return trans_native
+        if tp['referred_type'] == 'enum':
+          return self.transNative('int', meta_name)
+    if isinstance(tp, str):
+      if meta_name in self.vars:
+        trans = self.vars[meta_name]
+        if tp in trans:
+          return trans[tp]
+    return None
+
+
+  def toNative(self, tp):
+    to_native = self.transNative(tp, 'to_native')
+    if to_native: return to_native
+    return self.toNativeDefault(tp)
+
+  def fromNativeDefault(self, tp):
+    return 'xs_value_from'
+
+  def fromNative(self, tp):
+    from_native = self.transNative(tp, 'from_native')
+    if from_native: return from_native
+    return self.fromNativeDefault(tp)
+
+  def freeNative(self, tp):
+    return self.transNative(tp, 'free_native')
+
+  def select(self, d, path):
+    return jsonpath.jsonpath(d, path)
+
+  def getByType(self, d, tp):
+    return self.select(d, '$.members[?(@.type=="%s")]'%tp)
+
+  def getInterfaces(self, d):
+    return self.getByType(d, 'interface')
+
+  def getMethods(self, d):
+    return self.getByType(d, 'method')
+
+  def getProperties(self, d):
+    return self.getByType(d, 'property')
+
+  def getStructs(self, d):
+    return self.getByType(d, 'struct')
+
+  def getCallbacks(self, d):
+    return self.getByType(d, 'callback')
+
+  def getConsts(self, d):
+    return self.getByType(d, 'const')
+
+  def toIdName(self, s):
+    return  re.sub(r"[^0-9A-Za-z_]","_", s)
+
+  def buildPropertyValues(self, pname, prop):
+    d = {}
+    copyDict(d, prop['meta'])
+    copyDict(d, prop, 'property')
+    d['parent_name'] = pname
+    return d
+
+def parseVars(args):
+    vars = {}
+    if args.config:
+        conf = loadJSONFile(args.config)
+        for c,v in conf.items():
+            vars[c] = v
+
+    if args.vars:
+        for v in args.vars:
+            m = re.match(r'(.*)=(.*)', v)
+            if m:
+                vars[m.group(1)] = m.group(2)
+    return vars
+
+
+def render(args, vars, U):
+    source = loadJSONFile(args.input)
+    temp = Template(readFile(args.template))
+    writeFile(temp.render(doc=source, vars=vars, utils = U(source, args, vars)), args.output)
+
+def main(U):
+    args = parseArgs()
+    vars = parseVars(args)
+    #print(args)
+    #print(vars)
+    render(args, vars, U)
+
+if __name__ == '__main__':
+    main(Utils)

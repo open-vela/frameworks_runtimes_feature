@@ -34,6 +34,7 @@ STRUCT_MEMBER_CALLBACK = 29
 INTERFACE_DEFINE = 30
 META_ATTRIBUTE = 31
 ARRAY_LITERAL = 32
+ENUM_DEFINE = 33
 
 type_names = {
   LITERVAL : 'literval',
@@ -69,11 +70,18 @@ type_names = {
   STRUCT_MEMBER_STRUCT: 'struct_member_struct',
   STRUCT_MEMBER_CALLBACK: 'struct_member_callback',
   META_ATTRIBUTE : 'meta_attribute',
-  ARRAY_LITERAL : 'array_literal'
+  ARRAY_LITERAL : 'array_literal',
+  ENUM_DEFINE : 'enum_define'
 }
 
 def TypeName(tp):
   return type_names[tp]
+
+def AddJson(t, out):
+  if isinstance(out, dict):
+    for k,v in t.items(): out[k] = v
+  else:
+    out.append(t)
 
 class Node:
   def __init__(self, tp):
@@ -89,6 +97,13 @@ class Node:
 
   def Is(self, tp):
     return self.__type == tp
+
+  def IsReferenceType(self):
+    return self.__type == INTERFACE_DEFINE or \
+           self.__type == CLASS_DEFINE or \
+           self.__type == STRUCT_DEFINE or \
+           self.__type == ENUM_DEFINE or \
+           self.__type == CALLBACK_DEFINE
 
   def Check(self, context):
     pass
@@ -112,7 +127,7 @@ class LiteralValue(Node):
     self.type = GetPrimaryType(value_type)
 
   def __str__(self):
-    return self.value
+    return str(self.value)
 
 class LiteralArrayValue(Node):
   def __init__(self, value):
@@ -141,6 +156,11 @@ class Type(Node):
         a.ToJson(meta_attrs)
       out['meta'] = meta_attrs
 
+  def GetJson(self):
+    out = {}
+    self.ToJson(out)
+    return out
+
 class PrimaryType(Type):
   def __init__(self, name):
     Type.__init__(self, name, PRIMARY_TYPE)
@@ -161,7 +181,7 @@ class IDType(Type):
   def __init__(self, name):
     Type.__init__(self, name, ID)
 
-class PrimaryArrayType(Node):
+class PrimaryArrayType(Type):
   def __init__(self, base_type):
     Node.__init__(self, PRIMARY_ARRAY_TYPE)
     if type(base_type) == str:
@@ -200,19 +220,15 @@ class PromiseType(Node):
   def __str__(self):
     return "promise<%s,%s>" % (str(self.resolve_type), str(self.reject_type))
 
-  def ToJson(self, out):
-    out['type'] = 'promise'
-    out['resolve_type'] = {}
-    out['reject_type'] = {}
-    if self.resolve_type.Is(PRIMARY_TYPE):
-      out['resolve_type'] = self.resolve_type.name
-    else:
-      self.resolve_type.ToJson(out['resolve_type'])
+  def GetJson(self):
+    return {'type': 'promise',
+            'resolve_type' : GetTypeJson(self.resolve_type),
+            'reject_type' : GetTypeJson(self.reject_type)
+    }
 
-    if self.reject_type.Is(PRIMARY_TYPE):
-      out['reject_type'] = self.reject_type.name
-    else:
-      self.reject_type.ToJson(out['reject_type'])
+  def ToJson(self, out):
+    r = self.GetJson()
+    for k,v in r.items(): out[k] = v
 
 class EllipseType(Node):
   def __init__(self, primary_type = None):
@@ -232,11 +248,28 @@ class EllipseType(Node):
       ellipse_def['primary'] = str(self.primary)
     out.append(ellipse_def)
 
+def GetTypeJson(tp):
+  if tp.IsReferenceType():
+    return tp.GetReferenceJson()
+  elif tp.Is(PRIMARY_TYPE):
+    return tp.name
+  else:
+    return tp.GetJson()
+
+def MakeReferenctJson(rtype, rname):
+  return { 'type' : 'reference',
+           'referred_type' : rtype,
+           'referred_name': rname }
+
 class ParamDefine(Node):
   def __init__(self, param_type, param_name):
     Node.__init__(self, PARAM_DEFINE)
     self.type = param_type
     self.name = param_name
+    self.meta_attributes = []
+
+  def SetMetaAttributes(self, meta_attrs):
+    self.meta_attributes = meta_attrs
 
   def SetDefault(self, def_val):
     self.default = def_val
@@ -255,23 +288,25 @@ class ParamDefine(Node):
   def Check(self, context):
     context.AddId(self.name, self.type)
 
-  def ToJson(self, out):
+  def GetJson(self):
     param_def = {}
-    if self.type.Is(CALLBACK_DEFINE) \
-        or self.type.Is(STRUCT_DEFINE) \
-        or self.type.Is(INTERFACE_DEFINE):
-      param_def['type'] = self.type.GetReferenceJson()
-    elif self.type.Is(PRIMARY_TYPE):
-      param_def['type'] = self.type.name
-    else:
-      param_def['type'] = {}
-      self.type.ToJson(param_def['type'])
+    param_def['type'] = GetTypeJson(self.type)
 
     if self.name:
       param_def['name'] = self.name
     if hasattr(self, 'default'):
       param_def['default'] = str(self.default)
-    out.append(param_def)
+
+    if len(self.meta_attributes) > 0:
+      meta_attrs = {}
+      for a in self.meta_attributes:
+        a.ToJson(meta_attrs)
+      param_def['meta'] = meta_attrs
+
+    return param_def
+
+  def ToJson(self, out):
+    out.append(self.GetJson())
 
 class ListNode(Node):
   def __init__(self, tp):
@@ -443,7 +478,7 @@ class CallbackDefine(Type):
     self.params.Resolve(context)
     context.PopTable()
 
-  def ToJson(self, out):
+  def GetJson(self):
     callback_def = {}
     Type.ToJson(self, callback_def)
     callback_def['type'] = 'callback'
@@ -451,14 +486,13 @@ class CallbackDefine(Type):
     if self.params.Count() > 0:
       callback_def['params'] = []
       self.params.ToJson(callback_def['params'])
-    out.append(callback_def)
+    return callback_def
+
+  def ToJson(self, out):
+    AddJson(self.GetJson(), out)
 
   def GetReferenceJson(self):
-    callback_t = {}
-    callback_t['type'] = 'reference'
-    callback_t['referred_type'] = 'callback'
-    callback_t['referred_name'] = self.name
-    return callback_t
+    return MakeReferenctJson('callback', self.name)
 
 class EventDefine(Type):
   def __init__(self, name, params):
@@ -523,6 +557,7 @@ class ConstDefine(Type):
 
   def ToJson(self, out):
     const_def = {}
+    Type.ToJson(self, const_def)
     const_def['type'] = 'const'
     const_def['name'] = self.name
     const_def['value'] = str(self.value)
@@ -557,7 +592,7 @@ class FunctionDefine(Type):
 
   def Check(self, context):
     Type.Check(self, context)
-    self.return_type.Check(context)
+    #self.return_type.Check(context) // uneed check
     context.PushTable(self)
     self.params.Check(context)
     context.PopTable()
@@ -577,7 +612,7 @@ class FunctionDefine(Type):
       func_def['params'] = []
       self.params.ToJson(func_def['params'])
 
-  def ToJson(self, out):
+  def GetJson(self):
     func_def = {}
     Type.ToJson(self, func_def)
     func_def['type'] = 'function'
@@ -595,18 +630,13 @@ class FunctionDefine(Type):
         self.async_info.ToJson(async_def)
         qualifiers.append(async_def)
 
-    if self.return_type.Is(CLASS_DEFINE) or \
-      self.return_type.Is(STRUCT_DEFINE) or \
-      self.return_type.Is(INTERFACE_DEFINE):
-      func_def['return_type'] = self.return_type.GetReferenceJson()
-    elif self.return_type.Is(PRIMARY_TYPE):
-      func_def['return_type'] = self.return_type.name
-    else:
-      func_def['return_type'] = {}
-      self.return_type.ToJson(func_def['return_type'])
+    func_def['return_type'] = GetTypeJson(self.return_type)
 
     self.GetBaseJson(func_def)
-    out.append(func_def)
+    return func_def
+
+  def ToJson(self, out):
+    out.append(self.GetJson())
 
 class ConstructorDefine(FunctionDefine):
   def __init__(self, params):
@@ -641,6 +671,9 @@ class PropertyDefine(Type):
   def SetConst(self):
     self.const = True
 
+  def Resolve(self, context):
+    self.type = ResolvePropertyType(context, self.type, None, self)
+
   def __str__(self):
     readable = self.readable and 'readable' or ''
     writeable = self.writeable and 'writeable' or ''
@@ -658,11 +691,7 @@ class PropertyDefine(Type):
       prop_def['writeable'] = self.writeable
     if self.const:
       prop_def['const'] = self.const
-    prop_def['value_type'] = {}
-    if self.type.Is(PRIMARY_TYPE):
-      prop_def['value_type'] = self.type.name
-    else:
-      self.type.ToJson(prop_def['value_type'])
+    prop_def['value_type'] = GetTypeJson(self.type)
     out.append(prop_def)
 
 class BlockList(ListNode):
@@ -690,6 +719,46 @@ class BlockList(ListNode):
     for block in self.content:
       block.Dump(out)
 
+class EnumDefine(Type):
+  def __init__(self, name, block_list):
+    Type.__init__(self, name, ENUM_DEFINE)
+    self.members = block_list
+    idx = 0
+    for m in self.members:
+      if m.value:
+        if isinstance(m.value, LiteralValue) and m.value.type.name == 'int':
+          idx = self.value.value + 1
+      else:
+        v = LiteralValue(idx + 1, 'int')
+        m.value = v
+        idx = idx + 1
+
+  def Dump(self, out):
+    out.Write('enum %s {' % (self.name))
+    out.Shift()
+    for m in self.members:
+      out.Write('%s = %s,' % (m.name, str(m.value)))
+    out.Reduce()
+    out.Write('}')
+
+  def GetReferenceJson(self):
+    return MakeReferenctJson('enum', self.name)
+
+  def GetJson(self):
+    members = []
+    for m in self.members:
+      m.ToJson(members)
+
+    t = { 'type': 'enum',
+          'name': self.name,
+          'members': members
+    }
+    Type.ToJson(self, t)
+    return t
+
+  def ToJson(self, out):
+    AddJson(self.GetJson(), out)
+
 class InterfaceDefine(Type):
   def __init__(self, name, tp, block_list = None):
     Type.__init__(self, name, tp)
@@ -699,6 +768,9 @@ class InterfaceDefine(Type):
 
   def SetExtends(self, extends):
     self.extends = extends
+
+  def SetContent(self, content):
+    self.content = content
 
   def toString(self, type_name):
     return '%s %s { ... }' % (type_name, self.name)
@@ -739,15 +811,10 @@ class InterfaceDefine(Type):
     return t
 
   def ToJson(self, out):
-    out.append(self.GetJson())
+    AddJson(self.GetJson(), out)
 
   def GetReferenceJson(self):
-    reference_type = {
-       'type': 'reference',
-       'referred_type': self.GetClassType(),
-       'referred_name': self.name,
-    }
-    return reference_type
+    return MakeReferenctJson('interface', self.name)
 
   def Dump(self, out):
     out.Write('%s %s {' % (self.GetClassType(), self.GetDumpName()))
@@ -771,6 +838,9 @@ class StructDefine(InterfaceDefine):
     struct_type = self.GetJson()
     out.append(struct_type)
 
+  def GetReferenceJson(self):
+    return MakeReferenctJson('struct', self.name)
+
 class StructMemberBase(Node):
   def __init__(self, member_type, member_name):
     Node.__init__(self, STRUCT_MEMBER_BASE)
@@ -787,7 +857,7 @@ class StructMemberBase(Node):
     return s
 
   def Resolve(self, context):
-    self.type = ResolveStructMemberType(context, self.type, StructDefine, self)
+    self.type = ResolveStructMemberType(context, self.type, None, self)
     #print("param resolve: ", self.type, str(self.type), str(self))
     context.AddId(self.name, self.type)
 
@@ -796,11 +866,7 @@ class StructMemberBase(Node):
 
   def ToJson(self, out):
     member_type = {}
-    if self.type.Is(PRIMARY_TYPE):
-      member_type['type'] = self.type.name
-    else:
-      member_type['type'] = {}
-      self.type.ToJson(member_type['type'])
+    member_type['type'] = GetTypeJson(self.type)
 
     if self.name:
       member_type['name'] = self.name
@@ -831,7 +897,7 @@ class StructMemberStruct(Node):
     if not self.type.Is(STRUCT_DEFINE):
       raise Exception('not an struct member struct: {}'.format(self.type))
 
-    member_type['type'] = self.type.GetReferenceJson()
+    member_type['type'] = GetTypeJson(self.type)
     if self.name:
       member_type['name'] = self.name
     out.append(member_type)
@@ -854,15 +920,18 @@ class StructMemberCallback(Node):
   def Check(self, context):
     context.AddId(self.name, self.type)
 
-  def ToJson(self, out):
+  def GetJson(self):
     member_type = {}
     if not self.type.Is(CALLBACK_DEFINE):
       raise Exception('not an struct member callback: {}'.format(self.type))
 
-    member_type['type'] = self.type.GetReferenceJson()
+    member_type['type'] = GetTypeJson(self.type)
     if self.name:
       member_type['name'] = self.name
-    out.append(member_type)
+    return member_type
+
+  def ToJson(self, out):
+    out.append(self.GetJson())
 
 class ClassDefine(InterfaceDefine):
   def __init__(self, name, block_list = None):
@@ -878,6 +947,9 @@ class ClassDefine(InterfaceDefine):
     class_def = InterfaceDefine.GetJson(self)
     class_def['type'] = 'class'
     out.append(class_def)
+
+  def GetReferenceJson(self):
+    return MakeReferenctJson('class', self.name)
 
 class ImportDefine(Node):
   def __init__(self, name, version):
@@ -1008,14 +1080,18 @@ struct_member_accepted_types = (
   PrimaryArrayType,
   TypedArrayType,
   StructDefine,
-  CallbackDefine
+  InterfaceDefine,
+  CallbackDefine,
+  EnumDefine,
 )
 
 param_accepted_types = (
   PrimaryType,
   PrimaryArrayType,
   CallbackDefine,
+  StructDefine,
   InterfaceDefine,
+  EnumDefine,
   EllipseType
 )
 
@@ -1023,6 +1099,8 @@ return_accepted_type = (
   PrimaryType,
   PrimaryArrayType,
   InterfaceDefine,
+  StructDefine,
+  EnumDefine,
   PromiseType
 )
 
@@ -1030,6 +1108,8 @@ value_accepted_type = (
   PrimaryType,
   PrimaryArrayType,
   InterfaceDefine,
+  EnumDefine,
+  StructDefine,
 )
 
 direct_resolve_types = (
@@ -1064,6 +1144,9 @@ def ResolveReturnType(context, tp, owner, holder):
   return ResolveType(context, tp, return_accepted_type, owner, holder)
 
 def ResolveStructMemberType(context, tp, owner, holder):
+  return ResolveType(context, tp, struct_member_accepted_types, owner, holder)
+
+def ResolvePropertyType(context, tp, owner, holder):
   return ResolveType(context, tp, struct_member_accepted_types, owner, holder)
 
 class Context:
@@ -1112,6 +1195,8 @@ class Context:
 
   def ShowError(self, out):
     out.Write('\n'.join(self.errors))
+    if len(self.errors) > 0:
+      raise Exception("ERROR:%s" % (';\n'.join(self.errors)))
 
 class DumpOut:
   def __init__(self):
