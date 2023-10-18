@@ -4,7 +4,7 @@
   module_name = render.GetModuleName()
   header_define = render.GenHeaderDefine()
 %>\
-<%def name="GenVTableFunctionsDefine(func_node, ctor_info)">\
+<%def name="GenInterfaceVTableDefines(func_node, ctor_info)">\
 <%
   identifier = func_node['identifier']
   func_def = render.GenerateFunctionDefine(func_node)
@@ -13,14 +13,14 @@
   final_vtable = render.GetFinalVTable(ctor_interface)
   parent_prefix = f"{ctor_interface}_interface_"
 %>\
-// vtable functions for interface constructor function '${identifier}'
+  // vtable functions for interface constructor function '${identifier}'
 %for vtable_item in final_vtable:
 <%
   i_name = vtable_item['name']
   i_type = vtable_item['type']
   i_params = vtable_item['params']
   i_ret_type = vtable_item['return_type']
-  params = "FeatureInstanceHandle feature, AppendData data"
+  params = "FeatureInterfaceHandle handle, AppendData data"
   if i_params != '':
     params = f"{params}, {i_params}"
   func_define = f"{i_ret_type} {module_name}_{parent_prefix}{ctor_target}"
@@ -33,12 +33,13 @@
 %>\
   ${func_define};
 %endfor
-</%def>\
-<%def name="GenInterfaceCtorVTableDefine(func_node, ctor_info)">\
-  ${GenVTableFunctionsDefine(func_node, ctor_info)}
+
 </%def>\
 <%def name="GenFunctionDefine(func_node)">\
   ${render.GenerateFunctionDefine(func_node)};
+</%def>\
+<%def name="GenInterfaceCtorDefine(func_node)">\
+  ${render.GenerateInterfaceCtorDefine(func_node)};
 </%def>\
 <%def name="GenPropertyDefines(prop_node)">\
 <%
@@ -135,18 +136,18 @@ ${GenStructDefine(block)}\
 
   // Function wrappers to be implemented
 %for block in module['members']:
-<%
-  ctor_info = render.GetInterfaceCtorInfo(block)
-%>\
-%if block['type'] == 'function' and not ctor_info:
+%if block['type'] == 'function':
 ${GenFunctionDefine(block)}\
 %endif
 %endfor
 
-  // Property getters and setters to be implemented
+  // Interface constructors
 %for block in module['members']:
-%if block['type'] == 'property':
-${GenPropertyDefines(block)}\
+<%
+  ctor_info = render.GetInterfaceCtorInfo(block)
+%>\
+%if block['type'] == 'function' and ctor_info:
+${GenInterfaceCtorDefine(block)}\
 %endif
 %endfor
 
@@ -156,7 +157,14 @@ ${GenPropertyDefines(block)}\
   ctor_info = render.GetInterfaceCtorInfo(block)
 %>\
 %if ctor_info:
-${GenInterfaceCtorVTableDefine(block, ctor_info)}\
+${GenInterfaceVTableDefines(block, ctor_info)}\
+%endif
+%endfor
+
+  // Property getters and setters to be implemented
+%for block in module['members']:
+%if block['type'] == 'property':
+${GenPropertyDefines(block)}\
 %endif
 %endfor
 

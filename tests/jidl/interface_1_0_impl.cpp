@@ -263,18 +263,28 @@ void Interface_onUnregister(const char* feature_name)
 
 // Function wrappers to be implemented
 
-void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance) {
-    printf("%s::%s() distance: %d\n", file_tag, __FUNCTION__, distance);
-    FtArray* strArray = Interface_malloc_string_array();
-    strArray->_size = 4;
-    strArray->_element = malloc(sizeof(char*) * 4);
-    for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
-        sprintf(str, "flip wings %d", i);
-        ((char**)strArray->_element)[i] = str;
-    }
-    FeaturePromiseResolve(feature, pid, strArray);
-    FeatureFreeValue(strArray);
+FeatureInstanceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type)
+{
+   FeatureInstanceHandle handle = Interface_createDog_instance(feature, data, type);
+   // void* data = create_dog_data(type);
+   // FeatureSetObjectData(handle, data);
+   return handle;
+}
+
+FeatureInstanceHandle Interface_wrap_createPigeon(FeatureInstanceHandle feature, AppendData data)
+{
+   FeatureInstanceHandle handle = Interface_createPigeon_instance(feature, data);
+   // void* data = create_pigeon_data();
+   // FeatureSetObjectData(handle, data);
+   return handle;
+}
+
+FeatureInstanceHandle Interface_wrap_createCock(FeatureInstanceHandle feature, AppendData data)
+{
+   FeatureInstanceHandle handle = Interface_createCock_instance(feature, data);
+   // void* data = create_cock_data();
+   // FeatureSetObjectData(handle, data);
+   return handle;
 }
 
 FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data) {
@@ -288,11 +298,28 @@ FeatureInstanceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, Ap
         NativeFunc(_Interface_cat_eatFood),
         NativeFunc(_Interface_cat_run)
     };
-    return FeatureCreateInterface(feature, cat_vtable, countof(cat_vtable));
+    FeatureInstanceHandle handle  = FeatureCreateInterface(feature, cat_vtable, countof(cat_vtable));
+    // void* data = create_cat_data();
+    // FeatureSetObjectData(handle, data);
+    return handle;
 }
 
 void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal) {
     printf("%s::%s() animal: %p\n", file_tag, __FUNCTION__, animal);
+}
+
+void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance) {
+    printf("%s::%s() distance: %d\n", file_tag, __FUNCTION__, distance);
+    FtArray* strArray = Interface_malloc_string_array();
+    strArray->_size = 4;
+    strArray->_element = malloc(sizeof(char*) * 4);
+    for (int i = 0; i < 4; i++) {
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        sprintf(str, "flip wings %d", i);
+        ((char**)strArray->_element)[i] = str;
+    }
+    FeaturePromiseResolve(feature, pid, strArray);
+    FeatureFreeValue(strArray);
 }
 
 void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
