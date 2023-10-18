@@ -155,25 +155,25 @@ ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 
 JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 {
-    FeatureInstanceQjs* instance = static_cast<ferry::FeatureInstanceQjs*>(handle);
+    FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
     return (JSValue)instance->getVmObject();
 }
 
-char* FeatureGetPackageName(FeatureInstanceHandle handle)
+char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
-    FeatureInstanceQjs* instance = static_cast<ferry::FeatureInstanceQjs*>(handle);
-    return instance->getPackageName();
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
+    return proto->getPackageName();
 }
 
 char* FeatureGetEnvironmentName(FeatureInstanceHandle handle)
 {
-    FeatureInstanceQjs* instance = static_cast<ferry::FeatureInstanceQjs*>(handle);
+    FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
     return instance->getEnvironmentName();
 }
 
 uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle)
 {
-    FeatureInstanceQjs* instance = static_cast<ferry::FeatureInstanceQjs*>(handle);
+    FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
     return instance->uvloop();
 }
 

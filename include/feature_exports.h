@@ -80,6 +80,14 @@ void* FeatureGetProtoData(FeatureProtoHandle handle);
 void FeatureSetProtoData(FeatureProtoHandle handle, void* data);
 
 /**
+ * @brief get feature package name from FeatureProtoHandle
+ *
+ * @param handle
+ * @return char*
+ */
+char* FeatureGetPackageName(FeatureProtoHandle handle);
+
+/**
  * @brief get the native object pointer bind to feature instance
  *
  * @param handle
@@ -111,14 +119,6 @@ ft_context_ref FeatureGetContext(FeatureInstanceHandle handle);
  * @return feature_value_t
  */
 JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
-
-/**
- * @brief get feature package name from FeatureInstanceHandle
- *
- * @param handle
- * @return char*
- */
-char* FeatureGetPackageName(FeatureInstanceHandle handle);
 
 /**
  * @brief get feature environment name from FeatureInstanceHandle
