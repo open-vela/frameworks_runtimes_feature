@@ -121,9 +121,9 @@ static FeatureType create_cat_parameters[] = {
 };
 
 static const Member g_interface_members[] = {
-    { .type = MEMBER_METHOD, .name = "printName", .method = { .func = { .vtable_idx = 1 }, .parameters = print_parameters, .return_type = FT_VOID, .data = { 0 } } },
-    { .type = MEMBER_METHOD, .name = "receiveInterface", .method = { .func = { .vtable_idx = 2 }, .parameters = receive_interface_parameters, .return_type = FT_VOID, .data = { 0 } } },
-    { .type = MEMBER_CONST, .name = "name", .value = { .type = FT_STRING, .func = { .vtable_idx = 3 }, .data = { .ptr = nullptr } } },
+    { .type = MEMBER_METHOD, .name = "printName", .method = { .func = { .vtable_idx = 0 }, .parameters = print_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_METHOD, .name = "receiveInterface", .method = { .func = { .vtable_idx = 1 }, .parameters = receive_interface_parameters, .return_type = FT_VOID, .data = { 0 } } },
+    { .type = MEMBER_CONST, .name = "name", .value = { .type = FT_STRING, .func = { .vtable_idx = 2 }, .data = { .ptr = nullptr } } },
 };
 
 static const FeatureDescription animal_description = {
@@ -174,27 +174,33 @@ static FeatureDescription interface_description = { .version = 1, .name = "inter
 FeatureInterfaceHandle __createDog(FeatureInstanceHandle handle, AppendData data)
 {
     // we should combine the vtable
-    static NativeFunc dog_vtable[] = {
-        nullptr,
+    static const NativeFunc dog_vtable_members[] = {
         NativeFunc(__printNameDog),
         NativeFunc(__receiveInterface),
-        NativeFunc(__init_nameDog)
+        NativeFunc(__init_nameDog),
     };
-    return FeatureCreateInterface(handle, dog_vtable, countof(dog_vtable));
+    static VTable dog_vtable = {
+        .size = 3,
+        .finalizer = nullptr,
+        .members = dog_vtable_members
+    };
+    return FeatureCreateInterface(handle, &dog_vtable);
 }
 
 FeatureInterfaceHandle __createCat(FeatureInstanceHandle handle, AppendData data)
 {
     // we should combine the vtable
-    static NativeFunc cat_vtable[] = {
-        nullptr,
+    static const NativeFunc cat_vtable_members[] = {
         NativeFunc(__printNameCat),
         NativeFunc(__receiveInterface),
-        NativeFunc(__init_nameCat)
+        NativeFunc(__init_nameCat),
     };
-    cat_vtable[1] = NativeFunc(__printNameCat);
-    cat_vtable[2] = NativeFunc(__receiveInterface);
-    return FeatureCreateInterface(handle, cat_vtable, countof(cat_vtable));
+    static VTable cat_vtable = {
+        .size = 3,
+        .finalizer = nullptr,
+        .members = cat_vtable_members
+    };
+    return FeatureCreateInterface(handle, &cat_vtable);
 }
 
 QAPPFEATURE_INIT(interface)

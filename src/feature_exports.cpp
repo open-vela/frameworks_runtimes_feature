@@ -200,11 +200,6 @@ bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
     va_start(ap, pid);
     int ret = instance->settlePromise(true, pid, ap);
     va_end(ap);
-    // remove
-    if (!instance->removePromise(pid)) {
-        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
-        ret = -2;
-    }
     return ret == 0;
 }
 
@@ -214,16 +209,12 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
     va_list ap;
     va_start(ap, pid);
     int ret = instance->settlePromise(false, pid, ap);
-    if (!instance->removePromise(pid)) {
-        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
-        ret = -2;
-    }
     va_end(ap);
     return ret == 0;
 }
 
-FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable vtable, int vtable_size)
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    return instance->createInterface(vtable, vtable_size);
+    return instance->createInterface(vtable);
 }

@@ -31,10 +31,10 @@ class FeaturePrototype;
 
 class FeatureInstance {
 public:
-    FeatureInstance(struct FeaturePrototype* prototype, VTable vtable, int vtable_size);
+    FeatureInstance(struct FeaturePrototype* prototype, VTable* vtable);
     virtual ~FeatureInstance();
 
-    virtual FeatureInstance* createInterface(VTable vtable, int vtable_size) = 0;
+    virtual FeatureInstance* createInterface(VTable* vtable) = 0;
     /**
      * @brief remove callback from instance vai FtCallbackId
      *
@@ -44,8 +44,6 @@ public:
      * @return false
      */
     virtual bool removeCallback(FtCallbackId cid) = 0;
-
-    virtual bool removePromise(FtPromiseId pid) = 0;
 
     virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap) = 0;
 
@@ -63,9 +61,9 @@ public:
 
     NativeFunc getVirtualFunction(int index) const
     {
-        if (index < 0 || index >= vtable_size_)
+        if (index < 0 || index >= vtable_->size)
             return nullptr;
-        return vtable_[index];
+        return vtable_->members[index];
     }
 
     void* native;
@@ -75,8 +73,7 @@ public:
 private:
     FeaturePrototype* proto_;
     int instance_id_; // the instance id, order in instances aray.
-    VTable vtable_; // vtable array
-    int32_t vtable_size_;
+    VTable* vtable_; // vtable
 };
 
 }

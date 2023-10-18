@@ -24,19 +24,18 @@ using namespace FEATURE;
 namespace ferry {
 
 /////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* proto, VTable vtable, int vtable_size)
+FeatureInstance::FeatureInstance(FeaturePrototype* proto, VTable* vtable)
     : native(nullptr)
     , proto_(proto)
     , instance_id_(-1)
     , vtable_(vtable)
-    , vtable_size_(vtable_size)
 {
 }
 
 FeatureInstance::~FeatureInstance()
 {
-    if (vtable_ && vtable_[0]) {
-        dtor_func dtor = (dtor_func)(vtable_[0]);
+    if (vtable_ && vtable_->finalizer) {
+        dtor_func dtor = (dtor_func)(vtable_->finalizer);
         dtor(this);
     }
 }

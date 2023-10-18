@@ -312,16 +312,19 @@ FeatureInterfaceHandle Interface_wrap_createCock(FeatureInstanceHandle feature, 
 }
 
 FeatureInterfaceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data) {
-    // we should combine the vtable
-    static NativeFunc cat_vtable[] = {
-        NativeFunc(_Interface_cat_finalize),
+    static const NativeFunc cat_vtable_members[] = {
         NativeFunc(_Interface_cat_get_name),
         NativeFunc(_Interface_cat_set_name),
         NativeFunc(_Interface_cat_get_legCount),
         NativeFunc(_Interface_cat_eatFood),
-        NativeFunc(_Interface_cat_run)
+        NativeFunc(_Interface_cat_run),
     };
-    FeatureInterfaceHandle handle  = FeatureCreateInterface(feature, cat_vtable, countof(cat_vtable));
+    static VTable cat_vtable = {
+        .size = 5,
+        .finalizer = NativeFunc(_Interface_cat_finalize),
+        .members = cat_vtable_members
+    };
+    FeatureInterfaceHandle handle  = FeatureCreateInterface(feature, &cat_vtable);
     printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
     // void* data = create_cat_data();
     // FeatureSetObjectData(handle, data);
