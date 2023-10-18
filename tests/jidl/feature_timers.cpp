@@ -53,7 +53,7 @@ struct Point {
     }
 };
 
-static Point* __printPoint(void* FeatureInstanceHandle, int64_t data, Point* point)
+static Point* __printPoint(FeatureInstanceHandle handle, int64_t data, Point* point)
 {
     printf("point {x: %f, y: %f, z: %f}\n", point->_x, point->_y, point->_z);
     FeatureDupValue(point);
@@ -62,7 +62,7 @@ static Point* __printPoint(void* FeatureInstanceHandle, int64_t data, Point* poi
     return point;
 }
 
-static const char* __printString(void* FeatureInstanceHandle, int64_t data, const char* str)
+static const char* __printString(FeatureInstanceHandle handle, int64_t data, const char* str)
 {
     printf("str is: %s\n", str);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -156,8 +156,8 @@ static void __print(FeatureInstanceHandle handle, int64_t data, FtVariParams var
         } else if (param_type == FT_TYPE_ARRAY) {
             uint32_t array_size = ft_array_size(ft_ctx, param);
             printf("[");
-            for (int i = 0; i < array_size; ++i) {
-                ft_value_t elem = ft_array_at(ft_ctx, param, i);
+            for (uint32_t j = 0; j < array_size; ++j) {
+                ft_value_t elem = ft_array_at(ft_ctx, param, j);
                 ft_type elem_type = ft_get_type(ft_ctx, elem);
                 if (elem_type == FT_TYPE_NUMBER) {
                     double param_num;
@@ -169,7 +169,7 @@ static void __print(FeatureInstanceHandle handle, int64_t data, FtVariParams var
                     ft_free_string(ft_ctx, param_str);
                 } else if (elem_type == FT_TYPE_BOOL) {
                     bool param_bool;
-                    bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+                    ft_to_bool(ft_ctx, param, &param_bool);
                     printf("%d ", param_bool);
                 } else {
                     printf("invalid array element type!");
@@ -183,11 +183,11 @@ static void __print(FeatureInstanceHandle handle, int64_t data, FtVariParams var
             ft_free_string(ft_ctx, param_str);
         } else if (param_type == FT_TYPE_NUMBER) {
             double param_num;
-            bool ret = ft_to_double(ft_ctx, param, &param_num);
+            ft_to_double(ft_ctx, param, &param_num);
             printf("%lf ", param_num);
         } else if (param_type == FT_TYPE_BOOL) {
             bool param_bool;
-            bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+            ft_to_bool(ft_ctx, param, &param_bool);
             printf("%d ", param_bool);
         } else {
             printf("invalid param type!");
@@ -309,12 +309,6 @@ static ArrayType string_array_type = {
 
 static FeatureType recv_string_array_parameters[] = {
     FT_MK_COMPLEX_REF(&string_array_type), FT_PARAM_END
-};
-
-static OptionalType recv_point_array_type {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = "this is optional default string"
 };
 
 Point* g_point1 = new (FeatureMalloc(sizeof(Point), FT_MK_COMPLEX(&Point_type))) Point(4.0, 5.0, 6.0);

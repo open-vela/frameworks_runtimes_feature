@@ -53,7 +53,12 @@ typedef void* FeatureInterfaceHandle; // feature interface handle.
 
 typedef uintptr_t FeatureType; // feature type flag
 typedef void (*NativeFunc)(void);
-typedef NativeFunc* VTable;
+
+typedef struct VTable {
+    size_t size;
+    NativeFunc finalizer;
+    const NativeFunc* members;
+} VTable;
 
 enum FeaturePrimitiveType {
     FT_VOID = 0, // void defination

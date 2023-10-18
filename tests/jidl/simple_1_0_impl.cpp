@@ -112,8 +112,8 @@ void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPar
         } else if (param_type == FT_TYPE_ARRAY) {
             uint32_t array_size = ft_array_size(ft_ctx, param);
             printf("[");
-            for (int i = 0; i < array_size; ++i) {
-                ft_value_t elem = ft_array_at(ft_ctx, param, i);
+            for (uint32_t j = 0; j < array_size; ++j) {
+                ft_value_t elem = ft_array_at(ft_ctx, param, j);
                 ft_type elem_type = ft_get_type(ft_ctx, elem);
                 if (elem_type == FT_TYPE_NUMBER) {
                     double param_num;
@@ -125,10 +125,10 @@ void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPar
                     ft_free_string(ft_ctx, param_str);
                 } else if (elem_type == FT_TYPE_BOOL) {
                     bool param_bool;
-                    bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+                    ft_to_bool(ft_ctx, param, &param_bool);
                     printf("%d ", param_bool);
                 } else {
-                    printf("invalid array element type!\n");
+                    printf("invalid array element type!");
                     return;
                 }
             }
@@ -139,14 +139,14 @@ void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPar
             ft_free_string(ft_ctx, param_str);
         } else if (param_type == FT_TYPE_NUMBER) {
             double param_num;
-            bool ret = ft_to_double(ft_ctx, param, &param_num);
+            ft_to_double(ft_ctx, param, &param_num);
             printf("%lf ", param_num);
         } else if (param_type == FT_TYPE_BOOL) {
             bool param_bool;
-            bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+            ft_to_bool(ft_ctx, param, &param_bool);
             printf("%d ", param_bool);
         } else {
-            printf("invalid param type!\n");
+            printf("invalid param type!");
             return;
         }
     }
@@ -178,8 +178,8 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
         } else if (param_type == FT_TYPE_ARRAY) {
             uint32_t array_size = ft_array_size(ft_ctx, param);
             printf("[");
-            for (int i = 0; i < array_size; ++i) {
-                ft_value_t elem = ft_array_at(ft_ctx, param, i);
+            for (uint32_t j = 0; j < array_size; ++j) {
+                ft_value_t elem = ft_array_at(ft_ctx, param, j);
                 ft_type elem_type = ft_get_type(ft_ctx, elem);
                 if (elem_type == FT_TYPE_NUMBER) {
                     double param_num;
@@ -191,10 +191,10 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
                     ft_free_string(ft_ctx, param_str);
                 } else if (elem_type == FT_TYPE_BOOL) {
                     bool param_bool;
-                    bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+                    ft_to_bool(ft_ctx, param, &param_bool);
                     printf("%d ", param_bool);
                 } else {
-                    printf("invalid array element type!\n");
+                    printf("invalid array element type!");
                     return;
                 }
             }
@@ -205,14 +205,14 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
             ft_free_string(ft_ctx, param_str);
         } else if (param_type == FT_TYPE_NUMBER) {
             double param_num;
-            bool ret = ft_to_double(ft_ctx, param, &param_num);
+            ft_to_double(ft_ctx, param, &param_num);
             printf("%lf ", param_num);
         } else if (param_type == FT_TYPE_BOOL) {
             bool param_bool;
-            bool ret = ft_to_bool(ft_ctx, param, &param_bool);
+            ft_to_bool(ft_ctx, param, &param_bool);
             printf("%d ", param_bool);
         } else {
-            printf("invalid param type!\n");
+            printf("invalid param type!");
             return;
         }
     }
@@ -344,7 +344,6 @@ FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray& 
 
 FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
     FtArray* strArray = Simple_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);

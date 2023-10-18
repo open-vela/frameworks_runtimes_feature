@@ -34,7 +34,11 @@ typedef enum ft_type {
 } ft_type;
 
 typedef struct ft_value_t {
+#if INTPTR_MAX >= INT64_MAX
     uint64_t val[2];
+#else
+    uint64_t val;
+#endif
     ft_type type;
 } ft_value_t;
 

@@ -177,7 +177,7 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  * @param vtable_size
  * @return FeatureInterfaceHandle
  */
-FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable vtable, int vtable_size);
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable);
 
 #ifdef __cplusplus
 }

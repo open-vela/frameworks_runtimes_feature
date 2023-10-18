@@ -127,7 +127,7 @@
   for extend in extends:
     index_offset += render.GetFinalVTableSize(extend)
   index = render.CacheVTableItem(parent_name, func_node, 0)
-  index += index_offset + 1
+  index += index_offset
 %>\
   // for member method '${identifier}'
 ${GenParamsFeatureType(func_node, parent_prefix)}
@@ -152,11 +152,11 @@ ${GenInterfaceMemberMethod(func_node, parent_name, index)}
   setter_info = ''
   if has_getter:
     index = render.CacheVTableItem(parent_name, prop_node, 1)
-    index += index_offset + 1
+    index += index_offset
     getter_info = f".vtable_idx = {index}"
   if has_setter:
     index = render.CacheVTableItem(parent_name, prop_node, 2)
-    index += index_offset + 1
+    index += index_offset
     setter_info = f".vtable_idx = {index}"
 
   member_info = render.GetMemberInfo(prop_node)
@@ -198,7 +198,7 @@ ${GenInterfaceMemberMethod(func_node, parent_name, index)}
 </%def>\
 <%def name="GenParentInterFaceMemberDefs(iname, members)">\
 <%
-  vtable_idx = 1
+  vtable_idx = 0
 %>\
   // Overrided parent member defines
 %for member in members:
@@ -447,12 +447,12 @@ ${GenInterFaceMembers(iname, members)}\
   ctor_interface = ctor_info['interface']
   parent_prefix = f"{ctor_interface}_interface_"
   final_vtable = render.GetFinalVTable(ctor_interface)
+  vtable_size = len(final_vtable)
   item_prefix = f"{module_name}_{parent_prefix}{ctor_target}"
-  dtor = f"NativeFunc({item_prefix}_finalize)"
+  finalizer = f"NativeFunc({item_prefix}_finalize)"
 %>\
   ${func_def} {
-    static NativeFunc ${ctor_target}_vtable[] = {
-        ${dtor},
+    static const NativeFunc ${ctor_target}_vtable_members[] = {
 %for vtable_item in final_vtable:
 <%
   item_name = vtable_item['name']
@@ -472,7 +472,14 @@ ${GenInterFaceMembers(iname, members)}\
 %endif
 %endfor
     };
-    return FeatureCreateInterface(feature, ${ctor_target}_vtable, countof(${ctor_target}_vtable));
+
+    static VTable ${ctor_target}_vtable = {
+        .size = ${vtable_size},
+        .finalizer = ${finalizer},
+        .members = ${ctor_target}_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &${ctor_target}_vtable);
   }
 </%def>\
 <%def name="GenFunction(func_node)">\

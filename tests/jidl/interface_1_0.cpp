@@ -11,14 +11,14 @@
   extern const InterfaceType Interface_Animal_interface_type;
   // for member property 'name'
   static const MemberAccessor Interface_Animal_interface_name_member_accessor = {
-    .getter = { .vtable_idx = 1 },
-    .setter = { .vtable_idx = 2 },
+    .getter = { .vtable_idx = 0 },
+    .setter = { .vtable_idx = 1 },
     .type = FT_STRING,
   };
 
   // for member property 'legCount'
   static const MemberAccessor Interface_Animal_interface_legCount_member_accessor = {
-    .getter = { .vtable_idx = 3 },
+    .getter = { .vtable_idx = 2 },
     .type = FT_INT,
   };
 
@@ -39,7 +39,7 @@
   };
 
   static const MemberMethod Interface_Animal_interface_eatFood_member_method = {
-    .func = { .vtable_idx = 4 },
+    .func = { .vtable_idx = 3 },
     .parameters = Interface_Animal_interface_eatFood_parameters,
     .return_type = FT_INT,
   };
@@ -52,7 +52,7 @@
   };
 
   static const MemberMethod Interface_Animal_interface_run_member_method = {
-    .func = { .vtable_idx = 5 },
+    .func = { .vtable_idx = 4 },
     .parameters = Interface_Animal_interface_run_parameters,
     .return_type = FT_STRING,
   };
@@ -102,15 +102,21 @@
 
   /****** for JIDL Interface constructor function 'createDog' ******/
   FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature, AppendData data, FtInt type) {
-    static NativeFunc dog_vtable[] = {
-        NativeFunc(Interface_Animal_interface_dog_finalize),
+    static const NativeFunc dog_vtable_members[] = {
         NativeFunc(Interface_Animal_interface_dog_get_name),
         NativeFunc(Interface_Animal_interface_dog_set_name),
         NativeFunc(Interface_Animal_interface_dog_get_legCount),
         NativeFunc(Interface_Animal_interface_dog_eatFood),
         NativeFunc(Interface_Animal_interface_dog_run),
     };
-    return FeatureCreateInterface(feature, dog_vtable, countof(dog_vtable));
+
+    static VTable dog_vtable = {
+        .size = 5,
+        .finalizer = NativeFunc(Interface_Animal_interface_dog_finalize),
+        .members = dog_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &dog_vtable);
   }
 
   /****** for JIDL function 'createDog' ******/
@@ -134,15 +140,15 @@
   };
 
   static const MemberMethod Interface_Bird_interface_fly_member_method = {
-    .func = { .vtable_idx = 1 },
+    .func = { .vtable_idx = 0 },
     .parameters = Interface_Bird_interface_fly_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Interface_string_array),
   };
 
   // for member property 'breed'
   static const MemberAccessor Interface_Bird_interface_breed_member_accessor = {
-    .getter = { .vtable_idx = 2 },
-    .setter = { .vtable_idx = 3 },
+    .getter = { .vtable_idx = 1 },
+    .setter = { .vtable_idx = 2 },
     .type = FT_STRING,
   };
 
@@ -181,13 +187,19 @@
 
   /****** for JIDL Interface constructor function 'createPigeon' ******/
   FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature, AppendData data) {
-    static NativeFunc pigeon_vtable[] = {
-        NativeFunc(Interface_Bird_interface_pigeon_finalize),
+    static const NativeFunc pigeon_vtable_members[] = {
         NativeFunc(Interface_Bird_interface_pigeon_fly),
         NativeFunc(Interface_Bird_interface_pigeon_get_breed),
         NativeFunc(Interface_Bird_interface_pigeon_set_breed),
     };
-    return FeatureCreateInterface(feature, pigeon_vtable, countof(pigeon_vtable));
+
+    static VTable pigeon_vtable = {
+        .size = 3,
+        .finalizer = NativeFunc(Interface_Bird_interface_pigeon_finalize),
+        .members = pigeon_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &pigeon_vtable);
   }
 
   /****** for JIDL function 'createPigeon' ******/
@@ -206,44 +218,44 @@
   extern const InterfaceType Interface_Chicken_interface_type;
   // Overrided parent member defines
   static const MemberAccessor Interface_Chicken_Animal_interface_name_member_accessor = {
-    .getter = { .vtable_idx = 1 },
-    .setter = { .vtable_idx = 2 },
+    .getter = { .vtable_idx = 0 },
+    .setter = { .vtable_idx = 1 },
     .type = FT_STRING,
   };
 
   static const MemberAccessor Interface_Chicken_Animal_interface_legCount_member_accessor = {
-    .getter = { .vtable_idx = 3 },
+    .getter = { .vtable_idx = 2 },
     .type = FT_INT,
   };
 
   static const MemberMethod Interface_Chicken_Animal_interface_eatFood_member_method = {
-    .func = { .vtable_idx = 4 },
+    .func = { .vtable_idx = 3 },
     .parameters = Interface_Animal_interface_eatFood_parameters,
     .return_type = FT_INT,
   };
 
   static const MemberMethod Interface_Chicken_Animal_interface_run_member_method = {
-    .func = { .vtable_idx = 5 },
+    .func = { .vtable_idx = 4 },
     .parameters = Interface_Animal_interface_run_parameters,
     .return_type = FT_STRING,
   };
 
   static const MemberMethod Interface_Chicken_Bird_interface_fly_member_method = {
-    .func = { .vtable_idx = 6 },
+    .func = { .vtable_idx = 5 },
     .parameters = Interface_Bird_interface_fly_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Interface_string_array),
   };
 
   static const MemberAccessor Interface_Chicken_Bird_interface_breed_member_accessor = {
-    .getter = { .vtable_idx = 7 },
-    .setter = { .vtable_idx = 8 },
+    .getter = { .vtable_idx = 6 },
+    .setter = { .vtable_idx = 7 },
     .type = FT_STRING,
   };
 
   // for member property 'weight'
   static const MemberAccessor Interface_Chicken_interface_weight_member_accessor = {
-    .getter = { .vtable_idx = 9 },
-    .setter = { .vtable_idx = 10 },
+    .getter = { .vtable_idx = 8 },
+    .setter = { .vtable_idx = 9 },
     .type = FT_INT,
   };
 
@@ -258,7 +270,7 @@
   };
 
   static const MemberMethod Interface_Chicken_interface_walk_member_method = {
-    .func = { .vtable_idx = 11 },
+    .func = { .vtable_idx = 10 },
     .parameters = Interface_Chicken_interface_walk_parameters,
     .return_type = FT_MK_COMPLEX_REF(&Interface_promise_string_array_FT_INT_type),
   };
@@ -329,8 +341,7 @@
 
   /****** for JIDL Interface constructor function 'createCock' ******/
   FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature, AppendData data) {
-    static NativeFunc cock_vtable[] = {
-        NativeFunc(Interface_Chicken_interface_cock_finalize),
+    static const NativeFunc cock_vtable_members[] = {
         NativeFunc(Interface_Chicken_interface_cock_get_name),
         NativeFunc(Interface_Chicken_interface_cock_set_name),
         NativeFunc(Interface_Chicken_interface_cock_get_legCount),
@@ -343,7 +354,14 @@
         NativeFunc(Interface_Chicken_interface_cock_set_weight),
         NativeFunc(Interface_Chicken_interface_cock_walk),
     };
-    return FeatureCreateInterface(feature, cock_vtable, countof(cock_vtable));
+
+    static VTable cock_vtable = {
+        .size = 11,
+        .finalizer = NativeFunc(Interface_Chicken_interface_cock_finalize),
+        .members = cock_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &cock_vtable);
   }
 
   /****** for JIDL function 'createCock' ******/
