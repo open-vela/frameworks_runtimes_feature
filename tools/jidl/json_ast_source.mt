@@ -442,13 +442,13 @@ ${GenInterFaceMembers(iname, members)}\
 <%def name="GenInterfaceCtorFunction(func_node, ctor_info)">\
 <%
   identifier = func_node['identifier']
-  func_def = render.GenerateFunctionDefine(func_node)
+  func_def = render.GenerateInterfaceCtorDefine(func_node)
   ctor_target = ctor_info['target']
   ctor_interface = ctor_info['interface']
   parent_prefix = f"{ctor_interface}_interface_"
   final_vtable = render.GetFinalVTable(ctor_interface)
 %>\
-  static ${func_def} {
+  ${func_def} {
     static NativeFunc ${ctor_target}_vtable[] = {
         nullptr,
 %for vtable_item in final_vtable:
@@ -482,9 +482,8 @@ ${GenInterFaceMembers(iname, members)}\
 %if ctor_info:
   /****** for JIDL Interface constructor function '${identifier}' ******/
 ${GenInterfaceCtorFunction(func_node, ctor_info)}
-%else:
-  /****** for JIDL function '${identifier}' ******/
 %endif
+  /****** for JIDL function '${identifier}' ******/
 ${GenParamsFeatureType(func_node)}
 ${GenMemberMethod(identifier, ret_type)}
 </%def>\

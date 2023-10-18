@@ -101,7 +101,7 @@
   /****** JIDL interface 'Animal' glue code end ******/
 
   /****** for JIDL Interface constructor function 'createDog' ******/
-  static FeatureInstanceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type) {
+  FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature, AppendData data, FtInt type) {
     static NativeFunc dog_vtable[] = {
         nullptr,
         NativeFunc(Interface_Animal_interface_dog_get_name),
@@ -113,6 +113,7 @@
     return FeatureCreateInterface(feature, dog_vtable, countof(dog_vtable));
   }
 
+  /****** for JIDL function 'createDog' ******/
   static const FeatureType Interface_createDog_parameters[] = {
     FT_INT,
     FT_PARAM_END
@@ -179,7 +180,7 @@
   /****** JIDL interface 'Bird' glue code end ******/
 
   /****** for JIDL Interface constructor function 'createPigeon' ******/
-  static FeatureInstanceHandle Interface_wrap_createPigeon(FeatureInstanceHandle feature, AppendData data) {
+  FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature, AppendData data) {
     static NativeFunc pigeon_vtable[] = {
         nullptr,
         NativeFunc(Interface_Bird_interface_pigeon_fly),
@@ -189,6 +190,7 @@
     return FeatureCreateInterface(feature, pigeon_vtable, countof(pigeon_vtable));
   }
 
+  /****** for JIDL function 'createPigeon' ******/
   static const FeatureType Interface_createPigeon_parameters[] = {
     FT_PARAM_END
   };
@@ -326,7 +328,7 @@
   /****** JIDL interface 'Chicken' glue code end ******/
 
   /****** for JIDL Interface constructor function 'createCock' ******/
-  static FeatureInstanceHandle Interface_wrap_createCock(FeatureInstanceHandle feature, AppendData data) {
+  FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature, AppendData data) {
     static NativeFunc cock_vtable[] = {
         nullptr,
         NativeFunc(Interface_Chicken_interface_cock_get_name),
@@ -344,6 +346,7 @@
     return FeatureCreateInterface(feature, cock_vtable, countof(cock_vtable));
   }
 
+  /****** for JIDL function 'createCock' ******/
   static const FeatureType Interface_createCock_parameters[] = {
     FT_PARAM_END
   };
