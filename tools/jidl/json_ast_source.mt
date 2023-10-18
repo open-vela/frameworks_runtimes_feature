@@ -447,25 +447,29 @@ ${GenInterFaceMembers(iname, members)}\
   ctor_interface = ctor_info['interface']
   parent_prefix = f"{ctor_interface}_interface_"
   final_vtable = render.GetFinalVTable(ctor_interface)
+  item_prefix = f"{module_name}_{parent_prefix}{ctor_target}"
+  dtor = f"NativeFunc({item_prefix}_finalize)"
 %>\
   ${func_def} {
     static NativeFunc ${ctor_target}_vtable[] = {
-        nullptr,
+        ${dtor},
 %for vtable_item in final_vtable:
 <%
   item_name = vtable_item['name']
   item_type = vtable_item['type']
-  item_content = f"{module_name}_{parent_prefix}{ctor_target}"
+  item_content = ''
   if item_type == 0:
-    item_content = f"{item_content}_{item_name}"
+    item_content = f"{item_prefix}_{item_name}"
   elif item_type == 1:
-    item_content = f"{item_content}_get_{item_name}"
+    item_content = f"{item_prefix}_get_{item_name}"
   elif item_type == 2:
-    item_content = f"{item_content}_set_{item_name}"
+    item_content = f"{item_prefix}_set_{item_name}"
   if item_content != '':
     item_content = f"NativeFunc({item_content})"
 %>\
+%if item_content != '':
         ${item_content},
+%endif
 %endfor
     };
     return FeatureCreateInterface(feature, ${ctor_target}_vtable, countof(${ctor_target}_vtable));

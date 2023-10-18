@@ -35,6 +35,10 @@ FeatureInstance::FeatureInstance(FeaturePrototype* proto, VTable vtable, int vta
 
 FeatureInstance::~FeatureInstance()
 {
+    if (vtable_ && vtable_[0]) {
+        dtor_func dtor = (dtor_func)(vtable_[0]);
+        dtor(this);
+    }
 }
 
 }

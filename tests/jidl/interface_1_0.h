@@ -42,6 +42,7 @@
 
   // interface vtable functions to be implemented
   // vtable functions for interface constructor function 'createDog'
+  void Interface_Animal_interface_dog_finalize(FeatureInterfaceHandle handle);
   FtString Interface_Animal_interface_dog_get_name(FeatureInterfaceHandle handle, AppendData data);
   void Interface_Animal_interface_dog_set_name(FeatureInterfaceHandle handle, AppendData data, FtString name);
   FtInt Interface_Animal_interface_dog_get_legCount(FeatureInterfaceHandle handle, AppendData data);
@@ -49,11 +50,13 @@
   FtString Interface_Animal_interface_dog_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination);
 
   // vtable functions for interface constructor function 'createPigeon'
+  void Interface_Bird_interface_pigeon_finalize(FeatureInterfaceHandle handle);
   FtArray* Interface_Bird_interface_pigeon_fly(FeatureInterfaceHandle handle, AppendData data);
   FtString Interface_Bird_interface_pigeon_get_breed(FeatureInterfaceHandle handle, AppendData data);
   void Interface_Bird_interface_pigeon_set_breed(FeatureInterfaceHandle handle, AppendData data, FtString breed);
 
   // vtable functions for interface constructor function 'createCock'
+  void Interface_Chicken_interface_cock_finalize(FeatureInterfaceHandle handle);
   FtString Interface_Chicken_interface_cock_get_name(FeatureInterfaceHandle handle, AppendData data);
   void Interface_Chicken_interface_cock_set_name(FeatureInterfaceHandle handle, AppendData data, FtString name);
   FtInt Interface_Chicken_interface_cock_get_legCount(FeatureInterfaceHandle handle, AppendData data);
