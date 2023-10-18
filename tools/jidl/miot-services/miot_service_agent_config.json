@@ -1,6 +1,6 @@
 {
     "includes": [
-        "miotclient.h",
+        "miot-conn.h",
         "feature-help.h"
     ]
 }

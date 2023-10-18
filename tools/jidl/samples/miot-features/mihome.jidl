@@ -1,0 +1,38 @@
+module mihome@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+callback on_data(object data);
+
+struct GetDeviceListParam {
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETDEVLST",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET",
+  cb_data_parser = "mihome_parse_device_list"
+]
+void getDeviceList(GetDeviceListParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETDEVLST",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET",
+  cb_data_parser = "mihome_parse_scence_list"
+]
+void getSceneList(GetDeviceListParam p);
+
+struct FetchParam {
+  string path;
+  string arg;
+  string method;
+  string uid;
+  string srvTk;
+  string sec;
+  callback on_void success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+void fetch(FetchParam p);

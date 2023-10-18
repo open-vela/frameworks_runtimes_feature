@@ -1,0 +1,65 @@
+module audiosync@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+
+struct AudioState {
+  string state;
+  string src;
+  int currentTime;
+  boolean autoplay;
+  boolean loop;
+  int volume;
+  boolean mute;
+  int duration;
+};
+
+callback on_get_state(AudioState state);
+
+struct MetaInfo {
+  string title;
+  string album;
+  string[] artist;
+};
+
+struct GetPalyStateParam {
+  callback on_get_state success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+callback on_event(object data);
+
+property string src;
+property MetaInfo meta;
+property int currentTime;
+property int duration;
+property int percent;
+property boolean autoplay;
+property boolean loop;
+property int volume;
+property boolean muted;
+property string streamType;
+
+property on_event onplay;
+property on_event onpause;
+property on_event onstop;
+property on_event onloadeddata;
+property on_event onended;
+property on_event ondurationchange;
+property on_event onerror;
+property on_event ontimeupdate;
+property on_event onctrlplayprev;
+property on_event onctrlplaynext;
+property on_event onctrlplay;
+property on_event onctrlpause;
+property on_event onctrlstop;
+property on_event onctrlvolumeup;
+property on_event onctrlvolumedown;
+property on_event onvolumechange;
+
+void play();
+void pause();
+void stop();
+void getPlayState(GetPalyStateParam p);
+

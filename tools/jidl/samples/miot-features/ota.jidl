@@ -1,0 +1,79 @@
+module ota@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+callback on_data(object data);
+
+
+struct CommonParam {
+  on_void success;
+  on_fail fail;
+  on_void complete;
+};
+
+struct DataParam {
+  [msg_key = "option", to_msg = "ft_to_string"]
+  object options;
+  on_void success;
+  on_fail fail;
+  on_void complete;
+};
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTAGETSTATE",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+]
+void getState(CommonParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTAQUERY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTAQUERYARG",
+  msg_sub_type = "Otaquerymsg"
+]
+void query(DataParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTADOWNLOAD",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTADOWNLOADARG",
+  msg_sub_type = "Otadownloadmsg"
+]
+void download(DataParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTAAPPLY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTAAPPLYARG",
+  msg_sub_type = "Otaapplymsg"
+]
+void apply(DataParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTAABORT",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+]
+void abort(CommonParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTANOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTASUBARG",
+  msg_sub_type = "Otasubmsg",
+  cb_name = "onotastatechange"
+]
+property on_data onstatechange;
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTANOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTASUBARG",
+  msg_sub_type = "Otasubmsg",
+  cb_name = "onotadownloadprocess"
+]
+property on_data ondownloadprocess;
+
+[
+
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTANOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTASUBARG",
+  msg_sub_type = "Otasubmsg",
+  cb_name = "onotaapplyprocess"
+]
+property on_data onapplyprocess;
+

@@ -2,11 +2,11 @@ module alarmsa@1.0
 
 callback onNotify(object value);
 
-[msg_sub_type="Alarmsubmsg", msg_sub_type_id="MIOTMSG__MSGSUBTYPE__ALARMNOTIFY", msg_arg_id="MIOTMSG__TEST_ONEOF_ALARMSUBARG", keep_alive=true]
+[msg_sub_type="Alarmsubmsg", msg_sub_id="MIOTMSG__MSGSUBTYPE__ALARMNOTIFY", msg_arg_id="MIOTMSG__TEST_ONEOF_ALARMSUBARG"]
 promise setattribute(string key, onNotify on_notify);
 
-[msg_sub_type="Stopalarmmsg", msg_sub_type_id="MIOTMSG__MSGSUBTYPE__STOPALARM",  msg_arg_id="MIOTMSG__TEST_ONEOF_STOPALARMARG", keep_alive=true]
+[msg_sub_type="Stopalarmmsg", msg_sub_id="MIOTMSG__MSGSUBTYPE__STOPALARM",  msg_arg_id="MIOTMSG__TEST_ONEOF_STOPALARMARG"]
 promise stopAlarm(string alarmid);
 
-[msg_sub_type="Cancelalarmmsg", msg_sub_type_id="MIOTMSG__MSGSUBTYPE__CANCELALARM",  msg_arg_id="MIOTMSG__TEST_ONEOF_CANCELALARMARG", keep_alive=true]
+[msg_sub_type="Cancelalarmmsg", msg_sub_id="MIOTMSG__MSGSUBTYPE__CANCELALARM",  msg_arg_id="MIOTMSG__TEST_ONEOF_CANCELALARMARG"]
 promise cancelAlarm(string alarmid);

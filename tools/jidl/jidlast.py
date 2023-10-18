@@ -841,11 +841,10 @@ class StructDefine(InterfaceDefine):
   def GetReferenceJson(self):
     return MakeReferenctJson('struct', self.name)
 
-class StructMemberBase(Node):
+class StructMemberBase(Type):
   def __init__(self, member_type, member_name):
-    Node.__init__(self, STRUCT_MEMBER_BASE)
+    Type.__init__(self, member_name, STRUCT_MEMBER_BASE)
     self.type = member_type
-    self.name = member_name
 
   def SetDefault(self, def_val):
     self.default = def_val
@@ -859,13 +858,14 @@ class StructMemberBase(Node):
   def Resolve(self, context):
     self.type = ResolveStructMemberType(context, self.type, None, self)
     #print("param resolve: ", self.type, str(self.type), str(self))
-    context.AddId(self.name, self.type)
+    #context.AddId(self.name, self.type)
 
-  def Check(self, context):
-    context.AddId(self.name, self.type)
+  #def Check(self, context):
+  #  context.AddId(self.name, self.type)
 
   def ToJson(self, out):
     member_type = {}
+    Type.ToJson(self, member_type)
     member_type['type'] = GetTypeJson(self.type)
 
     if self.name:
@@ -874,11 +874,10 @@ class StructMemberBase(Node):
       member_type['default'] = str(self.default)
     out.append(member_type)
 
-class StructMemberStruct(Node):
+class StructMemberStruct(Type):
   def __init__(self, struct_type, struct_name):
-    Node.__init__(self, STRUCT_MEMBER_STRUCT)
+    Type.__init__(self, struct_name, STRUCT_MEMBER_STRUCT)
     self.type = struct_type
-    self.name = struct_name
 
   def __str__(self):
     s = 'member struct: ' + str(self.type) + ' ' + str(self.name)
@@ -887,26 +886,26 @@ class StructMemberStruct(Node):
   def Resolve(self, context):
     self.type = ResolveStructMemberType(context, self.type, None, self)
     #print("param resolve: ", self.type, str(self.type), str(self))
-    context.AddId(self.name, self.type)
+    #context.AddId(self.name, self.type)
 
-  def Check(self, context):
-    context.AddId(self.name, self.type)
+  #def Check(self, context):
+  #  context.AddId(self.name, self.type)
 
   def ToJson(self, out):
     member_type = {}
     if not self.type.Is(STRUCT_DEFINE):
       raise Exception('not an struct member struct: {}'.format(self.type))
 
+    Type.ToJson(self, member_type)
     member_type['type'] = GetTypeJson(self.type)
     if self.name:
       member_type['name'] = self.name
     out.append(member_type)
 
-class StructMemberCallback(Node):
+class StructMemberCallback(Type):
   def __init__(self, callback_type, callback_name):
-    Node.__init__(self, STRUCT_MEMBER_CALLBACK)
+    Type.__init__(self, callback_name, STRUCT_MEMBER_CALLBACK)
     self.type = callback_type
-    self.name = callback_name
 
   def __str__(self):
     s = 'member callback: ' + str(self.type) + ' ' + str(self.name)
@@ -915,16 +914,17 @@ class StructMemberCallback(Node):
   def Resolve(self, context):
     self.type = ResolveStructMemberType(context, self.type, None, self)
     #print("param resolve: ", self.type, str(self.type), str(self))
-    context.AddId(self.name, self.type)
+    #context.AddId(self.name, self.type)
 
-  def Check(self, context):
-    context.AddId(self.name, self.type)
+  #def Check(self, context):
+  #  context.AddId(self.name, self.type)
 
   def GetJson(self):
     member_type = {}
     if not self.type.Is(CALLBACK_DEFINE):
       raise Exception('not an struct member callback: {}'.format(self.type))
 
+    Type.ToJson(self, member_type)
     member_type['type'] = GetTypeJson(self.type)
     if self.name:
       member_type['name'] = self.name
@@ -1058,7 +1058,7 @@ class IDTable:
   def AddId(self, id_name, obj, context):
     if id_name in self.table:
       v = self.table[id_name]
-      #print(id_name, self.table)
+      #print(id_name, v)
       context.AddError("[%d:%d] id:'%s' has defined in %s" % (v.lineno, v.lexpos, id_name, str(v)))
       return
     self.table[id_name] = obj

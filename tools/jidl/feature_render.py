@@ -54,6 +54,9 @@ class FeatureUtils(render.Utils):
             return cpp_type_map[tp]
     return str(tp)
 
+  def cppTypeStruct(self, tp):
+    return '%s_%s' % (self.toIdName(self.doc['name']), tp['referred_name'])
+
   def fromNativeDefault(self, tp):
     return 'ft_help::from_native'
 
@@ -63,7 +66,21 @@ class FeatureUtils(render.Utils):
   def getPromiseType(self, tp):
     return 'FeaturePromiseHandle'
 
+  def getMsgKey(self, p):
+    p_name = p['name']
+    to_key = ''
+    if 'meta' in p:
+      meta = p['meta']
+      if 'msg_key' in meta:
+        p_name = meta['msg_key']
+      if 'to_msg' in meta:
+        to_key = meta['to_msg']
+    return (p_name, to_key)
+    
+
   def genParamsList(self, method):
+    if not 'params' in method:
+      return []
     params = method['params']
     ret_type = method['return_type']
     param_list = []
@@ -72,7 +89,9 @@ class FeatureUtils(render.Utils):
     for i,p in enumerate(params):
       p_type = p['type']
       p_native_type = self.cppType(p_type)
-      if IsParamReferenceType(p_native_type):
+      if self.isStructType(p_type):
+        p_native_type += '*'
+      elif IsParamReferenceType(p_native_type):
         p_native_type += '&'
       if 'name' in p:
         pname = p['name']
