@@ -70,6 +70,12 @@ char* FeatureInstanceQjs::getPackageName() const
     return package_name_;
 }
 
+void FeatureInstanceQjs::setEnvironmentName(const char* environment_name)
+{
+    environment_name_ = environment_name;
+}
+
+
 FeatureInstanceQjs::~FeatureInstanceQjs()
 {
     // remove opaque binding
