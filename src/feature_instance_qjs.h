@@ -54,6 +54,10 @@ public:
 
     char* getPackageName() const;
 
+    void setEnvironmentName(const char* environment_name);
+
+    char* getEnvironmentName() const { return (char*)environment_name_; }
+
     uv_loop_t* uvloop() { return &loop; }
 
     virtual FeatureInstance* createInterface(VTable* vtable);
@@ -111,6 +115,7 @@ private:
     WeakRef weak_self_;
     FtCallbackId curr_cid_ = 0;
     char* package_name_ = nullptr;
+    const char * environment_name_ = nullptr;
     PromiseManager* promise_manager_ = nullptr;
     uv_loop_t loop;
 

@@ -25,6 +25,7 @@ extern "C"
 #include <stdbool.h>
 #include "feature_types.h"
 #include <uv.h>
+#include "quickjs/quickjs.h"
 
 /**
  * @brief malloc a memory by featureType
@@ -104,12 +105,28 @@ void FeatureSetObjectData(FeatureInstanceHandle handle, void* data);
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle);
 
 /**
+ * @brief get feature binding object value from FeatureInstanceHandle
+ *
+ * @param handle
+ * @return feature_value_t
+ */
+JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
+
+/**
  * @brief get feature package name from FeatureInstanceHandle
  *
  * @param handle
  * @return char*
  */
 char* FeatureGetPackageName(FeatureInstanceHandle handle);
+
+/**
+ * @brief get feature environment name from FeatureInstanceHandle
+ *
+ * @param handle
+ * @return char*
+ */
+char* FeatureGetEnvironmentName(FeatureInstanceHandle handle);
 
 /**
  * @brief get feature uvloop from FeatureInstanceHandle
