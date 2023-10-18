@@ -103,7 +103,7 @@
   /****** for JIDL Interface constructor function 'createDog' ******/
   FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature, AppendData data, FtInt type) {
     static NativeFunc dog_vtable[] = {
-        nullptr,
+        NativeFunc(Interface_Animal_interface_dog_finalize),
         NativeFunc(Interface_Animal_interface_dog_get_name),
         NativeFunc(Interface_Animal_interface_dog_set_name),
         NativeFunc(Interface_Animal_interface_dog_get_legCount),
@@ -182,7 +182,7 @@
   /****** for JIDL Interface constructor function 'createPigeon' ******/
   FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature, AppendData data) {
     static NativeFunc pigeon_vtable[] = {
-        nullptr,
+        NativeFunc(Interface_Bird_interface_pigeon_finalize),
         NativeFunc(Interface_Bird_interface_pigeon_fly),
         NativeFunc(Interface_Bird_interface_pigeon_get_breed),
         NativeFunc(Interface_Bird_interface_pigeon_set_breed),
@@ -330,7 +330,7 @@
   /****** for JIDL Interface constructor function 'createCock' ******/
   FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature, AppendData data) {
     static NativeFunc cock_vtable[] = {
-        nullptr,
+        NativeFunc(Interface_Chicken_interface_cock_finalize),
         NativeFunc(Interface_Chicken_interface_cock_get_name),
         NativeFunc(Interface_Chicken_interface_cock_set_name),
         NativeFunc(Interface_Chicken_interface_cock_get_legCount),

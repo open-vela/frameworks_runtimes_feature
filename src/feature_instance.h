@@ -70,6 +70,8 @@ public:
 
     void* native;
 
+    typedef void (*dtor_func)(FeatureInstance*);
+
 private:
     FeaturePrototype* proto_;
     int instance_id_; // the instance id, order in instances aray.

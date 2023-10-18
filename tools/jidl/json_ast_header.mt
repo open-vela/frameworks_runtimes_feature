@@ -12,8 +12,11 @@
   ctor_interface = ctor_info['interface']
   final_vtable = render.GetFinalVTable(ctor_interface)
   parent_prefix = f"{ctor_interface}_interface_"
+  item_prefix = f"{module_name}_{parent_prefix}{ctor_target}"
+  dtor_def = f"void {item_prefix}_finalize(FeatureInterfaceHandle handle)"
 %>\
   // vtable functions for interface constructor function '${identifier}'
+  ${dtor_def};
 %for vtable_item in final_vtable:
 <%
   i_name = vtable_item['name']
@@ -23,15 +26,15 @@
   params = "FeatureInterfaceHandle handle, AppendData data"
   if i_params != '':
     params = f"{params}, {i_params}"
-  func_define = f"{i_ret_type} {module_name}_{parent_prefix}{ctor_target}"
+  func_def = f"{i_ret_type} {item_prefix}"
   if i_type == 0:
-    func_define = f"{func_define}_{i_name}({params})"
+    func_def = f"{func_def}_{i_name}({params})"
   elif i_type == 1:
-    func_define = f"{func_define}_get_{i_name}({params})"
+    func_def = f"{func_def}_get_{i_name}({params})"
   elif i_type == 2:
-    func_define = f"{func_define}_set_{i_name}({params})"
+    func_def = f"{func_def}_set_{i_name}({params})"
 %>\
-  ${func_define};
+  ${func_def};
 %endfor
 
 </%def>\
