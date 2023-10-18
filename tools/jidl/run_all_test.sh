@@ -25,6 +25,7 @@ run_feature() {
 
 run_miot_service_gen() {
   f=$1
+  shift
   echo "=== FEATURE $f === "
   cmd="$PYTHON $CUR_DIR/jidlast.py $f"
   echo "TOJSON: $cmd"
@@ -32,7 +33,7 @@ run_miot_service_gen() {
   json_file=${f%.*}.json
   file_name=${f##*/}
   file_name=${file_name%.*}
-  cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_feture.cpp"
+  cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_feture.cpp $*"
   echo "GEN: $cmd"
   $cmd
   echo "=========================================="
@@ -55,5 +56,14 @@ run_lvgl_binding_gen() {
 
 run_feature $CUR_DIR/samples
 run_feature $CUR_DIR/../../tests/jidl
+run_feature $CUR_DIR/samples/miot-features
 run_miot_service_gen $CUR_DIR/samples/alarmsa.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/audiofocus.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/alarm.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/mihome.jidl -v "includes=mihome-help.h"
+run_miot_service_gen $CUR_DIR/samples/miot-features/ota.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/settings.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/miai.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/microphone.jidl
+run_miot_service_gen $CUR_DIR/samples/miot-features/miot.jidl
 run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl

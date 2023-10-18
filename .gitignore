@@ -6,6 +6,7 @@ tags
 .out
 tests/*/*.json
 tools/jidl/samples/*.json
+tools/jidl/samples/*/*.json
 tests/*/*.h
 tests/*/*.cpp
 tests/*/*.cc

@@ -286,8 +286,8 @@ class JIDL(Parser):
 
   def p_struct_body(self, p):
     """
-    struct_body : struct_block
-           | struct_body struct_block
+    struct_body : struct_block_with_meta
+           | struct_body struct_block_with_meta
     """
     count = len(p)
     if count == 1:
@@ -306,6 +306,17 @@ class JIDL(Parser):
                | struct_member_callback
     """
     p[0] = p[1]
+
+  def p_struct_block_with_meta(self, p):
+    """
+    struct_block_with_meta : struct_block
+              | meta_attributes_define struct_block
+    """
+    if len(p) == 3:
+      p[0] = p[2]
+      p[0].SetMetaAttributes(p[1])
+    else:
+      p[0] = p[1]
 
   def p_struct_member_define(self, p):
     """

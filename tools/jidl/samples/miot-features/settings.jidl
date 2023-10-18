@@ -1,0 +1,36 @@
+module settings@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+callback on_data(object data);
+
+struct CommonParam {
+  on_data success;
+  on_fail fail;
+  on_void complete;
+};
+
+struct FactoryResetParam {
+  boolean wipe;
+  on_void success;
+  on_fail fail;
+  on_void complete;
+};
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETTINGRESET",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTAAPPLYARG",
+  msg_sub_type = "MIOTMSG__TEST_ONEOF_SETTINGSRESETARG"
+]
+void factoryReset(FactoryResetParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETTINGDEVTOKEN",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+]
+void getDeviceToken(CommonParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETTINGGETMIIODID"
+]
+void getMiioDid(CommonParam p);

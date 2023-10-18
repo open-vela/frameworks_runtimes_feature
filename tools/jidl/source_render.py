@@ -101,6 +101,21 @@ class Utils:
     if nt: return nt
     if tp['referred_type'] == 'callback':
       return self.cppTypeCallback(tp)
+    if tp['referred_type'] == 'struct':
+      return self.cppTypeStruct(tp)
+    if tp['referred_type'] == 'enum':
+      return self.cppTypeEnum(tp)
+    if tp['referred_type'] == 'interface':
+      return self.cppTypeInterface(tp)
+    return self.cppTypeDefault(tp)
+
+  def cppTypeStruct(self, tp):
+    return self.cppTypeDefault(tp)
+
+  def cppTypeEnum(self, tp):
+    return self.cppTypeDefault('int')
+
+  def cppTypeInterface(self, tp):
     return self.cppTypeDefault(tp)
 
   def cppTypeCallback(self, tp):
@@ -122,8 +137,17 @@ class Utils:
   def isPromiseType(self, tp):
     return isinstance(tp, dict) and tp['type'] == 'promise'
 
+  def isReferenceType(self, tp, tn):
+    return isinstance(tp, dict) and 'type' in tp and tp['type'] == 'reference' and 'referred_type' in tp and tp['referred_type'] == tn
+
   def isCallbackType(self, tp):
-    return isinstance(tp, dict) and tp['type'] == 'reference' and tp['referred_type'] == 'callback'
+    return self.isReferenceType(tp, 'callback')
+
+  def isStructType(self, tp):
+    return self.isReferenceType(tp, 'struct')
+
+  def isInterfaceType(self, tp):
+    return self.isReferenceType(tp, 'interface')
 
   def getPromiseType(self, tp):
     return 'xs_promise_type<%s, %s>' % (tp['resolve_type'], tp['reject_type'])
@@ -205,6 +229,12 @@ class Utils:
   def getByType(self, d, tp):
     return self.select(d, '$.members[?(@.type=="%s")]'%tp)
 
+  def getUserType(self, tp, name):
+    r = self.select(self.doc, '$.members[?((@.type=="%s")&&(@.name=="%s"))]'%(tp, name))
+    if r and len(r) == 1:
+      return r[0]
+    return None
+
   def getInterfaces(self, d):
     return self.getByType(d, 'interface')
 
@@ -244,7 +274,11 @@ def parseVars(args):
         for v in args.vars:
             m = re.match(r'(.*)=(.*)', v)
             if m:
-                vars[m.group(1)] = m.group(2)
+                name = m.group(1)
+                if name in vars and isinstance(vars[name], list):
+                  vars[name].append(m.group(2))
+                else:
+                  vars[name] = m.group(2)
     return vars
 
 

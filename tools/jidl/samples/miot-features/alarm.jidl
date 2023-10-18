@@ -1,0 +1,57 @@
+module alarm@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+callback on_data(object data);
+
+struct SetAlarmParams {
+  int hour;
+  int minute;
+  int[] days;
+  string message;
+  boolean vibrate = false;
+  string ringtone;
+  callback on_void success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+string setAlarm(SetAlarmParams p);
+
+string getProvider();
+
+struct StopAlarmParams {
+  [msg_key = "alarmid"]
+  string alarmId;
+  callback on_void success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__STOPALARM",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_STOPALARMARG",
+  msg_sub_type = "Stopalarmmsg"
+]
+void stopAlarm(StopAlarmParams p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__CANCELALARM",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_CANCELALARMARG",
+  msg_sub_type = "Cancelalarmmsg"
+]
+void cancelAlarm(StopAlarmParams p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__ALARMNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_ALARMSUBARG",
+  msg_sub_type = "Alarmsubmsg"
+]
+property on_data oncreatealarm writeonly;
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__ALARMNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_ALARMSUBARG",
+  msg_sub_type = "Alarmsubmsg"
+]
+property on_data onalarmbell writeonly;

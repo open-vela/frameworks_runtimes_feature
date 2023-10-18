@@ -1,0 +1,33 @@
+module message@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+
+struct SubscribeCallbackParam {
+  string key;
+  object data;
+  int code;
+};
+
+callback on_success(string data);
+callback on_subscribe(SubscribeCallbackParam p);
+
+struct SubscribeParam {
+  string key;
+  callback on_subscribe cb;
+  callback on_success success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+void subscribe(SubscribeParam p);
+
+void unsubscribe(SubscribeParam p);
+
+
+struct PublishParam {
+  string key;
+  object data;
+};
+
+void publish(PublishParam p);
