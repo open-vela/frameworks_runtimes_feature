@@ -405,6 +405,7 @@ class JIDL(Parser):
       extends = p[4]
     else:
       CreateASTNode(p, ast.InterfaceDefine, p[2], ast.INTERFACE_DEFINE, p[5])
+      extends = p[3]
 
     if extends:
       p[0].SetExtends(extends)
