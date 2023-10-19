@@ -50,12 +50,6 @@ public:
 
     feature_value_t getFeatureJsvalue(ft_value_t ft_value);
 
-    void setPackageName(char* package_name);
-
-    char* getPackageName() const;
-
-    uv_loop_t* uvloop() { return &loop; }
-
     virtual FeatureInstance* createInterface(VTable* vtable);
 
     virtual bool removeCallback(FtCallbackId cid);
@@ -110,9 +104,7 @@ private:
     feature_value_t vm_object_;
     WeakRef weak_self_;
     FtCallbackId curr_cid_ = 0;
-    char* package_name_ = nullptr;
     PromiseManager* promise_manager_ = nullptr;
-    uv_loop_t loop;
 
     std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
     std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype

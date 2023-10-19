@@ -712,13 +712,14 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
         }
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        featurePrototype->setPackageName(registry_->getFeaturePackageName());
+        featurePrototype->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
 
     // create feature instance for the required object
     auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr);
     // save vm_object into instance
     featureInstance->setVmObject(vm_object);
-    featureInstance->setPackageName(registry_->getFeaturePackageName());
     auto featureInstancePtr = featureInstance.get();
     // insert into instances array, update iid
     int iid = featurePrototype->addInstance(std::move(featureInstance));
