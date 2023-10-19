@@ -36,9 +36,9 @@
   void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params);
 
   // Interface constructors
-  FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature, AppendData data, FtInt type);
-  FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature, AppendData data);
-  FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature, AppendData data);
+  FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature);
+  FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature);
+  FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature);
 
   // interface vtable functions to be implemented
   // vtable functions for interface constructor function 'createDog'

@@ -485,31 +485,24 @@ class CPPRender(Render):
       param_list.append(param_str)
     return ", ".join(param_list)
 
-  def _MakeFunctionDefine(self, node, func_name):
+  def GenerateFunctionDefine(self, node):
     if node['type'] != 'function':
       return None
 
+    identifier = node["identifier"]
     ret_type_node = node["return_type"]
     ret_type = self.GenerateReturnType(ret_type_node)
     prefix_params = 'FeatureInstanceHandle feature, AppendData data'
     if ret_type == 'FtPromiseId':
       ret_type = 'void'
       prefix_params += ', FtPromiseId pid'
-    func_define = f"{ret_type} {func_name}({prefix_params}"
+    module_name = self.GetModuleName()
+    func_define = f"{ret_type} {module_name}_wrap_{identifier}({prefix_params}"
     if 'params' in node:
       params_str = self.GenerateParamList(node["params"])
       func_define += f", {params_str}"
     func_define += ")"
     return func_define
-
-  def GenerateFunctionDefine(self, node):
-    if node['type'] != 'function':
-      return None
-
-    module_name = self.GetModuleName()
-    identifier = node["identifier"]
-    func_name = f"{module_name}_wrap_{identifier}"
-    return self._MakeFunctionDefine(node, func_name)
 
   def GenerateInterfaceCtorDefine(self, node):
     if node['type'] != 'function':
@@ -517,8 +510,9 @@ class CPPRender(Render):
 
     module_name = self.GetModuleName()
     identifier = node["identifier"]
-    func_name = f"{module_name}_{identifier}_instance"
-    return self._MakeFunctionDefine(node, func_name)
+    ret_type = self.GenerateReturnType(node["return_type"])
+    ctor_name = f"{module_name}_{identifier}_instance"
+    return f"{ret_type} {ctor_name}(FeatureInstanceHandle feature)"
 
   def HasEllipseParam(self, node):
     if not 'params' in node:

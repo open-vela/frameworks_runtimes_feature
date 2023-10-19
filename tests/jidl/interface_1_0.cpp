@@ -101,7 +101,7 @@
   /****** JIDL interface 'Animal' glue code end ******/
 
   /****** for JIDL Interface constructor function 'createDog' ******/
-  FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature, AppendData data, FtInt type) {
+  FeatureInterfaceHandle Interface_createDog_instance(FeatureInstanceHandle feature) {
     static const NativeFunc dog_vtable_members[] = {
         NativeFunc(Interface_Animal_interface_dog_get_name),
         NativeFunc(Interface_Animal_interface_dog_set_name),
@@ -186,7 +186,7 @@
   /****** JIDL interface 'Bird' glue code end ******/
 
   /****** for JIDL Interface constructor function 'createPigeon' ******/
-  FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature, AppendData data) {
+  FeatureInterfaceHandle Interface_createPigeon_instance(FeatureInstanceHandle feature) {
     static const NativeFunc pigeon_vtable_members[] = {
         NativeFunc(Interface_Bird_interface_pigeon_fly),
         NativeFunc(Interface_Bird_interface_pigeon_get_breed),
@@ -340,7 +340,7 @@
   /****** JIDL interface 'Chicken' glue code end ******/
 
   /****** for JIDL Interface constructor function 'createCock' ******/
-  FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature, AppendData data) {
+  FeatureInterfaceHandle Interface_createCock_instance(FeatureInstanceHandle feature) {
     static const NativeFunc cock_vtable_members[] = {
         NativeFunc(Interface_Chicken_interface_cock_get_name),
         NativeFunc(Interface_Chicken_interface_cock_set_name),
