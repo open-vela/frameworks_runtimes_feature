@@ -198,14 +198,4 @@ void FeaturePrototype::clearAllInstances()
     instances.clear();
 }
 
-void FeaturePrototype::setPackageName(char* package_name)
-{
-    package_name_ = package_name;
-}
-
-char* FeaturePrototype::getPackageName() const
-{
-    return package_name_;
-}
-
 }

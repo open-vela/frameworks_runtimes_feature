@@ -103,13 +103,6 @@ public:
      *
      */
     void clearAllInstances();
-
-    void setPackageName(char* package_name);
-
-    char* getPackageName() const;
-
-private:
-    char* package_name_ = nullptr;
 };
 
 /**
