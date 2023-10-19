@@ -286,7 +286,7 @@ void Interface_onUnregister(const char* feature_name)
 
 FeatureInterfaceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type)
 {
-   FeatureInterfaceHandle handle = Interface_createDog_instance(feature, data, type);
+   FeatureInterfaceHandle handle = Interface_createDog_instance(feature);
    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
    // void* data = create_dog_data(type);
    // FeatureSetObjectData(handle, data);
@@ -295,7 +295,7 @@ FeatureInterfaceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, A
 
 FeatureInterfaceHandle Interface_wrap_createPigeon(FeatureInstanceHandle feature, AppendData data)
 {
-   FeatureInterfaceHandle handle = Interface_createPigeon_instance(feature, data);
+   FeatureInterfaceHandle handle = Interface_createPigeon_instance(feature);
    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
    // void* data = create_pigeon_data();
    // FeatureSetObjectData(handle, data);
@@ -304,7 +304,7 @@ FeatureInterfaceHandle Interface_wrap_createPigeon(FeatureInstanceHandle feature
 
 FeatureInterfaceHandle Interface_wrap_createCock(FeatureInstanceHandle feature, AppendData data)
 {
-   FeatureInterfaceHandle handle = Interface_createCock_instance(feature, data);
+   FeatureInterfaceHandle handle = Interface_createCock_instance(feature);
    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
    // void* data = create_cock_data();
    // FeatureSetObjectData(handle, data);
