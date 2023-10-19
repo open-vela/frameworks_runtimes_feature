@@ -60,11 +60,15 @@ feature_value_t FeatureInstanceQjs::getFeatureJsvalue(ft_value_t value)
     return q_val.js_val;
 }
 
-void FeatureInstanceQjs::setEnvironmentName(const char* environment_name)
+void FeatureInstanceQjs::setPackageName(char* package_name)
 {
-    environment_name_ = environment_name;
+    package_name_ = package_name;
 }
 
+char* FeatureInstanceQjs::getPackageName() const
+{
+    return package_name_;
+}
 
 FeatureInstanceQjs::~FeatureInstanceQjs()
 {

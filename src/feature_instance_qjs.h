@@ -50,9 +50,9 @@ public:
 
     feature_value_t getFeatureJsvalue(ft_value_t ft_value);
 
-    void setEnvironmentName(const char* environment_name);
+    void setPackageName(char* package_name);
 
-    char* getEnvironmentName() const { return (char*)environment_name_; }
+    char* getPackageName() const;
 
     uv_loop_t* uvloop() { return &loop; }
 
@@ -110,7 +110,7 @@ private:
     feature_value_t vm_object_;
     WeakRef weak_self_;
     FtCallbackId curr_cid_ = 0;
-    const char * environment_name_ = nullptr;
+    char* package_name_ = nullptr;
     PromiseManager* promise_manager_ = nullptr;
     uv_loop_t loop;
 
