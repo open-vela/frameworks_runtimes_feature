@@ -58,7 +58,7 @@ void abort(CommonParam p);
   msg_sub_type = "Otasubmsg",
   cb_name = "onotastatechange"
 ]
-property on_data onstatechange;
+property on_data onstatechange writeonly;
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTANOTIFY",
@@ -66,7 +66,7 @@ property on_data onstatechange;
   msg_sub_type = "Otasubmsg",
   cb_name = "onotadownloadprocess"
 ]
-property on_data ondownloadprocess;
+property on_data ondownloadprocess writeonly;
 
 [
 
@@ -75,5 +75,5 @@ property on_data ondownloadprocess;
   msg_sub_type = "Otasubmsg",
   cb_name = "onotaapplyprocess"
 ]
-property on_data onapplyprocess;
+property on_data onapplyprocess writeonly;
 
