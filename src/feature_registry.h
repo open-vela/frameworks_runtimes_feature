@@ -59,7 +59,7 @@ public:
     bool registerFeature(std::vector<std::string>&features, const FeatureDescription* description);
 
     FeatureRegistryPair* findFeature(const char* name);
-    char* getFeaturePackageName() const { return FeaturePackageName_; }
+    const char* getFeaturePackageName() const { return package_name_.data(); }
     /**
      * @brief Get the Registered Features object
      * 
@@ -70,7 +70,7 @@ public:
 private:
     std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features
     bool manifest_check_enable = true;
-    char* FeaturePackageName_ = nullptr;
+    std::string package_name_;
 };// class FeatureRegistry
 
 }

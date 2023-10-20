@@ -103,16 +103,16 @@ public:
      */
     void clearAllInstances();
 
-    void setPackageName(char* package_name);
+    void setPackageName(const char* package_name);
 
-    char* getPackageName() const;
+    const char* getPackageName() const;
 
     void setEnvironmentName(const char* environment_name);
 
-    char* getEnvironmentName() const { return (char*)environment_name_; }
+    const char* getEnvironmentName() const { return environment_name_; }
 
 private:
-    char* package_name_ = nullptr;
+    const char* package_name_ = nullptr;
     const char* environment_name_ = nullptr;
 };
 

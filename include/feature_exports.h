@@ -85,7 +85,7 @@ void FeatureSetProtoData(FeatureProtoHandle handle, void* data);
  * @param handle
  * @return char*
  */
-char* FeatureGetPackageName(FeatureProtoHandle handle);
+const char* FeatureGetPackageName(FeatureProtoHandle handle);
 
 /**
  * @brief get the native object pointer bind to feature instance
@@ -126,7 +126,7 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
  * @param handle
  * @return char*
  */
-char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
+const char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
 
 /**
  * @brief get feature uvloop from FeatureInstanceHandle

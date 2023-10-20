@@ -159,13 +159,13 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
     return (JSValue)instance->getVmObject();
 }
 
-char* FeatureGetPackageName(FeatureProtoHandle handle)
+const char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->getPackageName();
 }
 
-char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
+const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->getEnvironmentName();
