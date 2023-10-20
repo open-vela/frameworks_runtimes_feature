@@ -78,6 +78,7 @@ static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst val) {
 <% prop_name = '_%s_%s_property' % (pname, m['name']) %>
 static JSMetaProperty ${prop_name} = {
   "${m['name']}",
+  ${pname}_member_index_${m['name']},
   JM_PROPERTY,
   ${('readable' in m and m['readable']) and '1' or '0'},
   ${('writeable' in m and m['writeable']) and '1' or '0'},
@@ -159,6 +160,7 @@ failed_args${p[1]}:
 
 static JSMetaMethod ${func_name} = {
   "${m['identifier']}",
+  ${pname}_member_index_${m['identifier']},
   JM_METHOD,
   ${call_name}
 };
@@ -168,12 +170,13 @@ if func_name:
 %>
 </%def>
 
-<%def name='gen_const_content(m)'>
+<%def name='gen_const_content(m, idx)'>
 <%
   const_value = utils.getConstValue(m)
   value_type = utils.getConstValueType(m)
 %>
   "${m['name']}",
+  ${idx},
   JM_CONST,
 %if value_type == 'int':
   JV_INT,
@@ -196,7 +199,7 @@ if func_name:
   member_defines.append(const_name)
 %>
 static JSMetaConst ${const_name} = {
-${gen_const_content(m)}
+${gen_const_content(m, "%s_member_index_%s" % (pname, m['name']))}
 };
 </%def>
 
@@ -208,11 +211,12 @@ ${gen_const_content(m)}
 %>
 static JSMetaConst ${enum_member_name}[] = {
 %for mb in m['members']:
-{${gen_const_content(mb)}},
+{${gen_const_content(mb, 0)}},
 %endfor
 };
 static JSMetaEnum ${enum_name} = {
   "${m['name']}",
+  ${pname}_member_index_${m['name']},
   JM_ENUM,
   0,
   sizeof(${enum_member_name}) / sizeof(${enum_member_name}[0]),
@@ -236,6 +240,7 @@ static JSMetaEnum ${enum_name} = {
     native_type = 'NativeHandle'
 
   finalizer = utils.findTypeMeta('interface', inf['name'], 'finalizer', True)
+  native_class = None
 
   if meta:
     if 'tag' in meta:
@@ -243,6 +248,8 @@ static JSMetaEnum ${enum_name} = {
     if 'create' in meta:
       creator = meta['create']
     need_parent = utils.findTypeMeta('interface', inf['name'], 'need_parent', True) == 'true'
+    if 'native_class' in meta:
+      native_class = meta['native_class']
 
   members = inf['members']
 
@@ -275,6 +282,13 @@ static void _${name}_finalizer(NativeHandle self) {
 }
 %endif
 
+enum {
+%for m in members:
+  ${name}_member_index_${'name' in m and m['name'] or m['identifier'] },
+%endfor
+  ${name}_member_max,
+};
+
 %for m in members:
 %if m['type'] == 'property':
 ${gen_property(name, native_type, m, inf_members)}
@@ -295,17 +309,26 @@ static JSMetaMember* ${class_name}_members[] = {
 %endfor
 };
 
+%if native_class:
+extern const lv_obj_class_t ${native_class};
+%endif
+
 ${not is_mod and 'static ' or ''}JSMetaInterface ${class_name} = {
   "${inf_name}",
+  ${pname}_member_index_${inf_name},
   ${is_mod and 'JM_MODULE' or 'JM_INTERFACE'},
   0,
   ${len(inf_members)},
   "${tag}",
   ${extends},
+  ${native_class and '&' + native_class or 'NULL'},
   ${not creator and 'NULL' or '_%s_create' % name},
   ${not finalizer and 'NULL' or '_%s_finalizer' % name},
   ${class_name}_members
 };
 </%def>
 
+enum {
+  _member_index_${module_name}
+};
 ${gen_interface('', doc, [], True)}

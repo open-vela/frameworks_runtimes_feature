@@ -48,7 +48,7 @@ run_lvgl_binding_gen() {
   json_file=${f%.*}.json
   file_name=${f##*/}
   file_name=${file_name%.*}
-  cmd="$PYTHON $CUR_DIR/ui_render.py -t $CUR_DIR/lvgl-binding/qjs_lvgl_temp.mt -c $CUR_DIR/lvgl-binding/qjs-lvgl-config.json -i $json_file -o $CUR_DIR/.out/${file_name}_ui.cpp"
+  cmd="$PYTHON $CUR_DIR/ui_render.py -t $CUR_DIR/lvgl-binding/qjs_lvgl_temp.mt -c $CUR_DIR/lvgl-binding/qjs-lvgl-config.json -i $json_file -o $CUR_DIR/.out/${file_name}_ui.c"
   echo "GEN: $cmd"
   $cmd
   echo "=========================================="

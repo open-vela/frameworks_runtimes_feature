@@ -46,7 +46,7 @@ enum Align {
   OUT_RIGHT_MID,
 };
 
-[from_native="from_widget_event", to_native="to_widget_event"]
+[native_type="lv_event_t*"]
 interface WidgetEvent {
   [get="lv_event_get_code"]
   property int code readonly;
@@ -56,29 +56,11 @@ interface WidgetEvent {
 
   [get="lv_event_get_current_target"]
   property Widget current_target readonly;
-
-  [get="lv_event_get_param"]
-  property Widget paramWidget readonly;
-
-  [get="lv_event_get_param"]
-  property string paramString readonly;
-
-  [get="lv_event_get_param"]
-  property int paramInt readonly;
-
-  [get="lv_event_get_user_data"]
-  property Widget userWidget readonly;
-
-  [get="lv_event_get_user_data"]
-  property int userInt readonly;
-
-  [get="lv_event_get_user_data"]
-  property string userString readonly;
 };
 
 callback event_cb(WidgetEvent evt);
 
-[from_native="from_widget", to_native="to_widget", native_type="lv_obj_t*", finalizer="finalize_widget", need_parent=true]
+[from_native="from_widget", to_native="to_widget", native_type="lv_obj_t*", finalizer="finalize_widget", need_parent=true, native_class="lv_obj_class"]
 interface Widget {
   [set="lv_obj_set_id", get="lv_obj_get_id"]
   property string id readonly;
@@ -105,6 +87,9 @@ interface Widget {
   void setSize(int width, int height);
   [func="lv_obj_set_layout"]
   void setLayout(int layout);
+
+  [func="lv_obj_get_child"]
+  Widget getChild(int id);
 }
 
 const LV_LABEL_LONG_WRAP = 0;
@@ -113,7 +98,7 @@ const LV_LABEL_LONG_SCROLL = 2;
 const LV_LABEL_LONG_SCROLL_CIRCULAR = 3;
 const LV_LABEL_LONG_CLIP = 4;
 
-[tag="label", create="lv_label_create"]
+[tag="label", create="lv_label_create", native_class="lv_label_class"]
 interface Label extends Widget {
   [set="lv_label_set_text", get="lv_label_get_text"]
   property string text;
@@ -123,12 +108,12 @@ interface Label extends Widget {
   property boolean recolor;
 }
 
-[tag="button", create="lv_btn_create"]
+[tag="button", create="lv_btn_create", native_class="lv_btn_class"]
 interface Button extends Widget {
   [type="event", source_gen="event-call", code="LV_EVENT_CLICKED", event_type="WidgetEvent"]
   property event_cb onclick writeonly;
 }
 
-boolean inflate(object param);
+boolean inflate(object parent, object param);
 
 Widget findWidget(string id);
