@@ -765,4 +765,46 @@ void FeatureManagerQjs::uninit()
     }
 }
 
+feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const char* name)
+{
+    auto featurePair = registry_->findFeature(name);
+    if (!featurePair || !featurePair->first->description || featurePair->second) {
+        FEATURE_LOG_WARN("can't find native feature '%s'!", name);
+        return FEATURE_VALUE_UNDEFINED;
+    }
+
+    auto js_proto = FT_VAL_GET_JS_VAL(featurePair->second->ft_proto);
+    return feature_dup_value(ctx, js_proto);
+}
+
+feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, feature_value_t proto)
+{
+    for (const auto& pair : registry_->getRegisteredFeatures()) {
+        auto prototype = pair.second.second;
+        if (!prototype)
+            continue;
+
+        auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
+        JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype->ft_ctx);
+        if (!feature_is_same_value(js_ctx, js_proto, proto))
+            continue;
+
+        // create feature instance for the required object
+        auto instance = std::make_unique<FeatureInstanceQjs>(prototype, nullptr);
+        // insert into instances array, update iid
+        int iid = prototype->addInstance(std::move(instance));
+        prototype->instances[iid]->setInstanceId(iid);
+        // create prototype class instance
+        auto description = pair.second.first;
+        auto js_instance = createJsInstance(prototype, feature_class_id, instance.get());
+        if (description->native_callbacks && description->native_callbacks->onRequired) {
+            FEATURE_LOG_DEBUG("invoke onRequired callback...");
+            description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());
+        }
+        return js_instance;
+    }
+
+    return FEATURE_VALUE_UNDEFINED;
+}
+
 }
