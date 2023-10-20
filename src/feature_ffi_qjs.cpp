@@ -32,8 +32,7 @@ namespace ferry {
 
 extern thread_local feature_classid_t interface_class_id; // prototype class id
 extern FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description);
-extern feature_value_t createFeatureObject(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance);
-extern bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object);
+extern feature_value_t createJsInstance(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance);
 
 namespace FeatureFFIQjs {
 
@@ -483,9 +482,9 @@ namespace FeatureFFIQjs {
                 const FeatureDescription* interfaceDesc = interfaceType->desc;
                 FEATURE_CHECK_NE(interfaceDesc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
-                auto interfaceInstancePtr = static_cast<FeatureInstanceQjs*>(ptr);
+                auto interface_ptr = static_cast<FeatureInstanceQjs*>(ptr);
                 // save interface prototype in parent instance
-                auto interfaceInstance = std::unique_ptr<FeatureInstance>(interfaceInstancePtr);
+                auto interfaceInstance = std::unique_ptr<FeatureInstance>(interface_ptr);
                 const char* name = interfaceDesc->name;
                 FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
                 if (!interfacePrototype) {
@@ -497,15 +496,13 @@ namespace FeatureFFIQjs {
                     ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
                 }
                 // setup prototype
-                interfaceInstancePtr->setPrototype(interfacePrototype);
-
-                //
+                interface_ptr->setPrototype(interfacePrototype);
                 int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
                 interfacePrototype->instances[iid]->setInstanceId(iid);
                 // create prototype class instance
-                value = createFeatureObject(interfacePrototype, interface_class_id, interfaceInstancePtr);
+                value = createJsInstance(interfacePrototype, interface_class_id, interface_ptr);
                 // setup featureInstance WeakRef, refers to feature_object
-                WeakRefInit(ctx, value);
+                interface_ptr->initWeakRef(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

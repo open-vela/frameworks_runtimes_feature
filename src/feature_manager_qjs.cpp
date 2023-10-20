@@ -114,26 +114,26 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     feature_mark_value(rt, js_proto, mark_func);
 }
 
-static bool createJsInstanceClass(context_ref ctx, feature_classid_t& class_id, feature_classdef_t& class_def)
+static bool createJsInstanceClass(ft_context_ref ft_ctx, feature_classid_t& class_id, feature_classdef_t& class_def)
 {
     // FEATURE_CHECK_EQ(featurePrototype->class_id, 0);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
+    FEATURE_CHECK_NE(js_ctx, nullptr);
     JS_NewClassID(&class_id);
     FEATURE_CHECK_NE(class_id, 0); // it must not 0 now
     // create native feature prototype class defination
-    JS_NewClass(feature_get_runtime(static_cast<feature_context_ref>(ctx)), class_id, &class_def);
+    JS_NewClass(feature_get_runtime(static_cast<feature_context_ref>(js_ctx)), class_id, &class_def);
     return true;
 }
 
 static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
 {
     FEATURE_CHECK_NE(description, nullptr);
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    FEATURE_CHECK_NE(js_ctx, nullptr);
     FEATURE_LOG_DEBUG("create feature FeaturePrototype for description: %s.", description->name);
     // fill the class_def structure
     feature_class_def = { .class_name = "FeatureInstanceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
-    if (!createJsInstanceClass(js_ctx, feature_class_id, feature_class_def)) {
-        FEATURE_LOG_ERROR("create js Instance class for feature %s.", description->name);
+    if (!createJsInstanceClass(ft_ctx, feature_class_id, feature_class_def)) {
+        FEATURE_LOG_ERROR("create js prototype class for feature %s.", description->name);
         return nullptr;
     }
     return new FeaturePrototype(ft_ctx, description);
@@ -142,13 +142,11 @@ static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, const Fea
 FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
 {
     FEATURE_CHECK_NE(description, nullptr);
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    FEATURE_CHECK_NE(js_ctx, nullptr);
     FEATURE_LOG_DEBUG("create interface FeaturePrototype for description: %s.", description->name);
     // fill the class_def structure
     interface_class_def = { .class_name = "FeatureInterfaceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
-    if (!createJsInstanceClass(js_ctx, interface_class_id, interface_class_def)) {
-        FEATURE_LOG_ERROR("create js interface class for feature %s.", description->name);
+    if (!createJsInstanceClass(ft_ctx, interface_class_id, interface_class_def)) {
+        FEATURE_LOG_ERROR("create js prototype class for interface %s.", description->name);
         return nullptr;
     }
     return new FeaturePrototype(ft_ctx, description);
@@ -617,19 +615,6 @@ static int initialize_prototype(context_ref ctx, FeatureDescription* description
     return 0;
 }
 
-bool WeakRefInit(context_ref js_ctx, feature_value_t feature_object)
-{
-    // 根据cid获取FeaturePrototype
-    FeatureInstance* instance = getInstance(feature_object);
-    if (!instance || !instance->prototype()) {
-        FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
-        return false;
-    }
-
-    FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
-    return instance_qjs->initWeakRef(feature_object);
-}
-
 static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
 {
     // 获取feature_object的cid
@@ -663,76 +648,89 @@ FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
 {
 }
 
-feature_value_t createFeatureObject(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance)
+static feature_value_t createJsPrototype(FeaturePrototype* prototype)
 {
-    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
-    auto ctx = ft_context_get_data(featurePrototype->ft_ctx);
-    if (feature_is_undefined(*js_proto_ptr)) {
-        feature_value_t js_proto_obj = feature_object(static_cast<feature_context_ref>(ctx));
-        if (feature_is_exception(js_proto_obj)) {
-            feature_dump_error(static_cast<feature_context_ref>(ctx));
-            return FEATURE_VALUE_UNDEFINED;
-        }
-        // TODO: initialize js_proto using description
-        initialize_prototype(ctx, featurePrototype->description, featurePrototype, js_proto_obj);
-        *js_proto_ptr = js_proto_obj;
-        if (featurePrototype->description->native_callbacks && featurePrototype->description->native_callbacks->onCreate) {
-            FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            featurePrototype->description->native_callbacks->onCreate(ctx, featurePrototype);
-        }
+    auto ctx = ft_context_get_data(prototype->ft_ctx);
+    feature_value_t js_proto = feature_object(static_cast<feature_context_ref>(ctx));
+    if (feature_is_exception(js_proto)) {
+        feature_dump_error(static_cast<feature_context_ref>(ctx));
+        return FEATURE_VALUE_UNDEFINED;
     }
 
-    // create object with proto and set opaque refers to FeatureInstance
-    feature_value_t feature_object = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), *js_proto_ptr, class_id);
-    feature_set_opaque(feature_object, featureInstance);
-    return feature_object;
+    initialize_prototype(ctx, prototype->description, prototype, js_proto);
+    // TODO: initialize js_proto using description
+    if (prototype->description->native_callbacks && prototype->description->native_callbacks->onCreate) {
+        FEATURE_LOG_DEBUG("invoke onCreate callback...");
+        prototype->description->native_callbacks->onCreate(ctx, prototype);
+    }
+
+    return js_proto;
+}
+
+feature_value_t createJsInstance(FeaturePrototype* prototype, feature_classid_t class_id, FeatureInstanceQjs* instance)
+{
+    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
+    auto ctx = ft_context_get_data(prototype->ft_ctx);
+    // ensure js prototype is created
+    if (feature_is_undefined(*js_proto_ptr)) {
+        feature_value_t js_proto = createJsPrototype(prototype);
+        if (feature_is_exception(js_proto)) {
+            return FEATURE_VALUE_UNDEFINED;
+        }
+        *js_proto_ptr = js_proto;
+    }
+
+    // create instance with prototype and set opaque refers to FeatureInstance
+    feature_value_t js_instance = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), *js_proto_ptr, class_id);
+    feature_set_opaque(js_instance, instance);
+    return js_instance;
 }
 
 feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value_t vm_object, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
-    auto featurePair = registry_->findFeature(name);
-    if (!featurePair || !featurePair->first->description) {
+    auto feature_pair = registry_->findFeature(name);
+    if (!feature_pair || !feature_pair->first->description) {
         FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
-    const FeatureDescription* description = featurePair->first;
+    const FeatureDescription* description = feature_pair->first;
 
     if (!ft_ctx_) {
         ft_ctx_ = CreateFeatureContextQjs(ctx);
     }
 
-    auto& featurePrototype = featurePair->second;
-    if (!featurePrototype) {
+    auto& prototype = feature_pair->second;
+    if (!prototype) {
         // create proto
-        featurePrototype = createFeaturePrototype(ft_ctx_, description);
-        if (!featurePrototype) {
+        prototype = createFeaturePrototype(ft_ctx_, description);
+        if (!prototype) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
         }
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(featurePrototype->ft_proto);
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-        featurePrototype->setPackageName(registry_->getFeaturePackageName());
-        featurePrototype->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+        prototype->setPackageName(registry_->getFeaturePackageName());
+        prototype->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
 
     // create feature instance for the required object
-    auto featureInstance = std::make_unique<FeatureInstanceQjs>(featurePrototype, nullptr);
+    auto instance = std::make_unique<FeatureInstanceQjs>(prototype, nullptr);
+    auto instance_ptr = instance.get();
     // save vm_object into instance
-    featureInstance->setVmObject(vm_object);
-    auto featureInstancePtr = featureInstance.get();
+    instance->setVmObject(vm_object);
     // insert into instances array, update iid
-    int iid = featurePrototype->addInstance(std::move(featureInstance));
-    featurePrototype->instances[iid]->setInstanceId(iid);
+    int iid = prototype->addInstance(std::move(instance));
+    prototype->instances[iid]->setInstanceId(iid);
     // create prototype class instance
-    auto feature_object = createFeatureObject(featurePrototype, feature_class_id, featureInstancePtr);
-    // setup featureInstance WeakRef, refers to feature_object
-    WeakRefInit(ctx, feature_object);
+    auto js_instance = createJsInstance(prototype, feature_class_id, instance_ptr);
+    // setup instance WeakRef, refers to js_instance
+    instance_ptr->initWeakRef(js_instance);
     if (description->native_callbacks && description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        description->native_callbacks->onRequired(ctx, featurePrototype->instances[iid].get());
+        description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());
     }
-    return feature_object;
+    return js_instance;
 }
 
 void FeatureManagerQjs::uninit()
