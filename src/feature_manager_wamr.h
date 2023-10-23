@@ -33,12 +33,12 @@ class FeatureManagerWamr;
 class FeatureRegistry;
 class FeatureUnit;
 
-typedef struct WarmAttachment {
+typedef struct WamrAttachment {
     FeatureManagerWamr* manager;
     NativeSymbol* symbol;
     const FeatureDescription* description;
     int index;
-} WarmAttachment;
+} WamrAttachment;
 
 class FeatureManagerWamr {
 public:
@@ -55,8 +55,9 @@ private:
 
     ft_context_ref ft_ctx_;
     FeatureRegistry* registry_;
+    std::vector<NativeSymbol*> nativesymbol_;
     std::map<wasm_obj_t, FeatureInstance*> feature_instance_map_;
-    std::map<NativeSymbol*, WarmAttachment> symbol_attachment_map_;
+    std::map<NativeSymbol*, WamrAttachment> symbol_attachment_map_;
 };
 
 }
