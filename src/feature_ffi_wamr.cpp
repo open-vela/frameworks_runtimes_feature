@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "feature_ffi_wamr.h"
+#include "feature_context_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "feature_instance_wamr.h"
@@ -261,6 +262,18 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 // feature_free_cstring(ctx, str);
                 break;
             }
+            case FT_ANY:
+            {
+                native_raw_get_arg(void *, param, value);
+                ft_value_t* f_val = (ft_value_t*)malloc(sizeof(ft_value_t));
+                JSValue *js_value = (JSValue *)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
+                qjs_val_t* q_val = (qjs_val_t*)f_val;
+                q_val->js_val = *js_value;
+                q_val->type = FT_TYPE_OBJECT;
+                memcpy((void*)ptr, (void*)f_val, sizeof(ft_value_t));
+                free(f_val);
+            }
+            break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return false;

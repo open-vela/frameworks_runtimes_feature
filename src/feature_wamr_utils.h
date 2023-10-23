@@ -45,13 +45,6 @@ typedef struct ts_value_t {
 
 } ts_value_t;
 
-typedef struct Person
-{
-    char* name;
-    char* gender;
-    int age;
-} Person;
-
 static wasm_value_type_t
 get_refTypeValue_from_ts_value(wasm_exec_env_t exec_env, ts_value_t ts_val)
 {

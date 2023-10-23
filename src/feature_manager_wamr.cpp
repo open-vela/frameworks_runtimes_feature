@@ -220,6 +220,62 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
     FeatureFreeValue(arg_value_input);
 }
 
+static inline void fill_struct_data(ObjectMapType &obj_type, uint64_t ptr, ts_value_t obj_arr[], uint32_t count)
+{
+    if (count <= 0) {
+        FEATURE_LOG_ERROR("need fill struct is null!");
+    }
+    ts_value_t obj_field;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        // fill it
+        auto member = obj_type.members[i];
+        void *member_ptr = (void *)((char *)ptr + member.offset);
+        FeatureType featureType = member.type;
+        TRY_GET_REAL_TYPE(featureType);
+        if (FT_IS_PRIMITIVE(featureType))
+        {
+            switch (FT_GET_VALUE(featureType))
+            {
+            case FT_BOOLEAN:
+            {
+                obj_field.of.i32 = *(int32_t *)member_ptr;
+                obj_field.type = TS_BOOLEAN;
+                obj_arr[i] = obj_field;
+            }
+            break;
+            case FT_INT:
+            case FT_INT8:
+            case FT_UINT8:
+            case FT_INT16:
+            case FT_UINT16:
+            case FT_INT32:
+            case FT_UINT32:
+            case FT_INT64:
+            case FT_UINT64:
+            case FT_FLOAT:
+            case FT_DOUBLE:
+            {
+                obj_field.of.f64 = *(int64_t *)member_ptr;
+                obj_field.type = TS_NUMBER;
+                obj_arr[i] = obj_field;
+            }
+            break;
+            case FT_CHAR:
+            {
+                char **title_ptr = (char **)member_ptr;
+                obj_field.of.ref = *title_ptr;
+                obj_field.type = TS_STRING;
+                obj_arr[i] = obj_field;
+            }
+            break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
     bool got_error = false;
@@ -451,8 +507,8 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                     {
                         const char *str = (char *)method_ret_value.of.foreign;
                         obj = create_wasm_string(exec_env, str);
-                    } 
-                    // if return type is array or struct type and is complex
+                    }
+                    /* if return type is complex, and then is array or struct type.*/
                     else if (FT_IS_COMPLEX(method.return_type))
                     {
                         ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
@@ -460,17 +516,12 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                         {
                         case COMPLEX_STRUCT_MAP:
                         {
-                            Person *per = (Person *)method_ret_value.of.foreign;
-                            uint32_t member_count = sizeof(Person) / sizeof(per->name);
-                            ts_value_t obj_field1, obj_field2, obj_field3;
-                            obj_field1.of.ref = per->name;
-                            obj_field1.type = TS_STRING;
-                            obj_field2.of.ref = per->gender;
-                            obj_field2.type = TS_STRING;
-                            obj_field3.of.f64 = (double)per->age;
-                            obj_field3.type = TS_NUMBER;
-                            ts_value_t obj_arr[member_count] = { obj_field1, obj_field2, obj_field3 };
-                            /* call create_wasm_class_struct from feature_wamr_utils.h */
+                            ObjectMapType &objMapType = *(ObjectMapType *)complexType;
+                            auto member_count = countMember(objMapType.members);
+                            ts_value_t obj_arr[member_count];
+                            /* call fill_struct_data api to fill data in obj array as above */
+                            fill_struct_data(objMapType, method_ret_value.of.foreign, obj_arr, member_count);
+                            /* call create_wasm_class_struct api from feature_wamr_utils.h */
                             obj = create_wasm_class_struct(exec_env, obj_arr, member_count);
                         }
                         break;
@@ -512,9 +563,9 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 
     freeTypeDeclaration(ffi_ret);
     // ffi_ret_value will cause "segmentation fault " when reture string to ts
-    // if (ffi_ret_value) {
-    //     FeatureFreeValue(ffi_ret_value);
-    // }
+    if (ffi_ret_value) {
+        FeatureFreeValue(ffi_ret_value);
+    }
     delete[] ffi_arg_values;
     delete[] ffi_params;
     if (rest_params) {
@@ -584,7 +635,7 @@ bool FeatureManagerWamr::init()
         auto proto = pair.second.second;
         FEATURE_CHECK_NE(description, nullptr);
 
-        if (strcmp(name.data(), "ATest") != 0 && strcmp(name.data(), "Simple") != 0) {
+        if (strcmp(name.data(), "ATest") != 0 && strcmp(name.data(), "Simple") != 0 && strcmp(name.data(), "Struct") != 0) {
             FEATURE_LOG_WARN("Feature '%s' is not for wamr!", name.data());
             continue;
         }
