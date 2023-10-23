@@ -91,7 +91,7 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
     char *p_src = (char *)wasm_array_obj_first_elem_addr(arr_ref);
 
     FEATURE_LOG_INFO("class name: %s", p_src);
-    WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
+    WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
 
     manager->require(exec_env, (wasm_obj_t)thiz_ptr, p_src);
@@ -105,7 +105,7 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
     uint64_t *tmp_args = args;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     wasm_val_t method_ret_value;
-    WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
+    WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
@@ -179,7 +179,7 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
 {
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     wasm_val_t method_ret_value;
-    WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
+    WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
@@ -291,7 +291,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     wasm_array_obj_t arr_ref;
     feature_value_t **js_value = NULL;
 
-    WarmAttachment* attachment = (WarmAttachment*)wasm_runtime_get_function_attachment(exec_env);
+    WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(instance->prototype()->ft_ctx);
@@ -678,6 +678,13 @@ void FeatureManagerWamr::release()
     delete registry_;
     registry_ = nullptr;
 
+    /* delete nativesymbol */
+    if(!nativesymbol_.empty()){
+      for(int i = 0; i < nativesymbol_.size(); i++){
+        delete nativesymbol_[i];
+      }
+    }
+
     if (ft_ctx_) {
         ReleaseFeatureContextQjs(ft_ctx_);
         ft_ctx_ = nullptr;
@@ -748,7 +755,7 @@ bool FeatureManagerWamr::makeAttachment(NativeSymbol* symbol, const FeatureDescr
     if (symbol->attachment)
         return false;
 
-    WarmAttachment attachment = { this, symbol, description, index};
+    WamrAttachment attachment = { this, symbol, description, index};
     symbol_attachment_map_[symbol] = attachment;
     symbol->attachment = &(symbol_attachment_map_[symbol]);
     return true;
@@ -757,7 +764,8 @@ bool FeatureManagerWamr::makeAttachment(NativeSymbol* symbol, const FeatureDescr
 int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 {
     // 注册class_initNative函数
-    NativeSymbol* init_symbol = new NativeSymbol();
+    auto init_symbol = new NativeSymbol();
+    nativesymbol_.push_back(init_symbol);
     init_symbol->func_ptr = (void*)init_native;
     char* name = new char[128];
     strcpy(name, description->name);
@@ -785,7 +793,8 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             case MEMBER_METHOD: {
                 // register different type
                 MemberMethod* method = &member.method;
-                NativeSymbol* native_symbol = new NativeSymbol();
+                auto native_symbol = new NativeSymbol();
+                nativesymbol_.push_back(native_symbol);
                 native_symbol->func_ptr = (void*)method_call;
                 char* name1 = new char[128];
                 strcpy(name1, description->name);
@@ -825,7 +834,8 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 // register accessor_get and accessor_set
                 MemberAccessor *accessor = &member.accessor;
                 if (accessor->getter.callback) {
-                    NativeSymbol *native_symbol = new NativeSymbol();
+                    auto native_symbol = new NativeSymbol();
+                    nativesymbol_.push_back(native_symbol);
                     native_symbol->func_ptr = (void *)accessor_get;
                     char *buf = new char[128];
                     strcpy(buf, description->name);
@@ -849,7 +859,8 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     }
                 }
                 if (accessor->setter.callback) {
-                    NativeSymbol *native_symbol = new NativeSymbol();
+                    auto native_symbol = new NativeSymbol();
+                    nativesymbol_.push_back(native_symbol);
                     native_symbol->func_ptr = (void *)accessor_set;
                     char *buf = new char[128];
                     strcpy(buf, description->name);
