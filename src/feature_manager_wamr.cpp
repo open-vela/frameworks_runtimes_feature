@@ -279,17 +279,14 @@ static inline void fill_struct_data(ObjectMapType &obj_type, uint64_t ptr, ts_va
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
     bool got_error = false;
-    wasm_val_t method_ret_value;
-    feature_value_t* promise_ret_value;
-
-    uint64_t *tmp_args = args;
+    feature_value_t* ret_promise;
+    wasm_val_t wasm_ret_value;
+    uint64_t *wasm_ret_ptr = args;
     native_raw_get_arg(void*, thiz_ptr, args);
-    size_t argc = 0;
 
+    // wasm array values for rest parameters
     wasm_value_t wasm_array_data = { 0 }, wasm_array_len = { 0 };
-    wasm_struct_obj_t arr_struct_ref;
-    wasm_array_obj_t arr_ref;
-    feature_value_t **js_value = NULL;
+    wasm_array_obj_t wasm_arr_ref;
 
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
@@ -298,68 +295,80 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto& method = member->method;
-    auto currParam = method.parameters;
+    auto method_params = method.parameters;
     FtPromiseId pid = -1;
-    feature_value_t promise_obj = FEATURE_VALUE_UNDEFINED;
+
     // count size
     bool has_rest_param = false;
-    int optional_count = 0;
-    int method_param_count = getParamCount(const_cast<FeatureType*>(currParam), &has_rest_param, &optional_count);
-    argc = method_param_count;
-    // optional and rest parameters must not set together.
-    FEATURE_CHECK_NE(has_rest_param && optional_count, true);
-    int32_t variadic_count = 0;
-    // check argument count match.
-    // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", method_param_count, argc);
-    // beacuse we support rest parameters, so argc is greater or equal to method_param_count.
-    if (has_rest_param) {
-        FEATURE_CHECK_GE(argc, method_param_count);
-    } else if (optional_count) {
-        // for optional parameters, argc + optional must grater or equal to method_param_count
-        FEATURE_CHECK_GE(argc + optional_count, method_param_count);
-    } else {
-        // for method which do not have rest or optional parameters, argc equals to method_param_count.
-        FEATURE_CHECK_EQ(argc, method_param_count);
-    }
-    // exact param from feature_value_t, finally call method
-    //int paramTotalIdx = 0;
-    // prepare and get params
-    ffi_type** ffi_params = new ffi_type*[argc + optional_count + 5]; // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
-    ffi_type* ffi_ret = nullptr;
-    memset(ffi_params, 0, sizeof(ffi_type*) * (argc + optional_count + 5));
+    int optional_argc = 0;
+    size_t fixed_argc = getParamCount(const_cast<FeatureType*>(method_params), &has_rest_param, &optional_argc);
+    size_t argc = fixed_argc;
 
-    void** ffi_arg_values = new void*[argc + optional_count + 4]; // FeaturInstance, data, maybe return promise, maybe variadic count
-    memset(ffi_arg_values, 0, sizeof(void*) * (argc + optional_count + 4));
+    // variadic parameters type
+    ffi_type vari_arg_type;
+    ffi_type* vari_arg_elem_types[3];
+    FtVariParams vari_params;
+    memset(&vari_params, 0, sizeof(vari_params));
+
+    // optional and rest parameters must not set together.
+    FEATURE_CHECK_NE(has_rest_param && optional_argc, true);
+    int32_t vari_argc = 0;
+    if (has_rest_param) {
+        wasm_struct_obj_t arr_struct_ref;
+        uint64_t * vari_argv = args + fixed_argc;
+        native_raw_get_arg(wasm_obj_t, obj_ref, vari_argv);
+        assert(wasm_obj_is_struct_obj(obj_ref));
+        arr_struct_ref = (wasm_struct_obj_t)obj_ref;
+        wasm_struct_obj_get_field(arr_struct_ref, 0, false, &wasm_array_data);
+        wasm_struct_obj_get_field(arr_struct_ref, 1, false, &wasm_array_len);
+        wasm_arr_ref = (wasm_array_obj_t)(wasm_array_data.gc_obj);
+        vari_argc = wasm_array_len.i32;
+        argc += vari_argc;
+        FEATURE_CHECK_GT(argc, fixed_argc);
+        vari_params.vari_count = vari_argc;
+    } else if (optional_argc > 0) {
+        // for optional parameters, argc + optional must grater or equal to fixed_argc
+        FEATURE_CHECK_GE(argc + optional_argc, fixed_argc);
+    } else {
+        // for method which do not have rest or optional parameters, argc equals to fixed_argc.
+        FEATURE_CHECK_EQ(argc, fixed_argc);
+    }
+
+    // prepare and get args
+    int32_t packed_argc = has_rest_param ? fixed_argc + 1 : fixed_argc;
+    bool is_promise = FT_IS_PROMISE(method.return_type);
+    int extra_argc = is_promise ? 3 : 2;
+    ffi_type** ffi_arg_types = new ffi_type*[extra_argc + packed_argc + optional_argc + 1]; // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
+    memset(ffi_arg_types, 0, sizeof(ffi_type*) * (extra_argc + packed_argc + optional_argc + 1));
+    void** ffi_arg_values = new void*[extra_argc + packed_argc + optional_argc]; // FeaturInstance, data, maybe return promise, maybe variadic count
+    memset(ffi_arg_values, 0, sizeof(void*) * (extra_argc + packed_argc + optional_argc));
+    ffi_type* ffi_ret_type = nullptr;
     void* ffi_ret_value = nullptr;
 
-    feature_value_t** rest_params = nullptr;
-
     // prepare first two param
-    ffi_params[0] = &ffi_type_pointer; // FeatureContext
+    ffi_arg_types[0] = &ffi_type_pointer; // FeatureContext
     ffi_arg_values[0] = &instance;
-    ffi_params[1] = &ffi_type_sint64; // data
+    ffi_arg_types[1] = &ffi_type_sint64; // data
     ffi_arg_values[1] = (void*)&method.data;
-    bool isPromise = FT_IS_PROMISE(method.return_type);
-    if (isPromise) {
-        ffi_params[2] = &ffi_type_sint32;
+    if (is_promise) {
+        ffi_arg_types[2] = &ffi_type_sint32;
     }
-    int external_count = isPromise ? 3 : 2;
 
     do {
-        for (int i = 0; i < method_param_count && i < argc; i++) {
+        for (int i = 0; i < fixed_argc; i++) {
             //feature_value_t currArg = argv[i];
-            auto param = currParam[i];
+            auto param = method_params[i];
             if (FT_IS_PROMISE(param)) {
                 FEATURE_LOG_ERROR("do not support promise as input param !");
                 got_error = true;
                 break;
             }
-            if (!createTypeDeclaration(param, ffi_params[external_count + i])) {
+            if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
                 FEATURE_LOG_ERROR("prepareType for type failed !");
                 got_error = true;
                 break;
             }
-            if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_values[external_count + i], exec_env, args++)) {
+            if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_values[extra_argc + i], exec_env, args++)) {
                 FEATURE_LOG_ERROR("convert argument %d failed !", i);
                 got_error = true;
                 break;
@@ -370,70 +379,51 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 
         // process rest parameters
         if (has_rest_param) {
-            native_raw_get_arg(wasm_obj_t, obj_ref, args);
-            assert(wasm_obj_is_struct_obj(obj_ref));
-            arr_struct_ref = (wasm_struct_obj_t)obj_ref;
-            wasm_struct_obj_get_field(arr_struct_ref, 0, false, &wasm_array_data);
-            wasm_struct_obj_get_field(arr_struct_ref, 1, false, &wasm_array_len);
-
-            arr_ref = (wasm_array_obj_t)(wasm_array_data.gc_obj);
-            variadic_count = wasm_array_len.i32;
-
-            if(variadic_count > 0) {
-                ffi_type** ffi_params_new = new ffi_type*[argc + optional_count + 5 + variadic_count]; // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
-                //ffi_type* ffi_ret = nullptr;
-                memset(ffi_params_new, 0, sizeof(ffi_type*) * (argc + optional_count + 5 + variadic_count));
-                memcpy(ffi_params_new, ffi_params, sizeof(ffi_type*) * (argc + optional_count + 5));
-                delete[] ffi_params;
-                ffi_params = ffi_params_new;
-
-                void** ffi_arg_values_new = new void*[argc + optional_count + 4 + variadic_count]; // FeaturInstance, data, maybe return promise, maybe variadic count
-                memset(ffi_arg_values_new, 0, sizeof(void*) * (argc + optional_count + 4  + variadic_count));
-                memcpy(ffi_arg_values_new, ffi_arg_values, sizeof(void*) * (argc + optional_count + 4 ));
-                delete[] ffi_arg_values;
-                ffi_arg_values = ffi_arg_values_new;
-                //void* ffi_ret_value = nullptr;
-
-                //variadic_count = argc - method_param_count;
-                //rest_params = new feature_value_t*[variadic_count];
-                ffi_params[method_param_count + external_count] = &ffi_type_sint32;
-                ffi_arg_values[method_param_count + external_count] = &variadic_count;
-                js_value = new feature_value_t*[variadic_count];
-                for (int i = 0; i < variadic_count; i++) {
-                    void *addr = wasm_array_obj_elem_addr(arr_ref, i);
-                    wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
-                    feature_value_t *tmp = (feature_value_t *)wasm_anyref_obj_get_value(anyref);
-                    //just passthrough guest param pointers
-                    ffi_params[i + external_count + 1 + method_param_count] = &ffi_type_pointer;
-                    js_value[i] = tmp;
-                    ffi_arg_values[i + method_param_count + external_count + 1] = &js_value[i];
-                }
+            // prepare vari_params type
+            vari_arg_type.size = 0;
+            vari_arg_type.type = FFI_TYPE_STRUCT;
+            vari_arg_type.elements = vari_arg_elem_types;
+            vari_arg_elem_types[0] = &ffi_type_sint32;
+            vari_arg_elem_types[1] = &ffi_type_pointer;
+            vari_arg_elem_types[2] = nullptr;
+            // prepare vari_params struct
+            vari_params.vari_args = new ft_value_t[vari_params.vari_count];
+            // pass param
+            ffi_arg_types[fixed_argc + extra_argc] = &vari_arg_type;
+            ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
+            for (int i = 0; i + fixed_argc < argc; i++) {
+                void *addr = wasm_array_obj_elem_addr(wasm_arr_ref, i);
+                wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
+                feature_value_t *js_any_ptr = (feature_value_t *)wasm_anyref_obj_get_value(anyref);	
+                // just passthrough guest param pointers
+                auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
+                *js_val_ptr = *js_any_ptr;
             }
-        } else if (optional_count) {
-            for (int i = argc; i < method_param_count; i++) {
-                auto param = currParam[i];
+        } else if (optional_argc > 0) {
+            for (int i = argc; i < fixed_argc; i++) {
+                auto param = method_params[i];
                 FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
-                OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param);
-                FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
-                if (!createTypeDeclaration(param, ffi_params[external_count + i])) {
+                OptionalType* optional_type = (OptionalType*)FT_GET_COMPLEX(param);
+                FEATURE_CHECK_EQ(optional_type->header.type, COMPLEX_OPTIONAL);
+                if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
                     FEATURE_LOG_ERROR("prepareType for type failed !");
                     got_error = true;
                     break;
                 }
-                ffi_arg_values[external_count + i] = &optionalType->fval;
+                ffi_arg_values[extra_argc + i] = &optional_type->fval;
             }
         }
-        // if (got_error)
-        //     break;
+        if (got_error)
+            break;
 
         // prepeare return type
-        if (!createTypeDeclaration(method.return_type, ffi_ret)) {
+        if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
             FEATURE_LOG_ERROR("prepareType for complex type failed !");
             got_error = true;
             break;
         }
         // create return value pointer inneed.
-        if (!isPromise && method.return_type != FT_VOID) {
+        if (!is_promise && method.return_type != FT_VOID) {
             if (!createHostValue(method.return_type, ffi_ret_value, true)) {
                 FEATURE_LOG_ERROR("create return value failed !");
                 got_error = true;
@@ -445,10 +435,10 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         ffi_status ret = FFI_OK;
         if (has_rest_param) {
             // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
-            ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, method_param_count + external_count, argc + variadic_count + external_count + 1, ffi_ret, ffi_params);
+            ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
         } else {
             // FEATURE_LOG_DEBUG("prepare for function...");
-            ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, method_param_count + external_count, ffi_ret, ffi_params);
+            ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
         }
         if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
@@ -459,75 +449,75 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         // special handle for promise
         feature_value_t tmp_p;
         //instance->prototype()->ctx =  dyntype_get_context()->js_ctx;
-        if (isPromise) {
-            ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
+        if (is_promise) {
+            ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
             // create promise
-            PromiseType* promiseType = (PromiseType*)complexType;
+            PromiseType* promise_type = (PromiseType*)complex_type;
             // create promise and add to instance
-            pid = ((FeatureInstanceWamr*)instance)->addPromise(promiseType->resolveTypes[0], promiseType->resolveTypes[1]);
+            pid = ((FeatureInstanceWamr*)instance)->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
             feature_value_t promise = ((FeatureInstanceWamr*)instance)->getPromise(pid);
             ((FeatureInstanceWamr*)instance)->addPromise_wamr(promise);
             // pass pid to native function
             ffi_arg_values[2] = &pid;
             // dup and return promise object.
-            //promise_ret_value = feature_dup_value(instance->prototype()->ctx, promiseData->promise);
+            //ret_promise = feature_dup_value(instance->prototype()->ctx, promiseData->promise);
             feature_value_t tmp_p = feature_dup_value(js_ctx, promise);
-            promise_ret_value = dynamic_dup_value(js_ctx, tmp_p);
+            ret_promise = dynamic_dup_value(js_ctx, tmp_p);
         }
 
         // invoke method
         ffi_call(&cif, method.func.callback, ffi_ret_value, ffi_arg_values);
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
-        if (!isPromise && method.return_type != FT_VOID) {
+        if (!is_promise && method.return_type != FT_VOID) {
             //process return value
-            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, method_ret_value)) {
+            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret_value)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(js_ctx, tmp_p);
-                // method_ret_value = FEATURE_EXCEPTION;
+                // wasm_ret_value = FEATURE_EXCEPTION;
                 // got_error = true;
             }
-            switch (method_ret_value.kind) {
+            switch (wasm_ret_value.kind) {
                 case WASM_I32:
                 {
-                    native_raw_return_type(double, tmp_args);
-                    native_raw_set_return(method_ret_value.of.i32);
+                    native_raw_return_type(double, wasm_ret_ptr);
+                    native_raw_set_return(wasm_ret_value.of.i32);
                 }
                 break;
                 case WASM_F64:
                 {
-                    native_raw_return_type(double, tmp_args);
-                    native_raw_set_return(method_ret_value.of.f64);
+                    native_raw_return_type(double, wasm_ret_ptr);
+                    native_raw_set_return(wasm_ret_value.of.f64);
                 }
                 break;
                 case WASM_ANYREF:
                 {
-                    native_raw_return_type(void *, tmp_args);
+                    native_raw_return_type(void *, wasm_ret_ptr);
                     wasm_struct_obj_t obj = nullptr;
                     if (FT_IS_PRIMITIVE(method.return_type))
                     {
-                        const char *str = (char *)method_ret_value.of.foreign;
+                        const char *str = (char *)wasm_ret_value.of.foreign;
                         obj = create_wasm_string(exec_env, str);
                     }
                     /* if return type is complex, and then is array or struct type.*/
                     else if (FT_IS_COMPLEX(method.return_type))
                     {
-                        ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
-                        switch (complexType->type)
+                        ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
+                        switch (complex_type->type)
                         {
                         case COMPLEX_STRUCT_MAP:
                         {
-                            ObjectMapType &objMapType = *(ObjectMapType *)complexType;
-                            auto member_count = countMember(objMapType.members);
+                            ObjectMapType &obj_map_type = *(ObjectMapType *)complex_type;
+                            auto member_count = countMember(obj_map_type.members);
                             ts_value_t obj_arr[member_count];
                             /* call fill_struct_data api to fill data in obj array as above */
-                            fill_struct_data(objMapType, method_ret_value.of.foreign, obj_arr, member_count);
+                            fill_struct_data(obj_map_type, wasm_ret_value.of.foreign, obj_arr, member_count);
                             /* call create_wasm_class_struct api from feature_wamr_utils.h */
                             obj = create_wasm_class_struct(exec_env, obj_arr, member_count);
                         }
                         break;
                         case COMPLEX_ARRAY:
                         {
-                            FtArray *array = (FtArray *)method_ret_value.of.foreign;
+                            FtArray *array = (FtArray *)wasm_ret_value.of.foreign;
                             uint32_t len = array->_size;
                             obj = create_wasm_array_with_string(exec_env, array->_element, len);
                         }
@@ -540,40 +530,37 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                 default:
                     break;
             }
-        } else if (isPromise) {
+        } else if (is_promise) {
             //把promise返回给ts层
-            native_raw_return_type(void*, tmp_args);
-            wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, promise_ret_value);
+            native_raw_return_type(void*, wasm_ret_ptr);
+            wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ret_promise);
             native_raw_set_return(p_obj);
             //feature_free_value(js_ctx, tmp_p);
         }
     } while (0);
 
     // free ffi call resources
-    for (int i = 0; i < method_param_count; i++) {
+    for (int i = 0; i < fixed_argc; i++) {
         // free type
-        if (ffi_params[i + external_count]) {
-            freeTypeDeclaration(ffi_params[i + external_count]);
+        if (ffi_arg_types[i + extra_argc]) {
+            freeTypeDeclaration(ffi_arg_types[i + extra_argc]);
         }
         // free value
-        if (ffi_arg_values[i + external_count]) {
-            FeatureFreeValue(ffi_arg_values[i + external_count]);
+        if (ffi_arg_values[i + extra_argc]) {
+            FeatureFreeValue(ffi_arg_values[i + extra_argc]);
         }
     }
 
-    freeTypeDeclaration(ffi_ret);
+    freeTypeDeclaration(ffi_ret_type);
     // ffi_ret_value will cause "segmentation fault " when reture string to ts
     if (ffi_ret_value) {
         FeatureFreeValue(ffi_ret_value);
     }
     delete[] ffi_arg_values;
-    delete[] ffi_params;
-    if (rest_params) {
-        delete[] rest_params;
+    delete[] ffi_arg_types;
+    if (vari_params.vari_args) {
+        delete[] vari_params.vari_args;
     }
-
-    if(js_value != NULL)
-        delete []js_value;
 
     // if error occurred, throw internal error
     // if (got_error) {
@@ -821,7 +808,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 if(retc!=0) {
                     param[strlen(param)] = retc;
                 }
-                FEATURE_LOG_INFO("register method, name: %s, param: %s", name1, param);
+                // FEATURE_LOG_INFO("register method, name: %s, param: %s", name1, param);
                 native_symbol->signature = param;
                 makeAttachment(native_symbol, description, i);
                 if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
@@ -850,7 +837,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     strcat(signature, ")");
                     if (type != 0)
                         signature[strlen(signature)] = type;
-                    FEATURE_LOG_INFO("register getter, name: %s, signature: %s", buf, signature);
+                    // FEATURE_LOG_INFO("register getter, name: %s, signature: %s", buf, signature);
                     native_symbol->signature = signature;
                     makeAttachment(native_symbol, description, i);
                     if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
@@ -875,7 +862,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     if (type != 0)
                         signature[strlen(signature)] = type;
                     strcat(signature, ")");
-                    FEATURE_LOG_INFO("register setter, name: %s, signature: %s", buf, signature);
+                    // FEATURE_LOG_INFO("register setter, name: %s, signature: %s", buf, signature);
                     native_symbol->signature = signature;
                     makeAttachment(native_symbol, description, i);
                     if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
