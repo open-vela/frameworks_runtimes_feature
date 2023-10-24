@@ -47,6 +47,7 @@ class Render:
     if 'out-dir' in configs:
       self.outdir = configs['out-dir']
     self.module = self.LoadJSON()
+    self.interface_extends_map = {}
 
   def LoadJSON(self):
     with open(self.json_file, 'r', encoding='UTF-8') as f:
@@ -93,6 +94,34 @@ class Render:
     if ('writeable' in ast_type) and ('const' not in ast_type):
       return True
     return False
+
+  def CacheInterfaceExtend(self, name, extend):
+    if name in self.interface_extends_map:
+      extend_list = self.interface_extends_map[name]
+    else:
+      extend_list = []
+      self.interface_extends_map[name] = extend_list
+    extend_list.append(extend)
+
+  def GetInterfaceExtends(self, name):
+    if not name in self.interface_extends_map:
+      return []
+    return self.interface_extends_map[name]
+
+  def GetInterfaceCtorInfo(self, ast_node):
+    ctor_info = {}
+    if isinstance(ast_node, dict) \
+        and ast_node['type'] == 'function' \
+        and 'meta' in ast_node \
+        and 'ctor' in ast_node['meta'] \
+        and 'target' in ast_node['meta'] \
+        and ast_node['meta']['ctor'] == 'true' \
+        and isinstance(ast_node['return_type'], dict) \
+        and 'referred_type' in ast_node['return_type'] \
+        and ast_node['return_type']['referred_type'] == 'interface':
+      ctor_info['target'] = ast_node['meta']['target']
+      ctor_info['interface'] = ast_node['return_type']['referred_name']
+    return ctor_info
 
 ### CPP Render
 class CPPRender(Render):
@@ -241,7 +270,6 @@ class CPPRender(Render):
     self.struct_name_set = set()
     self.interface_name_set = set()
     self.vtable_map = {}
-    self.interface_extends_map = {}
     self.interface_members_map = {}
     self.feature_type_set = set()
     self.array_malloc_func_set = set()
@@ -580,19 +608,6 @@ class CPPRender(Render):
       return True
     return False
 
-  def CacheInterfaceExtend(self, name, extend):
-    if name in self.interface_extends_map:
-      extend_list = self.interface_extends_map[name]
-    else:
-      extend_list = []
-      self.interface_extends_map[name] = extend_list
-    extend_list.append(extend)
-
-  def GetInterfaceExtends(self, name):
-    if not name in self.interface_extends_map:
-      return []
-    return self.interface_extends_map[name]
-
   def CacheInterfaceMember(self, name, member_info):
     if name in self.interface_members_map:
       member_list = self.interface_members_map[name]
@@ -686,21 +701,6 @@ class CPPRender(Render):
     final_size += len(self.vtable_map[interface_name])
     return final_size
 
-  def GetInterfaceCtorInfo(self, ast_node):
-    ctor_info = {}
-    if isinstance(ast_node, dict) \
-        and ast_node['type'] == 'function' \
-        and 'meta' in ast_node \
-        and 'ctor' in ast_node['meta'] \
-        and 'target' in ast_node['meta'] \
-        and ast_node['meta']['ctor'] == 'true' \
-        and isinstance(ast_node['return_type'], dict) \
-        and 'referred_type' in ast_node['return_type'] \
-        and ast_node['return_type']['referred_type'] == 'interface':
-      ctor_info['target'] = ast_node['meta']['target']
-      ctor_info['interface'] = ast_node['return_type']['referred_name']
-    return ctor_info
-
   def GetMemberInfo(self, member):
     member_info = {}
     if member['type'] == 'function' or member['type'] == 'use':
@@ -772,6 +772,7 @@ class TSRender(Render):
     self.d_ts_file = d_ts_file
     self.callback_map = {}
     self.func_ret_node_map = {}
+    self.interface_member_map = {}
     Render.__init__(self, json_file, configs)
 
   def Generate(self):
@@ -801,7 +802,7 @@ class TSRender(Render):
     if not (isinstance(ast_type, dict) and 'type' in ast_type):
       raise Exception('invalid complex type: {}'.format(ast_type))
 
-    print("wjf ast_type: {}".format(ast_type))
+    # print("ast_type: {}".format(ast_type))
     if 'element' in ast_type:
       ts_type = self.GenerateTsType(ast_type['element'])
       return ts_type + '[]'
@@ -812,7 +813,7 @@ class TSRender(Render):
         if referred_name not in self.callback_map:
           raise Exception('invalid callback type: {}'.format(referred_name))
         return self.callback_map[referred_name]
-      elif referred_type == 'struct':
+      elif referred_type == 'struct' or referred_type == 'interface':
         return ast_type['referred_name']
     elif ast_type['type'] == 'promise':
       return 'any'
@@ -844,7 +845,7 @@ class TSRender(Render):
     params = ''
     if 'params' in node:
       params = self.GenerateParamList(node["params"])
-    func_define = f"declare {identifier}({params}): {ret_type};"
+    func_define = f"{identifier}({params}): {ret_type}"
     return func_define
 
   def TryCacheCallback(self, ast_type):
@@ -891,6 +892,31 @@ class TSRender(Render):
       else:
         call_list += f"{call_value}"
     return call_list
+
+  def _CacheToListMap(self, list_map, list_key, value):
+    if list_key in list_map:
+      list = list_map[list_key]
+    else:
+      list = []
+      list_map[list_key] = list
+    list.append(value)
+
+  def CacheInterfaceMember(self, interface_name, method_def):
+    # print("cache Interface({}) member: {}".format(interface_name, method_def))
+    self._CacheToListMap(self.interface_member_map, interface_name, method_def)
+
+  def GetFinalInterfaceMembers(self, interface_name):
+    # print("get Interface({}) members".format(interface_name))
+    method_list = []
+    extends = self.GetInterfaceExtends(interface_name)
+    for extend in extends:
+      method_list.extend(self.GetFinalInterfaceMembers(extend))
+
+    if not interface_name in self.interface_member_map:
+      return method_list
+      # raise Exception('cannot find methods for interface: {}'.format(interface_name))
+    method_list.extend(self.interface_member_map[interface_name])
+    return method_list
 
 ### Usage and main entry point
 def Usage():
