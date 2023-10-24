@@ -3,13 +3,35 @@
   module = render.module
   module_name = render.GetModuleName()
 %>\
-<%def name="GenFunctionDefine(func_node)">\
+<%def name="GenInterfaceCtorFunction(func_node, ctor_info)">\
+<%
+  identifier = func_node['identifier']
+  func_def = render.GenerateFunctionDefine(func_node)
+  ctor_target = ctor_info['target']
+  ctor_interface = ctor_info['interface']
+%>\
+  ${func_def} {
+    let instance = this._${identifier}();
+    let ${ctor_target} = new ${ctor_interface}();
+    ${ctor_target}.instance = instance;
+    return ${ctor_target};
+  }
+  declare _${identifier}(): number;
+</%def>\
+<%def name="GenFunction(func_node)">\
 <%
   identifier = func_node['identifier']
   ret_type = func_node['return_type']
   render.CacheFuncReturnNode(identifier, ret_type)
+  # for interface constructor function
+  ctor_info = render.GetInterfaceCtorInfo(func_node)
 %>\
-  ${render.GenerateFunctionDefine(func_node)}
+%if ctor_info:
+  /****** for JIDL Interface constructor function '${identifier}' ******/
+${GenInterfaceCtorFunction(func_node, ctor_info)}
+%else:
+  declare ${render.GenerateFunctionDefine(func_node)};
+%endif
 </%def>\
 <%def name="CacheCallback(cb_node)">\
 <%
@@ -36,7 +58,114 @@ ${GenStructMember(member)}\
 }
 
 </%def>\
-<%def name="GenPropertyDefines(prop_node)">\
+<%def name="GenInterfaceParentMember(iname, member)">\
+<%
+  type = member['type'] # 0 for Method, 1 for property
+  if type == 0:
+    method_def = member['method_def']
+  elif type == 1:
+    prop_name = member['prop_name']
+    prop_type = member['prop_type']
+    has_getter = member['has_getter']
+    has_setter = member['has_setter']
+%>\
+%if type == 0:
+  ${method_def}
+%elif type == 1:
+%if has_getter:
+  get ${prop_name}(): ${prop_type} {
+    return this.get_${prop_name}_0();
+  }
+  declare get_${prop_name}_0(): ${prop_type};
+%endif
+%if has_setter:
+  set ${prop_name}(v: ${prop_type}) {
+    this.set_${prop_name}_0(v);
+  }
+  declare set_${prop_name}_0(v: ${prop_type}): void;
+%endif
+%endif
+
+</%def>\
+<%def name="GenInterfaceClassMember(parent_name, member_node)">\
+<%
+  member_type = member_node['type']
+  if member_type == 'function':
+    identifier = member_node['identifier']
+    method_def = render.GenerateFunctionDefine(member_node)
+    method_def = f"declare {method_def};"
+    member_info = {
+      'type': 0,
+      'method_def': method_def
+    }
+    render.CacheInterfaceMember(parent_name, member_info)
+  elif member_type == 'property':
+    prop_name = member_node["name"]
+    prop_type = render.GenerateTsType(member_node["value_type"])
+    has_getter = render.PropertyHasGetter(member_node)
+    has_setter = render.PropertyHasSetter(member_node)
+    member_info = {
+      'type': 1,
+      'prop_name': prop_name,
+      'prop_type': prop_type,
+      'has_getter': has_getter,
+      'has_setter': has_setter
+    }
+    render.CacheInterfaceMember(parent_name, member_info)
+%>\
+%if member_type == 'function':
+  ${method_def}
+%elif member_type == 'property':
+%if has_getter:
+  get ${prop_name}(): ${prop_type} {
+    return this.get_${prop_name}_0();
+  }
+  declare get_${prop_name}_0(): ${prop_type};
+%endif
+%if has_setter:
+  set ${prop_name}(v: ${prop_type}) {
+    this.set_${prop_name}_0(v);
+  }
+  declare set_${prop_name}_0(v: ${prop_type}): void;
+%endif
+%endif
+
+</%def>\
+<%def name="GenInterfaceClass(i_node)">\
+<%
+  i_name = i_node['name']
+  implements = f"implements _{i_name}"
+  parent_members = render.GetFinalInterfaceMembers(i_name)
+%>\
+export class ${i_name} {
+  public instance: number;
+  constructor() {
+    this.init_native(this.clazz_name);
+  }
+
+  // parent member defines
+%for p_member in parent_members:
+${GenInterfaceParentMember(i_name, p_member)}\
+%endfor
+  // self member defines
+%for member in i_node['members']:
+${GenInterfaceClassMember(i_name, member)}\
+%endfor
+
+  readonly clazz_name = "${i_name}";
+  declare init_native(i_name: string): void;
+}
+
+</%def>\
+<%def name="GenInterface(i_node)">\
+<%
+  iname = i_node['name']
+  for extend in i_node['extends']:
+    render.CacheInterfaceExtend(iname, extend)
+%>\
+${GenInterfaceClass(i_node)}\
+</%def>\
+<%def name="GenProperty(prop_node)">\
 <%
   prop_name = prop_node["name"]
   prop_type = prop_node["value_type"]
@@ -57,7 +186,6 @@ ${GenStructMember(member)}\
   declare set_${prop_name}_0(v: ${ts_type}): void;
 %endif
 </%def>\
-
 <%def name="GenUse(use_node)">\
 <%
   func_node = use_node['function']
@@ -88,6 +216,8 @@ ${GenStructMember(member)}\
 %for block in module['members']:
 %if block['type'] == 'struct':
 ${GenStructDefine(block)}\
+%elif block['type'] == 'interface':
+${GenInterface(block)}\
 %endif
 %endfor
 
@@ -97,13 +227,13 @@ export class ${module_name} {
   }
 %for block in module['members']:
 %if block['type'] == 'function':
-${GenFunctionDefine(block)}\
+${GenFunction(block)}\
 %elif block['type'] == 'use':
 ${GenUse(block)}\
 %elif block['type'] == 'callback':
 ${CacheCallback(block)}\
 %elif block['type'] == 'property':
-${GenPropertyDefines(block)}\
+${GenProperty(block)}\
 %endif
 %endfor
 
