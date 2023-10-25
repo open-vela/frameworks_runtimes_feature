@@ -1,4 +1,4 @@
-module Struct@1.0
+module struct_test@1.0
 
 // Declare a simple struct
 struct Chapter {

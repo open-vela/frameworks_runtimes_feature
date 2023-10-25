@@ -1,4 +1,4 @@
-let interface = require('Interface');
+let interface = require('interface_test');
 
 function show_array(arr, pre) {
   interface.print(pre)

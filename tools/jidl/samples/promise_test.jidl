@@ -1,4 +1,4 @@
-module Promise@1.0
+module promise_test@1.0
 
 promise<int, int> foo(int a, string b)
 use use_foo(int a) = foo(a, "hello")

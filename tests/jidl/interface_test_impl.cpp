@@ -1,6 +1,6 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-#include "interface_1_0.h"
+#include "interface_test.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -76,12 +76,12 @@ static FtString _Interface_cat_run(FeatureInterfaceHandle handle, AppendData dat
 }
 
 // vtalble functions implemented for dog
-void Interface_Animal_interface_dog_finalize(FeatureInterfaceHandle handle)
+void interface_test_Animal_interface_dog_finalize(FeatureInterfaceHandle handle)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
 }
 
-FtString Interface_Animal_interface_dog_get_name(FeatureInterfaceHandle handle, AppendData data)
+FtString interface_test_Animal_interface_dog_get_name(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -89,18 +89,18 @@ FtString Interface_Animal_interface_dog_get_name(FeatureInterfaceHandle handle, 
     return buf;
 }
 
-void Interface_Animal_interface_dog_set_name(FeatureInterfaceHandle handle, AppendData data, FtString name)
+void interface_test_Animal_interface_dog_set_name(FeatureInterfaceHandle handle, AppendData data, FtString name)
 {
     printf("%s::%s(), interface: %p, set dog name: %s\n", file_tag, __FUNCTION__, handle, name);
 }
 
-FtInt Interface_Animal_interface_dog_get_legCount(FeatureInterfaceHandle handle, AppendData data)
+FtInt interface_test_Animal_interface_dog_get_legCount(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p, dog leg count is: %d\n", file_tag, __FUNCTION__, handle, 4);
     return 4;
 }
 
-FtInt Interface_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
+FtInt interface_test_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
 {
     FtArrayHelper<const char*> string_array(&foods);
     printf("%s::%s(), interface: %p, dog eat food, array_size: %d\n", file_tag,  __FUNCTION__, handle, string_array.size());
@@ -112,7 +112,7 @@ FtInt Interface_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, Appe
     return string_array.size();
 }
 
-FtString Interface_Animal_interface_dog_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
+FtString interface_test_Animal_interface_dog_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s(), interface: %p, dog run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, handle, distance, destination);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -121,15 +121,15 @@ FtString Interface_Animal_interface_dog_run(FeatureInterfaceHandle handle, Appen
 }
 
 // vtable functions for interface constructor function 'createBird'
-void Interface_Bird_interface_pigeon_finalize(FeatureInterfaceHandle handle)
+void interface_test_Bird_interface_pigeon_finalize(FeatureInterfaceHandle handle)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
 }
 
-FtArray* Interface_Bird_interface_pigeon_fly(FeatureInterfaceHandle handle, AppendData data)
+FtArray* interface_test_Bird_interface_pigeon_fly(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p, %s\n", file_tag, __FUNCTION__, handle, "pigeon fly");
-    FtArray* strArray = Interface_malloc_string_array();
+    FtArray* strArray = interface_test_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -140,7 +140,7 @@ FtArray* Interface_Bird_interface_pigeon_fly(FeatureInterfaceHandle handle, Appe
     return strArray;
 }
 
-FtString Interface_Bird_interface_pigeon_get_breed(FeatureInterfaceHandle handle, AppendData data)
+FtString interface_test_Bird_interface_pigeon_get_breed(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -148,18 +148,18 @@ FtString Interface_Bird_interface_pigeon_get_breed(FeatureInterfaceHandle handle
     return buf;
 }
 
-void Interface_Bird_interface_pigeon_set_breed(FeatureInterfaceHandle handle, AppendData data, FtString breed)
+void interface_test_Bird_interface_pigeon_set_breed(FeatureInterfaceHandle handle, AppendData data, FtString breed)
 {
     printf("%s::%s(), interface: %p, set pigeon breed: %s\n", file_tag, __FUNCTION__, handle, breed);
 }
 
 // vtable functions for interface constructor function 'createChicken'
- void Interface_Chicken_interface_cock_finalize(FeatureInterfaceHandle handle)
+ void interface_test_Chicken_interface_cock_finalize(FeatureInterfaceHandle handle)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
 }
 
-FtString Interface_Chicken_interface_cock_get_name(FeatureInterfaceHandle handle, AppendData data)
+FtString interface_test_Chicken_interface_cock_get_name(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -167,18 +167,18 @@ FtString Interface_Chicken_interface_cock_get_name(FeatureInterfaceHandle handle
     return buf;
 }
 
-void Interface_Chicken_interface_cock_set_name(FeatureInterfaceHandle handle, AppendData data, FtString name)
+void interface_test_Chicken_interface_cock_set_name(FeatureInterfaceHandle handle, AppendData data, FtString name)
 {
     printf("%s::%s(), interface: %p, set cock name: %s\n", file_tag, __FUNCTION__, handle, name);
 }
 
-FtInt Interface_Chicken_interface_cock_get_legCount(FeatureInterfaceHandle handle, AppendData data)
+FtInt interface_test_Chicken_interface_cock_get_legCount(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p, cock leg count is: %d\n", file_tag, __FUNCTION__, handle, 2);
     return 2;
 }
 
-FtInt Interface_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
+FtInt interface_test_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
 {
     FtArrayHelper<const char*> string_array(&foods);
     printf("%s::%s(), interface: %p, cock eat food, array_size: %d\n", file_tag,  __FUNCTION__, handle, string_array.size());
@@ -190,7 +190,7 @@ FtInt Interface_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, Ap
     return string_array.size();
 }
 
-FtString Interface_Chicken_interface_cock_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
+FtString interface_test_Chicken_interface_cock_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s(), interface: %p, cock run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, handle, distance, destination);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -198,10 +198,10 @@ FtString Interface_Chicken_interface_cock_run(FeatureInterfaceHandle handle, App
     return buf;
 }
 
-FtArray* Interface_Chicken_interface_cock_fly(FeatureInterfaceHandle handle, AppendData data)
+FtArray* interface_test_Chicken_interface_cock_fly(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p, %s\n", file_tag, __FUNCTION__, handle, "cock fly");
-    FtArray* strArray = Interface_malloc_string_array();
+    FtArray* strArray = interface_test_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -212,7 +212,7 @@ FtArray* Interface_Chicken_interface_cock_fly(FeatureInterfaceHandle handle, App
     return strArray;
 }
 
-FtString Interface_Chicken_interface_cock_get_breed(FeatureInterfaceHandle handle, AppendData data)
+FtString interface_test_Chicken_interface_cock_get_breed(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
@@ -220,26 +220,26 @@ FtString Interface_Chicken_interface_cock_get_breed(FeatureInterfaceHandle handl
     return buf;
 }
 
-void Interface_Chicken_interface_cock_set_breed(FeatureInterfaceHandle handle, AppendData data, FtString breed)
+void interface_test_Chicken_interface_cock_set_breed(FeatureInterfaceHandle handle, AppendData data, FtString breed)
 {
     printf("%s::%s(), interface: %p, set cock breed: %s\n", file_tag, __FUNCTION__, handle, breed);
 }
 
-FtInt Interface_Chicken_interface_cock_get_weight(FeatureInterfaceHandle handle, AppendData data)
+FtInt interface_test_Chicken_interface_cock_get_weight(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p, cock weight is: %d kg\n", file_tag, __FUNCTION__, handle, 2);
     return 2;
 }
 
-void Interface_Chicken_interface_cock_set_weight(FeatureInterfaceHandle handle, AppendData data, FtInt weight)
+void interface_test_Chicken_interface_cock_set_weight(FeatureInterfaceHandle handle, AppendData data, FtInt weight)
 {
     printf("%s::%s(), interface: %p, set cock weight to: %d kg\n", file_tag, __FUNCTION__, handle, weight);
 }
 
-void Interface_Chicken_interface_cock_walk(FeatureInterfaceHandle handle, AppendData data, FtPromiseId pid)
+void interface_test_Chicken_interface_cock_walk(FeatureInterfaceHandle handle, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s(), interface: %p, %s\n", file_tag, __FUNCTION__, handle, "cock walk slowly");
-    FtArray* strArray = Interface_malloc_string_array();
+    FtArray* strArray = interface_test_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -252,66 +252,66 @@ void Interface_Chicken_interface_cock_walk(FeatureInterfaceHandle handle, Append
 }
 
 // FeatureCallbacks to be implemented
-void Interface_onRegister(const char* feature_name)
+void interface_test_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Interface_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void interface_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Interface_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle feature)
+void interface_test_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle feature)
 {
     printf("%s::%s(), feature: %p\n", file_tag,  __FUNCTION__, feature);
 }
 
-void Interface_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle feature)
+void interface_test_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle feature)
 {
     printf("%s::%s(), feature: %p\n", file_tag,  __FUNCTION__, feature);
 }
 
-void Interface_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void interface_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Interface_onUnregister(const char* feature_name)
+void interface_test_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
 // Function wrappers to be implemented
 
-FeatureInterfaceHandle Interface_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type)
+FeatureInterfaceHandle interface_test_wrap_createDog(FeatureInstanceHandle feature, AppendData data, FtInt type)
 {
-   FeatureInterfaceHandle handle = Interface_createDog_instance(feature);
+   FeatureInterfaceHandle handle = interface_test_createDog_instance(feature);
    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
    // void* data = create_dog_data(type);
    // FeatureSetObjectData(handle, data);
    return handle;
 }
 
-FeatureInterfaceHandle Interface_wrap_createPigeon(FeatureInstanceHandle feature, AppendData data)
+FeatureInterfaceHandle interface_test_wrap_createPigeon(FeatureInstanceHandle feature, AppendData data)
 {
-   FeatureInterfaceHandle handle = Interface_createPigeon_instance(feature);
+   FeatureInterfaceHandle handle = interface_test_createPigeon_instance(feature);
    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
    // void* data = create_pigeon_data();
    // FeatureSetObjectData(handle, data);
    return handle;
 }
 
-FeatureInterfaceHandle Interface_wrap_createCock(FeatureInstanceHandle feature, AppendData data)
+FeatureInterfaceHandle interface_test_wrap_createCock(FeatureInstanceHandle feature, AppendData data)
 {
-   FeatureInterfaceHandle handle = Interface_createCock_instance(feature);
+   FeatureInterfaceHandle handle = interface_test_createCock_instance(feature);
    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
    // void* data = create_cock_data();
    // FeatureSetObjectData(handle, data);
    return handle;
 }
 
-FeatureInterfaceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, AppendData data) {
+FeatureInterfaceHandle interface_test_wrap_createCat(FeatureInstanceHandle feature, AppendData data) {
     static const NativeFunc cat_vtable_members[] = {
         NativeFunc(_Interface_cat_get_name),
         NativeFunc(_Interface_cat_set_name),
@@ -331,13 +331,13 @@ FeatureInterfaceHandle Interface_wrap_createCat(FeatureInstanceHandle feature, A
     return handle;
 }
 
-void Interface_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal) {
+void interface_test_wrap_setAnimal(FeatureInstanceHandle feature, AppendData data, FeatureInstanceHandle animal) {
     printf("%s::%s(), feature: %p, animal: %p\n", file_tag, __FUNCTION__, feature, animal);
 }
 
-void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance) {
+void interface_test_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt distance) {
     printf("%s::%s(), feature: %p, distance: %d\n", file_tag, __FUNCTION__, feature, distance);
-    FtArray* strArray = Interface_malloc_string_array();
+    FtArray* strArray = interface_test_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -349,7 +349,7 @@ void Interface_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, FtPro
     FeatureFreeValue(strArray);
 }
 
-void Interface_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
+void interface_test_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
