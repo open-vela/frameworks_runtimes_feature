@@ -13,12 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef __FEATURE_FFI_WAMR_H__
+#define __FEATURE_FFI_WAMR_H__
+#include "feature_exports.h"
+#include "feature.h"
+#include "feature_ffi.h"
+#include "wasm_export.h"
+#include "gc_object.h"
 
-package message_transport;
+namespace ferry {
 
-import message_transport.IReply;
+namespace FeatureFFIWamr {
 
-interface IMessageTransport {
-    oneway void sendMessage(@utf8InCpp String message, in IReply reply);
-    oneway void sendSessionMessage(@utf8InCpp String message, in IReply reply);
+    char getFeatureSignature(FeatureType featureType);
+
+    bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
+        wasm_exec_env_t exec_env, uint64_t* value);
+
+    bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
+        wasm_exec_env_t exec_env, wasm_val_t& value);
 }
+
+}
+#endif

@@ -30,8 +30,4 @@ config FEATURE_LOG_LEVEL
 		4 - ALERT
 		5 - OFF
 
-config MESSAGE_CHANNEL
-	bool "Enable Message Channel feature"
-	default n
-
 endif

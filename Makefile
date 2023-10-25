@@ -83,17 +83,6 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
-ifeq ($(CONFIG_MESSAGE_CHANNEL),y)
-AIDLSRCS += $(shell find ./modules/aidl -name *.aidl)
-AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
-CXXSRCS += $(patsubst %.aidl,%$(CXXEXT),$(AIDLSRCS))
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/modules/aidl
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_transport.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_1_0_impl.cpp
-FEATURELIST += MessageChannel
-endif
-
 ifeq ($(CONFIG_MIWEAR_APPS),y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
