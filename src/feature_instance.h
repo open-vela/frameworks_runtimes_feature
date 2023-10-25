@@ -70,11 +70,11 @@ public:
 
     typedef void (*dtor_func)(FeatureInstance*);
 
-    uv_loop_t* uvloop() { return &loop_; }
+    uv_async_t async;
+    uv_mutex_t mutex;
 
 private:
     FeaturePrototype* proto_;
-    uv_loop_t loop_;
 
     int instance_id_; // the instance id, order in instances aray.
     VTable* vtable_; // vtable

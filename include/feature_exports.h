@@ -24,7 +24,6 @@ extern "C"
 
 #include <stdbool.h>
 #include "feature_types.h"
-#include <uv.h>
 #include "quickjs/quickjs.h"
 
 /**
@@ -129,14 +128,6 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
 
 /**
- * @brief get feature uvloop from FeatureInstanceHandle
- *
- * @param handle
- * @return uv_loop_t*
- */
-uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle);
-
-/**
  * @brief invoke callback via cid
  *
  * @param handle
@@ -195,6 +186,36 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  * @return FeatureInterfaceHandle
  */
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable);
+
+//封装feature_uv.h中的接口
+/**
+ * @brief feature uv async send
+ *
+ * @param handle
+ * @param data
+ * @return void
+ */
+void FeatureAsyncSend(FeatureInstanceHandle handle, void* data);
+
+/**
+ * @brief feature uv async close
+ *
+ * @param handle
+ * @return void
+ */
+void FeatureAsyncClose(FeatureInstanceHandle handle);
+
+/**
+ * @brief feature uv register
+ *
+ * @param handle
+ * @param test
+ * @return int
+ */
+int FeatureRegister(FeatureInstanceHandle handle, register_fun_t* register_data);
+
+
+
 
 #ifdef __cplusplus
 }

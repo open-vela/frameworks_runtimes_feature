@@ -26,6 +26,9 @@
 
 using namespace ferry;
 
+static void feature_async_cb(uv_async_t* handle);
+
+
 void* FeatureMalloc(size_t size, FeatureType featureType)
 {
     void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
@@ -171,12 +174,6 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
     return proto->getEnvironmentName();
 }
 
-uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle)
-{
-    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    return instance->uvloop();
-}
-
 bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
@@ -229,4 +226,41 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTab
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->createInterface(vtable);
+}
+
+void feature_async_cb(uv_async_t* handle)
+{
+    register_fun_t *fun_callback = (register_fun_t *)handle->data;
+    //FeatureInvokeCallback(test->instance, test->callbackId, test->data);
+    fun_callback->callback(fun_callback->instance, fun_callback->callbackId, fun_callback->data);
+}
+
+int FeatureRegister(FeatureInstanceHandle handle, register_fun_t* register_data)
+{
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    FeatureProtoHandle proto_handle = (FeatureProtoHandle)static_cast<FeatureInstance*>(handle)->prototype();
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(proto_handle);
+    uv_loop_t* loop = (uv_loop_t*)proto->getProtoLoop();
+
+    uv_mutex_lock(&instance->mutex);
+    uv_async_init(loop, &instance->async, feature_async_cb);
+    instance->async.data = register_data;
+    uv_mutex_unlock(&instance->mutex);
+    return 0;
+}
+
+void FeatureAsyncSend(FeatureInstanceHandle handle, void* data)
+{
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    register_fun_t *test = (register_fun_t *)(instance->async.data);
+    test->data = data;
+    instance->async.data = test;
+
+    uv_async_send(&instance->async);
+}
+
+void FeatureAsyncClose(FeatureInstanceHandle handle)
+{
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    uv_close((uv_handle_t*)&instance->async, NULL);    //如果async没有关闭，消息队列是会阻塞的
 }
