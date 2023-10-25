@@ -1,4 +1,4 @@
-let struct = require('Struct');
+let struct = require('struct_test');
 
 struct.foo(1,
     {

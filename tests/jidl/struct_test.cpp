@@ -1,0 +1,194 @@
+// Copyright 2023 Xiaomi, Inc. All rights reserved.
+
+
+#include "struct_test.h"
+#include "ajs_features_init.h"
+#include "feature_description.h"
+
+#define countof(x) (sizeof(x) / sizeof(x[0]))
+
+  static OptionalType struct_test_Chapter_member_page_count_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_INT,
+    .ival = 10
+  };
+
+  static OptionalType struct_test_Chapter_member_title_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_STRING,
+    .str = "hello world"
+  };
+
+  static OptionalType struct_test_Chapter_member_is_end_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_BOOLEAN,
+    .ival = false
+  };
+
+  /****** for JIDL struct 'Chapter' ******/
+  static ObjectMember struct_test_Chapter_struct_members[] = {
+    { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Chapter, _page_count), sizeof(FtInt) },
+    { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Chapter, _title), sizeof(FtString) },
+    { "is_end", FT_MK_OPTIONAL(&struct_test_Chapter_member_is_end_opt_type), offsetof(struct_test_Chapter, _is_end), sizeof(FtBool) },
+    { nullptr },
+  };
+
+  // complex defination
+  static const ObjectMapType struct_test_Chapter_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Chapter) },
+    .members = struct_test_Chapter_struct_members
+  };
+
+  struct_test_Chapter* struct_testMallocChapter () {
+    return (struct_test_Chapter*)FeatureMalloc(
+      sizeof(struct_test_Chapter), FT_MK_COMPLEX(&struct_test_Chapter_struct_type));
+  }
+
+
+  /****** for JIDL callback 'ChapChanged' ******/
+  static const FeatureType struct_test_ChapChanged_parameters[] = {
+    FT_INT,
+    FT_STRING,
+    FT_PARAM_END
+  };
+
+  static const CallbackType struct_test_ChapChanged_callback_type {
+    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
+    .parameters = struct_test_ChapChanged_parameters,
+    .return_type = FT_VOID
+  };
+
+
+  static const ArrayType struct_test_string_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_STRING
+  };
+
+  FtArray* struct_test_malloc_string_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&struct_test_string_array));
+  }
+
+  /****** for JIDL struct 'Book' ******/
+  static ObjectMember struct_test_Book_struct_members[] = {
+    { "any_param", FT_ANY, offsetof(struct_test_Book, _any_param), sizeof(FtAny) },
+    { "page_count", FT_INT, offsetof(struct_test_Book, _page_count), sizeof(FtInt) },
+    { "title", FT_STRING, offsetof(struct_test_Book, _title), sizeof(FtString) },
+    { "chap_titles", FT_MK_COMPLEX_REF(&struct_test_string_array), offsetof(struct_test_Book, _chap_titles), sizeof(FtArray*) },
+    { "first_chap", FT_MK_COMPLEX_REF(&struct_test_Chapter_struct_type), offsetof(struct_test_Book, _first_chap), sizeof(struct_test_Chapter *) },
+    { "chap_changed", FT_MK_COMPLEX(&struct_test_ChapChanged_callback_type), offsetof(struct_test_Book, _chap_changed), sizeof(FtCallbackId) },
+    { nullptr },
+  };
+
+  // complex defination
+  static const ObjectMapType struct_test_Book_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Book) },
+    .members = struct_test_Book_struct_members
+  };
+
+  struct_test_Book* struct_testMallocBook () {
+    return (struct_test_Book*)FeatureMalloc(
+      sizeof(struct_test_Book), FT_MK_COMPLEX(&struct_test_Book_struct_type));
+  }
+
+
+  /****** for JIDL function 'foo' ******/
+  static const FeatureType struct_test_foo_parameters[] = {
+    FT_INT,
+    FT_MK_COMPLEX_REF(&struct_test_Chapter_struct_type),
+    FT_PARAM_END
+  };
+
+  static const MemberMethod struct_test_foo_member_method = {
+    .func = { .callback = FFI_FN(struct_test_wrap_foo) },
+    .parameters = struct_test_foo_parameters,
+    .return_type = FT_VOID,
+  };
+
+
+  /****** for JIDL function 'bar' ******/
+  static const FeatureType struct_test_bar_parameters[] = {
+    FT_INT,
+    FT_PARAM_END
+  };
+
+  static const MemberMethod struct_test_bar_member_method = {
+    .func = { .callback = FFI_FN(struct_test_wrap_bar) },
+    .parameters = struct_test_bar_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&struct_test_Chapter_struct_type),
+  };
+
+
+  /****** for JIDL function 'bar2' ******/
+  static const FeatureType struct_test_bar2_parameters[] = {
+    FT_MK_COMPLEX_REF(&struct_test_Book_struct_type),
+    FT_PARAM_END
+  };
+
+  static const MemberMethod struct_test_bar2_member_method = {
+    .func = { .callback = FFI_FN(struct_test_wrap_bar2) },
+    .parameters = struct_test_bar2_parameters,
+    .return_type = FT_VOID,
+  };
+
+
+  /****** for JIDL function 'print' ******/
+  static const FeatureType struct_test_print_parameters[] = {
+    FT_PARAM_REST_END,
+  };
+
+  static const MemberMethod struct_test_print_member_method = {
+    .func = { .callback = FFI_FN(struct_test_wrap_print) },
+    .parameters = struct_test_print_parameters,
+    .return_type = FT_VOID,
+  };
+
+
+  // members
+  static const Member struct_test_members[] = {
+    {
+      .type = MEMBER_METHOD,
+      .name = "foo",
+      .method = struct_test_foo_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "bar",
+      .method = struct_test_bar_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "bar2",
+      .method = struct_test_bar2_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "print",
+      .method = struct_test_print_member_method,
+    },
+  };
+
+  // callbacks
+  static const struct FeatureCallbacks struct_test_callbacks {
+    struct_test_onRegister,
+    struct_test_onCreate,
+    struct_test_onRequired,
+    struct_test_onDetached,
+    struct_test_onDestroy,
+    struct_test_onUnregister
+  };
+
+  static const FeatureDescription struct_test_desc = {
+    .version = 1,
+    .name = "struct_test",
+    .description = "struct_test",
+    { .dynamic = false },
+    .native_callbacks = &struct_test_callbacks,
+    .member_count = countof(struct_test_members),
+    .members = struct_test_members,
+  };
+
+QAPPFEATURE_INIT(struct_test)
+{
+    return mgr->registerFeature(features, &struct_test_desc);
+}

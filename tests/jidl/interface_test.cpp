@@ -1,0 +1,512 @@
+// Copyright 2023 Xiaomi, Inc. All rights reserved.
+
+
+#include "interface_test.h"
+#include "ajs_features_init.h"
+#include "feature_description.h"
+
+#define countof(x) (sizeof(x) / sizeof(x[0]))
+
+  /****** JIDL interface 'Animal' glue code begin ******/
+  extern const InterfaceType interface_test_Animal_interface_type;
+  // for member property 'name'
+  static const MemberAccessor interface_test_Animal_interface_name_member_accessor = {
+    .getter = { .vtable_idx = 0 },
+    .setter = { .vtable_idx = 1 },
+    .type = FT_STRING,
+  };
+
+  // for member property 'legCount'
+  static const MemberAccessor interface_test_Animal_interface_legCount_member_accessor = {
+    .getter = { .vtable_idx = 2 },
+    .type = FT_INT,
+  };
+
+  // for member method 'eatFood'
+  static const ArrayType interface_test_string_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_STRING
+  };
+
+  FtArray* interface_test_malloc_string_array() {
+    return (FtArray*)FeatureMalloc(
+      sizeof(FtArray), FT_MK_COMPLEX(&interface_test_string_array));
+  }
+
+  static const FeatureType interface_test_Animal_interface_eatFood_parameters[] = {
+    FT_MK_COMPLEX_REF(&interface_test_string_array),
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_Animal_interface_eatFood_member_method = {
+    .func = { .vtable_idx = 3 },
+    .parameters = interface_test_Animal_interface_eatFood_parameters,
+    .return_type = FT_INT,
+  };
+
+  // for member method 'run'
+  static const FeatureType interface_test_Animal_interface_run_parameters[] = {
+    FT_INT,
+    FT_STRING,
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_Animal_interface_run_member_method = {
+    .func = { .vtable_idx = 4 },
+    .parameters = interface_test_Animal_interface_run_parameters,
+    .return_type = FT_STRING,
+  };
+
+  // Interface members
+  static const Member interface_test_Animal_interface_members[] = {
+    // Animal interface members
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "name",
+      .accessor = interface_test_Animal_interface_name_member_accessor,
+    },
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "legCount",
+      .accessor = interface_test_Animal_interface_legCount_member_accessor,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "eatFood",
+      .method = interface_test_Animal_interface_eatFood_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "run",
+      .method = interface_test_Animal_interface_run_member_method,
+    },
+  };
+
+  // Interface description
+  static const FeatureDescription interface_test_Animal_interface_desc = {
+    .version = 1,
+    .name = "Animal",
+    .description = "Animal description",
+    { .dynamic = true },
+    nullptr,
+    countof(interface_test_Animal_interface_members),
+    interface_test_Animal_interface_members,
+  };
+
+  // InterfaceType
+  const InterfaceType interface_test_Animal_interface_type {
+    .header = { .type = COMPLEX_INTERFACE, .size = 0 },
+    .desc = &interface_test_Animal_interface_desc
+  };
+  /****** JIDL interface 'Animal' glue code end ******/
+
+  /****** for JIDL Interface constructor function 'createDog' ******/
+  FeatureInterfaceHandle interface_test_createDog_instance(FeatureInstanceHandle feature) {
+    static const NativeFunc dog_vtable_members[] = {
+        NativeFunc(interface_test_Animal_interface_dog_get_name),
+        NativeFunc(interface_test_Animal_interface_dog_set_name),
+        NativeFunc(interface_test_Animal_interface_dog_get_legCount),
+        NativeFunc(interface_test_Animal_interface_dog_eatFood),
+        NativeFunc(interface_test_Animal_interface_dog_run),
+    };
+
+    static VTable dog_vtable = {
+        .size = 5,
+        .finalizer = NativeFunc(interface_test_Animal_interface_dog_finalize),
+        .members = dog_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &dog_vtable);
+  }
+
+  /****** for JIDL function 'createDog' ******/
+  static const FeatureType interface_test_createDog_parameters[] = {
+    FT_INT,
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_createDog_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_createDog) },
+    .parameters = interface_test_createDog_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_Animal_interface_type),
+  };
+
+
+  /****** JIDL interface 'Bird' glue code begin ******/
+  extern const InterfaceType interface_test_Bird_interface_type;
+  // for member method 'fly'
+  static const FeatureType interface_test_Bird_interface_fly_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_Bird_interface_fly_member_method = {
+    .func = { .vtable_idx = 0 },
+    .parameters = interface_test_Bird_interface_fly_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_string_array),
+  };
+
+  // for member property 'breed'
+  static const MemberAccessor interface_test_Bird_interface_breed_member_accessor = {
+    .getter = { .vtable_idx = 1 },
+    .setter = { .vtable_idx = 2 },
+    .type = FT_STRING,
+  };
+
+  // Interface members
+  static const Member interface_test_Bird_interface_members[] = {
+    // Bird interface members
+    {
+      .type = MEMBER_METHOD,
+      .name = "fly",
+      .method = interface_test_Bird_interface_fly_member_method,
+    },
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "breed",
+      .accessor = interface_test_Bird_interface_breed_member_accessor,
+    },
+  };
+
+  // Interface description
+  static const FeatureDescription interface_test_Bird_interface_desc = {
+    .version = 1,
+    .name = "Bird",
+    .description = "Bird description",
+    { .dynamic = true },
+    nullptr,
+    countof(interface_test_Bird_interface_members),
+    interface_test_Bird_interface_members,
+  };
+
+  // InterfaceType
+  const InterfaceType interface_test_Bird_interface_type {
+    .header = { .type = COMPLEX_INTERFACE, .size = 0 },
+    .desc = &interface_test_Bird_interface_desc
+  };
+  /****** JIDL interface 'Bird' glue code end ******/
+
+  /****** for JIDL Interface constructor function 'createPigeon' ******/
+  FeatureInterfaceHandle interface_test_createPigeon_instance(FeatureInstanceHandle feature) {
+    static const NativeFunc pigeon_vtable_members[] = {
+        NativeFunc(interface_test_Bird_interface_pigeon_fly),
+        NativeFunc(interface_test_Bird_interface_pigeon_get_breed),
+        NativeFunc(interface_test_Bird_interface_pigeon_set_breed),
+    };
+
+    static VTable pigeon_vtable = {
+        .size = 3,
+        .finalizer = NativeFunc(interface_test_Bird_interface_pigeon_finalize),
+        .members = pigeon_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &pigeon_vtable);
+  }
+
+  /****** for JIDL function 'createPigeon' ******/
+  static const FeatureType interface_test_createPigeon_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_createPigeon_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_createPigeon) },
+    .parameters = interface_test_createPigeon_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_Bird_interface_type),
+  };
+
+
+  /****** JIDL interface 'Chicken' glue code begin ******/
+  extern const InterfaceType interface_test_Chicken_interface_type;
+  // Overrided parent member defines
+  static const MemberAccessor interface_test_Chicken_Animal_interface_name_member_accessor = {
+    .getter = { .vtable_idx = 0 },
+    .setter = { .vtable_idx = 1 },
+    .type = FT_STRING,
+  };
+
+  static const MemberAccessor interface_test_Chicken_Animal_interface_legCount_member_accessor = {
+    .getter = { .vtable_idx = 2 },
+    .type = FT_INT,
+  };
+
+  static const MemberMethod interface_test_Chicken_Animal_interface_eatFood_member_method = {
+    .func = { .vtable_idx = 3 },
+    .parameters = interface_test_Animal_interface_eatFood_parameters,
+    .return_type = FT_INT,
+  };
+
+  static const MemberMethod interface_test_Chicken_Animal_interface_run_member_method = {
+    .func = { .vtable_idx = 4 },
+    .parameters = interface_test_Animal_interface_run_parameters,
+    .return_type = FT_STRING,
+  };
+
+  static const MemberMethod interface_test_Chicken_Bird_interface_fly_member_method = {
+    .func = { .vtable_idx = 5 },
+    .parameters = interface_test_Bird_interface_fly_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_string_array),
+  };
+
+  static const MemberAccessor interface_test_Chicken_Bird_interface_breed_member_accessor = {
+    .getter = { .vtable_idx = 6 },
+    .setter = { .vtable_idx = 7 },
+    .type = FT_STRING,
+  };
+
+  // for member property 'weight'
+  static const MemberAccessor interface_test_Chicken_interface_weight_member_accessor = {
+    .getter = { .vtable_idx = 8 },
+    .setter = { .vtable_idx = 9 },
+    .type = FT_INT,
+  };
+
+  // for member method 'walk'
+  static const FeatureType interface_test_Chicken_interface_walk_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const PromiseType interface_test_promise_string_array_FT_INT_type = {
+    .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
+    .resolveTypes = { FT_MK_COMPLEX_REF(&interface_test_string_array), FT_INT }
+  };
+
+  static const MemberMethod interface_test_Chicken_interface_walk_member_method = {
+    .func = { .vtable_idx = 10 },
+    .parameters = interface_test_Chicken_interface_walk_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_promise_string_array_FT_INT_type),
+  };
+
+  // Interface members
+  static const Member interface_test_Chicken_interface_members[] = {
+    // overrided parent members
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "name",
+      .accessor = interface_test_Chicken_Animal_interface_name_member_accessor,
+    },
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "legCount",
+      .accessor = interface_test_Chicken_Animal_interface_legCount_member_accessor,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "eatFood",
+      .method = interface_test_Chicken_Animal_interface_eatFood_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "run",
+      .method = interface_test_Chicken_Animal_interface_run_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "fly",
+      .method = interface_test_Chicken_Bird_interface_fly_member_method,
+    },
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "breed",
+      .accessor = interface_test_Chicken_Bird_interface_breed_member_accessor,
+    },
+    // Chicken interface members
+    {
+      .type = MEMBER_ACCESSOR,
+      .name = "weight",
+      .accessor = interface_test_Chicken_interface_weight_member_accessor,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "walk",
+      .method = interface_test_Chicken_interface_walk_member_method,
+    },
+  };
+
+  // Interface description
+  static const FeatureDescription interface_test_Chicken_interface_desc = {
+    .version = 1,
+    .name = "Chicken",
+    .description = "Chicken description",
+    { .dynamic = true },
+    nullptr,
+    countof(interface_test_Chicken_interface_members),
+    interface_test_Chicken_interface_members,
+  };
+
+  // InterfaceType
+  const InterfaceType interface_test_Chicken_interface_type {
+    .header = { .type = COMPLEX_INTERFACE, .size = 0 },
+    .desc = &interface_test_Chicken_interface_desc
+  };
+  /****** JIDL interface 'Chicken' glue code end ******/
+
+  /****** for JIDL Interface constructor function 'createCock' ******/
+  FeatureInterfaceHandle interface_test_createCock_instance(FeatureInstanceHandle feature) {
+    static const NativeFunc cock_vtable_members[] = {
+        NativeFunc(interface_test_Chicken_interface_cock_get_name),
+        NativeFunc(interface_test_Chicken_interface_cock_set_name),
+        NativeFunc(interface_test_Chicken_interface_cock_get_legCount),
+        NativeFunc(interface_test_Chicken_interface_cock_eatFood),
+        NativeFunc(interface_test_Chicken_interface_cock_run),
+        NativeFunc(interface_test_Chicken_interface_cock_fly),
+        NativeFunc(interface_test_Chicken_interface_cock_get_breed),
+        NativeFunc(interface_test_Chicken_interface_cock_set_breed),
+        NativeFunc(interface_test_Chicken_interface_cock_get_weight),
+        NativeFunc(interface_test_Chicken_interface_cock_set_weight),
+        NativeFunc(interface_test_Chicken_interface_cock_walk),
+    };
+
+    static VTable cock_vtable = {
+        .size = 11,
+        .finalizer = NativeFunc(interface_test_Chicken_interface_cock_finalize),
+        .members = cock_vtable_members
+    };
+
+    return FeatureCreateInterface(feature, &cock_vtable);
+  }
+
+  /****** for JIDL function 'createCock' ******/
+  static const FeatureType interface_test_createCock_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_createCock_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_createCock) },
+    .parameters = interface_test_createCock_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_Chicken_interface_type),
+  };
+
+
+  /****** for JIDL function 'createCat' ******/
+  static const FeatureType interface_test_createCat_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_createCat_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_createCat) },
+    .parameters = interface_test_createCat_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_Animal_interface_type),
+  };
+
+
+  /****** for JIDL function 'setAnimal' ******/
+  static const FeatureType interface_test_setAnimal_parameters[] = {
+    FT_MK_COMPLEX_REF(&interface_test_Animal_interface_type),
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_setAnimal_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_setAnimal) },
+    .parameters = interface_test_setAnimal_parameters,
+    .return_type = FT_VOID,
+  };
+
+
+  /****** for JIDL function 'flyFar' ******/
+  static const FeatureType interface_test_flyFar_parameters[] = {
+    FT_INT,
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_flyFar_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_flyFar) },
+    .parameters = interface_test_flyFar_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_promise_string_array_FT_INT_type),
+  };
+
+
+  /****** for JIDL use 'flyAway' ******/
+  static void interface_test_wrap_flyAway (FeatureInstanceHandle feature, AppendData data, FtPromiseId pid) {
+    interface_test_wrap_flyFar (feature, data, pid, 100);
+  }
+
+  static const FeatureType interface_test_flyAway_parameters[] = {
+    FT_PARAM_END
+  };
+
+  static const MemberMethod interface_test_flyAway_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_flyAway) },
+    .parameters = interface_test_flyAway_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&interface_test_promise_string_array_FT_INT_type),
+  };
+
+
+  /****** for JIDL function 'print' ******/
+  static const FeatureType interface_test_print_parameters[] = {
+    FT_PARAM_REST_END,
+  };
+
+  static const MemberMethod interface_test_print_member_method = {
+    .func = { .callback = FFI_FN(interface_test_wrap_print) },
+    .parameters = interface_test_print_parameters,
+    .return_type = FT_VOID,
+  };
+
+
+  // members
+  static const Member interface_test_members[] = {
+    {
+      .type = MEMBER_METHOD,
+      .name = "createDog",
+      .method = interface_test_createDog_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "createPigeon",
+      .method = interface_test_createPigeon_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "createCock",
+      .method = interface_test_createCock_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "createCat",
+      .method = interface_test_createCat_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "setAnimal",
+      .method = interface_test_setAnimal_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "flyFar",
+      .method = interface_test_flyFar_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "flyAway",
+      .method = interface_test_flyAway_member_method,
+    },
+    {
+      .type = MEMBER_METHOD,
+      .name = "print",
+      .method = interface_test_print_member_method,
+    },
+  };
+
+  // callbacks
+  static const struct FeatureCallbacks interface_test_callbacks {
+    interface_test_onRegister,
+    interface_test_onCreate,
+    interface_test_onRequired,
+    interface_test_onDetached,
+    interface_test_onDestroy,
+    interface_test_onUnregister
+  };
+
+  static const FeatureDescription interface_test_desc = {
+    .version = 1,
+    .name = "interface_test",
+    .description = "interface_test",
+    { .dynamic = false },
+    .native_callbacks = &interface_test_callbacks,
+    .member_count = countof(interface_test_members),
+    .members = interface_test_members,
+  };
+
+QAPPFEATURE_INIT(interface_test)
+{
+    return mgr->registerFeature(features, &interface_test_desc);
+}

@@ -16,10 +16,10 @@
           "name": "Record"
       },
       {
-          "name": "Struct"
+          "name": "struct_test"
       },
       {
-          "name": "Promise"
+          "name": "promise_test"
       },
       {
           "name": "mockatest"
@@ -28,13 +28,10 @@
           "name": "Timer"
       },
       {
-          "name": "ATest"
-      },
-      {
           "name": "interface"
       },
       {
-          "name": "Interface"
+          "name": "interface_test"
       }
   ],
   "config": {

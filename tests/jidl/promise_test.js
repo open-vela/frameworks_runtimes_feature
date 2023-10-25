@@ -1,5 +1,5 @@
 let console = require('console');
-let promise = require('Promise');
+let promise = require('promise_test');
 
 promise.print("before call foo()");
 promise.foo(10,  'hello').then(a => {

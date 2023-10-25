@@ -1,7 +1,6 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-#include "promise_1_0.h"
-
+#include "promise_test.h"
 
 static const char* file_tag = "[jidl_feature] promise_1_0_impl";
 
@@ -29,38 +28,38 @@ public:
 };
 
 // FeatureCallbacks to be implemented
-void Promise_onRegister(const char* feature_name)
+void promise_test_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void promise_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void promise_test_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void promise_test_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void promise_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_onUnregister(const char* feature_name)
+void promise_test_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
 // Function wrappers to be implemented
-void Promise_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a, FtString b)
+void promise_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a, FtString b)
 {
     printf("%s::%s(), a: %d, b: %s\n", file_tag,  __FUNCTION__, a, b);
     int rs = a;
@@ -72,7 +71,7 @@ void Promise_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPromiseI
     }
 }
 
-void Promise_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a)
+void promise_test_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a)
 {
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
     int rs = a;
@@ -84,7 +83,7 @@ void Promise_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPromise
     }
 }
 
-void Promise_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
+void promise_test_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     int rs = 0;
@@ -96,22 +95,22 @@ void Promise_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromise
     }
 }
 
-void Promise_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
+void promise_test_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
+void promise_test_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
+void promise_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Promise_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
+void promise_test_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
