@@ -711,6 +711,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         prototype->setPackageName(registry_->getFeaturePackageName());
         prototype->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+        prototype->setProtoLoop(registry_->getFeatureUVLoop());
     }
 
     // create feature instance for the required object
@@ -718,6 +719,8 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     auto instance_ptr = instance.get();
     // save vm_object into instance
     instance->setVmObject(vm_object);
+    uv_mutex_init(&instance->mutex);
+
     // insert into instances array, update iid
     int iid = prototype->addInstance(std::move(instance));
     prototype->instances[iid]->setInstanceId(iid);

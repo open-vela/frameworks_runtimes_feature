@@ -54,6 +54,16 @@ typedef void* FeatureInterfaceHandle; // feature interface handle.
 typedef uintptr_t FeatureType; // feature type flag
 typedef void (*NativeFunc)(void);
 
+typedef int (*ptrFunc)(FeatureInstanceHandle, FtCallbackId, void*);
+//结构体
+typedef struct register_fun_t
+{
+    FeatureInstanceHandle instance;	//实例
+    FtCallbackId callbackId;	//回调id
+    ptrFunc callback;	//函数管理器
+    void* data;
+} register_fun_t;
+
 typedef struct VTable {
     size_t size;
     NativeFunc finalizer;

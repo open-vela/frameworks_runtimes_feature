@@ -213,4 +213,9 @@ void FeaturePrototype::setEnvironmentName(const char* environment_name)
     environment_name_ = environment_name;
 }
 
+void FeaturePrototype::setProtoLoop(const uv_loop_t* loop)
+{
+    proto_loop_ = loop;
+}
+
 }
