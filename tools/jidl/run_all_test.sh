@@ -37,7 +37,7 @@ run_miot_service_gen() {
   json_file=${f%.*}.json
   file_name=${f##*/}
   file_name=${file_name%.*}
-  cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_feture.cpp $*"
+  cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_feature.cpp $*"
   echo "GEN FEATURE: $cmd"
   $cmd
   cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent_event.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_event.c $*"

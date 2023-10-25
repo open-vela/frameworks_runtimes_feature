@@ -287,6 +287,9 @@ class Utils:
   def getModuleName(self):
     return self.toIdName(self.doc['name'])
 
+  def getFeatureName(self, s):
+    return s[0:(s.find("@"))]
+
   def toTypeName(self, tp):
     if isinstance(tp, str):
       return tp

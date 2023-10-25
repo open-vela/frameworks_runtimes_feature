@@ -23,7 +23,7 @@ cpp_type_map = {
   'object' : 'FtAny',
   'void' : 'void',
   'ellipse' : '...',
-  'callback' : 'FeatureCallbackId',
+  'callback' : 'FtCallbackId',
   'Int8Array' : 'FTArray',
   'Uint8Array' : 'FTArray',
   'Int16Array' : 'FTArray',
