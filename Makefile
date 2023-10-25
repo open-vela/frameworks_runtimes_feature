@@ -56,9 +56,9 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
 
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_1_0_impl.cpp
-FEATURELIST += Promise
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_test_impl.cpp
+FEATURELIST += promise_test
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/record_1_0.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/record_1_0_impl.cpp
@@ -68,9 +68,9 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/simple_1_0.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/simple_1_0_impl.cpp
 FEATURELIST += Simple
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_1_0_impl.cpp
-FEATURELIST += Struct
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test_impl.cpp
+FEATURELIST += struct_test
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feature_timers.cpp
 FEATURELIST += timers
