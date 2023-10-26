@@ -99,6 +99,9 @@ endif
 
 endif
 
+ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
+FEATURELIST += folme
+endif
 
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 

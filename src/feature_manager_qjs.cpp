@@ -48,7 +48,7 @@ thread_local feature_classid_t interface_class_id; // prototype class id
 thread_local feature_classdef_t interface_class_def; // prototype class defination, contains finalizer
 
 // some static functions used by FeatureManagerQjs
-static bool createJsInstanceClass(context_ref ctx, feature_classid_t& class_id, feature_classdef_t& class_def);
+static bool createJsInstanceClass(ft_context_ref ft_ctx, feature_classid_t& class_id, feature_classdef_t& class_def);
 static context_ref getContext(feature_runtime_ref rt);
 
 static inline FeatureInstance* getInstance(feature_value_t val)
