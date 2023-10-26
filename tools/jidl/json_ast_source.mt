@@ -518,7 +518,7 @@ ${GenMemberMethod(identifier, ret_type)}
   func_call = ''
   if ret_type != 'void':
     func_call += 'return '
-  func_call += f"{module_name}_wrap_{func_call_id} (feature, data"
+  func_call += f"{module_name}_wrap_{func_call_id} (feature, append_data"
   if is_promise:
     func_call += ', pid'
 
@@ -527,7 +527,7 @@ ${GenMemberMethod(identifier, ret_type)}
     func_call += f", {params_call_list}"
   func_call += ")"
 
-  prefix_params = 'FeatureInstanceHandle feature, AppendData data'
+  prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
   if is_promise:
     prefix_params += ', FtPromiseId pid'
 %>\
@@ -605,7 +605,7 @@ ${GenParamsFeatureType(cb_node)}
   else:
     const_def += f" = {const_value}"
     const_func_def = f"{cpp_type} "
-  const_func_def += f"{module_name}_init_const_{const_name}(FeatureInstanceHandle feature, AppendData data) {{ return {module_name}_g_const_{const_name}; }}"
+  const_func_def += f"{module_name}_init_const_{const_name}(FeatureInstanceHandle feature, AppendData append_data) {{ return {module_name}_g_const_{const_name}; }}"
 %>\
   /****** for JIDL const '${const_name}' ******/
   ${const_def};

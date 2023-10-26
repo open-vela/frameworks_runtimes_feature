@@ -415,8 +415,8 @@
 
 
   /****** for JIDL use 'flyAway' ******/
-  static void interface_test_wrap_flyAway (FeatureInstanceHandle feature, AppendData data, FtPromiseId pid) {
-    interface_test_wrap_flyFar (feature, data, pid, 100);
+  static void interface_test_wrap_flyAway (FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid) {
+    interface_test_wrap_flyFar (feature, append_data, pid, 100);
   }
 
   static const FeatureType interface_test_flyAway_parameters[] = {
