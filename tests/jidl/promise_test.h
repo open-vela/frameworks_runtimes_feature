@@ -27,13 +27,13 @@
   // Struct defines
 
   // Function wrappers to be implemented
-  void promise_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a, FtString b);
-  void promise_test_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a);
-  void promise_test_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
-  void promise_test_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
-  void promise_test_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
-  void promise_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid);
-  void promise_test_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params);
+  void promise_test_wrap_foo(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtInt a, FtString b);
+  void promise_test_wrap_foo1(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtInt a);
+  void promise_test_wrap_foo2(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid);
+  void promise_test_wrap_bar(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid);
+  void promise_test_wrap_bar1(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid);
+  void promise_test_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid);
+  void promise_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
 
   // Interface constructors
 

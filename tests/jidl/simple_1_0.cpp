@@ -1,8 +1,6 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
 
-
-
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
@@ -96,8 +94,8 @@
 
 
   /****** for JIDL use 'ubar6' ******/
-  static FtString Simple_wrap_ubar6 (FeatureInstanceHandle feature, AppendData data, FtFloat a) {
-    return Simple_wrap_bar6 (feature, data, 1, a, false);
+  static FtString Simple_wrap_ubar6 (FeatureInstanceHandle feature, AppendData append_data, FtFloat a) {
+    return Simple_wrap_bar6 (feature, append_data, 1, a, false);
   }
 
   static const FeatureType Simple_ubar6_parameters[] = {
@@ -196,8 +194,8 @@
 
 
   /****** for JIDL use 'goo3' ******/
-  static void Simple_wrap_goo3 (FeatureInstanceHandle feature, AppendData data, FtCallbackId cb) {
-    Simple_wrap_goo (feature, data, 100, 200, cb);
+  static void Simple_wrap_goo3 (FeatureInstanceHandle feature, AppendData append_data, FtCallbackId cb) {
+    Simple_wrap_goo (feature, append_data, 100, 200, cb);
   }
 
   static const FeatureType Simple_goo3_parameters[] = {
@@ -314,7 +312,7 @@
 
   /****** for JIDL const 'x' ******/
   const FtInt Simple_g_const_x = 1;
-  const FtInt Simple_init_const_x(FeatureInstanceHandle feature, AppendData data) { return Simple_g_const_x; };
+  const FtInt Simple_init_const_x(FeatureInstanceHandle feature, AppendData append_data) { return Simple_g_const_x; };
 
   static const MemberConst Simple_x_member_const = {
     .type = FT_INT,
@@ -325,7 +323,7 @@
 
   /****** for JIDL const 'y' ******/
   FtString Simple_g_const_y = "hello world";
-  FtString Simple_init_const_y(FeatureInstanceHandle feature, AppendData data) { return Simple_g_const_y; };
+  FtString Simple_init_const_y(FeatureInstanceHandle feature, AppendData append_data) { return Simple_g_const_y; };
 
   static const MemberConst Simple_y_member_const = {
     .type = FT_STRING,
@@ -336,7 +334,7 @@
 
   /****** for JIDL const 'z' ******/
   const FtDouble Simple_g_const_z = 9.8;
-  const FtDouble Simple_init_const_z(FeatureInstanceHandle feature, AppendData data) { return Simple_g_const_z; };
+  const FtDouble Simple_init_const_z(FeatureInstanceHandle feature, AppendData append_data) { return Simple_g_const_z; };
 
   static const MemberConst Simple_z_member_const = {
     .type = FT_DOUBLE,

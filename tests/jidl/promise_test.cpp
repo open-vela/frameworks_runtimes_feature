@@ -27,8 +27,8 @@
 
 
   /****** for JIDL use 'use_foo' ******/
-  static void promise_test_wrap_use_foo (FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a) {
-    promise_test_wrap_foo (feature, data, pid, a, "hello");
+  static void promise_test_wrap_use_foo (FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtInt a) {
+    promise_test_wrap_foo (feature, append_data, pid, a, "hello");
   }
 
   static const FeatureType promise_test_use_foo_parameters[] = {
