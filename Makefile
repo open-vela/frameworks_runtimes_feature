@@ -115,13 +115,14 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_1_0_impl.cp
 FEATURELIST += MessageChannel
 endif
 
-ifeq ($(CONFIG_MIWEAR_APPS),y)
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
-FEATURELIST += jumpApp
+ifeq ($(CONFIG_QUICKAPP_VAPP_XMS), y)
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/framework
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/jse
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/am/include/app
 endif
+FEATURELIST += jumpApp
 
 ifeq ($(GCCVER),12)
 CXXFLAGS += -DGTEST_HAS_POSIX_RE=0
