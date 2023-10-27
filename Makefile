@@ -84,6 +84,11 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
 ifeq ($(CONFIG_MESSAGE_CHANNEL),y)
+PROGNAME = feature_test_cli
+PRIORITY = 100
+STACKSIZE = 4096
+MAINSRC = $(APPDIR)/frameworks/base/feature/modules/feature_test_cli.cpp
+
 AIDLSRCS += $(shell find ./modules/aidl -name *.aidl)
 AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
 CXXSRCS += $(patsubst %.aidl,%$(CXXEXT),$(AIDLSRCS))
