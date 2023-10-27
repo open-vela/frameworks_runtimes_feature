@@ -20,14 +20,19 @@
 
 #include "feature_description.h"
 #include "feature_utils.h"
+#include "feature_framework.h"
 
 #include <map>
 #include <memory>
 #include <vector>
+#include <queue>
 
 namespace ferry {
 
-class FeaturePrototype;
+struct TaskData {
+    FeatureTaskCallback task_cb;
+    void* data;
+};
 
 class FeatureInstance {
 public:
@@ -70,14 +75,20 @@ public:
 
     typedef void (*dtor_func)(FeatureInstance*);
 
-    uv_async_t async;
-    uv_mutex_t mutex;
+    void addCallback(FeatureTaskCallback task_cb, void* data);
+
+    void runAsyncTasks(int task_run_mode);
+
+    void sendAsnyc();
 
 private:
     FeaturePrototype* proto_;
 
     int instance_id_; // the instance id, order in instances aray.
     VTable* vtable_; // vtable
+
+    std::queue<TaskData> task_queue_;
+
 };
 
 }

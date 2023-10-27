@@ -18,6 +18,7 @@
 
 #include "feature_description.h"
 #include "feature_utils.h"
+#include "feature_manager.h"
 
 #include <map>
 #include <memory>
@@ -42,6 +43,7 @@
 namespace ferry {
 
 class FeatureInstance;
+//class FeatureManager;
 
 /**
  * @brief Feature Protoype struct
@@ -103,22 +105,12 @@ public:
      */
     void clearAllInstances();
 
-    void setPackageName(const char* package_name);
+    void setFeatureManeger(FeatureManager* manager) { feature_manager_ = manager; }
 
-    const char* getPackageName() const;
-
-    void setEnvironmentName(const char* environment_name);
-
-    const char* getEnvironmentName() const { return environment_name_; }
-
-    void setProtoLoop(const uv_loop_t* loop);
-
-    const uv_loop_t* getProtoLoop() const { return proto_loop_; }
+    FeatureManager* getFeatureManager() const { return feature_manager_; }
 
 private:
-    const char* package_name_ = nullptr;
-    const char* environment_name_ = nullptr;
-    const uv_loop_t* proto_loop_ = nullptr;
+    FeatureManager* feature_manager_ = nullptr;
 };
 
 /**

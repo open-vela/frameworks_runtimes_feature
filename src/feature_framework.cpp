@@ -198,24 +198,4 @@ void FeaturePrototype::clearAllInstances()
     instances.clear();
 }
 
-void FeaturePrototype::setPackageName(const char* package_name)
-{
-    package_name_ = package_name;
-}
-
-const char* FeaturePrototype::getPackageName() const
-{
-    return package_name_;
-}
-
-void FeaturePrototype::setEnvironmentName(const char* environment_name)
-{
-    environment_name_ = environment_name;
-}
-
-void FeaturePrototype::setProtoLoop(const uv_loop_t* loop)
-{
-    proto_loop_ = loop;
-}
-
 }
