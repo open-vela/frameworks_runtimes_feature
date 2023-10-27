@@ -18,7 +18,6 @@
 #include "feature_log.h"
 
 #include <string.h>
-
 using namespace FEATURE;
 
 namespace ferry {
@@ -38,6 +37,42 @@ FeatureInstance::~FeatureInstance()
         dtor_func dtor = (dtor_func)(vtable_->finalizer);
         dtor(this);
     }
+
+    FeatureManager* manager = prototype()->getFeatureManager();
+    manager->lockAsync();
+    runAsyncTasks(FEATURE_TASK_MODE_FREE);
+    manager->unlockAsync();
+}
+
+void FeatureInstance::addCallback(FeatureTaskCallback task_cb, void* data)
+{
+    FeatureManager* manager = prototype()->getFeatureManager();
+    manager->lockAsync();
+    TaskData task_data;
+    task_data.task_cb = task_cb;
+    task_data.data = data;
+    task_queue_.push(task_data);
+    manager->unlockAsync();
+}
+
+void FeatureInstance::sendAsnyc()
+{
+    FeatureManager* manager = prototype()->getFeatureManager();
+    manager->lockAsync();
+    uv_async_send(&manager->async);
+    manager->unlockAsync();
+}
+
+
+
+void FeatureInstance::runAsyncTasks(int task_run_mode) {
+
+   int task_queue_size = task_queue_.size();
+   for(int i = 0; i < task_queue_size; i++) {
+        TaskData task_data = task_queue_.front();
+        task_data.task_cb(task_run_mode, task_data.data);
+        task_queue_.pop();
+   } 
 }
 
 }

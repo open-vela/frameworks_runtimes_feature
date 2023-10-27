@@ -47,7 +47,7 @@ public:
      * @return true
      * @return false
      */
-    bool init(char* manifest, uv_loop_t* loop);
+    bool init(char* manifest);
 
     /**
      * @brief register FeatureRegistry
@@ -67,12 +67,10 @@ public:
      * @return const std::map<std::string, FeatureUnit*>& 
      */
     const std::map<std::string, FeatureRegistryPair>& getRegisteredFeatures() const { return registeredFeatures_; }
-    uv_loop_t* getFeatureUVLoop() const { return loop_; }
 private:
     std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features
     bool manifest_check_enable = true;
     std::string package_name_;
-    uv_loop_t* loop_ = nullptr;
 
 };// class FeatureRegistry
 

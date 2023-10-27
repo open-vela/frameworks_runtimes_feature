@@ -642,8 +642,7 @@ static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
 }
 
 FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
-    : registry_(registry)
-    , ft_ctx_(nullptr)
+    :FeatureManager(registry)
 {
 }
 
@@ -688,30 +687,31 @@ feature_value_t createJsInstance(FeaturePrototype* prototype, feature_classid_t 
 feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value_t vm_object, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
-    auto feature_pair = registry_->findFeature(name);
+    auto feature_pair = getFeatureRegistry()->findFeature(name);
     if (!feature_pair || !feature_pair->first->description) {
         FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
     const FeatureDescription* description = feature_pair->first;
 
-    if (!ft_ctx_) {
-        ft_ctx_ = CreateFeatureContextQjs(ctx);
+    if (!getFeatureContext()) {
+        ft_context_ref ft_ctx = CreateFeatureContextQjs(ctx);
+        setFeatureContext(ft_ctx);
     }
 
     auto& prototype = feature_pair->second;
     if (!prototype) {
         // create proto
-        prototype = createFeaturePrototype(ft_ctx_, description);
+        prototype = createFeaturePrototype(getFeatureContext(), description);
         if (!prototype) {
             FEATURE_LOG_ERROR("createFeaturePrototype failed !");
             return JS_UNDEFINED;
         }
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-        prototype->setPackageName(registry_->getFeaturePackageName());
-        prototype->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
-        prototype->setProtoLoop(registry_->getFeatureUVLoop());
+        prototype->setFeatureManeger(this);
+        this->setPackageName(getFeatureRegistry()->getFeaturePackageName());
+        this->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
 
     // create feature instance for the required object
@@ -719,7 +719,6 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     auto instance_ptr = instance.get();
     // save vm_object into instance
     instance->setVmObject(vm_object);
-    uv_mutex_init(&instance->mutex);
 
     // insert into instances array, update iid
     int iid = prototype->addInstance(std::move(instance));
@@ -737,7 +736,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
 
 void FeatureManagerQjs::uninit()
 {
-    for (const auto& pair : registry_->getRegisteredFeatures()) {
+    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto proto = pair.second.second;
         auto description = pair.second.first;
         FEATURE_CHECK_NE(description, nullptr);
@@ -760,17 +759,17 @@ void FeatureManagerQjs::uninit()
         delete pair.second.second;
     }
     // uninit registery
-    delete registry_;
+    delete getFeatureRegistry();
 
-    if (ft_ctx_) {
-        ReleaseFeatureContextQjs(ft_ctx_);
-        ft_ctx_ = nullptr;
+    if (getFeatureContext()) {
+        ReleaseFeatureContextQjs(getFeatureContext());
+        setFeatureContext(nullptr);
     }
 }
 
 feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const char* name)
 {
-    auto featurePair = registry_->findFeature(name);
+    auto featurePair = getFeatureRegistry()->findFeature(name);
     if (!featurePair || !featurePair->first->description || featurePair->second) {
         FEATURE_LOG_WARN("can't find native feature '%s'!", name);
         return FEATURE_VALUE_UNDEFINED;
@@ -782,7 +781,7 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
 
 feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, feature_value_t proto)
 {
-    for (const auto& pair : registry_->getRegisteredFeatures()) {
+    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto prototype = pair.second.second;
         if (!prototype)
             continue;

@@ -187,35 +187,15 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  */
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable);
 
-//封装feature_uv.h中的接口
 /**
- * @brief feature uv async send
+ * @brief post a task with callback to feature instance
  *
  * @param handle
+ * @param task_cb
  * @param data
  * @return void
  */
-void FeatureAsyncSend(FeatureInstanceHandle handle, void* data);
-
-/**
- * @brief feature uv async close
- *
- * @param handle
- * @return void
- */
-void FeatureAsyncClose(FeatureInstanceHandle handle);
-
-/**
- * @brief feature uv register
- *
- * @param handle
- * @param test
- * @return int
- */
-int FeatureRegister(FeatureInstanceHandle handle, register_fun_t* register_data);
-
-
-
+void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data);
 
 #ifdef __cplusplus
 }

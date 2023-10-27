@@ -17,16 +17,13 @@
 #define __FEATURE_MANAGER_QJS_H__
 
 #include "feature.h"
-#include "feature_context.h"
+#include "feature_manager.h"
 
 #define FEATURE_ENVIRONMENT_NAME "quickjs"
 
 namespace ferry {
 
 class FeatureRegistry;
-
-// feature require的实现，直接走FeatureManagerQjs，失败之后fallback回JS require
-// 需要考虑，无需require的全局函数怎么处理？如setInterval这类
 
 /**
  * @brief Feature Manager, Manage all feature instance.
@@ -36,7 +33,7 @@ class FeatureRegistry;
  * Application level or Page level.
  * ApplicationManager manages all feature instance and it's life cycles.
  */
-class FeatureManagerQjs {
+class FeatureManagerQjs : public FeatureManager {
 public:
     FeatureManagerQjs(FeatureRegistry* registry);
     /**
@@ -55,8 +52,6 @@ public:
     feature_value_t createFeature(feature_context_ref ctx, feature_value_t js_proto);
 
 private:
-    FeatureRegistry* registry_;
-    ft_context_ref ft_ctx_;
 };
 
 }

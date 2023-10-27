@@ -98,7 +98,7 @@ const char* ManifestParser::getPackageName()
     return package.GetString();
 }
 
-bool FeatureRegistry::init(char* manifest, uv_loop_t* loop)
+bool FeatureRegistry::init(char* manifest)
 {
     // register features
     ManifestParser parser;
@@ -126,9 +126,6 @@ bool FeatureRegistry::init(char* manifest, uv_loop_t* loop)
 
     // register features
     #include "ajs_features_list.h"
-
-    FEATURE_LOG_DEBUG("FeatureRegister init loop is %p !", loop);
-    loop_ = loop;
 
     return true;
 }
