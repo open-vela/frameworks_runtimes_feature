@@ -54,16 +54,24 @@ run_lvgl_binding_gen() {
   echo "=========================================="
 }
 
-run_feature $CUR_DIR/samples
-run_feature $CUR_DIR/../../tests/jidl
-run_feature $CUR_DIR/samples/miot-features
-run_miot_service_gen $CUR_DIR/samples/alarmsa.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/audiofocus.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/alarm.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/mihome.jidl -v "includes=mihome-help.h"
-run_miot_service_gen $CUR_DIR/samples/miot-features/ota.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/settings.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/miai.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/microphone.jidl
-run_miot_service_gen $CUR_DIR/samples/miot-features/miot.jidl
+run_features() {
+  run_feature $CUR_DIR/samples
+  run_feature $CUR_DIR/../../tests/jidl
+  run_feature $CUR_DIR/samples/miot-features
+}
+
+run_miot_services() {
+  run_miot_service_gen $CUR_DIR/samples/alarmsa.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/audiofocus.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/alarm.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/mihome.jidl -v "includes=mihome-help.h"
+  run_miot_service_gen $CUR_DIR/samples/miot-features/ota.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/settings.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/miai.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/microphone.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/miot.jidl
+}
+
+#run_features
+#run_miot_services
 run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl
