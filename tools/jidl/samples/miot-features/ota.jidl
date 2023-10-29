@@ -69,11 +69,9 @@ property on_data onstatechange writeonly;
 property on_data ondownloadprocess writeonly;
 
 [
-
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTANOTIFY",
   msg_arg_id = "MIOTMSG__TEST_ONEOF_OTASUBARG",
   msg_sub_type = "Otasubmsg",
   cb_name = "onotaapplyprocess"
 ]
 property on_data onapplyprocess writeonly;
-

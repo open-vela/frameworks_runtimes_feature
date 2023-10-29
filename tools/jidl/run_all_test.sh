@@ -34,7 +34,10 @@ run_miot_service_gen() {
   file_name=${f##*/}
   file_name=${file_name%.*}
   cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_feture.cpp $*"
-  echo "GEN: $cmd"
+  echo "GEN FEATURE: $cmd"
+  $cmd
+  cmd="$PYTHON $CUR_DIR/feature_render.py -t $CUR_DIR/miot-services/miot_service_agent_event.mt -c $CUR_DIR/miot-services/miot_service_agent_config.json -i $json_file -o $CUR_DIR/.out/${file_name}_event.c $*"
+  echo "GEN EVENT: $cmd"
   $cmd
   echo "=========================================="
 }
@@ -72,6 +75,6 @@ run_miot_services() {
   run_miot_service_gen $CUR_DIR/samples/miot-features/miot.jidl
 }
 
-#run_features
-#run_miot_services
+run_features
+run_miot_services
 run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl

@@ -23,7 +23,7 @@
   __${p_name}__ = ${prefix}${p_name};
   %endif
 %else:
-  sub_arg.${key_name} = ${prefix}${len(to_key) > 0 and '%s(%s)' % (to_key, p_name) or p_name};
+  sub_arg.${key_name} = ${len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s->%s'%(prefix, p_name)};
 %endif
 </%def>
 
@@ -159,7 +159,7 @@ void ${module_name}_onUnregister(FeatureRuntimeContext ctx) {
 
 %for m in doc['members']:
 
-%if not ('meta' in m and 'external' in m['meta'] and m['meta']['external']):
+%if utils.needGenerator(m):
 %if m['type'] == 'property':
 ${gen_property(doc, m)}
 %elif m['type'] == 'function':
