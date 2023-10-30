@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "feature_exports.h"
+#include "feature_manager.h"
 #include "feature_framework.h"
 #include "feature_instance.h"
 #include "feature_log.h"
@@ -174,6 +175,11 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
     return proto->getFeatureManager()->getEnvironmentName();
 }
 
+void* FeatureInstanceGetUserData(FeatureInstanceHandle handle, const char* name) {
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->prototype()->getFeatureManager()->getUserData(name);
+}
+
 bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
@@ -233,4 +239,3 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void
     instance->addCallback(task_cb, data);
     instance->sendAsnyc();
 }
-

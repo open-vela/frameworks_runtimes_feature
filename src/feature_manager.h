@@ -46,6 +46,13 @@ public:
 
     const char* getEnvironmentName() const { return environment_name_; }
 
+    void setUserData(const char* name, void* data) { user_data_[name] = data; }
+
+    void* getUserData(const char* name) {
+        auto it = user_data_.find(name);
+        return it != user_data_.end() ? it->second : nullptr;
+    }
+
     void runAllTasks(int mode);
 
     void lockAsync();
@@ -61,6 +68,7 @@ private:
     uv_loop_t* loop_ = nullptr;
     const char* package_name_ = nullptr;
     const char* environment_name_ = nullptr;
+    std::map<std::string, void*> user_data_;
 };
 
 }

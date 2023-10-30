@@ -128,6 +128,15 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
 
 /**
+ * @brief get user defined data from FeatureManager by name
+ *
+ * @param handle
+ * @param name
+ * @return void*
+ */
+void* FeatureInstanceGetUserData(FeatureInstanceHandle handle, const char* name);
+
+/**
  * @brief invoke callback via cid
  *
  * @param handle
