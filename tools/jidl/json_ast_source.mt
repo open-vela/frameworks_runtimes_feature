@@ -3,6 +3,7 @@
 <%
   module = render.module
   module_name = render.GetModuleName()
+  raw_mod_name = render.GetRawModuleName()
   header_name = render.GetHeaderFileName()
 %>\
 <%def name="GenOptionalType(name, feature_type, value)">\
@@ -679,8 +680,8 @@ ${GenMembers(module['members'])}\
 
   static const FeatureDescription ${module_name}_desc = {
     .version = 1,
-    .name = "${module_name}",
-    .description = "${module_name}",
+    .name = "${raw_mod_name}",
+    .description = "${raw_mod_name}",
     { .dynamic = false },
     .native_callbacks = &${module_name}_callbacks,
     .member_count = countof(${module_name}_members),
