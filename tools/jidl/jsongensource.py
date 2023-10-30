@@ -56,8 +56,11 @@ class Render:
     return json_module
 
   def GetModuleName(self):
-    name = self.module['name'].split("@")[0]
+    name = self.GetRawModuleName()
     return name.replace('.', '_')
+
+  def GetRawModuleName(self):
+    return self.module['name'].split("@")[0]
 
   def MakeOutPath(self, filename):
     if self.outdir:
