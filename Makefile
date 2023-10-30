@@ -31,6 +31,7 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_framework.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
 
