@@ -35,12 +35,15 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
 
+GTEST_DIR = $(APPDIR)/frameworks/base/feature/tests/jidl/googletest-src/googletest
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src
+CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)/include
+CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)
 
 ifeq ($(CONFIG_ARCH), arm)
 TARGETDIR := arm
@@ -108,12 +111,24 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
 FEATURELIST += jumpApp
 endif
 
-ifeq ($(CONFIG_TESTING_CMOCKA),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest_impl.cpp
-FEATURELIST += mockatest
+ifeq ($(GCCVER),12)
+CXXFLAGS += -DGTEST_HAS_POSIX_RE=0
+CXXFLAGS += -Wno-maybe-uninitialized
 endif
 
+CXXSRCS += ${GTEST_DIR}/src/gtest-assertion-result.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-filepath.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-port.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-printers.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-test-part.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test_impl.cpp
+FEATURELIST += feat_test
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/device.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/device_impl.cpp
+FEATURELIST += device
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
