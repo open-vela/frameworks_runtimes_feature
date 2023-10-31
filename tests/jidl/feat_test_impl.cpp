@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "feat_test.h"
-#include "feat_test_utils.h"
 
 class FeatureUnittest {
  public:
@@ -32,6 +31,13 @@ class FeatureUnittest {
 int FeatureUnittest::current_async_id = 0;
 int FeatureUnittest::next_async_id = 0;
 
+typedef void (*LoopFunc)(void*);
+typedef struct LoopPack {
+  void* manager;
+  LoopFunc run_loop;
+  LoopFunc stop_loop;
+} LoopPack;
+
 class FeatureTest : public ::testing::Test {
  public:
   FeatureTest(FeatureInstanceHandle featureInstance, FtCallbackId cb,
@@ -48,13 +54,15 @@ class FeatureTest : public ::testing::Test {
     FeatureUnittest* p =
         static_cast<FeatureUnittest*>(FeatureGetObjectData(_featureInstance));
     FeatureUnittest::setCurrentAsyncId(_async_id);
-    ferry::LoopPack* pack = (ferry::LoopPack*)FeatureInstanceGetUserData(
-        _featureInstance, "run_loop");
-    ferry::LoopFunc run_loop = pack->run_loop;
-    ferry::FeatureManager* manager = pack->manager;
+
+    LoopPack* pack =
+        (LoopPack*)FeatureInstanceGetUserData(_featureInstance, "run_loop");
+
+    LoopFunc run_loop = pack->run_loop;
+
     // set timer
     if (run_loop) {
-      run_loop(manager);
+      run_loop(pack->manager);
     }
     FeatureUnittest::setCurrentAsyncId(0);
     // clear timer and done connection
@@ -144,11 +152,10 @@ void feat_test_wrap_done(FeatureInstanceHandle feature, AppendData append_data,
   }
 
   printf("feat_test done stop async_id %d\n", async_id);
-  ferry::LoopPack* pack =
-      (ferry::LoopPack*)FeatureInstanceGetUserData(feature, "run_loop");
-  ferry::FeatureManager* manager = pack->manager;
-  ferry::LoopFunc stop_loop = pack->stop_loop;
-  stop_loop(manager);
+
+  LoopPack* pack = (LoopPack*)FeatureInstanceGetUserData(feature, "run_loop");
+  LoopFunc stop_loop = pack->stop_loop;
+  stop_loop(pack->manager);
 }
 FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
                                AppendData append_data, FtString test_suit_name,

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "feat_test_utils.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
@@ -15,6 +14,13 @@ typedef struct feature_env_t {
   JSRuntime* rt;
   JSContext* ctx;
 } feature_env_t;
+
+typedef void (*LoopFunc)(void*);
+typedef struct LoopPack {
+  void* manager;
+  LoopFunc run_loop;
+  LoopFunc stop_loop;
+} LoopPack;
 
 // __require
 feature_value_t __require(feature_context_ref ctx, feature_value_t this_val,
@@ -76,12 +82,14 @@ static void execute_job_cb(uv_prepare_t* handle) {
 }
 
 // TODO： 增加超时退出机制
-static void run_loop(ferry::FeatureManager* manager) {
+static void run_loop(void* m) {
+  ferry::FeatureManager* manager = static_cast<ferry::FeatureManager*>(m);
   uv_loop_t* ploop = manager->getUVLoop();
   uv_run(ploop, UV_RUN_DEFAULT);
 }
 
-static void stop_loop(ferry::FeatureManager* manager) {
+static void stop_loop(void* m) {
+  ferry::FeatureManager* manager = static_cast<ferry::FeatureManager*>(m);
   uv_loop_t* ploop = manager->getUVLoop();
   uv_stop(ploop);
 }
@@ -131,7 +139,7 @@ int main(int argc, char** argv) {
   // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
   ferry::FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
 
-  struct LoopPack pack = {manager, run_loop, stop_loop};
+  LoopPack pack = {manager, run_loop, stop_loop};
 
   manager->setUserData("run_loop", &pack);
 
