@@ -1,0 +1,31 @@
+// Copyright 2023 Xiaomi, Inc. All rights reserved.
+
+export declare class Chapter {
+  page_count: number;
+  title: string;
+  is_end: boolean;
+}
+
+export declare class Book {
+  any_param: any;
+  page_count: number;
+  title: string;
+  chap_titles: string[];
+  first_chap: Chapter;
+  chap_changed: (index: number, title: string) => void;
+}
+
+
+export class struct_test {
+  constructor(){
+    this.init_native(this.clazz_name);
+  }
+  declare foo(a: number, b: Chapter): void;
+  declare bar(a: number): Chapter;
+  declare bar2(a: Book): void;
+  declare print(...rest: any[]): void;
+
+// private:
+  readonly clazz_name = "struct_test";
+  declare init_native(name: string): void;
+}

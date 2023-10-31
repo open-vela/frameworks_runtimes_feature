@@ -107,8 +107,9 @@ class Utils:
       return self.cppTypeEnum(tp)
     if tp['referred_type'] == 'interface':
       return self.cppTypeInterface(tp)
-    if tp['referred_type'] == 'user_type':
-      return tp['referred_name']
+    return self.cppTypeDefault(tp)
+
+  def cppTypeStruct(self, tp):
     return self.cppTypeDefault(tp)
 
   def cppTypeEnum(self, tp):
@@ -151,39 +152,22 @@ class Utils:
   def getPromiseType(self, tp):
     return 'xs_promise_type<%s, %s>' % (tp['resolve_type'], tp['reject_type'])
 
-  def cppTypeArray(self, tp):
-    ele_native_type = self.cppType(tp['element'])
-    return '%s*' % ele_native_type
-
   def cppType(self, tp):
     if isinstance(tp, dict):
         if tp['type'] == 'reference':
           return self.findReferenceNativeType(tp)
-        elif tp['type'] == 'array':
-          return self.cppTypeArray(tp)
         elif self.isPromiseType(tp):
           return self.getPromiseType(tp)
     return self.cppTypeDefault(tp)
 
-  def getMetaValue(self, m, key):
-    if 'meta' in m and key in m['meta']:
-      return m['meta'][key]
-    return None
-
-  def getValueByKey(self, m, key, defval):
-    v = self.getMetaValue(m, key)
-    if v: return v;
-    return key in m and m[key] or defval
-
-  def getDefaultValueType(self):
-    return 'xs_value_type'
-
   def getValueType(self, m):
-    return self.getValueByKey(m, 'value_type', self.getDefaultValueType())
+    if 'meta' in m and 'value_type' in m['meta']:
+      return m['meta']['value_type']
+    return 'value_type' in m and m['value_type'] or 'xs_value_type'
 
   def getConstValue(self, m):
-    v = self.getMetaValue(m, 'value')
-    if v: return v;
+    if 'meta' in m and 'value' in m['meta']:
+      return m['meta']['value']
     if 'value' in m:
       if 'value_type' in m and m['value_type'] == 'string':
         return '"%s"' % m['value']
@@ -191,8 +175,10 @@ class Utils:
     return '"%s"' % m['name']
 
   def getConstValueType(self, m):
-    v = self.getValueByKey(m, 'value_type', None)
-    if v: return v
+    if 'meta' in m and 'value_type' in m['meta']:
+      return m['meta']['value_type']
+    if 'value_type' in m:
+      return m['value_type']
     t = type(m['value'])
     if t == int:
       return 'int'
@@ -202,9 +188,6 @@ class Utils:
       return 'bool'
     else:
       return 'string'
-
-  def getConstInitFunc(self, m):
-    return self.getMetaValue(m, 'init')
 
   def toNativeDefault(self, tp):
     return 'xs_value_to'
@@ -238,12 +221,7 @@ class Utils:
     return self.fromNativeDefault(tp)
 
   def freeNative(self, tp):
-    free_native = self.transNative(tp, 'free_native')
-    if free_native: return free_native
-    return self.freeNativeDefault(tp)
-
-  def freeNativeDefault(self, tp):
-    return None
+    return self.transNative(tp, 'free_native')
 
   def select(self, d, path):
     return jsonpath.jsonpath(d, path)
@@ -277,19 +255,6 @@ class Utils:
 
   def toIdName(self, s):
     return  re.sub(r"[^0-9A-Za-z_]","_", s)
-
-  def getModuleName(self):
-    return self.toIdName(self.doc['name'])
-
-  def toTypeName(self, tp):
-    if isinstance(tp, str):
-      return tp
-    if isinstance(tp, dict):
-      if tp['type'] == 'reference':
-        return '%s<%s>' % (tp['referred_type'], tp['referred_name'])
-      elif tp['type'] == 'array':
-        return 'array<%s>' % (self.toTypeName(tp['element']))
-    return str(tp)
 
   def buildPropertyValues(self, pname, prop):
     d = {}

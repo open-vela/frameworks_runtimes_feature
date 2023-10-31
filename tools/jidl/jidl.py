@@ -118,7 +118,6 @@ class JIDL(Parser):
     'CALLBACK',
     'CONST',
     'USE',
-    'TYPE',
     'PRIVATE',
     'PROPERTY',
     'EVENT',
@@ -137,7 +136,7 @@ class JIDL(Parser):
     'AT', 'LPAREN', 'RPAREN', 'COMMA', 'ELLIPSIS', 'COLON',
     'LBRACE', 'RBRACE', 'LBRACKET', 'RBRACKET', 'EQUALS',
     'LANGULARBRACKET', 'RANGULARBRACKET',
-    'LITERAL', 'DOT', 'ID',
+    'LITERAL', 'DOTTED_ID', 'ID',
     'INTEGER', 'NUMBER'
   )
 
@@ -156,7 +155,6 @@ class JIDL(Parser):
   t_EQUALS = r'='
   t_ELLIPSIS = r'\.\.\.'
   t_COLON = ':'
-  t_DOT = r'\.'
   t_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
   t_NUMBER = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
   t_LITERAL = r'\"([^\\\n]|(\\.))*?\"'
@@ -171,6 +169,11 @@ class JIDL(Parser):
   def t_comment(self, t):
     r'(/\*(.|\n)*?\*/)|(//.*\n)'
     t.lexer.lineno += t.value.count('\n')
+
+  def t_DOTTED_ID(self, t):
+    r'[A-Za-z_][\w_]*\.[\w_]+'
+    t.type = self.reserved_map.get(t.value, "DOTTED_ID")
+    return t
 
   def t_ID(self, t):
     r'[A-Za-z_][\w_]*'
@@ -225,12 +228,9 @@ class JIDL(Parser):
   def p_module_name(self, p):
     """
     module_name : ID
-                | module_name DOT ID
+                | DOTTED_ID
     """
-    if len(p) == 2:
-      p[0] = p[1]
-    else:
-      p[0] = p[1] + '.' + p[3]
+    p[0] = p[1]
 
   def p_module_blocks(self, p):
     """
@@ -255,7 +255,6 @@ class JIDL(Parser):
            | class_define
            | interface_define
            | struct_define
-           | type_define
     """
     p[0] = p[1]
 
@@ -318,17 +317,6 @@ class JIDL(Parser):
       p[0].SetMetaAttributes(p[1])
     else:
       p[0] = p[1]
-
-  def p_type_define(self, p):
-    """
-    type_define : TYPE ID 
-                | meta_attributes_define TYPE ID
-    """
-    if len(p) == 3:
-      CreateASTNode(p, ast.UserTypeDefine, p[2])
-    else:
-      CreateASTNode(p, ast.UserTypeDefine, p[3])
-      p[0].SetMetaAttributes(p[1])
 
   def p_struct_member_define(self, p):
     """
@@ -734,20 +722,14 @@ class JIDL(Parser):
 
   def p_param_define(self, p):
     """
-    param_define : value_type param_id
-                 | meta_attributes_define value_type param_id
+    param_define : value_type ID
+                 | meta_attributes_define value_type ID
     """
     if len(p) == 3:
       CreateASTNode(p, ast.ParamDefine, p[1], p[2])
     else:
       CreateASTNode(p, ast.ParamDefine, p[2], p[3])
       p[0].SetMetaAttributes(p[1])
-
-  def p_param_id(self, p):
-    """
-    param_id : meta_id
-    """
-    p[0] = p[1]
 
   def p_return_type(self, p):
     """
@@ -844,33 +826,10 @@ class JIDL(Parser):
 
   def p_meta_attribute(self, p):
     """
-    meta_attribute : meta_id EQUALS literal_value
-               | meta_id EQUALS array_literal
+    meta_attribute : ID EQUALS literal_value
+               | ID EQUALS array_literal
     """
     CreateASTNode(p, ast.MetaAttribute, p[1], p[3])
-
-  def p_meta_id(self, p):
-    """
-    meta_id : ID
-            | CALLBACK
-            | TYPE
-            | MODULE
-            | CLASS
-            | CONST
-            | USE
-            | PRIVATE
-            | EVENT
-            | ENUM
-            | CONSTRUCTOR
-            | MAIN
-            | WORKER
-            | ASYNC
-            | TRUE
-            | FALSE
-            | PROPERTY
-            | EXTENDS
-    """
-    p[0] = p[1]
 
   def p_typed_array_element_type(self, p):
     """

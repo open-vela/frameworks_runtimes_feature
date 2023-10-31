@@ -35,7 +35,6 @@ INTERFACE_DEFINE = 30
 META_ATTRIBUTE = 31
 ARRAY_LITERAL = 32
 ENUM_DEFINE = 33
-USER_TYPE_DEFINE = 34
 
 type_names = {
   LITERVAL : 'literval',
@@ -72,8 +71,7 @@ type_names = {
   STRUCT_MEMBER_CALLBACK: 'struct_member_callback',
   META_ATTRIBUTE : 'meta_attribute',
   ARRAY_LITERAL : 'array_literal',
-  ENUM_DEFINE : 'enum_define',
-  USER_TYPE_DEFINE : 'type_define',
+  ENUM_DEFINE : 'enum_define'
 }
 
 def TypeName(tp):
@@ -105,8 +103,7 @@ class Node:
            self.__type == CLASS_DEFINE or \
            self.__type == STRUCT_DEFINE or \
            self.__type == ENUM_DEFINE or \
-           self.__type == CALLBACK_DEFINE or \
-           self.__type == USER_TYPE_DEFINE
+           self.__type == CALLBACK_DEFINE
 
   def Check(self, context):
     pass
@@ -529,29 +526,6 @@ class EventDefine(Type):
       event_def['params'] = []
       self.params.ToJson(event_def['params'])
     out.append(event_def)
-
-class UserTypeDefine(Type):
-  def __init__(self, name):
-    Type.__init__(self, name, USER_TYPE_DEFINE)
-
-  def __str__(self):
-    return 'type %s' % (self.name)
-
-  def Check(self, context):
-    context.AddId(self.name, self)
-
-  def GetJson(self):
-    type_def = {}
-    Type.ToJson(self, type_def)
-    type_def['type'] = 'user_type'
-    type_def['name'] = self.name
-    return type_def
-
-  def ToJson(self, out):
-    AddJson(self.GetJson(), out)
-
-  def GetReferenceJson(self):
-    return MakeReferenctJson('user_type', self.name)
 
 class AsyncInfo(Node):
   def __init__(self, async_type):
@@ -1109,7 +1083,6 @@ struct_member_accepted_types = (
   InterfaceDefine,
   CallbackDefine,
   EnumDefine,
-  UserTypeDefine
 )
 
 param_accepted_types = (
@@ -1119,8 +1092,7 @@ param_accepted_types = (
   StructDefine,
   InterfaceDefine,
   EnumDefine,
-  EllipseType,
-  UserTypeDefine
+  EllipseType
 )
 
 return_accepted_type = (
@@ -1129,8 +1101,7 @@ return_accepted_type = (
   InterfaceDefine,
   StructDefine,
   EnumDefine,
-  PromiseType,
-  UserTypeDefine
+  PromiseType
 )
 
 value_accepted_type = (
