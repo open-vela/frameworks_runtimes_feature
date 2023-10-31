@@ -91,6 +91,10 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
 FEATURELIST += exchange
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
+FEATURELIST += storage
+
 ifeq ($(CONFIG_MESSAGE_CHANNEL),y)
 PROGNAME = feature_test_cli
 PRIORITY = 100
