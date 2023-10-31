@@ -41,6 +41,38 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val,
   return feature_obj;
 }
 
+typedef struct {
+  JSContext *ctx;
+  JSValue callback;
+} TimeCallback;
+void timeout_callback(uv_timer_t *handle) {
+  static int cnt = 0;
+  printf("callback %d\n", cnt++);
+
+  TimeCallback *tc = static_cast<TimeCallback *>(handle->data);
+  JS_Call(tc->ctx, tc->callback, JS_UNDEFINED, 0, NULL);
+  JS_FreeValue(tc->ctx, tc->callback);
+}
+
+// setTimeout
+feature_value_t __setTimeout(JSContext* ctx, feature_value_t this_val,
+                             int argc, JSValue* argv) {
+  if (argc < 2) {
+    FEATURE_THROW_INTERNAL_ERROR(ctx, "setTimeout need a callback and time!");
+    return FEATURE_UNDEFINED;
+  }
+  int t = JS_VALUE_GET_INT(argv[1]);
+  TimeCallback* tc = (TimeCallback*)malloc(sizeof(TimeCallback));
+  tc->ctx = ctx;
+  tc->callback = JS_DupValue(ctx, argv[0]);
+  printf("set time out!!!! %d\n", t);
+  uv_timer_t *timer = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+  uv_timer_init(uv_default_loop(), timer);
+  timer->data = tc;
+  uv_timer_start(timer, timeout_callback, t, 0);
+  return feature_int(ctx, 3);
+}
+
 bool load_file(const char* file_name, char** file_content) {
   if (file_name == NULL || file_content == NULL) {
     printf("file_name or file_content is NULL!\n");
@@ -72,13 +104,6 @@ static void execute_job_cb(uv_prepare_t* handle) {
   feature_context_ref r_ctx;
   int ret;
   ret = JS_ExecutePendingJob(env->rt, &r_ctx);
-  if (!ret) {
-    uv_stop(handle->loop);
-  } else if (ret > 0) {
-    // 执行成功
-  } else {
-    // TODO: err deal
-  }
 }
 
 // TODO： 增加超时退出机制
@@ -148,8 +173,12 @@ int main(int argc, char** argv) {
   // register global require
   feature_value_t global_obj = feature_global_object(js_env.ctx);
   feature_value_t require = getRequireObject(&js_env, manager);
-
   feature_set_object_property(js_env.ctx, global_obj, "require", require);
+
+  feature_value_t setTimeout =
+      feature_cfunction(js_env.ctx, __setTimeout, "setTimeout", 2);
+  feature_set_object_property(js_env.ctx, global_obj, "setTimeout", setTimeout);
+
   feature_free_value(js_env.ctx, global_obj);
 
   // 加载 test frame work
@@ -183,7 +212,7 @@ int main(int argc, char** argv) {
     feature_free_value(js_env.ctx, result);
     return -1;
   }
-
+ 
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
   feature_free_value(js_env.ctx, result);
