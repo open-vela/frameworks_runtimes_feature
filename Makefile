@@ -126,9 +126,6 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test_impl.cpp
 FEATURELIST += feat_test
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/device.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/device_impl.cpp
-FEATURELIST += device
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
