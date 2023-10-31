@@ -180,6 +180,11 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, voi
             value.kind = WASM_ANYREF;
         }
         break;
+        case COMPLEX_INTERFACE:
+        {
+            value.of.foreign = (uintptr_t)ptr;
+            value.kind = WASM_ANYREF;
+        } break;
         }
     }
     return true;
@@ -353,14 +358,15 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 }
                 break;
             }
-            //	   case COMPLEX_PROMISE: {
-            //		   FEATURE_LOG_ERROR("do not support convert promise to guest !");
-            //		   return false;
-            //	   } break;
-            //	   default: {
-            //		   FEATURE_LOG_ERROR("unsupported complex type !");
-            //		   return false;
-            //	   }
+            case COMPLEX_INTERFACE:
+            {
+            }
+            break;
+        default:
+        {
+            FEATURE_LOG_ERROR("unsupported complex type !");
+            return false;
+        }
         }
     }
     return true;
