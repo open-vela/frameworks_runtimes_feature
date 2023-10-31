@@ -60,33 +60,6 @@ bool load_file(const char* file_name, char** file_content) {
   return true;
 }
 
-// static void idle_cb(uv_idle_t* handle) {
-//   static int num = 0;
-//   feature_env_t* env = static_cast<feature_env_t*>(handle->data);
-//   if (!JS_IsJobPending(env->rt)) {
-//     num++;
-//     if (num > 5) {
-//       uv_stop(handle->loop);
-//     }
-//     return;
-//   }
-//   int cnt = 8, err;
-//   feature_context_ref r_ctx;
-//   while (cnt-- && !!JS_IsJobPending(env->rt)) {
-//     err = JS_ExecutePendingJob(env->rt, &r_ctx);
-//     if (err <= 0) {
-//       if (err < 0) feature_dump_error(r_ctx);
-//       break;
-//     }
-//   }
-
-//   printf("idle callback\n");
-//   if (num >= 5) {
-//     printf("idle stop, num = %d\n", num);
-//     uv_stop();
-//   }
-// }
-
 // TODO: remove stop
 static void execute_job_cb(uv_prepare_t* handle) {
   feature_env_t* env = static_cast<feature_env_t*>(handle->data);
@@ -132,27 +105,11 @@ int main(int argc, char** argv) {
 
   char* js_file = argv[1];
   char* js_str = NULL;
-  char* test_str = NULL;
-  char* manifast_str = NULL;
 
-  // TODO: ues qjs bytecode
-  const char* test_file =
-      "/home/gyl/work/vela/miwear-bes/frameworks/base/feature/tests/jidl/"
-      "test-internal.js";
-  // 打开 test 框架加载文件
-  load_file(test_file, &test_str);
-  if (test_str == NULL) {
-    printf("load test framework failed. filename: %s\n", test_file);
-    return -1;
-  }
   // 打开js文件
   load_file(js_file, &js_str);
   if (js_str == NULL) {
     printf("malloc js file failed!\n");
-    if (manifast_str != NULL) {
-      free(manifast_str);
-      manifast_str = NULL;
-    }
     return 0;
   }
 
@@ -188,8 +145,19 @@ int main(int argc, char** argv) {
   feature_free_value(js_env.ctx, global_obj);
 
   // 加载 test frame work
-  auto res = feature_eval(js_env.ctx, test_str, strlen(test_str), "<eval>",
-                          JS_EVAL_TYPE_GLOBAL);
+  // TODO: ues qjs bytecode
+  // original file ../test-internal.js
+  const char* test_content =
+      "let unittest = require('feat_test');\n\nfunction feat_test(name, desc, "
+      "cb) {\n    unittest.testsuite(name, desc, cb);\n}\n\nfunction "
+      "feat_async_test(suitname, desc, test_cb) {\n    var async_id;\n    "
+      "async_id = unittest.testsuite(suitname, desc, () => {\n        "
+      "test_cb(() => unittest.done(async_id));\n    }, true);\n}\n\nfunction "
+      "feat_test_all() {\n    unittest.run_all_tests();\n}\n\nfunction "
+      "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
+      "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n";
+  auto res = feature_eval(js_env.ctx, test_content, strlen(test_content),
+                          "<eval>", JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(res)) {
     const char* str = JS_ToCString(js_env.ctx, res);
     printf("test internal file error: %s\n", str);
@@ -216,12 +184,8 @@ int main(int argc, char** argv) {
   JS_FreeContext(js_env.ctx);
   JS_FreeRuntime(js_env.rt);
   uv_loop_close(uv_default_loop());
-  // 释放 test_str
-  if (test_str) {
-    free(test_str);
-    test_str = NULL;
-  }
-  // 释放 js_str
+
+  // free js_str
   if (js_str != NULL) {
     free(js_str);
     js_str = NULL;
