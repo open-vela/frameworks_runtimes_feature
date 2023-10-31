@@ -24,6 +24,7 @@ extern "C"
 
 #include <stdbool.h>
 #include "feature_types.h"
+#include <uv.h>
 #include "quickjs/quickjs.h"
 
 /**
@@ -128,13 +129,12 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
 
 /**
- * @brief get user defined data from FeatureManager by name
+ * @brief get feature uvloop from FeatureInstanceHandle
  *
  * @param handle
- * @param name
- * @return void*
+ * @return uv_loop_t*
  */
-void* FeatureInstanceGetUserData(FeatureInstanceHandle handle, const char* name);
+uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle);
 
 /**
  * @brief invoke callback via cid
@@ -195,16 +195,6 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  * @return FeatureInterfaceHandle
  */
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable);
-
-/**
- * @brief post a task with callback to feature instance
- *
- * @param handle
- * @param task_cb
- * @param data
- * @return void
- */
-void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data);
 
 #ifdef __cplusplus
 }
