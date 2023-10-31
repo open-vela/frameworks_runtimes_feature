@@ -61,6 +61,7 @@ add_executable("feat_test"
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     feature-framework
+    uv
 )
 
 target_link_libraries("feat_test" PRIVATE
