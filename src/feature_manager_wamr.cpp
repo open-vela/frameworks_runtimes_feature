@@ -62,6 +62,9 @@ get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 extern "C" uint32_t
 get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 
+using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
+
+static std::map<std::string, FeatureRegistryPair> registeredInterfaceFeatures_;
 
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
@@ -149,21 +152,23 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
             {
                 native_raw_return_type(double, tmp_args);
                 native_raw_set_return(method_ret_value.of.i32);
-                break;
             }
+            break;
             case WASM_F64:
             {
                 native_raw_return_type(double, tmp_args);
                 native_raw_set_return(method_ret_value.of.f64);
-            } break;
+            } 
+            break;
             case WASM_ANYREF:
             {
                 native_raw_return_type(void *, tmp_args);
                 const char *str = (char *)method_ret_value.of.foreign;
                 wasm_struct_obj_t obj = create_wasm_string(exec_env, str);
                 native_raw_set_return(obj);
-                break;
+
             }
+            break;
             default:
                 break;
         }
@@ -292,6 +297,18 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(instance->prototype()->ft_ctx);
+    auto description = instance->prototype()->description;
+
+    /* deal with interface real instance (include member vatable) */
+    wasm_value_t val = { 0 };
+    if (description->dynamic)
+    {
+        wasm_obj_t obj_ref = (wasm_obj_t)thiz_ptr;
+        /* every interface class have a field and name is instance, it's index in the class obj(because the index 0 is obj this) is 1 */
+        wasm_struct_obj_get_field((wasm_struct_obj_t)obj_ref, 1, false, &val);
+        instance = (FeatureInstance *)val.gc_obj;
+    }
+
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto& method = member->method;
@@ -448,7 +465,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 
         // special handle for promise
         feature_value_t tmp_p;
-        //instance->prototype()->ctx =  dyntype_get_context()->js_ctx;
+        // instance->prototype()->ft_ctx =  dyntype_get_context()->js_ctx;
         if (is_promise) {
             ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
             // create promise
@@ -466,7 +483,9 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         }
 
         // invoke method
-        ffi_call(&cif, method.func.callback, ffi_ret_value, ffi_arg_values);
+        NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
+        FEATURE_CHECK_NE(callback, nullptr);
+        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method.return_type != FT_VOID) {
             //process return value
@@ -474,7 +493,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(js_ctx, tmp_p);
                 // wasm_ret_value = FEATURE_EXCEPTION;
-                // got_error = true;
+                got_error = true;
             }
             switch (wasm_ret_value.kind) {
                 case WASM_I32:
@@ -491,12 +510,13 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                 break;
                 case WASM_ANYREF:
                 {
-                    native_raw_return_type(void *, wasm_ret_ptr);
                     wasm_struct_obj_t obj = nullptr;
                     if (FT_IS_PRIMITIVE(method.return_type))
                     {
+                        native_raw_return_type(void *, wasm_ret_ptr);
                         const char *str = (char *)wasm_ret_value.of.foreign;
                         obj = create_wasm_string(exec_env, str);
+                        native_raw_set_return(obj);
                     }
                     /* if return type is complex, and then is array or struct type.*/
                     else if (FT_IS_COMPLEX(method.return_type))
@@ -506,6 +526,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                         {
                         case COMPLEX_STRUCT_MAP:
                         {
+                            native_raw_return_type(void *, wasm_ret_ptr);
                             ObjectMapType &obj_map_type = *(ObjectMapType *)complex_type;
                             auto member_count = countMember(obj_map_type.members);
                             ts_value_t obj_arr[member_count];
@@ -513,18 +534,26 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                             fill_struct_data(obj_map_type, wasm_ret_value.of.foreign, obj_arr, member_count);
                             /* call create_wasm_class_struct api from feature_wamr_utils.h */
                             obj = create_wasm_class_struct(exec_env, obj_arr, member_count);
+                            native_raw_set_return(obj);
                         }
                         break;
                         case COMPLEX_ARRAY:
                         {
+                            native_raw_return_type(void *, wasm_ret_ptr);
                             FtArray *array = (FtArray *)wasm_ret_value.of.foreign;
                             uint32_t len = array->_size;
                             obj = create_wasm_array_with_string(exec_env, array->_element, len);
+                            native_raw_set_return(obj);
+                        }
+                        break;
+                        case COMPLEX_INTERFACE:
+                        {
+                            native_raw_return_type(void *, wasm_ret_ptr);
+                            native_raw_set_return((void *)wasm_ret_value.of.foreign);
                         }
                         break;
                         }
                     }
-                    native_raw_set_return(obj);
                 }
                 break;
                 default:
@@ -703,26 +732,40 @@ FeatureInstance* FeatureManagerWamr::getFeatureInstance(wasm_obj_t obj)
 
 bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
 {
-    FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
-    FeatureRegistry::FeatureRegistryPair* feature_pair = registry_->findFeature(name);
+    FEATURE_LOG_INFO("featureRequire for name: %s", name);
+    FeatureRegistry::FeatureRegistryPair *feature_pair = nullptr;
+    /* find name if exist, feature_pair new assign value by registeredInterfaceFeatures_*/
+    auto pos = registeredInterfaceFeatures_.find(name);
+    if (pos != registeredInterfaceFeatures_.end()) {
+         feature_pair = &pos->second;
+    } else {
+        feature_pair = registry_->findFeature(name);
+    }
+    // FeatureRegistry::FeatureRegistryPair* feature_pair = registry_->findFeature(name);
     if (!feature_pair || !feature_pair->first) {
         FEATURE_LOG_WARN("can't find native feature '%s'!", name);
         return false;
-    }
+    } 
     auto description = feature_pair->first;
 
     if (!ft_ctx_)
         ft_ctx_ = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
 
     auto& proto = feature_pair->second;
-    if (!proto) {
+
+    if (!proto)
+    {
         // create proto
         proto = new FeaturePrototype(ft_ctx_, feature_pair->first);
         proto->wamr_env = ctx;
 
-        if (description->native_callbacks->onCreate) {
-            FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            description->native_callbacks->onCreate(ctx, proto);
+        if (!description->dynamic)
+        {
+            if (description->native_callbacks->onCreate)
+            {
+                FEATURE_LOG_DEBUG("invoke onCreate callback...");
+                description->native_callbacks->onCreate(ctx, proto);
+            }
         }
     }
 
@@ -733,7 +776,9 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
     // insert into instances array, update iid
     int iid = proto->addInstance(std::move(featureInstance));
     proto->instances[iid]->setInstanceId(iid);
-    if (description->native_callbacks->onRequired) {
+    
+    // create prototype class instance
+    if (description->native_callbacks && description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
         description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
     }
@@ -753,8 +798,40 @@ bool FeatureManagerWamr::makeAttachment(NativeSymbol* symbol, const FeatureDescr
 }
 
 int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
-{
-    // 注册class_initNative函数
+{ 
+   /* register interface api */
+    if (description->members->type == MEMBER_METHOD)
+    {
+        for (size_t i = 0; i < description->member_count; i++)
+        {
+            Member member = description->members[i];
+            FeatureType feature_type =  member.method.return_type;
+            if (feature_type != FT_VOID && FT_IS_COMPLEX(feature_type))
+            {
+                ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(feature_type);
+                switch (complexType->type)
+                {
+                case COMPLEX_INTERFACE:
+                {
+                    InterfaceType *interfaceType = (InterfaceType *)complexType;
+                    const FeatureDescription *interfaceDesc = interfaceType->desc;
+                    if (interfaceDesc->name)
+                    {
+                        registeredInterfaceFeatures_[interfaceDesc->name] = std::pair<const FeatureDescription *, FeaturePrototype *>(interfaceDesc, nullptr);
+                    }
+                    registerFeature(interfaceDesc);
+                }
+                break;
+                default:
+                {
+                    break;
+                }
+                }
+            }
+        }
+    }
+
+    /* register class initNative api */
     auto init_symbol = new NativeSymbol();
     nativesymbol_.push_back(init_symbol);
     init_symbol->func_ptr = (void*)init_native;
@@ -763,6 +840,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
     strcat(name,"_init_native");
     init_symbol->symbol = name;
     init_symbol->signature = "(rr)";
+    // FEATURE_LOG_INFO("register init_native method, name: %s and param:%s", name, init_symbol->signature);
     makeAttachment(init_symbol, description, -1);
 
     if (!wasm_runtime_register_natives_raw("env", init_symbol, 1)) {
@@ -781,41 +859,77 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 FEATURE_CHECK(false && "invalid member type!");
                 break;
             }
-            case MEMBER_METHOD: {
+            case MEMBER_METHOD:
+            {
                 // register different type
-                MemberMethod* method = &member.method;
+                MemberMethod *method = &member.method;
                 auto native_symbol = new NativeSymbol();
                 nativesymbol_.push_back(native_symbol);
-                native_symbol->func_ptr = (void*)method_call;
-                char* name1 = new char[128];
+                native_symbol->func_ptr = (void *)method_call;
+                char *name1 = new char[128];
                 strcpy(name1, description->name);
-                strcat(name1,"_");
-                strcat(name1,const_p->name);
+                /* special treat for interface */
+                if (FT_IS_COMPLEX(method->return_type))
+                {
+                    ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method->return_type);
+                    (complexType->type == COMPLEX_INTERFACE) ? strcat(name1, "__") : strcat(name1, "_");
+                }
+                else /* method->return_type is PRIMITIVE TYPE, name1 as before */
+                {
+                    strcat(name1, "_");
+                }
+
+                strcat(name1, const_p->name);
                 native_symbol->symbol = name1;
-                char* param = new char[64];
-                memset(param,0,64);
-                strcpy(param,"(r");
-                FeatureType* pars = (FeatureType*)method->parameters;
-                while((*pars)!=0) {
-                    if(FT_PARAM_REST_END == *pars) {
+                char *param = new char[64];
+                memset(param, 0, 64);
+                strcpy(param, "(r");
+                FeatureType *pars = (FeatureType *)method->parameters;
+                while ((*pars) != 0)
+                {
+                    if (FT_PARAM_REST_END == *pars)
+                    {
                         param[strlen(param)] = 'r';
                         break;
                     }
                     char sig = FeatureFFIWamr::getFeatureSignature(*pars);
-                    if (sig!=0) {
+                    if (sig != 0)
+                    {
                         param[strlen(param)] = sig;
                     }
                     pars += 1;
                 }
-                strcat(param,")");
-                char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
-                if(retc!=0) {
-                    param[strlen(param)] = retc;
+                strcat(param, ")");
+                /* if method->return_type is COMPLEX_INTERFACE, it's means the method is createxxx, and return is feature instance ptr
+                there use f64 express it's return type */
+                if (FT_IS_COMPLEX(method->return_type))
+                {
+                    ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method->return_type);
+                    /* special treat for interface */
+                    if (complexType->type == COMPLEX_INTERFACE)
+                    {
+                        param[strlen(param)] = 'F';
+                    }
+                    else
+                    {
+                        /* COMPLEX TYPE, such as FTArray, deal with is as brefore */
+                        char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
+                        if (retc != 0)
+                            param[strlen(param)] = retc;
+                    }
+                }
+                else
+                {
+                    /* PRIMITIVE TYPE, deal with is as brefore */
+                    char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
+                    if (retc != 0)
+                        param[strlen(param)] = retc;
                 }
                 // FEATURE_LOG_INFO("register method, name: %s, param: %s", name1, param);
                 native_symbol->signature = param;
                 makeAttachment(native_symbol, description, i);
-                if (!wasm_runtime_register_natives_raw("env", native_symbol, 1)) {
+                if (!wasm_runtime_register_natives_raw("env", native_symbol, 1))
+                {
                     FEATURE_LOG_ERROR("register memthod: '%s' failed !", name1);
                     return false;
                 }

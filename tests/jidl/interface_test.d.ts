@@ -1,80 +1,79 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
 export class Animal {
-  public instance: number;
+  private instance: number;
   constructor() {
     this.init_native(this.clazz_name);
   }
 
   // parent member defines
   // self member defines
-  get name(): string {
-    return this.get_name_0();
-  }
-  declare get_name_0(): string;
-  set name(v: string) {
-    this.set_name_0(v);
-  }
-  declare set_name_0(v: string): void;
+  // get name(): string {
+  //   return this.get_name_0();
+  // }
+  // declare get_name_0(): string;
+  // set name(v: string) {
+  //   this.set_name_0(v);
+  // }
+  // declare set_name_0(v: string): void;
 
-  get legCount(): number {
-    return this.get_legCount_0();
-  }
-  declare get_legCount_0(): number;
+  // get legCount(): number {
+  //   return this.get_legCount_0();
+  // }
+  // declare get_legCount_0(): number;
 
   declare eatFood(foods: string[]): number;
 
   declare run(distance: number, destination: string): string;
-
 
   readonly clazz_name = "Animal";
   declare init_native(i_name: string): void;
 }
 
 export class Bird {
-  public instance: number;
+  private instance: number;
   constructor() {
     this.init_native(this.clazz_name);
   }
 
   // parent member defines
   // self member defines
+
   declare fly(): string[];
 
-  get breed(): string {
-    return this.get_breed_0();
-  }
-  declare get_breed_0(): string;
-  set breed(v: string) {
-    this.set_breed_0(v);
-  }
-  declare set_breed_0(v: string): void;
-
+  // get breed(): string {
+  //   return this.get_breed_0();
+  // }
+  // declare get_breed_0(): string;
+  // set breed(v: string) {
+  //   this.set_breed_0(v);
+  // }
+  // declare set_breed_0(v: string): void;
 
   readonly clazz_name = "Bird";
   declare init_native(i_name: string): void;
 }
 
 export class Chicken {
-  public instance: number;
+  private instance: number;
   constructor() {
     this.init_native(this.clazz_name);
   }
 
   // parent member defines
-  get name(): string {
-    return this.get_name_0();
-  }
-  declare get_name_0(): string;
-  set name(v: string) {
-    this.set_name_0(v);
-  }
-  declare set_name_0(v: string): void;
+  // get name(): string {
+  //   return this.get_name_0();
+  // }
+  // declare get_name_0(): string;
+  // set name(v: string) {
+  //   this.set_name_0(v);
+  // }
+  // declare set_name_0(v: string): void;
 
-  get legCount(): number {
-    return this.get_legCount_0();
-  }
-  declare get_legCount_0(): number;
+  // get legCount(): number {
+  //   return this.get_legCount_0();
+  // }
+  // declare get_legCount_0(): number;
 
   declare eatFood(foods: string[]): number;
 
@@ -82,27 +81,26 @@ export class Chicken {
 
   declare fly(): string[];
 
-  get breed(): string {
-    return this.get_breed_0();
-  }
-  declare get_breed_0(): string;
-  set breed(v: string) {
-    this.set_breed_0(v);
-  }
-  declare set_breed_0(v: string): void;
+  // get breed(): string {
+  //   return this.get_breed_0();
+  // }
+  // declare get_breed_0(): string;
+  // set breed(v: string) {
+  //   this.set_breed_0(v);
+  // }
+  // declare set_breed_0(v: string): void;
 
   // self member defines
-  get weight(): number {
-    return this.get_weight_0();
-  }
-  declare get_weight_0(): number;
-  set weight(v: number) {
-    this.set_weight_0(v);
-  }
-  declare set_weight_0(v: number): void;
+  // get weight(): number {
+  //   return this.get_weight_0();
+  // }
+  // declare get_weight_0(): number;
+  // set weight(v: number) {
+  //   this.set_weight_0(v);
+  // }
+  // declare set_weight_0(v: number): void;
 
   declare walk(): any;
-
 
   readonly clazz_name = "Chicken";
   declare init_native(i_name: string): void;
@@ -115,12 +113,12 @@ export class interface_test {
   }
   /****** for JIDL Interface constructor function 'createDog' ******/
   createDog(type: number): Animal {
-    let instance = this._createDog();
+    let instance = this._createDog(type);
     let dog = new Animal();
     dog.instance = instance;
     return dog;
   }
-  declare _createDog(): number;
+  declare _createDog(type: number): number;
 
   /****** for JIDL Interface constructor function 'createPigeon' ******/
   createPigeon(): Bird {
@@ -140,11 +138,18 @@ export class interface_test {
   }
   declare _createCock(): number;
 
-  declare createCat(): Animal;
+  createCat(): Animal {
+    let instance = this._createCat();
+    let cat = new Animal();
+    cat.instance = instance;
+    return cat;
+  }
+  declare _createCat(): number;
+
   declare setAnimal(animal: Animal): void;
   declare flyFar(distance: number): any;
-  flyAway (): any {
-    return this.flyFar (100);
+  flyAway(): any {
+    return this.flyFar(100);
   }
   declare print(...rest: any[]): void;
 
