@@ -87,6 +87,10 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
+FEATURELIST += exchange
+
 ifeq ($(CONFIG_MESSAGE_CHANNEL),y)
 PROGNAME = feature_test_cli
 PRIORITY = 100
