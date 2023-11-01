@@ -1,13 +1,20 @@
 module lv_binding@1.0;
 
-[from_native="js_value_from_color", to_native="js_value_to_color"]
-type lv_color_t;
+[native_type="lv_color_t", from_native="js_value_from_color", to_native="js_value_to_color"]
+type lv_color_t = uint;
+
+[native_type="lv_coord_t", to_native="js_tocoord"]
+type lv_coord_t = int;
+
+[native_type="lv_font_t*"]
+type lv_font_p = ulong;
 
 [native_type="lv_point_t"]
 struct Point {
-  int x;
-  int y;
+  lv_coord_t x;
+  lv_coord_t y;
 };
+
 
 enum Align {
   [value="LV_ALIGN_TOP_LEFT"]
@@ -66,6 +73,13 @@ enum TextAlign {
   RIGHT
 };
 
+enum Animate {
+  [value="LV_ANIM_OFF"]
+  OFF,
+  [value="LV_ANIM_ON"]
+  ON
+};
+
 
 enum Direction {
   [value="LV_DIR_NONE"]
@@ -85,7 +99,6 @@ enum Direction {
   [value="LV_DIR_ALL"]
   ALL
 };
-
 
 enum Color {
   [init="lv_color_white().full"]
@@ -260,6 +273,33 @@ enum Flag {
   USER_4,
 };
 
+enum BlendMode {
+  [value="LV_BLEND_MODE_NORMAL"]
+  NORMAL,
+  [value="LV_BLEND_MODE_ADDITIVE"]
+  ADDITIVE,
+  [value="LV_BLEND_MODE_SUBTRACTIVE"]
+  SUBTRACTIVE,
+  [value="LV_BLEND_MODE_MULTIPLY"]
+  MULTIPLY,
+  [value="LV_BLEND_MODE_REPLACE"]
+  REPLACE
+};
+
+enum BaseDirection {
+  [value="LV_BASE_DIR_LTR"]
+  LTR,
+  [value="LV_BASE_DIR_RTL"]
+  RTL,
+  [value="LV_BASE_DIR_AUTO"]
+  AUTO,
+
+  [value="LV_BASE_DIR_NEUTRAL"]
+  NEUTRAL,
+  [value="LV_BASE_DIR_WEAK"]
+  WEAK
+};
+
 
 enum Part {
   [value="LV_PART_MAIN"]
@@ -374,14 +414,54 @@ enum GridAlign {
   SPACE_BETWEEN
 };
 
-[set="lv_grid_fr", need_self=false]
-int gridFR(int v);
+[func="lv_grid_fr", need_self=false]
+lv_coord_t gridFR(int v);
 
 
-[get="LV_LAYOUT_GRID"]
+[value="LV_LAYOUT_GRID"]
 property int LV_LAYOUT_GRID readonly;
-[get="LV_LAYOUT_FLEX"]
+[value="LV_LAYOUT_FLEX"]
 property int LV_LAYOUT_FLEX readonly;
+
+enum BorderSide {
+  [value="LV_BORDER_SIDE_NONE"]
+  NONE,
+  [value="LV_BORDER_SIDE_BOTTOM"]
+  BOTTOM,
+  [value="LV_BORDER_SIDE_TOP"]
+  TOP,
+  [value="LV_BORDER_SIDE_LEFT"]
+  LEFT,
+  [value="LV_BORDER_SIDE_RIGHT"]
+  RIGHT,
+  [value="LV_BORDER_SIDE_FULL"]
+  FULL,
+  [value="LV_BORDER_SIDE_INTERNAL"]
+  INTERNAL
+};
+
+enum TextDecor {
+  [value="LV_TEXT_DECOR_NONE"]
+  NONE,
+  [value="LV_TEXT_DECOR_UNDERLINE"]
+  UNDERLINE,
+  [value="LV_TEXT_DECOR_STRIKETHROUGH"]
+  STRIKETHROUGH
+};
+
+[value="(int64_t)&lv_font_montserrat_8"]
+property lv_font_p font_montserrat_8 readonly;
+[value="(int64_t)&lv_font_montserrat_10"]
+property lv_font_p font_montserrat_10 readonly;
+[value="(int64_t)&lv_font_montserrat_12"]
+property lv_font_p font_montserrat_12 readonly;
+[value="(int64_t)&lv_font_montserrat_14"]
+property lv_font_p font_montserrat_14 readonly;
+[value="(int64_t)&lv_font_montserrat_16"]
+property lv_font_p font_montserrat_16 readonly;
+[value="(int64_t)&lv_font_montserrat_18"]
+property lv_font_p font_montserrat_18 readonly;
+
 
 [
   native_type="lv_style_t*",
@@ -393,7 +473,7 @@ property int LV_LAYOUT_FLEX readonly;
 ]
 interface Style {
 
-  [set="lv_style_set_width"] 
+  [set="lv_style_set_width"]
   property int width writeonly;
   [set="lv_style_set_min_width"]
   property int minWidth writeonly;
@@ -441,10 +521,15 @@ interface Style {
   property int padLeft writeonly;
   [set="lv_style_set_pad_right"]
   property int padRight writeonly;
+  [set="lv_style_set_pad_all"]
+  property int padding writeonly;
   [set="lv_style_set_pad_row"]
   property int padRow writeonly;
   [set="lv_style_set_pad_column"]
   property int padColumn writeonly;
+
+  [set="lv_style_set_anim_time"]
+  property int animateTime writeonly;
 
   /*
   [set="lv_style_set_margin_top"]
@@ -470,9 +555,9 @@ interface Style {
   [set="lv_style_set_bg_grad_stop"]
   property int bgGradStop writeonly;
   //[set="lv_style_set_bg_grad"]
-  //property grad grad writeonly;  
+  //property grad grad writeonly;
   [set="lv_style_set_bg_dither_mode"]
-  property int bgDitherMode writeonly; 
+  property int bgDitherMode writeonly;
 
   [set="lv_style_set_bg_img_src"]
   property string bgImageSrc writeonly;
@@ -485,11 +570,102 @@ interface Style {
   [set="lv_style_set_bg_img_tiled"]
   property boolean bgImageTitle writeonly;
 
-  // TODO src/misc/lv_style_gen.h
- 
 
-  [set="lv_obj_set_layout"]
+  [set="lv_style_set_border_color"]
+  property lv_color_t borderColor writeonly;
+  [set="lv_style_set_border_opa"]
+  property int borderOPA writeonly;
+  [set="lv_style_set_border_width"]
+  property int borderWidth writeonly;
+  [set="lv_style_set_border_side"]
+  property BorderSide borderSide writeonly;
+  [set="lv_style_set_border_post"]
+  property boolean borderPost writeonly;
+  [set="lv_style_set_outline_width"]
+  property int outlineWidth writeonly;
+  [set="lv_style_set_outline_color"]
+  property lv_color_t outlineColor writeonly;
+  [set="lv_style_set_outline_opa"]
+  property int outlineOPA writeonly;
+  [set="lv_style_set_outline_pad"]
+  property int outlinePad writeonly;
+  [set="lv_style_set_shadow_width"]
+  property int shadowWidth writeonly;
+  [set="lv_style_set_shadow_ofs_x"]
+  property int shadowOFSX writeonly;
+  [set="lv_style_set_shadow_ofs_y"]
+  property int shadowOFSY writeonly;
+  [set="lv_style_set_shadow_color"]
+  property lv_color_t shadowColor writeonly;
+  [set="lv_style_set_shadow_spread"]
+  property int shadowSpread writeonly;
+  [set="lv_style_set_shadow_opa"]
+  property int shadowOPA writeonly;
+
+  [set="lv_style_set_img_opa"]
+  property int imageOPA writeonly;
+  [set="lv_style_set_img_recolor"]
+  property lv_color_t imageRecolor writeonly;
+  [set="lv_style_set_img_recolor_opa"]
+  property int imageRecolorOPA writeonly;
+
+  [set="lv_style_set_line_width"]
+  property int lineWidth writeonly;
+  [set="lv_style_set_line_dash_width"]
+  property int lineDashGap writeonly;
+  [set="lv_style_set_line_rounded"]
+  property boolean lineRounded writeonly;
+  [set="lv_style_set_line_color"]
+  property lv_color_t lineColor writeonly;
+  [set="lv_style_set_line_opa"]
+  property int lineOPA writeonly;
+
+  [set="lv_style_set_arc_width"]
+  property int arcWidth writeonly;
+  [set="lv_style_set_arc_rounded"]
+  property boolean arcRounded writeonly;
+  [set="lv_style_set_arc_color"]
+  property lv_color_t arcColor writeonly;
+  [set="lv_style_set_arc_opa"]
+  property int arcOPA writeonly;
+  [set="lv_style_set_arc_img_src"]
+  property string arcImageSrc writeonly;
+
+  [set="lv_style_set_text_color"]
+  property lv_color_t textColor writeonly;
+  [set="lv_style_set_text_opa"]
+  property int textOPA writeonly;
+  [set="lv_style_set_text_font"]
+  property lv_font_p textFont writeonly;
+  [set="lv_style_set_text_letter_space"]
+  property int textLetterSpace writeonly;
+  [set="lv_style_set_text_line_space"]
+  property int textLineSpace writeonly;
+  [set="lv_style_set_text_decor"]
+  property TextDecor textDecor writeonly;
+  [set="lv_style_set_text_align"]
+  property TextAlign textAlign writeonly;
+
+  [set="lv_style_set_radius"]
+  property int radius writeonly;
+
+  [set="lv_style_set_clip_corner"]
+  property boolean clipCorner writeonly;
+
+  [set="lv_style_set_opa"]
+  property int OPA writeonly;
+
+  [set="lv_style_set_color_filter_opa"]
+  property int colorFilterOPA writeonly;
+
+  [set="lv_style_set_blend_mode"]
+  property BlendMode blendMode writeonly;
+
+  [set="lv_style_set_layout"]
   property int layout writeonly;
+
+  [set="lv_style_set_base_dir"]
+  property BaseDirection baseDirection writeonly;
 
   // flex style
   [set="lv_style_set_flex_flow"]
@@ -503,16 +679,37 @@ interface Style {
   [set="lv_style_set_flex_grow"]
   property int flexGrow writeonly;
 
-  // grid
-  [func="lv_obj_set_grid_dsc_array", param_pack=true, name="grid"]
-  void setGridArray(int[] columns, int[] rows);
 
   [func="lv_obj_set_grid_cell"]
   void setGridCell(GridAlign column_align, int col_pos, int col_span, GridAlign row_align, int row_pos, int row_span);
+
+  property int[] gridRows writeonly;
+  property int[] gridColumns writeonly;
+
+  [set="lv_style_set_grid_row_align"]
+  property GridAlign gridRowAlign writeonly;
+  [set="lv_style_set_grid_column_align"]
+  property GridAlign gridColumnAlgin writeonly;
+  [set="lv_style_set_grid_cell_column_pos"]
+  property int gridColumnPos writeonly;
+  [set="lv_style_set_grid_cell_column_span"]
+  property int gridColumnSpan writeonly;
+  [set="lv_style_set_grid_cell_row_pos"]
+  property int gridRowPos writeonly;
+  [set="lv_style_set_grid_cell_row_span"]
+  property int gridRowSpan writeonly;
+  [set="lv_style_set_grid_cell_x_align"]
+  property int gridCellXAlign writeonly;
+  [set="lv_style_set_grid_cell_y_align"]
+  property int gridCellYAlign writeonly;
 };
 
 Style createStyle(object style_data);
 
+[value="LV_RADIUS_CIRCLE"]
+const RADIUS_CIRCLE = 0;
+
+[tag="inline-style"]
 interface LocalStyle {
 
   [func="lv_obj_set_style_width"]
@@ -535,7 +732,188 @@ interface LocalStyle {
   void y(int value, uint selector);
 
   [func="lv_obj_set_style_align"]
-  void align(Align align, uint selector);
+  void align(Align value, uint selector);
+
+  [func="lv_obj_set_style_bg_color"]
+  void bgColor(lv_color_t value, uint selector);
+
+  [func="lv_obj_set_style_bg_opa"]
+  void bgOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_grad_dir"]
+  void gradiantDir(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_main_stop"]
+  void bgMainStop(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_grad_stop"]
+  void bgGradiantStop(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_grad"]
+  void bgGradiant(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_dither_mode"]
+  void bgDitherMode(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_img_src"]
+  void bgImageSrc(string value, uint selector);
+
+  [func="lv_obj_set_style_bg_img_opa"]
+  void bgImageOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_img_recolor"]
+  void bgImageRecolor(lv_color_t value, uint selector);
+
+  [func="lv_obj_set_style_bg_img_recolor_opa"]
+  void bgImageRecolorOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_bg_img_tiled"]
+  void bgImageTitle(boolean value, uint selector);
+
+  [func="lv_obj_set_style_border_color"]
+  void borderColor(lv_color_t value, uint selector);
+
+  [func="lv_obj_set_style_border_opa"]
+  void borderOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_border_width"]
+  void borderWidth(int value, uint selector);
+
+  [func="lv_obj_set_style_border_side"]
+  void borderSide(BorderSide value, uint selector);
+
+  [func="lv_obj_set_style_border_post"]
+  void borderPost(boolean value, uint selector);
+
+  [func="lv_obj_set_style_outline_width"]
+  void outlineWidth(int value, uint selector);
+
+  [func="lv_obj_set_style_outline_color"]
+  void outlineColor(lv_color_t value, uint selector);
+
+  [func="lv_obj_set_style_outline_opa"]
+  void outlineOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_outline_pad"]
+  void outlinePadding(int value, uint selector);
+
+  [func="lv_obj_set_style_radius"]
+  void radius(int value, uint selector);
+
+  [func="lv_obj_set_style_transform_width"]
+  void transformWidth(int value, uint selector);
+  [func="lv_obj_set_style_transform_height"]
+  void transformHeight(int value, uint selector);
+  [func="lv_obj_set_style_translate_x"]
+  void translateX(int value, uint selector);
+  [func="lv_obj_set_style_translate_y"]
+  void translateY(int value, uint selecotr);
+  [func="lv_obj_set_style_transform_zoom"]
+  void transformZoom(int value, uint selector);
+  [func="lv_obj_set_style_transform_angle"]
+  void transformAngle(int value, uint selector);
+  [func="lv_obj_set_style_transform_pivot_x"]
+  void transformPivotX(int value, uint selector);
+  [func="lv_obj_set_style_transform_pivot_y"]
+  void transformPivotY(int value, uint selector);
+  [func="lv_obj_set_style_pad_top"]
+  void paddintTop(int value, uint selector);
+  [func="lv_obj_set_style_pad_bottom"]
+  void paddingBottom(int value, uint selector);
+  [func="lv_obj_set_style_pad_left"]
+  void paddingLeft(int value, uint selector);
+  [func="lv_obj_set_style_pad_right"]
+  void paddingRight(int value, uint selector);
+  [func="lv_obj_set_style_pad_row"]
+  void paddingRow(int value, uint selector);
+  [func="lv_obj_set_style_pad_column"]
+  void paddingColumn(int value, uint selector);
+
+  /*[func="lv_obj_set_style_margin_top"]
+  void marginTop(int value, uint selector);
+  [func="lv_obj_set_style_margin_bottom"]
+  void marginBottom(int value, uint selector);
+  [func="lv_obj_set_style_margin_right"]
+  void marginRight(int value, uint selector);
+  [func="lv_obj_set_style_margin_left"]
+  void marginLeft(int value, uint selector);*/
+
+  [func="lv_obj_set_style_shadow_width"]
+  void shadowWidth(int value, uint selector);
+  [func="lv_obj_set_style_shadow_ofs_x"]
+  void shadowOffsetX(int value, uint selector);
+  [func="lv_obj_set_style_shadow_ofs_y"]
+  void shadowOffsetY(int value, uint selector);
+  [func="lv_obj_set_style_shadow_spread"]
+  void shadowSpreed(int vlaue, uint selector);
+  [func="lv_obj_set_style_shadow_color"]
+  void shadowColor(lv_color_t value, uint selector);
+  [func="lv_obj_set_style_shadow_opa"]
+  void shadowOPA(int value, uint selector);
+  [func="lv_obj_set_style_img_opa"]
+  void imageOPA(int value, uint selector);
+  [func="lv_obj_set_style_img_recolor"]
+  void imageRecolor(lv_color_t value, uint selector);
+  [func="lv_obj_set_style_img_recolor_opa"]
+  void imageRecolorOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_line_width"]
+  void lineWidth(int value, uint selector);
+  [func="lv_obj_set_style_line_dash_width"]
+  void lineDashWidth(int value, uint selector);
+  [func="lv_obj_set_style_line_dash_gap"]
+  void lineDashGap(int value, uint selector);
+  [func="lv_obj_set_style_line_rounded"]
+  void lineRounded(boolean value, uint selector);
+  [func="lv_obj_set_style_line_color"]
+  void lineColor(lv_color_t value, uint selector);
+  [func="lv_obj_set_style_line_opa"]
+  void lineOPA(int value, uint selector);
+
+  [func="lv_obj_set_style_arc_width"]
+  void arcWidth(int value, uint selector);
+  [func="lv_obj_set_style_arc_rounded"]
+  void arcRounded(boolean value, uint selector);
+  [func="lv_obj_set_style_arc_color"]
+  void arcColor(lv_color_t value, uint selector);
+  [func="lv_obj_set_style_arc_opa"]
+  void arcOPA(int value, uint selector);
+  [func="lv_obj_set_style_arc_img_src"]
+  void arcImageSrc(string value, uint selector);
+
+  [func="lv_obj_set_style_text_color"]
+  void textColor(lv_color_t value, uint selector);
+
+  [func="lv_obj_set_style_text_opa"]
+  void textOPA(int value, uint selector);
+
+  //[func="lv_obj_set_style_text_font"]
+  //void textFont(Font font, uint selector);
+
+  [func="lv_obj_set_style_text_letter_space"]
+  void textLetterSpace(int value, uint selector);
+  [func="lv_obj_set_style_text_line_space"]
+  void textLineSpace(int value, uint selector);
+  [func="lv_obj_set_style_text_decor"]
+  void textDecor(TextDecor value, uint selector);
+  [func="lv_obj_set_style_text_align"]
+  void textAlign(TextDecor value, uint selector);
+  [func="lv_obj_set_style_clip_corner"]
+  void clipCorner(boolean value, uint selector);
+  [func="lv_obj_set_style_opa"]
+  void opa(int value, uint selector);
+  [func="lv_obj_set_style_anim"]
+  void animate(Animation value, uint selector);
+  [func="lv_obj_set_style_anim_time"]
+  void animateTime(uint value, uint selector);
+  [func="lv_obj_set_style_anim_speed"]
+  void animateSpeed(uint value, uint selector);
+  [func="lv_obj_set_style_blend_mode"]
+  void blendMode(BlendMode value, uint selector);
+  [func="lv_obj_set_style_layout"]
+  void layout(int value, uint selector);
+  [func="lv_obj_set_style_base_dir"]
+  void baseDirection(BaseDirection value, uint selector);
 
   [func="lv_obj_set_style_flex_flow"]
   void flexFlow(FlexFlow value, uint selector);
@@ -547,7 +925,93 @@ interface LocalStyle {
   void flexTrackAlign(FlexAlign value, uint selector);
   [func="lv_obj_set_style_flex_grow"]
   void flexGrow(int value, uint selector);
+
+  void gridRows(int[] value, uint selector);
+  void gridColumns(int[] value, uint selector);
+  [func="lv_obj_set_style_grid_row_align"]
+  void gridRowAlign(GridAlign value, uint selector);
+  [func="lv_obj_set_style_grid_column_align"]
+  void gridColumnAlgin(GridAlign value, uint selector);
+  [func="lv_obj_set_style_grid_cell_column_pos"]
+  void gridColumnPos(int value, uint selector);
+  [func="lv_obj_set_style_grid_cell_column_span"]
+  void gridColumnSpan(int value, uint selector);
+  [func="lv_obj_set_style_grid_cell_row_pos"]
+  void gridRowPos(int value, uint selector);
+  [func="lv_obj_set_style_grid_cell_row_span"]
+  void gridRowSpan(int value, uint selector);
+  [func="lv_obj_set_style_grid_cell_x_align"]
+  void gridCellXAlign(int value, uint selector);
+  [func="lv_obj_set_style_grid_cell_y_align"]
+  void gridCellYAlign(int value, uint selector);
 };
+
+callback anim_cb();
+
+[
+  native_type="lv_anim_t*",
+  tag="animation",
+  from_native="jsvalue_from_anim",
+  to_native="jsvalue_to_anim"
+]
+interface Animation {
+  [rawset="NativeAnimateSetExecCb"]
+  property anim_cb onExec writeonly;
+  [rawset="NativeAnimateSetPathCb"]
+  property anim_cb onPath writeonly;
+  [rawset="NativeAnimateSetStartCb"]
+  property anim_cb onStart writeonly;
+  [rawset="NativeAnimateSetGetValueCb"]
+  property anim_cb onGetValue writeonly;
+  [rawset="NativeAnimateSetReadyCb"]
+  property anim_cb onReady writeonly;
+  [rawset="NativeAnimateSetDeleteCb"]
+  property anim_cb onDelete writeonly;
+  [set="lv_anim_set_delay", get="lv_anim_get_delay"]
+  property int delay;
+  [func="lv_anim_set_values", param_pack=true, name="values"]
+  void setValues(int start, int end);
+  [set="lv_anim_set_time"]
+  property int time writeonly;
+  [set="lv_anim_set_playback_time", get="lv_anim_get_playtime"]
+  property int playbackTime;
+  [set="lv_anim_set_playback_delay"]
+  property int playbackDelay writeonly;
+  [set="lv_anim_set_repeat_count"]
+  property int repeatCount writeonly;
+  [set="lv_anim_set_repeat_delay"]
+  property int repeatDelay writeonly;
+  [set="lv_anim_set_early_apply"]
+  property boolean earlyApply writeonly;
+  [func="lv_anim_start"]
+  void start();
+};
+
+[rawfunc="NativeAnimateCreateFrom"]
+Animation createAnimation(object params);
+
+[func="lv_anim_count_running", need_self=false]
+int getAnimCountRunning();
+[func="lv_anim_speed_to_time", need_self=false]
+int animSpeedToTime(uint speed, int start, int end);
+[func="lv_anim_refr_now", need_self=false]
+void animRefreshNow();
+
+[value="(uintptr_t)&lv_anim_path_linear"]
+property ulong ANIM_PATH_LINEAR readonly;
+[value="(uintptr_t)&lv_anim_path_ease_in"]
+property ulong ANIM_PATH_EASE_IN readonly;
+[value="(uintptr_t)&lv_anim_path_ease_out"]
+property ulong ANIM_PATH_EASE_OUT readonly;
+[value="(uintptr_t)&lv_anim_path_ease_in_out"]
+property ulong ANIM_PATH_EASE_IN_OUT readonly;
+[value="(uintptr_t)&lv_anim_path_overshoot"]
+property ulong ANIM_PATH_OVERSHOOT readonly;
+[value="(uintptr_t)&lv_anim_path_bounce"]
+property ulong ANIM_PATH_BOUNCE readonly;
+[value="(uintptr_t)&lv_anim_path_step"]
+property ulong ANIM_PATH_PATH_STEP readonly;
+
 
 [native_type="lv_event_t*"]
 interface WidgetEvent {
@@ -569,11 +1033,13 @@ callback event_cb(WidgetEvent evt);
   native_type="lv_obj_t*",
   finalizer="finalize_widget",
   need_parent=true,
-  native_class="lv_obj_class"
+  native_class="lv_obj_class",
+  tag="widget",
+  create="lv_obj_create"
 ]
 interface Widget {
   [set="lv_obj_set_id", get="lv_obj_get_id"]
-  property string id readonly;
+  property string id;
 
   [set="lv_obj_set_x", get="lv_obj_get_x"]
   property int x;
@@ -601,9 +1067,16 @@ interface Widget {
   [func="lv_obj_get_child"]
   Widget getChild(int id);
 
+  [param_pack="true", name="style"]
   void addStyle(object style, uint selector);
 
+  [param_pack="true", name="inlineStyle"]
   void setStyle(object style);
+
+  [func="lv_obj_remove_style_all"]
+  void removeAllStyle();
+  [func="lv_obj_remove_style"]
+  void removeStyle(Style style, uint selector);
 
 
   [func="lv_obj_add_flag"]
@@ -638,6 +1111,14 @@ interface Widget {
 
   [set="lv_obj_set_flex_grow"]
   property int flexGrow writeonly;
+
+  // grid
+  [param_pack=true, name="grid"]
+  void setGridArray(int[] columns, int[] rows);
+
+  // events
+  [type="event", source_gen="event-call", code="LV_EVENT_VALUE_CHANGED", event_type="WidgetEvent"]
+  property event_cb onvaluechanged writeonly;
 }
 
 const LV_LABEL_LONG_WRAP = 0;
@@ -721,7 +1202,7 @@ interface Arc extends Widget {
 
   [set="lv_arc_set_max_value", get="lv_arc_get_max_value"]
   property int max;
-  
+
   [set="lv_arc_set_change_rate"]
   property int changeRate writeonly;
 }
@@ -729,10 +1210,10 @@ interface Arc extends Widget {
 [tag="bar", create="lv_bar_create", native_class="lv_bar_class"]
 interface Bar extends Widget {
   [func="lv_bar_set_value", param_pack=true, name="value"]
-  void setValue(int value, boolean animate);
+  void setValue(int value, Animate animate);
 
   [func="lv_bar_set_start_value", param_pack=true, name="startValue"]
-  void setStartValue(int value, boolean animate);
+  void setStartValue(int value, Animate animate);
 
   [func="lv_bar_set_range", param_pack=true, name="range"]
   void setRange(int min, int max);
@@ -830,7 +1311,7 @@ interface Dropdown extends Widget {
   property int optionsCount readonly;
 
   [func="lv_dropdown_get_option_index"]
-  int getOptionIndex(string option); 
+  int getOptionIndex(string option);
 
   [get="lv_dropdown_get_selected_str", native_value_type="string_buffer", buffer_length=256]
   property string selectedString readonly;
@@ -858,7 +1339,7 @@ interface Roller extends Widget {
   void setOptions(string options, Mode mode);
 
   [func="lv_roller_set_selected", param_pack=true, name="selected"]
-  void setSelected(int option, boolean animate);
+  void setSelected(int option, Animate animate);
   [get="lv_roller_get_selected"]
   property int selected readonly;
 
@@ -878,7 +1359,7 @@ interface Roller extends Widget {
 [tag="slider", create="lv_slider_create", native_class="lv_slider_class"]
 interface Slider extends Bar {
   [func="lv_slider_set_left_value", param_pack=true, name="leftValue"]
-  void setLeftValue(int value, boolean animate);
+  void setLeftValue(int value, Animate animate);
 
   [get="lv_slider_get_left_value"]
   property int leftValue readonly;

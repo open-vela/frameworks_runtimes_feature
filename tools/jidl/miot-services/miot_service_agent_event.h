@@ -4,7 +4,7 @@
 
 struct _EventAction EventAction;
 
-typedef void (*POnEventCallback)(int type, const char* json_data, void* user_data);
+typedef void (*POnEventCallback)(int type, const char* reply_key, const char* json_data, void* user_data);
 
 struct _EventAction {
   void (*send)(EventAction* pself, const Miotmsg* msg, POnEventCallback cb, void* user_data);

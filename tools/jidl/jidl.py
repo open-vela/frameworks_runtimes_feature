@@ -650,7 +650,7 @@ class JIDL(Parser):
               | CALLBACK
               | MAIN
               | WORKER
-              | EXTENDS 
+              | EXTENDS
     """
     p[0] = p[1]
 
@@ -670,7 +670,7 @@ class JIDL(Parser):
                 | EVENT
                 | PROPERTY
                 | MODULE
-                | CONST 
+                | CONST
                 | ASYNC
     """
     p[0] = p[1]

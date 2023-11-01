@@ -5,10 +5,10 @@ import source_render as render
 class UIUtils(render.Utils):
   def __init__(self, source, args, vars):
     render.Utils.__init__(self, source, args, vars)
-    self.array_trans_natives = {}
-    self.defineArrayNative('int')
-    self.defineArrayNative('float')
-    self.defineArrayNative('string')
+    #self.array_trans_natives = {}
+    #self.defineArrayNative('int')
+    #self.defineArrayNative('float')
+    #self.defineArrayNative('string')
 
   def getNativeType(self, tp):
     return self.findTypeMeta(tp['type'], tp['name'], 'native_type', True)
@@ -53,41 +53,41 @@ class UIUtils(render.Utils):
     return None
 
   def getArrayNative(self, tp, native_name):
-    el_type = tp['element'] 
+    el_type = tp['element']
     el_type_name = self.toTypeName(el_type)
     if el_type_name in self.array_trans_natives:
       return self.array_trans_natives[el_type_name][native_name]
 
-  def defineArrayNative(self, el_type):
-    el_type_name = self.toTypeName(el_type)
-    el_native_type = self.cppType(el_type)
-    name_prefix = 'array_%s_%s_' %(self.getModuleName(), self.toIdName(el_native_type))
-    el_from_native = self.fromNative(el_type)
-    el_to_native = self.toNative(el_type)
-    el_free_native = self.freeNative(el_type)
-    el_natives = {
-      'element_native_type' : el_native_type,
-      'element_from_native' : el_from_native,
-      'element_to_native'   : el_to_native,
-      'element_free_native' : el_free_native,
-      'array_native_type'   : 'array_%s_t' % el_native_type,
-      'from_native' : name_prefix + 'from_native',
-      'to_native' : name_prefix + 'to_native',
-      'free_native' : name_prefix + 'free_native',
-    }
-    self.array_trans_natives[el_type_name] = el_natives
+  #def defineArrayNative(self, el_type):
+  #  el_type_name = self.toTypeName(el_type)
+  #  el_native_type = self.cppType(el_type)
+  #  name_prefix = 'array_%s_%s_' %(self.getModuleName(), self.toIdName(el_native_type))
+  #  el_from_native = self.fromNative(el_type)
+  #  el_to_native = self.toNative(el_type)
+  #  el_free_native = self.freeNative(el_type)
+  #  el_natives = {
+  #    'element_native_type' : el_native_type,
+  #    'element_from_native' : el_from_native,
+  #    'element_to_native'   : el_to_native,
+  #    'element_free_native' : el_free_native,
+  #    'array_native_type'   : 'array_%s_t' % el_native_type,
+  #    'from_native' : name_prefix + 'from_native',
+  #    'to_native' : name_prefix + 'to_native',
+  #    'free_native' : name_prefix + 'free_native',
+  #  }
+  #  self.array_trans_natives[el_type_name] = el_natives
 
-  def fromArrayNative(self, tp):
-    return self.getArrayNative(tp, 'from_native') 
+  #def fromArrayNative(self, tp):
+  #  return self.getArrayNative(tp, 'from_native')
 
-  def toArrayNative(self, tp):
-    return self.getArrayNative(tp, 'to_native')
+  #def toArrayNative(self, tp):
+  #  return self.getArrayNative(tp, 'to_native')
 
-  def freeArrayNative(self, tp):
-    return self.getArrayNative(tp, 'free_native')
+  #def freeArrayNative(self, tp):
+  #  return self.getArrayNative(tp, 'free_native')
 
-  def cppTypeArray(self, tp):
-    return self.getArrayNative(tp, 'array_native_type')
+  #def cppTypeArray(self, tp):
+  #  return self.getArrayNative(tp, 'array_native_type')
 
 if __name__ == '__main__':
     render.main(UIUtils)

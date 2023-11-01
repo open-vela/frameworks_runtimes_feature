@@ -89,9 +89,15 @@ static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst value) {
   getter = 'NULL'
   setter = 'NULL'
   if 'readable' in m and  m['readable']:
-    getter = '_%s_get_%s' % (pname, m['name'])
+    if meta and 'rawget' in meta:
+      getter = meta['rawget']
+    else:
+      getter = '_%s_get_%s' % (pname, m['name'])
   if 'writeable' in m and m['writeable']:
-    setter = '_%s_set_%s' % (pname, m['name'])
+    if meta and 'rawset' in meta:
+      setter = meta['rawset']
+    else:
+      setter = '_%s_set_%s' % (pname, m['name'])
 %>
 
 %if meta:
@@ -104,9 +110,11 @@ static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst value) {
 <%
   value_type = utils.getValueType(m)
 %>
-
-%if 'readable' in m and  m['readable']:
+%if 'readable' in m and  m['readable'] and meta and (not 'rawget' in meta):
 static JSValue ${getter}(JSContext* ctx, NativeHandle self) {
+%if 'value' in meta:
+  return ${utils.fromNative(value_type)}(ctx, ${meta['value']});
+%else:
 %if utils.isStructType(value_type):
   ${utils.cppType(value_type)} to_val;
   ${meta['get']}((${native_type})self, &to_val);
@@ -124,11 +132,15 @@ static JSValue ${getter}(JSContext* ctx, NativeHandle self) {
   return ${utils.fromNative(value_type)}(ctx, ${meta['get']}((${native_type})self));
   %endif
 %endif
+%endif
 }
 %endif
 
-%if 'writeable' in m and m['writeable']:
+%if 'writeable' in m and m['writeable'] and meta and (not 'rawset' in meta):
 static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst val) {
+%if 'value' in meta:
+  ${utils.toNative(value_type)}(ctx, &${meta['value']}, val);
+%else:
   ${utils.cppType(value_type)} to_val;
   if (${utils.toNative(value_type)}(ctx, &to_val, val) == 0) {
     ${meta['set']}((${native_type})self, to_val);
@@ -138,6 +150,7 @@ static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst val) {
 <% free_value = utils.freeNative(value_type) %>
 %if free_value:
   ${free_value}(ctx, to_val);
+%endif
 %endif
 }
 
@@ -170,6 +183,8 @@ if prop_name:
   need_self = True
   param_pack = False
   aliase_name = 'NULL'
+  call_name = '_%s_%s' %(pname, m['identifier'])
+  func_name = '_%s_%s_method' % (pname, m['identifier'])
   if 'meta' in m:
     meta = m['meta']
     if 'need_self' in meta:
@@ -178,8 +193,8 @@ if prop_name:
       param_pack = (meta['param_pack'] == "true" and True or False)
     if 'name' in meta:
       aliase_name = '"%s"' %  meta['name']
-  func_name = '_%s_%s_method' % (pname, m['identifier'])
-  call_name = '_%s_%s' %(pname, m['identifier'])
+    if 'rawfunc' in meta:
+      call_name = meta['rawfunc']
 %>
 
 %if meta and 'func' in meta:
@@ -249,11 +264,11 @@ failed_args${p[1]}:
   ${p[3]}(ctx, ${p[0]});
 %endif
 %endfor
+%endif
 %if return_type != 'void':
   return __ret__;
 %else:
   return JS_UNDEFINED;
-%endif
 %endif
 }
 %endif
@@ -477,51 +492,6 @@ enum {
 %if m['type'] == 'struct':
 ${gen_struct_define(m)}
 %endif
-%endfor
-
-// define the array types
-%for arrdef in utils.array_trans_natives.values():
-typedef struct _${arrdef['array_native_type']} {
-  int count;
-  ${arrdef['element_native_type']}*  elements;
-} ${arrdef['array_native_type']};
-
-JSValue ${arrdef['from_native']}(JSContext* ctx, const ${arrdef['array_native_type']}* parr_native) {
-  if (!parr_native || parr_native->count <= 0)
-    return JS_UNDEFINED;
-
-  JSValue jsarr = JS_NewArray(ctx);
-  for (int i = 0; i < parr_native->count; i ++) {
-    JS_SetPropertyUint32(ctx, jsarr, i, ${arrdef['element_from_native']}(ctx, parr_native->elements[i]));
-  }
-  return jsarr;
-}
-
-int ${arrdef['to_native']}(JSContext* ctx, ${arrdef['array_native_type']}* parr_native, JSValueConst jsarr) {
-  JSValueConst lv = JS_GetPropertyStr(ctx, jsarry, "length");
-  int len = 0;
-  JS_ToInt32(ctx, &len, lv);
-  JS_FreeValue(ctx, lv);
-
-  parr_native->count = len;
-  parr_native->elements = NULL;
-
-  if (len <= 0)
-    return -1;
-
-  parr_native->elements = (${arrdef['element_native_type']}*)malloc(sizeof(parr_native->elements[0]) * len);
-  for (int i = 0; i < len; i ++) {
-    JSValueConst js_e = JS_GetPropertyUint32(ctx, jsarr, i);
-    ${arrdef['element_to_native']}(ctx, &(parr_native->elements[i]), jse);
-  }
-
-  return 0;
-}
-
-void ${arrdef['free_native']}(${arrdef['array_native_type']} arr_native) {
-  if (arr_native.elements)
-    free(arr_native.elements);
-}
 %endfor
 
 ${gen_interface('', doc, [], True)}
