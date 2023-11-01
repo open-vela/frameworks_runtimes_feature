@@ -7,16 +7,24 @@
 <%
   identifier = func_node['identifier']
   func_def = render.GenerateFunctionDefine(func_node)
+
+  params = ''
+  param_names = ''
+  if 'params' in func_node:
+    params = render.GenerateParamList(func_node["params"])
+    param_names = render.GenerateParamNameList(func_node["params"])
+  func_head = f"{identifier}({params})"
+
   ctor_target = ctor_info['target']
   ctor_interface = ctor_info['interface']
 %>\
   ${func_def} {
-    let instance = this._${identifier}();
+    let instance = this._${identifier}(${param_names});
     let ${ctor_target} = new ${ctor_interface}();
     ${ctor_target}.instance = instance;
     return ${ctor_target};
   }
-  declare _${identifier}(): number;
+  declare _${func_head}: number;
 </%def>\
 <%def name="GenFunction(func_node)">\
 <%
