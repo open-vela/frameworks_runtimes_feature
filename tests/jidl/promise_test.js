@@ -27,32 +27,32 @@ promise.print("after call foo1()");
 
 promise.print("before call foo2()");
 promise.foo2().then(a => {
-    test_obj.print("foo2 resolve a: ", a);
+    promise.print("foo2 resolve a: ", a);
 }, b => {
-    test_obj.print("foo2 reject b: ", b);
+    promise.print("foo2 reject b: ", b);
 })
 promise.print("after call foo2()");
 
 promise.print("before call bar()");
 promise.bar().then(a => {
-    test_obj.print("bar resolve a: ", a);
+    promise.print("bar resolve a: ", a);
 }, b => {
-    test_obj.print("bar reject b: ", b);
+    promise.print("bar reject b: ", b);
 })
 promise.print("after call bar()");
 
 promise.print("before call bar1()");
 promise.bar1().then(a => {
-    test_obj.print("bar1 resolve a: ", a);
+    promise.print("bar1 resolve a: ", a);
 }, b => {
-    test_obj.print("bar1 reject b: ", b);
+    promise.print("bar1 reject b: ", b);
 })
 promise.print("after call bar1()");
 
 promise.print("before call bar2()");
 promise.bar2().then(a => {
-    test_obj.print("bar2 resolve a: ", a);
+    promise.print("bar2 resolve a: ", a);
 }, b => {
-    test_obj.print("bar2 reject b: ", b);
+    promise.print("bar2 reject b: ", b);
 })
 promise.print("after call bar2()");
