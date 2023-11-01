@@ -114,9 +114,22 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor *accessor = &member->accessor;
+    auto description = instance->prototype()->description;
+    /* deal with interface real instance (include member vatable) */
+    wasm_value_t val = { 0 };
+    if (description->dynamic)
+    {
+        wasm_obj_t obj_ref = (wasm_obj_t)thiz_ptr;
+        /* every interface class have a field and name is instance, it's index in the class obj(because the index 0 is obj this) is 1 */
+        wasm_struct_obj_get_field((wasm_struct_obj_t)obj_ref, 1, false, &val);
+        instance = (FeatureInstance *)val.gc_obj;
+    }
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
+    FEATURE_CHECK_NE(callback, nullptr);
+
     ffi_type *ffi_params[2] = {&ffi_type_pointer, &ffi_type_sint64};
     ffi_type *ffi_ret = nullptr;
     void *arg_values[2] = {&instance, &accessor->data};
@@ -140,7 +153,7 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
             break;
         }
         // invoke
-        ffi_call(&cif, accessor->getter.callback, ret_value, arg_values);
+        ffi_call(&cif, callback, ret_value, arg_values);
         // process return value
         if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, method_ret_value)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
@@ -190,12 +203,27 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor *accessor = &member->accessor;
+    auto description = instance->prototype()->description;
+    /* deal with interface real instance (include member vatable) */
+    wasm_value_t val = { 0 };
+    if (description->dynamic)
+    {
+        wasm_obj_t obj_ref = (wasm_obj_t)thiz_ptr;
+        /* every interface class have a field and name is instance, it's index in the class obj(because the index 0 is obj this) is 1 */
+        wasm_struct_obj_get_field((wasm_struct_obj_t)obj_ref, 1, false, &val);
+        instance = (FeatureInstance *)val.gc_obj;
+    }
+
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type *ffi_params[3] = {&ffi_type_pointer, &ffi_type_sint64, nullptr};
     void *arg_value_input = nullptr;
     void *arg_values[3] = {&instance, &accessor->data, nullptr};
+
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
+    FEATURE_CHECK_NE(callback, nullptr);
+
     do {
         // prepare third param type declaration, create by accessor type
         if (!createTypeDeclaration(accessor->type, ffi_params[2])) {
@@ -208,7 +236,6 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
             break;
         }
         arg_values[2] = arg_value_input;
-
         // prepare and call method
         ffi_cif cif;
         ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_params);
@@ -217,7 +244,7 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
             break;
         }
         // invoke
-        ffi_call(&cif, accessor->setter.callback, arg_values[2], arg_values);
+        ffi_call(&cif, callback, arg_values[2], arg_values);
     } while (0);
 
     // free resources
@@ -937,8 +964,8 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             }
             case MEMBER_ACCESSOR: {
                 // register accessor_get and accessor_set
-                MemberAccessor *accessor = &member.accessor;
-                if (accessor->getter.callback) {
+                const MemberAccessor& accessor = member.accessor;
+                if (accessor.getter.vtable_idx >= 0) {
                     auto native_symbol = new NativeSymbol();
                     nativesymbol_.push_back(native_symbol);
                     native_symbol->func_ptr = (void *)accessor_get;
@@ -951,7 +978,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     char *signature = new char[64];
                     memset(signature, 0, 64);
                     strcpy(signature, "(r");
-                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
+                    char type = FeatureFFIWamr::getFeatureSignature(accessor.type);
                     strcat(signature, ")");
                     if (type != 0)
                         signature[strlen(signature)] = type;
@@ -963,7 +990,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                         return false;
                     }
                 }
-                if (accessor->setter.callback) {
+                if(accessor.setter.vtable_idx >= 0) {
                     auto native_symbol = new NativeSymbol();
                     nativesymbol_.push_back(native_symbol);
                     native_symbol->func_ptr = (void *)accessor_set;
@@ -976,7 +1003,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     char *signature = new char[64];
                     memset(signature, 0, 64);
                     strcpy(signature, "(r");
-                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
+                    char type = FeatureFFIWamr::getFeatureSignature(accessor.type);
                     if (type != 0)
                         signature[strlen(signature)] = type;
                     strcat(signature, ")");
@@ -988,8 +1015,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                         return false;
                     }
                 }
-                break;
-            }
+            } break;
         }
     }
     return 0;
