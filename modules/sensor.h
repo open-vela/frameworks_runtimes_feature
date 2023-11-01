@@ -54,7 +54,7 @@ sensor_AccelerometerRet* sensorMallocAccelerometerRet();
 typedef struct _Accelerometer {
   FtBool _reserved;
   FtString _interval;
-  FtCallbackId _cb;
+  FtCallbackId _callback;
 } sensor_Accelerometer;
 
 sensor_Accelerometer* sensorMallocAccelerometer();
@@ -68,7 +68,7 @@ sensor_CompassRet* sensorMallocCompassRet();
 
 typedef struct _Compass {
   FtBool _reserved;
-  FtCallbackId _cb;
+  FtCallbackId _callback;
 } sensor_Compass;
 
 sensor_Compass* sensorMallocCompass();
@@ -81,7 +81,7 @@ sensor_ProximityRet* sensorMallocProximityRet();
 
 typedef struct _Proximity {
   FtBool _reserved;
-  FtCallbackId _cb;
+  FtCallbackId _callback;
   FtCallbackId _fail;
 } sensor_Proximity;
 
@@ -95,7 +95,7 @@ sensor_LightRet* sensorMallocLightRet();
 
 typedef struct _Light {
   FtBool _reserved;
-  FtCallbackId _cb;
+  FtCallbackId _callback;
 } sensor_Light;
 
 sensor_Light* sensorMallocLight();
@@ -108,7 +108,7 @@ sensor_StepCountRet* sensorMallocStepCountRet();
 
 typedef struct _StepCount {
   FtBool _reserved;
-  FtCallbackId _cb;
+  FtCallbackId _callback;
   FtCallbackId _fail;
 } sensor_StepCount;
 
