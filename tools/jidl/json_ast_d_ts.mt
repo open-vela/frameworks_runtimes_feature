@@ -51,7 +51,7 @@ ${GenInterfaceCtorFunction(func_node, ctor_info)}
 <%
   struct_name = struct_node['name']
 %>\
-export declare class ${struct_name} {
+export class ${struct_name} {
 %for member in struct_node['members']:
 ${GenStructMember(member)}\
 %endfor
@@ -138,7 +138,7 @@ ${GenStructMember(member)}\
   parent_members = render.GetFinalInterfaceMembers(i_name)
 %>\
 export class ${i_name} {
-  public instance: number;
+  private instance: number;
   constructor() {
     this.init_native(this.clazz_name);
   }
