@@ -880,6 +880,21 @@ class TSRender(Render):
       return self.func_ret_node_map[identifier]
     raise Exception('cannot find the called function for the use node: {}'.format(node))
 
+  def GenerateParamNameList(self, params):
+    param_count = len(params)
+    if param_count == 0:
+      return ''
+    name_list = []
+    for index, param in enumerate(params):
+      param_type = param["type"]
+      if index < param_count -1 and param_type == 'ellipse':
+        raise Exception('wrong ellipse param position: {}'.format(params))
+      if param_type == 'ellipse':
+        name_list.append('rest')
+      elif 'name' in param:
+        name_list.append(param["name"])
+    return ", ".join(name_list)
+
   def GenerateParamCallList(self, param_calls):
     call_list = ''
     is_first_param = True
@@ -898,7 +913,7 @@ class TSRender(Render):
         is_first_param = False
 
       if call_type == 'ellipse':
-        call_list += '...rest'
+        call_list += 'rest'
       else:
         call_list += f"{call_value}"
     return call_list
