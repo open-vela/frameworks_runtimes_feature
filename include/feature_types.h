@@ -54,6 +54,13 @@ typedef void* FeatureInterfaceHandle; // feature interface handle.
 typedef uintptr_t FeatureType; // feature type flag
 typedef void (*NativeFunc)(void);
 
+enum FeatureTaskMode {
+    FEATURE_TASK_MODE_FREE = 0,
+    FEATURE_TASK_MODE_NORMAL = 1,
+};
+
+typedef void (*FeatureTaskCallback)(int status, void* data);
+
 typedef struct VTable {
     size_t size;
     NativeFunc finalizer;
