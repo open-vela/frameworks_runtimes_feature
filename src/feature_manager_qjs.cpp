@@ -646,13 +646,17 @@ FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
 {
 }
 
-static feature_value_t createJsPrototype(FeaturePrototype* prototype)
+static bool ensureJsPrototype(FeaturePrototype* prototype)
 {
+    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
+    if (!feature_is_undefined(*js_proto_ptr))
+        return true;
+
     auto ctx = ft_context_get_data(prototype->ft_ctx);
     feature_value_t js_proto = feature_object(static_cast<feature_context_ref>(ctx));
     if (feature_is_exception(js_proto)) {
         feature_dump_error(static_cast<feature_context_ref>(ctx));
-        return FEATURE_VALUE_UNDEFINED;
+        return false;
     }
 
     initialize_prototype(ctx, prototype->description, prototype, js_proto);
@@ -662,24 +666,20 @@ static feature_value_t createJsPrototype(FeaturePrototype* prototype)
         prototype->description->native_callbacks->onCreate(ctx, prototype);
     }
 
-    return js_proto;
+    *js_proto_ptr = js_proto;
+    return true;
 }
 
 feature_value_t createJsInstance(FeaturePrototype* prototype, feature_classid_t class_id, FeatureInstanceQjs* instance)
 {
-    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
     auto ctx = ft_context_get_data(prototype->ft_ctx);
     // ensure js prototype is created
-    if (feature_is_undefined(*js_proto_ptr)) {
-        feature_value_t js_proto = createJsPrototype(prototype);
-        if (feature_is_exception(js_proto)) {
-            return FEATURE_VALUE_UNDEFINED;
-        }
-        *js_proto_ptr = js_proto;
-    }
+    if (!ensureJsPrototype(prototype))
+        return FEATURE_VALUE_UNDEFINED;
 
     // create instance with prototype and set opaque refers to FeatureInstance
-    feature_value_t js_instance = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), *js_proto_ptr, class_id);
+    auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
+    feature_value_t js_instance = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), js_proto, class_id);
     feature_set_opaque(js_instance, instance);
     return js_instance;
 }
@@ -710,8 +710,8 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         prototype->setFeatureManeger(this);
-        this->setPackageName(getFeatureRegistry()->getFeaturePackageName());
-        this->setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+        setPackageName(getFeatureRegistry()->getFeaturePackageName());
+        setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
 
     // create feature instance for the required object
@@ -769,13 +769,38 @@ void FeatureManagerQjs::uninit()
 
 feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const char* name)
 {
-    auto featurePair = getFeatureRegistry()->findFeature(name);
-    if (!featurePair || !featurePair->first->description || featurePair->second) {
-        FEATURE_LOG_WARN("can't find native feature '%s'!", name);
+    FEATURE_LOG_DEBUG("findFeature for '%s'", name);
+    auto feature_pair = getFeatureRegistry()->findFeature(name);
+    if (!feature_pair || !feature_pair->first) {
+        FEATURE_LOG_WARN("can't find description for native feature '%s'!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
 
-    auto js_proto = FT_VAL_GET_JS_VAL(featurePair->second->ft_proto);
+    if (!getFeatureContext()) {
+        ft_context_ref ft_ctx = CreateFeatureContextQjs(ctx);
+        setFeatureContext(ft_ctx);
+    }
+
+    // create proto
+    const FeatureDescription* description = feature_pair->first;
+    auto& prototype = feature_pair->second;
+    if (!prototype) {
+        prototype = createFeaturePrototype(getFeatureContext(), description);
+        if (!prototype) {
+            FEATURE_LOG_ERROR("create FeaturePrototype failed !");
+            return FEATURE_VALUE_UNDEFINED;
+        }
+        prototype->setFeatureManeger(this);
+        setPackageName(getFeatureRegistry()->getFeaturePackageName());
+        setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+    }
+
+    if (!ensureJsPrototype(prototype)) {
+        FEATURE_LOG_ERROR("ensure js prototype failed !");
+        return FEATURE_VALUE_UNDEFINED;
+    }
+
+    auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
     return feature_dup_value(ctx, js_proto);
 }
 
