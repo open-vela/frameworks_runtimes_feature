@@ -31,12 +31,11 @@ class FeatureUnittest {
 int FeatureUnittest::current_async_id = 0;
 int FeatureUnittest::next_async_id = 0;
 
-typedef void (*LoopFunc)(void*);
-typedef struct LoopPack {
-  void* manager;
+typedef int (*LoopFunc)(void*);
+typedef struct FeatTestEnv {
   LoopFunc run_loop;
   LoopFunc stop_loop;
-} LoopPack;
+} FeatTestEnv;
 
 class FeatureTest : public ::testing::Test {
  public:
@@ -55,17 +54,18 @@ class FeatureTest : public ::testing::Test {
         static_cast<FeatureUnittest*>(FeatureGetObjectData(_featureInstance));
     FeatureUnittest::setCurrentAsyncId(_async_id);
 
-    LoopPack* pack =
-        (LoopPack*)FeatureInstanceGetUserData(_featureInstance, "run_loop");
+    FeatTestEnv* pack =
+        (FeatTestEnv*)FeatureInstanceGetUserData(_featureInstance, "run_loop");
 
     LoopFunc run_loop = pack->run_loop;
 
-    // set timer
     if (run_loop) {
-      run_loop(pack->manager);
+      int ret = run_loop(pack);
+      if (ret) {
+        EXPECT_TRUE(false) << "this testsuite overtime";
+      }
     }
     FeatureUnittest::setCurrentAsyncId(0);
-    // clear timer and done connection
   }
 
  private:
@@ -100,7 +100,6 @@ void feat_test_onRegister(const char* module_name) {
 }
 
 void feat_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-  printf("create module feat_test\n");
   int argc = 1;
   const char* argv[] = {"feature google test"};
   ::testing::InitGoogleTest(&argc, const_cast<char**>(argv));
@@ -140,28 +139,25 @@ void feat_test_onUnregister(const char* module_name) {
 
 void feat_test_wrap_done(FeatureInstanceHandle feature, AppendData append_data,
                          FtInt async_id, FtInt err, FtString err_message) {
-  printf("feat_test done %p\n", feature);
   FeatureUnittest* p =
       static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
   if (FeatureUnittest::currentAsyncId() != async_id) {
-    printf(
-        "done(%d) in wrong context: Timeout or asynchronous test framework "
-        "error occurred.",
-        async_id);
+    printf("[feat_test] done(%d) in odd test context: Timeout occurred.",
+           async_id);
     return;
   }
 
-  printf("feat_test done stop async_id %d\n", async_id);
-
-  LoopPack* pack = (LoopPack*)FeatureInstanceGetUserData(feature, "run_loop");
+  printf("[feat_test] done stop a async test: id(%d)\n", async_id);
+  FeatTestEnv* pack =
+      (FeatTestEnv*)FeatureInstanceGetUserData(feature, "run_loop");
   LoopFunc stop_loop = pack->stop_loop;
-  stop_loop(pack->manager);
+  stop_loop(pack);
 }
 FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
                                AppendData append_data, FtString test_suit_name,
                                FtString test_case_name, FtCallbackId body,
                                FtBool is_async) {
-  printf("feat_test testuite %p\n", feature);
+  printf("[feat_test] add testsuite %p\n", feature);
   FeatureUnittest* p =
       static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
   ::testing::UnitTest* u = p->getUnittest();
@@ -185,11 +181,8 @@ FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
 
 void feat_test_wrap_expect_true(FeatureInstanceHandle feature, AppendData data,
                                 FtBool result, FtString message_info) {
-  printf("feat_test : expect_true\n");
   FeatureUnittest* p =
       static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
-  // ::testing::UnitTest* u = p->u;
-  // if (!u) return;
   // TODO 判断是否要执行
   EXPECT_TRUE(result) << message_info;
 }
@@ -204,7 +197,7 @@ void feat_test_wrap_run_all_tests(FeatureInstanceHandle feature,
 
 void feat_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data,
                           FtVariParams var_params) {
-  printf("[feat_test] ");
+  printf("[feat_test print] ");
   ft_context_ref ft_ctx = FeatureGetContext(feature);
   for (int i = 0; i < var_params.vari_count; i++) {
     ft_value_t param = var_params.vari_args[i];
