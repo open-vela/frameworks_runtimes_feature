@@ -265,8 +265,8 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 strcpy(alloc_ptr, p_str);
                 ptr = alloc_ptr;
                 // feature_free_cstring(ctx, str);
-                break;
             }
+            break;
             case FT_ANY:
             {
                 native_raw_get_arg(void *, param, value);
@@ -360,6 +360,8 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
             }
             case COMPLEX_INTERFACE:
             {
+                native_raw_get_arg(void*, param, value);
+                ptr = param;
             }
             break;
         default:
