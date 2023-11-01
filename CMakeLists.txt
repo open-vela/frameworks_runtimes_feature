@@ -9,11 +9,6 @@ set(QUICKAPP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../quickapp/src)
 set(FEATURE_FRAMEWORK_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
 set(FEATURE_FRAMEWORK_INC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
-## WAMR
-set(UNITE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../apps/interpreters/)
-include(${UNITE_PATH}/wamr/wamr/runtime-library/wamr_config.cmake)
-#add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
-
 # set runtime engine
 set(FEATURE_BACKEND_ENGINE "quickjs" CACHE STRING "feature backend engine, support quickjs and ts2wasm, default: quickjs")
 set_property(CACHE FEATURE_BACKEND_ENGINE PROPERTY STRINGS "quickjs;ts2wasm")
@@ -94,8 +89,6 @@ target_include_directories(feature-framework PUBLIC
     ${FEATURE_FRAMEWORK_SRC}
     ${FEATURE_FRAMEWORK_INC}
 )
-
-set(CMAKE_BUILD_TYPE Debug)
 
 # link backend engine
 target_link_libraries(feature-framework PUBLIC
