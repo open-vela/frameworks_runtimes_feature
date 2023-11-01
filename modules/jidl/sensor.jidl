@@ -27,7 +27,7 @@ callback accelerometer_cb(AccelerometerRet ret)
 struct Accelerometer {
     boolean reserved = false
     string interval = "normal"
-    callback accelerometer_cb cb
+    callback accelerometer_cb callback
 }
 void subscribeAccelerometer(Accelerometer param)
 void unsubscribeAccelerometer()
@@ -39,7 +39,7 @@ struct CompassRet {
 callback compass_cb(CompassRet ret)
 struct Compass {
     boolean reserved = false
-    callback compass_cb cb
+    callback compass_cb callback
 }
 void subscribeCompass(Compass param)
 void unsubscribeCompass()
@@ -50,7 +50,7 @@ struct ProximityRet {
 callback Proximity_cb(ProximityRet ret)
 struct Proximity {
     boolean reserved = false
-    callback Proximity_cb cb
+    callback Proximity_cb callback
     callback fail_cb fail
 }
 void subscribeProximity(Proximity param)
@@ -62,7 +62,7 @@ struct LightRet {
 callback light_cb(LightRet ret)
 struct Light {
     boolean reserved = false
-    callback light_cb cb
+    callback light_cb callback
 }
 void subscribeLight(Light param)
 void unsubscribeLight()
@@ -73,7 +73,7 @@ struct StepCountRet {
 callback StepCount_cb(StepCountRet ret)
 struct StepCount {
     boolean reserved = false
-    callback StepCount_cb cb
+    callback StepCount_cb callback
     callback fail_cb fail
 }
 void subscribeStepCounter(StepCount param)

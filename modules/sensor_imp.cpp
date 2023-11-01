@@ -210,7 +210,7 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
 
     sensor_event_t *event = th->events[SENSOR_MAGIC_ACCEL];
     if (event) {
-        uv_topic_unsubscribe(&th->events[SENSOR_MAGIC_ACCEL]->topic);
+        uv_topic_unsubscribe(&event->topic);
         free(event);
         th->events[SENSOR_MAGIC_ACCEL] = NULL;
     }
@@ -218,7 +218,7 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->_reserved;
-    meta.id = param->_cb;
+    meta.id = param->_callback;
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_ACCEL] = event;
@@ -264,7 +264,7 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->_reserved;
-    meta.id = param->_cb;
+    meta.id = param->_callback;
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_PROX] = event;
@@ -304,7 +304,7 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->_reserved;
-    meta.id = param->_cb;
+    meta.id = param->_callback;
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_LIGHT] = event;
