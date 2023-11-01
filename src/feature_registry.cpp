@@ -118,7 +118,7 @@ bool FeatureRegistry::init(char* manifest)
             }
         }
         package_name_ = parser.getPackageName();
-        FEATURE_LOG_ERROR("package_name is %s!", package_name_);
+        FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
     } else {
         FEATURE_LOG_DEBUG("manifest is null!");
         manifest_check_enable = false;
