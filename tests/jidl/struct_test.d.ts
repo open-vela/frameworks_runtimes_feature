@@ -1,12 +1,12 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-export declare class Chapter {
+export class Chapter {
   page_count: number;
   title: string;
   is_end: boolean;
 }
 
-export declare class Book {
+export class Book {
   any_param: any;
   page_count: number;
   title: string;
