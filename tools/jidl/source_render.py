@@ -23,8 +23,8 @@ cpp_type_map = {
   'ulong' : 'unsigned long',
   'float' : 'float',
   'double' : 'double',
-  'boolean' : 'bool',
-  'string': 'const char*',
+  'boolean' : 'int', # bool as int
+  'string': 'const_pstr',
   'uint8' : 'uint8_t',
   'int8'  : 'int8_t',
   'uint16' : 'uint16_t',
@@ -108,7 +108,8 @@ class Utils:
     if tp['referred_type'] == 'interface':
       return self.cppTypeInterface(tp)
     if tp['referred_type'] == 'user_type':
-      return tp['referred_name']
+      tp = self.findType('user_type', tp['referred_name'])
+      return self.cppType(tp['target'])
     return self.cppTypeDefault(tp)
 
   def cppTypeEnum(self, tp):
@@ -216,6 +217,11 @@ class Utils:
         if trans_native: return trans_native
         if tp['referred_type'] == 'enum':
           return self.transNative('int', meta_name)
+        if tp['referred_type'] == 'user_type':
+          tp = self.findType('user_type', tp['referred_name'])
+          return self.transNative(tp['target'], meta_name)
+      elif tp['type'] == 'user_type':
+        return self.transNative(tp['target'], meta_name)
     if isinstance(tp, str):
       if meta_name in self.vars:
         trans = self.vars[meta_name]

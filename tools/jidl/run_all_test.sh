@@ -6,7 +6,11 @@ PYTHON="python3"
 mkdir -p $CUR_DIR/.out
 
 run_feature() {
-  jidl_files=`ls $1/*.jidl`
+  if [ -d $1 ]; then
+    jidl_files=`ls $1/*.jidl`
+  elif [ -f $1 ]; then
+    jidl_files=$1
+  fi
   for f in $jidl_files
   do
     echo "=== $f =="
@@ -75,6 +79,35 @@ run_miot_services() {
   run_miot_service_gen $CUR_DIR/samples/miot-features/miot.jidl
 }
 
-run_features
-run_miot_services
-run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl
+run_all() {
+  run_features
+  run_miot_services
+  run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl
+}
+
+if [ $# == 0 ]; then
+  run_all
+fi
+
+case $1 in
+  features)
+    run_features
+    ;;
+  miot)
+    run_miot_services
+    ;;
+  lvgl)
+    run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl
+    ;;
+  feature)
+    shift
+    run_feature $*
+    ;;
+  miot_service)
+    shift
+    run_miot_service_gen $*
+    ;;
+  *)
+    run_all
+    ;;
+esac
