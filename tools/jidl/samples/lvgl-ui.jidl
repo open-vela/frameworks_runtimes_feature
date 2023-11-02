@@ -6,6 +6,11 @@ type lv_color_t = uint;
 [native_type="lv_coord_t", to_native="js_tocoord"]
 type lv_coord_t = int;
 
+[native_type="lv_chart_series_t*"]
+type lv_chart_series_p = ulong;
+[native_type="lv_chart_cursor_t*"]
+type lv_chart_cursor_p = ulong;
+
 [native_type="lv_font_t*"]
 type lv_font_p = ulong;
 
@@ -14,7 +19,6 @@ struct Point {
   lv_coord_t x;
   lv_coord_t y;
 };
-
 
 enum Align {
   [value="LV_ALIGN_TOP_LEFT"]
@@ -416,6 +420,8 @@ enum GridAlign {
 
 [func="lv_grid_fr", need_self=false]
 lv_coord_t gridFR(int v);
+[value="LV_GRID_TEMPLATE_LAST"]
+const GRID_TEMPLATE_LAST = 0;
 
 
 [value="LV_LAYOUT_GRID"]
@@ -680,9 +686,6 @@ interface Style {
   property int flexGrow writeonly;
 
 
-  [func="lv_obj_set_grid_cell"]
-  void setGridCell(GridAlign column_align, int col_pos, int col_span, GridAlign row_align, int row_pos, int row_span);
-
   property int[] gridRows writeonly;
   property int[] gridColumns writeonly;
 
@@ -828,6 +831,8 @@ interface LocalStyle {
   void paddingRow(int value, uint selector);
   [func="lv_obj_set_style_pad_column"]
   void paddingColumn(int value, uint selector);
+  [func="lv_obj_set_style_pad_all"]
+  void padding(int value, uint selector);
 
   /*[func="lv_obj_set_style_margin_top"]
   void marginTop(int value, uint selector);
@@ -948,6 +953,11 @@ interface LocalStyle {
 
 callback anim_cb();
 
+[value="LV_ANIM_REPEAT_INFINITE"]
+const ANIM_REPEAT_INFINITE = 65535;
+[value="LV_ANIM_PLAYTIME_INFINITE"]
+const ANIM_PLAYTIME_INFINITE = 1;
+
 [
   native_type="lv_anim_t*",
   tag="animation",
@@ -965,14 +975,12 @@ interface Animation {
   property anim_cb onGetValue writeonly;
   [rawset="NativeAnimateSetReadyCb"]
   property anim_cb onReady writeonly;
-  [rawset="NativeAnimateSetDeleteCb"]
-  property anim_cb onDelete writeonly;
   [set="lv_anim_set_delay", get="lv_anim_get_delay"]
   property int delay;
   [func="lv_anim_set_values", param_pack=true, name="values"]
   void setValues(int start, int end);
-  [set="lv_anim_set_time"]
-  property int time writeonly;
+  [set="lv_anim_set_time", get="native_anim_get_time"]
+  property int time;
   [set="lv_anim_set_playback_time", get="lv_anim_get_playtime"]
   property int playbackTime;
   [set="lv_anim_set_playback_delay"]
@@ -983,8 +991,15 @@ interface Animation {
   property int repeatDelay writeonly;
   [set="lv_anim_set_early_apply"]
   property boolean earlyApply writeonly;
-  [func="lv_anim_start"]
+  [func="NativeAnimateStart"]
   void start();
+
+  [set="native_anim_set_start_value", get="native_anim_get_start_value"]
+  property int startValue;
+  [set="native_anim_set_end_value", get="native_anim_get_end_value"]
+  property int endValue;
+  [set="native_anim_set_current_value", get="native_anim_get_current_value"]
+  property int currentValue;
 };
 
 [rawfunc="NativeAnimateCreateFrom"]
@@ -1013,6 +1028,131 @@ property ulong ANIM_PATH_BOUNCE readonly;
 property ulong ANIM_PATH_PATH_STEP readonly;
 
 
+[value="LV_SYMBOL_BULLET"]
+const SYMBOL_BULLET="";
+[value="LV_SYMBOL_AUDIO"]
+const SYMBOL_AUDIO="";
+[value="LV_SYMBOL_VIDEO"]
+const SYMBOL_VIDEO="";
+[value="LV_SYMBOL_LIST"]
+const SYMBOL_LIST="";
+[value="LV_SYMBOL_OK"]
+const SYMBOL_OK="";
+[value="LV_SYMBOL_CLOSE"]
+const SYMBOL_CLOSE="";
+[value="LV_SYMBOL_POWER"]
+const SYMBOL_POWER="";
+[value="LV_SYMBOL_SETTINGS"]
+const SYMBOL_SETTINGS="";
+[value="LV_SYMBOL_HOME"]
+const SYMBOL_HOME="";
+[value="LV_SYMBOL_DOWNLOAD"]
+const SYMBOL_DOWNLOAD="";
+[value="LV_SYMBOL_DRIVE"]
+const SYMBOL_DRIVE="";
+[value="LV_SYMBOL_REFRESH"]
+const SYMBOL_REFRESH="";
+[value="LV_SYMBOL_MUTE"]
+const SYMBOL_MUTE="";
+[value="LV_SYMBOL_VOLUME_MID"]
+const SYMBOL_VOLUME_MID="";
+[value="LV_SYMBOL_VOLUME_MAX"]
+const SYMBOL_VOLUME_MAX="";
+[value="LV_SYMBOL_IMAGE"]
+const SYMBOL_IMAGE="";
+[value="LV_SYMBOL_TINT"]
+const SYMBOL_TINT="";
+[value="LV_SYMBOL_PREV"]
+const SYMBOL_PREV="";
+[value="LV_SYMBOL_PLAY"]
+const SYMBOL_PLAY="";
+[value="LV_SYMBOL_PAUSE"]
+const SYMBOL_PAUSE="";
+[value="LV_SYMBOL_STOP"]
+const SYMBOL_STOP="";
+[value="LV_SYMBOL_NEXT"]
+const SYMBOL_NEXT="";
+[value="LV_SYMBOL_EJECT"]
+const SYMBOL_EJECT="";
+[value="LV_SYMBOL_LEFT"]
+const SYMBOL_LEFT="";
+[value="LV_SYMBOL_RIGHT"]
+const SYMBOL_RIGHT="";
+[value="LV_SYMBOL_PLUS"]
+const SYMBOL_PLUS="";
+[value="LV_SYMBOL_MINUS"]
+const SYMBOL_MINUS="";
+[value="LV_SYMBOL_EYE_OPEN"]
+const SYMBOL_EYE_OPEN="";
+[value="LV_SYMBOL_EYE_CLOSE"]
+const SYMBOL_EYE_CLOSE="";
+[value="LV_SYMBOL_WARNING"]
+const SYMBOL_WARNING="";
+[value="LV_SYMBOL_SHUFFLE"]
+const SYMBOL_SHUFFLE="";
+[value="LV_SYMBOL_UP"]
+const SYMBOL_UP="";
+[value="LV_SYMBOL_DOWN"]
+const SYMBOL_DOWN="";
+[value="LV_SYMBOL_LOOP"]
+const SYMBOL_LOOP="";
+[value="LV_SYMBOL_DIRECTORY"]
+const SYMBOL_DIRECTORY="";
+[value="LV_SYMBOL_UPLOAD"]
+const SYMBOL_UPLOAD="";
+[value="LV_SYMBOL_CALL"]
+const SYMBOL_CALL="";
+[value="LV_SYMBOL_CUT"]
+const SYMBOL_CUT="";
+[value="LV_SYMBOL_COPY"]
+const SYMBOL_COPY="";
+[value="LV_SYMBOL_SAVE"]
+const SYMBOL_SAVE="";
+[value="LV_SYMBOL_BARS"]
+const SYMBOL_BARS="";
+[value="LV_SYMBOL_ENVELOPE"]
+const SYMBOL_ENVELOPE="";
+[value="LV_SYMBOL_CHARGE"]
+const SYMBOL_CHARGE="";
+[value="LV_SYMBOL_PASTE"]
+const SYMBOL_PASTE="";
+[value="LV_SYMBOL_BELL"]
+const SYMBOL_BELL="";
+[value="LV_SYMBOL_KEYBOARD"]
+const SYMBOL_KEYBOARD="";
+[value="LV_SYMBOL_GPS"]
+const SYMBOL_GPS="";
+[value="LV_SYMBOL_FILE"]
+const SYMBOL_FILE="";
+[value="LV_SYMBOL_WIFI"]
+const SYMBOL_WIFI="";
+[value="LV_SYMBOL_BATTERY_FULL"]
+const SYMBOL_BATTERY_FULL="";
+[value="LV_SYMBOL_BATTERY_3"]
+const SYMBOL_BATTERY_3="";
+[value="LV_SYMBOL_BATTERY_2"]
+const SYMBOL_BATTERY_2="";
+[value="LV_SYMBOL_BATTERY_1"]
+const SYMBOL_BATTERY_1="";
+[value="LV_SYMBOL_BATTERY_EMPTY"]
+const SYMBOL_BATTERY_EMPTY="";
+[value="LV_SYMBOL_USB"]
+const SYMBOL_USB="";
+[value="LV_SYMBOL_BLUETOOTH"]
+const SYMBOL_BLUETOOTH="";
+[value="LV_SYMBOL_TRASH"]
+const SYMBOL_TRASH="";
+[value="LV_SYMBOL_EDIT"]
+const SYMBOL_EDIT="";
+[value="LV_SYMBOL_BACKSPACE"]
+const SYMBOL_BACKSPACE="";
+[value="LV_SYMBOL_SD_CARD"]
+const SYMBOL_SD_CARD="";
+[value="LV_SYMBOL_NEW_LINE"]
+const SYMBOL_NEW_LINE="";
+[value="LV_SYMBOL_DUMMY"]
+const SYMBOL_DUMMY="";
+
 [native_type="lv_event_t*"]
 interface WidgetEvent {
   [get="lv_event_get_code"]
@@ -1037,7 +1177,7 @@ callback event_cb(WidgetEvent evt);
   tag="widget",
   create="lv_obj_create"
 ]
-interface Widget {
+interface Widget extends LocalStyle {
   [set="lv_obj_set_id", get="lv_obj_get_id"]
   property string id;
 
@@ -1056,6 +1196,9 @@ interface Widget {
 
   [set="lv_obj_set_align"]
   property Align align writeonly;
+
+  [func="lv_obj_align", param_pack=true, name="alignOffset"]
+  void setAlignOffset(Align align, int x, int y);
 
   [func="lv_obj_set_pos"]
   void setPos(int x, int y);
@@ -1112,9 +1255,207 @@ interface Widget {
   [set="lv_obj_set_flex_grow"]
   property int flexGrow writeonly;
 
+  [func="lv_obj_get_style_width"]
+  lv_coord_t getStyleWidth(uint part);
+  [func="lv_obj_get_style_min_width"]
+  lv_coord_t getStyleMinWidth(uint part);
+  [func="lv_obj_get_style_max_width"]
+  lv_coord_t getStyleMaxWidth(uint part);
+  [func="lv_obj_get_style_height"]
+  lv_coord_t getStyleHeight(uint part);
+  [func="lv_obj_get_style_min_height"]
+  lv_coord_t getStyleMinHeight(uint part);
+  [func="lv_obj_get_style_max_height"]
+  lv_coord_t getStyleMaxHeight(uint part);
+  [func="lv_obj_get_style_x"]
+  lv_coord_t getStyleX(uint part);
+  [func="lv_obj_get_style_y"]
+  lv_coord_t getStyleY(uint part);
+  [func="lv_obj_get_style_align"]
+  Align getStyleAlign(uint part);
+  [func="lv_obj_get_style_transform_width"]
+  lv_coord_t getStyleTransformWidth(uint part);
+  [func="lv_obj_get_style_transform_height"]
+  lv_coord_t getStyleTransformHeight(uint part);
+  [func="lv_obj_get_style_translate_x"]
+  lv_coord_t getStyleTranslateX(uint part);
+  [func="lv_obj_get_style_translate_y"]
+  lv_coord_t getStyleTranslateY(uint part);
+  [func="lv_obj_get_style_transform_zoom"]
+  lv_coord_t getStyleTransformZoom(uint part);
+  [func="lv_obj_get_style_transform_angle"]
+  lv_coord_t getStyleTransformAngle(uint part);
+  [func="lv_obj_get_style_transform_pivot_x"]
+  lv_coord_t getStyleTransformPivotX(uint part);
+  [func="lv_obj_get_style_transform_pivot_y"]
+  lv_coord_t getStyleTransformPivotY(uint part);
+  [func="lv_obj_get_style_pad_top"]
+  lv_coord_t getStylePaddingTop(uint part);
+  [func="lv_obj_get_style_pad_bottom"]
+  lv_coord_t getStylePaddingBottom(uint part);
+  [func="lv_obj_get_style_pad_left"]
+  lv_coord_t getStylePaddingLeft(uint part);
+  [func="lv_obj_get_style_pad_right"]
+  lv_coord_t getStylePaddingRight(uint part);
+  [func="lv_obj_get_style_pad_row"]
+  lv_coord_t getStylePaddingRow(uint part);
+  [func="lv_obj_get_style_pad_column"]
+  lv_coord_t getStylePaddingColumn(uint part);
+  //[func="lv_obj_get_style_margin_top"]
+  //lv_coord_t getStyleMarginTop(uint part)
+  //[func="lv_obj_get_style_margin_bottom"]
+  //lv_coord_t getStyleMarginBottom(uint part)
+  //[func="lv_obj_get_style_margin_left"]
+  //lv_coord_t getStyleMarginLeft(uint part)
+  //[func="lv_obj_get_style_margin_right"]
+  //lv_coord_t getStyleMarginRight(uint part)
+  [func="lv_obj_get_style_bg_color"]
+  lv_color_t getStyleBgColor(uint part);
+  [func="lv_obj_get_style_bg_color_filtered"]
+  lv_color_t getStyleBgColorFiltered(uint part);
+  [func="lv_obj_get_style_bg_opa"]
+  int getStyleBgOPA(uint part);
+  [func="lv_obj_get_style_bg_grad_color"]
+  lv_color_t getStyleBgGradColor(uint part);
+  [func="lv_obj_get_style_bg_grad_color_filtered"]
+  lv_color_t getStyleBgGradColorFiltered(uint part);
+  [func="lv_obj_get_style_bg_grad_dir"]
+  int getStyleBgGradDir(uint part);
+  [func="lv_obj_get_style_bg_main_stop"]
+  lv_coord_t getStyleBgMainStop(uint part);
+  [func="lv_obj_get_style_bg_grad_stop"]
+  lv_coord_t getStyleBgGradStop(uint part);
+  //[func="lv_obj_get_style_bg_grad"]
+  //const lv_grad_dsc_t * get_bg_grad(uint part)
+  [func="lv_obj_get_style_bg_dither_mode"]
+  int getStyleBgDitherMode(uint part);
+  [func="lv_obj_get_style_bg_img_src"]
+  string getStyleBgImgSrc(uint part);
+  [func="lv_obj_get_style_bg_img_opa"]
+  int getStyleBgImgOPA(uint part);
+  [func="lv_obj_get_style_bg_img_recolor"]
+  lv_color_t getStyleBgImgRecolor(uint part);
+  [func="lv_obj_get_style_bg_img_recolor_filtered"]
+  lv_color_t get_bg_img_recolor_filtered(uint part)
+  [func="lv_obj_get_style_bg_img_recolor_opa"]
+  int getStyleBgImageRecolorOPA(uint part);
+  [func="lv_obj_get_style_bg_img_tiled"]
+  boolean getStyleBgImageTiled(uint part);
+  [func="lv_obj_get_style_border_color"]
+  lv_color_t getStyleBorderColor(uint part);
+  [func="lv_obj_get_style_border_color_filtered"]
+  lv_color_t getStyleBorderColorFiltered(uint part);
+  [func="lv_obj_get_style_border_opa"]
+  int getStyleBorderOPA(uint part);
+  [func="lv_obj_get_style_border_width"]
+  lv_coord_t getStyleBorderWidth(uint part);
+  [func="lv_obj_get_style_border_side"]
+  BorderSide getStyleBorderSide(uint part);
+  [func="lv_obj_get_style_border_post"]
+  boolean getStyleBorderPost(uint part)
+  [func="lv_obj_get_style_outline_width"]
+  lv_coord_t getStyleOutlineWidth(uint part);
+  [func="lv_obj_get_style_outline_color"]
+  lv_color_t getStyleOutlineColor(uint part);
+  [func="lv_obj_get_style_outline_color_filtered"]
+  lv_color_t getStyleOutlineColorFiltered(uint part);
+  [func="lv_obj_get_style_outline_opa"]
+  int getStyleOutlineOPA(uint part);
+  [func="lv_obj_get_style_outline_pad"]
+  lv_coord_t getStyleOutlinePadding(uint part);
+  [func="lv_obj_get_style_shadow_width"]
+  lv_coord_t getStyleShadowWidth(uint part);
+  [func="lv_obj_get_style_shadow_ofs_x"]
+  lv_coord_t getStyleShadowOffsetX(uint part);
+  [func="lv_obj_get_style_shadow_ofs_y"]
+  lv_coord_t getStyleShadowOffsetY(uint part);
+  [func="lv_obj_get_style_shadow_spread"]
+  lv_coord_t getStyleShadowSpread(uint part);
+  [func="lv_obj_get_style_shadow_color"]
+  lv_color_t getStyleShadowColor(uint part);
+  [func="lv_obj_get_style_shadow_color_filtered"]
+  lv_color_t getStyleShadowColorFiltered(uint part);
+  [func="lv_obj_get_style_shadow_opa"]
+  int getStyleShadowOPA(uint part)
+  [func="lv_obj_get_style_img_opa"]
+  int getStyleImageOPA(uint part)
+  [func="lv_obj_get_style_img_recolor"]
+  lv_color_t getStyleImageRecolor(uint part);
+  [func="lv_obj_get_style_img_recolor_filtered"]
+  lv_color_t getStyleImageRecolorFiltered(uint part);
+  [func="lv_obj_get_style_img_recolor_opa"]
+  int getStyleImageRecolorOPA(uint part);
+  [func="lv_obj_get_style_line_width"]
+  lv_coord_t getStyleLineWidth(uint part);
+  [func="lv_obj_get_style_line_dash_width"]
+  lv_coord_t getStyleLineDashWidth(uint part);
+  [func="lv_obj_get_style_line_dash_gap"]
+  lv_coord_t getStyleLineDashGap(uint part);
+  [func="lv_obj_get_style_line_rounded"]
+  boolean getStyleLineRounded(uint part);
+  [func="lv_obj_get_style_line_color"]
+  lv_color_t getStyleLineColor(uint part);
+  [func="lv_obj_get_style_line_color_filtered"]
+  lv_color_t getStyleLineColorFiltered(uint part);
+  [func="lv_obj_get_style_line_opa"]
+  int getStyleLineOPA(uint part);
+  [func="lv_obj_get_style_arc_width"]
+  lv_coord_t getStyleArcWidth(uint part);
+  [func="lv_obj_get_style_arc_rounded"]
+  boolean getStyleArcRounded(uint part);
+  [func="lv_obj_get_style_arc_color"]
+  lv_color_t getStyleArcColor(uint part);
+  [func="lv_obj_get_style_arc_color_filtered"]
+  lv_color_t getStyleArcColorFiltered(uint part);
+  [func="lv_obj_get_style_arc_opa"]
+  int getStyleArcOPA(uint part);
+  [func="lv_obj_get_style_arc_img_src"]
+  string getStyleArcIamegSrc(uint part);
+  [func="lv_obj_get_style_text_color"]
+  lv_color_t getStyleTextColor(uint part);
+  [func="lv_obj_get_style_text_color_filtered"]
+  lv_color_t getStyleTextColorFiltered(uint part);
+  [func="lv_obj_get_style_text_opa"]
+  int getStyleTextOPA(uint part);
+  //[func="lv_obj_get_style_text_font"]
+  //const lv_font_t * get_text_font(uint part)
+  [func="lv_obj_get_style_text_letter_space"]
+  lv_coord_t getStyleTextLetterSpace(uint part);
+  [func="lv_obj_get_style_text_line_space"]
+  lv_coord_t getStyleTextLineSpace(uint part);
+  [func="lv_obj_get_style_text_decor"]
+  TextDecor getStyleTextDecor(uint part);
+  [func="lv_obj_get_style_text_align"]
+  TextAlign getStyleTextAlign(uint part);
+  [func="lv_obj_get_style_radius"]
+  lv_coord_t getStyleRadius(uint part);
+  [func="lv_obj_get_style_clip_corner"]
+  boolean getStyleClipCorner(uint part);
+  [func="lv_obj_get_style_opa"]
+  int getStyleOPA(uint part);
+  //[func="lv_obj_get_style_color_filter_dsc"]
+  //const lv_color_filter_dsc_t * get_color_filter_dsc(uint part)
+  [func="lv_obj_get_style_color_filter_opa"]
+  int getStyleColorFilterOPA(uint part);
+  [func="lv_obj_get_style_anim_time"]
+  uint getStyleAnimTime(uint part);
+  [func="lv_obj_get_style_anim_speed"]
+  uint getStyleAnimSpeed(uint part);
+  //[func="lv_obj_get_style_transition"]
+  //const lv_style_transition_dsc_t * get_transition(uint part)
+  [func="lv_obj_get_style_blend_mode"]
+  BlendMode getStyleBlendMode(uint part);
+  [func="lv_obj_get_style_layout"]
+  int getStyleLayout(uint part);
+  [func="lv_obj_get_style_base_dir"]
+  BaseDirection getStyleBaseDirection(uint part);
+
   // grid
   [param_pack=true, name="grid"]
   void setGridArray(int[] columns, int[] rows);
+  [func="lv_obj_set_grid_cell", param_pack=true, name="gridCell"]
+  void setGridCell(GridAlign columnAlign, int columnPos, int columnSpan, GridAlign rowAlign, int rowPos, int rowSpan);
+
 
   // events
   [type="event", source_gen="event-call", code="LV_EVENT_VALUE_CHANGED", event_type="WidgetEvent"]
@@ -1485,7 +1826,148 @@ interface TextArea extends Widget {
   void moveCursorUp();
 }
 
+[
+  tag="chart",
+  create="lv_chart_create",
+  native_class="lv_chart_class"
+]
+interface Chart extends Widget {
+ enum Type {
+   [value="LV_CHART_TYPE_NONE"]
+   NONE,
+   [value="LV_CHART_TYPE_LINE"]
+   LINE,
+   [value="LV_CHART_TYPE_BAR"]
+   BAR,
+   [value="LV_CHART_TYPE_SCATTER"]
+   SCATTER
+ }
+
+  enum UpdateMode {
+    [value="LV_CHART_UPDATE_MODE_SHIFT"]
+    SHIFT,
+    [value="LV_CHART_UPDATE_MODE_CIRCULAR"]
+    CIRCULAR
+  }
+
+  enum Axis {
+    [value="LV_CHART_AXIS_PRIMARY_Y"]
+    PRIMARY_Y,
+    [value="LV_CHART_AXIS_SECONDARY_Y"]
+    SECONDARY_Y,
+    [value="LV_CHART_AXIS_PRIMARY_X"]
+    PRIMARY_X,
+    [value="LV_CHART_AXIS_SECONDARY_X"]
+    SECONDARY_X
+  }
+
+  enum DrawPart {
+    [value="LV_CHART_DRAW_PART_DIV_LINE_INIT"]
+    DIV_LINE_INIT,
+    [value="LV_CHART_DRAW_PART_DIV_LINE_HOR"]
+    DIV_LINE_HOR,
+    [value="LV_CHART_DRAW_PART_DIV_LINE_VER"]
+    DIV_LINE_VER,
+    [value="LV_CHART_DRAW_PART_LINE_AND_POINT"]
+    LINE_AND_POINT,
+    [value="LV_CHART_DRAW_PART_BAR"]
+    BAR,
+    [value="LV_CHART_DRAW_PART_CURSOR"]
+    CURSOR,
+    [value="LV_CHART_DRAW_PART_TICK_LABEL"]
+    TICK_LABEL
+  }
+
+  [set="lv_chart_set_type", get="lv_chart_get_type"]
+  property Type type;
+
+  [set="lv_chart_set_point_count", get="lv_chart_get_point_count"]
+  property int pointCount;
+
+  [get="lv_chart_get_pressed_point"]
+  property int pressedPoint readonly;
+
+  [func="lv_chart_set_range"]
+  void setRange(Axis axis, int min, int max);
+
+  [set="lv_chart_set_update_mode"]
+  property UpdateMode updateMode writeonly;
+
+  [func="lv_chart_set_div_line_count", param_pack=true, name="divLineCount"]
+  void setDivLineCount(int horizontal, int vertical);
+
+  [set="lv_chart_set_zoom_x", get="lv_chart_get_zoom_x"]
+  property int zoomX;
+
+  [set="lv_chart_set_zoom_y", get="lv_chart_get_zoom_y"]
+  property int zoomY;
+
+  [func="lv_chart_set_axis_tick", param_pack=true, name="axisTick"]
+  void setAxisTick(Axis axis, int majorLen, int minorLen, int majorCount, int minorCount, boolean label, int drawSize);
+
+
+  [func="lv_chart_refresh"]
+  void refresh();
+
+  [func="lv_chart_add_series"]
+  lv_chart_series_p addSeries(lv_color_t color, Axis axis);
+  [func="lv_chart_remove_series"]
+  void removeSeries(lv_chart_series_p series);
+  [func="lv_chart_hide_series"]
+  void hideSeries(lv_chart_series_p series, boolean hide);
+  [func="lv_chart_set_series_color"]
+  void setSeriesColor(lv_chart_series_p series, lv_color_t color);
+  [func="lv_chart_set_x_start_point"]
+  void setXStartPint(lv_chart_series_p series, int id);
+  [func="lv_chart_get_series_next"]
+  lv_chart_series_p getSeriesNext(lv_chart_series_p series);
+  [func="lv_chart_set_all_value"]
+  void setAllValue(lv_chart_series_p series, lv_coord_t value);
+  [func="lv_chart_set_next_value"]
+  void setNextValue(lv_chart_series_p series, lv_chart_series_p next);
+  [func="lv_chart_set_next_value2"]
+  void setNextValue2(lv_chart_series_p series, lv_coord_t x, lv_coord_t y);
+  [func="lv_chart_set_value_by_id"]
+  void setValueById(lv_chart_series_p series, int id, lv_coord_t value);
+  [func="lv_chart_set_value_by_id2"]
+  void setValueById2(lv_chart_series_p series, int id, lv_coord_t x, lv_coord_t y);
+  //[func="lv_chart_set_ext_y_array"]
+  //void setExtYArray(lv_chart_series_p series, lv_coord_t[] array);
+  //[func="lv_chart_set_ext_x_array"]
+  //void setExtXArray(lv_chart_series_p series, lv_coord_t[] array);
+  //[func="lv_chart_get_y_array"]
+  //lv_coord_t[] getXArray(lv_chart_series_p series);
+  //[func="lv_chart_get_x_array"]
+  //lv_coord_t[] getYArray(lv_chart_series_p series);
+
+  [func="lv_chart_add_cursor"]
+  lv_chart_cursor_p addCursor(lv_color_t color, Direction dir);
+  //[func="lv_chart_set_cursor_pos"]
+  //void setCursorPostion(lv_chart_cursor_p cursor, Point point);
+  [func="lv_chart_set_cursor_point"]
+  void setCursorPoint(lv_chart_cursor_p cursor, lv_chart_series_p series, int point_id);
+  //[func="lv_chart_get_cursor_point"]
+  //Point getCursorPoint(lv_chart_cursor_p cursor);
+
+};
+
 /////////////////////////////////////////////////////////
 boolean inflate(object parent, object param);
 
 Widget findWidget(string id);
+
+///////////////////////////////////////////////////
+// math
+[func="lv_trigo_sin", need_self=false]
+int trigoSin(int v);
+[func="lv_trigo_cos", need_self=false]
+int trigoCos(int v);
+[func="lv_bezier3", need_self=false]
+int bezier3(uint t, uint u0, uint u1, uint u2, uint u3);
+[func="lv_atan2", need_self=false]
+int atan2(int x, int y);
+[func="lv_pow", need_self=false]
+long pow(long base, int exp);
+[func="lv_map", need_self=false]
+int map(int x, int min_in, int max_in, int min_out, int max_out);
+
