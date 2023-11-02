@@ -138,6 +138,11 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test_impl.cpp
 FEATURELIST += feat_test
 
+PROGNAME += feat_test
+PRIORITY += 100
+STACKSIZE += 4096
+MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
+
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
