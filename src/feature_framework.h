@@ -18,7 +18,6 @@
 
 #include "feature_description.h"
 #include "feature_utils.h"
-#include "feature_manager.h"
 
 #include <map>
 #include <memory>
@@ -43,7 +42,6 @@
 namespace ferry {
 
 class FeatureInstance;
-//class FeatureManager;
 
 /**
  * @brief Feature Protoype struct
@@ -53,6 +51,7 @@ class FeatureInstance;
 class FeaturePrototype {
 public:
     ft_context_ref ft_ctx; // feature context
+    void* wamr_env;  //wamr_env
     std::vector<std::unique_ptr<FeatureInstance>> instances;
     void* native; // the native feature object instance pointer
     ft_value_t ft_proto; // ft prototype object, it's undefined at first
@@ -105,12 +104,17 @@ public:
      */
     void clearAllInstances();
 
-    void setFeatureManeger(FeatureManager* manager) { feature_manager_ = manager; }
+    void setPackageName(const char* package_name);
 
-    FeatureManager* getFeatureManager() const { return feature_manager_; }
+    const char* getPackageName() const;
+
+    void setEnvironmentName(const char* environment_name);
+
+    const char* getEnvironmentName() const { return environment_name_; }
 
 private:
-    FeatureManager* feature_manager_ = nullptr;
+    const char* package_name_ = nullptr;
+    const char* environment_name_ = nullptr;
 };
 
 /**

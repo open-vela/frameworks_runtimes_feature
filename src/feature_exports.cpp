@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include "feature_exports.h"
-#include "feature_manager.h"
 #include "feature_framework.h"
 #include "feature_instance.h"
 #include "feature_log.h"
@@ -26,9 +25,6 @@
 #include <string.h>
 
 using namespace ferry;
-
-static void feature_async_cb(uv_async_t* handle);
-
 
 void* FeatureMalloc(size_t size, FeatureType featureType)
 {
@@ -166,18 +162,19 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 const char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
-    return proto->getFeatureManager()->getPackageName();
+    return proto->getPackageName();
 }
 
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
-    return proto->getFeatureManager()->getEnvironmentName();
+    return proto->getEnvironmentName();
 }
 
-void* FeatureInstanceGetUserData(FeatureInstanceHandle handle, const char* name) {
+uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle)
+{
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    return instance->prototype()->getFeatureManager()->getUserData(name);
+    return instance->uvloop();
 }
 
 bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
@@ -232,10 +229,4 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTab
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->createInterface(vtable);
-}
-
-void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data) {
-    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    instance->addCallback(task_cb, data);
-    instance->sendAsnyc();
 }
