@@ -30,7 +30,7 @@
 
 namespace ferry {
 
-extern thread_local feature_classid_t interface_class_id; // prototype class id
+extern thread_local feature_classid_t g_interface_class_id; // prototype class id
 extern FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description);
 extern feature_value_t createJsInstance(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance);
 
@@ -327,7 +327,7 @@ namespace FeatureFFIQjs {
             } break;
             case COMPLEX_INTERFACE: {
                 // get interface ptr from js object
-                auto opaque_ptr = feature_get_opaque(value, interface_class_id);
+                auto opaque_ptr = feature_get_opaque(value, g_interface_class_id);
                 FEATURE_LOG_DEBUG("value: %p, get opaque_ptr: %p", JS_VALUE_GET_PTR(value), opaque_ptr);
                 FEATURE_CHECK_NE(opaque_ptr, nullptr);
                 ptr = opaque_ptr;
@@ -500,7 +500,7 @@ namespace FeatureFFIQjs {
                 int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
                 interfacePrototype->instances[iid]->setInstanceId(iid);
                 // create prototype class instance
-                value = createJsInstance(interfacePrototype, interface_class_id, interface_ptr);
+                value = createJsInstance(interfacePrototype, g_interface_class_id, interface_ptr);
                 // setup featureInstance WeakRef, refers to feature_object
                 interface_ptr->initWeakRef(value);
             } break;
