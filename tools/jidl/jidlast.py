@@ -35,7 +35,6 @@ INTERFACE_DEFINE = 30
 META_ATTRIBUTE = 31
 ARRAY_LITERAL = 32
 ENUM_DEFINE = 33
-USER_TYPE_DEFINE = 34
 
 type_names = {
   LITERVAL : 'literval',
@@ -72,8 +71,7 @@ type_names = {
   STRUCT_MEMBER_CALLBACK: 'struct_member_callback',
   META_ATTRIBUTE : 'meta_attribute',
   ARRAY_LITERAL : 'array_literal',
-  ENUM_DEFINE : 'enum_define',
-  USER_TYPE_DEFINE : 'type_define',
+  ENUM_DEFINE : 'enum_define'
 }
 
 def TypeName(tp):
@@ -105,8 +103,7 @@ class Node:
            self.__type == CLASS_DEFINE or \
            self.__type == STRUCT_DEFINE or \
            self.__type == ENUM_DEFINE or \
-           self.__type == CALLBACK_DEFINE or \
-           self.__type == USER_TYPE_DEFINE
+           self.__type == CALLBACK_DEFINE
 
   def Check(self, context):
     pass
@@ -530,33 +527,6 @@ class EventDefine(Type):
       self.params.ToJson(event_def['params'])
     out.append(event_def)
 
-class UserTypeDefine(Type):
-  def __init__(self, name, target_tp):
-    Type.__init__(self, name, USER_TYPE_DEFINE)
-    self.target = target_tp
-
-  def __str__(self):
-    return 'type %s' % (self.name)
-
-  def Check(self, context):
-    context.AddId(self.name, self)
-
-  def GetJson(self):
-    type_def = {}
-    Type.ToJson(self, type_def)
-    type_def['type'] = 'user_type'
-    type_def['name'] = self.name
-    target = {}
-    self.target.ToJson(target)
-    type_def['target'] = target['type']
-    return type_def
-
-  def ToJson(self, out):
-    AddJson(self.GetJson(), out)
-
-  def GetReferenceJson(self):
-    return MakeReferenctJson('user_type', self.name)
-
 class AsyncInfo(Node):
   def __init__(self, async_type):
     Node.__init__(self, ASYNC_INFO)
@@ -935,7 +905,6 @@ class StructMemberStruct(Type):
 class StructMemberCallback(Type):
   def __init__(self, callback_type, callback_name):
     Type.__init__(self, callback_name, STRUCT_MEMBER_CALLBACK)
-    #print("=== callback_type:", callback_type, type(callback_type))
     self.type = callback_type
 
   def __str__(self):
@@ -943,8 +912,8 @@ class StructMemberCallback(Type):
     return s
 
   def Resolve(self, context):
-    #print("param resolve: ", self.type)
     self.type = ResolveStructMemberType(context, self.type, None, self)
+    #print("param resolve: ", self.type, str(self.type), str(self))
     #context.AddId(self.name, self.type)
 
   #def Check(self, context):
@@ -1114,7 +1083,6 @@ struct_member_accepted_types = (
   InterfaceDefine,
   CallbackDefine,
   EnumDefine,
-  UserTypeDefine
 )
 
 param_accepted_types = (
@@ -1124,8 +1092,7 @@ param_accepted_types = (
   StructDefine,
   InterfaceDefine,
   EnumDefine,
-  EllipseType,
-  UserTypeDefine
+  EllipseType
 )
 
 return_accepted_type = (
@@ -1134,8 +1101,7 @@ return_accepted_type = (
   InterfaceDefine,
   StructDefine,
   EnumDefine,
-  PromiseType,
-  UserTypeDefine
+  PromiseType
 )
 
 value_accepted_type = (
@@ -1162,7 +1128,6 @@ def IsDirectResolveType(tp):
 def ResolveType(context, tp, accepted, owner, holder):
   if IsDirectResolveType(tp):
     return tp
-  #print("==== tp: ", tp, type(tp));
   new_tp = context.GetIdExist(tp.name, accepted, owner)
   if not new_tp:
     context.AddError("[%d:%d]Resolve Type '%s' faield in '%s'" % (holder.lineno, holder.lexpos, tp.name, str(holder)))
