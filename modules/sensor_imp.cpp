@@ -222,13 +222,15 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_ACCEL] = event;
-    int ret = uv_topic_subscribe(uv_default_loop(), &th->events[SENSOR_MAGIC_ACCEL]->topic,
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_ACCEL]->topic,
                                  sensor_orb_table[SENSOR_MAGIC_ACCEL].meta,
                                  sensor_orb_table[SENSOR_MAGIC_ACCEL].topic_cb);
     if (ret < 0) {
         th->events[SENSOR_MAGIC_ACCEL] = NULL;
         free(event);
         FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
+        return;
     }
     uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
 }
@@ -268,7 +270,8 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_PROX] = event;
-    int ret = uv_topic_subscribe(uv_default_loop(), &th->events[SENSOR_MAGIC_PROX]->topic,
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_PROX]->topic,
                                  sensor_orb_table[SENSOR_MAGIC_PROX].meta,
                                  sensor_orb_table[SENSOR_MAGIC_PROX].topic_cb);
     if (ret < 0) {
@@ -308,7 +311,8 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_LIGHT] = event;
-    int ret = uv_topic_subscribe(uv_default_loop(), &th->events[SENSOR_MAGIC_LIGHT]->topic,
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager),&th->events[SENSOR_MAGIC_LIGHT]->topic,
                                  sensor_orb_table[SENSOR_MAGIC_LIGHT].meta,
                                  sensor_orb_table[SENSOR_MAGIC_LIGHT].topic_cb);
     if (ret < 0) {
