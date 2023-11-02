@@ -260,7 +260,8 @@ void exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, exchange_
                                "param is invalid", handle);
     }
 
-    int status = uv_property_set(uv_default_loop(), handle->key, handle->value, exchange_cb,
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int status = uv_property_set(FeatureGetUVLoop(manager), handle->key, handle->value, exchange_cb,
                                  (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[SET] uv_property_set failed");
@@ -296,7 +297,8 @@ void exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, exchange_
                                "param is invalid", handle);
     }
 
-    int status = uv_property_get(uv_default_loop(), handle->key, (char*)handle->getvalue, NULL,
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int status = uv_property_get(FeatureGetUVLoop(manager), handle->key, (char*)handle->getvalue, NULL,
                                  exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[GET] uv_property_get failed");
@@ -330,7 +332,8 @@ void exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
                                "param is invalid", handle);
     }
 
-    int status = uv_property_delete(uv_default_loop(), handle->key, exchange_cb, (void*)handle);
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int status = uv_property_delete(FeatureGetUVLoop(manager), handle->key, exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[REMOVE] uv_property_delete failed");
         return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
@@ -405,7 +408,8 @@ void exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData dat
 
     FeatureFreeValue(key);
     FeatureFreeValue(value);
-    int status = uv_property_set(uv_default_loop(), handle->key, handle->value, exchange_cb,
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int status = uv_property_set(FeatureGetUVLoop(manager), handle->key, handle->value, exchange_cb,
                                  (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[grantPermission] uv_property_set failed");
@@ -445,7 +449,8 @@ void exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData da
     handle->key = strdup(key);
     FeatureFreeValue(key);
     FEATURE_LOG_INFO("[revokePermission] key=%s", handle->key);
-    int status = uv_property_delete(uv_default_loop(), handle->key, exchange_cb, (void*)handle);
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int status = uv_property_delete(FeatureGetUVLoop(manager), handle->key, exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[revokePermission] uv_property_delete failed");
         return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,

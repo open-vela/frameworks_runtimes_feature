@@ -106,7 +106,8 @@ void storage_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     th->db_path = (char*)malloc(strlen(name) + 1);
     strcpy(th->db_path, name);
     checkpath(th->db_path);
-    int ret = uv_db_init(uv_default_loop(), &th->db, name);
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
+    int ret = uv_db_init(FeatureGetUVLoop(manager), &th->db, name);
     if (ret != 0) {
         FEATURE_LOG_ERROR("%s::%s() uv_db_init error:%d\n", file_tag, __FUNCTION__, ret);
         return;
@@ -282,7 +283,8 @@ void storage_wrap_clear(FeatureInstanceHandle feature, AppendData data, storage_
     STORAGE_CHECK_IF(ret, "uv_db_close fail");
     ret = unlink(th->db_path);
     STORAGE_CHECK_IF(ret, "unlink fail");
-    ret = uv_db_init(uv_default_loop(), &th->db, th->db_path);
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    ret = uv_db_init(FeatureGetUVLoop(manager), &th->db, th->db_path);
     STORAGE_CHECK_IF(ret, "uv_db_init fail");
     finish_callback(ret, feature, info->_success, info->_fail, info->_complete, "succcess", NULL);
 }
