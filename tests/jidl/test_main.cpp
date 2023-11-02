@@ -5,15 +5,13 @@
 
 #include <set>
 
+#include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
 #ifdef __NuttX__
 #include <binder/IPCThreadState.h>
 #endif
-
-using namespace ferry;
-using namespace FEATURE;
 
 bool load_file(const char *file_name, char **file_content);
 
@@ -49,12 +47,12 @@ JSValue __require(JSContext *ctx, JSValue this_val, int argc, JSValue *argv,
     return FEATURE_UNDEFINED;
   }
 
-  ferry::FeatureManagerQjs *manager =
-      static_cast<ferry::FeatureManagerQjs *>(JS_GetOpaque(func_data[0], 1));
+  FeatureManagerHandle manager =
+      static_cast<FeatureManagerHandle>(JS_GetOpaque(func_data[0], 1));
 
   const char *str_module_name = JS_ToCString(ctx, argv[0]);
   JSValue vm_object = JS_UNDEFINED;
-  auto feature_obj = manager->featureRequire(ctx, vm_object, str_module_name);
+  auto feature_obj = FeatureRequire(manager, ctx, vm_object, str_module_name);
   JS_FreeCString(ctx, str_module_name);
   return feature_obj;
 }
@@ -239,17 +237,15 @@ extern "C" int main(int argc, char **argv) {
 
   // init feature framework
   JS_SetRuntimeOpaque(env.rt, env.ctx);
-  auto registry = new ferry::FeatureRegistry();
-  registry->init(nullptr);
 
   // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
-  ferry::FeatureManagerQjs *manager = new ferry::FeatureManagerQjs(registry);
+  FeatureManagerHandle manager = FeatureCreateManager();
   env.manager = manager;
   env.run_loop = run_loop;
   env.stop_loop = stop_loop;
 
-  manager->setUserData("run_loop", &env);
-  manager->setUVLoop(main_loop);
+  FeatureSetUserData(manager, "run_loop", &env);
+  FeatureSetUVLoop(manager, main_loop);
 
   // register global require
   JSValue global_obj = JS_GetGlobalObject(env.ctx);
@@ -303,7 +299,7 @@ extern "C" int main(int argc, char **argv) {
   env.time_host.timers.clear();
 
   // release manager first
-  manager->uninit();
+  FeatureUninit(manager);
   JS_FreeContext(env.ctx);
   JS_FreeRuntime(env.rt);
 
@@ -315,7 +311,7 @@ extern "C" int main(int argc, char **argv) {
     js_str = NULL;
   }
   // free manager
-  delete manager;
+  FeatureFreeManager(manager);
 
   return 0;
 }
