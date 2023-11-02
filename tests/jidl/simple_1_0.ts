@@ -36,9 +36,10 @@ export function main() {
     test.name = 'joker'
     test.print('after set, test.name=', test.name, '\n');
     test.print('test.version=', test.version, '\n');
-    // test.print('test.x=', test.x, '\n');
-    // test.print('test.y=', test.y, '\n');
-    // test.print('test.z=', test.z, '\n');
+
+    test.print('test.x=', test.x, '\n');
+    test.print('test.y=', test.y, '\n');
+    test.print('test.z=', test.z, '\n');
 
     let bar6_ret = test.bar6(7, 3.5, false);
     test.foo3(355, 59.39923, (x:number, y:string, z:number) => {

@@ -42,6 +42,22 @@ export class Simple {
   }
   declare get_args_0(): string[];
 
+  // consts
+  get x(): number {
+    return this.const_x();
+  }
+  declare const_x(): number;
+  
+  get y(): string {
+    return this.const_y();
+  }
+  declare const_y(): string;
+
+  get z(): number {
+    return this.const_z();
+  }
+  declare const_z(): number;
+ 
 // private:
   readonly clazz_name = "Simple";
   declare init_native(name: string): void;
