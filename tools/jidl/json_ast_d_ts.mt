@@ -194,6 +194,18 @@ ${GenInterfaceClass(i_node)}\
   declare set_${prop_name}_0(v: ${ts_type}): void;
 %endif
 </%def>\
+<%def name="GenConst(const_node)">\
+<%
+  const_name = const_node["name"]
+  const_val = const_node["value"]
+  const_type = const_node["value_type"]
+  ts_type = render.GenerateTsType(const_type)
+%>\
+  get ${const_name}(): ${ts_type} {
+    return this.const_${const_name}();
+  }
+  declare const_${const_name}(): ${ts_type};
+</%def>\
 <%def name="GenUse(use_node)">\
 <%
   func_node = use_node['function']
@@ -242,6 +254,8 @@ ${GenUse(block)}\
 ${CacheCallback(block)}\
 %elif block['type'] == 'property':
 ${GenProperty(block)}\
+%elif block['type'] == 'const':
+${GenConst(block)}\
 %endif
 %endfor
 
