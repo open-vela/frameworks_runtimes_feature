@@ -214,13 +214,13 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
 
 /**
  * @brief create a FeatureManagerHandle
- * @param void
+ * @param manifest
  * @return FeatureManagerHandle
  */
-FeatureManagerHandle FeatureCreateManager(void);
+FeatureManagerHandle FeatureCreateManager(char* manifest);
 
 /**
- * @brief free a FeatureFreeManager
+ * @brief free a FeatureManagerHandle
  * @param handle
  * @return void
  */
@@ -287,7 +287,15 @@ JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_o
  * @param handle
  * @return FeatureManagerHandle
  */
-FeatureManagerHandle FeatureGetManagerHandle(FeatureInstanceHandle handle);
+FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle);
+
+/**
+ * @brief get feature manager handle from feature prototype
+ *
+ * @param handle
+ * @return FeatureManagerHandle
+ */
+FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle);
 
 #ifdef __cplusplus
 }
