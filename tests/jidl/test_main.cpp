@@ -8,6 +8,9 @@
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
+#ifdef __NuttX__
+#include <binder/IPCThreadState.h>
+#endif
 
 using namespace ferry;
 using namespace FEATURE;
@@ -183,8 +186,14 @@ static void walk(uv_handle_t *handle, void *arg) {
   }
 }
 
+#ifdef __NuttX__
+static void __uv_poll_cb(uv_poll_t *handle, int status, int events) {
+  android::IPCThreadState::self()->handlePolledCommands();
+}
+#endif
+
 // 支持cli来读取 js 文件去执行，命令为：./feature_jidl_test
-int main(int argc, char **argv) {
+extern "C" int main(int argc, char **argv) {
   if (argc < 2) {
     printf("please input js file, like ./test.js \n");
     return 0;
@@ -215,6 +224,18 @@ int main(int argc, char **argv) {
   uv_timer_init(main_loop, &timer);
   env.async_limiter = &timer;
   timer.data = &env;
+#ifdef __NuttX__
+  // init binder
+  int binderFd = -1;
+  android::IPCThreadState::self()->setupPolling(&binderFd);
+  if (binderFd < 0) {
+    printf("failed to open binder device:%d", errno);
+  } else {
+    uv_poll_t binder_poll;
+    uv_poll_init(main_loop, &binder_poll, binderFd);
+    uv_poll_start(&binder_poll, UV_READABLE, __uv_poll_cb);
+  }
+#endif
 
   // init feature framework
   JS_SetRuntimeOpaque(env.rt, env.ctx);
