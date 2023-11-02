@@ -1021,7 +1021,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             case MEMBER_ACCESSOR: {
                 // register accessor_get and accessor_set
                 const MemberAccessor& accessor = member.accessor;
-                if (accessor.getter.vtable_idx >= 0) {
+                if (accessor.getter.vtable_idx >= 0 || accessor.getter.callback) {
                     auto native_symbol = new NativeSymbol();
                     nativesymbol_.push_back(native_symbol);
                     native_symbol->func_ptr = (void *)accessor_get;
@@ -1046,7 +1046,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                         return false;
                     }
                 }
-                if(accessor.setter.vtable_idx >= 0) {
+                if(accessor.setter.vtable_idx >= 0 || accessor.setter.callback) {
                     auto native_symbol = new NativeSymbol();
                     nativesymbol_.push_back(native_symbol);
                     native_symbol->func_ptr = (void *)accessor_set;
