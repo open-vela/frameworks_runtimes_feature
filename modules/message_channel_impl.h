@@ -18,9 +18,9 @@
 
 #include <map>
 
+#include "channel.h"
 #include "feature_exports.h"
 #include "message_transport.h"
-#include "channel.h"
 
 using message_transport::ClientConnection;
 using message_transport::MessageTransportServer;
@@ -32,7 +32,7 @@ class MessageChannel : public MessageServerChannelCallback,
                        public BroadcastChannelCallback {
 public:
     MessageChannel(FeatureInstanceHandle ft_instance, ClientChannel* client_channel,
-                   BroadcastChannel* broadcast_channel, ServerHelper* server_help);
+        BroadcastChannel* broadcast_channel, ServerHelper* server_help);
 
     virtual ~MessageChannel();
 
@@ -50,7 +50,7 @@ public:
 
     // override BroadcastChannelCallback
     void onReceive(const std::string& target, const std::string& action,
-                   const std::string& data) override;
+        const std::string& data) override;
 
     // notify
     void sendBroadcast(const std::string& action, const std::string& body);
@@ -74,11 +74,13 @@ public:
     // register server
     void registerServer(const std::string& name);
 
-    MessageServerChannel* message_server_channel() {
+    MessageServerChannel* message_server_channel()
+    {
         return message_server_channel_;
     }
 
-    ClientChannel* client_channel() {
+    ClientChannel* client_channel()
+    {
         return client_channel_;
     }
 

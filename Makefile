@@ -89,9 +89,9 @@ AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
 CXXSRCS += $(patsubst %.aidl,%$(CXXEXT),$(AIDLSRCS))
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/modules/aidl
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_transport.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_1_0_impl.cpp
-FEATURELIST += MessageChannel
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_impl.cpp
+FEATURELIST += system_messageChannel
 endif
 
 ifeq ($(CONFIG_MIWEAR_APPS),y)
