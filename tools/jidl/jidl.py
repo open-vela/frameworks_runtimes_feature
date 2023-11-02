@@ -459,10 +459,10 @@ class JIDL(Parser):
 
   def p_property_define(self, p):
     """
-    property_define : PROPERTY value_type ID
-            | PROPERTY value_type ID READONLY
-            | PROPERTY value_type ID WRITEONLY
-            | CONST PROPERTY value_type ID
+    property_define : PROPERTY value_type type_name
+            | PROPERTY value_type type_name READONLY
+            | PROPERTY value_type type_name WRITEONLY
+            | CONST PROPERTY value_type type_name
     """
     count = len(p)
     if p[1] == 'property':
@@ -651,6 +651,7 @@ class JIDL(Parser):
               | MAIN
               | WORKER
               | EXTENDS
+              | TYPE
     """
     p[0] = p[1]
 
