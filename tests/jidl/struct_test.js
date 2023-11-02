@@ -1,37 +1,43 @@
-let struct = require('struct_test');
+let test = require('struct_test');
 
-struct.foo(1,
-    {
-        'page_count' : 100,
-         'title': 'chapter one'
+test.foo(1024, {
+        'page_count' : 365,
+        'title': 'Pride and Prejudice',
+        'is_end': false
     })
 
-struct.bar2(
-    {
+let res_bar = test.bar(42)
+test.print('test.bar ret, page_count: ', res_bar.page_count)
+test.print('test.bar ret, title: ', res_bar.title)
+test.print('test.bar ret, is_end: ', res_bar.is_end)
+
+test.bar2({
         any_param: {
             any1: 100,
             any2: 'chapter one',
             any3: [500, 'chapter 2', '0.5px'],
         },
 
-        'page_count' : 500,
+        'page_count' : 1000,
         'title': 'my book',
-        chap_titles : ['chapter 1', 'chapter 2', 'chapter 3'],
+        chap_titles : ['section1', 'section2', 'section3'],
         'first_chap': {
             'page_count' : 100,
-            'title': 'chapter one'
+            'title': 'chapter one',
+            'is_end': false
         },
         'chap_changed': function (index, title) {
-            struct.print('chap_changed, index: ', index, ', title: ', title)
+            test.print('chapter changed, index: ', index, ', title: ', title)
         }
     })
-struct.print('\n\n')
+test.print('\n\n')
 
-let first_chapter = {
+let chapter2 = {
     'page_count' : 200,
-    'title': 'chapter two'
+    'title': 'chapter two',
+    'is_end': true
 }
-struct.foo(5, first_chapter);
+test.foo(5, chapter2);
 
 let book = {
     any_param: {
@@ -41,14 +47,11 @@ let book = {
     },
     'page_count' : 600,
     'title': 'your book',
-    'chap_titles': ['section 1', 'section 2', 'section 3'],
-    'first_chap': first_chapter,
+    'chap_titles': ['section 4', 'section 5', 'section 6'],
+    'first_chap': chapter2,
     'chap_changed': function (index, title) {
-        struct.print('chap_changed, index: ', index, ', title: ', title)
+        test.print('chap_changed, index: ', index, ', title: ', title)
     }
 }
-struct.bar2(book)
-struct.print('\n\n')
-
-let chapter = struct.bar(2)
-struct.print('chap_page_count: ', chapter.page_count, ', chap_title: ', chapter.title)
+test.bar2(book)
+test.print('\n\n')
