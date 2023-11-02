@@ -246,10 +246,10 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     instance->sendAsnyc();
 }
 
-FeatureManagerHandle FeatureCreateManager(void)
+FeatureManagerHandle FeatureCreateManager(char *manifest)
 {
     FeatureRegistry* registry = new ferry::FeatureRegistry();
-    registry->init(nullptr);
+    registry->init(manifest);
     FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
 
     return manager;
@@ -297,8 +297,14 @@ JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_o
     return manager->featureRequire(ctx, binding_object, name);
 }
 
-FeatureManagerHandle FeatureGetManagerHandle(FeatureInstanceHandle handle)
+FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->prototype()->getFeatureManager();
+}
+
+FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
+{
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
+    return proto->getFeatureManager();
 }
