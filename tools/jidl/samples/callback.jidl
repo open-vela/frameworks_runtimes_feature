@@ -1,0 +1,15 @@
+module test_callback@1.0
+
+callback callback();
+struct X {
+  callback callback callback;
+  int main;
+  string worker;
+  string property;
+  float extends;
+  float use;
+  boolean module;
+  int async;
+  int event;
+};
+

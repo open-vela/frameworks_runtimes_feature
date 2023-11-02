@@ -1,0 +1,343 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "storage.h"
+#include "uv_ext.h"
+
+static const char* file_tag = "[jidl_feature] storage_impl";
+#define DB_PATH_PREFIX "/data/quickapp"
+
+typedef struct {
+    uv_db_t* db;
+    char* db_path;
+} StorageContext;
+
+enum OP {
+    STORAGE_OP_GET,
+    STORAGE_OP_SET,
+    STORAGE_OP_CLEAR,
+    STORAGE_OP_DELETE,
+    STORAGE_OP_KEY,
+    STORAGE_OP_NONE
+};
+
+typedef struct {
+    FeatureInstanceHandle feature;
+    StorageContext* th;
+    OP op;
+    FtCallbackId success;
+    FtCallbackId fail;
+    FtCallbackId complete;
+    uv_buf_t buf;
+} StorageHandle;
+
+#define STORAGE_CHECK_IF(ret, msg)                                                              \
+    if (ret) {                                                                                  \
+        FEATURE_LOG_ERROR("[STORAGE_CHECK_IF] %s", msg);                                        \
+        return finish_callback(ret, feature, info->_success, info->_fail, info->_complete, msg, \
+                               handle);                                                         \
+    }
+
+int checkpath(const char* path) {
+    const char s[] = "/";
+    char* data;
+    char *token, *ret;
+    int res;
+
+    data = (char*)malloc(PATH_MAX);
+    if (data == NULL) {
+        return -ENOMEM;
+    }
+
+    res = access(path, F_OK);
+    if (res == 0) {
+        free(data);
+        return 0;
+    }
+
+    strcpy(data, path);
+    ret = strrchr(data, '/');
+    if (ret == 0) {
+        free(data);
+        return 0;
+    }
+    *ret++ = 0;
+
+    token = strtok(data, s);
+    while (token != NULL) {
+        token = strtok(NULL, s);
+        if (token != NULL) {
+            *(token - 1) = '/';
+        }
+
+        res = access(data, F_OK);
+        if (res != 0) {
+            res = mkdir(data, 0777);
+        }
+    }
+
+    free(data);
+    return res;
+}
+
+void storage_onRegister(const char* feature_name) {
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+}
+
+void storage_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    StorageContext* th = (StorageContext*)malloc(sizeof(StorageContext));
+    const char* packageName = FeatureGetPackageName(handle);
+    char name[PATH_MAX] = {0};
+    sprintf(name, DB_PATH_PREFIX "/%s/%s/%s", "system", packageName, "usr.db");
+    th->db_path = (char*)malloc(strlen(name) + 1);
+    strcpy(th->db_path, name);
+    checkpath(th->db_path);
+    int ret = uv_db_init(uv_default_loop(), &th->db, name);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s() uv_db_init error:%d\n", file_tag, __FUNCTION__, ret);
+        return;
+    }
+    FeatureSetProtoData(handle, th);
+}
+
+void storage_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+}
+
+void storage_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+}
+
+void storage_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(handle));
+    if (th) {
+        if (th->db) {
+            uv_db_close(th->db);
+        }
+        if (th->db_path) {
+            free(th->db_path);
+        }
+    }
+    free(th);
+}
+
+void storage_onUnregister(const char* feature_name) {
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+}
+
+FtInt storage_get_length(void* feature, AppendData data) {
+    FeatureProtoHandle proto_handle =
+            FeatureGetProtoHandle(static_cast<FeatureInstanceHandle>(feature));
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+    char* key;
+    return uv_db_key(th->db, -1, &key, NULL, NULL);
+}
+
+void storage_set_length(void* feature, AppendData data, FtInt length) {}
+
+static StorageHandle* storage_malloc(FeatureInstanceHandle feature) {
+    StorageHandle* handle = (StorageHandle*)malloc(sizeof(StorageHandle));
+    handle->feature = feature;
+    handle->th = NULL;
+    handle->buf = {0};
+    handle->op = STORAGE_OP_NONE;
+    handle->success = -1;
+    handle->fail = -1;
+    handle->complete = -1;
+    return handle;
+}
+
+static void storage_free(StorageHandle* handle) {
+    if (handle == NULL) {
+        return;
+    }
+    free(handle);
+}
+
+static void finish_callback(int status, FeatureInstanceHandle feature, FtCallbackId success_id,
+                            FtCallbackId fail_id, FtCallbackId complete_id, const char* msg,
+                            StorageHandle* handle) {
+    if (status == 0) {
+        FeatureInvokeCallback(feature, success_id, msg != NULL ? msg : "success");
+    } else {
+        FeatureInvokeCallback(feature, fail_id, msg, status);
+    }
+    FeatureInvokeCallback(feature, complete_id, (status >= 0) ? "success" : "fail");
+    FeatureRemoveCallback(feature, success_id);
+    FeatureRemoveCallback(feature, fail_id);
+    FeatureRemoveCallback(feature, complete_id);
+    storage_free(handle);
+}
+
+static void storage_cb(int status, const char* key, uv_buf_t value, void* data) {
+    StorageHandle* handle = static_cast<StorageHandle*>(data);
+    if (handle == NULL) {
+        return;
+    }
+    if (status == 0) {
+        if (handle->op == STORAGE_OP_DELETE || handle->op == STORAGE_OP_SET) {
+            uv_db_commit(handle->th->db);
+        }
+        const char* ret = value.base;
+        if (handle->op == STORAGE_OP_KEY || handle->op == STORAGE_OP_DELETE) {
+            ret = key;
+        }
+        finish_callback(status, handle->feature, handle->success, handle->fail, handle->complete,
+                        ret, handle);
+    } else {
+        finish_callback(status, handle->feature, handle->success, handle->fail, handle->complete,
+                        uv_strerror(status), handle);
+    }
+}
+
+void storage_wrap_get(FeatureInstanceHandle feature, AppendData data, storage_GetInfo* info) {
+    FEATURE_LOG_INFO("[STORAGE_GET] key=%s,default=%s", info->_key, info->_default);
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+    StorageHandle* handle = storage_malloc(feature);
+    if (th == NULL || handle == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_GET]  FeatureGetObjectData fail");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete,
+                               "FeatureGetObjectData fail", handle);
+    }
+
+    if (strcmp(info->_key, "") == 0) {
+        FEATURE_LOG_ERROR("[STORAGE_GET]  key is empty");
+        return finish_callback(0, feature, info->_success, info->_fail, info->_complete,
+                               info->_default, handle);
+    }
+
+    handle->th = th;
+    handle->op = STORAGE_OP_GET;
+    handle->success = info->_success;
+    handle->fail = info->_fail;
+    handle->complete = info->_complete;
+    int status = uv_db_get(th->db, strdup(info->_key), NULL, storage_cb, handle);
+    STORAGE_CHECK_IF(status, "uv_db_get fail");
+}
+
+void storage_wrap_set(FeatureInstanceHandle feature, AppendData data, storage_SetInfo* info) {
+    FEATURE_LOG_INFO("[STORAGE_SET] key=%s,value=%s", info->_key, info->_value);
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+    StorageHandle* handle = storage_malloc(feature);
+    if (th == NULL || handle == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_SET] FeatureGetObjectData fail");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete,
+                               "FeatureGetObjectData fail", handle);
+    }
+
+    if (strcmp(info->_key, "") == 0) {
+        FEATURE_LOG_ERROR("[STORAGE_SET]  key is empty");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete, "fail",
+                               handle);
+    }
+
+    handle->th = th;
+    handle->op = STORAGE_OP_SET;
+    handle->success = info->_success;
+    handle->fail = info->_fail;
+    handle->complete = info->_complete;
+    handle->buf.base = strdup(info->_value);
+    handle->buf.len = strlen(info->_value);
+
+    int status = 0;
+    // if value is empty,delete key
+    if (strcmp(info->_value, "") == 0) {
+        handle->op = STORAGE_OP_DELETE;
+        status = uv_db_delete(th->db, strdup(info->_key), storage_cb, handle);
+    } else {
+        status = uv_db_set(th->db, strdup(info->_key), &handle->buf, storage_cb, handle);
+    }
+    STORAGE_CHECK_IF(status, "uv_db_set fail");
+}
+
+void storage_wrap_clear(FeatureInstanceHandle feature, AppendData data, storage_ClearInfo* info) {
+    FEATURE_LOG_INFO("[STORAGE_CLEAR]");
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+    StorageHandle* handle = storage_malloc(feature);
+    if (th == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_CLEAR] FeatureGetObjectData fail");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete,
+                               "FeatureGetObjectData fail", NULL);
+    }
+
+    int ret = uv_db_close(th->db);
+    STORAGE_CHECK_IF(ret, "uv_db_close fail");
+    ret = unlink(th->db_path);
+    STORAGE_CHECK_IF(ret, "unlink fail");
+    ret = uv_db_init(uv_default_loop(), &th->db, th->db_path);
+    STORAGE_CHECK_IF(ret, "uv_db_init fail");
+    finish_callback(ret, feature, info->_success, info->_fail, info->_complete, "succcess", NULL);
+}
+
+void storage_wrap_delete(FeatureInstanceHandle feature, AppendData data, storage_DeleteInfo* info) {
+    FEATURE_LOG_INFO("[STORAGE_DELETE] key=%s", info->_key);
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+    StorageHandle* handle = storage_malloc(feature);
+    if (th == NULL || handle == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_DELETE] FeatureGetObjectData fail");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete,
+                               "FeatureGetObjectData fail", handle);
+    }
+    if (strcmp(info->_key, "") == 0) {
+        FEATURE_LOG_ERROR("[STORAGE_DELETE]  key is empty");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete, "fail",
+                               handle);
+    }
+
+    handle->th = th;
+    handle->op = STORAGE_OP_DELETE;
+    handle->success = info->_success;
+    handle->fail = info->_fail;
+    handle->complete = info->_complete;
+
+    int ret = uv_db_delete(th->db, strdup(info->_key), storage_cb, handle);
+    STORAGE_CHECK_IF(ret, "uv_db_delete fail");
+}
+
+void storage_wrap_key(FeatureInstanceHandle feature, AppendData data, storage_KeyInfo* info) {
+    FEATURE_LOG_INFO("[STORAGE_KEY] index=%d", info->_index);
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+    StorageHandle* handle = storage_malloc(feature);
+    if (th == NULL || handle == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_KEY] FeatureGetObjectData fail");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete,
+                               "FeatureGetObjectData fail", handle);
+    }
+    if (info->_index < 0) {
+        FEATURE_LOG_ERROR("[STORAGE_KEY]  index Less than 0");
+        return finish_callback(-1, feature, info->_success, info->_fail, info->_complete, "fail",
+                               handle);
+    }
+
+    handle->th = th;
+    handle->op = STORAGE_OP_KEY;
+    handle->success = info->_success;
+    handle->fail = info->_fail;
+    handle->complete = info->_complete;
+    int ret = uv_db_key(th->db, info->_index, NULL, storage_cb, handle);
+    if (ret < 0) {
+        FEATURE_LOG_ERROR("[STORAGE_KEY]  uv_db_key fail");
+        finish_callback(ret, feature, info->_success, info->_fail, info->_complete,
+                        "uv_db_key fail", handle);
+    }
+}

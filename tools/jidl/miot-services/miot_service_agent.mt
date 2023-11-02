@@ -20,10 +20,10 @@
    %endif
 %elif utils.isCallbackType(p_type):
   %if p_name in ['success', 'fail', 'complete']:
-  __${p_name}__ = ${prefix}${p_name}
+  __${p_name}__ = ${prefix}${p_name};
   %endif
 %else:
-  sub_arg.${key_name} = ${prefix}${len(to_key) > 0 and '%s(%s)' % (to_key, p_name) or p_name};
+  sub_arg.${key_name} = ${len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s->%s'%(prefix, p_name)};
 %endif
 </%def>
 
@@ -64,7 +64,7 @@ void ${module_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, 
     ${msg_sub_type} sub_arg;
   %endif
   miotmsg__init(&msg);
-  msg.type = MIOTMSG__MSGTYPE__INVOKE
+  msg.type = MIOTMSG__MSGTYPE__INVOKE;
   msg.subtype = ${msg_sub_type_id};
   msg.test_oneof_case = ${msg_arg_id};
 
@@ -76,7 +76,7 @@ void ${module_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, 
   %for param in method['params']:
     ${gen_param(param, '')}
   %endfor
-  conn->send(&msg, __success__, __fail__, __complete__, ${cb_data_parser});
+  conn->send(feature, &msg, __success__, __fail__, __complete__, ${cb_data_parser});
 }
 %endif
 </%def>
@@ -113,7 +113,7 @@ void ${module_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData d
   if 'cb_name' in meta: cb_name = meta['cb_name']
 %>
   sub_arg.${cb_key} = (char*)"${cb_name}";
-  conn->listen(&msg, sub_arg.${cb_key}, ${prop_name});
+  conn->listen(feature, &msg, sub_arg.${cb_key}, ${prop_name});
 %else:
   ${gen_param(prop, '')}
   conn->send(&msg);
@@ -159,7 +159,7 @@ void ${module_name}_onUnregister(FeatureRuntimeContext ctx) {
 
 %for m in doc['members']:
 
-%if not ('meta' in m and 'external' in m['meta'] and m['meta']['external']):
+%if utils.needGenerator(m):
 %if m['type'] == 'property':
 ${gen_property(doc, m)}
 %elif m['type'] == 'function':

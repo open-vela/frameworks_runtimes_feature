@@ -15,6 +15,7 @@ class MiotConnect {
 
  private:
   // ....
+  MiotChannel *_channel;
 };
 
 

@@ -19,6 +19,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <uv.h>
 
 struct FeatureDescription;
 
@@ -66,11 +67,11 @@ public:
      * @return const std::map<std::string, FeatureUnit*>& 
      */
     const std::map<std::string, FeatureRegistryPair>& getRegisteredFeatures() const { return registeredFeatures_; }
-
 private:
     std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features
     bool manifest_check_enable = true;
     std::string package_name_;
+
 };// class FeatureRegistry
 
 }
