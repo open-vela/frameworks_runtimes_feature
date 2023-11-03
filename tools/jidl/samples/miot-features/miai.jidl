@@ -22,7 +22,7 @@ struct RequestTtsParam {
   msg_arg_id = "MIOTMSG__TEST_ONEOF_REQTTSARG",
   msg_sub_type = "Reqttsmsg"
 ]
-void requestTts(RequestTtsParam p);
+void requestTts(CommonParam p);
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__CALTTS",

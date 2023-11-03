@@ -18,13 +18,14 @@
 #define FEATURE_EXPORTS_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-#include "feature_types.h"
-#include "quickjs/quickjs.h"
-#include "uv.h"
 #include <stdbool.h>
+#include "feature_types.h"
+#include <uv.h>
+#include "quickjs/quickjs.h"
 
 /**
  * @brief malloc a memory by featureType
@@ -62,8 +63,7 @@ void FeatureFreeValue(void* ptr);
 FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle);
 
 /**
- * @brief get the native object pointer bind to feature proto(global object for
- * all feature instance)
+ * @brief get the native object pointer bind to feature proto(global object for all feature instance)
  *
  * @param handle
  * @return void*
@@ -105,8 +105,7 @@ void* FeatureGetObjectData(FeatureInstanceHandle handle);
 void FeatureSetObjectData(FeatureInstanceHandle handle, void* data);
 
 /**
- * @brief get feature context from FeatureInstanceHandle, feature context is
- * guest context.
+ * @brief get feature context from FeatureInstanceHandle, feature context is guest context.
  *
  * @param handle
  * @return context_ref
@@ -117,7 +116,7 @@ ft_context_ref FeatureGetContext(FeatureInstanceHandle handle);
  * @brief get feature binding object value from FeatureInstanceHandle
  *
  * @param handle
- * @return JSValue
+ * @return feature_value_t
  */
 JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
 
@@ -130,14 +129,12 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
 
 /**
- * @brief get user defined data from FeatureManager by name
+ * @brief get feature uvloop from FeatureInstanceHandle
  *
  * @param handle
- * @param name
- * @return void*
+ * @return uv_loop_t*
  */
-void* FeatureInstanceGetUserData(FeatureInstanceHandle handle,
-    const char* name);
+uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle);
 
 /**
  * @brief invoke callback via cid
@@ -158,8 +155,7 @@ bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...);
  * @param ...
  * @return bool
  */
-bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
-    int count, ...);
+bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid, int count, ...);
 
 /**
  * @brief remove callback from instance via cid.
@@ -198,104 +194,7 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  * @param vtable_size
  * @return FeatureInterfaceHandle
  */
-FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
-    VTable* vtable);
-
-/**
- * @brief post a task with callback to feature instance
- *
- * @param handle
- * @param task_cb
- * @param data
- * @return void
- */
-void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
-    void* data);
-
-/**
- * @brief create a FeatureManagerHandle
- * @param manifest
- * @return FeatureManagerHandle
- */
-FeatureManagerHandle FeatureCreateManager(char* manifest);
-
-/**
- * @brief free a FeatureManagerHandle
- * @param handle
- * @return void
- */
-void FeatureFreeManager(FeatureManagerHandle handle);
-
-/**
- * @brief set feature uvloop to FeatureManagerHandle
- * @param handle
- * @param loop
- * @return void
- * @note: must be called before FeatureCreateInstance
- */
-void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop);
-
-/**
- * @brief get feature uvloop from FeatureManagerHandle
- *
- * @param handle
- * @return uv_loop_t*
- */
-uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle);
-
-/**
- * @brief set feature userdata to FeatureManagerHandle
- *
- * @param handle
- * @param name
- * @param data
- * @return void
- */
-void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* data);
-
-/**
- * @brief get feature userdata from FeatureManagerHandle
- *
- * @param handle
- * @param name
- * @return void*
- */
-void* FeatureGetUserData(FeatureManagerHandle handle, const char* name);
-
-/**
- * @brief uninit with FeatureManagerHandle
- *
- * @param handle
- * @return void
- */
-void FeatureUninit(FeatureManagerHandle handle);
-
-/**
- * @brief require a feature with feature name
- *
- * @param handle
- * @param ctx
- * @param binding_object
- * @param name
- * @return JSValue
- */
-JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_object, const char* name);
-
-/**
- * @brief get feature manager handle from feature instance
- *
- * @param handle
- * @return FeatureManagerHandle
- */
-FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle);
-
-/**
- * @brief get feature manager handle from feature prototype
- *
- * @param handle
- * @return FeatureManagerHandle
- */
-FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle);
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable);
 
 #ifdef __cplusplus
 }
