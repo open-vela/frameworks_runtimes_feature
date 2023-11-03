@@ -1,46 +1,20 @@
 #include "feature_log.h"
 #include "jumpapp.h"
-#ifdef CONFIG_QUICKAPP_VAPP_XMS
-#include "application.h"
-#include "feature_context_qjs.h"
-#include "jse_api.h"
-#endif
-#include <cstring>
-#include <limits.h>
 
-static const char* file_tag = "[jidl_feature] jumpApp_impl";
-
-void jumpApp_onRegister(const char* feature_name)
-{
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-}
-void jumpApp_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
-{
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-}
+void jumpApp_onRegister(const char* feature_name) { }
+void jumpApp_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) { }
 void jumpApp_onRequired(FeatureRuntimeContext ctx,
-    FeatureInstanceHandle handle)
-{
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-}
+    FeatureInstanceHandle handle) { }
 void jumpApp_onDetached(FeatureRuntimeContext ctx,
-    FeatureInstanceHandle handle)
-{
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-}
-void jumpApp_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
-{
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-}
-void jumpApp_onUnregister(const char* feature_name)
-{
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-}
+    FeatureInstanceHandle handle) { }
+void jumpApp_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) { }
+void jumpApp_onUnregister(const char* feature_name) { }
 
 #define NATIVE_APP_PREFIX "native://"
-#define QUICK_APP_PREFIX "hap://app/"
+extern "C" int quickapp_navigate_async(const char* uri, const char* arg);
 
-void jumpApp_wrap_jumpApp(FeatureInstanceHandle feature, AppendData append_data, FtString uri, FtString arg)
+void jumpApp_wrap_jumpApp(FeatureInstanceHandle feature, AppendData data,
+    FtString uri, FtString arg)
 {
     if (strstr(uri, NATIVE_APP_PREFIX) == NULL) {
         FEATURE_LOG_ERROR("[jump native] uri format error!");
@@ -48,48 +22,5 @@ void jumpApp_wrap_jumpApp(FeatureInstanceHandle feature, AppendData append_data,
     }
 
     FEATURE_LOG_INFO("[jump native] uri:%s, param:%s", uri, arg);
-    // TODO jump to native application
-}
-
-void jumpApp_wrap_launchQuickApp(FeatureInstanceHandle feature, AppendData append_data, FtString uri)
-{
-    FEATURE_LOG_INFO("[jump native] jumpApp_wrap_launchQuickApp uri: %s", uri);
-    if (strncmp(uri, QUICK_APP_PREFIX, strlen(QUICK_APP_PREFIX)) != 0) {
-        FEATURE_LOG_ERROR("[jump native] uri should start with %s!", QUICK_APP_PREFIX);
-        return;
-    }
-
-    const char* pos_pkg = uri + strlen(QUICK_APP_PREFIX);
-    const char* pos_path = strchr(pos_pkg, '/');
-
-    char pkg[PATH_MAX] = "";
-    if (pos_path == NULL) {
-        strcpy(pkg, pos_pkg);
-    } else {
-        strncpy(pkg, pos_pkg, pos_path - pos_pkg);
-    }
-
-    if (pkg == NULL) {
-        FEATURE_LOG_ERROR("[jump native] package name is null!");
-        return;
-    }
-
-#ifdef CONFIG_QUICKAPP_VAPP_XMS
-    os::app::Intent intent;
-    intent.setTarget(pkg);
-    if (pos_path != NULL) {
-        intent.setData(pos_path);
-    }
-
-    ft_context_ref ctx = FeatureGetContext(feature);
-    Application* app = static_cast<Application*>(jse_get_context_opaque(GET_QJS_CTX(ctx)));
-    assert(app != NULL);
-
-    os::app::Context* xms_context = static_cast<os::app::Context*>(app->getXmsContext());
-    if (xms_context == NULL) {
-        FEATURE_LOG_INFO("no xms_context");
-        return;
-    }
-    xms_context->startActivity(intent);
-#endif
+    quickapp_navigate_async(uri + strlen(NATIVE_APP_PREFIX), arg);
 }

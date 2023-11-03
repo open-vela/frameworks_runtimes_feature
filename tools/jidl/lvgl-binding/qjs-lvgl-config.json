@@ -9,7 +9,7 @@
       "int" : "JS_NewInt32",
       "uint" : "JS_NewUint32",
       "long" : "JS_NewInt64",
-      "ulong" : "JS_NewInt64",
+      "ulong" : "JS_NewUint64",
       "float" : "JS_NewFloat64",
       "double" : "JS_NewFloat64",
       "boolean" : "JS_NewBool",
@@ -18,7 +18,7 @@
       "uint8" : "JS_NewUint32",
       "uint32" : "JS_NewUint32",
       "int32" : "JS_NewInt32",
-      "uint64" : "JS_NewInt64",
+      "uint64" : "JS_NewUint64",
       "int64" : "JS_NewInt64",
       "void" : "",
       "object" : ""
