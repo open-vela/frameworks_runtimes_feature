@@ -96,13 +96,6 @@ JSValue __setTimeout(JSContext* ctx, JSValue this_val, int argc, JSValue* argv,
     return JS_UNDEFINED;
 }
 
-/**
- * 在进入 io 之前执行（时机待定）：
- *  1. 如果有 pending job 就执行
- *  2. 如果没有 pending job 查看是否有运行时数据(io/timer等)未执行完。
- *    2.1 检查 timer
- *    2.3 todo: 检查 IO
- */
 static void execute_job_cb(uv_prepare_t* handle)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(handle->data);
@@ -206,6 +199,13 @@ extern "C" int main(int argc, char** argv)
         printf("malloc js file failed!\n");
         return 0;
     }
+    // 打开 manifest 文件
+    char* mfst_content = NULL;
+    if (argc > 2) {
+        char* mfst_file = argv[2];
+        load_file(mfst_file, &mfst_content);
+    }
+
     FeatTestEnv env;
     // initialize quickjs engine
     env.rt = JS_NewRuntime();
@@ -239,7 +239,7 @@ extern "C" int main(int argc, char** argv)
     JS_SetRuntimeOpaque(env.rt, env.ctx);
 
     // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
-    FeatureManagerHandle manager = FeatureCreateManager();
+    FeatureManagerHandle manager = FeatureCreateManager(mfst_content);
     env.manager = manager;
     env.run_loop = run_loop;
     env.stop_loop = stop_loop;
@@ -275,6 +275,13 @@ extern "C" int main(int argc, char** argv)
         const char* str = JS_ToCString(env.ctx, res);
         printf("test internal file error: %s\n", str);
         JS_FreeValue(env.ctx, res);
+
+        // free js_str
+        free(js_str);
+        if (mfst_content)
+            free(mfst_content);
+        // free manager
+        FeatureFreeManager(manager);
         return -1;
     }
     JS_FreeValue(env.ctx, res);
@@ -286,7 +293,14 @@ extern "C" int main(int argc, char** argv)
         const char* str = JS_ToCString(env.ctx, result);
         printf("exec js file error: %s\n", str);
         JS_FreeValue(env.ctx, result);
-        return -1;
+
+        uv_loop_close(main_loop);
+        // free js_str
+        free(js_str);
+        if (mfst_content)
+            free(mfst_content);
+        // free manager
+        FeatureFreeManager(manager);
     }
     JS_FreeValue(env.ctx, result);
 
@@ -303,12 +317,10 @@ extern "C" int main(int argc, char** argv)
     JS_FreeRuntime(env.rt);
 
     uv_loop_close(main_loop);
-
     // free js_str
-    if (js_str != NULL) {
-        free(js_str);
-        js_str = NULL;
-    }
+    free(js_str);
+    if (mfst_content)
+        free(mfst_content);
     // free manager
     FeatureFreeManager(manager);
 
