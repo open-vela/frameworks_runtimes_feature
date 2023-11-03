@@ -39,6 +39,7 @@ Status SessionMessageReply::onReply(const ::std::string& reply) {
 Status SessionMessageReply::onSessionClose() {
     client_channel_cb_->clientOnSessionCloseBypeer(id_, SESSION_REASON_CLOSE_PEER);
     client_connection_->eraseSessionReply(id_);
+    client_connection_->eraseSessionClient(id_);
     return Status::ok();
 }
 
@@ -88,7 +89,7 @@ void ClientConnection::sessionSend(SessionId id, const std::string& msg) {
         }
         Status status = service->sendSessionMessage(msg, reply);
         if (!status.isOk()) {
-            ALOGE("sendMessage error: %s. SessionId(%d)", status.toString8().c_str(), id);
+            ALOGE("sendSessionMessage error: %s. SessionId(%d)", status.toString8().c_str(), id);
         }
     }
 }
@@ -119,7 +120,7 @@ int ClientConnection::sendMessage(const std::string& target, const std::string& 
     reply->setClientConnection(this);
     Status status = service->sendMessage(msg, reply);
     if (!status.isOk()) {
-        ALOGE("sendSessionMessage error: %s. target:%s", status.toString8().c_str(),
+        ALOGE("sendMessage error: %s. target:%s", status.toString8().c_str(),
               target.c_str());
         return -1;
     }
@@ -153,6 +154,12 @@ void ClientConnection::sendBroadcast(const std::string& action, const std::strin
 void ClientConnection::eraseSessionReply(SessionId id) {
     if (session_reply_map_.find(id) != session_reply_map_.end()) {
         session_reply_map_.erase(id);
+    }
+}
+
+void ClientConnection::eraseSessionClient(SessionId id) {
+    if (session_client_map_.find(id) != session_client_map_.end()) {
+        session_client_map_.erase(id);
     }
 }
 
@@ -215,7 +222,7 @@ void MessageTransportServer::sessionSend(int reply_id, const std::string& messag
 void MessageTransportServer::sessionClose(SessionId id) {
     if (reply_map_.find(id) != reply_map_.end()) {
         reply_map_[id]->onSessionClose();
-        // reply_map_.erase(id);
+        reply_map_.erase(id);
     }
 }
 

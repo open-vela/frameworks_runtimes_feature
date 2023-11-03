@@ -115,6 +115,7 @@ public:
 
     // for sessionReply
     void eraseSessionReply(SessionId id);
+    void eraseSessionClient(SessionId id);
     // for MessageReply
     void eraseMessageReply(ReplyId id);
 
