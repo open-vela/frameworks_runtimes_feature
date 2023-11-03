@@ -1,6 +1,6 @@
 {
     "includes": [
-        "miot-conn.h",
-        "feature-help.h"
+        "MiotConnect.h",
+        "feature_exports.h"
     ]
 }

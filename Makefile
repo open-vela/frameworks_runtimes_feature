@@ -31,15 +31,19 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_framework.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
 
+GTEST_DIR = $(APPDIR)/frameworks/base/feature/tests/jidl/googletest-src/googletest
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src
+CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)/include
+CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)
 
 ifeq ($(CONFIG_ARCH), arm)
 TARGETDIR := arm
@@ -83,7 +87,24 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
+FEATURELIST += exchange
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
+FEATURELIST += storage
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
+FEATURELIST += sensor
+
 ifeq ($(CONFIG_MESSAGE_CHANNEL),y)
+PROGNAME = feature_test_cli
+PRIORITY = 100
+STACKSIZE = 4096
+MAINSRC = $(APPDIR)/frameworks/base/feature/modules/feature_test_cli.cpp
+
 AIDLSRCS += $(shell find ./modules/aidl -name *.aidl)
 AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
 CXXSRCS += $(patsubst %.aidl,%$(CXXEXT),$(AIDLSRCS))
@@ -94,19 +115,40 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_1_0_impl.cp
 FEATURELIST += MessageChannel
 endif
 
-ifeq ($(CONFIG_MIWEAR_APPS),y)
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/apps/applications/proxyquickapp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
+ifeq ($(CONFIG_QUICKAPP_VAPP_XMS), y)
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/framework
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/jse
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/am/include/app
+endif
 FEATURELIST += jumpApp
+
+ifeq ($(CONFIG_MIPLAY),y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0_impl.cpp
+FEATURELIST += Miplay
 endif
 
-ifeq ($(CONFIG_TESTING_CMOCKA),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/mockatest_impl.cpp
-FEATURELIST += mockatest
+ifeq ($(GCCVER),12)
+CXXFLAGS += -DGTEST_HAS_POSIX_RE=0
+CXXFLAGS += -Wno-maybe-uninitialized
 endif
+
+CXXSRCS += ${GTEST_DIR}/src/gtest-assertion-result.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-filepath.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-port.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-printers.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest-test-part.cpp
+CXXSRCS += ${GTEST_DIR}/src/gtest.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test_impl.cpp
+FEATURELIST += feat_test
+
+PROGNAME += feat_test
+PRIORITY += 100
+STACKSIZE += 4096
+MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
 
 endif
 
