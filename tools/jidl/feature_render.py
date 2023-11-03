@@ -23,7 +23,7 @@ cpp_type_map = {
   'object' : 'FtAny',
   'void' : 'void',
   'ellipse' : '...',
-  'callback' : 'FeatureCallbackId',
+  'callback' : 'FtCallbackId',
   'Int8Array' : 'FTArray',
   'Uint8Array' : 'FTArray',
   'Int16Array' : 'FTArray',
@@ -54,8 +54,13 @@ class FeatureUtils(render.Utils):
             return cpp_type_map[tp]
     return str(tp)
 
+  def getModuleName(self):
+    name = self.doc['name'].split('@')[0]
+    return self.toIdName(name)
+     
+
   def cppTypeStruct(self, tp):
-    return '%s_%s' % (self.toIdName(self.doc['name']), tp['referred_name'])
+    return '%s_%s' % (self.getModuleName(), tp['referred_name'])
 
   def fromNativeDefault(self, tp):
     return 'ft_help::from_native'
@@ -99,6 +104,10 @@ class FeatureUtils(render.Utils):
         pname = '__args__%d' % i
       param_list.append((p_native_type, pname))
     return param_list
+
+  def needGenerator(self, m):
+    return not ('meta' in m and 'external' in m['meta'] and m['meta']['external'] == 'true')
+
 
 if __name__ == '__main__':
     render.main(FeatureUtils)

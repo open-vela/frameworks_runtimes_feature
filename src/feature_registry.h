@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <uv.h>
 #include <vector>
 
 struct FeatureDescription;
@@ -56,22 +57,22 @@ public:
      * @return true
      * @return false
      */
-    bool registerFeature(std::vector<std::string>&features, const FeatureDescription* description);
+    bool registerFeature(std::vector<std::string>& features, const FeatureDescription* description);
 
     FeatureRegistryPair* findFeature(const char* name);
     const char* getFeaturePackageName() const { return package_name_.data(); }
     /**
      * @brief Get the Registered Features object
-     * 
-     * @return const std::map<std::string, FeatureUnit*>& 
+     *
+     * @return const std::map<std::string, FeatureUnit*>&
      */
     const std::map<std::string, FeatureRegistryPair>& getRegisteredFeatures() const { return registeredFeatures_; }
 
 private:
     std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features
-    bool manifest_check_enable = true;
     std::string package_name_;
-};// class FeatureRegistry
+
+}; // class FeatureRegistry
 
 }
 

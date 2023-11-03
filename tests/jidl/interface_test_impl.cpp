@@ -324,7 +324,6 @@ FeatureInterfaceHandle interface_test_wrap_createCat(FeatureInstanceHandle featu
         .finalizer = NativeFunc(_Interface_cat_finalize),
         .members = cat_vtable_members
     };
-    printf("call interface_test_wrap_createCat\n");
     FeatureInterfaceHandle handle  = FeatureCreateInterface(feature, &cat_vtable);
     printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
     // void* data = create_cat_data();
