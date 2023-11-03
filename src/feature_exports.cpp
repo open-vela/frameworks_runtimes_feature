@@ -16,9 +16,11 @@
 #include "feature_exports.h"
 #include "feature_framework.h"
 #include "feature_instance.h"
-#include "feature_log.h"
-#include "feature_utils.h"
 #include "feature_instance_qjs.h"
+#include "feature_log.h"
+#include "feature_manager.h"
+#include "feature_manager_qjs.h"
+#include "feature_utils.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -122,7 +124,8 @@ void FeatureFreeValue(void* ptr)
 
 FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
 {
-    return (FeatureProtoHandle)static_cast<FeatureInstance*>(handle)->prototype();
+    return (FeatureProtoHandle) static_cast<FeatureInstance*>(handle)
+        ->prototype();
 }
 
 void* FeatureGetProtoData(FeatureProtoHandle handle)
@@ -162,22 +165,24 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 const char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
-    return proto->getPackageName();
+    return proto->getFeatureManager()->getPackageName();
 }
 
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
-    return proto->getEnvironmentName();
+    return proto->getFeatureManager()->getEnvironmentName();
 }
 
-uv_loop_t* FeatureGetUvLoop(FeatureInstanceHandle handle)
+void* FeatureInstanceGetUserData(FeatureInstanceHandle handle,
+    const char* name)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    return instance->uvloop();
+    return instance->prototype()->getFeatureManager()->getUserData(name);
 }
 
-bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
+bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid,
+    ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
 
@@ -188,7 +193,8 @@ bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid, ...)
     return ret == 0;
 }
 
-bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid, int count, ...)
+bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
+    int count, ...)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
 
@@ -225,8 +231,80 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
     return ret == 0;
 }
 
-FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle, VTable* vtable)
+FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
+    VTable* vtable)
 {
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->createInterface(vtable);
+}
+
+void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
+    void* data)
+{
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    instance->addCallback(task_cb, data);
+    instance->sendAsnyc();
+}
+
+FeatureManagerHandle FeatureCreateManager(char *manifest)
+{
+    FeatureRegistry* registry = new ferry::FeatureRegistry();
+    registry->init(manifest);
+    FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
+
+    return manager;
+}
+
+void FeatureFreeManager(FeatureManagerHandle handle)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    delete manager;
+}
+
+void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    manager->setUVLoop(loop);
+}
+
+uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    return manager->getUVLoop();
+}
+
+void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* data)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    manager->setUserData(name, data);
+}
+
+void* FeatureGetUserData(FeatureManagerHandle handle, const char* name)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    return manager->getUserData(name);
+}
+
+void FeatureUninit(FeatureManagerHandle handle)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    return manager->uninit();
+}
+
+JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_object, const char* name)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    return manager->featureRequire(ctx, binding_object, name);
+}
+
+FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
+{
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->prototype()->getFeatureManager();
+}
+
+FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
+{
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
+    return proto->getFeatureManager();
 }

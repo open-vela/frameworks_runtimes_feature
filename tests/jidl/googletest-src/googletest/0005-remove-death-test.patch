@@ -1,0 +1,110 @@
+From c9fafc60874ce41a6c413ae80c6a5128d12979ee Mon Sep 17 00:00:00 2001
+From: gaoyulong <gaoyulong@xiaomi.com>
+Date: Fri, 20 Oct 2023 12:29:27 +0800
+Subject: [PATCH 5/7] remove death test
+
+---
+ .../include/gtest/internal/gtest-port.h       | 21 +++++++++++--------
+ googletest/src/gtest-internal-inl.h           | 12 +++++------
+ googletest/src/gtest.cpp                      | 10 ++++-----
+ 3 files changed, 23 insertions(+), 20 deletions(-)
+
+diff --git a/googletest/include/gtest/internal/gtest-port.h b/googletest/include/gtest/internal/gtest-port.h
+index b40e6bb..5a849d8 100644
+--- a/googletest/include/gtest/internal/gtest-port.h
++++ b/googletest/include/gtest/internal/gtest-port.h
+@@ -592,15 +592,18 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
+ 
+ // Determines whether to support death tests.
+ // pops up a dialog window that cannot be suppressed programmatically.
+-#if (GTEST_OS_LINUX || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS ||             \
+-     (GTEST_OS_MAC && !GTEST_OS_IOS) ||                                   \
+-     (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW ||  \
+-     GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD || GTEST_OS_QNX || \
+-     GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA ||           \
+-     GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU ||     \
+-     GTEST_OS_GNU_HURD)
+-#define GTEST_HAS_DEATH_TEST 1
+-#endif
++// #if (GTEST_OS_LINUX || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS ||             \
++//      (GTEST_OS_MAC && !GTEST_OS_IOS) ||                                   \
++//      (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW ||  \
++//      GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD || GTEST_OS_QNX || \
++//      GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA ||           \
++//      GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU ||     \
++//      GTEST_OS_GNU_HURD)
++// #define GTEST_HAS_DEATH_TEST 1
++// #endif
++
++// close death test
++#define GTEST_HAS_DEATH_TEST 0
+ 
+ // Determines whether to support type-driven tests.
+ 
+diff --git a/googletest/src/gtest-internal-inl.h b/googletest/src/gtest-internal-inl.h
+index 948b70d..a04505f 100644
+--- a/googletest/src/gtest-internal-inl.h
++++ b/googletest/src/gtest-internal-inl.h
+@@ -143,11 +143,11 @@ class GTestFlagSaver {
+     break_on_failure_ = GTEST_FLAG_GET(break_on_failure);
+     catch_exceptions_ = GTEST_FLAG_GET(catch_exceptions);
+     color_ = GTEST_FLAG_GET(color);
+-    death_test_style_ = GTEST_FLAG_GET(death_test_style);
+-    death_test_use_fork_ = GTEST_FLAG_GET(death_test_use_fork);
++    // death_test_style_ = GTEST_FLAG_GET(death_test_style);
++    // death_test_use_fork_ = GTEST_FLAG_GET(death_test_use_fork);
+     fail_fast_ = GTEST_FLAG_GET(fail_fast);
+     filter_ = GTEST_FLAG_GET(filter);
+-    internal_run_death_test_ = GTEST_FLAG_GET(internal_run_death_test);
++    // internal_run_death_test_ = GTEST_FLAG_GET(internal_run_death_test);
+     list_tests_ = GTEST_FLAG_GET(list_tests);
+     output_ = GTEST_FLAG_GET(output);
+     brief_ = GTEST_FLAG_GET(brief);
+@@ -169,11 +169,11 @@ class GTestFlagSaver {
+     GTEST_FLAG_SET(break_on_failure, break_on_failure_);
+     GTEST_FLAG_SET(catch_exceptions, catch_exceptions_);
+     GTEST_FLAG_SET(color, color_);
+-    GTEST_FLAG_SET(death_test_style, death_test_style_);
+-    GTEST_FLAG_SET(death_test_use_fork, death_test_use_fork_);
++    // GTEST_FLAG_SET(death_test_style, death_test_style_);
++    // GTEST_FLAG_SET(death_test_use_fork, death_test_use_fork_);
+     GTEST_FLAG_SET(filter, filter_);
+     GTEST_FLAG_SET(fail_fast, fail_fast_);
+-    GTEST_FLAG_SET(internal_run_death_test, internal_run_death_test_);
++    // GTEST_FLAG_SET(internal_run_death_test, internal_run_death_test_);
+     GTEST_FLAG_SET(list_tests, list_tests_);
+     GTEST_FLAG_SET(output, output_);
+     GTEST_FLAG_SET(brief, brief_);
+diff --git a/googletest/src/gtest.cpp b/googletest/src/gtest.cpp
+index 7bf20b7..a4da6a8 100644
+--- a/googletest/src/gtest.cpp
++++ b/googletest/src/gtest.cpp
+@@ -5393,8 +5393,8 @@ void UnitTest::RecordProperty(const std::string& key,
+ // We don't protect this under mutex_, as we only support calling it
+ // from the main thread.
+ int UnitTest::Run() {
+-  const bool in_death_test_child_process =
+-      GTEST_FLAG_GET(internal_run_death_test).length() > 0;
++  const bool in_death_test_child_process = false;
++      // GTEST_FLAG_GET(internal_run_death_test).length() > 0;
+ 
+   // Google Test implements this protocol for catching that a test
+   // program exits before returning control to Google Test:
+@@ -6563,11 +6563,11 @@ static bool ParseGoogleTestFlag(const char* const arg) {
+   GTEST_INTERNAL_PARSE_FLAG(break_on_failure);
+   GTEST_INTERNAL_PARSE_FLAG(catch_exceptions);
+   GTEST_INTERNAL_PARSE_FLAG(color);
+-  GTEST_INTERNAL_PARSE_FLAG(death_test_style);
+-  GTEST_INTERNAL_PARSE_FLAG(death_test_use_fork);
++  // GTEST_INTERNAL_PARSE_FLAG(death_test_style);
++  // GTEST_INTERNAL_PARSE_FLAG(death_test_use_fork);
+   GTEST_INTERNAL_PARSE_FLAG(fail_fast);
+   GTEST_INTERNAL_PARSE_FLAG(filter);
+-  GTEST_INTERNAL_PARSE_FLAG(internal_run_death_test);
++  // GTEST_INTERNAL_PARSE_FLAG(internal_run_death_test);
+   GTEST_INTERNAL_PARSE_FLAG(list_tests);
+   GTEST_INTERNAL_PARSE_FLAG(output);
+   GTEST_INTERNAL_PARSE_FLAG(brief);
+-- 
+2.25.1
+
