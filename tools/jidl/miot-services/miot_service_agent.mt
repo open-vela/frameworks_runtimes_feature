@@ -36,10 +36,12 @@
 <%
   meta = None
   func_name = None
+  json_method = None
   if 'meta' in method:
     meta = method['meta']
     msg_arg_id = 'MIOTMSG__TEST_ONEOF__NOT_SET'
     msg_sub_type = None
+    msg_sub_type_id = None
     cb_data_parser = 'NULL'
     if 'msg_sub_type' in meta:
       msg_sub_type = meta['msg_sub_type']
@@ -47,7 +49,18 @@
       msg_arg_id = meta['msg_arg_id']
     if 'cb_data_parser' in meta:
       cb_data_parser = meta['cb_data_parser']
-    msg_sub_type_id = meta['msg_sub_id']
+    if 'json_method' in meta:
+      json_method = meta['json_method']
+    if 'msg_sub_id' in meta:
+      msg_sub_type_id = meta['msg_sub_id']
+
+  if json_method:
+    if msg_arg_id == 'MIOTMSG__TEST_ONEOF__NOT_SET':
+      msg_arg_id = 'MIOTMSG__TEST_ONEOF__JSONDATA' # TODO change me
+    if not msg_sub_type:
+      msg_sub_type = "Jsondata"  #TODO change me
+    if not msg_sub_id:
+      msg_sub_type_id = "MIOTMSG__MSGSUBTYPE__JSONDATA"
 
   ret_type = method['return_type']
   is_promise = utils.isPromiseType(ret_type)
@@ -55,6 +68,7 @@
   return_type = utils.cppType(method['return_type'])
 
   params = utils.genParamsList(method)
+  param_out = utils.genParams(method)
 %>
 
 %if meta:
@@ -66,7 +80,7 @@ void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature,
   FtCallbackId __complete__ = 0;
   Miotmsg msg;
   %if msg_sub_type:
-    ${msg_sub_type} sub_arg;
+  ${msg_sub_type} sub_arg;
   %endif
   miotmsg__init(&msg);
   msg.type = MIOTMSG__MSGTYPE__INVOKE;
@@ -74,13 +88,34 @@ void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature,
   msg.test_oneof_case = ${msg_arg_id};
 
   %if msg_sub_type:
-    ${msg_sub_type.lower()}__init(&sub_arg);
-    msg.subarg = (Submsg*)&sub_arg;
-
+  ${msg_sub_type.lower()}__init(&sub_arg);
+  msg.subarg = (Submsg*)&sub_arg;
   %endif
-  %for param in method['params']:
-    ${gen_param(param, '')}
+  %if json_method:
+  char szbuf[JSON_DATA_LEN];
+  // add a space to avoid a null params
+  int buf_len = snprintf(szbuf, sizeof(szbuf), "{ ");
+    %for k, v in param_out.items():
+      %if k != 'callbacks':
+  buf_len += snprintf(szbuf + buf_len, sizeof(szbuf) - buf_len, "\"%s\":\"%s\",", "${k}", v);
+      %endif
+    %endfor
+  // -1 to remove the last ','
+  snprintf(szbuf + buf_len - 1, sizeof(szbuf) - buf_len, "}");
+  sub_arg.method = "${json_method}";
+  sub_arg.json = szbuf;
+  %else:
+    %for k, v in param_out.items():
+      %if k != 'callbacks':
+  sub_arg.${k} = ${v};
+      %endif
+    %endfor
+  %endif
+  %if 'callbacks' in param_out:
+  %for cb_key, cb_value in param_out['callbacks'].items():
+  __${cb_key}__ = ${cb_value};
   %endfor
+  %endif
   conn->send(feature, &msg, __success__, __fail__, __complete__, ${cb_data_parser});
 }
 %endif
