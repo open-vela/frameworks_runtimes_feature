@@ -108,6 +108,30 @@ class FeatureUtils(render.Utils):
   def needGenerator(self, m):
     return not ('meta' in m and 'external' in m['meta'] and m['meta']['external'] == 'true')
 
+  def genParam(self, out, param, prefix):
+    p_type = 'value_type' in param and param['value_type'] or param['type']
+    p_name = param['name']
+    key_name, to_key = self.getMsgKey(param)
+    if self.isStructType(p_type):
+      s = self.getUserType('struct', p_type['referred_name'])
+      if s:
+        for s_mb in s['members']:
+          self.genParam(out, s_mb, '%s->' % p_name)
+    elif self.isCallbackType(p_type):
+      if p_name in ['success', 'fail', 'complete']:
+        if not 'callbacks' in out: out['callbacks'] = {}
+        out['callbacks'][p_name] = '%s%s' % (prefix, p_name)
+    else:
+      out[key_name] = len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s->%s'%(prefix, p_name)
+
+  def genParams(self, method):
+    out = {}
+    if not 'params' in method:
+      return out
+    params = method['params']
+    for p in params:
+      self.genParam(out, p, '')
+    return out
 
 if __name__ == '__main__':
     render.main(FeatureUtils)
