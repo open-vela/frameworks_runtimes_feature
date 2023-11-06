@@ -35,6 +35,7 @@ FeatureManager::FeatureManager(FeatureRegistry* registry)
 
 FeatureManager::~FeatureManager()
 {
+    ft_ctx_ = nullptr;
 }
 
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx) { 

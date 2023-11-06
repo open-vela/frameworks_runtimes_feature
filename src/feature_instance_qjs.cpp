@@ -35,7 +35,7 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, VTable* vtable)
     : FeatureInstance(proto, vtable)
     , vm_object_(FEATURE_VALUE_UNDEFINED)
 {
-    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(proto->ft_ctx));
+    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext()));
 }
 
 FeatureInstance* FeatureInstanceQjs::createInterface(VTable* vtable)
@@ -66,7 +66,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
     feature_set_opaque(js_val, nullptr);
     auto proto = prototype();
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
 
     // free weakRef
     freeWeakRef();
@@ -120,7 +120,7 @@ FeatureCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
 
 FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
     FeatureCallbackData callback;
     callback.cb = feature_dup_value(js_ctx, value);
     callback.cb_type = callbackType;
@@ -130,7 +130,7 @@ FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType
 
 bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
     if (!callbacks_.count(cid)) {
         FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", cid, this);
         return false;
@@ -260,7 +260,7 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
 
 int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count)
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->ft_ctx);
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
     bool got_error = false;
     feature_value_t ret = FEATURE_VALUE_UNDEFINED;
 

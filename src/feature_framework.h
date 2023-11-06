@@ -43,7 +43,6 @@
 namespace ferry {
 
 class FeatureInstance;
-//class FeatureManager;
 
 /**
  * @brief Feature Protoype struct
@@ -52,7 +51,6 @@ class FeatureInstance;
  */
 class FeaturePrototype {
 public:
-    ft_context_ref ft_ctx; // feature context
     std::vector<std::unique_ptr<FeatureInstance>> instances;
     void* native; // the native feature object instance pointer
     ft_value_t ft_proto; // ft prototype object, it's undefined at first
@@ -63,10 +61,9 @@ public:
     /**
      * @brief FeaturePrototype constructor
      *
-     * @param js_ctx
      * @param description
      */
-    FeaturePrototype(ft_context_ref ctx, const FeatureDescription* feature_desc);
+    FeaturePrototype(const FeatureDescription* feature_desc);
 
     /**
      * @brief Destroy the Feature Prototype object
