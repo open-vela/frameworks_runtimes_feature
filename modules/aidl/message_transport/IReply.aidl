@@ -16,7 +16,7 @@
 
 package message_transport;
 
-interface IReply {
-    oneway void onReply(@utf8InCpp String reply);
+oneway interface IReply {
+    void onReply(@utf8InCpp String reply);
     void onSessionClose();
 }

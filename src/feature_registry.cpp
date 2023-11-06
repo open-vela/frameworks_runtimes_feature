@@ -15,13 +15,13 @@
  */
 
 #include "feature_registry.h"
-#include "ajs_features_init.h"
 #include "feature_framework.h"
 #include "feature_utils.h"
+#include "ajs_features_init.h"
 #include <assert.h>
 #include <memory>
-#include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
+#include <rapidjson/document.h>
 #include <string.h>
 #include <string>
 
@@ -33,8 +33,9 @@ class ManifestParser {
 public:
     ManifestParser() = default;
     bool parse(char* json);
+    size_t getFeaturesCount();
+    const char* getFeatureName(size_t index);
     const char* getPackageName();
-
 private:
     JSONDocument doc_;
 };
@@ -43,11 +44,44 @@ bool ManifestParser::parse(char* manifest)
 {
     doc_.ParseInsitu(manifest);
     if (doc_.HasParseError()) {
-        FEATURE_LOG_ERROR("%s: parse json failed: %s", __func__,
-            GetParseError_En(doc_.GetParseError()));
+        FEATURE_LOG_ERROR("%s: parse json failed: %s", __func__, GetParseError_En(doc_.GetParseError()));
         return false;
     }
     return true;
+}
+
+size_t ManifestParser::getFeaturesCount()
+{
+    if (!doc_.HasMember("features")) {
+        FEATURE_LOG_WARN("manifest do not have features variable !");
+        return 0;
+    }
+    const auto& features = doc_.GetObject()["features"];
+    if (!features.IsArray()) {
+        FEATURE_LOG_WARN("manifest.features is not array !");
+        return 0;
+    }
+    const auto& featuresArray = features.GetArray();
+    return featuresArray.Size();
+}
+
+const char* ManifestParser::getFeatureName(size_t index)
+{
+    const auto& count = getFeaturesCount();
+    if (!count) {
+        FEATURE_LOG_WARN("features count is 0 !");
+        return "";
+    }
+    if (index >= count) {
+        FEATURE_LOG_WARN("features count: %u, index %u out of bound !", count, index);
+        return "";
+    }
+    const auto& featureObj = doc_.GetObject()["features"].GetArray()[index].GetObject();
+    if (!featureObj.HasMember("name")) {
+        FEATURE_LOG_WARN("featureObj do not have name property !");
+        return "";
+    }
+    return featureObj["name"].GetString();
 }
 
 const char* ManifestParser::getPackageName()
@@ -76,28 +110,46 @@ bool FeatureRegistry::init(char* manifest)
             FEATURE_LOG_ERROR("parse manifest failed !");
             return false;
         }
-
+        FEATURE_LOG_DEBUG("parser.getFeaturesCount() is %d!", parser.getFeaturesCount());
+        for (size_t i = 0; i < parser.getFeaturesCount(); i++) {
+            const char* featureName = parser.getFeatureName(i);
+            if (featureName && strlen(featureName)) {
+                features.emplace_back(featureName);
+            }
+        }
         package_name_ = parser.getPackageName();
-        FEATURE_LOG_ERROR("package_name is %s!", package_name_.c_str());
+        FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
     } else {
         FEATURE_LOG_DEBUG("manifest is null!");
+        manifest_check_enable = false;
     }
 
-// register features
-#include "ajs_features_list.h"
+    // register features
+    #include "ajs_features_list.h"
 
     return true;
 }
 
-bool FeatureRegistry::registerFeature(std::vector<std::string>& features,
-    const FeatureDescription* description)
+bool FeatureRegistry::registerFeature(std::vector<std::string>&features, const FeatureDescription* description)
 {
     if (!description)
         return false;
 
-    if (description->name != nullptr) {
-        registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description,
-            nullptr);
+    if (manifest_check_enable) {
+        for (const auto& feature_name : features) {
+            if (feature_name == description->name) {
+                registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description, nullptr);
+                // invoke onRegister callback
+                FEATURE_LOG_DEBUG("description->name is %s...", description->name);
+                if (description->native_callbacks && description->native_callbacks->onRegister) {
+                    FEATURE_LOG_DEBUG("invoke onRegister callback...");
+                    description->native_callbacks->onRegister(description->name);
+                }
+                return true;
+            }
+        }
+    } else {
+        registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description, nullptr);
         // invoke onRegister callback
         FEATURE_LOG_DEBUG("description->name is %s...", description->name);
         if (description->native_callbacks && description->native_callbacks->onRegister) {
@@ -109,18 +161,15 @@ bool FeatureRegistry::registerFeature(std::vector<std::string>& features,
     return false;
 }
 
-FeatureRegistry::FeatureRegistryPair*
-FeatureRegistry::findFeature(const char* name)
+FeatureRegistry::FeatureRegistryPair* FeatureRegistry::findFeature(const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
     auto pos = registeredFeatures_.find(name);
     if (pos == registeredFeatures_.end()) {
-        FEATURE_LOG_WARN(
-            "can't find %s in FeatureManager, fallback to original JS module load",
-            name);
+        FEATURE_LOG_WARN("can't find %s in FeatureManager, fallback to original JS module load", name);
         return nullptr;
     }
     return &pos->second;
 }
 
-} // namespace ferry
+}

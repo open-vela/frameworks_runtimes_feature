@@ -1,4 +1,4 @@
-module system.messageChannel@1.0
+module MessageChannel@1.0
 
 // Message模式
 promise<string, string> sendMessage(string target, string body);
