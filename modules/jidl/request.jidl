@@ -1,0 +1,61 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+module request@1.0
+
+struct notify_data_t {
+    int result
+    int percent
+}
+
+struct download_succ_t {
+    string token
+}
+
+callback cb_download_notify(notify_data_t data)
+callback cb_download_success(download_succ_t data)
+callback cb_download_fail(string data, int code)
+callback cb_download_complete()
+
+struct download_t {
+    string url
+    object header
+    object filename
+    boolean share = true
+    cb_download_notify onDownLoadNotify
+    cb_download_success success
+    cb_download_fail fail
+    cb_download_complete complete
+}
+
+void download(download_t param)
+
+struct dl_cmpl_succ_t {
+    string uri
+}
+callback cb_dl_cp_success(dl_cmpl_succ_t data)
+callback cb_dl_cp_fail(string data, long code)
+callback cb_dl_cp_complete()
+
+struct dl_cmpl_t {
+    string token
+    cb_dl_cp_success success
+    cb_dl_cp_fail fail
+    cb_dl_cp_complete complete
+}
+void onDownloadComplete(dl_cmpl_t param)
+
+void print(...)
