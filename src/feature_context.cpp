@@ -16,8 +16,6 @@
 
 #include "feature_context_private.h"
 #include "feature_context_qjs.h"
-#include "feature_context_wamr.h"
-
 #include <stdio.h>
 #include <cstring>
 #include <malloc.h>
@@ -33,21 +31,6 @@ void ReleaseFeatureContextQjs(ft_context_ref ft_ctx) {
         return;
 
     UninitFeatureContextQjs(ft_ctx);
-    free(ft_ctx);
-}
-
-ft_context_ref CreateFeatureContextWamr(void* data0, void* data1) {
-    FeatureContext* ft_ctx = (FeatureContext*)malloc(sizeof(FeatureContext));
-    memset(ft_ctx, 0, sizeof(FeatureContext));
-    InitFeatureContextWamr(ft_ctx, data0, data1);
-    return ft_ctx;
-}
-
-void ReleaseFeatureContextWamr(ft_context_ref ft_ctx) {
-    if (!ft_ctx)
-        return;
-
-    UninitFeatureContextWamr(ft_ctx);
     free(ft_ctx);
 }
 
