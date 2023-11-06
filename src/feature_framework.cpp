@@ -131,9 +131,8 @@ int getValueSize(FeatureType featureType)
  *
  * @param description
  */
-FeaturePrototype::FeaturePrototype(ft_context_ref ctx, const FeatureDescription* feature_desc)
-    : ft_ctx(ctx)
-    , native(nullptr)
+FeaturePrototype::FeaturePrototype(const FeatureDescription* feature_desc)
+    : native(nullptr)
     , description(const_cast<FeatureDescription*>(feature_desc))
 {
     // default capacity as 10 element
@@ -144,7 +143,6 @@ FeaturePrototype::FeaturePrototype(ft_context_ref ctx, const FeatureDescription*
 FeaturePrototype::~FeaturePrototype()
 {
     clearAllInstances();
-    ft_ctx = nullptr;
 }
 
 /**

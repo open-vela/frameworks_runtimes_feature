@@ -488,10 +488,11 @@ namespace FeatureFFIQjs {
                 const char* name = interfaceDesc->name;
                 FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
                 if (!interfacePrototype) {
-                    interfacePrototype = createInterfacePrototype(instance->prototype()->ft_ctx, interfaceDesc);
+                    interfacePrototype = createInterfacePrototype(instance->prototype()->getFeatureManager()->getFeatureContext(), interfaceDesc);
                     auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(interfacePrototype->ft_proto);
                     *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
                     FEATURE_CHECK_NE(interfacePrototype, nullptr);
+                    interfacePrototype->setFeatureManeger(instance->prototype()->getFeatureManager());
                     // add interface prototype to parent instance
                     ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
                 }

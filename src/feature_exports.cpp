@@ -153,7 +153,7 @@ void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 {
-    return static_cast<FeatureInstance*>(handle)->prototype()->ft_ctx;
+    return static_cast<FeatureInstance*>(handle)->prototype()->getFeatureManager()->getFeatureContext();
 }
 
 JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)

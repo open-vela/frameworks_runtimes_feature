@@ -138,7 +138,7 @@ static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, const Fea
             return nullptr;
         }
     }
-    return new FeaturePrototype(ft_ctx, description);
+    return new FeaturePrototype(description);
 }
 
 FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
@@ -154,7 +154,7 @@ FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureD
             return nullptr;
         }
     }
-    return new FeaturePrototype(ft_ctx, description);
+    return new FeaturePrototype(description);
 }
 
 /**
@@ -657,7 +657,7 @@ static bool ensureJsPrototype(FeaturePrototype* prototype)
     if (!feature_is_undefined(*js_proto_ptr))
         return true;
 
-    auto ctx = ft_context_get_data(prototype->ft_ctx);
+    auto ctx = ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
     feature_value_t js_proto = feature_object(static_cast<feature_context_ref>(ctx));
     if (feature_is_exception(js_proto)) {
         feature_dump_error(static_cast<feature_context_ref>(ctx));
@@ -677,7 +677,7 @@ static bool ensureJsPrototype(FeaturePrototype* prototype)
 
 feature_value_t createJsInstance(FeaturePrototype* prototype, feature_classid_t class_id, FeatureInstanceQjs* instance)
 {
-    auto ctx = ft_context_get_data(prototype->ft_ctx);
+    auto ctx = ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
     // ensure js prototype is created
     if (!ensureJsPrototype(prototype))
         return FEATURE_VALUE_UNDEFINED;
@@ -746,7 +746,7 @@ void FeatureManagerQjs::uninit()
         auto description = pair.second.first;
         FEATURE_CHECK_NE(description, nullptr);
         if (proto) {
-            JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->ft_ctx);
+            JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext());
             // clear all feature instance at first, it will free all feature instance and call onDetach for them
             proto->clearAllInstances();
             // call feature's onDestroy
@@ -817,7 +817,7 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, featur
             continue;
 
         auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
-        JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype->ft_ctx);
+        JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
         if (!feature_is_same_value(js_ctx, js_proto, proto))
             continue;
 
