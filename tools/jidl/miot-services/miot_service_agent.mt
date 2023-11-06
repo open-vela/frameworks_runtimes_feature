@@ -3,6 +3,11 @@
   module_name = utils.toIdName(doc['name'])
 %>
 
+<%
+  feature_name = utils.getFeatureName(doc['name'])
+%>
+
+
 <%def name='gen_param(param, prefix)'>
 <%
   p_type = 'value_type' in param and param['value_type'] or param['type']
@@ -20,10 +25,10 @@
    %endif
 %elif utils.isCallbackType(p_type):
   %if p_name in ['success', 'fail', 'complete']:
-  __${p_name}__ = ${prefix}${p_name}
+  __${p_name}__ = ${prefix}_${p_name};
   %endif
 %else:
-  sub_arg.${key_name} = ${prefix}${len(to_key) > 0 and '%s(%s)' % (to_key, p_name) or p_name};
+  sub_arg.${key_name} = ${len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s_%s'%(prefix, p_name)};
 %endif
 </%def>
 
@@ -53,8 +58,8 @@
 %>
 
 %if meta:
-void ${module_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, AppendData data ${len(params) > 0 and ',' or ''} ${','.join(['%s %s'%(p[0], p[1]) for p in params])}) {
-  MiotConn* conn = MiotConn::From(feature);
+void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, AppendData data ${len(params) > 0 and ',' or ''} ${','.join(['%s %s'%(p[0], p[1]) for p in params])}) {
+  MiotConnect* conn = MiotConnect::From(feature);
 
   FtCallbackId __success__ = 0;
   FtCallbackId __fail__ = 0;
@@ -64,7 +69,7 @@ void ${module_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, 
     ${msg_sub_type} sub_arg;
   %endif
   miotmsg__init(&msg);
-  msg.type = MIOTMSG__MSGTYPE__INVOKE
+  msg.type = MIOTMSG__MSGTYPE__INVOKE;
   msg.subtype = ${msg_sub_type_id};
   msg.test_oneof_case = ${msg_arg_id};
 
@@ -76,7 +81,7 @@ void ${module_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, 
   %for param in method['params']:
     ${gen_param(param, '')}
   %endfor
-  conn->send(&msg, __success__, __fail__, __complete__, ${cb_data_parser});
+  conn->send(feature, &msg, __success__, __fail__, __complete__, ${cb_data_parser});
 }
 %endif
 </%def>
@@ -93,8 +98,8 @@ void ${module_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, 
   prop_native_type = utils.cppType(prop_type)
 %>
 %if 'writeable' in prop and prop['writeable']:
-void ${module_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData data, ${prop_native_type} ${prop_name}) {
-  MiotConn* conn = MiotConn::From(feature);
+void ${feature_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData data, ${prop_native_type} ${prop_name}) {
+  MiotConnect* conn = MiotConnect::From(feature);
 
   Miotmsg msg;
   ${msg_sub_type} sub_arg;
@@ -113,7 +118,7 @@ void ${module_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData d
   if 'cb_name' in meta: cb_name = meta['cb_name']
 %>
   sub_arg.${cb_key} = (char*)"${cb_name}";
-  conn->listen(&msg, sub_arg.${cb_key}, ${prop_name});
+  conn->listen(feature, &msg, sub_arg.${cb_key}, ${prop_name});
 %else:
   ${gen_param(prop, '')}
   conn->send(&msg);
@@ -128,38 +133,38 @@ void ${module_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData d
 #include "${include}"
 %endfor
 
-#include "${module_name}.h"
+#include "${feature_name}.h"
 
-void ${module_name}_onRegister(FeatureRuntimeContext ctx) {
+void ${feature_name}_onRegister(const char* feature_name) {
   // TODO implement the service agent initialize
 }
 
-void ${module_name}_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void ${feature_name}_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   // TODO create prototype info
 }
 
-void ${module_name}_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void ${feature_name}_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
   // TODO onrequired
-  MiotConn* conn = MiotConn::Create(ctx);
+  MiotConnect* conn = MiotConnect::Create(ctx);
   FeatureSetObjectData(handle, conn);
 }
 
-void ${module_name}_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-  MiotConn* conn = MiotConn::From(handle);
-  conn->destroy();
+void ${feature_name}_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+  MiotConnect* conn = MiotConnect::From(handle);
+  conn->Destroy();
 }
 
-void ${module_name}_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void ${feature_name}_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   // TODO
 }
 
-void ${module_name}_onUnregister(FeatureRuntimeContext ctx) {
+void ${feature_name}_onUnregister(const char* feature_name) {
   // TODO
 }
 
 %for m in doc['members']:
 
-%if not ('meta' in m and 'external' in m['meta'] and m['meta']['external']):
+%if utils.needGenerator(m):
 %if m['type'] == 'property':
 ${gen_property(doc, m)}
 %elif m['type'] == 'function':
