@@ -128,6 +128,17 @@ FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType
     return curr_cid_++;
 }
 
+bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
+{
+    const auto callback = getCallback(cid);
+    if (feature_is_undefined(callback.cb)) {
+        FEATURE_LOG_DEBUG("callback in undefined !");
+        return false;
+    } else {
+        return true;
+    }
+}
+
 bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());

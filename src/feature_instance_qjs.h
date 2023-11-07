@@ -62,6 +62,8 @@ public:
 
     FtCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
 
+    bool checkCallback(FtCallbackId cid);
+
     feature_value_t getPromise(FtPromiseId pid);
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);

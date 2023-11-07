@@ -297,6 +297,15 @@ FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle h
  */
 FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle);
 
+/**
+ * @brief check if cid function is exist in js file
+ *
+ * @param handle
+ * @param cid
+ * @return bool
+ */
+bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid);
+
 #ifdef __cplusplus
 }
 #endif

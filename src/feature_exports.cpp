@@ -308,3 +308,9 @@ FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->getFeatureManager();
 }
+
+bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid)
+{
+    FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
+    return instance->checkCallback(cid);
+}
