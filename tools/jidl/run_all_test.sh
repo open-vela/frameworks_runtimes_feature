@@ -99,6 +99,9 @@ case $1 in
   lvgl)
     run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui.jidl
     ;;
+  lvgl9)
+    run_lvgl_binding_gen $CUR_DIR/samples/lvgl-ui9.jidl
+    ;;
   feature)
     shift
     run_feature $*
