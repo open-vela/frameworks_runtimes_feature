@@ -47,9 +47,6 @@ thread_local feature_classdef_t g_feature_class_def; // prototype class definati
 thread_local feature_classid_t g_interface_class_id = 0; // interface prototype class id
 thread_local feature_classdef_t g_interface_class_def; // prototype class defination, contains finalizer
 
-// some static functions used by FeatureManagerQjs
-static context_ref getContext(feature_runtime_ref rt);
-
 static inline FeatureInstance* getInstance(feature_value_t val)
 {
     void* ptr = feature_get_opaque(val, g_feature_class_id);
@@ -57,19 +54,6 @@ static inline FeatureInstance* getInstance(feature_value_t val)
         ptr = feature_get_opaque(val, g_interface_class_id);
     }
     return static_cast<FeatureInstance*>(ptr);
-}
-
-static context_ref getContext(feature_runtime_ref rt)
-{
-#if defined(CONFIG_QUICKAPP)
-    // how to get context in nuttx? need check yaozong
-    auto qrt = static_cast<AIOTJS::RuntimeContext*>(JS_GetRuntimeOpaque(rt));
-    FEATURE_CHECK_NE(qrt, nullptr);
-    return qrt->env.ctx;
-#else
-    auto ctx = static_cast<context_ref>(JS_GetRuntimeOpaque(rt));
-    return ctx;
-#endif
 }
 
 static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)

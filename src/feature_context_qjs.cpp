@@ -120,7 +120,7 @@ static ft_value_t _ft_string_array (ft_context_ref ft_ctx, const char** val, uin
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewString, val, size);
 }
 
-static ft_value_t _ft_prase_json(ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename) {
+static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename) {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
     ret.js_val = JS_UNDEFINED;
@@ -293,7 +293,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data){
     rt_ctx->ft_from_double_array = _ft_double_array;
     rt_ctx->ft_from_bool_array = _ft_bool_array;
     rt_ctx->ft_from_string_array = _ft_string_array;
-    rt_ctx->ft_prase_json = _ft_prase_json;
+    rt_ctx->ft_parse_json = _ft_parse_json;
 
     // convert
     rt_ctx->ft_to_int = _ft_to_int;

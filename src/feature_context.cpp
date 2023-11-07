@@ -99,8 +99,8 @@ ft_value_t ft_from_string_array (ft_context_ref ft_ctx, const char** val, uint32
     return ft_ctx->ft_from_string_array(ft_ctx, val, size);
 }
 
-ft_value_t ft_prase_json (ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename) {
-    return ft_ctx->ft_prase_json(ft_ctx, buf, buf_len, filename);
+ft_value_t ft_parse_json (ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename) {
+    return ft_ctx->ft_parse_json(ft_ctx, buf, buf_len, filename);
 }
 
 // convert
