@@ -55,7 +55,7 @@ device_Device *device_wrap_getInfo(FeatureInstanceHandle feature, AppendData dat
   char *screenShape = NULL;
   int platformVersionCode = 0;
   device_Device *device = deviceMallocDevice();
-  const char *devicetypeMap[] = {"unknow", "watch", "band", "smartspeaker"};
+  const char *devicetypeMap[] = {"unknown", "watch", "band", "smartspeaker"};
 
   memset(&devinfo, 0, sizeof(devinfo));
   uv_getdeviceinfo(&devinfo);
@@ -73,7 +73,7 @@ device_Device *device_wrap_getInfo(FeatureInstanceHandle feature, AppendData dat
   STRCPY(platformVersionName, AIOTJS::version());
   platformVersionCode = AIOTJS::versionCode();
 #else
-  STRCPY(platformVersionName, "undefined");
+  STRCPY(platformVersionName, "unknown");
 #endif
   STRCPY(devicetype, devicetypeMap[devinfo.devicetype]);
 
@@ -84,7 +84,7 @@ device_Device *device_wrap_getInfo(FeatureInstanceHandle feature, AppendData dat
     STRCPY(screenshape, "rect");
     screenShape = screenshape;
   } else {
-    STRCPY(screenshape, "undefined");
+    STRCPY(screenshape, "unknown");
     screenShape = screenshape;
   }
   device->_brand = brand;
