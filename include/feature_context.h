@@ -71,7 +71,7 @@ ft_value_t ft_from_bool_array (ft_context_ref ft_ctx, bool* val, uint32_t size);
 ft_value_t ft_from_double_array (ft_context_ref ft_ctx, double* val, uint32_t size);
 ft_value_t ft_from_string_array (ft_context_ref ft_ctx, const char** val, uint32_t size);
 
-ft_value_t ft_prase_json (ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename);
+ft_value_t ft_parse_json (ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename);
 
 // feature type to native types
 bool ft_to_int (ft_context_ref ft_ctx, ft_value_t f_val, int32_t* val);
