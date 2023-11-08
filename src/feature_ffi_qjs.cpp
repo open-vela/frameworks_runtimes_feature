@@ -225,12 +225,11 @@ namespace FeatureFFIQjs {
             } break;
             case FT_ANY: {
                 // copy value
-                ft_value_t* f_val = (ft_value_t*)malloc(sizeof(ft_value_t));
+                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
                 qjs_val_t* q_val = (qjs_val_t*)f_val;
                 q_val->js_val = value;
                 q_val->type = FT_TYPE_OBJECT;
-                memcpy((void*)ptr, (void*)f_val, sizeof(ft_value_t));
-                free(f_val);
+                ptr = f_val;
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
@@ -395,7 +394,8 @@ namespace FeatureFFIQjs {
                 value = feature_string(ctx, (const char*)ptr);
             } break;
             case FT_ANY: {
-                // any type not need convert to guest
+                ft_value_t* f_val = (ft_value_t*)(ptr);
+                value = FT_VAL_GET_JS_VAL(*f_val);
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");

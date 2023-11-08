@@ -40,7 +40,7 @@ typedef float FtFloat;
 typedef double FtDouble;
 typedef bool FtBool;
 typedef const char* FtString;
-typedef ft_value_t FtAny;
+typedef ft_value_t* FtAny;
 typedef int32_t FtCallbackId; // feature callback id
 typedef int32_t FtPromiseId; // feature promise id
 
@@ -88,6 +88,7 @@ enum FeaturePrimitiveType {
     FT_RAWPOINTER, // raw pointer point to a native C struct which has no ref
                    // count header
     FT_STRING = FT_REFERENCE_BIT | FT_CHAR, // string
+    FT_ANY_REF = FT_REFERENCE_BIT | FT_ANY, // any ref
 };
 
 union AppendData {

@@ -84,10 +84,10 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
                 ptr = FeatureMalloc(sizeof(bool), featureType);
             } break;
             case FT_CHAR: {
-                // skip string space allocation, delay to value copy6
+                // skip string space allocation, delay to value copy
             } break;
             case FT_ANY: {
-                ptr = FeatureMalloc(sizeof(ft_value_t), featureType);
+                // skip anyref space allocation, delay to value copy
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
@@ -389,7 +389,7 @@ void* exactVariadicParameter(va_list& ap, FeatureType featureType)
             } break;
             case FT_ANY: {
                 result = malloc(sizeof(uintptr_t));
-                *(void**)result = va_arg(ap, void*);
+                *(ft_value_t**)result = va_arg(ap, ft_value_t*);
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");

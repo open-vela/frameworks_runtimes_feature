@@ -1,0 +1,5 @@
+module any_test@1.0
+
+void setAny(int a, object any)
+object getAny()
+void print(...)

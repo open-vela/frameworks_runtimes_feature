@@ -32,6 +32,9 @@
       },
       {
           "name": "interface_test"
+      },
+      {
+          "name": "any_test"
       }
   ],
   "config": {

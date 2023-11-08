@@ -29,6 +29,8 @@ add_executable(${PROJECT_NAME}
     promise_test_impl.cpp
     interface_test.cpp
     interface_test_impl.cpp
+    any_test.cpp
+    any_test_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
     feature_interface.cpp

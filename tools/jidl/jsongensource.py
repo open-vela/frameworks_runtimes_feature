@@ -147,7 +147,7 @@ class CPPRender(Render):
     'int64' : 'FT_INT64',
     'void' : 'FT_VOID',
     'ellipse' : 'FT_PARAM_REST_END',
-    'object' : 'FT_ANY',
+    'object' : 'FT_ANY_REF',
     'array' : 'FT_ARRAY',
     'Int8Array' : 'FT_ARRAY',
     'Uint8Array' : 'FT_ARRAY',
