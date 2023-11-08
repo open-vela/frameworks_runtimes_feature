@@ -177,7 +177,7 @@ MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
-FEATURELIST += folme
+FEATURELIST += system_folme
 endif
 
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
