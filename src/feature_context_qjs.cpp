@@ -47,17 +47,21 @@
 
 ft_type _ft_get_type (ft_context_ref ft_ctx, ft_value_t ft_val) {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
-    qjs_val_t q_val = FT_VAL_TO_QJS(ft_val);
+    JSValue js_val = FT_VAL_GET_JS_VAL(ft_val);
 
-    if (JS_IsObject(q_val.js_val))
+    size_t size;
+    if (JS_GetArrayBuffer(js_ctx, &size, js_val))
+        return FT_TYPE_ARRAY_BUFFER;
+
+    if (JS_IsObject(js_val))
         return FT_TYPE_OBJECT;
-    else if (JS_IsArray(js_ctx, q_val.js_val))
+    else if (JS_IsArray(js_ctx, js_val))
         return FT_TYPE_ARRAY;
-    else if (JS_IsNumber(q_val.js_val))
+    else if (JS_IsNumber(js_val))
         return FT_TYPE_NUMBER;
-    else if (JS_IsBool(q_val.js_val))
+    else if (JS_IsBool(js_val))
         return FT_TYPE_NUMBER;
-    else if (JS_IsString(q_val.js_val))
+    else if (JS_IsString(js_val))
         return FT_TYPE_STRING;
 
     return FT_TYPE_NONE;
@@ -90,6 +94,14 @@ static ft_value_t _ft_boolean(ft_context_ref ft_ctx, bool val) {
 
 static ft_value_t _ft_string(ft_context_ref ft_ctx, const char* val) {
     MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewString, val, FT_TYPE_STRING);
+}
+
+static ft_value_t _ft_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size) {
+    JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
+    qjs_val_t ret;
+    ret.js_val = JS_NewArrayBufferCopy(js_ctx, buff, size);
+    ret.type = FT_TYPE_ARRAY_BUFFER;
+    return QJS_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_int_array (ft_context_ref ft_ctx, int32_t* val, uint32_t size) {
@@ -152,6 +164,14 @@ static const char* _ft_to_string(ft_context_ref ft_ctx, ft_value_t f_val) {
     const char* ret_str = JS_ToCString(js_ctx, js_str);
     JS_FreeValue(js_ctx, js_str);
     return ret_str;
+}
+
+static uint8_t* _ft_to_buffer (ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val) {
+    JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
+    qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
+    JSValue val = q_val.js_val;
+    uint8_t* ret = JS_GetArrayBuffer(js_ctx, p_size, val);
+    return ret;
 }
 
 static bool _ft_to_int(ft_context_ref ft_ctx, ft_value_t f_val, int32_t* pres) {
@@ -285,6 +305,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data){
     rt_ctx->ft_from_double = _ft_double;
     rt_ctx->ft_from_bool = _ft_boolean;
     rt_ctx->ft_from_string = _ft_string;
+    rt_ctx->ft_from_buffer = _ft_buffer;
 
     rt_ctx->ft_from_int_array = _ft_int_array;
     rt_ctx->ft_from_uint_array = _ft_uint_array;
@@ -303,6 +324,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data){
     rt_ctx->ft_to_double = _ft_to_double;
     rt_ctx->ft_to_bool = _ft_to_bool;
     rt_ctx->ft_to_string = _ft_to_string;
+    rt_ctx->ft_to_buffer = _ft_to_buffer;
     // array operations
     rt_ctx->ft_array_size = _ft_array_size;
     rt_ctx->ft_array_at = _ft_array_at;

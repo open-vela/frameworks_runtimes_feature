@@ -31,6 +31,8 @@ add_executable(${PROJECT_NAME}
     interface_test_impl.cpp
     any_test.cpp
     any_test_impl.cpp
+    arraybuffer_test.cpp
+    arraybuffer_test_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
     feature_interface.cpp

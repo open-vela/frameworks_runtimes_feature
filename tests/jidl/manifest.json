@@ -35,6 +35,9 @@
       },
       {
           "name": "any_test"
+      },
+      {
+          "name": "arraybuffer_test"
       }
   ],
   "config": {

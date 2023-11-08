@@ -71,6 +71,10 @@ ft_value_t ft_from_string (ft_context_ref ft_ctx, const char* val) {
     return ft_ctx->ft_from_string(ft_ctx, val);
 }
 
+ft_value_t ft_from_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size) {
+    return ft_ctx->ft_from_buffer(ft_ctx, buff, size);
+}
+
 ft_value_t ft_from_int_array (ft_context_ref ft_ctx, int32_t* val, uint32_t size) {
     return ft_ctx->ft_from_int_array(ft_ctx, val, size);
 }
@@ -130,6 +134,10 @@ bool ft_to_bool (ft_context_ref ft_ctx, ft_value_t f_val, bool* val) {
 
 const char* ft_to_string(ft_context_ref ft_ctx, ft_value_t f_val) {
     return ft_ctx->ft_to_string(ft_ctx, f_val);
+}
+
+uint8_t* ft_to_buffer (ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val) {
+    return ft_ctx->ft_to_buffer(ft_ctx, p_size, f_val);
 }
 
 uint32_t ft_array_size(ft_context_ref ft_ctx, const ft_value_t array) {
