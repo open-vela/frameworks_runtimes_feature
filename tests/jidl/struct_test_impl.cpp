@@ -89,7 +89,7 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, struc
     } else {
         printf("%s::%s(), any_param: ", file_tag, __FUNCTION__);
         ft_context_ref ft_ctx = FeatureGetContext(feature);
-        const char* str_json = ft_to_string(ft_ctx, a->_any_param);
+        const char* str_json = ft_to_string(ft_ctx, *(a->_any_param));
         printf("%s", str_json);
         ft_free_string(ft_ctx, str_json);
         printf("\n");

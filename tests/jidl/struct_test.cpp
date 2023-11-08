@@ -91,7 +91,7 @@ FtArray* struct_test_malloc_string_array() {
 
 /****** for JIDL struct 'Book' ******/
 static ObjectMember struct_test_Book_struct_members[] = {
-    { "any_param", FT_ANY, offsetof(struct_test_Book, _any_param), sizeof(FtAny) },
+    { "any_param", FT_ANY_REF, offsetof(struct_test_Book, _any_param), sizeof(FtAny) },
     { "page_count", FT_INT, offsetof(struct_test_Book, _page_count), sizeof(FtInt) },
     { "title", FT_STRING, offsetof(struct_test_Book, _title), sizeof(FtString) },
     { "chap_titles", FT_MK_COMPLEX_REF(&struct_test_string_array), offsetof(struct_test_Book, _chap_titles), sizeof(FtArray*) },
