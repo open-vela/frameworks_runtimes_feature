@@ -386,7 +386,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 #define GTEST_HAS_POSIX_RE (__ANDROID_API__ >= 9)
 #else
 #define GTEST_HAS_POSIX_RE \
-  !(GTEST_OS_WINDOWS || GTEST_OS_XTENSA || GTEST_OS_QURT)
+  !(GTEST_OS_WINDOWS || GTEST_OS_XTENSA || GTEST_OS_QURT || GTEST_OS_NUTTX)
 #endif
 #endif
 
@@ -428,7 +428,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 // clang, check for
 // __EXCEPTIONS && __has_feature(cxx_exceptions).
 #define GTEST_HAS_EXCEPTIONS (__EXCEPTIONS && __has_feature(cxx_exceptions))
-#elif defined(__GNUC__) && __EXCEPTIONS
+#elif defined(__GNUC__) && defined(__EXCEPTIONS) && __EXCEPTIONS
 // gcc defines __EXCEPTIONS to 1 if and only if exceptions are enabled.
 #define GTEST_HAS_EXCEPTIONS 1
 #elif defined(__SUNPRO_CC)
@@ -592,16 +592,17 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 
 // Determines whether to support death tests.
 // pops up a dialog window that cannot be suppressed programmatically.
-// #if (GTEST_OS_LINUX || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS ||             \
-//      (GTEST_OS_MAC && !GTEST_OS_IOS) ||                                   \
-//      (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW ||  \
-//      GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD || GTEST_OS_QNX || \
-//      GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA ||           \
-//      GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU ||     \
-//      GTEST_OS_GNU_HURD)
-// #define GTEST_HAS_DEATH_TEST 1
-// #endif
-
+/*
+#if (GTEST_OS_LINUX || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS ||             \
+     (GTEST_OS_MAC && !GTEST_OS_IOS) ||                                   \
+     (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW ||  \
+     GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD || GTEST_OS_QNX || \
+     GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA ||           \
+     GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU ||     \
+     GTEST_OS_GNU_HURD)
+#define GTEST_HAS_DEATH_TEST 1
+#endif
+*/
 // close death test
 #define GTEST_HAS_DEATH_TEST 0
 
@@ -622,7 +623,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 // Determines whether test results can be streamed to a socket.
 #if GTEST_OS_LINUX || GTEST_OS_GNU_KFREEBSD || GTEST_OS_DRAGONFLY || \
     GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_OPENBSD ||       \
-    GTEST_OS_GNU_HURD
+    GTEST_OS_GNU_HURD || GTEST_OS_NUTTX
 #define GTEST_CAN_STREAM_RESULTS_ 1
 #endif
 
@@ -2123,7 +2124,7 @@ GTEST_DISABLE_MSC_DEPRECATED_POP_()
 // MSVC-based platforms.  We map the GTEST_SNPRINTF_ macro to the appropriate
 // function in order to achieve that.  We use macro definition here because
 // snprintf is a variadic function.
-#if _MSC_VER && !GTEST_OS_WINDOWS_MOBILE
+#if defined(_MSC_VER) && !GTEST_OS_WINDOWS_MOBILE
 // MSVC 2005 and above support variadic macros.
 #define GTEST_SNPRINTF_(buffer, size, format, ...) \
   _snprintf_s(buffer, size, size, format, __VA_ARGS__)
