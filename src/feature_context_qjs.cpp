@@ -53,9 +53,7 @@ ft_type _ft_get_type (ft_context_ref ft_ctx, ft_value_t ft_val) {
     if (JS_GetArrayBuffer(js_ctx, &size, js_val))
         return FT_TYPE_ARRAY_BUFFER;
 
-    if (JS_IsObject(js_val))
-        return FT_TYPE_OBJECT;
-    else if (JS_IsArray(js_ctx, js_val))
+    if (JS_IsArray(js_ctx, js_val))
         return FT_TYPE_ARRAY;
     else if (JS_IsNumber(js_val))
         return FT_TYPE_NUMBER;
@@ -63,6 +61,8 @@ ft_type _ft_get_type (ft_context_ref ft_ctx, ft_value_t ft_val) {
         return FT_TYPE_NUMBER;
     else if (JS_IsString(js_val))
         return FT_TYPE_STRING;
+    else if (JS_IsObject(js_val))
+        return FT_TYPE_OBJECT;
 
     return FT_TYPE_NONE;
 }
