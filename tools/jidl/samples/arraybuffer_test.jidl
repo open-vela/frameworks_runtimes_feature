@@ -1,0 +1,5 @@
+module arraybuffer_test@1.0
+
+void setArraybuffer(int a, object buffer)
+object getArraybuffer()
+void print(...)

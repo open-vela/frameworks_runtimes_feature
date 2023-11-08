@@ -35,6 +35,7 @@ typedef struct FeatureContext {
     ft_value_t (*ft_from_double)(ft_context_ref ft_ctx, double val);
     ft_value_t (*ft_from_bool)(ft_context_ref ft_ctx, bool val);
     ft_value_t (*ft_from_string)(ft_context_ref ft_ctx, const char* val);
+    ft_value_t (*ft_from_buffer)(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
 
     ft_value_t (*ft_from_int_array)(ft_context_ref ft_ctx, int32_t* val, uint32_t size);
     ft_value_t (*ft_from_uint_array)(ft_context_ref ft_ctx, uint32_t* val, uint32_t size);
@@ -53,6 +54,7 @@ typedef struct FeatureContext {
     bool (*ft_to_double)(ft_context_ref ft_ctx, ft_value_t f_val, double* val);
     bool (*ft_to_bool)(ft_context_ref ft_ctx, ft_value_t ft_val, bool* val);
     const char* (*ft_to_string)(ft_context_ref ft_ctx, ft_value_t f_val);
+    uint8_t* (*ft_to_buffer)(ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val);
 
     // array operations
     uint32_t (*ft_array_size)(ft_context_ref ft_ctx, const ft_value_t array);
