@@ -51,6 +51,11 @@ configuration_Configuration *configuration_wrap_getLocale(FeatureInstanceHandle 
     if (ret <= 0)
     {
         FEATURE_LOG_ERROR("%s::%s getlocale failed\n", file_tag, __FUNCTION__);
+        ret = uv_property_set(NULL, (const char*)UV_EXT_LOCALE_LANG_KEY, "zh_CN", NULL, NULL);
+        if (ret != 0)
+        {
+            FEATURE_LOG_ERROR("%s::%s set locale failed\n", file_tag, __FUNCTION__);
+        }
     }
     char *language = (char *)FeatureMalloc(strlen(uvlocale.language) + 1, FT_CHAR);
     sprintf(language, "%s", uvlocale.language);
