@@ -366,8 +366,6 @@ void exchange_wrap_clear(FeatureInstanceHandle feature, AppendData data, exchang
 
 void exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData data,
                                    exchange_GrantPermissionInfo* info) {
-    ////Not yet implemented
-    return;
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
@@ -420,8 +418,6 @@ void exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData dat
 
 void exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData data,
                                     exchange_RevokePermissionInfo* info) {
-    // Not yet implemented
-    return;
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {

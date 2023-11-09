@@ -17,188 +17,188 @@
 let exchange =require('exchange');
 
 feat_async_test("exchange","set_application",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.set({
-            key: 'A1',
-            value: 'V1',
-            scope:'application',
-            package:'com.xiaomi.application',
-            sign:'7a12ec1d66233f20a20141035b1f7937',
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange set_application success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange set_application fail");
-        done();
-      });
+  exchange.set({
+    key: 'A1',
+    value: 'V1',
+    scope:'application',
+    package:'com.xiaomi.application',
+    sign:'7a12ec1d66233f20a20141035b1f7937',
+    success: function(data) {
+      feat_expect_true(true, "exchange set_application success");
+      done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange set_application fail");
+      done();
+    }
+  })
 })
 
 feat_async_test("exchange","get_application",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.get({
-            key: 'A1',
-            scope:'application',
-            package:'com.xiaomi.application',
-            sign:'7a12ec1d66233f20a20141035b1f7937',
-            success: function(data) {
-               print(data);
-               if(data == 'V1') {resolve(true);}
-               else {reject(false);}
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange get_application success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange get_application fail");
-        done();
-      });
+  exchange.get({
+    key: 'A1',
+    scope:'application',
+    package:'com.xiaomi.application',
+    sign:'7a12ec1d66233f20a20141035b1f7937',
+    success: function(data) {
+       var res = false;
+       if(data == 'V1') { 
+        res = true;
+       }
+       feat_expect_true(res, "exchange get_application success");
+       done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange get_application fail");
+      done();
+    }
+  })
 })
 
 feat_async_test("exchange","remove",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.remove({
-            key: 'A1',
-            package:'com.xiaomi.application',
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange remove success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange remove fail");
-        done();
-      });
+  exchange.remove({
+    key: 'A1',
+    package:'com.xiaomi.application',
+    success: function(data) {
+      feat_expect_true(true, "exchange remove success");
+      done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange remove fail");
+      done();
+    }
+  })
 })
 
 feat_async_test("exchange","set_global",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.set({
-            key: 'A2',
-            scope:'global',
-            value:'V2',
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange set_global success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange set_global fail");
-        done();
-      });
+  exchange.set({
+    key: 'A2',
+    scope:'global',
+    value:'V2',
+    success: function(data) {
+      feat_expect_true(true, "exchange set_global success");
+      done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange set_global fail");
+      done();
+    }
+  })
 })
 
 feat_async_test("exchange","get_global",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.get({
-            key: 'A2',
-            scope:'global',
-            success: function(data) {
-               if(data == 'V2') {resolve(true);}
-               else {reject(false);}
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange set_global success");
+  exchange.get({
+    key: 'A2',
+    scope:'global',
+    success: function(data) {
+       var res =false;
+       if(data == 'V2') {
+        res=true;
+       }
+       feat_expect_true(res, "exchange get_global success");
         done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange set_global fail");
-        done();
-      });
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange get_global fail");
+      done();
+    }
+  })
 })
 
-feat_async_test("exchange","clear",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.clear({
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange clear success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange clear fail");
-        done();
-      });
+feat_test("exchange","setParamError1",(done)=>{
+  exchange.set({
+    key: 'A1',
+    scope:'application',
+    sign:'7a12ec1d66233f20a20141035b1f7937',
+    success: function(data) {
+       feat_expect_true(false, "exchange setParamError1 expect false,fail");
+       done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(true, "exchange setParamError1 expect false,success");
+      done();
+    }
+  })
+})
+
+feat_test("exchange","setParamError2",(done)=>{
+  exchange.set({
+    key: 'A1',
+    scope:'global',
+    package:'com.xiaomi.application',
+    sign:'7a12ec1d66233f20a20141035b1f7937',
+    success: function(data) {
+       feat_expect_true(false, "exchange setParamError2 expect false,fail");
+       done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(true, "exchange setParamError2 expect false,success");
+      done();
+    }
+  })
+})
+
+feat_test("exchange","setParamError3",(done)=>{
+  exchange.get({
+    key: 'A1',
+    scope:'global',
+    package:'com.xiaomi.application',
+    sign:'7a12ec1d66233f20a20141035b1f7937',
+    success: function(data) {
+       feat_expect_true(false, "exchange setParamError3 expect false,fail");
+       done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(true, "exchange setParamError3 expect false,success");
+      done();
+    }
+  })
+})
+
+feat_test("exchange","clear",()=>{
+  exchange.clear({
+    success: function(data) {
+      feat_expect_true(true, "exchange clear success");
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange clear fail");
+    }
+  })
 })
 
 feat_async_test("exchange","grantPermission",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.grantPermission({
-            package:'com.xiaomi.application',
-            key:'V3',
-            sign:"7a12ec1d66233f20a20141035b1f7937",
-            success: function(data) {
-               if(data == '4') {resolve(true)}
-               reject(false);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange grantPermission success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange grantPermission fail");
-        done();
-      });
+  exchange.grantPermission({
+    package:'com.xiaomi.application',
+    key:'V3',
+    sign:"7a12ec1d66233f20a20141035b1f7937",
+    success: function(data) {
+      var res =false; 
+      if(data == '4') {
+        res=true;
+      }
+      feat_expect_true(res, "exchange grantPermission success");
+      done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(err, "exchange grantPermission fail");
+      done();
+    }
+  })  
 })
 
 feat_async_test("exchange","revokePermission",(done)=>{
-    return new Promise(function (resolve, reject) {
-        exchange.revokePermission({
-            package:'com.xiaomi.application',
-            key:'V3',
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-          })
-    }).then((res)=>{
-        feat_expect_true(res, "exchange revokePermission success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "exchange revokePermission fail");
-        done();
-      });
+  exchange.revokePermission({
+    package:'com.xiaomi.application',
+    key:'V3',
+    success: function(data) {
+      feat_expect_true(true, "exchange revokePermission success");
+      done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "exchange revokePermission fail");
+      done();
+    }
+  })
 })
 
 feat_test_all();
