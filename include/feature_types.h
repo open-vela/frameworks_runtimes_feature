@@ -62,7 +62,7 @@ enum FeatureTaskMode {
 typedef void (*FeatureTaskCallback)(int status, void* data);
 
 typedef struct VTable {
-    size_t size;
+    int size;
     NativeFunc finalizer;
     const NativeFunc* members;
 } VTable;

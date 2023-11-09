@@ -603,33 +603,6 @@ static int initialize_prototype(context_ref ctx, FeatureDescription* description
     return 0;
 }
 
-static bool WeakRefFree(context_ref js_ctx, feature_value_t feature_object)
-{
-    // 获取feature_object的cid
-    int ret = -1;
-    FeatureInstance* instance = getInstance(feature_object);
-    if (!instance || !instance->prototype()) {
-        FEATURE_LOG_ERROR("WeakRefFree() get FeatureInstance failed");
-        return false;
-    }
-    auto proto = instance->prototype();
-
-    // 遍历proto->weak_ref_list链表，将其中所有js_value为feature_object的节点删除
-    WeakRef* node;
-    WeakRef* node_temp;
-    weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
-    {
-        auto js_val = FT_VAL_GET_JS_VAL(node->ft_value);
-        ret = feature_is_same_value(static_cast<feature_context_ref>(js_ctx), js_val, feature_object);
-        if (ret == 1) {
-            weakref_list_delete(&node->link);
-            proto->weak_ref_count--;
-        }
-    }
-
-    return true;
-}
-
 FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
     :FeatureManager(registry)
 {

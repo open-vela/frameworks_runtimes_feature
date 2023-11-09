@@ -65,16 +65,16 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     // remove opaque binding
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
     feature_set_opaque(js_val, nullptr);
-    auto proto = prototype();
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
+    auto proto_type = prototype();
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto_type->getFeatureManager()->getFeatureContext());
 
     // free weakRef
     freeWeakRef();
 
     // invoke callback
-    if (proto->description->native_callbacks && proto->description->native_callbacks->onDetached) {
+    if (proto_type->description->native_callbacks && proto_type->description->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
-        proto->description->native_callbacks->onDetached(js_ctx, this);
+        proto_type->description->native_callbacks->onDetached(js_ctx, this);
     }
     // release all callbacks
     for (const auto& callback : callbacks_) {
@@ -97,7 +97,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
         }
     };
     // check if all instances deleted, then clear proto object
-    free_instance(prototype());
+    free_instance(proto_type);
     for (auto& pair : prototypes_) {
         // clear all interface instances belongs to this instance.
         pair.second->clearAllInstances();
