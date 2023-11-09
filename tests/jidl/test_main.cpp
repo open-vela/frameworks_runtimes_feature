@@ -25,6 +25,7 @@ struct TimeCallback {
 };
 
 struct TimeoutHost {
+    uv_loop_t* loop;
     std::set<TimeCallback*> timers;
 };
 
@@ -90,7 +91,7 @@ JSValue __setTimeout(JSContext* ctx, JSValue this_val, int argc, JSValue* argv,
     tc->ctx = ctx;
     time_host->timers.insert(tc);
     uv_timer_t* timer = (uv_timer_t*)malloc(sizeof(uv_timer_t));
-    uv_timer_init(uv_default_loop(), timer);
+    uv_timer_init(time_host->loop, timer);
     timer->data = tc;
     uv_timer_start(timer, timeout_callback, t, 0);
     return JS_UNDEFINED;
@@ -222,6 +223,8 @@ extern "C" int main(int argc, char** argv)
     uv_timer_init(main_loop, &timer);
     env.async_limiter = &timer;
     timer.data = &env;
+    // init set time out
+    env.time_host.loop = main_loop;
 #if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
     // init binder
     int binderFd = -1;
@@ -270,41 +273,29 @@ extern "C" int main(int argc, char** argv)
                                "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
                                "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n";
     auto res = JS_Eval(env.ctx, test_content, strlen(test_content), "<eval>",
-        JS_EVAL_TYPE_GLOBAL);
+        JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
-        printf("test internal file error: %s\n", str);
+        printf("[feat_test]: Exception in initializing test internal interface.: %s\n", str);
         JS_FreeValue(env.ctx, res);
-
-        // free js_str
-        free(js_str);
-        if (mfst_content)
-            free(mfst_content);
-        // free manager
-        FeatureFreeManager(manager);
-        return -1;
+        goto feat_test_done;
     }
     JS_FreeValue(env.ctx, res);
     // 加载 测试文件
-    auto result = JS_Eval(env.ctx, js_str, strlen(js_str), "a.js",
-        JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_STRICT);
+    res = JS_Eval(env.ctx, js_str, strlen(js_str), "a.js",
+        JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
 
-    if (JS_IsException(result)) {
-        const char* str = JS_ToCString(env.ctx, result);
-        printf("exec js file error: %s\n", str);
-        JS_FreeValue(env.ctx, result);
-
-        uv_loop_close(main_loop);
-        // free js_str
-        free(js_str);
-        if (mfst_content)
-            free(mfst_content);
-        // free manager
-        FeatureFreeManager(manager);
+    if (JS_IsException(res)) {
+        const char* str = JS_ToCString(env.ctx, res);
+        printf("[feat_test]: Exception thrown while executing test file \"%s\": %s\n", js_file, str);
+        JS_FreeValue(env.ctx, res);
+        goto feat_test_done;
     }
-    JS_FreeValue(env.ctx, result);
+    JS_FreeValue(env.ctx, res);
 
     // uv_run(main_loop, UV_RUN_DEFAULT);
+
+feat_test_done:
     // clear un-triggered timers
     for (TimeCallback* tc : env.time_host.timers) {
         JS_FreeValue(tc->ctx, tc->callback);
