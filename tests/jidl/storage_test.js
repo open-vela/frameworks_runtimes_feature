@@ -14,148 +14,83 @@
  * limitations under the License.
  */
 
-let storage = require('storage')
+let sensor = require('sensor');
 
-feat_async_test("sensor","clear",(done)=>{
-    return new Promise(function (resolve, reject) {
-        storage.clear({
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-        })
-    }).then((res)=>{
-        feat_expect_true(res, "storage clear success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "storage clear fail");
-        done();
-      });
+feat_async_test("sensor","Accelerometer",(done)=>{
+  sensor.subscribeAccelerometer({
+    callback: function(ret) {
+      feat_expect_true(true, "sensor subscribeAccelerometer success");
+      sensor.unsubscribeAccelerometer();
+      done();
+    }
+  })  
 })
 
-feat_test("storage","length",()=>{
-    feat_expect_true(storage.length == -1,"length expect -1")
+feat_async_test("sensor","AccelerometerAddInterval",(done)=>{
+  sensor.subscribeAccelerometer({
+    interval:'game',
+    callback: function(ret) {
+      feat_expect_true(true, "sensor AccelerometerAddInterval success");
+      sensor.unsubscribeAccelerometer();
+      done();
+    }
+  })  
 })
 
-feat_async_test("storage","setA1",(done)=>{
-    return new Promise(function (resolve, reject) {
-        storage.set({
-            key: 'A1',
-            value: 'V1',
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-        })
-    }).then((res)=>{
-        feat_expect_true(res, "storage setA1 success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "storage setA1 fail");
-        done();
-      });
+
+feat_async_test("sensor","Compass",(done)=>{
+  sensor.subscribeCompass({
+    callback: function(ret) {
+      feat_expect_true(true, "sensor Compass success");
+      sensor.unsubscribeCompass();
+      done();
+    }
+  })
 })
 
-feat_async_test("storage","setA2",(done)=>{
-    return new Promise(function (resolve, reject) {
-        storage.set({
-            key: 'A2',
-            value: 'V2',
-            success: function(data) {
-               resolve(true);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-        })
-    }).then((res)=>{
-        feat_expect_true(res, "storage setA2 success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "storage setA2 fail");
-        done();
-      });
+feat_async_test("sensor","Proximity",(done)=>{
+  sensor.subscribeProximity({
+    callback: function(ret) {
+      feat_expect_true(true, "sensor Proximity success");
+      sensor.unsubscribeProximity();
+      done();
+    }
+  })
 })
 
-feat_async_test("storage","get",(done)=>{
-    return new Promise(function (resolve, reject) {
-        storage.get({
-            key: 'A1',
-            success: function(data) {
-               if(data == 'V1') {resolve(true);}
-               else reject(false);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-        })
-    }).then((res)=>{
-        feat_expect_true(res, "storage get success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "storage get fail");
-        done();
-      });
+feat_async_test("sensor","Proximity_reserved",(done)=>{
+  sensor.subscribeProximity({
+    reserved:true,
+    callback: function(ret) {
+      feat_expect_true(true, "sensor Proximity_reserved success");
+      sensor.unsubscribeProximity();
+      done();
+    }
+  })
 })
 
-feat_test("storage","length1",()=>{
-    feat_expect_true(storage.length == 1,"length expect 1")
+feat_async_test("sensor","Light",(done)=>{
+  sensor.subscribeLight({
+    callback: function(ret) {
+      feat_expect_true(true, "sensor Proximity success");
+      sensor.unsubscribeLight();
+      done();
+    }
+  })
 })
 
-feat_async_test("storage","key",(done)=>{
-    return new Promise(function (resolve, reject) {
-        storage.key({
-            index: 1,
-            success: function(data) {
-               if(data == 'A2') {resolve(true);}
-               else reject(false);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-        })
-    }).then((res)=>{
-        feat_expect_true(res, "storage key success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "storage key fail");
-        done();
-      });
-})
-
-feat_async_test("storage","delete",(done)=>{
-    return new Promise(function (resolve, reject) {
-        storage.delete({
-            key:'A1',
-            success: function(data) {
-               if(data == 'A1') {resolve(true);}
-               else reject(false);
-            },
-            fail: function(data, code) {
-                reject(false);
-            }
-        })
-    }).then((res)=>{
-        feat_expect_true(res, "storage delete success");
-        done();
-      },
-      (err)=>{
-        feat_expect_true(err, "storage delete fail");
-        done();
-      });
-})
-
-feat_test("storage","length2",()=>{
-    feat_expect_true(storage.length == 0,"length expect 0")
+feat_async_test("sensor","Step",(done)=>{
+  sensor.subscribeStepCounter({
+    callback: function(ret) {
+      feat_expect_true(true, "sensor Step success");
+      sensor.unsubscribeStepCounter();
+      done();
+    },
+    fail: function(data, code) {
+      feat_expect_true(false, "sensor Step fail");
+      done();
+    }
+  })
 })
 
 feat_test_all();
