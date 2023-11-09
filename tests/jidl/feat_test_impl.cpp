@@ -50,8 +50,6 @@ class FeatureTest : public ::testing::Test {
     if (!_is_async) return;
 
     // deal with async test
-    FeatureUnittest* p =
-        static_cast<FeatureUnittest*>(FeatureGetObjectData(_featureInstance));
     FeatureUnittest::setCurrentAsyncId(_async_id);
 
     FeatTestEnv* pack =
@@ -139,8 +137,6 @@ void feat_test_onUnregister(const char* module_name) {
 
 void feat_test_wrap_done(FeatureInstanceHandle feature, AppendData append_data,
                          FtInt async_id, FtInt err, FtString err_message) {
-  FeatureUnittest* p =
-      static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
   if (FeatureUnittest::currentAsyncId() != async_id) {
     printf("[feat_test] done(%d) in odd test context: Timeout occurred.",
            async_id);
@@ -181,8 +177,6 @@ FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
 
 void feat_test_wrap_expect_true(FeatureInstanceHandle feature, AppendData data,
                                 FtBool result, FtString message_info) {
-  FeatureUnittest* p =
-      static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
   // TODO 判断是否要执行
   EXPECT_TRUE(result) << message_info;
 }
