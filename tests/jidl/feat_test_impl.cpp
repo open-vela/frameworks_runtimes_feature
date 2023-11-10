@@ -33,6 +33,7 @@ int FeatureUnittest::next_async_id = 0;
 
 typedef int (*LoopFunc)(void*);
 typedef struct FeatTestEnv {
+  const char* filename;
   LoopFunc run_loop;
   LoopFunc stop_loop;
 } FeatTestEnv;
@@ -60,7 +61,8 @@ class FeatureTest : public ::testing::Test {
     if (run_loop) {
       int ret = run_loop(pack);
       if (ret) {
-        EXPECT_TRUE(false) << "this testsuite overtime";
+        EXPECT_TRUE_FILE(false, pack->filename, -1)
+            << "  This test case timed out. id: " << _async_id;
       }
     }
     FeatureUnittest::setCurrentAsyncId(0);
@@ -143,7 +145,7 @@ void feat_test_wrap_done(FeatureInstanceHandle feature, AppendData append_data,
     return;
   }
 
-  printf("[feat_test] done stop a async test: id(%d)\n", async_id);
+  // printf("[feat_test] done stop a async test: id(%d)\n", async_id);
   FeatTestEnv* pack =
       (FeatTestEnv*)FeatureInstanceGetUserData(feature, "run_loop");
   LoopFunc stop_loop = pack->stop_loop;
@@ -178,7 +180,9 @@ FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
 void feat_test_wrap_expect_true(FeatureInstanceHandle feature, AppendData data,
                                 FtBool result, FtString message_info) {
   // TODO 判断是否要执行
-  EXPECT_TRUE(result) << message_info;
+  FeatTestEnv* pack =
+      (FeatTestEnv*)FeatureInstanceGetUserData(feature, "run_loop");
+  EXPECT_TRUE_FILE(result, pack->filename, -1) << message_info;
 }
 
 void feat_test_wrap_run_all_tests(FeatureInstanceHandle feature,
