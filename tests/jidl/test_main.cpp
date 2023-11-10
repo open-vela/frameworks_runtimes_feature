@@ -31,6 +31,7 @@ struct TimeoutHost {
 
 typedef int (*LoopFunc)(void*);
 typedef struct FeatTestEnv {
+    const char* filename;
     LoopFunc run_loop;
     LoopFunc stop_loop;
     void* manager;
@@ -208,6 +209,7 @@ extern "C" int main(int argc, char** argv)
     }
 
     FeatTestEnv env;
+    env.filename = js_file;
     // initialize quickjs engine
     env.rt = JS_NewRuntime();
     env.ctx = JS_NewContext(env.rt);
