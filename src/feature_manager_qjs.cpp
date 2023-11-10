@@ -721,6 +721,14 @@ void FeatureManagerQjs::uninit()
         ReleaseFeatureContextQjs(getFeatureContext());
         setFeatureContext(nullptr);
     }
+    if (g_feature_class_id != 0)
+    {
+        g_feature_class_id = 0;
+    }
+    if (g_interface_class_id != 0)
+    {
+        g_interface_class_id = 0;
+    }
 }
 
 feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const char* name)
