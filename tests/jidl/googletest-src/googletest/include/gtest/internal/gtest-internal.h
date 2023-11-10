@@ -1349,11 +1349,17 @@ struct tuple_size<testing::internal::FlatTuple<Ts...>>
 #define GTEST_MESSAGE_(message, result_type) \
   GTEST_MESSAGE_AT_(__FILE__, __LINE__, message, result_type)
 
+#define GTEST_MESSAGE_FILE_(file, line, message, result_type)\
+  GTEST_MESSAGE_AT_(file, line, message, result_type)
+
 #define GTEST_FATAL_FAILURE_(message) \
   return GTEST_MESSAGE_(message, ::testing::TestPartResult::kFatalFailure)
 
 #define GTEST_NONFATAL_FAILURE_(message) \
   GTEST_MESSAGE_(message, ::testing::TestPartResult::kNonFatalFailure)
+
+#define GTEST_NONFATAL_FAILURE_FILE_(file, line, message) \
+  GTEST_MESSAGE_FILE_(file, line, message, ::testing::TestPartResult::kNonFatalFailure)
 
 #define GTEST_SUCCESS_(message) \
   GTEST_MESSAGE_(message, ::testing::TestPartResult::kSuccess)
@@ -1513,6 +1519,17 @@ class NeverThrown {
     fail(::testing::internal::GetBoolAssertionFailureMessage(         \
              gtest_ar_, text, #actual, #expected)                     \
              .c_str())
+
+#define GTEST_TEST_BOOLEAN_FILE_(expression, text, actual, expected,  \
+                                 file, line, fail)                    \
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_                                       \
+  if (const ::testing::AssertionResult gtest_ar_ =                    \
+          ::testing::AssertionResult(expression))                     \
+    ;                                                                 \
+  else                                                                \
+    fail(file, line,                                                  \
+             ::testing::internal::GetBoolAssertionFailureMessage(     \
+             gtest_ar_, text, #actual, #expected).c_str())
 
 #define GTEST_TEST_NO_FATAL_FAILURE_(statement, fail)                          \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                                \
