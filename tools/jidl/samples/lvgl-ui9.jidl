@@ -6,13 +6,13 @@ type lv_color_t = uint;
 [native_type="lv_coord_t", to_native="js_tocoord"]
 type lv_coord_t = int;
 
-[native_type="lv_chart_series_t*"]
-type lv_chart_series_p = uint;
-[native_type="lv_chart_cursor_t*"]
-type lv_chart_cursor_p = uint;
+[native_type="lv_chart_series_t*", from_native="js_value_from_pointer", to_native="js_value_to_pointer"]
+type lv_chart_series_p = ulong;
+[native_type="lv_chart_cursor_t*", from_native="js_value_from_pointer", to_native="js_value_to_pointer"]
+type lv_chart_cursor_p = ulong;
 
-[native_type="lv_font_t*"]
-type lv_font_p = uint;
+[native_type="lv_font_t*", from_native="js_value_from_pointer", to_native="js_value_to_pointer"]
+type lv_font_p = ulong;
 
 [native_type="lv_point_t"]
 struct Point {
