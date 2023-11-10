@@ -23,9 +23,6 @@
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
-#if defined(CONFIG_QUICKAPP)
-#include "aiotjs.h"
-#endif
 #include "feature.h"
 #include <assert.h>
 #include <ffi.h>
@@ -36,9 +33,6 @@
 #include <vector>
 
 using namespace FEATURE;
-#if defined(CONFIG_QUICKAPP)
-using namespace AIOTJS;
-#endif
 namespace ferry {
 
 thread_local feature_classid_t g_feature_class_id = 0; // feature prototype class id
