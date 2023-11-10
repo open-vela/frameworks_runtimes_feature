@@ -1793,6 +1793,12 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 #define GTEST_EXPECT_TRUE(condition)                      \
   GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
                       GTEST_NONFATAL_FAILURE_)
+
+#define GTEST_EXPECT_TRUE_FILE(condition, file, line)     \
+  GTEST_TEST_BOOLEAN_FILE_(condition, #condition, false,  \
+                           true, file, line,              \
+                           GTEST_NONFATAL_FAILURE_FILE_)
+
 #define GTEST_EXPECT_FALSE(condition)                        \
   GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
                       GTEST_NONFATAL_FAILURE_)
@@ -1807,6 +1813,8 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 
 #if !GTEST_DONT_DEFINE_EXPECT_TRUE
 #define EXPECT_TRUE(condition) GTEST_EXPECT_TRUE(condition)
+#define EXPECT_TRUE_FILE(condition, file, line) \
+  GTEST_EXPECT_TRUE_FILE(condition, file, line)
 #endif
 
 #if !GTEST_DONT_DEFINE_EXPECT_FALSE
