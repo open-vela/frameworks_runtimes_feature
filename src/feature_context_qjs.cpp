@@ -325,16 +325,23 @@ static ft_value_t _ft_array_at(ft_context_ref ft_ctx, const ft_value_t f_obj, ui
 }
 
 // object operations
+ft_value_t _ft_new_object (ft_context_ref ft_ctx) {
+    JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
+    qjs_val_t ret;
+    ret.js_val = JS_NewObject(js_ctx);
+    return QJS_VAL_TO_FT(ret);
+}
+
 static ft_value_t _ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t f_obj, const char* key)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
-    qjs_val_t q_obj = FT_VAL_TO_QJS(f_obj);
+    JSValue js_obj = FT_VAL_GET_JS_VAL(f_obj);
     qjs_val_t ret;
     ret.js_val = JS_UNDEFINED;
-    if (!JS_IsObject(q_obj.js_val))
+    if (!JS_IsObject(js_obj))
         return QJS_VAL_TO_FT(ret);
 
-    JSValue prop = JS_GetPropertyStr(js_ctx, q_obj.js_val, key);
+    JSValue prop = JS_GetPropertyStr(js_ctx, js_obj, key);
     ret.js_val = prop;
     return QJS_VAL_TO_FT(ret);
 }
@@ -342,12 +349,12 @@ static ft_value_t _ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t f_obj, 
 static bool _ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t f_obj, const char* prop, ft_value_t f_val)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
-    qjs_val_t q_obj = FT_VAL_TO_QJS(f_obj);
-    qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
-    if (!JS_IsObject(q_obj.js_val))
+    JSValue js_obj = FT_VAL_GET_JS_VAL(f_obj);
+    JSValue js_val = FT_VAL_GET_JS_VAL(f_val);
+    if (!JS_IsObject(js_obj))
         return false;
 
-    int ret = JS_SetPropertyStr(js_ctx, q_obj.js_val, prop, q_val.js_val);
+    int ret = JS_SetPropertyStr(js_ctx, js_obj, prop, js_val);
     return ret > 0;
 }
 
@@ -402,6 +409,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     rt_ctx->ft_array_size = _ft_array_size;
     rt_ctx->ft_array_at = _ft_array_at;
     // object operations
+    rt_ctx->ft_new_object = _ft_new_object;
     rt_ctx->ft_obj_get_property = _ft_obj_get_property;
     rt_ctx->ft_obj_set_property = _ft_obj_set_property;
     // free value

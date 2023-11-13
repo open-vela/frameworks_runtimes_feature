@@ -62,6 +62,7 @@ typedef struct FeatureContext {
     ft_value_t (*ft_array_at)(ft_context_ref ft_ctx, const ft_value_t array, uint32_t idx);
 
     // object operations
+    ft_value_t (*ft_new_object)(ft_context_ref ft_ctx);
     ft_value_t (*ft_obj_get_property)(ft_context_ref ft_ctx, ft_value_t ft_val, const char* prop);
     bool (*ft_obj_set_property)(ft_context_ref ft_ctx, ft_value_t obj, const char* prop, ft_value_t val);
     void (*ft_free_value)(ft_context_ref ft_ctx, ft_value_t ft_val);
