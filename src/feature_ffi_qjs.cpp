@@ -391,11 +391,18 @@ namespace FeatureFFIQjs {
                 value = feature_boolean(ctx, *((bool*)ptr));
             } break;
             case FT_CHAR: {
-                value = feature_string(ctx, (const char*)ptr);
+                if (!ptr)
+                    value = feature_string(ctx, " ");
+                else
+                    value = feature_string(ctx, (const char*)ptr);
             } break;
             case FT_ANY: {
-                ft_value_t* f_val = (ft_value_t*)(ptr);
-                value = FT_VAL_GET_JS_VAL(*f_val);
+                if (!ptr)
+                    value = JS_NULL;
+                else {
+                    ft_value_t* f_val = (ft_value_t*)(ptr);
+                    value = FT_VAL_GET_JS_VAL(*f_val);
+                }
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
