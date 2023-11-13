@@ -200,5 +200,3 @@ feat_async_test("exchange","revokePermission",(done)=>{
     }
   })
 })
-
-feat_test_all();

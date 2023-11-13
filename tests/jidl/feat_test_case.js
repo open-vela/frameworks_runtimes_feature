@@ -13,5 +13,3 @@ feat_async_test("async", "add", (done) => {
         done();
     });
 });
-
-feat_test_all();
