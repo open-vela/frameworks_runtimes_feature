@@ -194,6 +194,7 @@ extern "C" int main(int argc, char** argv)
 
     char* js_file = argv[1];
     char* js_str = NULL;
+    const char* test_all = "__feat_test_all();";
 
     // 打开js文件
     load_file(js_file, &js_str);
@@ -266,12 +267,12 @@ extern "C" int main(int argc, char** argv)
     // 加载 test frame work
     // TODO: ues qjs bytecode
     // original file ../test-internal.js
-    const char* test_content = "let unittest = require('feat_test');\n\nfunction feat_test(name, desc, "
-                               "cb) {\n    unittest.testsuite(name, desc, cb);\n}\n\nfunction "
-                               "feat_async_test(suitname, desc, test_cb) {\n    var async_id;\n    "
-                               "async_id = unittest.testsuite(suitname, desc, () => {\n        "
-                               "test_cb(() => unittest.done(async_id));\n    }, true);\n}\n\nfunction "
-                               "feat_test_all() {\n    unittest.run_all_tests();\n}\n\nfunction "
+    const char* test_content = "let unittest = require('feat_test');\n\nfunction feat_test(name, desc, cb) "
+                               "{\n    unittest.testsuite(name, desc, cb);\n}\n\nfunction "
+                               "feat_async_test(suitname, desc, test_cb) {\n    var async_id;\n    async_id = "
+                               "unittest.testsuite(suitname, desc, () => {\n        test_cb(() => "
+                               "unittest.done(async_id));\n    }, true);\n}\n\nfunction __feat_test_all() { "
+                               "// hide to outside\n    unittest.run_all_tests();\n}\n\nfunction "
                                "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
                                "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n";
     auto res = JS_Eval(env.ctx, test_content, strlen(test_content), "<eval>",
@@ -284,7 +285,7 @@ extern "C" int main(int argc, char** argv)
     }
     JS_FreeValue(env.ctx, res);
     // 加载 测试文件
-    res = JS_Eval(env.ctx, js_str, strlen(js_str), "a.js",
+    res = JS_Eval(env.ctx, js_str, strlen(js_str), "add_testsuites.js",
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
 
     if (JS_IsException(res)) {
@@ -295,6 +296,16 @@ extern "C" int main(int argc, char** argv)
     }
     JS_FreeValue(env.ctx, res);
 
+    res = JS_Eval(env.ctx, test_all, strlen(test_all), "run_test.js",
+        JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
+
+    if (JS_IsException(res)) {
+        const char* str = JS_ToCString(env.ctx, res);
+        printf("[feat_test]: Exception thrown while running all test\n");
+        JS_FreeValue(env.ctx, res);
+        goto feat_test_done;
+    }
+    JS_FreeValue(env.ctx, res);
     // uv_run(main_loop, UV_RUN_DEFAULT);
 
 feat_test_done:

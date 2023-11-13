@@ -109,4 +109,3 @@ feat_test("device info api", "storage", () => {
     feat_expect_true(typeof ssize === 'number', "avaliable storage is transform to number");
     feat_expect_true(ssize >= 1000000, "avaliable storage exceeds 1M");
 });
-feat_test_all();

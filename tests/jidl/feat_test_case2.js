@@ -26,5 +26,3 @@ feat_async_test("no timeout2", "sub", (done) => {
         done();
     });
 });
-
-feat_test_all();

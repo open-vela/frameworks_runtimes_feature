@@ -16,4 +16,3 @@ feat_test("configuration property", "configuration object", () => {
     print(config.language);
     print(config.countryOrRegion);
 });
-feat_test_all();

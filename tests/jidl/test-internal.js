@@ -11,7 +11,7 @@ function feat_async_test(suitname, desc, test_cb) {
     }, true);
 }
 
-function feat_test_all() {
+function __feat_test_all() { // hide to outside
     unittest.run_all_tests();
 }
 

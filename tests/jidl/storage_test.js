@@ -92,5 +92,3 @@ feat_async_test("sensor","Step",(done)=>{
     }
   })
 })
-
-feat_test_all();
