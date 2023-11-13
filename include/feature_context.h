@@ -29,10 +29,11 @@ typedef enum ft_type {
     FT_TYPE_BOOL,
     FT_TYPE_STRING,
     FT_TYPE_ARRAY,
-    FT_TYPE_ARRAY_BUFFER,
+    FT_TYPE_BUFFER,
+    FT_TYPE_TYPED_BUFFER,
     FT_TYPE_OBJECT
 } ft_type;
-
+    
 typedef struct ft_value_t {
 #if INTPTR_MAX >= INT64_MAX
     uint64_t val[2];
@@ -61,6 +62,7 @@ ft_value_t ft_from_double(ft_context_ref ft_ctx, double val);
 ft_value_t ft_from_bool(ft_context_ref ft_ctx, bool val);
 ft_value_t ft_from_string(ft_context_ref ft_ctx, const char* val);
 ft_value_t ft_from_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
+ft_value_t ft_from_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type);
 
 ft_value_t ft_from_int_array(ft_context_ref ft_ctx, int32_t* val, uint32_t size);
 ft_value_t ft_from_uint_array(ft_context_ref ft_ctx, uint32_t* val, uint32_t size);
