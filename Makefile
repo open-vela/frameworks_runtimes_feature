@@ -107,11 +107,11 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration_impl.cpp
 FEATURELIST += configuration
 
-ifeq ($(CONFIG_MESSAGE_CHANNEL),y)
-PROGNAME = feature_test_cli
-PRIORITY = 100
-STACKSIZE = 4096
-MAINSRC = $(APPDIR)/frameworks/base/feature/modules/feature_test_cli.cpp
+ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE),y)
+PROGNAME += feature_test_cli
+PRIORITY += 100
+STACKSIZE += 4096
+MAINSRC += $(APPDIR)/frameworks/base/feature/modules/feature_test_cli.cpp
 
 AIDLSRCS += $(shell find ./modules/aidl -name *.aidl)
 AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
