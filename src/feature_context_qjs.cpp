@@ -51,7 +51,14 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
 
     size_t size;
     if (JS_GetArrayBuffer(js_ctx, &size, js_val))
-        return FT_TYPE_ARRAY_BUFFER;
+        return FT_TYPE_BUFFER;
+
+    size_t offset;
+    size_t length;
+    size_t byte_per_elem;
+    JSValue buffer = JS_GetTypedArrayBuffer(js_ctx, js_val, &offset, &length, &byte_per_elem);
+    if (!JS_IsException(buffer) && JS_GetArrayBuffer(js_ctx, &size, buffer))
+        return FT_TYPE_TYPED_BUFFER;
 
     if (JS_IsArray(js_ctx, js_val))
         return FT_TYPE_ARRAY;
@@ -108,7 +115,30 @@ static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
     ret.js_val = JS_NewArrayBufferCopy(js_ctx, buff, size);
-    ret.type = FT_TYPE_ARRAY_BUFFER;
+    ret.type = FT_TYPE_BUFFER;
+    return QJS_VAL_TO_FT(ret);
+}
+
+static ft_value_t _ft_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type) {
+    static const char* type_names[] = {
+        "Int8Array", "Uint8Array", "Int16Array", "Uint16Array",
+        "Int32Array", "Uint32Array", "Float32Array", "Float64Array",
+    };
+
+    qjs_val_t ret;
+    ret.js_val = JS_UNDEFINED;
+    if (type >= (sizeof(type_names)/sizeof(type_names[0]))) {
+        return QJS_VAL_TO_FT(ret);
+    }
+
+    JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
+    JSValue array_buffer = JS_NewArrayBufferCopy(js_ctx, buff, size);
+    JSValueConst global = JS_GetGlobalObject(js_ctx);
+    JSValueConst uint8array_ctr = JS_GetPropertyStr(js_ctx, global, type_names[type]);
+    JSValue args[1] = { array_buffer };
+    ret.js_val =  JS_CallConstructor(js_ctx, uint8array_ctr, 1, args);
+    ret.type = FT_TYPE_TYPED_BUFFER;
+    JS_FreeValue(js_ctx, array_buffer);
     return QJS_VAL_TO_FT(ret);
 }
 
@@ -186,10 +216,21 @@ static const char* _ft_to_string(ft_context_ref ft_ctx, ft_value_t f_val)
 static uint8_t* _ft_to_buffer(ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
-    qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
-    JSValue val = q_val.js_val;
-    uint8_t* ret = JS_GetArrayBuffer(js_ctx, p_size, val);
-    return ret;
+    JSValue val = FT_VAL_GET_JS_VAL(f_val);
+
+    size_t offset;
+    size_t length;
+    size_t byte_per_elem;
+    // first get buffer ptr from a typedArray
+    JSValue array_buffer = JS_GetTypedArrayBuffer(js_ctx, val, &offset, &length, &byte_per_elem);
+    if (!JS_IsException(array_buffer)) {
+        uint8_t* ret = JS_GetArrayBuffer(js_ctx, p_size, array_buffer);
+        JS_FreeValue(js_ctx, array_buffer);
+        return ret;
+    }
+
+    // get buffer ptr from an arraybuffer
+    return JS_GetArrayBuffer(js_ctx, p_size, val);
 }
 
 static bool _ft_to_int(ft_context_ref ft_ctx, ft_value_t f_val, int32_t* pres)
@@ -337,6 +378,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     rt_ctx->ft_from_bool = _ft_boolean;
     rt_ctx->ft_from_string = _ft_string;
     rt_ctx->ft_from_buffer = _ft_buffer;
+    rt_ctx->ft_from_typed_buffer = _ft_typed_buffer;
 
     rt_ctx->ft_from_int_array = _ft_int_array;
     rt_ctx->ft_from_uint_array = _ft_uint_array;

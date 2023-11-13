@@ -53,6 +53,19 @@ static const MemberMethod arraybuffer_test_getArraybuffer_member_method = {
 };
 
 
+/****** for JIDL function 'getTypedArraybuffer' ******/
+static const FeatureType arraybuffer_test_getTypedArraybuffer_parameters[] = {
+    FT_INT,
+    FT_PARAM_END
+};
+
+static const MemberMethod arraybuffer_test_getTypedArraybuffer_member_method = {
+    .func = { .callback = FFI_FN(arraybuffer_test_wrap_getTypedArraybuffer) },
+    .parameters = arraybuffer_test_getTypedArraybuffer_parameters,
+    .return_type = FT_ANY_REF,
+};
+
+
 /****** for JIDL function 'print' ******/
 static const FeatureType arraybuffer_test_print_parameters[] = {
     FT_PARAM_REST_END,
@@ -76,6 +89,11 @@ static const Member arraybuffer_test_members[] = {
         .type = MEMBER_METHOD,
         .name = "getArraybuffer",
         .method = arraybuffer_test_getArraybuffer_member_method,
+    },
+    {
+        .type = MEMBER_METHOD,
+        .name = "getTypedArraybuffer",
+        .method = arraybuffer_test_getTypedArraybuffer_member_method,
     },
     {
         .type = MEMBER_METHOD,

@@ -40,23 +40,22 @@ void arraybuffer_test_onUnregister(const char* feature_name)
 
 void arraybuffer_test_wrap_setArraybuffer(FeatureInstanceHandle feature, AppendData append_data, FtInt a, FtAny buffer)
 {
-    printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
+    printf("%s::%s(), a: %d, arraybuffer: %p\n", file_tag,  __FUNCTION__, a, buffer);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
-    size_t buff_size;
-    FEATURE_LOG_ERROR("any arraybuffer ptr: %p", buffer);
     ft_type val_type = ft_get_type(ft_ctx, *buffer);
-    if (val_type != FT_TYPE_ARRAY_BUFFER){
-        printf("%s::%s(), %s\n", file_tag, __FUNCTION__, "not a arraybuffer type");
+    if (val_type == FT_TYPE_BUFFER || val_type == FT_TYPE_TYPED_BUFFER){
+        size_t buff_size;
+        uint8_t* buff = ft_to_buffer (ft_ctx, &buff_size, *buffer);
+        printf("%s::%s(), buffer type: %d, buffer_size: %ld\n", file_tag, __FUNCTION__, val_type, buff_size);
+        for (int i = 0; i < buff_size; ++i) {
+            printf(" buffer[%d]: %d\n", i, buff[i]);
+        }
         return;
     }
 
-    uint8_t* buff = ft_to_buffer (ft_ctx, &buff_size, *buffer);
-    printf("%s::%s(), arraybuffer: %p, buffer_size: %ld\n", file_tag, __FUNCTION__, buff, buff_size);
-    for (int i = 0; i < buff_size; ++i) {
-        printf(" buffer[%d]: %d\n", i, buff[i]);
-    }
+    printf("%s::%s(), %s\n", file_tag, __FUNCTION__, "not a arraybuffer or typed Arraybuffer type");
 }
 
 FtAny arraybuffer_test_wrap_getArraybuffer(FeatureInstanceHandle feature, AppendData append_data)
@@ -73,8 +72,27 @@ FtAny arraybuffer_test_wrap_getArraybuffer(FeatureInstanceHandle feature, Append
     }
 
     ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
-    FEATURE_LOG_ERROR("any arraybuffer ptr: %p", ret_ptr);
+    FEATURE_LOG_ERROR("arraybuffer ptr: %p\n", ret_ptr);
     *ret_ptr = ft_from_buffer (ft_ctx, out_buff, buff_size);
+    return ret_ptr;
+}
+
+FtAny arraybuffer_test_wrap_getTypedArraybuffer(FeatureInstanceHandle feature, AppendData append_data, FtInt type)
+{
+    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
+    FEATURE_CHECK_NE(ft_ctx, NULL);
+
+    size_t buff_size = 16;
+    unsigned char* out_buff = (unsigned char*)alloca(buff_size);
+    memset(out_buff, 0, buff_size);
+    for (int i = 0; i < buff_size; ++i) {
+        out_buff[i] = i;
+    }
+
+    ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+    FEATURE_LOG_ERROR("any arraybuffer ptr: %p", ret_ptr);
+    *ret_ptr = ft_from_typed_buffer (ft_ctx, out_buff, buff_size, type);
     return ret_ptr;
 }
 

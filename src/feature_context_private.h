@@ -36,6 +36,7 @@ typedef struct FeatureContext {
     ft_value_t (*ft_from_bool)(ft_context_ref ft_ctx, bool val);
     ft_value_t (*ft_from_string)(ft_context_ref ft_ctx, const char* val);
     ft_value_t (*ft_from_buffer)(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
+    ft_value_t (*ft_from_typed_buffer)(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type);
 
     ft_value_t (*ft_from_int_array)(ft_context_ref ft_ctx, int32_t* val, uint32_t size);
     ft_value_t (*ft_from_uint_array)(ft_context_ref ft_ctx, uint32_t* val, uint32_t size);

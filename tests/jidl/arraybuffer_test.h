@@ -47,6 +47,7 @@ void arraybuffer_test_onUnregister(const char* feature_name);
 // Function wrappers to be implemented
 void arraybuffer_test_wrap_setArraybuffer(FeatureInstanceHandle feature, AppendData append_data, FtInt a, FtAny buffer);
 FtAny arraybuffer_test_wrap_getArraybuffer(FeatureInstanceHandle feature, AppendData append_data);
+FtAny arraybuffer_test_wrap_getTypedArraybuffer(FeatureInstanceHandle feature, AppendData append_data, FtInt type);
 void arraybuffer_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
 
 // Interface constructors
