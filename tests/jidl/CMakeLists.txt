@@ -46,21 +46,15 @@ add_executable(${PROJECT_NAME}
     ajs_features_init.h
 )
 
-set(GTEST_DIR ${PROJECT_SOURCE_DIR}/googletest-src/googletest)
-set(GTEST_SRC ${GTEST_DIR}/src/gtest-assertion-result.cpp
-              ${GTEST_DIR}/src/gtest-filepath.cpp
-              ${GTEST_DIR}/src/gtest-port.cpp
-              ${GTEST_DIR}/src/gtest-printers.cpp
-              ${GTEST_DIR}/src/gtest-test-part.cpp
-              ${GTEST_DIR}/src/gtest.cpp )
+set(GTEST_DIR ${PROJECT_SOURCE_DIR}/../../../../../external/googletest/googletest/googletest)
+
+set(GTEST_SRC ${GTEST_DIR}/src/gtest-all.cc)
+
 # add test executable
 include_directories(${GTEST_DIR}/include
                     ${GTEST_DIR})
 add_executable("feat_test"
     ${GTEST_SRC}
-    # device_impl.cpp
-    # device.cpp
-    # device.h
     feat_test.h
     feat_test_impl.cpp
     feat_test.cpp

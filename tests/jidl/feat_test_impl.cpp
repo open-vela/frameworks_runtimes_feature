@@ -5,28 +5,31 @@
 
 class FeatureUnittest {
  public:
-  FeatureUnittest(::testing::UnitTest* u) : unittest_(u) {}
+  FeatureUnittest() : executed_(false) {}
   static int generateAsyncId() { return ++next_async_id; }
   static int currentAsyncId() { return current_async_id; }
   static void setCurrentAsyncId(int aid) { current_async_id = aid; }
   ~FeatureUnittest() {
-    if (unittest_) ::testing::UnitTest::Delete(unittest_);
+    setCurrentAsyncId(0);
+    next_async_id = 0;
   }
 
   int runAllTests() {
-    if (!unittest_) return -1;
-    int r = unittest_->Run();
+    if (executed_) return -1;
+
+    int r = RUN_ALL_TESTS();
+    executed_ = true;
     if (r) {
-      printf("feat_test: Test failed, handle %p\n", unittest_);
+      printf("feat_test: Test failed");
     }
     return r;
   }
-  ::testing::UnitTest* getUnittest() { return unittest_; }
 
  private:
   static int current_async_id;
   static int next_async_id;
-  ::testing::UnitTest* unittest_;
+
+  bool executed_;
 };
 int FeatureUnittest::current_async_id = 0;
 int FeatureUnittest::next_async_id = 0;
@@ -114,8 +117,7 @@ void feat_test_onRequired(FeatureRuntimeContext ctx,
     return;
   }
 
-  ::testing::UnitTest* u = ::testing::UnitTest::Create();
-  FeatureUnittest* p = new FeatureUnittest(u);
+  FeatureUnittest* p = new FeatureUnittest;
   FeatureSetObjectData(handle, p);
   return;
 }
@@ -156,16 +158,12 @@ FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
                                FtString test_case_name, FtCallbackId body,
                                FtBool is_async) {
   printf("[feat_test] add testsuite %p\n", feature);
-  FeatureUnittest* p =
-      static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
-  ::testing::UnitTest* u = p->getUnittest();
-  if (!u) return 0;
 
   int async_id = 0;
   if (is_async) async_id = FeatureUnittest::generateAsyncId();
 
-  ::testing::internal::UnitTestMakeAndRegisterTestInfo(
-      u, test_suit_name, test_case_name, NULL, NULL,
+  ::testing::internal::MakeAndRegisterTestInfo(
+      test_suit_name, test_case_name, NULL, NULL,
       ::testing::internal::CodeLocation("", 0),  // Location need more accurancy
       ::testing::internal::GetTypeId<FeatureTest>(),
       ::testing::internal::SuiteApiResolver<FeatureTest>::GetSetUpCaseOrSuite(
