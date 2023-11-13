@@ -154,6 +154,13 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/package_impl.cpp
 FEATURELIST += system_internal_package
 endif
 
+ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE), y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/activity_feature.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/activity_feature_impl.cpp
+FEATURELIST += system_internal_activity
+endif
+
+
 ifeq ($(GCCVER),12)
 CXXFLAGS += -DGTEST_HAS_POSIX_RE=0
 CXXFLAGS += -Wno-maybe-uninitialized

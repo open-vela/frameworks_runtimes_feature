@@ -1,0 +1,21 @@
+module system.internal.activity@1.0
+
+int startActivity(string target, object params);
+int stopActivity(string target);
+
+int startService(string target, object params);
+int stopService(string target);
+
+callback onConnected_cb()
+callback onDisconnected_cb()
+
+struct ServiceConnection {
+  callback onConnected_cb  connectCallBack
+  callback onDisconnected_cb  disconnectCallBack
+}
+
+// return bindId (bindId > 0), error return -1;
+int bindService(string target, object params, ServiceConnection conn)
+void unbindService(int bindId)
+
+boolean moveToBackground(boolean nonRoot)
