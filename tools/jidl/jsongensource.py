@@ -76,8 +76,8 @@ class CPPRender(Render):
   cpp_type_map = {
     'int' : 'FtInt',
     'uint' : 'unsigned int',
-    'long' : 'long',
-    'ulong' : 'unsigned long',
+    'long' : 'FtInt64',
+    'ulong' : 'FtUint64',
     'float' : 'FtFloat',
     'double' : 'FtDouble',
     'boolean' : 'FtBool',
