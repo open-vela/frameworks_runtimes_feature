@@ -1247,7 +1247,7 @@ interface Widget extends LocalStyle{
   [set="lv_obj_set_flex_grow"]
   property int flexGrow writeonly;
 
-   [func="lv_obj_get_style_width"]
+  [func="lv_obj_get_style_width"]
   lv_coord_t getStyleWidth(uint part);
   [func="lv_obj_get_style_min_width"]
   lv_coord_t getStyleMinWidth(uint part);
