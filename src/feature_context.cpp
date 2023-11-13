@@ -183,6 +183,10 @@ ft_value_t ft_array_at(ft_context_ref ft_ctx, const ft_value_t array, uint32_t i
 }
 
 // object operations
+ft_value_t ft_new_object (ft_context_ref ft_ctx) {
+    return ft_ctx->ft_new_object(ft_ctx);
+}
+
 ft_value_t ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t obj, const char* prop)
 {
     return ft_ctx->ft_obj_get_property(ft_ctx, obj, prop);
