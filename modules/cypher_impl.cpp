@@ -273,8 +273,8 @@ void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
         code = ARGSERROR;
     } else {
         const char* iv = check_str(opts->_iv) ? opts->_iv : opts->_key;
-        const int ivOffset = opts->_ivOffset ? opts->_ivOffset : 0;
-        const int ivLen = opts->_ivLen ? opts->_ivLen : 16;
+        size_t ivOffset = opts->_ivOffset ? opts->_ivOffset : 0;
+        size_t ivLen = opts->_ivLen ? opts->_ivLen : 16;
 
         size_t size = strlen(opts->_text);
         bool is_text = true;
