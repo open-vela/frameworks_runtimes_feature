@@ -16,8 +16,8 @@
 #ifndef __FEATURE_H__
 #define __FEATURE_H__
 
-#include <cstddef>
 #include "feature_utils.h"
+#include <cstddef>
 // use quickjs as default
 #ifndef BACKEND_ENGINE_TYPE
 #define BACKEND_ENGINE_TYPE 0
@@ -62,39 +62,44 @@ typedef JS_MarkFunc feature_mark_func;
 #define feature_eval(ctx, input, input_len, filename, eval_flags) JS_Eval(static_cast<JSContext*>(ctx), input, input_len, filename, eval_flags)
 #define feature_cfunction(ctx, func, name, length) JS_NewCFunction(static_cast<JSContext*>(ctx), func, name, length)
 #define feature_cfunctiondata(ctx, func, len, mgc, dlen, data) JS_NewCFunctionData(static_cast<JSContext*>(ctx), func, len, mgc, dlen, data)
-static inline bool feature_to_int(context_ref ctx, int32_t* pres, feature_value_t val) {
+static inline bool feature_to_int(context_ref ctx, int32_t* pres, feature_value_t val)
+{
     int r = JS_ToInt32(static_cast<JSContext*>(ctx), pres, val);
     return r == 0;
 }
 
-static inline bool feature_to_uint(context_ref ctx, uint32_t* pres, feature_value_t val) {
+static inline bool feature_to_uint(context_ref ctx, uint32_t* pres, feature_value_t val)
+{
     int r = JS_ToUint32(static_cast<JSContext*>(ctx), pres, val);
     return r == 0;
 }
 
-static inline bool feature_to_int64(context_ref ctx, int64_t* pres, feature_value_t val) {
+static inline bool feature_to_int64(context_ref ctx, int64_t* pres, feature_value_t val)
+{
     int r = JS_ToInt64(static_cast<JSContext*>(ctx), pres, val);
     return r == 0;
 }
 
-static inline bool feature_to_uint64(context_ref ctx, uint64_t* pres, feature_value_t val) {
+static inline bool feature_to_uint64(context_ref ctx, uint64_t* pres, feature_value_t val)
+{
     int r = JS_ToIndex(static_cast<JSContext*>(ctx), pres, val);
     return r == 0;
 }
 
-static inline bool feature_to_double(context_ref ctx, double* pres, feature_value_t val) {
+static inline bool feature_to_double(context_ref ctx, double* pres, feature_value_t val)
+{
     int r = JS_ToFloat64(static_cast<JSContext*>(ctx), pres, val);
     return r == 0;
 }
 
-static inline bool feature_to_boolean(context_ref ctx, bool* pres, feature_value_t val) {
+static inline bool feature_to_boolean(context_ref ctx, bool* pres, feature_value_t val)
+{
     int r = JS_ToBool(static_cast<JSContext*>(ctx), val);
     if (r >= 0) {
         *pres = !!r;
         return true;
     }
     return false;
-
 }
 
 // free value
@@ -154,7 +159,8 @@ static inline bool feature_is_error(context_ref ctx, feature_value_t val)
 
 #define feature_free_atom(ctx, atom) JS_FreeAtom(static_cast<JSContext*>(ctx), atom)
 
-static inline uint32_t feature_get_array_length(context_ref ctx, feature_value_t val) {
+static inline uint32_t feature_get_array_length(context_ref ctx, feature_value_t val)
+{
     uint32_t value = 0;
     JSValue length = JS_GetPropertyStr(static_cast<JSContext*>(ctx), val, "length");
     if (!!(JS_IsException((JSValueConst)length))) {
@@ -168,7 +174,8 @@ static inline uint32_t feature_get_array_length(context_ref ctx, feature_value_t
     return value;
 }
 
-static inline feature_value_t feature_get_array_idx_safe(context_ref ctx, feature_value_t val, uint32_t idx) {
+static inline feature_value_t feature_get_array_idx_safe(context_ref ctx, feature_value_t val, uint32_t idx)
+{
     JSValue value = JS_GetPropertyUint32(static_cast<JSContext*>(ctx), val, idx);
     if (!!JS_IsException(value)) {
         JS_FreeValue(static_cast<JSContext*>(ctx), value);

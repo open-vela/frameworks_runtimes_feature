@@ -15,8 +15,8 @@
  */
 #ifndef __FEATURE_FFI_QJS_H__
 #define __FEATURE_FFI_QJS_H__
-#include "feature_exports.h"
 #include "feature.h"
+#include "feature_exports.h"
 #include "feature_ffi.h"
 
 namespace ferry {

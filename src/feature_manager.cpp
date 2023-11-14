@@ -15,9 +15,9 @@
  */
 #include "feature_manager.h"
 #include "feature_context.h"
-#include "feature_log.h"
 #include "feature_framework.h"
 #include "feature_instance.h"
+#include "feature_log.h"
 
 #include <string.h>
 
@@ -38,43 +38,52 @@ FeatureManager::~FeatureManager()
     ft_ctx_ = nullptr;
 }
 
-void FeatureManager::setFeatureContext(ft_context_ref ft_ctx) { 
+void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
+{
     ft_ctx_ = ft_ctx;
 }
 
-static void feature_async_cb(uv_async_t* handle) {
+static void feature_async_cb(uv_async_t* handle)
+{
     FeatureManager* m = (FeatureManager*)handle->data;
     m->runAllTasks(FEATURE_TASK_MODE_NORMAL);
     return;
 }
 
-void FeatureManager::setUVLoop(uv_loop_t* loop) { 
+void FeatureManager::setUVLoop(uv_loop_t* loop)
+{
     loop_ = loop;
     uv_async_init(loop_, &async, feature_async_cb);
     async.data = this;
 }
 
-void FeatureManager::setPackageName(const char* package_name) {
+void FeatureManager::setPackageName(const char* package_name)
+{
     package_name_ = package_name;
 }
 
-const char* FeatureManager::getPackageName() const {
+const char* FeatureManager::getPackageName() const
+{
     return package_name_;
 }
 
-void FeatureManager::setEnvironmentName(const char* environment_name) {
+void FeatureManager::setEnvironmentName(const char* environment_name)
+{
     environment_name_ = environment_name;
 }
 
-void FeatureManager::lockAsync() {
+void FeatureManager::lockAsync()
+{
     uv_mutex_lock(&mutex);
 }
 
-void FeatureManager::unlockAsync() {
+void FeatureManager::unlockAsync()
+{
     uv_mutex_unlock(&mutex);
 }
 
-void FeatureManager::runAllTasks(int mode) {
+void FeatureManager::runAllTasks(int mode)
+{
     uv_mutex_lock(&mutex);
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         FeaturePrototype* prototype = pair.second.second;

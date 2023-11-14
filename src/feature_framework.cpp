@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 #include "feature_framework.h"
-#include "feature_instance.h"
 #include "feature_context_private.h"
+#include "feature_instance.h"
 #include "feature_log.h"
 
 #include <cstdarg>
@@ -66,56 +66,56 @@ int getValueSize(FeatureType featureType)
     }
     if (FT_IS_PRIMITIVE(featureType)) {
         switch (FT_GET_VALUE(featureType)) {
-            case FT_VOID: {
-                return 0;
-            } break;
-            case FT_INT: {
-                return sizeof(int);
-            } break;
-            case FT_INT8: {
-                return sizeof(int8_t);
-            } break;
-            case FT_UINT8: {
-                return sizeof(uint8_t);
-            } break;
-            case FT_INT16: {
-                return sizeof(int16_t);
-            } break;
-            case FT_UINT16: {
-                return sizeof(uint16_t);
-            } break;
-            case FT_INT32: {
-                return sizeof(int32_t);
-            } break;
-            case FT_UINT32: {
-                return sizeof(uint32_t);
-            } break;
-            case FT_INT64: {
-                return sizeof(int64_t);
-            } break;
-            case FT_UINT64: {
-                return sizeof(uint64_t);
-            } break;
-            case FT_DOUBLE: {
-                return sizeof(double);
-            } break;
-            case FT_FLOAT: {
-                return sizeof(float);
-            } break;
-            case FT_BOOLEAN: {
-                return sizeof(bool);
-            } break;
-            case FT_CHAR: {
+        case FT_VOID: {
+            return 0;
+        } break;
+        case FT_INT: {
+            return sizeof(int);
+        } break;
+        case FT_INT8: {
+            return sizeof(int8_t);
+        } break;
+        case FT_UINT8: {
+            return sizeof(uint8_t);
+        } break;
+        case FT_INT16: {
+            return sizeof(int16_t);
+        } break;
+        case FT_UINT16: {
+            return sizeof(uint16_t);
+        } break;
+        case FT_INT32: {
+            return sizeof(int32_t);
+        } break;
+        case FT_UINT32: {
+            return sizeof(uint32_t);
+        } break;
+        case FT_INT64: {
+            return sizeof(int64_t);
+        } break;
+        case FT_UINT64: {
+            return sizeof(uint64_t);
+        } break;
+        case FT_DOUBLE: {
+            return sizeof(double);
+        } break;
+        case FT_FLOAT: {
+            return sizeof(float);
+        } break;
+        case FT_BOOLEAN: {
+            return sizeof(bool);
+        } break;
+        case FT_CHAR: {
             // return 0 for string buffer size.
-                return 0;
-            } break;
-            case FT_ANY: {
-                return sizeof(ft_value_t);
-            } break;
-            default: {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return 0;
-            }
+            return 0;
+        } break;
+        case FT_ANY: {
+            return sizeof(ft_value_t);
+        } break;
+        default: {
+            FEATURE_LOG_WARN("unsupported type detected !");
+            return 0;
+        }
         }
     } else if (FT_IS_COMPLEX(featureType)) {
         // allocate complex type

@@ -246,7 +246,7 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     instance->sendAsnyc();
 }
 
-FeatureManagerHandle FeatureCreateManager(char *manifest)
+FeatureManagerHandle FeatureCreateManager(char* manifest)
 {
     FeatureRegistry* registry = new ferry::FeatureRegistry();
     registry->init(manifest);

@@ -19,12 +19,12 @@
 #define __FEATURE_MANAGE_H__
 
 #include "feature_description.h"
-#include "feature_utils.h"
 #include "feature_registry.h"
+#include "feature_utils.h"
 
 namespace ferry {
 
-//class FeatureRegistry;
+// class FeatureRegistry;
 
 class FeatureManager {
 public:
@@ -48,7 +48,8 @@ public:
 
     void setUserData(const char* name, void* data) { user_data_[name] = data; }
 
-    void* getUserData(const char* name) {
+    void* getUserData(const char* name)
+    {
         auto it = user_data_.find(name);
         return it != user_data_.end() ? it->second : nullptr;
     }

@@ -39,4 +39,3 @@ bool InitFeatureContextQjs(ft_context_ref ft_ctx, void* data);
 void UninitFeatureContextQjs(ft_context_ref ft_ctx);
 
 #endif // __FEATURE_CONTEXT_QJS_H__
-

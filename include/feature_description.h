@@ -18,8 +18,7 @@
 #define FEATURE_DESCRIPTION_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "feature_types.h"
@@ -205,4 +204,4 @@ typedef struct FeatureDescription {
 }
 #endif
 
-#endif //FEATURE_DESCRIPTION_H
+#endif // FEATURE_DESCRIPTION_H
