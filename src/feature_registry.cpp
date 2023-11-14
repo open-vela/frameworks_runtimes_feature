@@ -115,9 +115,6 @@ FeatureRegistry::findFeature(const char* name)
     FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
     auto pos = registeredFeatures_.find(name);
     if (pos == registeredFeatures_.end()) {
-        FEATURE_LOG_WARN(
-            "can't find %s in FeatureManager, fallback to original JS module load",
-            name);
         return nullptr;
     }
     return &pos->second;

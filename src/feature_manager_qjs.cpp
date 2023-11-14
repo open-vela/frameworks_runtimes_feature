@@ -645,7 +645,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
     auto feature_pair = getFeatureRegistry()->findFeature(name);
     if (!feature_pair || !feature_pair->first->description) {
-        FEATURE_LOG_WARN("can't find native feature '%s', fallback to original JS module load!", name);
+        FEATURE_LOG_DEBUG("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
     const FeatureDescription* description = feature_pair->first;
