@@ -141,7 +141,7 @@ void system_crypto_onUnregister(const char* feature_name) {
 FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData append_data,
         system_crypto_HashDigestParam * options)
 {
-    FEATURE_LOG_INFO("%s, options: %p, data: %p", file_tag, options, options->_data);
+    FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -166,6 +166,7 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
             if (!result && crypto_err) {
                 FEATURE_LOG_ERROR("%s %s, native digest error: %s", file_tag, crypto_err);
             }
+            FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
         }
     } else if (!check_any(options->_data) && check_str(options->_uri)) {
         result = digest_file(options->_algo, options->_uri, pkg_name);
@@ -182,6 +183,7 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
 void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData append_data,
         system_crypto_HmacDigestParam * options)
 {
+    FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 

@@ -40,6 +40,7 @@ const char* crypto_err = NULL;
 #define CHECK_ERR_RET(ptr, msg) \
     do { \
         if (ptr == NULL) { \
+            FEATURE_LOG_ERROR("%s, check_err_ret, msg: %s\n", file_tag, msg); \
             crypto_err = msg; \
             return NULL;\
         } \
@@ -47,6 +48,7 @@ const char* crypto_err = NULL;
 
 #define CHECK_ERR_BREAK(ptr, msg) \
     if (ptr == NULL) { \
+        FEATURE_LOG_ERROR("%s, check_err_break, msg: %s\n", file_tag, msg); \
         crypto_err = msg; \
         break; \
     }
@@ -56,13 +58,13 @@ static bool setup_uv_aes(uv_aes_t* aes_ctx, int mode,
 {
     unsigned int key_bitlen = aes_ctx->aes_context.cipher_info->key_bitlen;
     if (uv_aes_set_key_base64(aes_ctx, mode, key, key_bitlen) != 0) {
-        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "crypto.aes set base64 key failed");
+        FEATURE_LOG_ERROR("%s, %s\n", file_tag, "crypto.aes set base64 key failed");
         return false;
     }
 
     unsigned int iv_size  = aes_ctx->aes_context.cipher_info->iv_size;
     if (iv_size != 0 && uv_aes_set_iv_base64(aes_ctx, iv, iv_offset, iv_len) != 0) {
-        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "crypto.aes set base64 iv failed");
+        FEATURE_LOG_ERROR("%s, %s\n", file_tag, "crypto.aes set base64 iv failed");
         return false;
     }
 
@@ -80,11 +82,7 @@ static char* app_relative_to_absolute_path(const char* pkg, const char* relative
         return NULL;
     }
 
-    if (relative_path == NULL) {
-        return NULL;
-    }
     path = strdup(relative_path);
-
     if (strstr(path, APP_PATH_PREFIX) == NULL) {
         free(path);
         return NULL;
