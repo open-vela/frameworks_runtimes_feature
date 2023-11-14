@@ -33,6 +33,12 @@ add_executable(${PROJECT_NAME}
     any_test_impl.cpp
     arraybuffer_test.cpp
     arraybuffer_test_impl.cpp
+    crypto_native.cpp
+    crypto_utils.cpp
+    crypto.cpp
+    crypto_impl.cpp
+    cypher.cpp
+    cypher_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
     feature_interface.cpp

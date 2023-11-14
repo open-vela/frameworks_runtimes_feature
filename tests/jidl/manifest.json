@@ -38,6 +38,9 @@
       },
       {
           "name": "arraybuffer_test"
+      },
+      {
+          "name": "crypto"
       }
   ],
   "config": {
