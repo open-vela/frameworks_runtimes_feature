@@ -294,7 +294,10 @@ namespace FeatureFFIQjs {
             case COMPLEX_ARRAY: {
                 ArrayType& arrayType = *(ArrayType*)complexType;
                 auto element_type = arrayType.element_type;
-                FEATURE_CHECK_EQ(feature_is_array(ctx, value), true);
+                if (!feature_is_array(ctx, value)) {
+                    FEATURE_LOG_ERROR("arg type mismatch, need array !");
+                    return false;
+                }
                 auto len = feature_get_array_length(ctx, value);
                 FtArray* arrayData = (FtArray*)ptr;
                 arrayData->_size = len;
