@@ -75,10 +75,6 @@ static const char encryptCfgs[] = "{\
     }\
 }";
 
-static const char* algo_types[] = {
-    "RSA", "AES",
-};
-
 static const char* hash_types[] = {
     "MD5", "SHA1", "SHA256", "SHA512",
 };
@@ -486,7 +482,6 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     bool is_text = true;
     size_t size = 0;
 
-    const char* transformation = "";
     const char* iv = options->_key;
     int ivOffset = 0;
     int ivLen = 16;
@@ -512,7 +507,6 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
             } else if (strcmp(algo, "AES") == 0) {
                 if (options->_options) {
                     system_crypto_MixinCryptOption * opts = options->_options;
-                    transformation = opts->_transformation;
                     iv = opts->_iv ? opts->_iv : iv;
                     ivOffset = opts->_ivOffset ? opts->_ivOffset : ivOffset;
                     ivLen = opts->_ivLen ? opts->_ivLen : ivLen;

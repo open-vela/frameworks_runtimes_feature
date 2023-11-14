@@ -324,7 +324,7 @@ char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
     return ret_str;
 }
 
-bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, const char* sig_buf, size_t seg_size,  bool sig_text)
+bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, uint8_t* sig_buf, size_t seg_size,  bool sig_text)
 {
     crypto_err = NULL;
     uv_buf_t type = { 0 };

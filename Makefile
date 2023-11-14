@@ -111,11 +111,11 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_native.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_impl.cpp
-FEATURELIST += crypto
+FEATURELIST += system_crypto
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cypher.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cypher_impl.cpp
-FEATURELIST += cypher
+FEATURELIST += system_cypher
 
 ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE),y)
 PROGNAME += feature_test_cli
