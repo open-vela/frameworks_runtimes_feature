@@ -608,10 +608,10 @@ static bool ensureJsPrototype(FeaturePrototype* prototype)
     if (!feature_is_undefined(*js_proto_ptr))
         return true;
 
-    auto ctx = ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
-    feature_value_t js_proto = feature_object(static_cast<feature_context_ref>(ctx));
+    auto ctx = (feature_context_ref)ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
+    feature_value_t js_proto = feature_object(ctx);
     if (feature_is_exception(js_proto)) {
-        feature_dump_error(static_cast<feature_context_ref>(ctx));
+        feature_dump_error(ctx);
         return false;
     }
 
@@ -628,14 +628,14 @@ static bool ensureJsPrototype(FeaturePrototype* prototype)
 
 feature_value_t createJsInstance(FeaturePrototype* prototype, feature_classid_t class_id, FeatureInstanceQjs* instance)
 {
-    auto ctx = ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
+    auto ctx = (feature_context_ref)ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
     // ensure js prototype is created
     if (!ensureJsPrototype(prototype))
         return FEATURE_VALUE_UNDEFINED;
 
     // create instance with prototype and set opaque refers to FeatureInstance
     auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
-    feature_value_t js_instance = JS_NewObjectProtoClass(static_cast<feature_context_ref>(ctx), js_proto, class_id);
+    feature_value_t js_instance = JS_NewObjectProtoClass(ctx, js_proto, class_id);
     feature_set_opaque(js_instance, instance);
     return js_instance;
 }
@@ -697,7 +697,7 @@ void FeatureManagerQjs::uninit()
         auto description = pair.second.first;
         FEATURE_CHECK_NE(description, nullptr);
         if (proto) {
-            JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext());
+            JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
             // clear all feature instance at first, it will free all feature instance and call onDetach for them
             proto->clearAllInstances();
             // call feature's onDestroy
@@ -752,6 +752,8 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
             FEATURE_LOG_ERROR("create FeaturePrototype failed !");
             return FEATURE_VALUE_UNDEFINED;
         }
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
+        *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         prototype->setFeatureManeger(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
@@ -774,18 +776,19 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, featur
             continue;
 
         auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
-        JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
+        JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
         if (!feature_is_same_value(js_ctx, js_proto, proto))
             continue;
 
         // create feature instance for the required object
         auto instance = std::make_unique<FeatureInstanceQjs>(prototype, nullptr);
+        auto instance_ptr = instance.get();
         // insert into instances array, update iid
         int iid = prototype->addInstance(std::move(instance));
         prototype->instances[iid]->setInstanceId(iid);
         // create prototype class instance
         auto description = pair.second.first;
-        auto js_instance = createJsInstance(prototype, g_feature_class_id, instance.get());
+        auto js_instance = createJsInstance(prototype, g_feature_class_id, instance_ptr);
         if (description->native_callbacks && description->native_callbacks->onRequired) {
             FEATURE_LOG_DEBUG("invoke onRequired callback...");
             description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());
