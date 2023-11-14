@@ -49,6 +49,12 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     JSValue js_val = FT_VAL_GET_JS_VAL(ft_val);
 
+    if (JS_IsUndefined(js_val))
+        return FT_TYPE_UNDEF;
+
+    if (JS_IsNull(js_val))
+        return FT_TYPE_NULL;
+
     size_t size;
     if (JS_GetArrayBuffer(js_ctx, &size, js_val))
         return FT_TYPE_BUFFER;
@@ -65,7 +71,7 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
     else if (JS_IsNumber(js_val))
         return FT_TYPE_NUMBER;
     else if (JS_IsBool(js_val))
-        return FT_TYPE_NUMBER;
+        return FT_TYPE_BOOL;
     else if (JS_IsString(js_val))
         return FT_TYPE_STRING;
     else if (JS_IsObject(js_val))

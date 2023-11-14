@@ -24,6 +24,8 @@ extern "C" {
 #include <stdio.h>
 
 typedef enum ft_type {
+    FT_TYPE_NULL = -2,
+    FT_TYPE_UNDEF = -1,
     FT_TYPE_NONE = 0,
     FT_TYPE_NUMBER,
     FT_TYPE_BOOL,
