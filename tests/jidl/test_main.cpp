@@ -301,7 +301,7 @@ extern "C" int main(int argc, char** argv)
 
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
-        printf("[feat_test]: Exception thrown while running all test\n");
+        printf("[feat_test]: Exception thrown while running all test, \"%s\"\n", str);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
     }
