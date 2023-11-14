@@ -90,7 +90,7 @@ public:
 
     FeaturePrototype* removeInterfacePrototype(const char* name)
     {
-        if(!prototypes_.count(name)) {
+        if (!prototypes_.count(name)) {
             return nullptr;
         }
         FeaturePrototype* featurePrototype = prototypes_[name];

@@ -19,13 +19,13 @@
 #define __FEATURE_INSTANCE_H__
 
 #include "feature_description.h"
-#include "feature_utils.h"
 #include "feature_framework.h"
+#include "feature_utils.h"
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <queue>
+#include <vector>
 
 namespace ferry {
 
@@ -88,7 +88,6 @@ private:
     VTable* vtable_; // vtable
 
     std::queue<TaskData> task_queue_;
-
 };
 
 }

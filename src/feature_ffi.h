@@ -24,41 +24,41 @@
 
 namespace ferry {
 
-    /**
-     * @brief create type declaration using FeatureType
-     *
-     * @param featureType
-     * @param type
-     * @return true
-     * @return false
-     */
-    bool createTypeDeclaration(FeatureType featureType, ffi_type*& type);
+/**
+ * @brief create type declaration using FeatureType
+ *
+ * @param featureType
+ * @param type
+ * @return true
+ * @return false
+ */
+bool createTypeDeclaration(FeatureType featureType, ffi_type*& type);
 
-    /**
-     * @brief free ffi type declaration
-     *
-     * @param type
-     */
-    void freeTypeDeclaration(ffi_type*& type);
+/**
+ * @brief free ffi type declaration
+ *
+ * @param type
+ */
+void freeTypeDeclaration(ffi_type*& type);
 
-    /**
-     * @brief Create a Host Value object
-     *
-     * @param featureType
-     * @param ptr
-     * @param createPtrOnly
-     * @return true
-     * @return false
-     */
-    bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly = false);
+/**
+ * @brief Create a Host Value object
+ *
+ * @param featureType
+ * @param ptr
+ * @param createPtrOnly
+ * @return true
+ * @return false
+ */
+bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly = false);
 
-    /**
-     * @brief exact variadic parameter using va_list
-     *
-     * @param ap
-     * @param featureType
-     * @return void*
-     */
-    void* exactVariadicParameter(va_list& ap, FeatureType featureType);
+/**
+ * @brief exact variadic parameter using va_list
+ *
+ * @param ap
+ * @param featureType
+ * @return void*
+ */
+void* exactVariadicParameter(va_list& ap, FeatureType featureType);
 };
 #endif

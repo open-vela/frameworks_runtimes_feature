@@ -23,7 +23,7 @@ ft_context_ref CreateFeatureContextQjs(void* data);
 void ReleaseFeatureContextQjs(ft_context_ref ft_ctx);
 
 typedef struct FeatureContext {
-    void * data;
+    void* data;
 
     ft_type (*ft_get_type)(ft_context_ref ft_ctx, ft_value_t ft_val);
 
@@ -69,4 +69,3 @@ typedef struct FeatureContext {
 } FeatureContext;
 
 #endif // __FEATURE_RUNTIME_CONTEXT_PRIVATE_H__
-

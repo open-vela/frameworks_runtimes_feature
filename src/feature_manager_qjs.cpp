@@ -15,6 +15,7 @@
  */
 
 #include "feature_manager_qjs.h"
+#include "feature.h"
 #include "feature_context.h"
 #include "feature_context_qjs.h"
 #include "feature_ffi_qjs.h"
@@ -23,7 +24,6 @@
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
-#include "feature.h"
 #include <assert.h>
 #include <ffi.h>
 #include <memory>
@@ -598,7 +598,7 @@ static int initialize_prototype(context_ref ctx, FeatureDescription* description
 }
 
 FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
-    :FeatureManager(registry)
+    : FeatureManager(registry)
 {
 }
 
@@ -721,12 +721,10 @@ void FeatureManagerQjs::uninit()
         ReleaseFeatureContextQjs(getFeatureContext());
         setFeatureContext(nullptr);
     }
-    if (g_feature_class_id != 0)
-    {
+    if (g_feature_class_id != 0) {
         g_feature_class_id = 0;
     }
-    if (g_interface_class_id != 0)
-    {
+    if (g_interface_class_id != 0) {
         g_interface_class_id = 0;
     }
 }

@@ -17,27 +17,27 @@
 #define __FEATURE_FRAMEWORK_H__
 
 #include "feature_description.h"
-#include "feature_utils.h"
 #include "feature_manager.h"
+#include "feature_utils.h"
 
 #include <map>
 #include <memory>
 #include <vector>
 
-#define TRY_GET_REAL_TYPE(featureType)                                                                  \
-    if (FT_IS_COMPLEX(featureType)) {                                                                   \
+#define TRY_GET_REAL_TYPE(featureType)                                                    \
+    if (FT_IS_COMPLEX(featureType)) {                                                     \
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == COMPLEX_OPTIONAL) {                                             \
-            featureType = ((OptionalType*)complexType)->type;                                    \
-        }                                                                                               \
+        if (complexType->type == COMPLEX_OPTIONAL) {                                      \
+            featureType = ((OptionalType*)complexType)->type;                             \
+        }                                                                                 \
     }
 
-#define IS_INTERFACE_TYPE(featureType, ret)                                                             \
-    if (FT_IS_COMPLEX(featureType)) {                                                                   \
+#define IS_INTERFACE_TYPE(featureType, ret)                                               \
+    if (FT_IS_COMPLEX(featureType)) {                                                     \
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        ret = complexType->type == COMPLEX_INTERFACE;                                            \
-    } else {                                                                                            \
-        ret = false;                                                                                    \
+        ret = complexType->type == COMPLEX_INTERFACE;                                     \
+    } else {                                                                              \
+        ret = false;                                                                      \
     }
 
 namespace ferry {
