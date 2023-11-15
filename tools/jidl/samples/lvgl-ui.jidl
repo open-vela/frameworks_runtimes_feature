@@ -122,6 +122,8 @@ enum Color {
 
 [func="lv_color_make", need_self=false]
 lv_color_t makeColor(int r, int g, int b);
+[func="lv_color_hex", need_self=false]
+lv_color_t colorHex(uint c);
 
 enum Palette {
   [value="LV_PALETTE_RED"]
@@ -367,6 +369,13 @@ const DITHER_ORDERED = 1;
 [value="LV_DITHER_ERR_DIFF"]
 const DITHER_ERR_DIFF = 2;
 
+[value="LV_DPI_DEF"]
+const DPI_DEF = 130;
+[value="LV_HOR_RES", once=true]
+property int HOR_RES readonly;
+[value="LV_VER_RES", once=true]
+property int VER_RES readonly;
+
 enum FlexAlign {
   [value="LV_FLEX_ALIGN_START"]
   START,
@@ -475,6 +484,7 @@ property lv_font_p font_montserrat_18 readonly;
   to_native="to_style",
   finalizer="finalize_style",
   create="create_style",
+  need_context=true,
   tag="style"
 ]
 interface Style {
@@ -705,6 +715,9 @@ interface Style {
   property int gridCellXAlign writeonly;
   [set="lv_style_set_grid_cell_y_align"]
   property int gridCellYAlign writeonly;
+
+  [func="lv_style_reset"]
+  void reset();
 };
 
 Style createStyle(object style_data);
@@ -994,6 +1007,9 @@ interface Animation {
   [func="NativeAnimateStart"]
   void start();
 
+  [func="NativeAnimateDelete"]
+  void delete();
+
   [set="native_anim_set_start_value", get="native_anim_get_start_value"]
   property int startValue;
   [set="native_anim_set_end_value", get="native_anim_get_end_value"]
@@ -1252,6 +1268,9 @@ interface Widget extends LocalStyle {
   [func="lv_obj_set_flex_align", param_pack=true, name="flexAlgin"]
   void setFlexAlign(FlexAlign main, FlexAlign cross, FlexAlign track_cross);
 
+  [rawfunc="js_widget_track", need_this=true]
+  void track();
+
   [set="lv_obj_set_flex_grow"]
   property int flexGrow writeonly;
 
@@ -1450,6 +1469,12 @@ interface Widget extends LocalStyle {
   [func="lv_obj_get_style_base_dir"]
   BaseDirection getStyleBaseDirection(uint part);
 
+  [func="lv_obj_update_layout"]
+  void updateLayout();
+
+  [func="lv_obj_clean"]
+  void clean();
+
   // grid
   [param_pack=true, name="grid"]
   void setGridArray(int[] columns, int[] rows);
@@ -1591,8 +1616,8 @@ interface Checkbox extends Widget {
 
 [tag="image", create="lv_img_create", native_class="lv_img_class"]
 interface Image extends Widget {
-  [set="lv_img_set_src", get="lv_img_get_src"]
-  property string src;
+  [set="lv_img_set_src"]
+  property string src writeonly;
 
   [set="lv_img_set_offset_x", get="lv_img_get_offset_x"]
   property int offsetX;
@@ -1951,10 +1976,57 @@ interface Chart extends Widget {
 
 };
 
+callback OnTimer(Timer timer);
+
+[
+  from_native="from_interface",
+  to_native="to_interface",
+  need_interface=true,
+  native_type="lv_timer_t*",
+  create="lv_timer_create_basic"
+]
+interface Timer {
+  [func="lv_timer_pause"]
+  void pause();
+
+  [func="lv_timer_resume"]
+  void resume();
+
+  [set="lv_timer_set_period", field="period"]
+  property uint period;
+
+  [func="lv_timer_ready"]
+  void ready();
+
+  [set="lv_timer_set_repeat_count", field="repeat_count"]
+  property uint repeatCount;
+
+  [func="lv_timer_reset"]
+  void reset();
+
+  [rawset="js_timer_set_cb"]
+  property OnTimer onTimer writeonly;
+
+  [rawfunc="js_timer_delete"]
+  void delete();
+}
+
+[func="lv_timer_enable", need_self=false]
+void timerEnable(boolean en);
+
+[func="lv_timer_get_idle", need_self=false]
+int timerGetIdle();
+
+[func="lv_anim_get_timer", need_self=false]
+Timer getAnimationTimer();
+
 /////////////////////////////////////////////////////////
 boolean inflate(object parent, object param);
 
 Widget findWidget(string id);
+
+[get="lvgl_get_root", once=true]
+property Widget root readonly;
 
 ///////////////////////////////////////////////////
 // math
