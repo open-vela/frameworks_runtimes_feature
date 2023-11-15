@@ -89,7 +89,9 @@ void FeatureManager::runAllTasks(int mode)
         FeaturePrototype* prototype = pair.second.second;
         if (prototype) {
             for (const auto& instance : prototype->instances) {
-                instance->runAsyncTasks(mode);
+                if (instance) {
+                    instance->runAsyncTasks(mode);
+                }
             }
         }
     }
