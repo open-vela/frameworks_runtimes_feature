@@ -58,6 +58,26 @@ class UIUtils(render.Utils):
     if el_type_name in self.array_trans_natives:
       return self.array_trans_natives[el_type_name][native_name]
 
+  def getPropertyOnce(self, prop):
+    if 'meta' in prop and 'once' in prop['meta']:
+      return prop['meta']['once'] == 'true'
+
+  def getPropertyFlags(self, prop):
+    flags = '0'
+    if self.getPropertyOnce(prop):
+      flags = flags + '|JF_PROPERTY_ONCE'
+    return flags
+
+  def getMethodFlags(self, m):
+    flags = '0'
+    if not 'meta' in m: return flags;
+    meta = m['meta']
+    if 'param_pack' in meta and meta['param_pack'] == 'true':
+      flags = flags + '|JF_PARAM_PACK';
+    if 'need_this' in meta and meta['need_this'] == 'true':
+      flags = flags + '|JF_METHOD_NEED_THIS'
+    return flags
+
   #def defineArrayNative(self, el_type):
   #  el_type_name = self.toTypeName(el_type)
   #  el_native_type = self.cppType(el_type)

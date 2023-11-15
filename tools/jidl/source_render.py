@@ -229,7 +229,6 @@ class Utils:
           return trans[tp]
     return None
 
-
   def toNative(self, tp):
     to_native = self.transNative(tp, 'to_native')
     if to_native: return to_native
@@ -242,6 +241,21 @@ class Utils:
     from_native = self.transNative(tp, 'from_native')
     if from_native: return from_native
     return self.fromNativeDefault(tp)
+
+  def getInterfaceType(self, tp, check_meta):
+    intf = None
+    if isinstance(tp, dict):
+      if tp['type'] == 'interface':
+        intf = tp
+      elif tp['type'] == 'reference':
+        if tp['referred_type'] == 'interface':
+          intf = self.findType('interface', tp['referred_name'])
+    if intf and check_meta and check_meta != '':
+      return  ('meta' in intf \
+               and check_meta in intf['meta'] \
+               and intf['meta'][check_meta] == 'true') \
+            and intf or None
+    return intf
 
   def freeNative(self, tp):
     free_native = self.transNative(tp, 'free_native')

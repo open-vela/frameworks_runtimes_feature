@@ -6,6 +6,12 @@
 
 <% module_name = utils.getModuleName() %>
 
+<%
+def gen_from_native_interface(tp):
+  intf_tp = utils.getInterfaceType(tp, 'need_interface')
+  return intf_tp and ',%s_member_index_%s'%(module_name, utils.toIdName(intf_tp['name'])) or ''
+%>
+
 <%def name='gen_struct_define(s)'>
 <%
   meta = 'meta' in s and s['meta'] or None
@@ -21,6 +27,7 @@
     m_type = m['type']
     m_to_native = None
     m_from_native = None
+    m_from_native_intf = ''
     m_native_type = None
     if m_meta:
       if 'name' in m_meta: m_native_name = m_meta['name']
@@ -34,18 +41,20 @@
       m_to_native = utils.toNative(m_type)
     if not m_from_native:
       m_from_native = utils.fromNative(m_type)
+      m_from_native_intf = gen_from_native_interface(m_type)
     members.append({
       "name": m_name,
       "native_name": m_native_name,
       "native_type" : m_native_type,
       "to_native" : m_to_native,
-      "from_native" : m_from_native
+      "from_native" : m_from_native,
+      "from_native_intf" : m_from_native_intf
     })
 %>
 JSValue ${module_name}_${s['name']}_from_native(JSContext* ctx, const ${native_type}* native_value) {
   JSValue js_value = JS_NewObject(ctx);
 %for m in members:
-  JS_SetPropertyStr(ctx, js_value, "${m['name']}", ${m['from_native']}(ctx, native_value->${m['native_name']}));
+  JS_SetPropertyStr(ctx, js_value, "${m['name']}", ${m['from_native']}(ctx, native_value->${m['native_name']}${m['from_native_intf']}));
 %endfor
   return js_value;
 }
@@ -113,25 +122,27 @@ static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst value) {
 %if 'readable' in m and  m['readable'] and meta and (not 'rawget' in meta):
 static JSValue ${getter}(JSContext* ctx, NativeHandle self) {
 %if 'value' in meta:
-  return ${utils.fromNative(value_type)}(ctx, ${meta['value']});
-%else:
-%if utils.isStructType(value_type):
+  return ${utils.fromNative(value_type)}(ctx, ${meta['value']}${gen_from_native_interface(value_type)});
+%elif 'get' in meta:
+  %if utils.isStructType(value_type):
   ${utils.cppType(value_type)} to_val;
   ${meta['get']}((${native_type})self, &to_val);
-  return ${utils.fromNative(value_type)}(ctx, &to_val);
-%else:
-  %if native_value_type and native_value_type == 'string_buffer':
+  return ${utils.fromNative(value_type)}(ctx, &to_val${gen_from_native_interface(value_type)});
+  %else:
+    %if native_value_type and native_value_type == 'string_buffer':
   <%
     buffer_length = 256
     if 'buffer_length' in meta: buffer_length = meta['buffer_length']
   %>
   char __szbuf__[${buffer_length}];
   ${meta['get']}((${native_type})self, __szbuf__, sizeof(__szbuf__));
-  return ${utils.fromNative(value_type)}(ctx, __szbuf__);
-  %else:
-  return ${utils.fromNative(value_type)}(ctx, ${meta['get']}((${native_type})self));
+  return ${utils.fromNative(value_type)}(ctx, __szbuf__${gen_from_native_interface(value_type)});
+    %else:
+  return ${utils.fromNative(value_type)}(ctx, ${meta['get']}((${native_type})self)${gen_from_native_interface(value_type)});
+    %endif
   %endif
-%endif
+%elif 'field' in meta:
+  return ${utils.fromNative(value_type)}(ctx, ((${native_type})(self))->${meta['field']}${gen_from_native_interface(value_type)});
 %endif
 }
 %endif
@@ -140,21 +151,23 @@ static JSValue ${getter}(JSContext* ctx, NativeHandle self) {
 static void ${setter}(JSContext* ctx, NativeHandle self, JSValueConst val) {
 %if 'value' in meta:
   ${utils.toNative(value_type)}(ctx, &${meta['value']}, val);
-%else:
+%elif 'set' in meta:
   ${utils.cppType(value_type)} to_val;
   if (${utils.toNative(value_type)}(ctx, &to_val, val) == 0) {
     ${meta['set']}((${native_type})self, to_val);
   } else {
     // TODO exception
   }
-<% free_value = utils.freeNative(value_type) %>
-%if free_value:
+  <% free_value = utils.freeNative(value_type) %>
+  %if free_value:
   ${free_value}(ctx, to_val);
-%endif
+  %endif
+%elif 'field' in meta:
+  ${utils.toNative(native_type)}(ctx, &(((${native_type})self)->${meta['field']}), val);
 %endif
 }
-
 %endif
+
 %endif
 %endif
 
@@ -166,10 +179,10 @@ static JSMetaProperty ${prop_name} = {
   JM_PROPERTY,
   ${('readable' in m and m['readable']) and '1' or '0'},
   ${('writeable' in m and m['writeable']) and '1' or '0'},
+  ${utils.getPropertyFlags(m)},
   ${setter},
   ${getter}
 };
-
 <%
 if prop_name:
   member_defines.append(prop_name)
@@ -202,8 +215,10 @@ if prop_name:
   func_impl = meta['func']
   return_type = m['return_type']
   return_from_native = utils.fromNative(return_type)
+  return_from_intf = gen_from_native_interface(return_type)
   if meta and 'return_from_native' in meta:
     return_from_native = meta['return_from_native']
+    return_from_intf = ''
   param_list = []
 %>
 static JSValue ${call_name}(JSContext* ctx, NativeHandle self, int argc, JSValueConst* argv) {
@@ -251,9 +266,9 @@ static JSValue ${call_name}(JSContext* ctx, NativeHandle self, int argc, JSValue
 
 %if return_type != 'void':
 %if utils.isStructType(return_type):
-  __ret__ = ${return_from_native}(ctx, &__native_ret__);
+  __ret__ = ${return_from_native}(ctx, &__native_ret__${return_from_intf});
 %else:
-  __ret__ = ${return_from_native}(ctx, __native_ret__);
+  __ret__ = ${return_from_native}(ctx, __native_ret__${return_from_intf});
 %endif
 %endif
 
@@ -278,7 +293,7 @@ static JSMetaMethod ${func_name} = {
   ${aliase_name},
   ${pname}_member_index_${m['identifier']},
   JM_METHOD,
-  ${param_pack and 'JF_PARAM_PACK' or 0},
+  ${utils.getMethodFlags(m)},
   ${call_name}
 };
 <%
@@ -390,6 +405,7 @@ static JSMetaEnum ${enum_name} = {
   name = is_mod and inf_name or '%s_%s' % (pname, inf_name)
   creator = None
   need_parent = False
+  need_context = False
   native_type = utils.getNativeType(inf)
   if not native_type:
     native_type = 'NativeHandle'
@@ -403,6 +419,7 @@ static JSMetaEnum ${enum_name} = {
     if 'create' in meta:
       creator = meta['create']
     need_parent = utils.findTypeMeta('interface', inf['name'], 'need_parent', True) == 'true'
+    need_context = utils.findTypeMeta('interface', inf['name'], 'need_context', False) == 'true'
     if 'native_class' in meta:
       native_class = meta['native_class']
 
@@ -413,9 +430,11 @@ static JSMetaEnum ${enum_name} = {
   if not is_mod and 'extends' in inf and len(inf['extends']) > 0:
     extends = '&_%s_%s_class' % (pname, utils.toIdName(inf['extends'][0]))
 
-  create_param = ''
+  call_params = []
+  if need_context:
+    call_params.append('ctx')
   if need_parent:
-    create_param = 'NativeHandle parent'
+    call_params.append('(%s)parent' % native_type)
 
   class_name = '_%s_class' % name
 
@@ -426,8 +445,8 @@ static JSMetaEnum ${enum_name} = {
 %>
 
 %if creator:
-static NativeHandle _${name}_create(${create_param}) {
-  return (NativeHandle)(${creator}(${need_parent and '(%s)parent' % native_type or ''}));
+static NativeHandle _${name}_create(JSContext* ctx, NativeHandle parent) {
+  return (NativeHandle)(${creator}(${','.join(call_params)}));
 }
 %endif
 
