@@ -78,7 +78,7 @@ static ObjectMember ${module_name}_${struct_name}_struct_members[] = {
   member_ft = member_item['feature_type']
   cpp_type = member_item['cpp_type']
 %>\
-    { "${member_name}", ${member_ft}, offsetof(${module_name}_${struct_name}, _${member_name}), sizeof(${cpp_type}) },
+    { "${member_name}", ${member_ft}, offsetof(${module_name}_${struct_name}, ${member_name}), sizeof(${cpp_type}) },
 %endfor
     { nullptr },
 };

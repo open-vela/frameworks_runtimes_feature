@@ -1,0 +1,111 @@
+module audio@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+callback on_data(object data);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onvoiceorapp writeonly
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onnativeplay writeonly
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onnativetimeupdate writeonly
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onnativepause writeonly
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onnativechange writeonly
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onnativeerror writeonly
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onnativeended writeonly
+
+struct AudiosyncPlayParam {
+  string audioId;
+  string type;
+  [msg_key = "playload", to_msg = "(char*)ft_to_string"]
+  object playload;
+  on_data success;
+  on_fail fail;
+  on_void complete;
+};
+
+[
+  json_method = "audio.play",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void play(AudiosyncPlayParam p);
+
+struct AudiosyncPauseParam {
+  string audioId;
+  string type;
+  on_data success;
+  on_fail fail;
+  on_void complete;
+}
+
+[
+  json_method = "audio.pause",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void pause(AudiosyncPauseParam p);
+
+[
+  json_method = "audio.stop",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void stop(AudiosyncPauseParam p);
+
+struct GetPalyStateParam {
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+[
+  json_method = "audio.getplaystate",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void getplaystate(GetPalyStateParam p);
+

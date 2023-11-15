@@ -112,6 +112,7 @@ class FeatureUtils(render.Utils):
     p_type = 'value_type' in param and param['value_type'] or param['type']
     p_name = param['name']
     key_name, to_key = self.getMsgKey(param)
+    ft_ctx = '(ft_context_ref)conn->GetFeatureContext()'
     if self.isStructType(p_type):
       s = self.getUserType('struct', p_type['referred_name'])
       if s:
@@ -122,7 +123,7 @@ class FeatureUtils(render.Utils):
         if not 'callbacks' in out: out['callbacks'] = {}
         out['callbacks'][p_name] = '%s%s' % (prefix, p_name)
     else:
-      out[key_name] = len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s->%s'%(prefix, p_name)
+      out[key_name] = len(to_key) > 0 and '%s(%s, *(%s%s))' %(to_key, ft_ctx, prefix, p_name) or '%s%s' %(prefix, p_name)
 
   def genParams(self, method):
     out = {}

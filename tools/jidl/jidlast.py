@@ -1165,7 +1165,7 @@ def ResolveType(context, tp, accepted, owner, holder):
   #print("==== tp: ", tp, type(tp));
   new_tp = context.GetIdExist(tp.name, accepted, owner)
   if not new_tp:
-    context.AddError("[%d:%d]Resolve Type '%s' faield in '%s'" % (holder.lineno, holder.lexpos, tp.name, str(holder)))
+    context.AddError("[%d:%d]Resolve Type '%s' failed in '%s'" % (holder.lineno, holder.lexpos, tp.name, str(holder)))
     return tp
   return new_tp
 
