@@ -124,8 +124,8 @@ FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType
     FeatureCallbackData callback;
     callback.cb = feature_dup_value(js_ctx, value);
     callback.cb_type = callbackType;
-    callbacks_[curr_cid_] = callback;
-    return curr_cid_++;
+    callbacks_[++curr_cid_] = callback;
+    return curr_cid_;
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
