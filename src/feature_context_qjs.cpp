@@ -187,6 +187,7 @@ static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t 
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
+    ret.type = FT_TYPE_NONE;
     ret.js_val = JS_UNDEFINED;
     JSValue obj = JS_ParseJSON(js_ctx, buf, buf_len, filename);
     if (JS_IsException(obj)) {
@@ -194,6 +195,7 @@ static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t 
         return QJS_VAL_TO_FT(ret);
     }
     ret.js_val = obj;
+    ret.type = FT_TYPE_STRING;
     return QJS_VAL_TO_FT(ret);
 }
 
