@@ -87,7 +87,7 @@ static const CallbackType system_crypto_success_cb_bool_opt_callback_type {
 
 /****** for JIDL callback 'success_cb_obj_str_opt' ******/
 static const FeatureType system_crypto_success_cb_obj_str_opt_parameters[] = {
-    FT_STRING,
+    FT_ANY_REF,
     FT_PARAM_END
 };
 

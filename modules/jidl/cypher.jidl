@@ -30,7 +30,7 @@ enum HashType {
 }
 */
 
-callback success_cb_bool_opt(boolean data) // ? boolean
+callback success_cb_obj_bool_opt(object data) // ? boolean
 callback success_cb_obj_str_opt(object res) // ? { text: string }
 
 callback fail_cb(object data, int code)
@@ -68,7 +68,7 @@ struct RSAVerifyParam {
   string key  // rsa secret key
   string hashType = "SHA256" // ? HashType
   string signature = ""  // ?
-  callback success_cb_bool_opt success // ?
+  callback success_cb_obj_bool_opt success // ?
   callback fail_cb fail // ?
   callback complete_cb complete // ?
 }

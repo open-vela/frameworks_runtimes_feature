@@ -27,15 +27,15 @@
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
-/****** for JIDL callback 'success_cb_bool_opt' ******/
-static const FeatureType system_cypher_success_cb_bool_opt_parameters[] = {
-    FT_BOOLEAN,
+/****** for JIDL callback 'success_cb_obj_bool_opt' ******/
+static const FeatureType system_cypher_success_cb_obj_bool_opt_parameters[] = {
+    FT_ANY_REF,
     FT_PARAM_END
 };
 
-static const CallbackType system_cypher_success_cb_bool_opt_callback_type {
+static const CallbackType system_cypher_success_cb_obj_bool_opt_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_cypher_success_cb_bool_opt_parameters,
+    .parameters = system_cypher_success_cb_obj_bool_opt_parameters,
     .return_type = FT_VOID
 };
 
@@ -153,7 +153,7 @@ static ObjectMember system_cypher_RSAVerifyParam_struct_members[] = {
     { "key", FT_STRING, offsetof(system_cypher_RSAVerifyParam, _key), sizeof(FtString) },
     { "hashType", FT_MK_OPTIONAL(&system_cypher_RSAVerifyParam_member_hashType_opt_type), offsetof(system_cypher_RSAVerifyParam, _hashType), sizeof(FtString) },
     { "signature", FT_MK_OPTIONAL(&system_cypher_RSAVerifyParam_member_signature_opt_type), offsetof(system_cypher_RSAVerifyParam, _signature), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_cypher_success_cb_bool_opt_callback_type), offsetof(system_cypher_RSAVerifyParam, _success), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX(&system_cypher_success_cb_obj_bool_opt_callback_type), offsetof(system_cypher_RSAVerifyParam, _success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_cypher_fail_cb_callback_type), offsetof(system_cypher_RSAVerifyParam, _fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_cypher_complete_cb_callback_type), offsetof(system_cypher_RSAVerifyParam, _complete), sizeof(FtCallbackId) },
     { nullptr },

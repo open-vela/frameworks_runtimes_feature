@@ -49,7 +49,7 @@ struct HashDigestParam {
 string hashDigest(HashDigestParam options)
 
 callback success_cb_bool_opt(boolean data) // ? boolean
-callback success_cb_obj_str_opt(string res) // ? string
+callback success_cb_obj_str_opt(object res) // ? string
 callback success_cb_obj_str_u8a_opt(object res) // ? string | Uint8Array
 
 callback fail_cb(object data, int code)
