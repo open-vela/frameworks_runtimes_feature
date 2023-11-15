@@ -214,3 +214,16 @@ void system_internal_activity_wrap_unbindService(FeatureInstanceHandle feature,
         FEATURE_LOG_ERROR("Can't get nativeContext in Feature user data");
     }
 }
+
+FtBool system_internal_activity_wrap_moveToBackground(FeatureInstanceHandle feature,
+                                                      AppendData append_data, FtBool nonRoot) {
+    FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
+    os::app::Activity* nativeContext =
+            static_cast<os::app::Activity*>(FeatureInstanceGetUserData(feature, "nativeContext"));
+    if (nativeContext) {
+        return nativeContext->moveToBackground(nonRoot);
+    } else {
+        FEATURE_LOG_ERROR("Can't get nativeContext in Feature user data");
+        return false;
+    }
+}
