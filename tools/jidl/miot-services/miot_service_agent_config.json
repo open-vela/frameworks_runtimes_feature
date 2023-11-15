@@ -1,6 +1,7 @@
 {
     "includes": [
+        "feature_exports.h",
         "MiotConnect.h",
-        "feature_exports.h"
+        "MessageCodec.h"
     ]
 }

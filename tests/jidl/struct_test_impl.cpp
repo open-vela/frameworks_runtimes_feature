@@ -66,16 +66,16 @@ void struct_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt 
     }
 
     printf("%s::%s(), page_count: %d, title: %s\n",
-        file_tag,  __FUNCTION__, b->_page_count, b->_title);
+        file_tag,  __FUNCTION__, b->page_count, b->title);
 }
 
 struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a) {
     printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
     struct_test_Chapter* chap = struct_testMallocChapter();
-    chap->_page_count = a;
+    chap->page_count = a;
     char* title = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(title, "title is: %s", "hello world");
-    chap->_title = title;
+    chap->title = title;
     return chap;
 }
 
@@ -84,24 +84,24 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, struc
         printf("%s::%s(), book ptr is null!\n", file_tag,  __FUNCTION__);
         return;
     }
-    if (!&(a->_any_param)) {
+    if (!&(a->any_param)) {
         printf("%s::%s(), any_param ptr is null!\n", file_tag,  __FUNCTION__);
     } else {
         printf("%s::%s(), any_param: ", file_tag, __FUNCTION__);
         ft_context_ref ft_ctx = FeatureGetContext(feature);
-        const char* str_json = ft_to_string(ft_ctx, *(a->_any_param));
+        const char* str_json = ft_to_string(ft_ctx, *(a->any_param));
         printf("%s", str_json);
         ft_free_string(ft_ctx, str_json);
         printf("\n");
     }
 
     printf("%s::%s(), page_count: %d, title: %s\n",
-        file_tag,  __FUNCTION__, a->_page_count, a->_title);
+        file_tag,  __FUNCTION__, a->page_count, a->title);
 
-    if (!a->_chap_titles) {
+    if (!a->chap_titles) {
         printf("%s::%s(), chap_titles ptr is null!\n", file_tag,  __FUNCTION__);
     } else {
-        FTArrayHelper<const char*> chap_titles(a->_chap_titles);
+        FTArrayHelper<const char*> chap_titles(a->chap_titles);
         printf("%s::%s(), chap_titles: [", file_tag, __FUNCTION__);
         for (int32_t i = 0; i < chap_titles.size(); i++) {
             if (i > 0)
@@ -111,18 +111,18 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, struc
         printf("]\n");
     }
 
-    if (!a->_first_chap) {
+    if (!a->first_chap) {
         printf("%s::%s(), first_chap ptr is null!\n", file_tag,  __FUNCTION__);
     } else {
       printf("%s::%s(), first_chapter: [page_count: %d, title: %s]\n",
-          file_tag,  __FUNCTION__, a->_first_chap->_page_count, a->_first_chap->_title);
+          file_tag,  __FUNCTION__, a->first_chap->page_count, a->first_chap->title);
     }
 
-    if (!FeatureInvokeCallback(feature, a->_chap_changed, 0, a->_title)) {
+    if (!FeatureInvokeCallback(feature, a->chap_changed, 0, a->title)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
-    FeatureRemoveCallback(feature, a->_chap_changed);
+    FeatureRemoveCallback(feature, a->chap_changed);
 }
 
 void struct_test_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams var_params)

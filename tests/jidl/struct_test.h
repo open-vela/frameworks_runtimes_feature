@@ -44,20 +44,20 @@ void struct_test_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _Chapter {
-  FtInt _page_count;
-  FtString _title;
-  FtBool _is_end;
+  FtInt page_count;
+  FtString title;
+  FtBool is_end;
 } struct_test_Chapter;
 
 struct_test_Chapter* struct_testMallocChapter();
 
 typedef struct _Book {
-  FtAny _any_param;
-  FtInt _page_count;
-  FtString _title;
-  FtArray* _chap_titles;
-  struct_test_Chapter * _first_chap;
-  FtCallbackId _chap_changed;
+  FtAny any_param;
+  FtInt page_count;
+  FtString title;
+  FtArray* chap_titles;
+  struct_test_Chapter * first_chap;
+  FtCallbackId chap_changed;
 } struct_test_Book;
 
 struct_test_Book* struct_testMallocBook();

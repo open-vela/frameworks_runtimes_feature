@@ -70,6 +70,7 @@ run_features() {
 run_miot_services() {
   run_miot_service_gen $CUR_DIR/samples/alarmsa.jidl
   run_miot_service_gen $CUR_DIR/samples/miot-features/audiofocus.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/audio.jidl
   run_miot_service_gen $CUR_DIR/samples/miot-features/alarm.jidl
   run_miot_service_gen $CUR_DIR/samples/miot-features/mihome.jidl -v "includes=mihome-help.h"
   run_miot_service_gen $CUR_DIR/samples/miot-features/ota.jidl

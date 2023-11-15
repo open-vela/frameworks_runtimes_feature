@@ -6,15 +6,15 @@ callback on_data(object data);
 
 
 struct CommonParam {
-  on_void success;
+  on_data success;
   on_fail fail;
   on_void complete;
 };
 
 struct DataParam {
-  [msg_key = "option", to_msg = "ft_to_string"]
+  [msg_key = "option", to_msg = "(char*)ft_to_string"]
   object options;
-  on_void success;
+  on_data success;
   on_fail fail;
   on_void complete;
 };

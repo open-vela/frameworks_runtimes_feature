@@ -98,7 +98,7 @@ ${setter_def};
   cpp_type = render.GenerateCppType(member_type)
   if cpp_type == 'FtArray':
     cpp_type += '*'
-  member_def = f"{cpp_type} _{member_name}"
+  member_def = f"{cpp_type} {member_name}"
 %>\
 ${member_def};
 </%def>\

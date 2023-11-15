@@ -47,9 +47,9 @@ static OptionalType struct_test_Chapter_member_is_end_opt_type = {
 
 /****** for JIDL struct 'Chapter' ******/
 static ObjectMember struct_test_Chapter_struct_members[] = {
-    { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Chapter, _page_count), sizeof(FtInt) },
-    { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Chapter, _title), sizeof(FtString) },
-    { "is_end", FT_MK_OPTIONAL(&struct_test_Chapter_member_is_end_opt_type), offsetof(struct_test_Chapter, _is_end), sizeof(FtBool) },
+    { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Chapter, page_count), sizeof(FtInt) },
+    { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Chapter, title), sizeof(FtString) },
+    { "is_end", FT_MK_OPTIONAL(&struct_test_Chapter_member_is_end_opt_type), offsetof(struct_test_Chapter, is_end), sizeof(FtBool) },
     { nullptr },
 };
 
@@ -91,12 +91,12 @@ FtArray* struct_test_malloc_string_array() {
 
 /****** for JIDL struct 'Book' ******/
 static ObjectMember struct_test_Book_struct_members[] = {
-    { "any_param", FT_ANY_REF, offsetof(struct_test_Book, _any_param), sizeof(FtAny) },
-    { "page_count", FT_INT, offsetof(struct_test_Book, _page_count), sizeof(FtInt) },
-    { "title", FT_STRING, offsetof(struct_test_Book, _title), sizeof(FtString) },
-    { "chap_titles", FT_MK_COMPLEX_REF(&struct_test_string_array), offsetof(struct_test_Book, _chap_titles), sizeof(FtArray*) },
-    { "first_chap", FT_MK_COMPLEX_REF(&struct_test_Chapter_struct_type), offsetof(struct_test_Book, _first_chap), sizeof(struct_test_Chapter *) },
-    { "chap_changed", FT_MK_COMPLEX(&struct_test_ChapChanged_callback_type), offsetof(struct_test_Book, _chap_changed), sizeof(FtCallbackId) },
+    { "any_param", FT_ANY_REF, offsetof(struct_test_Book, any_param), sizeof(FtAny) },
+    { "page_count", FT_INT, offsetof(struct_test_Book, page_count), sizeof(FtInt) },
+    { "title", FT_STRING, offsetof(struct_test_Book, title), sizeof(FtString) },
+    { "chap_titles", FT_MK_COMPLEX_REF(&struct_test_string_array), offsetof(struct_test_Book, chap_titles), sizeof(FtArray*) },
+    { "first_chap", FT_MK_COMPLEX_REF(&struct_test_Chapter_struct_type), offsetof(struct_test_Book, first_chap), sizeof(struct_test_Chapter *) },
+    { "chap_changed", FT_MK_COMPLEX(&struct_test_ChapChanged_callback_type), offsetof(struct_test_Book, chap_changed), sizeof(FtCallbackId) },
     { nullptr },
 };
 

@@ -28,7 +28,7 @@
   __${p_name}__ = ${prefix}_${p_name};
   %endif
 %else:
-  sub_arg.${key_name} = ${len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s_%s'%(prefix, p_name)};
+  sub_arg.${key_name} = ${len(to_key) > 0 and '%s(%s%s)' % (to_key, prefix, p_name) or '%s%s'%(prefix, p_name)};
 %endif
 </%def>
 
@@ -56,9 +56,9 @@
 
   if json_method:
     if msg_arg_id == 'MIOTMSG__TEST_ONEOF__NOT_SET':
-      msg_arg_id = 'MIOTMSG__TEST_ONEOF__JSONDATA' # TODO change me
+      msg_arg_id = 'MIOTMSG__TEST_ONEOF_JSONARG'
     if not msg_sub_type:
-      msg_sub_type = "Jsondata"  #TODO change me
+      msg_sub_type = "Jsonmsg"
     if not msg_sub_id:
       msg_sub_type_id = "MIOTMSG__MSGSUBTYPE__JSONDATA"
 
@@ -73,7 +73,13 @@
 
 %if meta:
 void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature, AppendData data ${len(params) > 0 and ',' or ''} ${','.join(['%s %s'%(p[0], p[1]) for p in params])}) {
+  FEATURE_LOG_DEBUG("%s start ${feature_name} ${method['identifier']}", TAG);
   MiotConnect* conn = MiotConnect::From(feature);
+
+  if (!conn) {
+    FEATURE_LOG_ERROR("%s ${feature_name}_wrap_${method['identifier']} has a invalid connection.", TAG);
+    return;
+  }
 
   FtCallbackId __success__ = 0;
   FtCallbackId __fail__ = 0;
@@ -97,12 +103,13 @@ void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature,
   int buf_len = snprintf(szbuf, sizeof(szbuf), "{ ");
     %for k, v in param_out.items():
       %if k != 'callbacks':
-  buf_len += snprintf(szbuf + buf_len, sizeof(szbuf) - buf_len, "\"%s\":\"%s\",", "${k}", v);
+  buf_len += snprintf(szbuf + buf_len, sizeof(szbuf) - buf_len, "\"%s\":\"%s\",", "${k}", ${v});
       %endif
     %endfor
   // -1 to remove the last ','
   snprintf(szbuf + buf_len - 1, sizeof(szbuf) - buf_len, "}");
-  sub_arg.method = "${json_method}";
+  char method_name[] = "${json_method}";
+  sub_arg.method_name = method_name;
   sub_arg.json = szbuf;
   %else:
     %for k, v in param_out.items():
@@ -116,7 +123,7 @@ void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature,
   __${cb_key}__ = ${cb_value};
   %endfor
   %endif
-  conn->send(feature, &msg, __success__, __fail__, __complete__, ${cb_data_parser});
+  conn->send(&msg, __success__, __fail__, __complete__, ${cb_data_parser});
 }
 %endif
 </%def>
@@ -134,7 +141,12 @@ void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature,
 %>
 %if 'writeable' in prop and prop['writeable']:
 void ${feature_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData data, ${prop_native_type} ${prop_name}) {
+  FEATURE_LOG_DEBUG("%s start ${feature_name}_${prop_name}", TAG);
   MiotConnect* conn = MiotConnect::From(feature);
+
+  if (!conn) {
+    FEATURE_LOG_ERROR("%s ${feature_name}_set_${prop_name} has a invalid connection.", TAG);
+  }
 
   Miotmsg msg;
   ${msg_sub_type} sub_arg;
@@ -142,6 +154,7 @@ void ${feature_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData 
   msg.type = MIOTMSG__MSGTYPE__INVOKE;
   msg.subtype = ${msg_sub_id};
   msg.test_oneof_case = ${msg_arg_id};
+  msg.subarg = (Submsg*)(&sub_arg);
 
   ${msg_sub_type.lower()}__init(&sub_arg);
 
@@ -153,7 +166,7 @@ void ${feature_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData 
   if 'cb_name' in meta: cb_name = meta['cb_name']
 %>
   sub_arg.${cb_key} = (char*)"${cb_name}";
-  conn->listen(feature, &msg, sub_arg.${cb_key}, ${prop_name});
+  conn->listen(&msg, sub_arg.${cb_key}, ${prop_name});
 %else:
   ${gen_param(prop, '')}
   conn->send(&msg);
@@ -170,31 +183,39 @@ void ${feature_name}_set_${prop_name}(FeatureInstanceHandle feature, AppendData 
 
 #include "${feature_name}.h"
 
+static const char* TAG = "[jidl feature] ${feature_name}";
+
 void ${feature_name}_onRegister(const char* feature_name) {
   // TODO implement the service agent initialize
+  FEATURE_LOG_DEBUG("%s ${feature_name} onRegister", TAG);
 }
 
 void ${feature_name}_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   // TODO create prototype info
+  FEATURE_LOG_DEBUG("%s ${feature_name} onCreate", TAG);
 }
 
 void ${feature_name}_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
   // TODO onrequired
+  FEATURE_LOG_DEBUG("%s ${feature_name} onRequired", TAG);
   MiotConnect* conn = MiotConnect::Create(ctx);
   FeatureSetObjectData(handle, conn);
 }
 
 void ${feature_name}_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+  FEATURE_LOG_DEBUG("%s ${feature_name} onDetached", TAG);
   MiotConnect* conn = MiotConnect::From(handle);
   conn->Destroy();
 }
 
 void ${feature_name}_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   // TODO
+  FEATURE_LOG_DEBUG("%s ${feature_name} onDestroy", TAG);
 }
 
 void ${feature_name}_onUnregister(const char* feature_name) {
   // TODO
+  FEATURE_LOG_DEBUG("%s ${feature_name} onUnregister", TAG);
 }
 
 %for m in doc['members']:
