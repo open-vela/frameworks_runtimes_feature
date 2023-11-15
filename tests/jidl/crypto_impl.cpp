@@ -199,6 +199,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
             msg = crypto_err ? crypto_err : "digest error";
             code = GENERAL;
         }
+        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     if (result && options->_success) {
