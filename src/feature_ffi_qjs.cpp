@@ -63,7 +63,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_INT: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with int !");
                     return false;
                 }
                 if (!feature_to_int(ctx, (int32_t*)ptr, value)) {
@@ -73,7 +73,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_INT8: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with int8 !");
                     return false;
                 }
 
@@ -90,7 +90,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_UINT8: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with uint8 !");
                     return false;
                 }
                 void* uint32_ptr = nullptr;
@@ -106,7 +106,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_INT16: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with int16 !");
                     return false;
                 }
                 void* int32_ptr = nullptr;
@@ -122,7 +122,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_UINT16: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with uint16 !");
                     return false;
                 }
 
@@ -139,7 +139,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_INT32: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with int32 !");
                     return false;
                 }
                 if (!feature_to_int(ctx, (int32_t*)ptr, value)) {
@@ -149,7 +149,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_UINT32: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with uint32 !");
                     return false;
                 }
                 if (!feature_to_uint(ctx, (uint32_t*)ptr, value)) {
@@ -159,7 +159,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_INT64: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with int64 !");
                     return false;
                 }
                 if (!feature_to_int64(ctx, (int64_t*)ptr, value)) {
@@ -169,7 +169,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_UINT64: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need number with uint64 !");
                     return false;
                 }
                 if (!feature_to_uint64(ctx, (uint64_t*)ptr, value)) {
@@ -179,7 +179,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_FLOAT: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need float !");
                     return false;
                 }
 
@@ -195,7 +195,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_DOUBLE: {
                 if (!feature_is_number(value)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need number !");
+                    FEATURE_LOG_ERROR("arg type mismatch, need double !");
                     return false;
                 }
                 if (!feature_to_double(ctx, (double*)ptr, value)) {
