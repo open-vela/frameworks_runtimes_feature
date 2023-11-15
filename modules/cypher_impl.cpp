@@ -72,7 +72,7 @@ void system_cypher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
 
     const char* msg = "";
     int code = 0;
-    FtString result = NULL;
+    char* result = NULL;
 
     if (!(check_str(opts->_action) && check_str(opts->_text) && check_str(opts->_key))) {
         msg = "arguments action, text or key are needed";
@@ -110,6 +110,8 @@ void system_cypher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
     if (opts->_complete) {
         INVOKE_COMPLET_CB(opts->_complete);
     }
+
+    if (result) free(result);
 }
 
 void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAParam * opts)
@@ -119,7 +121,7 @@ void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
 
     const char* msg = "";
     int code = 0;
-    FtString result = NULL;
+    char* result = NULL;
 
     if (!(check_str(opts->_hashType) && check_str(opts->_text) && check_str(opts->_key))) {
         msg = "arguments hashType, text or key are needed";
@@ -146,6 +148,8 @@ void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (opts->_complete) {
         INVOKE_COMPLET_CB(opts->_complete);
     }
+
+    if (result) free(result);
 }
 
 void system_cypher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAVerifyParam * opts)
@@ -196,7 +200,7 @@ void system_cypher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
 
     const char* msg = "";
     int code = 0;
-    FtString result = NULL;
+    char* result = NULL;
 
     if (!(check_str(opts->_hashType) && check_str(opts->_text))) {
         msg = "arguments hashtype or text are needed";
@@ -222,6 +226,9 @@ void system_cypher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
     if (opts->_complete) {
         INVOKE_COMPLET_CB(opts->_complete);
     }
+
+    if (result)
+        FeatureFreeValue(result);
 }
 
 void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cypher_Md5Param * opts)
@@ -231,7 +238,7 @@ void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
 
     const char* msg = "";
     int code = 0;
-    FtString result = NULL;
+    char* result = NULL;
 
     if (!check_str(opts->_text)) {
         msg = "argument text is needed";
@@ -257,6 +264,9 @@ void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
     if (opts->_complete) {
         INVOKE_COMPLET_CB(opts->_complete);
     }
+
+    if (result)
+        FeatureFreeValue(result);
 }
 
 void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cypher_AESParam * opts)
@@ -266,7 +276,7 @@ void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
 
     const char* msg = "";
     int code = 0;
-    FtString result = NULL;
+    char* result = NULL;
 
     if (!(check_str(opts->_action) && check_str(opts->_text) && check_str(opts->_key))) {
         msg = "arguments action, text or key are needed";
@@ -312,4 +322,6 @@ void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
     if (opts->_complete) {
         INVOKE_COMPLET_CB(opts->_complete);
     }
+
+    if (result) free(result);
 }

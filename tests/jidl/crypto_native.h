@@ -33,26 +33,35 @@
 
 extern const char* crypto_err;
 
+// no need to free the return char* because it is FeatureMalloced
 char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str);
 
+// no need to free the return char* because it is FeatureMalloced
 char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str);
 
+// must free the return char* because it is malloced
 char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text);
 
+// must free the return char* because it is malloced
 char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text);
 
-char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text);
-
+// must free the return char* because it is malloced
 char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text);
 
+// must free the return char* because it is malloced
+char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text);
+
+// must free the return char* because it is malloced
 char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text);
 
+// must free the return char* because it is malloced
 char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_str, const char* pkg_str);
 
 bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, uint8_t* sig_buff, size_t seg_size,  bool sig_text);
 
 bool rsa_verify_file(const char* type_str, const char* key_str, const char* uri_str, const char* sig_str, const char* pkg_str);
 
+// no need to free the return char* because it is FeatureMalloced
 char* base64(const char* type_str, const char* text_str);
 
 #endif // _CRYPTO_NATIVE_H_
