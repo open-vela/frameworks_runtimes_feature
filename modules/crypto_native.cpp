@@ -257,11 +257,12 @@ char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
                CHECK_ERR_BREAK(NULL, "crypto.rsa encode base64 failed");
            }
             *buff_size = ret.len;
-            ret_str = (char*)malloc(ret.len + 1);
+            ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
+            memset(ret_str, 0, ret.len + 1);
             sprintf(ret_str, "%s", ret.base);
         } else {
             *buff_size = output.len;
-            ret_str = (char*)malloc(output.len);
+            ret_str = (char*)malloc(output.len * sizeof(char));
             memcpy(ret_str, output.base, output.len);
         }
         if (output.base) free(output.base);
@@ -304,12 +305,9 @@ char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
             if (uv_rsa(key, text, &output, UV_EXT_DECRYPT) != 0) {
                 CHECK_ERR_BREAK(NULL, "crypto.rsa decrypt failed");
             }
-            *buff_size = output.len;
-            ret_str = (char*)malloc(output.len);
-            memcpy(ret_str, output.base, output.len);
         }
         *buff_size = output.len;
-        ret_str = (char*)malloc(output.len);
+        ret_str = (char*)malloc(output.len * sizeof(char));
         memcpy(ret_str, output.base, output.len);
 
         if (input.base) free(input.base);
@@ -480,13 +478,14 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
                 CHECK_ERR_BREAK(NULL, "crypto.sign base64 failed");
                 break;
             }
-            *buff_size = ret.len + 1;
-            ret_str = (char*)malloc((*buff_size) * sizeof(char));
+            *buff_size = ret.len;
+            ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
+            memset(ret_str, 0, ret.len + 1);
             sprintf(ret_str, "%s", ret.base);
         } else {
             *buff_size = out.len;
             ret_str = (char*)malloc(out.len * sizeof(char));
-	    memcpy(ret_str, out.base, out.len);
+            memcpy(ret_str, out.base, out.len);
         }
 
         if (out.base) free(out.base);
@@ -530,7 +529,8 @@ char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_s
             CHECK_ERR_BREAK(NULL, "crypto.sign base64 failed");
             break;
         }
-        char* ret_str = (char*)FeatureMalloc(ret.len, FT_CHAR);
+        char* ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
+        memset(ret_str, 0, ret.len + 1);
         sprintf(ret_str, "%s", ret.base);
 
         if (text.base) free(text.base);
@@ -578,7 +578,7 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
         }
         uv_hexify(out, &ret);
 
-        char* ret_str = (char*)FeatureMalloc(ret.len, FT_CHAR);
+        char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
         sprintf(ret_str, "%s", ret.base);
         if (out.base) free(out.base);
         if (ret.base) free(ret.base);
@@ -618,7 +618,7 @@ char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str
         }
 
         uv_hexify(out, &ret);
-        char* ret_str = (char*)FeatureMalloc(ret.len, FT_CHAR);
+        char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
         sprintf(ret_str, "%s", ret.base);
 
         free(abs_path);

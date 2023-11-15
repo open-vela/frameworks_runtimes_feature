@@ -141,7 +141,7 @@ void system_crypto_onUnregister(const char* feature_name) {
 FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData append_data,
         system_crypto_HashDigestParam * options)
 {
-    FEATURE_LOG_INFO("%s, options: %p, data: %p", file_tag, options, options->_data);
+    FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -183,12 +183,13 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
 void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData append_data,
         system_crypto_HmacDigestParam * options)
 {
+    FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
     const char* msg = "";
     int code = 0;
-    const char* result = NULL;
+    char* result = NULL;
     if (!(check_str(options->_data) && check_str(options->_key))) {
         msg = "arguments data and key are needed";
         code = ARGSERROR;
@@ -212,6 +213,9 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     if (options->_complete) {
         INVOKE_COMPLET_CB(options->_complete);
     }
+
+    if (result)
+        FeatureFreeValue(result);
 }
 
 void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_data,
@@ -222,7 +226,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
 
     const char* msg = "";
     int code = 0;
-    const char* result = NULL;
+    char* result = NULL;
     const char* algo = NULL;
     int seg_count;
     char** algo_segs = split_str(options->_algo, "-", &seg_count);
@@ -285,6 +289,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     }
 
     free_str_array(algo_segs, seg_count);
+    if (result) free(result);
 }
 
 void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_data,
@@ -381,7 +386,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
 
     const char* msg = "";
     int code = 0;
-    const char* result = NULL;
+    char* result = NULL;
     const char* algo = check_str(options->_algo) ? options->_algo: "RSA";
     bool is_text = true;
     size_t size = 0;
@@ -468,6 +473,8 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     if (options->_complete) {
         INVOKE_COMPLET_CB(options->_complete);
     }
+
+    if (result) free(result);
 }
 
 void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append_data,
@@ -478,7 +485,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
 
     const char* msg = "";
     int code = 0;
-    const char* result = NULL;
+    char* result = NULL;
     const char* algo = check_str(options->_algo) ? options->_algo: "RSA";
     bool is_text = true;
     size_t size = 0;
@@ -534,6 +541,8 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     if (options->_complete) {
         INVOKE_COMPLET_CB(options->_complete);
     }
+
+    if (result) free(result);
 }
 
 FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData append_data, FtString text)
@@ -541,7 +550,7 @@ FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData appen
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
-    const char* result = NULL;
+    char* result = NULL;
     if (!check_str(text)) {
         FEATURE_LOG_ERROR("text param is needed!");
     } else {
@@ -560,7 +569,7 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
-    const char* result = NULL;
+    char* result = NULL;
     if (!check_str(text)) {
         FEATURE_LOG_ERROR("text param is needed!");
     } else {
@@ -573,4 +582,3 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
 
     return result;
 }
-
