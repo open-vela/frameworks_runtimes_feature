@@ -206,7 +206,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -280,7 +280,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -466,7 +466,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -534,7 +534,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
