@@ -64,7 +64,6 @@ public:
   int createSession(const std::string &target);
   void sessionOnData(SessionId session_id, FtCallbackId cb);
   void sessionOnClose(SessionId session_id, FtCallbackId cb);
-  void sessionOnError(SessionId session_id, FtCallbackId cb);
   void sessionOnReceive(FtCallbackId cb);
   void sessionSend(SessionId session_id, const std::string &msg);
   void sessionClose(SessionId session_id);
@@ -77,12 +76,6 @@ public:
 
   // register server
   void registerServer(const std::string &name);
-
-  MessageServerChannel *message_server_channel() {
-    return message_server_channel_;
-  }
-
-  ClientChannel *client_channel() { return client_channel_; }
 
 private:
   FeatureInstanceHandle ft_instance_;

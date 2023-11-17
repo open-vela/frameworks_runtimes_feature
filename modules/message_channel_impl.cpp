@@ -51,14 +51,6 @@ MessageChannel::~MessageChannel() {
     broadcast_channel_ = nullptr;
   }
 
-  // message_server_channel_ and session_server_channel_ is the same object.
-  if (message_server_channel_ != nullptr &&
-      session_server_channel_ != nullptr) {
-    delete message_server_channel_;
-    message_server_channel_ = nullptr;
-    session_server_channel_ = nullptr;
-  }
-
   if (server_help_) {
     delete server_help_;
     server_help_ = nullptr;
@@ -260,8 +252,9 @@ void MessageChannel::registerServer(const std::string &name) {
   if (server_help_) {
     server_help_->registerServer(name);
   }
-  message_server_channel_ = server_help_->getMessageTransportServer();
-  session_server_channel_ = server_help_->getMessageTransportServer();
+  message_server_channel_ = server_help_->getMessageTransportServer().get();
+  session_server_channel_ = server_help_->getMessageTransportServer().get();
+  
   if (message_server_channel_ && session_server_channel_) {
     message_server_channel_->setMessageServerChannelCallback(this);
     session_server_channel_->setSessionServerChannelCallback(this);

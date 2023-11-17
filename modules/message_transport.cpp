@@ -176,16 +176,17 @@ void ClientConnection::eraseMessageReply(ReplyId id) {
 void ServerHelper::registerServer(const std::string &name) {
   if (!register_flag_) {
     sp<IServiceManager> sm(defaultServiceManager());
-    sp<MessageTransportServer> server = new MessageTransportServer();
+    transport_server_ = new MessageTransportServer();
     // 注册服务
     ALOGI("add %s to service manager", name.c_str());
-    sm->addService(String16(name.c_str()), server);
-    transport_server_ = server.get();
+    sm->addService(String16(name.c_str()), transport_server_);
+    transport_server_->decStrong(transport_server_.get());
+    transport_server_->getWeakRefs()->decWeak(transport_server_.get());
     register_flag_ = true;
   }
 }
 
-MessageTransportServer *ServerHelper::getMessageTransportServer() {
+sp<MessageTransportServer> ServerHelper::getMessageTransportServer() {
   return transport_server_;
 }
 
