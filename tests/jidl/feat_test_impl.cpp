@@ -3,6 +3,18 @@
 
 #include "feat_test.h"
 
+#define EXPECT_TRUE_FILE(condition, file, line)                            \
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_                                            \
+  if (const ::testing::AssertionResult gtest_ar_ =                         \
+          ::testing::AssertionResult(condition))                           \
+    ;                                                                      \
+  else                                                                     \
+    GTEST_MESSAGE_AT_(file, line,                                          \
+                      ::testing::internal::GetBoolAssertionFailureMessage( \
+                          gtest_ar_, #condition, "false", "true")          \
+                          .c_str(),                                        \
+                      ::testing::TestPartResult::kNonFatalFailure)
+
 class FeatureUnittest {
  public:
   FeatureUnittest() : executed_(false) {}
@@ -133,6 +145,7 @@ void feat_test_onDetached(FeatureRuntimeContext ctx,
 
 void feat_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   printf("destroy feat_test\n");
+  testing::UnitTest::ClearTestSuitesAndIndices();
 }
 
 void feat_test_onUnregister(const char* module_name) {
