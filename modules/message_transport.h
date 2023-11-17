@@ -133,13 +133,14 @@ class ServerHelper {
 public:
   ServerHelper() : register_flag_(false), transport_server_(nullptr) {}
   ~ServerHelper() {}
+
   // register binder server
   void registerServer(const std::string &name);
-  MessageTransportServer *getMessageTransportServer();
+  sp<MessageTransportServer> getMessageTransportServer();
 
 private:
   bool register_flag_;
-  MessageTransportServer *transport_server_;
+  sp<MessageTransportServer> transport_server_;
 };
 
 class MessageTransportServer : public BnMessageTransport,
