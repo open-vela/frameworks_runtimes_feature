@@ -206,7 +206,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -274,13 +274,14 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
+    FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
 
     // deal with result
     if (result && options->_success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -364,6 +365,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
+    FEATURE_LOG_INFO("%s, result: %d", file_tag, result);
 
     // deal with result
     if (has_result && options->_success) {
@@ -459,6 +461,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     code = ARGSERROR;
             }
         }
+        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     // deal with result
@@ -466,7 +469,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -526,6 +529,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
                     code = GENERAL;
                 }
             }
+            FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
         }
     }
 
@@ -534,7 +538,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, ret_obj);
+        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
     } else if (options->_fail) {
         INVOKE_FAIL_CB(options->_fail, msg, code);
     }
@@ -560,6 +564,7 @@ FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
+        FEATURE_LOG_INFO("%s, wjf result: %s", file_tag, result);
     }
 
     return result;
@@ -579,6 +584,7 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
+        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     return result;
