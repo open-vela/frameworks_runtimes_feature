@@ -21,8 +21,8 @@
 
  /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_SYSTEM_CYPHER_H_
-#define JSON_AST_GEN_MODULE_SYSTEM_CYPHER_H_
+#ifndef JSON_AST_GEN_MODULE_SYSTEM_CIPHER_H_
+#define JSON_AST_GEN_MODULE_SYSTEM_CIPHER_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,12 +35,12 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void system_cypher_onRegister(const char* feature_name);
-void system_cypher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_cypher_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_cypher_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_cypher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_cypher_onUnregister(const char* feature_name);
+void system_cipher_onRegister(const char* feature_name);
+void system_cipher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void system_cipher_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void system_cipher_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void system_cipher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void system_cipher_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _RSAParam {
@@ -51,9 +51,9 @@ typedef struct _RSAParam {
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
-} system_cypher_RSAParam;
+} system_cipher_RSAParam;
 
-system_cypher_RSAParam* system_cypherMallocRSAParam();
+system_cipher_RSAParam* system_cipherMallocRSAParam();
 
 typedef struct _RSAVerifyParam {
   FtString _text;
@@ -63,9 +63,9 @@ typedef struct _RSAVerifyParam {
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
-} system_cypher_RSAVerifyParam;
+} system_cipher_RSAVerifyParam;
 
-system_cypher_RSAVerifyParam* system_cypherMallocRSAVerifyParam();
+system_cipher_RSAVerifyParam* system_cipherMallocRSAVerifyParam();
 
 typedef struct _DigestParam {
   FtString _hashType;
@@ -73,18 +73,18 @@ typedef struct _DigestParam {
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
-} system_cypher_DigestParam;
+} system_cipher_DigestParam;
 
-system_cypher_DigestParam* system_cypherMallocDigestParam();
+system_cipher_DigestParam* system_cipherMallocDigestParam();
 
 typedef struct _Md5Param {
   FtString _text;
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
-} system_cypher_Md5Param;
+} system_cipher_Md5Param;
 
-system_cypher_Md5Param* system_cypherMallocMd5Param();
+system_cipher_Md5Param* system_cipherMallocMd5Param();
 
 typedef struct _AESParam {
   FtString _action;
@@ -96,18 +96,18 @@ typedef struct _AESParam {
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
-} system_cypher_AESParam;
+} system_cipher_AESParam;
 
-system_cypher_AESParam* system_cypherMallocAESParam();
+system_cipher_AESParam* system_cipherMallocAESParam();
 
 
 // Function wrappers to be implemented
-void system_cypher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAParam * opts);
-void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAParam * opts);
-void system_cypher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAVerifyParam * opts);
-void system_cypher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cypher_DigestParam * opts);
-void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cypher_Md5Param * opts);
-void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cypher_AESParam * opts);
+void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam * opts);
+void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam * opts);
+void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAVerifyParam * opts);
+void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cipher_DigestParam * opts);
+void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cipher_Md5Param * opts);
+void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cipher_AESParam * opts);
 
 // Interface constructors
 
@@ -117,5 +117,5 @@ void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
 
 // Array malloc functions
 
-#endif // JSON_AST_GEN_MODULE_SYSTEM_CYPHER_H_
+#endif // JSON_AST_GEN_MODULE_SYSTEM_CIPHER_H_
 /* clang-format on */

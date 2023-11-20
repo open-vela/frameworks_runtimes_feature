@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cypher.h"
+#include "cipher.h"
 
 #include "feature_log.h"
 #include "feature_utils.h"
@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-static const char* file_tag = "[system_cypher_impl]";
+static const char* file_tag = "[system_cipher_impl]";
 
 static const char* pkg_name = NULL;
 
@@ -38,34 +38,34 @@ typedef enum ErrorCode {
 } ErrorCode;
 
 // FeatureCallbacks
-void system_cypher_onRegister(const char* feature_name) {
+void system_cipher_onRegister(const char* feature_name) {
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cypher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_cipher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     FEATURE_LOG_INFO("%s\n", file_tag);
     pkg_name = FeatureGetPackageName(handle);
 }
 
-void system_cypher_onRequired(FeatureRuntimeContext ctx,
+void system_cipher_onRequired(FeatureRuntimeContext ctx,
                        FeatureInstanceHandle handle) {
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cypher_onDetached(FeatureRuntimeContext ctx,
+void system_cipher_onDetached(FeatureRuntimeContext ctx,
                        FeatureInstanceHandle handle) {
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cypher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_cipher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cypher_onUnregister(const char* feature_name) {
+void system_cipher_onUnregister(const char* feature_name) {
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cypher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAParam * opts)
+void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam * opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -114,7 +114,7 @@ void system_cypher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
     if (result) free(result);
 }
 
-void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAParam * opts)
+void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam * opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -152,7 +152,7 @@ void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (result) free(result);
 }
 
-void system_cypher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cypher_RSAVerifyParam * opts)
+void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAVerifyParam * opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -193,7 +193,7 @@ void system_cypher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
 
 }
 
-void system_cypher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cypher_DigestParam * opts)
+void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cipher_DigestParam * opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -231,7 +231,7 @@ void system_cypher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
         FeatureFreeValue(result);
 }
 
-void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cypher_Md5Param * opts)
+void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cipher_Md5Param * opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -269,7 +269,7 @@ void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
         FeatureFreeValue(result);
 }
 
-void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cypher_AESParam * opts)
+void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cipher_AESParam * opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);

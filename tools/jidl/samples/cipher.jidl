@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module system.cypher@1.0
+module system.cipher@1.0
 
 /*
 const enum ActionType {
