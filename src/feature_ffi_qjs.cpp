@@ -240,6 +240,11 @@ namespace FeatureFFIQjs {
             ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
             switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
+                if (feature_is_undefined(value)) {
+                    FEATURE_LOG_WARN("js struct value missing!");
+                    ptr = NULL;
+                    break;
+                }
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member_count = countMember(objMapType.members);
                 for (int i = 0; i < member_count; i++) {
