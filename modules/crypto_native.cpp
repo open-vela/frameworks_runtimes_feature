@@ -158,7 +158,7 @@ char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str
         unsigned char* out_buff = (unsigned char*)alloca(out_size);
         memset(out_buff, 0, out_size);
 
-        if (is_text) {
+        if (*is_text) {
             if (uv_aes_encrypt_base64(&aes_ctx, (const unsigned char*)text.base, text.len, out_buff, out_size, &out_len) != 0) {
                 CHECK_ERR_BREAK(NULL, "crypto.aes encrypt_base64 failed");
             }
@@ -208,7 +208,7 @@ char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str
         out_buff = (unsigned char*)alloca(out_size);
         memset(out_buff, 0, out_size);
 
-        if (is_text) {
+        if (*is_text) {
             if (uv_aes_decrypt_base64(&aes_ctx, (const unsigned char*)text.base, text.len, out_buff, &out_len) != 0) {
                 CHECK_ERR_BREAK(NULL, "crypto.aes decrypt_base64 failed");
             }
@@ -252,14 +252,14 @@ char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
         if (uv_rsa(key, text, &output, UV_EXT_ENCRYPT) != 0) {
             CHECK_ERR_BREAK(NULL, "crypto.rsa encrypt failed");
         }
-        if (is_text) {
+        if (*is_text) {
            if (uv_base64_encode(output, &ret) != 0) {
                CHECK_ERR_BREAK(NULL, "crypto.rsa encode base64 failed");
            }
             *buff_size = ret.len;
             ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
             memset(ret_str, 0, ret.len + 1);
-            sprintf(ret_str, "%s", ret.base);
+            memcpy(ret_str, ret.base, ret.len);
         } else {
             *buff_size = output.len;
             ret_str = (char*)malloc(output.len * sizeof(char));
@@ -293,7 +293,7 @@ char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
         text.len = *buff_size;
         *buff_size = 0;
 
-        if (is_text) {
+        if (*is_text) {
             if (uv_base64_decode(text, &input)) {
                 CHECK_ERR_BREAK(NULL, "crypto.rsa decode base64 failed");
             }
@@ -307,7 +307,9 @@ char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
             }
         }
         *buff_size = output.len;
-        ret_str = (char*)malloc(output.len * sizeof(char));
+        size_t out_len = (*is_text) ? (output.len + 1) : output.len;
+        ret_str = (char*)malloc(out_len * sizeof(char));
+        memset(ret_str, 0, out_len);
         memcpy(ret_str, output.base, output.len);
 
         if (input.base) free(input.base);
@@ -437,8 +439,8 @@ char* base64(const char* type_str, const char* text_str)
             CHECK_ERR_RET(NULL, "crypto.base64 calculate failed");
         }
 
-        char* ret_str = (char*)FeatureMalloc(out.len, FT_CHAR);
-        sprintf(ret_str, "%s", out.base);
+        char* ret_str = (char*)FeatureMalloc(out.len + 1, FT_CHAR);
+        memcpy(ret_str, out.base, out.len);
         if (out.base)
             free(out.base);
         return ret_str;
@@ -481,7 +483,7 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
             *buff_size = ret.len;
             ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
             memset(ret_str, 0, ret.len + 1);
-            sprintf(ret_str, "%s", ret.base);
+            memcpy(ret_str, ret.base, ret.len);
         } else {
             *buff_size = out.len;
             ret_str = (char*)malloc(out.len * sizeof(char));
@@ -531,7 +533,7 @@ char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_s
         }
         char* ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
         memset(ret_str, 0, ret.len + 1);
-        sprintf(ret_str, "%s", ret.base);
+        memcpy(ret_str, ret.base, ret.len);
 
         if (text.base) free(text.base);
         if (out.base) free(out.base);
@@ -579,7 +581,7 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
         uv_hexify(out, &ret);
 
         char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
-        sprintf(ret_str, "%s", ret.base);
+        memcpy(ret_str, ret.base, ret.len);
         if (out.base) free(out.base);
         if (ret.base) free(ret.base);
         return ret_str;
@@ -619,7 +621,7 @@ char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str
 
         uv_hexify(out, &ret);
         char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
-        sprintf(ret_str, "%s", ret.base);
+        memcpy(ret_str, ret.base, ret.len);
 
         free(abs_path);
         free(out.base);

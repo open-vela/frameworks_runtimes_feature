@@ -274,7 +274,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
-    FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+    FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
 
     // deal with result
     if (result && options->_success) {
@@ -461,7 +461,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     code = ARGSERROR;
             }
         }
-        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+        FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
     }
 
     // deal with result
@@ -529,7 +529,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
                     code = GENERAL;
                 }
             }
-            FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+            FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
         }
     }
 
