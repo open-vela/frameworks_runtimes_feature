@@ -18,11 +18,11 @@
  * limitations under the License.
  */
 
-let request = require('Request');
+let request = require('request');
 
 var token;
 
-feat_async_test("Request", "download", (done) => {
+feat_async_test("request", "download", (done) => {
     return new Promise(function(resolve, reject) {
         request.download({
             url : 'https://statres.quickapp.cn/quickapp/quickapp/201806/file/quickapp_sample_v1000.rpk',
@@ -55,7 +55,7 @@ feat_async_test("Request", "download", (done) => {
         done(); });
 })
 
-feat_async_test("Request", "onDownloadComplete", (done) => {
+feat_async_test("request", "onDownloadComplete", (done) => {
     return new Promise(function(resolve, reject) {
         request.onDownloadComplete({
             token : token,
@@ -77,7 +77,7 @@ feat_async_test("Request", "onDownloadComplete", (done) => {
         done(); });
 })
 
-feat_async_test("Request", "download", (done) => {
+feat_async_test("request", "download", (done) => {
     return new Promise(function(resolve, reject) {
         request.download({
             url : 'https://www.quickapp.cn/assets/images/home/logo_quickApp.png',
@@ -101,7 +101,7 @@ feat_async_test("Request", "download", (done) => {
       done(); });
 })
 
-feat_async_test("Request", "download", (done) => {
+feat_async_test("request", "download", (done) => {
     return new Promise(function(resolve, reject) {
         request.download({
             url : 'https://www.quickapp.cn/assets/images/home/logo_quickApp.png',

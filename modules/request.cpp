@@ -64,54 +64,54 @@ request_download_succ_t* requestMallocdownload_succ_t () {
 }
 
 
-/****** for JIDL callback 'cb_download_notify' ******/
-static const FeatureType request_cb_download_notify_parameters[] = {
+/****** for JIDL callback 'download_notify_cb' ******/
+static const FeatureType request_download_notify_cb_parameters[] = {
     FT_MK_COMPLEX_REF(&request_notify_data_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_download_notify_callback_type {
+static const CallbackType request_download_notify_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_download_notify_parameters,
+    .parameters = request_download_notify_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'cb_download_success' ******/
-static const FeatureType request_cb_download_success_parameters[] = {
+/****** for JIDL callback 'download_success_cb' ******/
+static const FeatureType request_download_success_cb_parameters[] = {
     FT_MK_COMPLEX_REF(&request_download_succ_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_download_success_callback_type {
+static const CallbackType request_download_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_download_success_parameters,
+    .parameters = request_download_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'cb_download_fail' ******/
-static const FeatureType request_cb_download_fail_parameters[] = {
+/****** for JIDL callback 'download_fail_cb' ******/
+static const FeatureType request_download_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_download_fail_callback_type {
+static const CallbackType request_download_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_download_fail_parameters,
+    .parameters = request_download_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'cb_download_complete' ******/
-static const FeatureType request_cb_download_complete_parameters[] = {
+/****** for JIDL callback 'download_complete_cb' ******/
+static const FeatureType request_download_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_download_complete_callback_type {
+static const CallbackType request_download_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_download_complete_parameters,
+    .parameters = request_download_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
@@ -128,10 +128,10 @@ static ObjectMember request_download_t_struct_members[] = {
     { "header", FT_ANY_REF, offsetof(request_download_t, _header), sizeof(FtAny) },
     { "filename", FT_ANY_REF, offsetof(request_download_t, _filename), sizeof(FtAny) },
     { "share", FT_MK_OPTIONAL(&request_download_t_member_share_opt_type), offsetof(request_download_t, _share), sizeof(FtBool) },
-    { "onDownLoadNotify", FT_MK_COMPLEX(&request_cb_download_notify_callback_type), offsetof(request_download_t, _onDownLoadNotify), sizeof(FtCallbackId) },
-    { "success", FT_MK_COMPLEX(&request_cb_download_success_callback_type), offsetof(request_download_t, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&request_cb_download_fail_callback_type), offsetof(request_download_t, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&request_cb_download_complete_callback_type), offsetof(request_download_t, _complete), sizeof(FtCallbackId) },
+    { "onDownLoadNotify", FT_MK_COMPLEX(&request_download_notify_cb_callback_type), offsetof(request_download_t, _onDownLoadNotify), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX(&request_download_success_cb_callback_type), offsetof(request_download_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&request_download_fail_cb_callback_type), offsetof(request_download_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&request_download_complete_cb_callback_type), offsetof(request_download_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -178,41 +178,41 @@ request_dl_cmpl_succ_t* requestMallocdl_cmpl_succ_t () {
 }
 
 
-/****** for JIDL callback 'cb_dl_cp_success' ******/
-static const FeatureType request_cb_dl_cp_success_parameters[] = {
+/****** for JIDL callback 'dl_compl_succ_cb' ******/
+static const FeatureType request_dl_compl_succ_cb_parameters[] = {
     FT_MK_COMPLEX_REF(&request_dl_cmpl_succ_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_dl_cp_success_callback_type {
+static const CallbackType request_dl_compl_succ_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_dl_cp_success_parameters,
+    .parameters = request_dl_compl_succ_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'cb_dl_cp_fail' ******/
-static const FeatureType request_cb_dl_cp_fail_parameters[] = {
+/****** for JIDL callback 'dl_compl_fail_cb' ******/
+static const FeatureType request_dl_compl_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT64,
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_dl_cp_fail_callback_type {
+static const CallbackType request_dl_compl_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_dl_cp_fail_parameters,
+    .parameters = request_dl_compl_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'cb_dl_cp_complete' ******/
-static const FeatureType request_cb_dl_cp_complete_parameters[] = {
+/****** for JIDL callback 'dl_compl_compl_cb' ******/
+static const FeatureType request_dl_compl_compl_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType request_cb_dl_cp_complete_callback_type {
+static const CallbackType request_dl_compl_compl_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = request_cb_dl_cp_complete_parameters,
+    .parameters = request_dl_compl_compl_cb_parameters,
     .return_type = FT_VOID
 };
 
@@ -220,9 +220,9 @@ static const CallbackType request_cb_dl_cp_complete_callback_type {
 /****** for JIDL struct 'dl_cmpl_t' ******/
 static ObjectMember request_dl_cmpl_t_struct_members[] = {
     { "token", FT_STRING, offsetof(request_dl_cmpl_t, _token), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&request_cb_dl_cp_success_callback_type), offsetof(request_dl_cmpl_t, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&request_cb_dl_cp_fail_callback_type), offsetof(request_dl_cmpl_t, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&request_cb_dl_cp_complete_callback_type), offsetof(request_dl_cmpl_t, _complete), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX(&request_dl_compl_succ_cb_callback_type), offsetof(request_dl_cmpl_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&request_dl_compl_fail_cb_callback_type), offsetof(request_dl_cmpl_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&request_dl_compl_compl_cb_callback_type), offsetof(request_dl_cmpl_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
