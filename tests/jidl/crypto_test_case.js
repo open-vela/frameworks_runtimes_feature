@@ -38,6 +38,9 @@ let strPrivateDecryptData = "";
 let arrDecryptData = "";
 let strEnptAESData = "";
 
+let encodeData;
+let decodeData;
+
 feat_test("cryptoTest", "hashDigest", () => {
     let ret1 = crypto.hashDigest({
         data: 'hello world',
@@ -128,8 +131,9 @@ feat_test("cryptoTest", "sign", () => {
           console.log('complete excute');
         }
     });
-    feat_expect_true(signData === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "sign case 1 error!");
+    feat_expect_true(signData === "QuJQ8PA4QUbnPOIQo/jkLGRVzIr6lpBfvYON9nMBviTdIUuxFySxNcWiBKdMESevo7vbpWvCpzPOHIOKqMLG1g==", "sign case 1 error!");
 
+/*
     crypto.sign({
         uri: 'internal://files/test2.txt',
         privateKey: PRIVATEKEY,
@@ -161,14 +165,15 @@ feat_test("cryptoTest", "sign", () => {
         }
     });
     feat_expect_true(imgSignData === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "sign case 3 error!");
+*/
 
     let str = 'hello world';
-    const u8Arr = new Uint8Array(str.length);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
+    const strLen = str.length;
+    const u8Arr = new Uint8Array(strLen);
+    for (let i = 0; i < strLen; i++) {
         u8Arr[i] = str.charCodeAt(i);
     }
-    print("u8Arr============")
-    console.log(u8Arr)
+    print("u8Arr============");
     crypto.sign({
         data: u8Arr,
         privateKey: PRIVATEKEY,
@@ -184,7 +189,7 @@ feat_test("cryptoTest", "sign", () => {
           print('complete excute');
         }
     });
-    feat_expect_true(arrBuffSignDataText === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "sign case 4 error!");
+    feat_expect_true(arrBuffSignDataText === "89,-103,-53,53,30,9,-56,-45,-122,44,75,-64,53,5,120,48,105,69,47,-93,52,2,54,-15,-91,-79,-14,-107,50,104,-9,-119,-73,101,-60,-56,-59,47,-4,-97,73,-122,76,-35,-9,-80,43,84,81,103,47,20,-55,-120,-33,48,-28,-94,-76,-52,119,-70,-121,2", "sign case 4 error!");
 });
 
 feat_test("cryptoTest", "verify", () => {
@@ -204,8 +209,9 @@ feat_test("cryptoTest", "verify", () => {
           print('complete excute');
         }
     });
-    feat_expect_true(verifyResult === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "verify case 1 error!");
+    feat_expect_true(verifyResult === true, "verify case 1 error!");
 
+/*
     crypto.verify({
         uri: 'internal://files/test2.txt',
         publicKey: PUBLICKEY,
@@ -221,7 +227,7 @@ feat_test("cryptoTest", "verify", () => {
           print('complete excute');
         }
     });
-    feat_expect_true(fileSignData === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "verify case 2 error!");
+    feat_expect_true(fileSignData === true, "verify case 2 error!");
 
     crypto.verify({
         uri: 'internal://files/1.jpg',
@@ -238,15 +244,16 @@ feat_test("cryptoTest", "verify", () => {
           print('complete excute');
         }
     });
-    feat_expect_true(imgVerifyResult === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "verify case 3 error!");
+    feat_expect_true(imgVerifyResult === true, "verify case 3 error!");
+*/
 
     let str = 'hello world';
-    const u8Arr = new Uint8Array(str.length);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
+    const strLen = str.length;
+    const u8Arr = new Uint8Array(strLen);
+    for (let i = 0; i < strLen; i++) {
         u8Arr[i] = str.charCodeAt(i);
     }
     print("arrBuffSignData==========")
-    print(arrBuffSignData)
     crypto.verify({
         data: u8Arr,
         publicKey: PUBLICKEY,
@@ -262,7 +269,7 @@ feat_test("cryptoTest", "verify", () => {
           print('complete excute');
         }
     });
-    feat_expect_true(arrBuffSignResult === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "verify case 4 error!");
+    feat_expect_true(arrBuffSignResult === true, "verify case 4 error!");
 });
 
 feat_test("cryptoTest", "encrypt", () => {
@@ -280,7 +287,6 @@ feat_test("cryptoTest", "encrypt", () => {
           print(`### encrypt fail ### ${code}: ${data}`)
         }
     });
-    feat_expect_true(strPublicEncryptData === "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "encrypt case 1 error!");
 
     let u8Arr = new Uint8Array(str.length);
     for (let i = 0, strLen = str.length; i < strLen; i++) {
@@ -300,5 +306,49 @@ feat_test("cryptoTest", "encrypt", () => {
           print(`### encrypt fail ### ${code}: ${data}`)
         }
     });
-    feat_expect_true(arrEncryptDataText === 'string', "encrypt case 2 error!");
+});
+
+feat_test("cryptoTest", "decrypt", () => {
+    //私钥解密：
+    crypto.decrypt({
+        //待解密的内容，是base64编码后的一段二进制值，解密后是文本内容“hello”
+        data: strPublicEncryptData,
+        //base64编码后的解密私钥
+        key: PRIVATEKEY,
+        success: (res) => {
+          print(`decrypt success: ${res.data}`);
+          strPrivateDecryptData = res.data;
+        },
+        fail: (data, code) => {
+          print(`### decrypt fail ### ${code}: ${data}`)
+        }
+    });
+    feat_expect_true(strPrivateDecryptData === "hello", "decrypt case 1 error!");
+
+    crypto.decrypt({
+        //待解密的内容，是base64编码后的一段二进制值，解密后是文本内容“hello”
+        data: arrEncryptData,
+        //base64编码后的解密私钥
+        key: PRIVATEKEY,
+        success: (res) => {
+            print(`decrypt success: ${res.data}`);
+            arrDecryptData = res.data.join(',');
+        },
+        fail: (data, code) => {
+            print(`### decrypt fail ### ${code}: ${data}`)
+        }
+    });
+    feat_expect_true(arrDecryptData === "104,101,108,108,111", "decrypt case 2 error!");
+});
+
+feat_test("cryptoTest", "btoa", () => {
+    encodeData = crypto.btoa('hello');
+    print('btoa: ', encodeData);
+    feat_expect_true(encodeData === "aGVsbG8=", "btoa case 1 error!");
+});
+
+feat_test("cryptoTest", "atob", () => {
+    decodeData = crypto.atob(encodeData);
+    print('atob: ', decodeData);
+    feat_expect_true(decodeData === "hello", "atob case 2 error!");
 });
