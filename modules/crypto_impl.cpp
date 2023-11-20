@@ -274,6 +274,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
+    FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
 
     // deal with result
     if (result && options->_success) {
@@ -364,6 +365,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
+    FEATURE_LOG_INFO("%s, result: %d", file_tag, result);
 
     // deal with result
     if (has_result && options->_success) {
@@ -459,6 +461,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     code = ARGSERROR;
             }
         }
+        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     // deal with result
@@ -526,6 +529,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
                     code = GENERAL;
                 }
             }
+            FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
         }
     }
 
@@ -560,6 +564,7 @@ FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
+        FEATURE_LOG_INFO("%s, wjf result: %s", file_tag, result);
     }
 
     return result;
@@ -579,6 +584,7 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
+        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     return result;
