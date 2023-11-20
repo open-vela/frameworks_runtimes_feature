@@ -102,7 +102,7 @@ void system_cypher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
-        INVOKE_SUCCESS_CB(opts->_success, ret_obj);
+        INVOKE_SUCCESS_CB(opts->_success, (&ret_obj));
     } else if (opts->_fail) {
         INVOKE_FAIL_CB(opts->_fail, msg, code);
     }
@@ -140,7 +140,7 @@ void system_cypher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
-        INVOKE_SUCCESS_CB(opts->_success, ret_obj);
+        INVOKE_SUCCESS_CB(opts->_success, (&ret_obj));
     } else if (opts->_fail) {
         INVOKE_FAIL_CB(opts->_fail, msg, code);
     }
@@ -182,7 +182,7 @@ void system_cypher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         ft_value_t ret_data = ft_from_bool(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "valid", ret_data);
-        INVOKE_SUCCESS_CB(opts->_success, ret_obj);
+        INVOKE_SUCCESS_CB(opts->_success, (&ret_obj));
     } else if (opts->_fail) {
         INVOKE_FAIL_CB(opts->_fail, msg, code);
     }
@@ -218,7 +218,7 @@ void system_cypher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
-        INVOKE_SUCCESS_CB(opts->_success, ret_obj);
+        INVOKE_SUCCESS_CB(opts->_success, (&ret_obj));
     } else if (opts->_fail) {
         INVOKE_FAIL_CB(opts->_fail, msg, code);
     }
@@ -256,7 +256,7 @@ void system_cypher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
-        INVOKE_SUCCESS_CB(opts->_success, ret_obj);
+        INVOKE_SUCCESS_CB(opts->_success, (&ret_obj));
     } else if (opts->_fail) {
         INVOKE_FAIL_CB(opts->_fail, msg, code);
     }
@@ -314,7 +314,7 @@ void system_cypher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
-        INVOKE_SUCCESS_CB(opts->_success, ret_obj);
+        INVOKE_SUCCESS_CB(opts->_success, (&ret_obj));
     } else if (opts->_fail) {
         INVOKE_FAIL_CB(opts->_fail, msg, code);
     }
