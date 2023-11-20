@@ -37,8 +37,8 @@ add_executable(${PROJECT_NAME}
     crypto_utils.cpp
     crypto.cpp
     crypto_impl.cpp
-    cypher.cpp
-    cypher_impl.cpp
+    cipher.cpp
+    cipher_impl.cpp
     jidl_main.cpp
     feature_timers.cpp
     feature_interface.cpp
