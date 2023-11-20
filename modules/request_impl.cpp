@@ -1,5 +1,6 @@
 #include "feature.h"
 #include "feature_config.h"
+#include "feature_context_qjs.h"
 #include "feature_description.h"
 #include "feature_exports.h"
 #include "jse_apppath.h"
@@ -118,11 +119,6 @@ void request_onUnregister(const char* feature_name)
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-typedef struct FailObj {
-    int code;
-    char msg[32];
-} FailObj;
-
 void freeRequestInfo(RequestInfo* info)
 {
     REQUEST_INFO("free RequestInfo %p", info);
@@ -170,6 +166,7 @@ static void __request_cb(int state, uv_response_t* response)
             // 返回文件绝对地址
             // REQUEST_INFO("==========> success = %d", info->success);
             request_dl_cmpl_succ_t* param = requestMallocdl_cmpl_succ_t();
+            // REQUEST_INFO("==========> response->body = %s", response->body);
             char* body = AIOTJS::app_absolute_to_relative_path(th->pkg_name, response->body);
             param->_uri = body;
             FeatureInvokeCallback(info->feature_handle, info->success, param);
@@ -237,17 +234,17 @@ void initInfo(RequestInfo* info)
 
 void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, request_download_t* param)
 {
-    FailObj fail_obj;
-    const char *header, *filename;
+    const char *header, *filename, *msg;
     char *header_value, *kv, *pos_1, *pos_2, *absolute_path;
-    int i = 1, j = 0;
+    size_t i = 1, j = 0, code;
     request_download_succ_t* suc_param;
 
     ft_context_ref ctx = FeatureGetContext(feature);
     RequestInfo* info = static_cast<RequestInfo*>(malloc(sizeof(RequestInfo)));
     if (!info) {
         REQUEST_ERROR("malloc fail");
-        fail_obj = { GENERAL, "malloc fail" };
+        code = GENERAL;
+        msg = "malloc fail";
         goto callFail;
     }
     initInfo(info);
@@ -259,7 +256,8 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
 
     // 参数检查
     if (param->_url == NULL || (param->_url) == 0) {
-        fail_obj = { ARGSERROR, "invalid url" };
+        code = ARGSERROR;
+        msg = "invalid url";
         goto callFail;
     }
 
@@ -280,7 +278,8 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
         header = ft_to_string(ctx, *(param->_header));
         REQUEST_INFO("header = %s", header);
         if (header == NULL || header[0] != '{' || header[strlen(header) - 1] != '}') {
-            fail_obj = { ARGSERROR, "invalid header" };
+            code = ARGSERROR;
+            msg = "invalid header";
             goto callFail;
         }
         // header format {"test":"abc","test2":"ddd"}
@@ -288,7 +287,8 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
         header_value = (char*)malloc(strlen(header) - 2);
         if (!header_value) {
             REQUEST_ERROR("malloc fail");
-            fail_obj = { GENERAL, "malloc fail" };
+            code = GENERAL;
+            msg = "malloc fail";
             ft_free_string(ctx, header);
             goto callFail;
         }
@@ -320,7 +320,8 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
     } else {
         filename = ft_to_string(ctx, *(param->_filename));
         if (filename == NULL || strlen(filename) == 0) {
-            fail_obj = { ARGSERROR, "invalid filename" };
+            code = ARGSERROR;
+            msg = "invalid filename";
             goto callFail;
         }
         info->filename = strdup(filename);
@@ -342,9 +343,14 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
     }
 
     if (!AIOTJS::check_disk_limit()) {
+#ifdef CONFIG_QUICKAPP_VAPP_XMS
+        AIOTJS::notify_disk_space_insufficient(th->pkg_name, GET_QJS_CTX(FeatureGetContext(feature)));
+#else
         AIOTJS::notify_disk_space_insufficient(th->pkg_name);
+#endif
         FEATURE_LOG_ERROR("insufficient memory to download file");
-        fail_obj = { GENERAL, "no space to download file" };
+        code = GENERAL;
+        msg = "no space to download file";
         goto callFail;
     }
     assert(uv_request_set_userp(info->request, info) == 0);
@@ -359,8 +365,8 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
     FeatureInvokeCallback(feature, param->_complete);
     return;
 callFail:
-    REQUEST_INFO("fail_obj.code = %d, fail_obj.msg = %s", fail_obj.code, fail_obj.msg);
-    FeatureInvokeCallback(feature, param->_fail, fail_obj.msg, fail_obj.code);
+    REQUEST_INFO("code = %d, msg = %s", code, msg);
+    FeatureInvokeCallback(feature, param->_fail, msg, code);
     FeatureInvokeCallback(feature, param->_complete);
     if (info) {
         if (info->request)
@@ -373,10 +379,11 @@ void request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData a
 {
     REQUEST_INFO("onDownloadComplete token = %s", param->_token);
     // REQUEST_INFO("suc = %d, fail = %d, compl = %d", param->_success, param->_fail, param->_complete);
-
-    FailObj fail_obj;
+    int code;
+    const char* msg;
     if (param->_token == NULL) {
-        fail_obj = { ARGSERROR, "token is missing" };
+        code = ARGSERROR;
+        msg = "token is missing";
         goto fail;
     } else {
         RequestInfo *info, *temp, *res = NULL;
@@ -393,13 +400,14 @@ void request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData a
             res->fail = param->_fail;
             res->complete = param->_complete;
         } else {
-            fail_obj = { TASK_NOT_EXISTS, "task not exist" };
+            code = TASK_NOT_EXISTS;
+            msg = "task not exist";
             goto fail;
         }
         return;
     }
 fail:
-    FeatureInvokeCallback(feature, param->_fail, fail_obj.msg, fail_obj.code);
+    FeatureInvokeCallback(feature, param->_fail, msg, code);
     FeatureInvokeCallback(feature, param->_complete);
 }
 
