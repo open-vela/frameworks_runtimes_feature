@@ -441,7 +441,7 @@ namespace FeatureFFIQjs {
             } break;
             case COMPLEX_OPTIONAL: {
                 OptionalType* optinalType = (OptionalType*)complexType;
-                bool ret = convertValueToGuest(instance, optinalType->type, &optinalType->fval, ctx, value);
+                bool ret = convertValueToGuest(instance, optinalType->type, ptr, ctx, value);
                 if (!ret) {
                     feature_free_value(ctx, value);
                     value = FEATURE_UNDEFINED;
