@@ -43,6 +43,13 @@ void Simple_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
 void Simple_onUnregister(const char* feature_name);
 
 // Struct defines
+typedef struct _Struct_test_Array {
+  FtInt _page_count;
+  FtString _title;
+  FtBool _is_end;
+} struct_test_Array;
+
+struct_test_Array* struct_testMallocArray();
 
 // Function wrappers to be implemented
 void Simple_wrap_printStr(FeatureInstanceHandle feature, AppendData append_data, FtString c);
@@ -59,6 +66,8 @@ void Simple_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData ap
 void Simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData append_data);
 FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, FtArray& values);
 FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData append_data);
+FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData append_data);
+FtInt Simple_wrap_bar7(FeatureInstanceHandle feature, AppendData append_data, FtArray& values);
 
 // Interface constructors
 
@@ -73,6 +82,8 @@ FtArray* Simple_get_args(void* feature, AppendData append_data);
 // Array malloc functions
 FtArray* Simple_malloc_string_array();
 FtArray* Simple_malloc_int_array();
+
+FtArray* Simple_malloc_struct_array();
 
 #endif // JSON_AST_GEN_MODULE_SIMPLE_H_
 /* clang-format on */

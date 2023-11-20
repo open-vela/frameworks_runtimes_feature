@@ -329,6 +329,76 @@ static const MemberMethod Simple_bar3_member_method = {
     .return_type = FT_MK_COMPLEX_REF(&Simple_string_array),
 };
 
+/****** for JIDL struct 'Chapter' ******/
+static OptionalType struct_test_Chapter_member_page_count_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_INT,
+};
+
+static OptionalType struct_test_Chapter_member_title_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_STRING,
+};
+
+static OptionalType struct_test_Chapter_member_is_end_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_BOOLEAN,
+};
+
+static ObjectMember struct_test_Chapter_struct_members[] = {
+    { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Array, _page_count), sizeof(FtInt) },
+    { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Array, _title), sizeof(FtString) },
+    { "is_end", FT_MK_OPTIONAL(&struct_test_Chapter_member_is_end_opt_type), offsetof(struct_test_Array, _is_end), sizeof(FtBool) },
+    { nullptr },
+};
+
+// complex defination
+static const ObjectMapType struct_test_Array_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Array) },
+    .members = struct_test_Chapter_struct_members
+};
+
+struct_test_Array* struct_testMallocArray () {
+    return (struct_test_Array*)FeatureMalloc(
+        sizeof(struct_test_Array), FT_MK_COMPLEX(&struct_test_Array_struct_type));
+}
+
+/****** for JIDL function 'bar4' ******/
+static const FeatureType Simple_bar4_parameters[] = {
+    FT_PARAM_END
+};
+
+static const ArrayType Simple_struct_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_MK_COMPLEX_REF(&struct_test_Array_struct_type)
+};
+
+FtArray* Simple_malloc_struct_array() {
+    return (FtArray*)FeatureMalloc(
+        sizeof(FtArray), FT_MK_COMPLEX(&Simple_struct_array));
+}
+
+static const MemberMethod Simple_bar4_member_method = {
+    .func = { .callback = FFI_FN(Simple_wrap_bar4) },
+    .parameters = Simple_bar4_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&Simple_struct_array),
+};
+
+
+
+
+
+/****** for JIDL function 'bar7' ******/
+static const FeatureType Simple_bar7_parameters[] = {
+    FT_MK_COMPLEX_REF(&Simple_struct_array),
+    FT_PARAM_END
+};
+
+static const MemberMethod Simple_bar7_member_method = {
+    .func = { .callback = FFI_FN(Simple_wrap_bar7) },
+    .parameters = Simple_bar7_parameters,
+    .return_type = FT_INT,
+};
 
 /****** for JIDL const 'x' ******/
 const FtInt Simple_g_const_x = 1;
@@ -466,6 +536,16 @@ static const Member Simple_members[] = {
         .type = MEMBER_METHOD,
         .name = "bar3",
         .method = Simple_bar3_member_method,
+    },
+    {
+        .type = MEMBER_METHOD,
+        .name = "bar4",
+        .method = Simple_bar4_member_method,
+    },
+    {
+        .type = MEMBER_METHOD,
+        .name = "bar7",
+        .method = Simple_bar7_member_method,
     },
     {
         .type = MEMBER_CONST,

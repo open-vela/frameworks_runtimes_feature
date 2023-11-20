@@ -355,6 +355,63 @@ FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
     return strArray;
 }
 
+FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
+{
+    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    FtArray* structArray = Simple_malloc_struct_array();
+    structArray->_size = 4;
+    structArray->_element = malloc(sizeof(struct_test_Array*) * structArray->_size);
+
+    struct_test_Array* struct_0 = struct_testMallocArray();
+    struct_0->_page_count = 1000;
+    char* str_0 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    sprintf(str_0, "hello%d", 0);
+    struct_0->_title = str_0;
+    struct_0->_is_end = true;
+    ((struct_test_Array**)structArray->_element)[0] = struct_0;
+
+    struct_test_Array* struct_1 = struct_testMallocArray();
+    struct_1->_page_count = 1;
+    char* str_1 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    sprintf(str_1, "hello%d", 1);
+    struct_1->_title = str_1;
+    struct_1->_is_end = true;
+    ((struct_test_Array**)structArray->_element)[1] = struct_1;
+
+    struct_test_Array* struct_2 = struct_testMallocArray();
+    struct_2->_page_count = 2;
+    char* str_2 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    sprintf(str_2, "hello%d", 2);
+    struct_2->_title = str_2;
+    struct_2->_is_end = false;
+    ((struct_test_Array**)structArray->_element)[2] = struct_2;
+
+    struct_test_Array* struct_3 = struct_testMallocArray();
+    struct_3->_page_count = 3;
+    char* str_3 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    sprintf(str_3, "hello%d", 3);
+    struct_3->_title = str_3;
+    struct_3->_is_end = true;
+    ((struct_test_Array**)structArray->_element)[3] = struct_3;
+
+    return structArray;
+}
+
+
+FtInt Simple_wrap_bar7(FeatureInstanceHandle feature, AppendData data, FtArray& values)
+{
+    //FTArrayHelper<struct_test_Array> struct_array(&values);
+    printf("struct_array = [\n");
+    for (int32_t i = 0; i < values._size; i++) {
+        printf("  index %d:", i);
+        struct_test_Array* struct_array = ((struct_test_Array**)values._element)[i];
+        printf("  page_count: %d, title: %s, is_end: %d\n", struct_array->_page_count, struct_array->_title, struct_array->_is_end);
+    }
+    printf("]\n");
+    return -1;
+}
+
+
 // Property getters and setters to be implemented
 const char* Simple_get_name(FeatureInstanceHandle feature, AppendData data)
 {
