@@ -1,0 +1,51 @@
+module fetch@1.0
+
+/*
+enum MethodType {
+  GET = 'get',
+  OPTIONS = 'options',
+  HEAD = 'head',
+  POST = 'post',
+  PUT = 'put',
+  DELETE = 'delete',
+  TRACE = 'trace',
+  CONNECT = 'connect'
+}
+enum ResponseType {
+  TXT = 'text',
+  JSON = 'json',
+  FILE = 'file',
+  ARRAYBUFFER = 'arraybuffer'
+}
+
+enum ContentType {
+  TEXT = 'text/plain',
+  URLENCODED = 'application/x-www-form-urlencoded',
+  STREAM = 'application/octet-stream'
+}
+*/
+
+
+struct SuccessRes {
+  int code
+  object data
+  object headers
+}
+
+callback success_cb(SuccessRes res)
+callback fail_cb(object data, int code)
+callback complete_cb()
+
+struct FetchPara{
+  string url;
+  object data;
+  object header;
+  string method;   //MethodType
+  string responseType;   //ResponseType
+  int timeout;
+  callback success_cb success;
+  callback fail_cb fail;
+  callback complete_cb complete;
+}
+
+void fetch(FetchPara obj);
