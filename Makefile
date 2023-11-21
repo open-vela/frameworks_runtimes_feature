@@ -178,6 +178,10 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request_impl.cpp
 FEATURELIST += request
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file_impl.cpp
+FEATURELIST += file
+
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)

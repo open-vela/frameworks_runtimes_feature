@@ -1,0 +1,211 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+module file@1.0
+
+// move
+callback move_success_cb(string uri)
+callback move_fail_cb(string msg, int code)
+callback move_complete_cb()
+
+struct move_param_t {
+    string srcUri
+    string dstUri
+    move_success_cb success
+    move_fail_cb fail
+    move_complete_cb complete
+}
+void move(move_param_t param)
+
+// copy
+callback copy_success_cb(string uri)
+callback copy_fail_cb(string msg, int code)
+callback copy_complete_cb()
+
+struct copy_param_t {
+    string srcUri
+    string dstUri
+    copy_success_cb success
+    copy_fail_cb fail
+    copy_complete_cb complete
+}
+void copy(copy_param_t param)
+
+// list
+struct file_info_t {
+    string uri
+    int length
+    int lastModifiedTime
+}
+
+struct list_succ_param {
+    // file_info_t array
+    object fileList;
+}
+callback list_success_cb(list_succ_param param)
+callback list_fail_cb(string msg, int code)
+callback list_complete_cb()
+
+struct list_param_t {
+    string uri
+    list_success_cb success
+    list_fail_cb fail
+    list_complete_cb complete
+}
+void list(list_param_t param)
+
+// get
+struct extended_file_info_t {
+    string uri
+    int length
+    int lastModifiedTime
+    string type
+    // file_info_t array
+    object subFiles;
+}
+callback get_success_cb(string uri)
+callback get_fail_cb(string msg, int code)
+callback get_complete_cb()
+
+struct get_param_t {
+    string uri
+    boolean recursive = false
+    get_success_cb success
+    get_fail_cb fail
+    get_complete_cb complete
+}
+void get(get_param_t param)
+
+// delete
+callback delete_success_cb()
+callback delete_fail_cb(string msg, int code)
+callback delete_complete_cb()
+
+struct delete_param_t {
+    string uri
+    delete_success_cb success
+    delete_fail_cb fail
+    delete_complete_cb complete
+}
+void delete(delete_param_t param)
+
+// writeText
+callback writeText_success_cb()
+callback writeText_fail_cb(string msg, int code)
+callback writeText_complete_cb()
+
+struct write_text_param_t {
+    string uri
+    string text
+    string encoding = "UTF-8"
+    boolean append = false
+    writeText_success_cb success
+    writeText_fail_cb fail
+    writeText_complete_cb complete
+}
+void writeText(write_text_param_t param)
+
+// writeArrayBuffer
+callback writeArrBuf_success_cb()
+callback writeArrBuf_fail_cb(string msg, int code)
+callback writeArrBuf_complete_cb()
+
+struct write_arr_buf_param_t {
+    string uri
+    string[] buffer
+    int position = 0
+    boolean append = false
+    writeArrBuf_success_cb success
+    writeArrBuf_fail_cb fail
+    writeArrBuf_complete_cb complete
+}
+void writeArrayBuffer(write_arr_buf_param_t param)
+
+// readText
+struct read_txt_succ_t {
+    string text
+}
+callback readText_success_cb(read_txt_succ_t data)
+callback readText_fail_cb(string msg, int code)
+callback readText_complete_cb()
+
+struct read_text_param_t {
+    string uri
+    string encoding = "UTF-8"
+    readText_success_cb success
+    readText_fail_cb fail
+    readText_complete_cb complete
+}
+void readText(read_text_param_t param)
+
+// readArrayBuffer
+struct read_arr_buf_succ_t {
+    string[] buffer
+}
+callback readArrBuf_succ_cb(read_arr_buf_succ_t data)
+callback readArrBuf_fail_cb(string msg, int code)
+callback readArrBuf_compl_cb()
+
+struct ReadArrayBufferPara {
+    string uri
+    int position = 0
+    int length
+    readArrBuf_succ_cb success
+    readArrBuf_fail_cb fail
+    readArrBuf_compl_cb complete
+}
+void readArrayBuffer(ReadArrayBufferPara param)
+
+// access
+callback access_success_cb()
+callback access_fail_cb(string msg, int code)
+callback access_compl_cb()
+
+struct access_param_t {
+    string uri
+    access_success_cb success
+    access_fail_cb fail
+    access_compl_cb complete
+}
+void access(access_param_t param)
+
+// mkdir
+callback mkdir_success_cb()
+callback mkdir_fail_cb(string msg, int code)
+callback mkdir_compl_cb()
+
+struct mkdir_param_t {
+    string uri
+    boolean recursive = false
+    mkdir_success_cb success
+    mkdir_fail_cb fail
+    mkdir_compl_cb complete
+}
+void mkdir(mkdir_param_t param)
+
+// rmdir
+callback rmdir_success_cb()
+callback rmdir_fail_cb(string msg, int code)
+callback rmdir_compl_cb()
+
+struct rmdir_param_t {
+    string uri
+    boolean recursive = false
+    rmdir_success_cb success
+    rmdir_fail_cb fail
+    rmdir_compl_cb complete
+}
+void rmdir(rmdir_param_t param)
