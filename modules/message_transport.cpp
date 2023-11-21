@@ -221,7 +221,7 @@ void MessageTransportServer::serverReply(int reply_id,
   }
 }
 
-void MessageTransportServer::sessionSend(int reply_id,
+void MessageTransportServer::sessionSend(SessionId reply_id,
                                          const std::string &message) {
   if (reply_map_.find(reply_id) != reply_map_.end()) {
     reply_map_[reply_id]->onReply(message);

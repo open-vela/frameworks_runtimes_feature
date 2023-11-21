@@ -20,7 +20,12 @@
 
 #include "channel.h"
 #include "feature_exports.h"
+#include "message_channel_api.h"
 #include "message_transport.h"
+
+typedef void (*RequestCb)(const char* data);
+typedef void (*ServiceMsgCb)(void* handle, int32_t id, const char* data);
+typedef void (*SubscribeCb)(const char* name, const char* data);
 
 using message_transport::ClientConnection;
 using message_transport::MessageTransportServer;
@@ -31,64 +36,76 @@ class MessageChannel : public MessageServerChannelCallback,
                        public ClientChannelCallback,
                        public BroadcastChannelCallback {
 public:
-  MessageChannel(FeatureInstanceHandle ft_instance,
-                 ClientChannel *client_channel,
-                 BroadcastChannel *broadcast_channel,
-                 ServerHelper *server_help);
+    MessageChannel();
 
-  virtual ~MessageChannel();
+    virtual ~MessageChannel();
 
-  // override MessageServerChannelCallback
-  void serverOnMessage(ReplyId reply_id, const std::string &message) override;
+    void setFeatureInstanceHandle(FeatureInstanceHandle ft_instance);
 
-  // override SessionServerChannelCallback
-  void sessionOnMessage(SessionId id, const std::string &message) override;
+    // override MessageServerChannelCallback
+    void serverOnMessage(ReplyId reply_id, const std::string& message) override;
 
-  // override ClientChannelCallback
-  void clientOnSessionMessage(SessionId id,
-                              const std::string &message) override;
-  void clientOnSessionCloseByself(SessionId id, int flag) override;
-  void clientOnSessionCloseBypeer(SessionId id, int flag) override;
-  void clientOnMessage(int32_t id, const std::string &message) override;
+    // override SessionServerChannelCallback
+    void sessionOnMessage(SessionId id, const std::string& message) override;
 
-  // override BroadcastChannelCallback
-  void onReceive(const std::string &target, const std::string &action,
-                 const std::string &data) override;
+    // override ClientChannelCallback
+    void clientOnSessionMessage(SessionId id,
+        const std::string& message) override;
+    void clientOnSessionCloseByself(SessionId id, int flag) override;
+    void clientOnSessionCloseBypeer(SessionId id, int flag) override;
+    void clientOnMessage(int32_t id, const std::string& message) override;
 
-  // notify
-  void sendBroadcast(const std::string &action, const std::string &body);
-  void registerReceiver(const std::string &action, FtCallbackId action_cb);
-  void unregisterReceiver(const std::string &action);
+    // override BroadcastChannelCallback
+    void onReceive(const std::string& target, const std::string& action,
+        const std::string& data) override;
 
-  // session
-  int createSession(const std::string &target);
-  void sessionOnData(SessionId session_id, FtCallbackId cb);
-  void sessionOnClose(SessionId session_id, FtCallbackId cb);
-  void sessionOnReceive(FtCallbackId cb);
-  void sessionSend(SessionId session_id, const std::string &msg);
-  void sessionClose(SessionId session_id);
+    // notify
+    void sendBroadcast(const std::string& action, const std::string& body);
+    void registerReceiver(const std::string& action, FtCallbackId action_cb);
+    void unregisterReceiver(const std::string& action);
 
-  // Message
-  int sendMessage(const std::string &target, const std::string &msg,
-                  FtPromiseId pid);
-  void setReceiveRequestCallback(FtCallbackId cb);
-  void reply(ReplyId reply_id, const std::string &msg);
+    // session
+    int createSession(const std::string& target);
+    void sessionOnData(SessionId session_id, FtCallbackId cb);
+    void sessionOnClose(SessionId session_id, FtCallbackId cb);
+    void sessionOnReceive(FtCallbackId cb);
+    void sessionSend(SessionId session_id, const std::string& msg);
+    void sessionClose(SessionId session_id);
 
-  // register server
-  void registerServer(const std::string &name);
+    // Message
+    int sendMessage(const std::string& target, const std::string& msg,
+        FtPromiseId pid);
+    void setReceiveRequestCallback(FtCallbackId cb);
+    void reply(ReplyId reply_id, const std::string& msg);
+
+    // register server
+    void registerServer(const std::string& name);
+
+    // for c api
+    int sendMessageForC(const std::string& target, const std::string& msg,
+        RequestCb cb);
+    void setReceiveRequestCallbackForC(ServiceMsgCb cb);
+    void replyForC(ReplyId reply_id, const std::string& msg);
+    void sendBroadcastForC(const std::string& action, const std::string& body);
+    void registerReceiverForC(const std::string& action, SubscribeCb cb);
+    void unregisterReceiverForC(const std::string& action);
 
 private:
-  FeatureInstanceHandle ft_instance_;
-  BroadcastChannel *broadcast_channel_;
-  MessageServerChannel *message_server_channel_;
-  SessionServerChannel *session_server_channel_;
-  ClientChannel *client_channel_;
-  ServerHelper *server_help_;
+    FeatureInstanceHandle ft_instance_;
+    BroadcastChannel* broadcast_channel_;
+    MessageServerChannel* message_server_channel_;
+    SessionServerChannel* session_server_channel_;
+    ClientChannel* client_channel_;
+    ServerHelper* server_help_;
 
-  FtCallbackId message_server_recv_cb_;
-  FtCallbackId session_server_recv_cb_;
+    FtCallbackId message_server_recv_cb_;
+    FtCallbackId session_server_recv_cb_;
 
-  std::map<std::string, FtCallbackId> action_cb_map_;
-  std::map<SessionId, FtCallbackId> session_ondata_cb_map_;
-  std::map<SessionId, FtCallbackId> session_onclose_cb_map_;
+    std::map<std::string, FtCallbackId> action_cb_map_;
+    std::map<SessionId, FtCallbackId> session_ondata_cb_map_;
+    std::map<SessionId, FtCallbackId> session_onclose_cb_map_;
+
+    std::map<int32_t, RequestCb> request_map_;
+    std::pair<int32_t, ServiceMsgCb> service_msg_map_;
+    std::map<int32_t, SubscribeCb> subscribe_map_;
 };

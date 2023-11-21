@@ -23,417 +23,561 @@
 #include "message_channel.h"
 
 #define MessageChannelTag "[jidl_feature] messageChannel"
-#define GET_MESSAGE_CHANNEL(ft_instance)                                       \
-  (MessageChannel *)FeatureGetObjectData(ft_instance)
+#define GET_MESSAGE_CHANNEL(ft_instance) \
+    (MessageChannel*)FeatureGetObjectData(ft_instance)
 
 //////////////////// class MessageChannel
-MessageChannel::MessageChannel(FeatureInstanceHandle ft_instance,
-                               ClientChannel *client_channel,
-                               BroadcastChannel *broadcast_channel,
-                               ServerHelper *server_help)
-    : ft_instance_(ft_instance), broadcast_channel_(broadcast_channel),
-      client_channel_(client_channel), server_help_(server_help),
-      message_server_recv_cb_(-1), session_server_recv_cb_(-1) {
-  if (broadcast_channel_) {
-    broadcast_channel_->setBroadcastCallback(this);
-  }
+MessageChannel::MessageChannel()
+    : ft_instance_(nullptr)
+    , message_server_recv_cb_(-1)
+    , session_server_recv_cb_(-1)
+{
+    ClientConnection* client_connect = new ClientConnection();
+    client_channel_ = client_connect;
+    broadcast_channel_ = client_connect;
+    server_help_ = new ServerHelper();
+    if (broadcast_channel_) {
+        broadcast_channel_->setBroadcastCallback(this);
+    }
 
-  if (client_channel_) {
-    client_channel_->setClientChannelCallback(this);
-  }
+    if (client_channel_) {
+        client_channel_->setClientChannelCallback(this);
+    }
 }
 
-MessageChannel::~MessageChannel() {
-  // client_channel_ and broadcast_channel_ is the same object.
-  if (client_channel_ != nullptr && broadcast_channel_ != nullptr) {
-    delete client_channel_;
-    client_channel_ = nullptr;
-    broadcast_channel_ = nullptr;
-  }
-
-  if (server_help_) {
-    delete server_help_;
-    server_help_ = nullptr;
-  }
-
-  if (message_server_recv_cb_ != -1) {
-    FeatureRemoveCallback(ft_instance_, message_server_recv_cb_);
-  }
-
-  if (session_server_recv_cb_ != -1) {
-    FeatureRemoveCallback(ft_instance_, session_server_recv_cb_);
-  }
-
-  if (!session_ondata_cb_map_.empty()) {
-    for (auto &x : session_ondata_cb_map_) {
-      FeatureRemoveCallback(ft_instance_, x.second);
+MessageChannel::~MessageChannel()
+{
+    // client_channel_ and broadcast_channel_ is the same object.
+    if (client_channel_ != nullptr && broadcast_channel_ != nullptr) {
+        delete client_channel_;
+        client_channel_ = nullptr;
+        broadcast_channel_ = nullptr;
     }
-  }
 
-  if (!session_onclose_cb_map_.empty()) {
-    for (auto &x : session_onclose_cb_map_) {
-      FeatureRemoveCallback(ft_instance_, x.second);
+    if (server_help_) {
+        delete server_help_;
+        server_help_ = nullptr;
     }
-  }
+
+    if (message_server_recv_cb_ != -1) {
+        FeatureRemoveCallback(ft_instance_, message_server_recv_cb_);
+    }
+
+    if (session_server_recv_cb_ != -1) {
+        FeatureRemoveCallback(ft_instance_, session_server_recv_cb_);
+    }
+
+    if (!session_ondata_cb_map_.empty()) {
+        for (auto& x : session_ondata_cb_map_) {
+            FeatureRemoveCallback(ft_instance_, x.second);
+        }
+    }
+
+    if (!session_onclose_cb_map_.empty()) {
+        for (auto& x : session_onclose_cb_map_) {
+            FeatureRemoveCallback(ft_instance_, x.second);
+        }
+    }
 }
 
-void MessageChannel::serverOnMessage(int reply_id, const std::string &message) {
-  if (message_server_recv_cb_ != -1) {
-    bool ret = FeatureInvokeCallback(ft_instance_, message_server_recv_cb_,
-                                     reply_id, message.c_str());
-    if (!ret) {
-      FEATURE_LOG_ERROR("server onmessage invoke failed !");
+void MessageChannel::setFeatureInstanceHandle(FeatureInstanceHandle ft_instance)
+{
+    ft_instance_ = ft_instance;
+}
+
+void MessageChannel::serverOnMessage(ReplyId reply_id, const std::string& message)
+{
+    if (message_server_recv_cb_ != -1) {
+        if (ft_instance_ != nullptr) {
+            bool ret = FeatureInvokeCallback(ft_instance_, message_server_recv_cb_,
+                reply_id, message.c_str());
+            if (!ret) {
+                FEATURE_LOG_ERROR("server onmessage invoke failed !");
+            }
+        } else {
+            ServiceMsgCb cb = service_msg_map_.second;
+            cb((void*)this, reply_id, message.c_str());
+        }
     }
-  }
 }
 
 void MessageChannel::sessionOnMessage(SessionId id,
-                                      const std::string &message) {
-  if (session_server_recv_cb_ != -1) {
-    bool ret = FeatureInvokeCallback(ft_instance_, session_server_recv_cb_, id,
-                                     message.c_str());
-    if (!ret) {
-      FEATURE_LOG_ERROR("server onaccept invoke failed !");
+    const std::string& message)
+{
+    if (session_server_recv_cb_ != -1) {
+        bool ret = FeatureInvokeCallback(ft_instance_, session_server_recv_cb_, id,
+            message.c_str());
+        if (!ret) {
+            FEATURE_LOG_ERROR("server onaccept invoke failed !");
+        }
     }
-  }
 }
 
 void MessageChannel::clientOnSessionMessage(SessionId id,
-                                            const std::string &message) {
-  if (session_ondata_cb_map_.count(id) > 0) {
-    bool ret = FeatureInvokeCallback(ft_instance_, session_ondata_cb_map_[id],
-                                     message.c_str());
-    if (!ret) {
-      FEATURE_LOG_ERROR("client onopen invoke failed !");
-      return;
+    const std::string& message)
+{
+    if (session_ondata_cb_map_.count(id) > 0) {
+        bool ret = FeatureInvokeCallback(ft_instance_, session_ondata_cb_map_[id],
+            message.c_str());
+        if (!ret) {
+            FEATURE_LOG_ERROR("client onopen invoke failed !");
+            return;
+        }
     }
-  }
 }
 
-void MessageChannel::clientOnSessionCloseByself(SessionId id, int flag) {
-  if (session_onclose_cb_map_.count(id) > 0) {
-    bool ret =
-        FeatureInvokeCallback(ft_instance_, session_onclose_cb_map_[id], flag);
-    if (!ret) {
-      FEATURE_LOG_ERROR("client onclose invoke failed !");
-      return;
+void MessageChannel::clientOnSessionCloseByself(SessionId id, int flag)
+{
+    if (session_onclose_cb_map_.count(id) > 0) {
+        bool ret = FeatureInvokeCallback(ft_instance_, session_onclose_cb_map_[id], flag);
+        if (!ret) {
+            FEATURE_LOG_ERROR("client onclose invoke failed !");
+            return;
+        }
+
+        FeatureRemoveCallback(ft_instance_, session_onclose_cb_map_[id]);
+        session_onclose_cb_map_.erase(id);
+    }
+}
+
+void MessageChannel::clientOnSessionCloseBypeer(SessionId id, int flag)
+{
+    if (session_onclose_cb_map_.count(id) > 0) {
+        bool ret = FeatureInvokeCallback(ft_instance_, session_onclose_cb_map_[id], flag);
+        if (!ret) {
+            FEATURE_LOG_ERROR("client onclose invoke failed !");
+            return;
+        }
+
+        FeatureRemoveCallback(ft_instance_, session_onclose_cb_map_[id]);
+        session_onclose_cb_map_.erase(id);
+    }
+    // peer close时删除sessionOnData的callback
+    if (session_ondata_cb_map_.find(id) != session_ondata_cb_map_.end()) {
+        FeatureRemoveCallback(ft_instance_, session_ondata_cb_map_[id]);
+        session_ondata_cb_map_.erase(id);
+    }
+}
+
+void MessageChannel::clientOnMessage(int32_t id, const std::string& message)
+{
+    if (ft_instance_ != nullptr) {
+        FeaturePromiseResolve(ft_instance_, id, message.c_str());
+    } else {
+        RequestCb cb = request_map_[id];
+        cb(message.c_str());
+        request_map_.erase(id);
+    }
+}
+
+void MessageChannel::onReceive(const std::string& target,
+    const std::string& action,
+    const std::string& data)
+{
+    FEATURE_LOG_INFO("%s() target:%s, action:%s, data:%s ", __FUNCTION__,
+        target.c_str(), action.c_str(), data.c_str());
+
+    auto iter = action_cb_map_.find(action);
+    if (iter == action_cb_map_.end()) {
+        FEATURE_LOG_ERROR("ERROR: no found action callback: %s", action.c_str());
+        return;
     }
 
-    FeatureRemoveCallback(ft_instance_, session_onclose_cb_map_[id]);
-    session_onclose_cb_map_.erase(id);
-  }
-}
-
-void MessageChannel::clientOnSessionCloseBypeer(SessionId id, int flag) {
-  if (session_onclose_cb_map_.count(id) > 0) {
-    bool ret =
-        FeatureInvokeCallback(ft_instance_, session_onclose_cb_map_[id], flag);
-    if (!ret) {
-      FEATURE_LOG_ERROR("client onclose invoke failed !");
-      return;
+    if (ft_instance_ != nullptr) {
+        bool ret = FeatureInvokeCallback(ft_instance_, iter->second,
+            (iter->first).c_str(), data.c_str());
+        if (!ret) {
+            FEATURE_LOG_ERROR("broadcast recv invoke failed !");
+            return;
+        }
+    } else {
+        SubscribeCb cb = subscribe_map_[iter->second];
+        cb((iter->first).c_str(), data.c_str());
     }
-
-    FeatureRemoveCallback(ft_instance_, session_onclose_cb_map_[id]);
-    session_onclose_cb_map_.erase(id);
-  }
-  // peer close时删除sessionOnData的callback
-  if (session_ondata_cb_map_.find(id) != session_ondata_cb_map_.end()) {
-    FeatureRemoveCallback(ft_instance_, session_ondata_cb_map_[id]);
-    session_ondata_cb_map_.erase(id);
-  }
 }
 
-void MessageChannel::clientOnMessage(int32_t id, const std::string &message) {
-  FeaturePromiseResolve(ft_instance_, id, message.c_str());
+void MessageChannel::sendBroadcast(const std::string& action,
+    const std::string& body)
+{
+    if (broadcast_channel_) {
+        broadcast_channel_->sendBroadcast(action, body);
+    }
 }
 
-void MessageChannel::onReceive(const std::string &target,
-                               const std::string &action,
-                               const std::string &data) {
-  FEATURE_LOG_INFO("%s() target:%s, action:%s, data:%s ", __FUNCTION__,
-                   target.c_str(), action.c_str(), data.c_str());
-
-  auto iter = action_cb_map_.find(action);
-  if (iter == action_cb_map_.end()) {
-    FEATURE_LOG_ERROR("ERROR: no found action callback: %s", action.c_str());
-    return;
-  }
-
-  bool ret = FeatureInvokeCallback(ft_instance_, iter->second,
-                                   (iter->first).c_str(), data.c_str());
-  if (!ret) {
-    FEATURE_LOG_ERROR("broadcast recv invoke failed !");
-    return;
-  }
+void MessageChannel::registerReceiver(const std::string& action,
+    FtCallbackId action_cb)
+{
+    if (broadcast_channel_) {
+        broadcast_channel_->registerReceiver(action);
+        action_cb_map_[action] = action_cb;
+    }
 }
 
-void MessageChannel::sendBroadcast(const std::string &action,
-                                   const std::string &body) {
-  if (broadcast_channel_) {
-    broadcast_channel_->sendBroadcast(action, body);
-  }
-}
-
-void MessageChannel::registerReceiver(const std::string &action,
-                                      FtCallbackId action_cb) {
-  if (broadcast_channel_) {
-    broadcast_channel_->registerReceiver(action);
-    action_cb_map_[action] = action_cb;
-  }
-}
-
-void MessageChannel::unregisterReceiver(const std::string &action) {
-  if (broadcast_channel_ &&
-      action_cb_map_.find(action) != action_cb_map_.end()) {
-    FeatureRemoveCallback(ft_instance_, action_cb_map_[action]);
-    action_cb_map_.erase(action);
-    broadcast_channel_->unregisterReceiver(action);
-  }
+void MessageChannel::unregisterReceiver(const std::string& action)
+{
+    if (broadcast_channel_ && action_cb_map_.find(action) != action_cb_map_.end()) {
+        FeatureRemoveCallback(ft_instance_, action_cb_map_[action]);
+        action_cb_map_.erase(action);
+        broadcast_channel_->unregisterReceiver(action);
+    }
 }
 
 // 目前只支持js服务与native
 // service一对一。扩展为多对一，需将createSession添加jsservice_name参数
-int MessageChannel::createSession(const std::string &target) {
-  if (client_channel_) {
-    return client_channel_->createSession(target);
-  }
-  return -1;
+int MessageChannel::createSession(const std::string& target)
+{
+    if (client_channel_) {
+        return client_channel_->createSession(target);
+    }
+    return -1;
 }
 
-void MessageChannel::sessionClose(SessionId session_id) {
-  if (client_channel_ && client_channel_->haveSessionId(session_id)) {
-    client_channel_->sessionClose(session_id);
-  } else if (session_server_channel_ &&
-             session_server_channel_->haveSessionId(session_id)) {
-    session_server_channel_->sessionClose(session_id);
-  }
+void MessageChannel::sessionClose(SessionId session_id)
+{
+    if (client_channel_ && client_channel_->haveSessionId(session_id)) {
+        client_channel_->sessionClose(session_id);
+    } else if (session_server_channel_ && session_server_channel_->haveSessionId(session_id)) {
+        session_server_channel_->sessionClose(session_id);
+    }
 }
 
-void MessageChannel::sessionSend(SessionId session_id, const std::string &msg) {
-  if (client_channel_ && client_channel_->haveSessionId(session_id)) {
-    client_channel_->sessionSend(session_id, msg);
-  } else if (session_server_channel_ &&
-             session_server_channel_->haveSessionId(session_id)) {
-    session_server_channel_->sessionSend(session_id, msg);
-  }
+void MessageChannel::sessionSend(SessionId session_id, const std::string& msg)
+{
+    if (client_channel_ && client_channel_->haveSessionId(session_id)) {
+        client_channel_->sessionSend(session_id, msg);
+    } else if (session_server_channel_ && session_server_channel_->haveSessionId(session_id)) {
+        session_server_channel_->sessionSend(session_id, msg);
+    }
 }
 
-void MessageChannel::sessionOnData(SessionId session_id, FtCallbackId cb) {
-  session_ondata_cb_map_[session_id] = cb;
+void MessageChannel::sessionOnData(SessionId session_id, FtCallbackId cb)
+{
+    session_ondata_cb_map_[session_id] = cb;
 }
 
-void MessageChannel::sessionOnClose(SessionId session_id, FtCallbackId cb) {
-  session_onclose_cb_map_[session_id] = cb;
+void MessageChannel::sessionOnClose(SessionId session_id, FtCallbackId cb)
+{
+    session_onclose_cb_map_[session_id] = cb;
 }
 
-void MessageChannel::sessionOnReceive(FtCallbackId cb) {
-  session_server_recv_cb_ = cb;
+void MessageChannel::sessionOnReceive(FtCallbackId cb)
+{
+    session_server_recv_cb_ = cb;
 }
 
-void MessageChannel::setReceiveRequestCallback(FtCallbackId cb) {
-  message_server_recv_cb_ = cb;
+void MessageChannel::setReceiveRequestCallback(FtCallbackId cb)
+{
+    message_server_recv_cb_ = cb;
 }
 
-int MessageChannel::sendMessage(const std::string &target,
-                                const std::string &msg, FtPromiseId pid) {
-  if (client_channel_) {
-    return client_channel_->sendMessage(target, msg, pid);
-  }
-  return -1;
+int MessageChannel::sendMessage(const std::string& target,
+    const std::string& msg, FtPromiseId pid)
+{
+    if (client_channel_) {
+        return client_channel_->sendMessage(target, msg, pid);
+    }
+    return -1;
 }
 
-void MessageChannel::reply(ReplyId reply_id, const std::string &msg) {
-  if (message_server_channel_) {
-    message_server_channel_->serverReply(reply_id, msg);
-  }
+void MessageChannel::reply(ReplyId reply_id, const std::string& msg)
+{
+    if (message_server_channel_) {
+        message_server_channel_->serverReply(reply_id, msg);
+    }
 }
 
-void MessageChannel::registerServer(const std::string &name) {
-  if (server_help_) {
-    server_help_->registerServer(name);
-  }
-  message_server_channel_ = server_help_->getMessageTransportServer().get();
-  session_server_channel_ = server_help_->getMessageTransportServer().get();
-  
-  if (message_server_channel_ && session_server_channel_) {
-    message_server_channel_->setMessageServerChannelCallback(this);
-    session_server_channel_->setSessionServerChannelCallback(this);
-  }
+void MessageChannel::registerServer(const std::string& name)
+{
+    if (server_help_) {
+        server_help_->registerServer(name);
+    }
+    message_server_channel_ = server_help_->getMessageTransportServer().get();
+    session_server_channel_ = server_help_->getMessageTransportServer().get();
+
+    if (message_server_channel_ && session_server_channel_) {
+        message_server_channel_->setMessageServerChannelCallback(this);
+        session_server_channel_->setSessionServerChannelCallback(this);
+    }
+}
+
+int MessageChannel::sendMessageForC(const std::string& target, const std::string& msg, RequestCb cb)
+{
+    int32_t id = (int32_t)cb;
+    request_map_.insert(std::make_pair(id, cb));
+    return sendMessage(target, msg, id);
+}
+
+void MessageChannel::setReceiveRequestCallbackForC(ServiceMsgCb cb)
+{
+    int32_t id = (int32_t)cb;
+    service_msg_map_ = std::make_pair(id, cb);
+    setReceiveRequestCallback(id);
+}
+
+void MessageChannel::replyForC(ReplyId reply_id, const std::string& msg)
+{
+    reply(reply_id, msg);
+}
+
+void MessageChannel::sendBroadcastForC(const std::string& action, const std::string& body)
+{
+    sendBroadcast(action, body);
+}
+
+void MessageChannel::registerReceiverForC(const std::string& action, SubscribeCb cb)
+{
+    int32_t id = (int32_t)cb;
+    subscribe_map_.insert(std::make_pair(id, cb));
+    registerReceiver(action, id);
+}
+
+void MessageChannel::unregisterReceiverForC(const std::string& action)
+{
+    unregisterReceiver(action);
+    subscribe_map_.erase(action_cb_map_[action]);
 }
 
 ///////////////////////// jidl feature implement
-static void initMessageChannel(feature_context_ref ctx,
-                               FeatureInstanceHandle ft_instance) {
-  ClientConnection *client_connect = new ClientConnection();
-  ServerHelper *server_help = new ServerHelper();
-  MessageChannel *message_channel = new MessageChannel(
-      ft_instance, client_connect, client_connect, server_help);
-  FeatureSetObjectData(ft_instance, message_channel);
+static void initMessageChannel(FeatureInstanceHandle ft_instance)
+{
+    MessageChannel* message_channel = new MessageChannel();
+    FeatureSetObjectData(ft_instance, message_channel);
+    message_channel->setFeatureInstanceHandle(ft_instance);
 }
 
-static void freeMessageChannel(FeatureInstanceHandle ft_instance) {
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(ft_instance);
-  delete message_channel;
+static void freeMessageChannel(FeatureInstanceHandle ft_instance)
+{
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(ft_instance);
+    delete message_channel;
 }
 
-void system_messageChannel_onRegister(const char *feature_name) {
-  FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
+void system_messageChannel_onRegister(const char* feature_name)
+{
+    FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
 }
 
 void system_messageChannel_onCreate(FeatureRuntimeContext ctx,
-                                    FeatureProtoHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
+    FeatureProtoHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
 }
 
 void system_messageChannel_onRequired(FeatureRuntimeContext ctx,
-                                      FeatureInstanceHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
-  initMessageChannel(static_cast<feature_context_ref>(ctx), handle);
+    FeatureInstanceHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
+    initMessageChannel(handle);
 }
 
 void system_messageChannel_onDetached(FeatureRuntimeContext ctx,
-                                      FeatureInstanceHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
-  freeMessageChannel(handle);
+    FeatureInstanceHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
+    freeMessageChannel(handle);
 }
 
 void system_messageChannel_onDestroy(FeatureRuntimeContext ctx,
-                                     FeatureProtoHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
+    FeatureProtoHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
 }
 
-void system_messageChannel_onUnregister(const char *feature_name) {
-  FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
+void system_messageChannel_onUnregister(const char* feature_name)
+{
+    FEATURE_LOG_INFO("%s::%s()", MessageChannelTag, __FUNCTION__);
 }
 
 // Message mode
 // for client.
 void system_messageChannel_wrap_sendMessage(FeatureInstanceHandle feature,
-                                            AppendData append_data,
-                                            FtPromiseId pid, FtString target,
-                                            FtString body) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  int res = message_channel->sendMessage(target, body, pid);
-  if (res == -1) {
-    FeaturePromiseReject(feature, pid, "native sendMessage Failed");
-  }
+    AppendData append_data,
+    FtPromiseId pid, FtString target,
+    FtString body)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    int res = message_channel->sendMessage(target, body, pid);
+    if (res == -1) {
+        FeaturePromiseReject(feature, pid, "native sendMessage Failed");
+    }
 }
 
 // for server
 void system_messageChannel_wrap_reply(FeatureInstanceHandle feature,
-                                      AppendData append_data, FtInt reply_id,
-                                      FtString reply) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->reply(reply_id, reply);
+    AppendData append_data, FtInt reply_id,
+    FtString reply)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->reply(reply_id, reply);
 }
 
 void system_messageChannel_wrap_setReceiveRequestCallback(
     FeatureInstanceHandle feature, AppendData append_data,
-    FtString service_name, FtCallbackId cb) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->setReceiveRequestCallback(cb);
-  message_channel->registerServer(service_name);
+    FtString service_name, FtCallbackId cb)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->setReceiveRequestCallback(cb);
+    message_channel->registerServer(service_name);
 }
 
 // Session mode
 // jidl wrapper for client
 void system_messageChannel_wrap_createSession(FeatureInstanceHandle feature,
-                                              AppendData append_data,
-                                              FtPromiseId pid,
-                                              FtString target) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  int res = message_channel->createSession(target);
-  if (res != -1) {
-    FeaturePromiseResolve(feature, pid, res);
-  } else {
-    // TODO:error处理
-    FeaturePromiseReject(feature, pid, "native createSession Failed");
-  }
+    AppendData append_data,
+    FtPromiseId pid,
+    FtString target)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    int res = message_channel->createSession(target);
+    if (res != -1) {
+        FeaturePromiseResolve(feature, pid, res);
+    } else {
+        // TODO:error处理
+        FeaturePromiseReject(feature, pid, "native createSession Failed");
+    }
 }
 
 void system_messageChannel_wrap_sessionSend(FeatureInstanceHandle feature,
-                                            AppendData append_data,
-                                            FtInt session_id,
-                                            FtString message) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->sessionSend(session_id, message);
+    AppendData append_data,
+    FtInt session_id,
+    FtString message)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->sessionSend(session_id, message);
 }
 
 void system_messageChannel_wrap_acceptSession(FeatureInstanceHandle feature,
-                                              AppendData append_data,
-                                              FtInt session_id) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  // do nothing
+    AppendData append_data,
+    FtInt session_id)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    // do nothing
 }
 
 void system_messageChannel_wrap_sessionClose(FeatureInstanceHandle feature,
-                                             AppendData append_data,
-                                             FtInt session_id) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->sessionClose(session_id);
+    AppendData append_data,
+    FtInt session_id)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->sessionClose(session_id);
 }
 
 void system_messageChannel_wrap_sessionOnData(FeatureInstanceHandle feature,
-                                              AppendData append_data,
-                                              FtInt session_id,
-                                              FtCallbackId cb) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->sessionOnData(session_id, cb);
+    AppendData append_data,
+    FtInt session_id,
+    FtCallbackId cb)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->sessionOnData(session_id, cb);
 }
 
 void system_messageChannel_wrap_sessionOnClose(FeatureInstanceHandle feature,
-                                               AppendData append_data,
-                                               FtInt session_id,
-                                               FtCallbackId cb) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->sessionOnClose(session_id, cb);
+    AppendData append_data,
+    FtInt session_id,
+    FtCallbackId cb)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->sessionOnClose(session_id, cb);
 }
 
 void system_messageChannel_wrap_sessionOnReceive(FeatureInstanceHandle feature,
-                                                 AppendData append_data,
-                                                 FtString service_name,
-                                                 FtCallbackId cb) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->sessionOnReceive(cb);
-  message_channel->registerServer(service_name);
+    AppendData append_data,
+    FtString service_name,
+    FtCallbackId cb)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->sessionOnReceive(cb);
+    message_channel->registerServer(service_name);
 }
 
 // Notify mode
 void system_messageChannel_wrap_notifyMessage(FeatureInstanceHandle feature,
-                                              AppendData append_data,
-                                              FtString target, FtString body) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->sendBroadcast(target, body);
+    AppendData append_data,
+    FtString target, FtString body)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->sendBroadcast(target, body);
 }
 
 void system_messageChannel_wrap_setTopicListener(FeatureInstanceHandle feature,
-                                                 AppendData append_data,
-                                                 FtString topic,
-                                                 FtCallbackId cb) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->registerReceiver(topic, cb);
+    AppendData append_data,
+    FtString topic,
+    FtCallbackId cb)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->registerReceiver(topic, cb);
 }
 
 void system_messageChannel_wrap_unsetTopicListener(
-    FeatureInstanceHandle feature, AppendData append_data, FtString topic) {
-  FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
-  MessageChannel *message_channel = GET_MESSAGE_CHANNEL(feature);
-  message_channel->unregisterReceiver(topic);
+    FeatureInstanceHandle feature, AppendData append_data, FtString topic)
+{
+    FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->unregisterReceiver(topic);
 }
 
 void system_messageChannel_wrap_print(FeatureInstanceHandle feature,
-                                      AppendData append_data,
-                                      FtString message) {
-  FEATURE_LOG_INFO("############js print log:%s", message);
+    AppendData append_data,
+    FtString message)
+{
+    FEATURE_LOG_INFO("############js print log:%s", message);
+}
+
+extern "C" {
+MessageChannelHandle message_channel_init()
+{
+    return static_cast<MessageChannelHandle>(new MessageChannel());
+}
+
+void message_channel_uninit(MessageChannelHandle handle)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    delete channel;
+}
+
+void message_channel_send_async_request(MessageChannelHandle handle, const char* name, const char* data, RequestCb cb)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    channel->sendMessageForC(name, data, cb);
+}
+
+void message_channel_send_async_response(MessageChannelHandle handle, ReplyId id, const char* data)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    channel->replyForC(id, data);
+}
+
+void message_channel_add_async_service(MessageChannelHandle handle, const char* name, ServiceMsgCb cb)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    channel->setReceiveRequestCallbackForC(cb);
+    channel->registerServer(name);
+}
+
+void message_channel_publish(MessageChannelHandle handle, const char* topic_name, const char* data)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    channel->sendBroadcastForC(topic_name, data);
+}
+void message_channel_subscribe(MessageChannelHandle handle, const char* topic_name, SubscribeCb cb)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    channel->registerReceiverForC(topic_name, cb);
+}
+
+void message_channel_unsubscribe(MessageChannelHandle handle, const char* topic_name)
+{
+    MessageChannel* channel = static_cast<MessageChannel*>(handle);
+    channel->unregisterReceiverForC(topic_name);
+}
 }
