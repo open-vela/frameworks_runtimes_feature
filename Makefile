@@ -116,6 +116,11 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher_impl.cpp
 FEATURELIST += system_cipher
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/net_utils.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch_impl.cpp
+FEATURELIST += fetch
+
 ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE),y)
 PROGNAME += feature_test_cli
 PRIORITY += 100
