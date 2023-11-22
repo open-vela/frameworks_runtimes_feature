@@ -20,8 +20,6 @@
 #include <alloca.h>
 #include <stdio.h>
 
-static const char* file_tag = "[crypto_util] ";
-
 bool has_type(const char** type_array, int size, const char* type)
 {
     for (int i = 0; i < size; ++i) {
