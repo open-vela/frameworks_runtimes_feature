@@ -19,17 +19,42 @@
  *
  */
 
-/* clang-format off */
-#include "file.h"
 #include "feature_config.h"
-#include <cstdlib>
-#include <uv.h>
+#include "file.h"
 #include "jse_apppath.h"
+#include <cstdlib>
+#include <cstring>
+#include <type_traits>
+#include <uv.h>
+
+#define INVOKE_SUCCESS_CB(cb, ...)                                 \
+    do {                                                           \
+        if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
+            FEATURE_LOG_ERROR("invoke success callback failed !"); \
+        }                                                          \
+        FeatureRemoveCallback(feature, cb);                        \
+    } while (0)
+
+#define INVOKE_FAIL_CB(cb, msg, code)                           \
+    do {                                                        \
+        if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
+            FEATURE_LOG_ERROR("invoke fail callback failed !"); \
+        }                                                       \
+        FeatureRemoveCallback(feature, cb);                     \
+    } while (0)
+
+#define INVOKE_COMPLET_CB(cb)                                       \
+    do {                                                            \
+        if (!FeatureInvokeCallback(feature, cb)) {                  \
+            FEATURE_LOG_ERROR("invoke complete callback failed !"); \
+        }                                                           \
+        FeatureRemoveCallback(feature, cb);                         \
+    } while (0)
 
 static const char* file_tag = "[jidl_feature] file_impl";
 
 #define FILE_INFO(fmt, ...) \
-    FILE_INFO("[feature_file] " fmt, ##__VA_ARGS__)
+    FEATURE_LOG_INFO("[feature_file] " fmt, ##__VA_ARGS__)
 
 #define FILE_ERROR(fmt, ...) \
     FEATURE_LOG_ERROR("[feature_file] " fmt, ##__VA_ARGS__)
@@ -42,27 +67,33 @@ typedef struct
 
 FileContext* fc = NULL;
 
-void file_onRegister(const char* feature_name) {
+void file_onRegister(const char* feature_name)
+{
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     fc = static_cast<FileContext*>(malloc(sizeof(*fc)));
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     fc->loop = FeatureGetUVLoop(manager);
     fc->pkg_name = FeatureGetPackageName(handle);
 }
-void file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     free(fc);
 }
-void file_onUnregister(const char* feature_name) {
+void file_onUnregister(const char* feature_name)
+{
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
@@ -90,41 +121,42 @@ static int __error_code_map(int error)
     return code;
 }
 
-static void __uv_fs_req_cb(uv_fs_t* req) {
+static void __uv_fs_req_cb(uv_fs_t* req)
+{
     FILE_INFO("req->result = %d", req->result);
     FsReq* fr = static_cast<FsReq*>(req->data);
     if (!fr) {
         return;
     }
-    if(req->result < 0) {
-        FeatureInvokeCallback(fr->handle, fr->fail, uv_strerror(req->result), __error_code_map(req->result));
+    FeatureInstanceHandle feature = fr->handle;
+    if (req->result < 0) {
+        INVOKE_FAIL_CB(fr->fail, uv_strerror(req->result), __error_code_map(req->result));
     } else {
-        switch (req->fs_type)
-        {
+        switch (req->fs_type) {
         case UV_FS_COPYFILE:
         case UV_FS_RENAME:
-            FeatureInvokeCallback(fr->handle, fr->success, req->path);
+            INVOKE_SUCCESS_CB(fr->success, req->path);
             break;
         case UV_FS_UNLINK:
         case UV_FS_ACCESS:
-            FeatureInvokeCallback(fr->handle, fr->success);
+            INVOKE_SUCCESS_CB(fr->success);
             break;
         default:
             break;
         }
     }
-    FeatureInvokeCallback(fr->handle, fr->complete);
+    INVOKE_COMPLET_CB(fr->complete);
     uv_fs_req_cleanup(req);
     free(fr);
 }
 
-
-void file_copy_or_move(FeatureInstanceHandle feature, file_move_param_t * param, bool move = true) {
+void file_copy_or_move(FeatureInstanceHandle feature, file_move_param_t* param, bool move = true)
+{
     char *temp_str, *path, *new_path;
     const char* msg;
     int code, result;
     FsReq* fr = static_cast<FsReq*>(malloc(sizeof(*fr)));
-    if(!fr) {
+    if (!fr) {
         msg = "malloc fail";
         code = GENERAL;
         goto fail;
@@ -134,7 +166,7 @@ void file_copy_or_move(FeatureInstanceHandle feature, file_move_param_t * param,
     fr->complete = param->_complete;
     fr->handle = feature;
 
-    if(param->_srcUri == NULL || param->_dstUri == NULL) {
+    if (param->_srcUri == NULL || param->_dstUri == NULL) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
@@ -143,17 +175,17 @@ void file_copy_or_move(FeatureInstanceHandle feature, file_move_param_t * param,
 
     temp_str = strdup(param->_srcUri);
     path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    if(!path) {
+    if (!path) {
         path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
     temp_str = strdup(param->_dstUri);
     new_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    if(!new_path) {
+    if (!new_path) {
         new_path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
-    if(path == NULL || new_path == NULL) {
+    if (path == NULL || new_path == NULL) {
         FILE_ERROR("src path:%s, dest path:%s\n", path, new_path);
         free(path);
         free(new_path);
@@ -162,33 +194,34 @@ void file_copy_or_move(FeatureInstanceHandle feature, file_move_param_t * param,
         goto fail;
     }
     FILE_INFO("path = %s, new_path = %s", path, new_path);
-    result = move ?
-        uv_fs_rename(fc->loop, &fr->req, path, new_path, __uv_fs_req_cb) :
-        uv_fs_copyfile(fc->loop, &fr->req, path, new_path, 0, __uv_fs_req_cb);
-    if(result != 0) {
+    result = move ? uv_fs_rename(fc->loop, &fr->req, path, new_path, __uv_fs_req_cb) : uv_fs_copyfile(fc->loop, &fr->req, path, new_path, 0, __uv_fs_req_cb);
+    if (result != 0) {
         FILE_ERROR("wrong result = %d", result);
     }
     fr->req.data = fr;
     return;
 fail:
-    FeatureInvokeCallback(feature, fr->fail, msg, code);
-    FeatureInvokeCallback(feature, fr->complete);
-    if(fr) free(fr);
+    INVOKE_FAIL_CB(fr->fail, msg, code);
+    INVOKE_COMPLET_CB(fr->complete);
+    if (fr)
+        free(fr);
 }
 
-void file_wrap_move(FeatureInstanceHandle feature, AppendData append_data, file_move_param_t * param) {
+void file_wrap_move(FeatureInstanceHandle feature, AppendData append_data, file_move_param_t* param)
+{
     file_copy_or_move(feature, param, true);
 }
-void file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data, file_copy_param_t * param) {
+void file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data, file_copy_param_t* param)
+{
     file_copy_or_move(feature, (file_move_param_t*)param, false);
 }
-void file_access_or_delete(FeatureInstanceHandle feature, file_access_param_t * param, bool access = true) {
+void file_access_or_delete(FeatureInstanceHandle feature, file_access_param_t* param, bool access = true)
+{
     char *temp_str, *path;
     const char* msg;
     int code, result;
-    // FILE_INFO("uri = %s", param->_uri);
     FsReq* fr = static_cast<FsReq*>(malloc(sizeof(*fr)));
-        if(!fr) {
+    if (!fr) {
         msg = "malloc fail";
         code = GENERAL;
         goto fail;
@@ -198,7 +231,7 @@ void file_access_or_delete(FeatureInstanceHandle feature, file_access_param_t * 
     fr->complete = param->_complete;
     fr->handle = feature;
 
-    if(!param->_uri) {
+    if (!param->_uri) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
@@ -206,11 +239,11 @@ void file_access_or_delete(FeatureInstanceHandle feature, file_access_param_t * 
 
     temp_str = strdup(param->_uri);
     path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    if(!path) {
+    if (!path) {
         path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
-    if(path == NULL) {
+    if (path == NULL) {
         FILE_ERROR("uri path: %s\n", path);
         free(path);
         msg = "invalid parameter";
@@ -218,53 +251,349 @@ void file_access_or_delete(FeatureInstanceHandle feature, file_access_param_t * 
         goto fail;
     }
     FILE_INFO("path = %s", path);
-    result = access ?
-        uv_fs_access(fc->loop, &fr->req, path, F_OK, __uv_fs_req_cb):
-        uv_fs_unlink(fc->loop, &fr->req, path, __uv_fs_req_cb);
-    if(result != 0) {
+    result = access ? uv_fs_access(fc->loop, &fr->req, path, F_OK, __uv_fs_req_cb) : uv_fs_unlink(fc->loop, &fr->req, path, __uv_fs_req_cb);
+    if (result != 0) {
         FILE_ERROR("wrong result = %d", result);
     }
     fr->req.data = fr;
     return;
 fail:
-    FeatureInvokeCallback(feature, fr->fail, msg, code);
-    FeatureInvokeCallback(feature, fr->complete);
-    if(fr) free(fr);
+    INVOKE_FAIL_CB(fr->fail, msg, code);
+    INVOKE_COMPLET_CB(fr->complete);
+    if (fr)
+        free(fr);
 }
-void file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, file_delete_param_t * param) {
+void file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, file_delete_param_t* param)
+{
     file_access_or_delete(feature, (file_access_param_t*)param, false);
 }
-void file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, file_access_param_t * param) {
+void file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, file_access_param_t* param)
+{
     file_access_or_delete(feature, param, true);
 }
 
-static void __load_dir_after_work_cb(uv_work_t* req, int status) {
+enum {
+    FILE_WRITEARRBUF,
+    FILE_WRITETEXT,
+    FILE_READARRBUF,
+    FILE_READTEXT
+};
 
+typedef struct
+{
+    uv_work_t req;
+    int r; // 保存连续嵌套函数错误码
+    size_t len; // 文件读写数据长度
+    size_t offset; // 文件读写偏移
+    char* filename; // 文件路径
+    uint8_t* buf; // 文件读写缓冲区
+    int flags;
+    int success;
+    int fail;
+    int complete;
+    int type;
+    FeatureInstanceHandle handle;
+} FileReq;
+
+void freeFileReq(FileReq* fr)
+{
+    if (fr) {
+        if (fr->filename)
+            free(fr->filename);
+        if (fr->buf)
+            FeatureFreeValue(fr->buf);
+        free(fr);
+    }
 }
 
-void file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, file_list_param_t * param) {
-
-}
-void file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, file_get_param_t * param) {
-
-}
-
-void file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, file_write_text_param_t * param) {
-
-}
-void file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_write_arr_buf_param_t * param) {
-
-}
-void file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, file_read_text_param_t * param) {
-
-}
-void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_ReadArrayBufferPara * param) {
-
+void initFileReq(FileReq* fr)
+{
+    if (!fr)
+        return;
+    fr->r = -1;
+    fr->filename = NULL;
+    fr->buf = NULL;
 }
 
-void file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, file_mkdir_param_t * param) {
+/**
+ * @brief 递归创建文件夹，
+ */
+static void __create_dir(char* path, FileReq* fr)
+{
+    FILE_INFO("__create_dir, path = %s", path);
+    char data[CONFIG_PATH_MAX];
+    char* ret;
 
+    if ((strcmp(path, ".") == 0) || (strcmp(path, "/") == 0))
+        return;
+
+    if (access(path, F_OK) == 0) {
+        return;
+    }
+
+    else if (fr->flags == 1) { // 递归模式
+        strncpy(data, path, sizeof(data) - 1);
+        ret = strrchr(data, '/');
+        if (ret == 0) {
+            return;
+        }
+        *ret = 0;
+        __create_dir(data, fr);
+    }
+
+    if (mkdir(path, 0777) != 0) {
+        FILE_ERROR("file mkdir failed, path:%s,%d\n", path, errno);
+        fr->r = -errno;
+    }
+    return;
 }
-void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file_rmdir_param_t * param) {
 
+/**
+ * @brief 文件读写处理, uv_work 处理回调
+ */
+static void __load_file_work_cb(uv_work_t* wk)
+{
+    FileReq* fr = static_cast<FileReq*>(wk->data);
+    if (!fr)
+        return;
+
+    uv_file fd;
+    int r = 0, oflags = fr->flags;
+
+    // 获取文件读取长度
+    if ((int)fr->len == -1) {
+        struct stat statbuf;
+        r = stat(fr->filename, &statbuf);
+        fr->len = statbuf.st_size;
+        if (r < 0) {
+            FILE_ERROR("file stat: file: %s, %s", fr->filename, strerror(errno));
+            fr->r = -errno;
+            return;
+        }
+    }
+
+    fr->offset = ((int)fr->offset == -1) ? 0 : fr->offset;
+
+    FILE_INFO("file open file: %s, %d, %d", fr->filename, fr->flags, fr->offset);
+    if (oflags != O_RDONLY && !AIOTJS::check_disk_limit()) {
+        fr->r = -ENOSPC;
+        FILE_ERROR("file write failed: No space left on device");
+        return;
+    }
+
+    fd = open(fr->filename, fr->flags, 0777);
+    if (fd < 0) {
+        char path[PATH_MAX], *path_end;
+        fr->flags = 1;
+        strncpy(path, fr->filename, sizeof(path) - 1);
+        path_end = strrchr(path, '/');
+        assert(path_end != NULL);
+        *path_end = '\0';
+        __create_dir(path, fr);
+        fd = open(fr->filename, oflags, 0777);
+        if (fd < 0) {
+            fr->r = -errno;
+            FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
+            return;
+        }
+    }
+
+    if (oflags == O_RDONLY) {
+        fr->r = lseek(fd, fr->offset, SEEK_SET);
+        if (fr->r < 0) {
+            r = -errno;
+            FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
+        } else {
+            fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
+            r = read(fd, fr->buf, fr->len);
+            // char read_str[fr->len + 1];
+            // for(int i = 0; i< fr->len; i++) {
+            //     read_str[i] = fr->buf[i];
+            // }
+            // read_str[fr->len] = '\0';
+            // FILE_INFO("read_str = %s", read_str);
+            fr->len = r;
+            if (r < 0) {
+                r = -errno;
+                FILE_ERROR("file read failed: file: %s, %s", fr->filename, strerror(errno));
+            }
+        }
+    } else {
+        if (!AIOTJS::check_disk_limit()) {
+            r = -ENOSPC;
+            FILE_ERROR("file write failed: No space left on device");
+        } else if (fr->buf != NULL && fr->len != 0) {
+            fr->r = lseek(fd, fr->offset, SEEK_SET);
+            if (fr->r < 0) {
+                r = -errno;
+                FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
+            } else {
+                r = write(fd, (char*)fr->buf, fr->len);
+                // char write_str[fr->len + 1];
+                // for(int i = 0; i< fr->len; i++) {
+                //     write_str[i] = fr->buf[i];
+                // }
+                // write_str[fr->len] = '\0';
+                // FILE_INFO("write_str = %s", write_str);
+                if (r < 0) {
+                    r = -errno;
+                    FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
+                }
+            }
+        }
+    }
+    close(fd);
+
+    fr->r = r;
+}
+
+/**
+ * @brief uv_work 处理完成回调，返回执行结果，释放内存
+ */
+static void __load_after_work_cb(uv_work_t* req, int status)
+{
+    FileReq* fr = static_cast<FileReq*>(req->data);
+    if (!fr)
+        return;
+
+    FeatureInstanceHandle feature = fr->handle;
+    // 0 表示成功完成
+    if (status != 0) {
+        INVOKE_FAIL_CB(fr->fail, uv_strerror(status), __error_code_map(status));
+    } else if (fr->r < 0) {
+        INVOKE_FAIL_CB(fr->fail, uv_strerror(fr->r), __error_code_map(fr->r));
+    } else if (fr->type == FILE_READTEXT) {
+        // 将读取的文件内容写入 String
+        file_read_txt_succ_t* data = fileMallocread_txt_succ_t();
+        data->_text = (const char*)fr->buf;
+        INVOKE_SUCCESS_CB(fr->success, data);
+    } else if (fr->type == FILE_READARRBUF) {
+        // 将读取的文件内容写入ArrayBuffer
+        ft_value_t* buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+        *buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
+        file_read_arr_buf_succ_t* data = fileMallocread_arr_buf_succ_t();
+        data->_buffer = buffer;
+        INVOKE_SUCCESS_CB(fr->success, data);
+        FeatureFreeValue(buffer);
+    } else if (fr->type == FILE_WRITETEXT || fr->type == FILE_WRITEARRBUF) {
+        INVOKE_SUCCESS_CB(fr->success);
+    }
+
+    INVOKE_COMPLET_CB(fr->complete);
+    freeFileReq(fr);
+}
+
+template <typename T>
+void __file_load(FeatureInstanceHandle feature, T* param, int type)
+{
+    const char* msg;
+    int code, r;
+    char *app_path, *temp_str;
+    FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
+    if (!fr) {
+        FILE_ERROR("malloc fail");
+        msg = "malloc fail";
+        code = GENERAL;
+        goto fail;
+    }
+    initFileReq(fr);
+
+    if (!param->_uri) {
+        msg = "invalid file path";
+        code = ARGSERROR;
+        goto fail;
+    }
+    temp_str = strdup(param->_uri);
+    app_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    free(temp_str);
+    if (!app_path) {
+        FILE_ERROR("invalid parameter :path");
+        msg = "invalid file path";
+        code = ARGSERROR;
+        goto fail;
+    }
+
+    fr->filename = app_path;
+    fr->req.data = fr;
+    fr->handle = feature;
+    fr->success = param->_success;
+    fr->fail = param->_fail;
+    fr->complete = param->_complete;
+    fr->type = type;
+    if constexpr (std::is_same_v<T, file_write_text_param_t>) {
+        fr->offset = 0;
+        if (param->_append) {
+            fr->flags = O_APPEND;
+        } else {
+            fr->flags = O_TRUNC;
+        }
+        fr->flags |= O_WRONLY | O_CREAT;
+        fr->len = strlen(param->_text) + 1;
+        fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
+        memcpy(fr->buf, param->_text, fr->len);
+    } else if constexpr (std::is_same_v<T, file_write_arr_buf_param_t>) {
+        fr->offset = param->_position;
+        if (param->_append) {
+            fr->flags = O_APPEND;
+            fr->offset = 0;
+        } else {
+            fr->flags = O_TRUNC;
+        }
+        fr->flags |= O_WRONLY | O_CREAT;
+        // FILE_INFO("buf type = %d", ft_get_type(FeatureGetContext(feature), *(param->_buffer)));
+        uint8_t* buffer = ft_to_buffer(FeatureGetContext(feature), &(fr->len), *(param->_buffer));
+        fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
+        memcpy(fr->buf, buffer, fr->len);
+    } else if constexpr (std::is_same_v<T, file_read_text_param_t>) {
+        fr->offset = 0;
+        fr->len = -1;
+        fr->flags = O_RDONLY;
+    } else if constexpr (std::is_same_v<T, file_read_arr_buf_t>) {
+        fr->offset = param->_position;
+        fr->flags = O_RDONLY;
+        fr->len = param->_length;
+    }
+    // 使用 libuv 线程池，处理需要多次回调的接口
+    r = uv_queue_work(fc->loop, &fr->req, __load_file_work_cb,
+        __load_after_work_cb);
+    if (r != 0) {
+        FILE_ERROR("execute uv_queue_work fail");
+    }
+    return;
+fail:
+    INVOKE_FAIL_CB(param->_fail, msg, code);
+    INVOKE_COMPLET_CB(param->_complete);
+    freeFileReq(fr);
+}
+
+void file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, file_write_text_param_t* param)
+{
+    __file_load(feature, param, FILE_WRITETEXT);
+}
+
+void file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_write_arr_buf_param_t* param)
+{
+    __file_load(feature, param, FILE_WRITEARRBUF);
+}
+
+void file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, file_read_text_param_t* param)
+{
+    __file_load(feature, param, FILE_READTEXT);
+}
+void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_read_arr_buf_t* param)
+{
+    __file_load(feature, param, FILE_READARRBUF);
+}
+
+void file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, file_mkdir_param_t* param)
+{
+}
+void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file_rmdir_param_t* param)
+{
+}
+void file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, file_list_param_t* param)
+{
+}
+void file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, file_get_param_t* param)
+{
 }

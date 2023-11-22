@@ -125,7 +125,7 @@ callback writeArrBuf_complete_cb()
 
 struct write_arr_buf_param_t {
     string uri
-    string[] buffer
+    object buffer // uint8Array
     int position = 0
     boolean append = false
     writeArrBuf_success_cb success
@@ -153,21 +153,21 @@ void readText(read_text_param_t param)
 
 // readArrayBuffer
 struct read_arr_buf_succ_t {
-    string[] buffer
+    object buffer // uint8Array
 }
 callback readArrBuf_succ_cb(read_arr_buf_succ_t data)
 callback readArrBuf_fail_cb(string msg, int code)
 callback readArrBuf_compl_cb()
 
-struct ReadArrayBufferPara {
+struct read_arr_buf_t {
     string uri
     int position = 0
-    int length
+    int length = -1
     readArrBuf_succ_cb success
     readArrBuf_fail_cb fail
     readArrBuf_compl_cb complete
 }
-void readArrayBuffer(ReadArrayBufferPara param)
+void readArrayBuffer(read_arr_buf_t param)
 
 // access
 callback access_success_cb()
