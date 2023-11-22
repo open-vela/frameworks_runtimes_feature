@@ -102,7 +102,7 @@ public:
      */
     void clearAllInstances();
 
-    void setFeatureManeger(FeatureManager* manager) { feature_manager_ = manager; }
+    void setFeatureManager(FeatureManager* manager) { feature_manager_ = manager; }
 
     FeatureManager* getFeatureManager() const { return feature_manager_; }
 

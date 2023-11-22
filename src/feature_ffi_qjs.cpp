@@ -18,6 +18,7 @@
 #include "feature_framework.h"
 #include "feature_instance.h"
 #include "feature_instance_qjs.h"
+#include "feature_manager_qjs.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 
@@ -29,10 +30,6 @@
 #include <stdlib.h>
 
 namespace ferry {
-
-extern thread_local feature_classid_t g_interface_class_id; // prototype class id
-extern FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description);
-extern feature_value_t createJsInstance(FeaturePrototype* featurePrototype, feature_classid_t class_id, FeatureInstanceQjs* featureInstance);
 
 namespace FeatureFFIQjs {
 
@@ -334,7 +331,7 @@ namespace FeatureFFIQjs {
             } break;
             case COMPLEX_INTERFACE: {
                 // get interface ptr from js object
-                auto opaque_ptr = feature_get_opaque(value, g_interface_class_id);
+                auto opaque_ptr = feature_get_opaque(value, FeatureManagerQjs::jsClassId());
                 FEATURE_LOG_DEBUG("value: %p, get opaque_ptr: %p", JS_VALUE_GET_PTR(value), opaque_ptr);
                 FEATURE_CHECK_NE(opaque_ptr, nullptr);
                 ptr = opaque_ptr;
@@ -501,13 +498,15 @@ namespace FeatureFFIQjs {
                 // save interface prototype in parent instance
                 auto interfaceInstance = std::unique_ptr<FeatureInstance>(interface_ptr);
                 const char* name = interfaceDesc->name;
+                FeatureManagerQjs* manager = (FeatureManagerQjs*)(instance->prototype()->getFeatureManager());
+                FEATURE_CHECK_NE(manager, nullptr);
                 FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
                 if (!interfacePrototype) {
-                    interfacePrototype = createInterfacePrototype(instance->prototype()->getFeatureManager()->getFeatureContext(), interfaceDesc);
+                    interfacePrototype = new FeaturePrototype(interfaceDesc);
                     auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(interfacePrototype->ft_proto);
                     *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
                     FEATURE_CHECK_NE(interfacePrototype, nullptr);
-                    interfacePrototype->setFeatureManeger(instance->prototype()->getFeatureManager());
+                    interfacePrototype->setFeatureManager(manager);
                     // add interface prototype to parent instance
                     ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
                 }
@@ -516,7 +515,7 @@ namespace FeatureFFIQjs {
                 int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
                 interfacePrototype->instances[iid]->setInstanceId(iid);
                 // create prototype class instance
-                value = createJsInstance(interfacePrototype, g_interface_class_id, interface_ptr);
+                value = manager->createJsInstance(interfacePrototype, interface_ptr);
                 // setup featureInstance WeakRef, refers to feature_object
                 interface_ptr->initWeakRef(value);
             } break;

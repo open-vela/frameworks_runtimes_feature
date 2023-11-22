@@ -35,18 +35,13 @@
 using namespace FEATURE;
 namespace ferry {
 
-thread_local feature_classid_t g_feature_class_id = 0; // feature prototype class id
-thread_local feature_classdef_t g_feature_class_def; // prototype class defination, contains finalizer
-
-thread_local feature_classid_t g_interface_class_id = 0; // interface prototype class id
-thread_local feature_classdef_t g_interface_class_def; // prototype class defination, contains finalizer
-
 static inline FeatureInstance* getInstance(feature_value_t val)
 {
-    void* ptr = feature_get_opaque(val, g_feature_class_id);
-    if (!ptr) {
-        ptr = feature_get_opaque(val, g_interface_class_id);
-    }
+    auto class_id = FeatureManagerQjs::jsClassId();
+    if (class_id == 0)
+        return NULL;
+
+    void* ptr = feature_get_opaque(val, class_id);
     return static_cast<FeatureInstance*>(ptr);
 }
 
@@ -89,50 +84,6 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     // should mark feature prototype object.
     auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto);
     feature_mark_value(rt, js_proto, mark_func);
-}
-
-static bool createJsObjectClass(ft_context_ref ft_ctx, feature_classid_t& class_id, feature_classdef_t& class_def)
-{
-    // FEATURE_CHECK_EQ(featurePrototype->class_id, 0);
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    FEATURE_CHECK_NE(js_ctx, nullptr);
-    JS_NewClassID(&class_id);
-    FEATURE_CHECK_NE(class_id, 0); // it must not 0 now
-    // create native feature prototype class defination
-    JS_NewClass(feature_get_runtime(static_cast<feature_context_ref>(js_ctx)), class_id, &class_def);
-    return true;
-}
-
-static FeaturePrototype* createFeaturePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
-{
-    FEATURE_CHECK_NE(description, nullptr);
-    FEATURE_LOG_DEBUG("create feature prototype for description: %s.", description->name);
-
-    if (g_feature_class_id == 0) {
-        // fill the class_def structure
-        g_feature_class_def = { .class_name = "FeatureInstanceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
-        if (!createJsObjectClass(ft_ctx, g_feature_class_id, g_feature_class_def)) {
-            FEATURE_LOG_ERROR("create js prototype class for feature %s.", description->name);
-            return nullptr;
-        }
-    }
-    return new FeaturePrototype(description);
-}
-
-FeaturePrototype* createInterfacePrototype(ft_context_ref ft_ctx, const FeatureDescription* description)
-{
-    FEATURE_CHECK_NE(description, nullptr);
-    FEATURE_LOG_DEBUG("create interface prototype for description: %s.", description->name);
-
-    if (g_interface_class_id == 0) {
-        // fill the class_def structure
-        g_interface_class_def = { .class_name = "FeatureInterfaceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
-        if (!createJsObjectClass(ft_ctx, g_interface_class_id, g_interface_class_def)) {
-            FEATURE_LOG_ERROR("create js prototype class for interface %s.", description->name);
-            return nullptr;
-        }
-    }
-    return new FeaturePrototype(description);
 }
 
 /**
@@ -597,18 +548,49 @@ static int initialize_prototype(context_ref ctx, FeatureDescription* description
     return 0;
 }
 
+// static members
+feature_classid_t FeatureManagerQjs::js_class_id_ = 0;
+feature_classdef_t FeatureManagerQjs::js_class_def_ = { 0 };
+uv_mutex_t FeatureManagerQjs::js_class_mutex_ = PTHREAD_MUTEX_INITIALIZER;
+
+// static methods
+bool FeatureManagerQjs::ensureJsClass(feature_context_ref ctx)
+{
+    auto rt = JS_GetRuntime(ctx);
+    uv_mutex_lock(&js_class_mutex_);
+    if (js_class_id_ != 0 && JS_IsRegisteredClass(rt, js_class_id_)) {
+        FEATURE_LOG_DEBUG("class_id already registered.");
+        uv_mutex_unlock(&js_class_mutex_);
+        return true;
+    }
+    FEATURE_LOG_INFO("last class_id: %d.", js_class_id_);
+
+    js_class_id_ = JS_NewClassID(&js_class_id_);
+    if (js_class_id_ == 0) {
+        FEATURE_LOG_ERROR("create js class_id failed.");
+        uv_mutex_unlock(&js_class_mutex_);
+        return false;
+    }
+
+    FEATURE_LOG_INFO("created class_id: %d.", js_class_id_);
+    js_class_def_ = { .class_name = "FeatureInstanceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
+    JS_NewClass(rt, js_class_id_, &js_class_def_);
+    uv_mutex_unlock(&js_class_mutex_);
+    return true;
+}
+
 FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
     : FeatureManager(registry)
 {
 }
 
-static bool ensureJsPrototype(FeaturePrototype* prototype)
+bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototype* prototype)
 {
     auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
     if (!feature_is_undefined(*js_proto_ptr))
         return true;
 
-    auto ctx = (feature_context_ref)ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
+    auto ctx = (feature_context_ref)ft_context_get_data(getFeatureContext());
     feature_value_t js_proto = feature_object(ctx);
     if (feature_is_exception(js_proto)) {
         feature_dump_error(ctx);
@@ -626,16 +608,24 @@ static bool ensureJsPrototype(FeaturePrototype* prototype)
     return true;
 }
 
-feature_value_t createJsInstance(FeaturePrototype* prototype, feature_classid_t class_id, FeatureInstanceQjs* instance)
+feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototype* prototype, FeatureInstanceQjs* instance)
 {
-    auto ctx = (feature_context_ref)ft_context_get_data(prototype->getFeatureManager()->getFeatureContext());
-    // ensure js prototype is created
+    ft_context_ref ft_ctx = getFeatureContext();
+    auto ctx = (feature_context_ref)ft_context_get_data(ft_ctx);
+    FEATURE_CHECK_NE(ctx, nullptr);
+    // ensure js feature prototype is created
     if (!ensureJsPrototype(prototype))
         return FEATURE_VALUE_UNDEFINED;
 
+    if (!ensureJsClass(ctx)) {
+        FEATURE_LOG_ERROR("invalid js class_id: %d", js_class_id_);
+        return FEATURE_VALUE_UNDEFINED;
+    }
+
     // create instance with prototype and set opaque refers to FeatureInstance
+    FEATURE_LOG_INFO("created js instance with class_id: %d.", js_class_id_);
     auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
-    feature_value_t js_instance = JS_NewObjectProtoClass(ctx, js_proto, class_id);
+    feature_value_t js_instance = JS_NewObjectProtoClass(ctx, js_proto, js_class_id_);
     feature_set_opaque(js_instance, instance);
     return js_instance;
 }
@@ -658,14 +648,10 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     auto& prototype = feature_pair->second;
     if (!prototype) {
         // create proto
-        prototype = createFeaturePrototype(getFeatureContext(), description);
-        if (!prototype) {
-            FEATURE_LOG_ERROR("createFeaturePrototype failed !");
-            return JS_UNDEFINED;
-        }
+        prototype = new FeaturePrototype(description);
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-        prototype->setFeatureManeger(this);
+        prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
@@ -679,8 +665,8 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     // insert into instances array, update iid
     int iid = prototype->addInstance(std::move(instance));
     prototype->instances[iid]->setInstanceId(iid);
-    // create prototype class instance
-    auto js_instance = createJsInstance(prototype, g_feature_class_id, instance_ptr);
+
+    auto js_instance = createJsInstance(prototype, instance_ptr);
     // setup instance WeakRef, refers to js_instance
     instance_ptr->initWeakRef(js_instance);
     if (description->native_callbacks && description->native_callbacks->onRequired) {
@@ -721,12 +707,6 @@ void FeatureManagerQjs::uninit()
         ReleaseFeatureContextQjs(getFeatureContext());
         setFeatureContext(nullptr);
     }
-    if (g_feature_class_id != 0) {
-        g_feature_class_id = 0;
-    }
-    if (g_interface_class_id != 0) {
-        g_interface_class_id = 0;
-    }
 }
 
 feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const char* name)
@@ -747,14 +727,10 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
     const FeatureDescription* description = feature_pair->first;
     auto& prototype = feature_pair->second;
     if (!prototype) {
-        prototype = createFeaturePrototype(getFeatureContext(), description);
-        if (!prototype) {
-            FEATURE_LOG_ERROR("create FeaturePrototype failed !");
-            return FEATURE_VALUE_UNDEFINED;
-        }
+        prototype = new FeaturePrototype(description);
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
         *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-        prototype->setFeatureManeger(this);
+        prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
@@ -786,9 +762,11 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, featur
         // insert into instances array, update iid
         int iid = prototype->addInstance(std::move(instance));
         prototype->instances[iid]->setInstanceId(iid);
+
         // create prototype class instance
         auto description = pair.second.first;
-        auto js_instance = createJsInstance(prototype, g_feature_class_id, instance_ptr);
+        auto js_instance = createJsInstance(prototype, instance_ptr);
+        instance_ptr->initWeakRef(js_instance);
         if (description->native_callbacks && description->native_callbacks->onRequired) {
             FEATURE_LOG_DEBUG("invoke onRequired callback...");
             description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());

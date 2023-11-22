@@ -24,6 +24,7 @@
 namespace ferry {
 
 class FeatureRegistry;
+class FeatureInstanceQjs;
 
 /**
  * @brief Feature Manager, Manage all feature instance.
@@ -51,7 +52,19 @@ public:
 
     feature_value_t createFeature(feature_context_ref ctx, feature_value_t js_proto);
 
+    feature_value_t createJsInstance(FeaturePrototype* prototype, FeatureInstanceQjs* interface);
+
+    static feature_classid_t jsClassId() { return js_class_id_; }
+
 private:
+
+    bool ensureJsPrototype(FeaturePrototype* prototype);
+
+    static bool ensureJsClass(feature_context_ref ctx);
+
+    static feature_classid_t js_class_id_;
+    static feature_classdef_t js_class_def_;
+    static uv_mutex_t js_class_mutex_;
 };
 
 }
