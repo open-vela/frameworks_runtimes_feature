@@ -129,7 +129,7 @@ file_write_text_param_t* fileMallocwrite_text_param_t();
 
 typedef struct _write_arr_buf_param_t {
   FtString _uri;
-  FtArray* _buffer;
+  FtAny _buffer;
   FtInt _position;
   FtBool _append;
   FtCallbackId _success;
@@ -156,21 +156,21 @@ typedef struct _read_text_param_t {
 file_read_text_param_t* fileMallocread_text_param_t();
 
 typedef struct _read_arr_buf_succ_t {
-  FtArray* _buffer;
+  FtAny _buffer;
 } file_read_arr_buf_succ_t;
 
 file_read_arr_buf_succ_t* fileMallocread_arr_buf_succ_t();
 
-typedef struct _ReadArrayBufferPara {
+typedef struct _read_arr_buf_t {
   FtString _uri;
   FtInt _position;
   FtInt _length;
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
-} file_ReadArrayBufferPara;
+} file_read_arr_buf_t;
 
-file_ReadArrayBufferPara* fileMallocReadArrayBufferPara();
+file_read_arr_buf_t* fileMallocread_arr_buf_t();
 
 typedef struct _access_param_t {
   FtString _uri;
@@ -211,7 +211,7 @@ void file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, fil
 void file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, file_write_text_param_t * param);
 void file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_write_arr_buf_param_t * param);
 void file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, file_read_text_param_t * param);
-void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_ReadArrayBufferPara * param);
+void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_read_arr_buf_t * param);
 void file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, file_access_param_t * param);
 void file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, file_mkdir_param_t * param);
 void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file_rmdir_param_t * param);
@@ -223,7 +223,6 @@ void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* file_malloc_string_array();
 
 #endif // JSON_AST_GEN_MODULE_FILE_H_
 /* clang-format on */

@@ -45,7 +45,7 @@ feat_async_test("request", "download", (done) => {
         feat_expect_true(err, "request download fail");
         done(); });
 })
-var uri
+
 feat_async_test("request", "onDownloadComplete", (done) => {
     return new Promise(function(resolve, reject) {
         request.onDownloadComplete({
@@ -53,7 +53,6 @@ feat_async_test("request", "onDownloadComplete", (done) => {
             success : function(data) {
                 request.print("### request onDownloadComplete success ###");
                 request.print('data = ', data)
-                uri = data;
                 resolve(true);
             },
             fail : function(data, code) {
@@ -72,85 +71,181 @@ feat_async_test("request", "onDownloadComplete", (done) => {
 feat_async_test("file", "copy", (done) => {
     return new Promise(function(resolve, reject) {
         file.copy({
-            srcUri: "internal://files/quickAppLogo.png",
-            dstUri: "internal://files/copy_quickAppLogo.png",
-            success: function (ret) {
+            srcUri : "internal://files/quickAppLogo.png",
+            dstUri : "internal://files/copy_quickAppLogo.png",
+            success : function(ret) {
                 request.print("### copy success ### ", ret);
                 resolve(true);
             },
-            fail: function (errmsg, errcode) {
-              var fileCopyData = errcode + '---' + errmsg
-              request.print("### copy fail ### ", fileCopyData);
-              reject(false);
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### copy fail ### ", fileCopyData);
+                reject(false);
             }
-          })
+        })
     }).then((res) => {
-        feat_expect_true(res, "request download success");
+        feat_expect_true(res, "file copy success");
         done(); }, (err) => {
-        feat_expect_true(err, "request download fail");
+        feat_expect_true(err, "file copy fail");
         done(); });
 })
 feat_async_test("file", "access", (done) => {
     return new Promise(function(resolve, reject) {
         file.access({
-            uri: "internal://files/quickAppLogo.png",
-            success: function () {
+            uri : "internal://files/quickAppLogo.png",
+            success : function() {
                 request.print("### access success ### ");
                 resolve(true);
             },
-            fail: function (errmsg, errcode) {
-              var fileCopyData = errcode + '---' + errmsg
-              request.print("### access fail ### ", fileCopyData);
-              reject(false);
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### access fail ### ", fileCopyData);
+                reject(false);
             }
-          })
+        })
     }).then((res) => {
-        feat_expect_true(res, "request download success");
+        feat_expect_true(res, "file access success");
         done(); }, (err) => {
-        feat_expect_true(err, "request download fail");
+        feat_expect_true(err, "file access fail");
         done(); });
 })
 
 feat_async_test("file", "move", (done) => {
     return new Promise(function(resolve, reject) {
         file.move({
-            srcUri: "internal://files/quickAppLogo.png",
-            dstUri: "internal://files/move_quickAppLogo.png",
-            success: function (ret) {
+            srcUri : "internal://files/quickAppLogo.png",
+            dstUri : "internal://files/move_quickAppLogo.png",
+            success : function(ret) {
                 request.print("### move success ### ", ret);
                 resolve(true);
             },
-            fail: function (errmsg, errcode) {
-              var fileCopyData = errcode + '---' + errmsg
-              request.print("### move fail ### ", fileCopyData);
-              reject(false);
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### move fail ### ", fileCopyData);
+                reject(false);
             }
-          })
+        })
     }).then((res) => {
-        feat_expect_true(res, "request download success");
+        feat_expect_true(res, "file move success");
         done(); }, (err) => {
-        feat_expect_true(err, "request download fail");
+        feat_expect_true(err, "file move fail");
         done(); });
 })
 
 feat_async_test("file", "delete", (done) => {
     return new Promise(function(resolve, reject) {
         file.delete({
-            uri: "internal://files/move_quickAppLogo.png",
-            success: function () {
+            uri : "internal://files/move_quickAppLogo.png",
+            success : function() {
                 request.print("### delete success ### ");
                 resolve(true);
             },
-            fail: function (errmsg, errcode) {
-              var fileCopyData = errcode + '---' + errmsg
-              request.print("### delete fail ### ", fileCopyData);
-              reject(false);
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### delete fail ### ", fileCopyData);
+                reject(false);
             }
-          })
+        })
     }).then((res) => {
-        feat_expect_true(res, "request download success");
+        feat_expect_true(res, "file delete success");
         done(); }, (err) => {
-        feat_expect_true(err, "request download fail");
+        feat_expect_true(err, "file delete fail");
         done(); });
 })
 
+feat_async_test("file", "writeText", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.writeText({
+            uri : 'internal://files/demo.txt',
+            text : 'write by file.writeText. ',
+            success : function() {
+                request.print("### writeText success ### ");
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### writeText fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+    feat_expect_true(res, "file writeText success");
+    done(); }, (err) => {
+    feat_expect_true(err, "file writeText fail");
+    done(); });
+})
+
+feat_async_test("file", "writeArrayBuffer", (done) => {
+    return new Promise(function(resolve, reject) {
+        var str = "write by file.writeArrayBuffer."
+        var len = str.length;
+        const buffer = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            buffer[i] = str.charCodeAt(i);
+        }
+        file.writeArrayBuffer({
+            uri : 'internal://files/demo.txt',
+            buffer : buffer,
+            append : true,
+            success : function() {
+                request.print("### writeArrayBuffer success ### ");
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### writeArrayBuffer fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+            feat_expect_true(res, "file writeArrayBuffer success");
+            done(); }, (err) => {
+            feat_expect_true(err, "file writeArrayBuffer fail");
+            done(); });
+})
+
+feat_async_test("file", "readText", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.readText({
+            uri : 'internal://files/demo.txt',
+            success : function(data) {
+                request.print("### readText success ### text = ", data.text);
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### readText fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+            feat_expect_true(res, "file readText success");
+            done(); }, (err) => {
+            feat_expect_true(err, "file readText fail");
+            done(); });
+})
+
+feat_async_test("file", "readArrayBuffer", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.readArrayBuffer({
+            uri : 'internal://files/demo.txt',
+            position : 0,
+            length : 10,
+            success : function(data) {
+                request.print("### readArrayBuffer success ### ");
+                request.print('buffer' + JSON.stringify(data));
+                request.print('buffer.length: ' + data.buffer.length);
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### readArrayBuffer fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+            feat_expect_true(res, "file readArrayBuffer success");
+            done(); }, (err) => {
+            feat_expect_true(err, "file readArrayBuffer fail");
+            done(); });
+})

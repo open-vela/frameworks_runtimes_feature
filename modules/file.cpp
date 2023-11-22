@@ -585,16 +585,6 @@ static const CallbackType file_writeArrBuf_complete_cb_callback_type {
 };
 
 
-static const ArrayType file_string_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_STRING
-};
-
-FtArray* file_malloc_string_array() {
-    return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&file_string_array));
-}
-
 static OptionalType file_write_arr_buf_param_t_member_position_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
@@ -610,7 +600,7 @@ static OptionalType file_write_arr_buf_param_t_member_append_opt_type = {
 /****** for JIDL struct 'write_arr_buf_param_t' ******/
 static ObjectMember file_write_arr_buf_param_t_struct_members[] = {
     { "uri", FT_STRING, offsetof(file_write_arr_buf_param_t, _uri), sizeof(FtString) },
-    { "buffer", FT_MK_COMPLEX_REF(&file_string_array), offsetof(file_write_arr_buf_param_t, _buffer), sizeof(FtArray*) },
+    { "buffer", FT_ANY_REF, offsetof(file_write_arr_buf_param_t, _buffer), sizeof(FtAny) },
     { "position", FT_MK_OPTIONAL(&file_write_arr_buf_param_t_member_position_opt_type), offsetof(file_write_arr_buf_param_t, _position), sizeof(FtInt) },
     { "append", FT_MK_OPTIONAL(&file_write_arr_buf_param_t_member_append_opt_type), offsetof(file_write_arr_buf_param_t, _append), sizeof(FtBool) },
     { "success", FT_MK_COMPLEX(&file_writeArrBuf_success_cb_callback_type), offsetof(file_write_arr_buf_param_t, _success), sizeof(FtCallbackId) },
@@ -744,7 +734,7 @@ static const MemberMethod file_readText_member_method = {
 
 /****** for JIDL struct 'read_arr_buf_succ_t' ******/
 static ObjectMember file_read_arr_buf_succ_t_struct_members[] = {
-    { "buffer", FT_MK_COMPLEX_REF(&file_string_array), offsetof(file_read_arr_buf_succ_t, _buffer), sizeof(FtArray*) },
+    { "buffer", FT_ANY_REF, offsetof(file_read_arr_buf_succ_t, _buffer), sizeof(FtAny) },
     { nullptr },
 };
 
@@ -799,38 +789,44 @@ static const CallbackType file_readArrBuf_compl_cb_callback_type {
 };
 
 
-static OptionalType file_ReadArrayBufferPara_member_position_opt_type = {
+static OptionalType file_read_arr_buf_t_member_position_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
     .ival = 0
 };
 
-/****** for JIDL struct 'ReadArrayBufferPara' ******/
-static ObjectMember file_ReadArrayBufferPara_struct_members[] = {
-    { "uri", FT_STRING, offsetof(file_ReadArrayBufferPara, _uri), sizeof(FtString) },
-    { "position", FT_MK_OPTIONAL(&file_ReadArrayBufferPara_member_position_opt_type), offsetof(file_ReadArrayBufferPara, _position), sizeof(FtInt) },
-    { "length", FT_INT, offsetof(file_ReadArrayBufferPara, _length), sizeof(FtInt) },
-    { "success", FT_MK_COMPLEX(&file_readArrBuf_succ_cb_callback_type), offsetof(file_ReadArrayBufferPara, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&file_readArrBuf_fail_cb_callback_type), offsetof(file_ReadArrayBufferPara, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&file_readArrBuf_compl_cb_callback_type), offsetof(file_ReadArrayBufferPara, _complete), sizeof(FtCallbackId) },
+static OptionalType file_read_arr_buf_t_member_length_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_INT,
+    .ival = 1
+};
+
+/****** for JIDL struct 'read_arr_buf_t' ******/
+static ObjectMember file_read_arr_buf_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_read_arr_buf_t, _uri), sizeof(FtString) },
+    { "position", FT_MK_OPTIONAL(&file_read_arr_buf_t_member_position_opt_type), offsetof(file_read_arr_buf_t, _position), sizeof(FtInt) },
+    { "length", FT_MK_OPTIONAL(&file_read_arr_buf_t_member_length_opt_type), offsetof(file_read_arr_buf_t, _length), sizeof(FtInt) },
+    { "success", FT_MK_COMPLEX(&file_readArrBuf_succ_cb_callback_type), offsetof(file_read_arr_buf_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_readArrBuf_fail_cb_callback_type), offsetof(file_read_arr_buf_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_readArrBuf_compl_cb_callback_type), offsetof(file_read_arr_buf_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType file_ReadArrayBufferPara_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_ReadArrayBufferPara) },
-    .members = file_ReadArrayBufferPara_struct_members
+static const ObjectMapType file_read_arr_buf_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_read_arr_buf_t) },
+    .members = file_read_arr_buf_t_struct_members
 };
 
-file_ReadArrayBufferPara* fileMallocReadArrayBufferPara () {
-    return (file_ReadArrayBufferPara*)FeatureMalloc(
-        sizeof(file_ReadArrayBufferPara), FT_MK_COMPLEX(&file_ReadArrayBufferPara_struct_type));
+file_read_arr_buf_t* fileMallocread_arr_buf_t () {
+    return (file_read_arr_buf_t*)FeatureMalloc(
+        sizeof(file_read_arr_buf_t), FT_MK_COMPLEX(&file_read_arr_buf_t_struct_type));
 }
 
 
 /****** for JIDL function 'readArrayBuffer' ******/
 static const FeatureType file_readArrayBuffer_parameters[] = {
-    FT_MK_COMPLEX_REF(&file_ReadArrayBufferPara_struct_type),
+    FT_MK_COMPLEX_REF(&file_read_arr_buf_t_struct_type),
     FT_PARAM_END
 };
 
