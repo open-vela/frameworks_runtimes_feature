@@ -210,23 +210,32 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_CHAR: {
-                if (!feature_is_string(value)) {
+                if (feature_is_null(value) || feature_is_undefined(value)) {
+                    FEATURE_LOG_ERROR("string arg is null or undefined!");
+                    ptr = NULL;
+                } else if (!feature_is_string(value)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need string !");
                     return false;
+                } else {
+                    const char* str = feature_to_cstring(ctx, value);
+                    char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
+                    strcpy(alloc_ptr, str);
+                    ptr = alloc_ptr;
+                    feature_free_cstring(ctx, str);
                 }
-                const char* str = feature_to_cstring(ctx, value);
-                char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
-                strcpy(alloc_ptr, str);
-                ptr = alloc_ptr;
-                feature_free_cstring(ctx, str);
             } break;
             case FT_ANY: {
-                // copy value
-                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
-                qjs_val_t* q_val = (qjs_val_t*)f_val;
-                q_val->js_val = value;
-                q_val->type = FT_TYPE_OBJECT;
-                ptr = f_val;
+                if (feature_is_null(value) || feature_is_undefined(value)) {
+                    FEATURE_LOG_ERROR("object is null or undefined!");
+                    ptr = NULL;
+                } else {
+                    // copy value
+                    ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+                    qjs_val_t* q_val = (qjs_val_t*)f_val;
+                    q_val->js_val = value;
+                    q_val->type = FT_TYPE_OBJECT;
+                    ptr = f_val;
+                }
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
@@ -397,7 +406,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_CHAR: {
                 if (!ptr)
-                    value = feature_string(ctx, " ");
+                    value = feature_string(ctx, "");
                 else
                     value = feature_string(ctx, (const char*)ptr);
             } break;
