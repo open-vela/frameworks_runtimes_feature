@@ -550,13 +550,24 @@ static int initialize_prototype(context_ref ctx, FeatureDescription* description
 
 // static members
 feature_classid_t FeatureManagerQjs::js_class_id_ = 0;
-feature_classdef_t FeatureManagerQjs::js_class_def_ = { 0 };
+feature_classdef_t FeatureManagerQjs::js_class_def_ = {
+    .class_name = "FeatureInstanceObject",
+    .finalizer = __feature_finalizer,
+    .gc_mark = __feature_mark
+};
 uv_mutex_t FeatureManagerQjs::js_class_mutex_ = PTHREAD_MUTEX_INITIALIZER;
 
 // static methods
 bool FeatureManagerQjs::ensureJsClass(feature_context_ref ctx)
 {
     auto rt = JS_GetRuntime(ctx);
+    // here we do twice judgement for js_class_id. the one outside the mutex scope is for fast
+    // judgement, the other inside the mutex scope is to prevent thread racing coditions.
+    if (js_class_id_ != 0 && JS_IsRegisteredClass(rt, js_class_id_)) {
+        FEATURE_LOG_DEBUG("class_id already registered.");
+        return true;
+    }
+
     uv_mutex_lock(&js_class_mutex_);
     if (js_class_id_ != 0 && JS_IsRegisteredClass(rt, js_class_id_)) {
         FEATURE_LOG_DEBUG("class_id already registered.");
@@ -573,7 +584,6 @@ bool FeatureManagerQjs::ensureJsClass(feature_context_ref ctx)
     }
 
     FEATURE_LOG_INFO("created class_id: %d.", js_class_id_);
-    js_class_def_ = { .class_name = "FeatureInstanceObject", .finalizer = __feature_finalizer, .gc_mark = __feature_mark };
     JS_NewClass(rt, js_class_id_, &js_class_def_);
     uv_mutex_unlock(&js_class_mutex_);
     return true;
