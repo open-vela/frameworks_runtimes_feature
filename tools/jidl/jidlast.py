@@ -199,7 +199,7 @@ class PrimaryArrayType(Type):
     out['type'] = 'array'
     out['element'] = self.base_type.name
 
-class TypedArrayType(Node):
+class TypedArrayType(Type):
   def __init__(self, base_type):
     Node.__init__(self, TYPED_ARRAY_TYPE)
     if type(base_type) == str:
