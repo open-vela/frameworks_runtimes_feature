@@ -41,25 +41,22 @@
 static const char* type_list[] = { "cache", "file", "mass", "tmp" };
 
 /*app相对路径转换为绝对路径*/
-char* app_relative_to_absolute_path(const char* pkg, char* relative_path)
+char* app_relative_to_absolute_path(const char* pkg, const char* relative_path)
 {
     char* absolute_path = NULL;
+    char *rel_path = NULL;
     char *offset, *type, *filename = NULL;
 
     if (!relative_path || !pkg) {
         return NULL;
     }
 
-    relative_path = strdup(relative_path);
-    if (relative_path == NULL) {
+    rel_path = strdup(relative_path);
+    if (strstr(rel_path, APP_PATH_PREFIX) == NULL) {
+        free(rel_path);
         return NULL;
     }
-
-    if (strstr(relative_path, APP_PATH_PREFIX) == NULL) {
-        free(relative_path);
-        return NULL;
-    }
-    offset = relative_path + strlen(APP_PATH_PREFIX);
+    offset = rel_path + strlen(APP_PATH_PREFIX);
 
     type = strchr(offset, '/');
     if (type != NULL) {
@@ -74,7 +71,7 @@ char* app_relative_to_absolute_path(const char* pkg, char* relative_path)
         }
 
         if (i == arrayof(type_list) - 1) {
-            free(relative_path);
+            free(rel_path);
             return NULL;
         }
     }
@@ -96,14 +93,15 @@ char* app_relative_to_absolute_path(const char* pkg, char* relative_path)
         strcat(offset, filename);
     }
 
-    free(relative_path);
+    free(rel_path);
     return absolute_path;
 }
 
 /*绝对路径转换为app相对路径*/
-char* app_absolute_to_relative_path(const char* pkg, char* absolute_path)
+char* app_absolute_to_relative_path(const char* pkg, const char* absolute_path)
 {
     char* relative_path = NULL;
+    char *abs_path = NULL;
     char *offset = NULL, *type = NULL, *filename = NULL;
     int len = 0;
 
@@ -112,8 +110,8 @@ char* app_absolute_to_relative_path(const char* pkg, char* absolute_path)
     }
 
     len = strlen(absolute_path);
-    absolute_path = strdup(absolute_path);
-    if ((offset = strstr(absolute_path, ABS_PATH_PREFIX)) == NULL) {
+    abs_path = strdup(absolute_path);
+    if ((offset = strstr(abs_path, ABS_PATH_PREFIX)) == NULL) {
         goto fail;
     }
     offset = offset + strlen(ABS_PATH_PREFIX);
@@ -131,18 +129,18 @@ char* app_absolute_to_relative_path(const char* pkg, char* absolute_path)
 
     *(offset - 1) = '\0';
     filename = offset + strlen(pkg) + 1;
-    if (filename - absolute_path > len) {
+    if (filename - abs_path > len) {
         filename = (char*)"";
     }
 
     relative_path = (char*)malloc(PATH_MAX_LENGTH);
     snprintf(relative_path, PATH_MAX_LENGTH, APP_PATH_PREFIX "%s/%s", type, filename);
 
-    free(absolute_path);
+    free(abs_path);
     return relative_path;
 
 fail:
-    free(absolute_path);
+    free(abs_path);
     return NULL;
 }
 
@@ -171,7 +169,7 @@ char* app_absolute_path_generator(const char* pkg, const char* type, const char*
     return absolute_path;
 }
 
-int checkpath(const char* path)
+int app_check_path(const char* path)
 {
     const char s[] = "/";
     char* data;

@@ -27,10 +27,10 @@
 #define CONFIG_PATH_MAX PATH_MAX
 #endif
 
-int checkpath(const char* path);
-char* app_relative_to_absolute_path(const char* pkg, char* relative_path);
+int app_check_path(const char* path);
+char* app_relative_to_absolute_path(const char* pkg, const char* relative_path);
 char* app_relative_path_generator(const char* pkg, const char* type, const char* filename);
-char* app_absolute_to_relative_path(const char* pkg, char* absolute_path);
+char* app_absolute_to_relative_path(const char* pkg, const char* absolute_path);
 char* app_absolute_path_generator(const char* pkg, const char* type, const char* filename);
 
 #endif
