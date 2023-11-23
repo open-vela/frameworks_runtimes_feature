@@ -16,6 +16,7 @@
  */
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
@@ -29,7 +30,6 @@
 #include "crypto_utils.h"
 #include "fetch.h"
 #include "net_utils.h"
-#include "quickjs/cutils.h"
 
 namespace Fetch {
 
@@ -316,13 +316,20 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
                     : UV_DOWNLOAD;
   if (fetch->type == UV_DOWNLOAD) {
     std::string url(obj->_url);
+
     fetch->filename = url.substr(url.find_last_of("/") + 1);
+
     if (fetch->filename.empty()) {
       time_t cur_time = time(NULL);
       char time_buf[100];
       strftime(time_buf, sizeof(time_buf), "%Y%m%d %H%M%S",
                std::localtime(&cur_time));
-      fetch->filename = time_buf;
+      char* path = app_absolute_path_generator(FeatureGetPackageName(feature),
+                                               "files", (const char*)&time_buf);
+      if (path) {
+        fetch->filename.assign(path);
+        free((void*)path);
+      }
     }
   }
 
