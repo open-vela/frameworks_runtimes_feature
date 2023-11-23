@@ -21,11 +21,11 @@
 
 #include <map>
 
+#include "app_path.h"
 #include "feature.h"
 #include "feature_types.h"
 #include "netutils/cJSON.h"
 #include "uv_ext.h"
-#include "app_path.h"
 
 // namespace NET {
 typedef enum ErrorCode {
@@ -88,6 +88,37 @@ typedef enum ErrorCode {
 #define USER_ABORT_MSG "user cancel request"
 #define USER_ABORT_MSG_SIZE (strlen(USER_ABORT_MSG) + 1)
 #define CANCEL_ERROR_CODE 1002
+
+#define arrayof(array) sizeof(array) / sizeof(array[0])
+
+#define INVOKE_SUCCESS_CB(cb, ...)                            \
+  do {                                                        \
+    if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) { \
+      FEATURE_LOG_ERROR("invoke success callback failed !");  \
+    }                                                         \
+    FeatureRemoveCallback(feature, cb);                       \
+  } while (0)
+
+#define INVOKE_FAIL_CB(cb, msg, code)                          \
+  do {                                                         \
+    ft_value_t ret_data = ft_from_string(ft_ctx, msg);         \
+    if (!FeatureInvokeCallback(feature, cb, ret_data, code)) { \
+      FEATURE_LOG_ERROR("invoke fail callback failed !");      \
+    }                                                          \
+    FeatureRemoveCallback(feature, cb);                        \
+  } while (0)
+
+#define INVOKE_COMPLET_CB(cb)                                 \
+  do {                                                        \
+    if (!FeatureInvokeCallback(feature, cb)) {                \
+      FEATURE_LOG_ERROR("invoke complete callback failed !"); \
+    }                                                         \
+    FeatureRemoveCallback(feature, cb);                       \
+  } while (0)
+
+#define check_str(ptr) ((ptr) && strlen(ptr) > 0)
+#define check_any(ptr) ((ptr) && (ft_get_type(ft_ctx, *ptr) >= 0))
+bool type_contain(const char** type_array, int size, const char* type);
 
 typedef struct {
   uv_request_session_t* handle;
