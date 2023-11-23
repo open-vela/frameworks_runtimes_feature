@@ -16,22 +16,13 @@
 
 #include "crypto_native.h"
 
+#include "app_path.h"
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "uv_ext.h"
 
 #include <alloca.h>
 #include <stdio.h>
-
-#define APP_PATH_PREFIX "internal://"
-#define PATH_MAX_LENGTH CONFIG_PATH_MAX
-#define arrayof(array) sizeof(array) / sizeof(array[0])
-
-#ifdef __NuttX__
-#define ABS_PATH_PREFIX "/data/quickapp"
-#else
-#define ABS_PATH_PREFIX "/quickapp"
-#endif
 
 static const char* file_tag = "[jidl_feature] crypto_native";
 
@@ -70,64 +61,6 @@ static bool setup_uv_aes(uv_aes_t* aes_ctx, int mode,
 
     return true;
 }
-
-static const char* type_list[] = { "cache", "file", "mass", "tmp" };
-static char* app_relative_to_absolute_path(const char* pkg, const char* relative_path)
-{
-    char* absolute_path = NULL;
-    char *path = NULL;
-    char *offset, *type, *filename = NULL;
-
-    if (!relative_path || !pkg) {
-        return NULL;
-    }
-
-    path = strdup(relative_path);
-    if (strstr(path, APP_PATH_PREFIX) == NULL) {
-        free(path);
-        return NULL;
-    }
-    offset = path + strlen(APP_PATH_PREFIX);
-
-    type = strchr(offset, '/');
-    if (type != NULL) {
-        *type = '\0';
-        filename = ++type;
-    }
-
-    type = offset;
-    for (unsigned long i = 0; i < arrayof(type_list); i++) {
-        if (!strncmp(type_list[i], type, strlen(type_list[i]))) {
-            break;
-        }
-
-        if (i == arrayof(type_list) - 1) {
-            free(path);
-            return NULL;
-        }
-    }
-
-    absolute_path = (char*)malloc(PATH_MAX_LENGTH);
-    memset(absolute_path, 0, PATH_MAX_LENGTH);
-#ifndef __NuttX__
-    getcwd(absolute_path, PATH_MAX_LENGTH);
-#endif
-    offset = absolute_path + strlen(absolute_path);
-
-    if (!strcmp(type, type_list[3])) {
-        snprintf(offset, PATH_MAX_LENGTH - (offset - absolute_path), ABS_PATH_PREFIX "/%s", type);
-    } else {
-        snprintf(offset, PATH_MAX_LENGTH - (offset - absolute_path), ABS_PATH_PREFIX "/%s/%s", type, pkg);
-    }
-    if (filename != NULL) {
-        strcat(offset, "/");
-        strcat(offset, filename);
-    }
-
-    free(path);
-    return absolute_path;
-}
-
 
 char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text)
 {
