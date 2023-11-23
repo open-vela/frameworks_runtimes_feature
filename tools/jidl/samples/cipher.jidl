@@ -67,7 +67,7 @@ struct RSAVerifyParam {
   string text  // text to be encrypted or decrypted
   string key  // rsa secret key
   string hashType = "SHA256" // ? HashType
-  string signature = ""  // ?
+  string signature  // ?
   callback success_cb_obj_bool_opt success // ?
   callback fail_cb fail // ?
   callback complete_cb complete // ?
@@ -110,7 +110,7 @@ struct AESParam {
   string action  // ActionType
   string text  // text to be encrypted or decrypted
   string key  // aes secret key
-  string iv = ""  // ?
+  string iv  // ?
   int ivOffset = 0 // ?
   int ivLen = 16 // ?
   callback success_cb_obj_str_opt success // ?

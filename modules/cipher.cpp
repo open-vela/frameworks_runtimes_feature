@@ -141,18 +141,12 @@ static OptionalType system_cipher_RSAVerifyParam_member_hashType_opt_type = {
     .str = "SHA256"
 };
 
-static OptionalType system_cipher_RSAVerifyParam_member_signature_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
 /****** for JIDL struct 'RSAVerifyParam' ******/
 static ObjectMember system_cipher_RSAVerifyParam_struct_members[] = {
     { "text", FT_STRING, offsetof(system_cipher_RSAVerifyParam, _text), sizeof(FtString) },
     { "key", FT_STRING, offsetof(system_cipher_RSAVerifyParam, _key), sizeof(FtString) },
     { "hashType", FT_MK_OPTIONAL(&system_cipher_RSAVerifyParam_member_hashType_opt_type), offsetof(system_cipher_RSAVerifyParam, _hashType), sizeof(FtString) },
-    { "signature", FT_MK_OPTIONAL(&system_cipher_RSAVerifyParam_member_signature_opt_type), offsetof(system_cipher_RSAVerifyParam, _signature), sizeof(FtString) },
+    { "signature", FT_STRING, offsetof(system_cipher_RSAVerifyParam, _signature), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_bool_opt_callback_type), offsetof(system_cipher_RSAVerifyParam, _success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_RSAVerifyParam, _fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_RSAVerifyParam, _complete), sizeof(FtCallbackId) },
@@ -259,12 +253,6 @@ static const MemberMethod system_cipher_md5_member_method = {
 };
 
 
-static OptionalType system_cipher_AESParam_member_iv_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
 static OptionalType system_cipher_AESParam_member_ivOffset_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
@@ -282,7 +270,7 @@ static ObjectMember system_cipher_AESParam_struct_members[] = {
     { "action", FT_STRING, offsetof(system_cipher_AESParam, _action), sizeof(FtString) },
     { "text", FT_STRING, offsetof(system_cipher_AESParam, _text), sizeof(FtString) },
     { "key", FT_STRING, offsetof(system_cipher_AESParam, _key), sizeof(FtString) },
-    { "iv", FT_MK_OPTIONAL(&system_cipher_AESParam_member_iv_opt_type), offsetof(system_cipher_AESParam, _iv), sizeof(FtString) },
+    { "iv", FT_STRING, offsetof(system_cipher_AESParam, _iv), sizeof(FtString) },
     { "ivOffset", FT_MK_OPTIONAL(&system_cipher_AESParam_member_ivOffset_opt_type), offsetof(system_cipher_AESParam, _ivOffset), sizeof(FtInt) },
     { "ivLen", FT_MK_OPTIONAL(&system_cipher_AESParam_member_ivLen_opt_type), offsetof(system_cipher_AESParam, _ivLen), sizeof(FtInt) },
     { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_AESParam, _success), sizeof(FtCallbackId) },
