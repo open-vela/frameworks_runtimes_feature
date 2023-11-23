@@ -27,7 +27,6 @@
 #include <map>
 #include <string>
 
-#include "crypto_utils.h"
 #include "fetch.h"
 #include "net_utils.h"
 
@@ -205,8 +204,8 @@ bool get_method(FtString method, std::string& out) {
   if (!check_str(method)) {
     out.assign(Fetch::method_type[Fetch::MethodType::GET]);
     return true;
-  } else if (!has_type(Fetch::method_type, arrayof(Fetch::method_type),
-                       method)) {
+  } else if (!type_contain(Fetch::method_type, arrayof(Fetch::method_type),
+                           method)) {
     return false;
   }
   out.assign(method);
@@ -285,7 +284,9 @@ static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
   }
 
   // set timeout
-  uv_request_set_timeout(fetch->request, obj->_timeout);
+  if (!obj->_timeout) {
+    uv_request_set_timeout(fetch->request, obj->_timeout);
+  }
 
   // Set request to DOWNLOAD or FETCH
   uv_request_set_atrribute(fetch->request, fetch->type,
@@ -428,17 +429,25 @@ void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
       obj->_url, obj->_data, obj->_header, obj->_method, obj->_responseType,
       obj->_success, obj->_fail, obj->_complete);
 
-  // check arg
+  // Check necessary parameters
   obj->_timeout = obj->_timeout > 0 ? obj->_timeout : DEFAULT_TIMEOUT;
   SET_ARGERROR(check_url(obj->_url), "invalid url");
 
-  SET_ARGERROR(get_method(obj->_method, method), "invalid method");
+  // Check for non-essential parameters
+  if (check_str(obj->_method)) {
+    SET_ARGERROR(get_method(obj->_method, method), "invalid method");
+  }
 
-  SET_ARGERROR(check_header(ft_ctx, obj->_header, headers), "invalid headers");
+  if (check_any(obj->_header)) {
+    SET_ARGERROR(check_header(ft_ctx, obj->_header, headers),
+                 "invalid headers");
+  }
 
-  SET_ARGERROR(get_pdata_and_content_type(
-                   ft_ctx, obj->_data, get_cy_from_header(headers), &content),
-               "invalid data");
+  if (check_any(obj->_data)) {
+    SET_ARGERROR(get_pdata_and_content_type(
+                     ft_ctx, obj->_data, get_cy_from_header(headers), &content),
+                 "invalid data");
+  }
 
   // avoid setting twice
   if (content.content_type && headers.count("content-type")) {
