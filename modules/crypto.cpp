@@ -27,12 +27,6 @@
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
-static OptionalType system_crypto_HashDigestParam_member_uri_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
 static OptionalType system_crypto_HashDigestParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
@@ -42,7 +36,7 @@ static OptionalType system_crypto_HashDigestParam_member_algo_opt_type = {
 /****** for JIDL struct 'HashDigestParam' ******/
 static ObjectMember system_crypto_HashDigestParam_struct_members[] = {
     { "data", FT_ANY_REF, offsetof(system_crypto_HashDigestParam, _data), sizeof(FtAny) },
-    { "uri", FT_MK_OPTIONAL(&system_crypto_HashDigestParam_member_uri_opt_type), offsetof(system_crypto_HashDigestParam, _uri), sizeof(FtString) },
+    { "uri", FT_STRING, offsetof(system_crypto_HashDigestParam, _uri), sizeof(FtString) },
     { "algo", FT_MK_OPTIONAL(&system_crypto_HashDigestParam_member_algo_opt_type), offsetof(system_crypto_HashDigestParam, _algo), sizeof(FtString) },
     { nullptr },
 };
@@ -179,12 +173,6 @@ static const MemberMethod system_crypto_hmacDigest_member_method = {
 };
 
 
-static OptionalType system_crypto_SignParam_member_uri_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
 static OptionalType system_crypto_SignParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
@@ -194,7 +182,7 @@ static OptionalType system_crypto_SignParam_member_algo_opt_type = {
 /****** for JIDL struct 'SignParam' ******/
 static ObjectMember system_crypto_SignParam_struct_members[] = {
     { "data", FT_ANY_REF, offsetof(system_crypto_SignParam, _data), sizeof(FtAny) },
-    { "uri", FT_MK_OPTIONAL(&system_crypto_SignParam_member_uri_opt_type), offsetof(system_crypto_SignParam, _uri), sizeof(FtString) },
+    { "uri", FT_STRING, offsetof(system_crypto_SignParam, _uri), sizeof(FtString) },
     { "algo", FT_MK_OPTIONAL(&system_crypto_SignParam_member_algo_opt_type), offsetof(system_crypto_SignParam, _algo), sizeof(FtString) },
     { "privateKey", FT_STRING, offsetof(system_crypto_SignParam, _privateKey), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_SignParam, _success), sizeof(FtCallbackId) },
@@ -228,12 +216,6 @@ static const MemberMethod system_crypto_sign_member_method = {
 };
 
 
-static OptionalType system_crypto_RSAVerifyParam_member_uri_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
 static OptionalType system_crypto_RSAVerifyParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
@@ -243,7 +225,7 @@ static OptionalType system_crypto_RSAVerifyParam_member_algo_opt_type = {
 /****** for JIDL struct 'RSAVerifyParam' ******/
 static ObjectMember system_crypto_RSAVerifyParam_struct_members[] = {
     { "data", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, _data), sizeof(FtAny) },
-    { "uri", FT_MK_OPTIONAL(&system_crypto_RSAVerifyParam_member_uri_opt_type), offsetof(system_crypto_RSAVerifyParam, _uri), sizeof(FtString) },
+    { "uri", FT_STRING, offsetof(system_crypto_RSAVerifyParam, _uri), sizeof(FtString) },
     { "algo", FT_MK_OPTIONAL(&system_crypto_RSAVerifyParam_member_algo_opt_type), offsetof(system_crypto_RSAVerifyParam, _algo), sizeof(FtString) },
     { "signature", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, _signature), sizeof(FtAny) },
     { "publicKey", FT_STRING, offsetof(system_crypto_RSAVerifyParam, _publicKey), sizeof(FtString) },
@@ -278,18 +260,6 @@ static const MemberMethod system_crypto_verify_member_method = {
 };
 
 
-static OptionalType system_crypto_MixinCryptOption_member_transformation_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
-static OptionalType system_crypto_MixinCryptOption_member_iv_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
 static OptionalType system_crypto_MixinCryptOption_member_ivOffset_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
@@ -304,8 +274,8 @@ static OptionalType system_crypto_MixinCryptOption_member_ivLen_opt_type = {
 
 /****** for JIDL struct 'MixinCryptOption' ******/
 static ObjectMember system_crypto_MixinCryptOption_struct_members[] = {
-    { "transformation", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_transformation_opt_type), offsetof(system_crypto_MixinCryptOption, _transformation), sizeof(FtString) },
-    { "iv", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_iv_opt_type), offsetof(system_crypto_MixinCryptOption, _iv), sizeof(FtString) },
+    { "transformation", FT_STRING, offsetof(system_crypto_MixinCryptOption, _transformation), sizeof(FtString) },
+    { "iv", FT_STRING, offsetof(system_crypto_MixinCryptOption, _iv), sizeof(FtString) },
     { "ivOffset", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_ivOffset_opt_type), offsetof(system_crypto_MixinCryptOption, _ivOffset), sizeof(FtInt) },
     { "ivLen", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_ivLen_opt_type), offsetof(system_crypto_MixinCryptOption, _ivLen), sizeof(FtInt) },
     { nullptr },

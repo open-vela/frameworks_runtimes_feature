@@ -43,7 +43,7 @@ enum SignHashType {
  */
 struct HashDigestParam {
   object data  // ? string | Uint8Array
-  string uri = ""  // ?
+  string uri  // ?
   string algo = "SHA256" // ? HashType
 }
 string hashDigest(HashDigestParam options)
@@ -75,7 +75,7 @@ void hmacDigest(HmacDigestParam options)
  */
 struct SignParam {
   object data  // ? string | Uint8Array
-  string uri = ""  // ?
+  string uri  // ?
   string algo = "RSA-SHA256" // ? SignHashType
   string privateKey
   callback success_cb_obj_str_u8a_opt success // ?
@@ -90,7 +90,7 @@ void sign(SignParam options)
  */
 struct RSAVerifyParam {
   object data  // ? string | Uint8Array
-  string uri = ""  // ?
+  string uri  // ?
   string algo = "RSA-SHA256" // ? SignHashType
   object signature
   string publicKey
@@ -106,8 +106,8 @@ void verify(RSAVerifyParam options)
  * @param options
  */
 struct MixinCryptOption {
-  string transformation = "" // ?
-  string iv = "" // ?
+  string transformation // ?
+  string iv // ?
   int ivOffset = 0 // ?
   int ivLen = 16 // ?
 }
