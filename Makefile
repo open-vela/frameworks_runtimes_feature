@@ -58,7 +58,6 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
 
-
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_test.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_test_impl.cpp
