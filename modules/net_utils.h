@@ -25,6 +25,7 @@
 #include "feature_types.h"
 #include "netutils/cJSON.h"
 #include "uv_ext.h"
+#include "app_path.h"
 
 // namespace NET {
 typedef enum ErrorCode {
