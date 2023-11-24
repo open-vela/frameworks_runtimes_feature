@@ -128,7 +128,7 @@ void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPar
                     ft_to_bool(ft_ctx, param, &param_bool);
                     printf("%d ", param_bool);
                 } else {
-                    printf("invalid array element type!");
+                    printf("invalid array element type!\n");
                     return;
                 }
             }
@@ -146,7 +146,7 @@ void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPar
             ft_to_bool(ft_ctx, param, &param_bool);
             printf("%d ", param_bool);
         } else {
-            printf("invalid param type!");
+            printf("invalid param type!\n");
             return;
         }
     }
@@ -194,7 +194,7 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
                     ft_to_bool(ft_ctx, param, &param_bool);
                     printf("%d ", param_bool);
                 } else {
-                    printf("invalid array element type!");
+                    printf("invalid array element type!\n");
                     return;
                 }
             }
@@ -212,7 +212,7 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
             ft_to_bool(ft_ctx, param, &param_bool);
             printf("%d ", param_bool);
         } else {
-            printf("invalid param type!");
+            printf("invalid param type!\n");
             return;
         }
     }
@@ -344,6 +344,7 @@ FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray& 
 
 FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 {
+    printf("%s::%s()\n", file_tag,  __FUNCTION__);
     FtArray* strArray = Simple_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
