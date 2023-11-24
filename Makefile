@@ -88,10 +88,6 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
-FEATURELIST += sensor
-
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device_impl.cpp
 FEATURELIST += device
@@ -156,6 +152,12 @@ ifeq ($(CONFIG_KVDB) && $(CONFIG_LIBUV_EXTENSION),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
 FEATURELIST += exchange
+endif
+
+ifeq ($(CONFIG_UORB), y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
+FEATURELIST += sensor
 endif
 
 ifeq ($(CONFIG_SYSTEM_PACKAGE_SERVICE), y)
