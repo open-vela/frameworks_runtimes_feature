@@ -34,11 +34,11 @@ extern "C" int get_array_length(wasm_struct_obj_t obj);
 
 extern "C" wasm_array_obj_t get_array_ref(wasm_struct_obj_t obj);
 
-extern "C"
-{
+extern "C" {
     uint32_t wasm_string_get_length(wasm_stringref_obj_t str_obj);
     uint32_t wasm_string_to_cstring(wasm_stringref_obj_t str_obj, char *buffer, uint32_t len);
 }
+
 namespace FeatureFFIWamr {
 
 char getFeatureSignature(FeatureType featureType)
@@ -69,28 +69,22 @@ char getFeatureSignature(FeatureType featureType)
                 return 0;
             }
         }
-    }
-    else if (FT_IS_COMPLEX(featureType))
-    {
+    } else if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(featureType);
-        switch (complexType->type)
-        {
-        case COMPLEX_OPTIONAL:
-        {
-            OptionalType *optionalType = (OptionalType *)complexType;
-            char res = getFeatureSignature(optionalType->type);
-            if (res == 0)
-            {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return 0;
+        switch (complexType->type) {
+            case COMPLEX_OPTIONAL: {
+                OptionalType *optionalType = (OptionalType *)complexType;
+                char res = getFeatureSignature(optionalType->type);
+                if (res == 0) {
+                    FEATURE_LOG_WARN("unsupported type detected !");
+                    return 0;
+                }
+                return res;
             }
-            return res;
-        }
-        break;
-        default:
-        {
-            return 'r';
-        }
+            break;
+            default: {
+                return 'r';
+            }
         }
     }
     return 0;
@@ -230,30 +224,25 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, voi
                 return false;
             }
         }
-    } else if (FT_IS_COMPLEX(featureType))
-    {
+    } else if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(featureType);
-        switch (complexType->type)
-        {
-        case COMPLEX_STRUCT_MAP:
-        {
-            value.of.foreign = (uintptr_t)ptr;
-            value.kind = WASM_ANYREF;
-        }
-        break;
-        case COMPLEX_ARRAY:
-        {
-            // convert to guest
-            // FtArray* arrayData = (FtArray*)ptr;
-            value.of.foreign = (uintptr_t)ptr;
-            value.kind = WASM_ANYREF;
-        }
-        break;
-        case COMPLEX_INTERFACE:
-        {
-            value.of.foreign = (uintptr_t)ptr;
-            value.kind = WASM_ANYREF;
-        } break;
+        switch (complexType->type) {
+            case COMPLEX_STRUCT_MAP: {
+                value.of.foreign = (uintptr_t)ptr;
+                value.kind = WASM_ANYREF;
+            }
+            break;
+            case COMPLEX_ARRAY: {
+                // convert to guest
+                // FtArray* arrayData = (FtArray*)ptr;
+                value.of.foreign = (uintptr_t)ptr;
+                value.kind = WASM_ANYREF;
+            }
+            break;
+            case COMPLEX_INTERFACE: {
+                value.of.foreign = (uintptr_t)ptr;
+                value.kind = WASM_ANYREF;
+            } break;
         }
     }
     return true;
@@ -291,32 +280,27 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
             case FT_INT16:
             case FT_UINT16:
             case FT_INT32:
-            case FT_UINT32:
-            {
+            case FT_UINT32: {
                 native_raw_get_arg(double, number_value, value);
                 *(int32_t*)ptr = (int32_t)number_value;
             }
             break;
-            case FT_INT64:
-            {
+            case FT_INT64: {
                 native_raw_get_arg(double, number_value, value);
                 *(int64_t*)ptr = (int64_t)number_value;
             }
             break;
-            case FT_UINT64:
-            {
+            case FT_UINT64: {
                 native_raw_get_arg(double, number_value, value);
                 *(u_int64_t*)ptr = (u_int64_t)number_value;
             }
             break;
-            case FT_FLOAT:
-            {
+            case FT_FLOAT: {
                 native_raw_get_arg(double, number_value, value);
                 *(float*)ptr = (float)number_value;
             }
             break;
-            case FT_DOUBLE:
-            {
+            case FT_DOUBLE: {
                 native_raw_get_arg(double, number_value, value);
                 *(float64*)ptr = (float64)number_value;
             }
@@ -325,13 +309,11 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 native_raw_get_arg(void *, str, value);
                 /* get cstring from wasm string (stringref path) */
                 uint32_t str_len = 0, len = 0;
-                if (wasm_obj_is_stringref_obj((wasm_obj_t)str))
-                {
+                if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
                     str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
                 }
                 char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
-                if (buffer != nullptr)
-                {
+                if (buffer != nullptr) {
                     len = wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
                 }
                 char* alloc_ptr = (char*)FeatureMalloc(strlen(buffer) + 1, FT_CHAR);
@@ -340,8 +322,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 // feature_free_cstring(ctx, str);
             }
             break;
-            case FT_ANY:
-            {
+            case FT_ANY: {
                 // copy value
                 native_raw_get_arg(void *, param, value);
                 JSValue *js_value = (JSValue *)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
@@ -360,47 +341,40 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
     } else if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexType->type) {
-        case COMPLEX_STRUCT_MAP:
-        {
-            wasm_value_t val = {0};
-            ObjectMapType &objMapType = *(ObjectMapType *)complexType;
-            ObjectMember *member = (ObjectMember *)objMapType.members;
-            int member_count = 0;
-            while (member->name)
-            {
-                member_count++;
-                member++;
-            }
-
-            native_raw_get_arg(wasm_struct_obj_t, wasm_obj, value);
-            for (int i = 0; i < member_count; i++)
-            {
-                // fill it
-                auto member = &objMapType.members[i];
-                wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
-                void *member_ptr = (void *)((char *)ptr + member->offset);
-                bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, (uint64_t *)&val);
-                // feature_free_value(ctx, propValue);
-                if (!ret)
-                {
-                    printf("get property value for key: %s failed !",
-                           member->name);
-                    return false;
+            case COMPLEX_STRUCT_MAP: {
+                wasm_value_t val = {0};
+                ObjectMapType &objMapType = *(ObjectMapType *)complexType;
+                ObjectMember *member = (ObjectMember *)objMapType.members;
+                int member_count = 0;
+                while (member->name) {
+                    member_count++;
+                    member++;
                 }
-            }
-        }
-        break;
-        case COMPLEX_CALLBACK:
-        {
-            // save into instance
-            CallbackType *callbackType = (CallbackType *)complexType;
-            native_raw_get_arg(wasm_obj_t, cb_value, value);
-            //*(int32_t*)ptr = (int32_t)number_value;
-            FtCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(cb_value, callbackType);
-            *(FtCallbackId *)ptr = id; // write callback id to pointer.
+
+                native_raw_get_arg(wasm_struct_obj_t, wasm_obj, value);
+                for (int i = 0; i < member_count; i++) {
+                    // fill it
+                    auto member = &objMapType.members[i];
+                    wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
+                    void *member_ptr = (void *)((char *)ptr + member->offset);
+                    bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, (uint64_t *)&val);
+                    // feature_free_value(ctx, propValue);
+                    if (!ret) {
+                        printf("get property value for key: %s failed !",
+                            member->name);
+                        return false;
+                    }
+                }
             } break;
-            case COMPLEX_ARRAY:
-            {
+            case COMPLEX_CALLBACK: {
+                // save into instance
+                CallbackType *callbackType = (CallbackType *)complexType;
+                native_raw_get_arg(wasm_obj_t, cb_value, value);
+                //*(int32_t*)ptr = (int32_t)number_value;
+                FtCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(cb_value, callbackType);
+                *(FtCallbackId *)ptr = id; // write callback id to pointer.
+            } break;
+            case COMPLEX_ARRAY: {
                 uint32_t len;
                 wasm_value_t value1 = {0};
                 ArrayType &arrayType = *(ArrayType *)complexType;
@@ -426,22 +400,18 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                             // feature_free_value(ctx, elementValue);
                         break;
                         }
-                    // feature_free_value(ctx, elementValue);
+                        // feature_free_value(ctx, elementValue);
                     }
                 }
-                break;
-            }
-            case COMPLEX_INTERFACE:
-            {
+            } break;
+            case COMPLEX_INTERFACE: {
                 native_raw_get_arg(void*, param, value);
                 ptr = param;
+            } break;
+            default: {
+                FEATURE_LOG_ERROR("unsupported complex type !");
+                return false;
             }
-            break;
-        default:
-        {
-            FEATURE_LOG_ERROR("unsupported complex type !");
-            return false;
-        }
         }
     }
     return true;

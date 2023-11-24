@@ -51,12 +51,10 @@ static void dynamic_object_finalizer(wasm_anyref_obj_t obj, void *data)
 
 static wasm_anyref_obj_t return_box_anyref(wasm_exec_env_t exec_env, const void *ptr)
 {
-    do
-    {
+    do {
         wasm_anyref_obj_t any_obj =
             (wasm_anyref_obj_t)wasm_anyref_obj_new(exec_env, ptr);
-        if (!any_obj)
-        {
+        if (!any_obj) {
             wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
                                        "alloc memory failed");
             return NULL;
@@ -124,28 +122,22 @@ static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_ar
     bool is_mutable = true;
     wasm_value_t val = {0};
     type_count = wasm_get_defined_type_count(module);
-    for (i = 0; i < type_count; i++)
-    {
+    for (i = 0; i < type_count; i++) {
         wasm_defined_type_t type = wasm_get_defined_type(module, i);
-
-        if (wasm_defined_type_is_array_type(type))
-        {
+        if (wasm_defined_type_is_array_type(type)) {
             bool mutable_ref = false;
             wasm_ref_type_t arr_elem_ref_type = wasm_array_type_get_elem_type(
                 (wasm_array_type_t)type, &mutable_ref);
 
-            if (arr_elem_ref_type.value_type == VALUE_TYPE_ANYREF && mutable_ref == is_mutable)
-            {
-                if (p_array_type_t)
-                {
+            if (arr_elem_ref_type.value_type == VALUE_TYPE_ANYREF && mutable_ref == is_mutable) {
+                if (p_array_type_t) {
                     *p_array_type_t = (wasm_array_type_t)type;
                 }
                 return i;
             }
         }
     }
-    if (p_array_type_t)
-    {
+    if (p_array_type_t) {
         *p_array_type_t = nullptr;
     }
 
@@ -168,8 +160,7 @@ static wasm_struct_obj_t creat_any_array_obj(wasm_exec_env_t exec_env, uint32_t 
     wasm_struct_obj_t new_any_array_struct =
         wasm_struct_obj_new_with_type(exec_env, res_arr_struct_type);
 
-    if (!new_any_array_struct)
-    {
+    if (!new_any_array_struct) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
                                    "alloc memory failed");
         return nullptr;
@@ -183,8 +174,7 @@ static wasm_struct_obj_t creat_any_array_obj(wasm_exec_env_t exec_env, uint32_t 
     val.gc_obj = nullptr;
     wasm_array_obj_t new_arr = wasm_array_obj_new_with_type(exec_env, any_array_type, arr_elem_count,
                                                             &val);
-    if (!new_arr)
-    {
+    if (!new_arr) {
         wasm_runtime_pop_local_object_ref(exec_env);
         wasm_runtime_set_exception(module_inst, "alloc memory failed");
         return nullptr;
@@ -208,8 +198,7 @@ int FeatureInstanceWamr::invokeCallback(FtCallbackId cid, va_list &ap)
     bool has_rest_param = false;
     CallbackType *callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
-    if (has_rest_param)
-    {
+    if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with InvokeFeatureCallbackCount!");
         return -1;
     }
@@ -222,9 +211,7 @@ int FeatureInstanceWamr::invokeCallbackCount(FtCallbackId cid, va_list &ap, int 
     const auto callback = getCallback(cid);
     bool has_rest_param = false;
     CallbackType *callbackType = callback.cb_type;
-    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
-    if (!has_rest_param || count < method_param_count)
-    {
+    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param); {
         FEATURE_LOG_ERROR("no resut parameter callback must invoke with FeatureInvokeCallback!");
         return -1;
     }
@@ -233,143 +220,119 @@ int FeatureInstanceWamr::invokeCallbackCount(FtCallbackId cid, va_list &ap, int 
 
 int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, WamrCallbackData callback, va_list &ap, int method_param_count, int rest_param_count)
 {
-    {
-        auto manager = (FeatureManagerWamr*)(prototype()->getFeatureManager());
-        wasm_exec_env_t exec_env = (wasm_exec_env_t)(manager->wamrEnv());
-        wasm_value_t context = { 0 }, thiz = { 0 }, func_obj = { 0 };
+    auto manager = (FeatureManagerWamr*)(prototype()->getFeatureManager());
+    wasm_exec_env_t exec_env = (wasm_exec_env_t)(manager->wamrEnv());
+    wasm_value_t context = { 0 }, thiz = { 0 }, func_obj = { 0 };
 
-        if (callback.cb == nullptr)
-        {
-            FEATURE_LOG_ERROR("callback in undefined !");
-            return -1;
-        }
+    if (callback.cb == nullptr) {
+        FEATURE_LOG_ERROR("callback in undefined !");
+        return -1;
+    }
 
-        /* get closure context and func ref */
-        wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 0, false, &context);
-        wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 1, false, &thiz);
-        wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 2, false, &func_obj);
+    /* get closure context and func ref */
+    wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 0, false, &context);
+    wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 1, false, &thiz);
+    wasm_struct_obj_get_field((WASMStructObjectRef)callback.cb, 2, false, &func_obj);
 
-        uint32 argv[64];
-        uint32 occupied_slots = 0;
-        /* arg0: context */
-        bh_memcpy_s(argv, sizeof(argv), &context.gc_obj, sizeof(void *));
-        occupied_slots += sizeof(void *) / sizeof(uint32);
+    uint32 argv[64];
+    uint32 occupied_slots = 0;
+    /* arg0: context */
+    bh_memcpy_s(argv, sizeof(argv), &context.gc_obj, sizeof(void *));
+    occupied_slots += sizeof(void *) / sizeof(uint32);
 
-        /* arg1: thiz */
-        bh_memcpy_s(argv + occupied_slots,
-                    sizeof(argv) - occupied_slots * sizeof(uint32), &thiz.gc_obj,
-                    sizeof(void *));
-        occupied_slots += sizeof(void *) / sizeof(uint32);
+    /* arg1: thiz */
+    bh_memcpy_s(argv + occupied_slots,
+                sizeof(argv) - occupied_slots * sizeof(uint32), &thiz.gc_obj,
+                sizeof(void *));
+    occupied_slots += sizeof(void *) / sizeof(uint32);
 
-        do
-        {
-            /* convert parameters to feature_value_t */
-            for (int i = 0; i < method_param_count; i++)
-            {
-                FeatureType featureType = callbackType->parameters[i];
-                void *ptr = exactVariadicParameter(ap, featureType);
-                if (!ptr)
-                {
-                    // got_error = true;
-                    break;
-                }
-                wasm_val_t val;
-                if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, val))
-                {
-                    FEATURE_LOG_ERROR("convert callback param failed !");
-                    free(ptr);
-                    break;
-                }
-                switch (val.kind)
-                {
-                case WASM_I32:
-                {
+    do {
+        /* convert parameters to feature_value_t */
+        for (int i = 0; i < method_param_count; i++) {
+            FeatureType featureType = callbackType->parameters[i];
+            void *ptr = exactVariadicParameter(ap, featureType);
+            if (!ptr) {
+                // got_error = true;
+                break;
+            }
+            wasm_val_t val;
+            if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, val)) {
+                FEATURE_LOG_ERROR("convert callback param failed !");
+                free(ptr);
+                break;
+            }
+            switch (val.kind) {
+                case WASM_I32: {
                     *(double *)(argv + occupied_slots) = val.of.i32;
                     occupied_slots += sizeof(double) / sizeof(uint32);
-                }
-                break;
-                case WASM_F64:
-                {
+                } break;
+                case WASM_F64: {
                     *(double *)(argv + occupied_slots) = val.of.f64;
                     occupied_slots += sizeof(double) / sizeof(uint32);
-                }
-                break;
-                case WASM_ANYREF:
-                {
+                } break;
+                case WASM_ANYREF: {
                     const char *str = (char *)val.of.foreign;
                     wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
                     b_memcpy_s(argv + occupied_slots, sizeof(argv) - occupied_slots, &(obj),
-                               sizeof(wasm_stringref_obj_t));
+                                sizeof(wasm_stringref_obj_t));
                     occupied_slots += sizeof(wasm_stringref_obj_t) / sizeof(uint32);
-                }
-                break;
+                } break;
                 default:
                     break;
-                }
-                free(ptr);
             }
+            free(ptr);
+        }
 
-            /* Call the creat_any_array_obj api to create an array object with element type any 
-            *  rest_param_count： number of elements.
+        /* Call the creat_any_array_obj api to create an array object with element type any 
+        *  rest_param_count： number of elements.
+        */
+        wasm_struct_obj_t obj_ref = creat_any_array_obj(exec_env, rest_param_count);
+        wasm_value_t wasm_array = {0}, len_val = {0};
+
+        /*  Take out the array data field of the array object,
+            *  then wrap and assign any type to each element of the array.
             */
-            wasm_struct_obj_t obj_ref = creat_any_array_obj(exec_env, rest_param_count);
-            wasm_value_t wasm_array = {0}, len_val = {0};
+        wasm_struct_obj_get_field(obj_ref, 0, false, &wasm_array);
+        wasm_array_obj_t any_array = (wasm_array_obj_t)wasm_array.gc_obj;
 
-            /*  Take out the array data field of the array object,
-             *  then wrap and assign any type to each element of the array.
-             */
-            wasm_struct_obj_get_field(obj_ref, 0, false, &wasm_array);
-            wasm_array_obj_t any_array = (wasm_array_obj_t)wasm_array.gc_obj;
-
-            dyn_ctx_t dyn_ctx;
-            dyn_ctx = dyntype_get_context();
-            /* Set the field of the array length */
-            len_val.i32 = (int32_t)rest_param_count;
-            wasm_struct_obj_set_field(obj_ref, 1, &len_val);
-            // printf("[doInvokeCallback] have variable parameter %d\n", rest_param_count);
-            /* Unify the variable parameters into "any" and add each element to the any array object */
-            for (int i = 0; i < rest_param_count; i++)
-            {
-                void *arg = va_arg(ap, void *);
-                void *header_ptr = ((char *)arg - FT_OBJ_HEADER_SIZE);
-                FTObjHeader *header = (FTObjHeader *)header_ptr;
-                wasm_val_t val;
-                if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, exec_env, val))
-                {
-                    FEATURE_LOG_ERROR("convert callback param failed !");
-                    break;
-                }
-                switch (val.kind)
-                {
-                case WASM_I32:
-                {
+        dyn_ctx_t dyn_ctx;
+        dyn_ctx = dyntype_get_context();
+        /* Set the field of the array length */
+        len_val.i32 = (int32_t)rest_param_count;
+        wasm_struct_obj_set_field(obj_ref, 1, &len_val);
+        // printf("[doInvokeCallback] have variable parameter %d\n", rest_param_count);
+        /* Unify the variable parameters into "any" and add each element to the any array object */
+        for (int i = 0; i < rest_param_count; i++) {
+            void *arg = va_arg(ap, void *);
+            void *header_ptr = ((char *)arg - FT_OBJ_HEADER_SIZE);
+            FTObjHeader *header = (FTObjHeader *)header_ptr;
+            wasm_val_t val;
+            if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, exec_env, val)) {
+                FEATURE_LOG_ERROR("convert callback param failed !");
+                break;
+            }
+            switch (val.kind) {
+                case WASM_I32: {
                     wasm_value_t tmp_val = { 0 };
                     /* call return_box_anyref api to box element as any */
                     wasm_anyref_obj_t any_obj = nullptr;
-                    if (val.of.i32 == 1 || val.of.i32 == 0)
-                    {
+                    if (val.of.i32 == 1 || val.of.i32 == 0) {
                         any_obj = return_box_anyref(exec_env, dyntype_new_boolean(dyn_ctx, val.of.i32));
-                    }
-                    else
-                    {
+                    } else {
                         any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.i32));
                     }
                     // wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.i32));
                     tmp_val.gc_obj = (wasm_obj_t)any_obj;
                     wasm_array_obj_set_elem(any_array, i, &tmp_val);
-                }
-                break;
-                case WASM_F64:
-                {
+                } break;
+                case WASM_F64: {
                     wasm_value_t tmp_val = { 0 };
                     /* call return_box_anyref api to box element as any */
                     wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.f64));
                     tmp_val.gc_obj = (wasm_obj_t)any_obj;
                     wasm_array_obj_set_elem(any_array, i, &tmp_val);
-                }
-                break;
-                case WASM_ANYREF:
-                {
+                } break;
+                case WASM_ANYREF: {
                     const char *str = (char *)val.of.foreign;
                     wasm_stringref_obj_t obj = create_wasm_string_with_len(exec_env, str, strlen(str));
                     wasm_value_t tmp_val = {0};
@@ -377,23 +340,20 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
                     wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_string(dyn_ctx, (void *)wasm_stringref_obj_get_value(obj)));
                     tmp_val.gc_obj = (wasm_obj_t)any_obj;
                     wasm_array_obj_set_elem(any_array, i, &tmp_val);
-                }
-                break;
+                } break;
                 default:
                     break;
-                }
+            }
             /* at least, add the any array object to the return parameter argv */
             b_memcpy_s(argv + occupied_slots, sizeof(argv) - occupied_slots, &(obj_ref),
-                       sizeof(wasm_struct_obj_t));
+                        sizeof(wasm_struct_obj_t));
             occupied_slots += sizeof(wasm_struct_obj_t) / sizeof(uint32);
-            }
+        }
+        bool ret = wasm_runtime_call_func_ref(exec_env, (wasm_func_obj_t)func_obj.gc_obj,
+                                                occupied_slots, argv);
+    } while (0);
 
-            bool ret = wasm_runtime_call_func_ref(exec_env, (wasm_func_obj_t)func_obj.gc_obj,
-                                                  occupied_slots, argv);
-        } while (0);
-
-        return 0;
-    }
+    return 0;
 }
 
 FtPromiseId FeatureInstanceWamr::addPromise(FeatureType resolve_type, FeatureType reject_type)
@@ -411,7 +371,8 @@ void FeatureInstanceWamr::addPromise_wamr(feature_value_t data)
     promises_wamr.push_back(data);
 }
 
-void FeatureInstanceWamr::release() {
+void FeatureInstanceWamr::release()
+{
     callbacks_.clear();
 }
 
