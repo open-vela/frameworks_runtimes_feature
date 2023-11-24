@@ -249,3 +249,90 @@ feat_async_test("file", "readArrayBuffer", (done) => {
             feat_expect_true(err, "file readArrayBuffer fail");
             done(); });
 })
+
+feat_async_test("file", "mkdir", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.mkdir({
+            uri : 'internal://files/newdir',
+            success : function() {
+                request.print("### mkdir success ### ");
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### mkdir fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+    feat_expect_true(res, "file mkdir success");
+    done(); }, (err) => {
+    feat_expect_true(err, "file mkdir fail");
+    done(); });
+})
+
+feat_async_test("file", "rmdir", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.rmdir({
+            uri : 'internal://files/newdir',
+            success : function() {
+                request.print("### rmdir success ### ");
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### rmdir fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+    feat_expect_true(res, "file rmdir success");
+    done(); }, (err) => {
+    feat_expect_true(err, "file rmdir fail");
+    done(); });
+})
+
+feat_async_test("file", "list", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.list({
+            uri : 'internal://files/',
+            success : function(data) {
+                request.print("### list success ### ");
+                request.print(JSON.stringify(data.fileList))
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### list fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+    feat_expect_true(res, "file list success");
+    done(); }, (err) => {
+    feat_expect_true(err, "file list fail");
+    done(); });
+})
+
+feat_async_test("file", "get", (done) => {
+    return new Promise(function(resolve, reject) {
+        file.get({
+            uri : 'internal://files/',
+            recursive : true,
+            success : function(data) {
+                request.print("### get success ### ");
+                request.print(JSON.stringify(data))
+                resolve(true);
+            },
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### get fail ### ", fileCopyData);
+                reject(false);
+            }
+        })
+    }).then((res) => {
+    feat_expect_true(res, "file get success");
+    done(); }, (err) => {
+    feat_expect_true(err, "file get fail");
+    done(); });
+})

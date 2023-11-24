@@ -66,13 +66,13 @@ file_copy_param_t* fileMalloccopy_param_t();
 typedef struct _file_info_t {
   FtString _uri;
   FtInt _length;
-  FtInt _lastModifiedTime;
+  FtString _lastModifiedTime;
 } file_file_info_t;
 
 file_file_info_t* fileMallocfile_info_t();
 
 typedef struct _list_succ_param {
-  FtAny _fileList;
+  FtArray* _fileList;
 } file_list_succ_param;
 
 file_list_succ_param* fileMalloclist_succ_param();
@@ -88,10 +88,10 @@ file_list_param_t* fileMalloclist_param_t();
 
 typedef struct _extended_file_info_t {
   FtString _uri;
-  FtInt _length;
-  FtInt _lastModifiedTime;
+  FtInt64 _length;
+  FtString _lastModifiedTime;
   FtString _type;
-  FtAny _subFiles;
+  FtArray* _subFiles;
 } file_extended_file_info_t;
 
 file_extended_file_info_t* fileMallocextended_file_info_t();
@@ -223,6 +223,8 @@ void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file
 // Property getters and setters to be implemented
 
 // Array malloc functions
+FtArray* file_malloc_object_array();
+FtArray* file_malloc_struct_array();
 
 #endif // JSON_AST_GEN_MODULE_FILE_H_
 /* clang-format on */

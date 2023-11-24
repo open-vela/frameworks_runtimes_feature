@@ -179,7 +179,7 @@ static const MemberMethod file_copy_member_method = {
 static ObjectMember file_file_info_t_struct_members[] = {
     { "uri", FT_STRING, offsetof(file_file_info_t, _uri), sizeof(FtString) },
     { "length", FT_INT, offsetof(file_file_info_t, _length), sizeof(FtInt) },
-    { "lastModifiedTime", FT_INT, offsetof(file_file_info_t, _lastModifiedTime), sizeof(FtInt) },
+    { "lastModifiedTime", FT_STRING, offsetof(file_file_info_t, _lastModifiedTime), sizeof(FtString) },
     { nullptr },
 };
 
@@ -194,10 +194,19 @@ file_file_info_t* fileMallocfile_info_t () {
         sizeof(file_file_info_t), FT_MK_COMPLEX(&file_file_info_t_struct_type));
 }
 
+static const ArrayType file_struct_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_MK_COMPLEX_REF(&file_file_info_t_struct_type)
+};
+
+FtArray* file_malloc_struct_array() {
+    return (FtArray*)FeatureMalloc(
+        sizeof(FtArray), FT_MK_COMPLEX(&file_struct_array));
+}
 
 /****** for JIDL struct 'list_succ_param' ******/
 static ObjectMember file_list_succ_param_struct_members[] = {
-    { "fileList", FT_ANY_REF, offsetof(file_list_succ_param, _fileList), sizeof(FtAny) },
+    { "fileList", FT_MK_COMPLEX_REF(&file_struct_array), offsetof(file_list_succ_param, _fileList), sizeof(FtArray*) },
     { nullptr },
 };
 
@@ -285,14 +294,23 @@ static const MemberMethod file_list_member_method = {
     .return_type = FT_VOID,
 };
 
+// complex defination
+static ArrayType file_object_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_ANY_REF
+};
 
+FtArray* file_malloc_object_array() {
+    return (FtArray*)FeatureMalloc(
+        sizeof(FtArray), FT_MK_COMPLEX(&file_object_array));
+}
 /****** for JIDL struct 'extended_file_info_t' ******/
 static ObjectMember file_extended_file_info_t_struct_members[] = {
     { "uri", FT_STRING, offsetof(file_extended_file_info_t, _uri), sizeof(FtString) },
     { "length", FT_INT, offsetof(file_extended_file_info_t, _length), sizeof(FtInt) },
-    { "lastModifiedTime", FT_INT, offsetof(file_extended_file_info_t, _lastModifiedTime), sizeof(FtInt) },
+    { "lastModifiedTime", FT_STRING, offsetof(file_extended_file_info_t, _lastModifiedTime), sizeof(FtString) },
     { "type", FT_STRING, offsetof(file_extended_file_info_t, _type), sizeof(FtString) },
-    { "subFiles", FT_ANY_REF, offsetof(file_extended_file_info_t, _subFiles), sizeof(FtAny) },
+    { "subFiles", FT_MK_COMPLEX_REF(&file_object_array), offsetof(file_extended_file_info_t, _subFiles), sizeof(FtArray*) },
     { nullptr },
 };
 
@@ -310,7 +328,7 @@ file_extended_file_info_t* fileMallocextended_file_info_t () {
 
 /****** for JIDL callback 'get_success_cb' ******/
 static const FeatureType file_get_success_cb_parameters[] = {
-    FT_STRING,
+    FT_MK_COMPLEX_REF(&file_extended_file_info_t_struct_type),
     FT_PARAM_END
 };
 
