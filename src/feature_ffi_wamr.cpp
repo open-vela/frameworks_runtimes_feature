@@ -342,14 +342,14 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
             break;
             case FT_ANY:
             {
+                // copy value
                 native_raw_get_arg(void *, param, value);
-                ft_value_t* f_val = (ft_value_t*)malloc(sizeof(ft_value_t));
                 JSValue *js_value = (JSValue *)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
+                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
                 qjs_val_t* q_val = (qjs_val_t*)f_val;
                 q_val->js_val = *js_value;
                 q_val->type = FT_TYPE_OBJECT;
-                memcpy((void*)ptr, (void*)f_val, sizeof(ft_value_t));
-                free(f_val);
+                ptr = f_val;
             }
             break;
             default: {
