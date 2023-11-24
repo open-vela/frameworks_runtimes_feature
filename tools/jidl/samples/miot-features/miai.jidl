@@ -11,6 +11,7 @@ struct CommonParam {
 };
 
 struct RequestTtsParam {
+  [msg_key = "text", to_msg = "char*"]
   string text;
   on_data success;
   on_fail fail;
@@ -85,3 +86,26 @@ property on_data onintercommsg writeonly;
 ]
 property on_data onfinddevice writeonly;
 
+struct CustomDirectiveParams {
+  [msg_key = "nlp_text", to_msg = "char*"]
+  string nlp_text;
+  [msg_key = "nlp_execute", to_msg = "bool"]
+  boolean nlp_execute;
+  [msg_key = "nlp", to_msg = "bool"]
+  boolean nlp;
+  [msg_key = "tts", to_msg = "bool"]
+  boolean tts;
+  [msg_key = "tts_play", to_msg = "bool"]
+  boolean tts_play;
+  on_data success;
+  on_fail fail;
+  on_void complete;
+}
+
+[
+  json_method = "miai.customdirective",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void customDirective(CustomDirectiveParams p);

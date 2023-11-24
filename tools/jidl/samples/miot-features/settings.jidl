@@ -11,6 +11,7 @@ struct CommonParam {
 };
 
 struct FactoryResetParam {
+  [msg_key = "wipe", to_msg = "bool"]
   boolean wipe;
   on_void success;
   on_fail fail;
@@ -18,9 +19,10 @@ struct FactoryResetParam {
 };
 
 [
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETTINGRESET",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTAAPPLYARG",
-  msg_sub_type = "MIOTMSG__TEST_ONEOF_SETTINGSRESETARG"
+  json_method = "factoryreset",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
 ]
 void factoryReset(FactoryResetParam p);
 
@@ -34,3 +36,31 @@ void getDeviceToken(CommonParam p);
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETTINGGETMIIODID"
 ]
 void getMiioDid(CommonParam p);
+
+struct SetSleepModeParams {
+  string sleep_mode;
+  string total;
+  string start;
+  string stop;
+  [msg_key = "night_volume", to_msg = "int"]
+  int night_volume;
+  on_data success;
+  on_fail fail;
+  on_void complete;
+}
+
+[
+  json_method = "setting.setsleepmode",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void setSleepMode(SetSleepModeParams p);
+
+[
+  json_method = "setting.getsleepmodestatus",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void getSleepModeStatus(CommonParam p);
