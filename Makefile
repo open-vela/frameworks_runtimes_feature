@@ -88,14 +88,6 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
-FEATURELIST += exchange
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
-FEATURELIST += storage
-
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
 FEATURELIST += sensor
@@ -152,6 +144,18 @@ ifeq ($(CONFIG_MIPLAY),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0_impl.cpp
 FEATURELIST += Miplay
+endif
+
+ifeq ($(CONFIG_UNQLITE) && $(CONFIG_LIBUV_EXTENSION),y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
+FEATURELIST += storage
+endif
+
+ifeq ($(CONFIG_KVDB) && $(CONFIG_LIBUV_EXTENSION),y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
+FEATURELIST += exchange
 endif
 
 ifeq ($(CONFIG_SYSTEM_PACKAGE_SERVICE), y)
