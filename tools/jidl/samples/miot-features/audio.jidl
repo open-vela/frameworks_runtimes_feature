@@ -53,11 +53,11 @@ property on_data onnativeerror writeonly
 ]
 property on_data onnativeended writeonly
 
-struct AudiosyncPlayParam {
+struct AudioPlayParam {
   string audioId;
   string type;
-  [msg_key = "playload", to_msg = "(char*)ft_to_string"]
-  object playload;
+  [msg_key = "payload", to_msg = "(char*)ft_to_string"]
+  object payload;
   on_data success;
   on_fail fail;
   on_void complete;
@@ -69,9 +69,9 @@ struct AudiosyncPlayParam {
   msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
   msg_sub_type = "Jsonmsg"
 ]
-void play(AudiosyncPlayParam p);
+void play(AudioPlayParam p);
 
-struct AudiosyncPauseParam {
+struct AudioPauseParam {
   string audioId;
   string type;
   on_data success;
@@ -85,7 +85,7 @@ struct AudiosyncPauseParam {
   msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
   msg_sub_type = "Jsonmsg"
 ]
-void pause(AudiosyncPauseParam p);
+void pause(AudioPauseParam p);
 
 [
   json_method = "audio.stop",
@@ -93,9 +93,9 @@ void pause(AudiosyncPauseParam p);
   msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
   msg_sub_type = "Jsonmsg"
 ]
-void stop(AudiosyncPauseParam p);
+void stop(AudioPauseParam p);
 
-struct GetPalyStateParam {
+struct CommonParam {
   callback on_data success;
   callback on_fail fail;
   callback on_void complete;
@@ -107,5 +107,20 @@ struct GetPalyStateParam {
   msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
   msg_sub_type = "Jsonmsg"
 ]
-void getplaystate(GetPalyStateParam p);
+void getPlayState(CommonParam p);
 
+[
+  json_method = "audio.seek",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void seek(CommonParam p);
+
+[
+  json_method = "audio.loop",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void loop(CommonParam p);
