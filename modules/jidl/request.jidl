@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module request@1.0
+module system.request@1.0
 
 struct notify_data_t {
     int result
@@ -25,20 +25,20 @@ struct download_succ_t {
     string token
 }
 
-callback cb_download_notify(notify_data_t data)
-callback cb_download_success(download_succ_t data)
-callback cb_download_fail(string data, int code)
-callback cb_download_complete()
+callback download_notify_cb(notify_data_t data)
+callback download_succ_cb(download_succ_t data)
+callback download_fail_cb(string data, int code)
+callback download_cmpl_cb()
 
 struct download_t {
     string url
     object header
     object filename
     boolean share = true
-    cb_download_notify onDownLoadNotify
-    cb_download_success success
-    cb_download_fail fail
-    cb_download_complete complete
+    download_notify_cb onDownLoadNotify
+    download_succ_cb success
+    download_fail_cb fail
+    download_cmpl_cb complete
 }
 
 void download(download_t param)
@@ -46,15 +46,15 @@ void download(download_t param)
 struct dl_cmpl_succ_t {
     string uri
 }
-callback cb_dl_cp_success(dl_cmpl_succ_t data)
-callback cb_dl_cp_fail(string data, long code)
-callback cb_dl_cp_complete()
+callback dl_cmpl_succ_cb(dl_cmpl_succ_t data)
+callback dl_cmpl_fail_cb(string data, long code)
+callback dl_cmpl_cmpl()
 
 struct dl_cmpl_t {
     string token
-    cb_dl_cp_success success
-    cb_dl_cp_fail fail
-    cb_dl_cp_complete complete
+    dl_cmpl_succ_cb success
+    dl_cmpl_fail_cb fail
+    dl_cmpl_cmpl complete
 }
 void onDownloadComplete(dl_cmpl_t param)
 
