@@ -48,12 +48,12 @@ void copy(copy_param_t param)
 struct file_info_t {
     string uri
     int length
-    int lastModifiedTime
+    string lastModifiedTime
 }
 
 struct list_succ_param {
     // file_info_t array
-    object fileList;
+    object[] fileList;
 }
 callback list_success_cb(list_succ_param param)
 callback list_fail_cb(string msg, int code)
@@ -71,12 +71,12 @@ void list(list_param_t param)
 struct extended_file_info_t {
     string uri
     int length
-    int lastModifiedTime
+    string lastModifiedTime
     string type
     // file_info_t array
-    object subFiles;
+    object[] subFiles;
 }
-callback get_success_cb(string uri)
+callback get_success_cb(extended_file_info_t uri)
 callback get_fail_cb(string msg, int code)
 callback get_complete_cb()
 

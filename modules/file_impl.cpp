@@ -20,10 +20,13 @@
  */
 
 #include "feature_config.h"
+#include "feature_utils.h"
 #include "file.h"
 #include "jse_apppath.h"
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <type_traits>
 #include <uv.h>
 
@@ -78,6 +81,11 @@ void file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     fc->loop = FeatureGetUVLoop(manager);
     fc->pkg_name = FeatureGetPackageName(handle);
+    if (!fc->pkg_name || strlen(fc->pkg_name) == 0) {
+        FILE_ERROR("package name is null");
+        fc->pkg_name = "file_test";
+    }
+    FILE_INFO("pkg name = %s", fc->pkg_name);
 }
 void file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
@@ -276,8 +284,24 @@ enum {
     FILE_WRITEARRBUF,
     FILE_WRITETEXT,
     FILE_READARRBUF,
-    FILE_READTEXT
+    FILE_READTEXT,
+    FILE_GET,
+    FILE_LIST,
+    FILE_MKDIR,
+    FILE_RMDIR,
 };
+
+typedef struct
+{
+    int8_t type; // 0:file 1:dir
+    char* uri;
+    uint64_t length;
+    uint64_t last_modified_time;
+    int dir_num;
+    int file_num;
+    struct weakref_list_node file_node;
+    struct weakref_list_node dir_list;
+} FileInfo;
 
 typedef struct
 {
@@ -287,6 +311,7 @@ typedef struct
     size_t offset; // 文件读写偏移
     char* filename; // 文件路径
     uint8_t* buf; // 文件读写缓冲区
+    FileInfo* root_file;
     int flags;
     int success;
     int fail;
@@ -295,6 +320,17 @@ typedef struct
     FeatureInstanceHandle handle;
 } FileReq;
 
+void freeRootFile(FileInfo* root_file)
+{
+    FileInfo *item, *temp;
+    weakref_list_for_every_entry_safe(&root_file->dir_list, item, temp, FileInfo, file_node)
+    {
+        freeRootFile(item);
+    }
+
+    free(root_file->uri);
+    free(root_file);
+}
 void freeFileReq(FileReq* fr)
 {
     if (fr) {
@@ -302,6 +338,9 @@ void freeFileReq(FileReq* fr)
             free(fr->filename);
         if (fr->buf)
             FeatureFreeValue(fr->buf);
+        if (fr->root_file) {
+            freeRootFile(fr->root_file);
+        }
         free(fr);
     }
 }
@@ -313,6 +352,7 @@ void initFileReq(FileReq* fr)
     fr->r = -1;
     fr->filename = NULL;
     fr->buf = NULL;
+    fr->root_file = NULL;
 }
 
 /**
@@ -346,6 +386,36 @@ static void __create_dir(char* path, FileReq* fr)
         fr->r = -errno;
     }
     return;
+}
+
+/**
+ * @brief 递归删除文件夹，
+ */
+static void __remove_dir(char* dirname, FileReq* fr)
+{
+    DIR* dir;
+    struct dirent* entry;
+    char path[CONFIG_PATH_MAX];
+
+    dir = opendir(dirname);
+    if (dir == NULL) {
+        fr->r = -errno;
+        FILE_ERROR("file opendir failed, path:%s\n", path);
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+            snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
+            if (entry->d_type == DT_DIR && fr->flags == 1) {
+                __remove_dir(path, fr);
+            } else {
+                unlink(path);
+            }
+        }
+    }
+    closedir(dir);
+    rmdir(dirname);
 }
 
 /**
@@ -585,15 +655,322 @@ void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_
     __file_load(feature, param, FILE_READARRBUF);
 }
 
+/**
+ * @brief 获取文件信息，返回FileInfo数据结构
+ */
+static FileInfo* __get_info_c(char* path, FileReq* fr)
+{
+    struct stat statbuf;
+    char* app_path = NULL;
+    FileInfo* file_info = (FileInfo*)malloc(sizeof(FileInfo));
+    if (file_info == NULL || fc->pkg_name == NULL) {
+        FILE_ERROR("fc->pkg_name=%p\n", fc->pkg_name);
+        goto error;
+    }
+
+    fr->r = stat(path, &statbuf);
+    if (fr->r != 0) {
+        fr->r = -errno;
+        FILE_ERROR("file doesn't exist, path: %s\n", path);
+        goto error;
+    }
+
+    app_path = AIOTJS::app_absolute_to_relative_path(fc->pkg_name, path);
+    if (app_path == NULL) {
+        FILE_ERROR("src path:%s, pkg:%s\n", path, fc->pkg_name);
+        goto error;
+    }
+
+    weakref_list_initialize(&file_info->dir_list);
+    weakref_list_initialize(&file_info->file_node);
+    if (S_ISDIR(statbuf.st_mode)) {
+        file_info->type = 1;
+        file_info->length = 0;
+    } else {
+        file_info->type = 0;
+        file_info->length = statbuf.st_size;
+    }
+    file_info->uri = app_path;
+    file_info->last_modified_time = statbuf.st_mtim.tv_sec;
+    file_info->file_num = 0;
+    file_info->dir_num = 0;
+
+    return file_info;
+error:
+    if (file_info) {
+        free(file_info);
+    }
+    return NULL;
+}
+/**
+ * @brief 递归读取文件夹信息，添加到list中
+ */
+static void __read_dir_c(char* dirname, FileReq* fr, weakref_list_node* dir_list)
+{
+    DIR* dir;
+    struct dirent* entry;
+    char path[CONFIG_PATH_MAX];
+    FileInfo* file_info = NULL;
+    FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
+    root_file_ptr->file_num = 0;
+    root_file_ptr->dir_num = 0;
+    FILE_INFO("in __read_dir_c, cur dir = %s", root_file_ptr->uri);
+
+    dir = opendir(dirname);
+    if (dir == NULL) {
+        fr->r = -errno;
+        FILE_ERROR("file opendir failed, error: %d:%s path:%s", errno, uv_strerror(errno), dirname);
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) {
+            continue;
+        }
+
+        snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
+
+        file_info = __get_info_c(path, fr);
+        if (file_info == NULL) {
+            continue;
+        }
+        if (fr->type == FILE_GET) {
+            if (entry->d_type == DT_DIR) {
+                __read_dir_c(path, fr, &file_info->dir_list);
+            }
+        }
+        weakref_list_add_tail(dir_list, &file_info->file_node);
+
+        if (file_info->type == 0) {
+            root_file_ptr->file_num++;
+        } else {
+            root_file_ptr->dir_num++;
+        }
+        FILE_INFO("add child num, file = %s", file_info->uri);
+    }
+    closedir(dir);
+}
+
+/**
+ * @brief 文件夹处理 uv_work 回调
+ */
+static void __load_dir_work_cb(uv_work_t* wk)
+{
+    FileReq* fr = static_cast<FileReq*>(wk->data);
+    if (!fr)
+        return;
+
+    fr->r = 0;
+    fr->offset = 0;
+
+    switch (fr->type) {
+    case FILE_MKDIR:
+        __create_dir(fr->filename, fr);
+        break;
+    case FILE_RMDIR:
+        __remove_dir(fr->filename, fr);
+        break;
+    case FILE_GET:
+    case FILE_LIST:
+        fr->flags = -1;
+        fr->offset = 0;
+        fr->root_file = __get_info_c(fr->filename, fr);
+        if (fr->root_file && fr->root_file->type == 1) {
+            __read_dir_c(fr->filename, fr, &fr->root_file->dir_list);
+        }
+        break;
+    }
+}
+static FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list);
+
+file_file_info_t* get_file_info(FileInfo* info)
+{
+    file_file_info_t* file_info = fileMallocfile_info_t();
+    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_CHAR));
+    sprintf(uri, info->uri);
+    file_info->_uri = uri;
+    file_info->_length = info->length;
+    unsigned long long int num = static_cast<unsigned long long>(info->last_modified_time) * 1000;
+    std::string time = std::to_string(num);
+    char* lastModifiedTime = static_cast<char*>(FeatureMalloc(time.length() + 1, FT_CHAR));
+    memcpy(lastModifiedTime, time.c_str(), time.length());
+    file_info->_lastModifiedTime = lastModifiedTime;
+    return file_info;
+}
+
+file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* info)
+{
+    file_extended_file_info_t* file_info = fileMallocextended_file_info_t();
+    if (!info)
+        return NULL;
+    char* type = static_cast<char*>(FeatureMalloc(strlen(info->type == 0 ? "file" : "dir") + 1, FT_CHAR));
+    sprintf(type, info->type == 0 ? "file" : "dir");
+    file_info->_type = type;
+    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_CHAR));
+    sprintf(uri, info->uri);
+    file_info->_uri = uri;
+    file_info->_length = info->length;
+    unsigned long long int num = static_cast<unsigned long long>(info->last_modified_time) * 1000;
+    std::string time = std::to_string(num);
+    char* lastModifiedTime = static_cast<char*>(FeatureMalloc(time.length() + 1, FT_CHAR));
+    memcpy(lastModifiedTime, time.c_str(), time.length());
+    file_info->_lastModifiedTime = lastModifiedTime;
+    file_info->_subFiles = __get_dir_list(fr, &info->dir_list);
+
+    return file_info;
+}
+
+/**
+ * @brief 获取FileList
+ */
+FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
+{
+    if (!fr) {
+        return NULL;
+    }
+
+    if (!dir_list) {
+        FILE_ERROR("__get_dir_list failed, path:%s\n", fr->filename);
+        return NULL;
+    }
+
+    FtArray* array;
+    FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
+    FILE_INFO("=====> __get_dir_list, root_file_ptr->uri = %s, dir_num = %d, file_num = %d", root_file_ptr->uri, root_file_ptr->dir_num, root_file_ptr->file_num);
+    if (fr->type == FILE_GET) {
+        array = file_malloc_object_array();
+        array->_size = root_file_ptr->dir_num + root_file_ptr->file_num;
+        array->_element = malloc(sizeof(file_extended_file_info_t*) * array->_size);
+    } else {
+        array = file_malloc_struct_array();
+        array->_size = root_file_ptr->file_num;
+        array->_element = malloc(sizeof(file_file_info_t*) * array->_size);
+    }
+    FILE_INFO("array.size = %d", array->_size);
+
+    int index = 0;
+    FileInfo *item, *temp;
+    weakref_list_for_every_entry_safe(dir_list, item, temp, FileInfo, file_node)
+    {
+        if (fr->type == FILE_LIST) {
+            if (item->type == 0) {
+                file_file_info_t* file_info = get_file_info(item);
+                FILE_INFO("index = %d, get file_info->uri = %s", index, file_info->_uri);
+                ((file_file_info_t**)array->_element)[index++] = file_info;
+            }
+        } else {
+            ((file_extended_file_info_t**)array->_element)[index++] = get_extended_file_info(fr, item);
+            FILE_INFO("index = %d, get file_info->uri: %s", index, ((file_extended_file_info_t**)array->_element)[index - 1]->_uri);
+        }
+    }
+    return array;
+}
+
+/**
+ * @brief uv_work 处理完成回调，返回执行结果，释放内存
+ */
+static void __load_dir_after_work_cb(uv_work_t* req, int status)
+{
+    FileReq* fr = static_cast<FileReq*>(req->data);
+    if (!fr)
+        return;
+    FeatureInstanceHandle feature = fr->handle;
+
+    // 0 表示成功完成
+    if (status != 0) {
+        FILE_ERROR("file failed: file:%s, errno = %d", fr->filename, fr->r);
+        INVOKE_FAIL_CB(fr->fail, uv_strerror(status), __error_code_map(status));
+    } else if (fr->r < 0) {
+        FILE_ERROR("file failed: file:%s, errno = %d", fr->filename, fr->r);
+        INVOKE_FAIL_CB(fr->fail, uv_strerror(fr->r), __error_code_map(fr->r));
+    } else if (fr->type == FILE_GET) {
+        file_extended_file_info_t* file_info = get_extended_file_info(fr, fr->root_file);
+        INVOKE_SUCCESS_CB(fr->success, file_info);
+    } else if (fr->type == FILE_LIST) {
+        file_list_succ_param* data = fileMalloclist_succ_param();
+        if (fr->root_file) {
+            data->_fileList = __get_dir_list(fr, &fr->root_file->dir_list);
+        }
+        INVOKE_SUCCESS_CB(fr->success, data);
+    } else {
+        INVOKE_SUCCESS_CB(fr->success);
+    }
+    INVOKE_COMPLET_CB(fr->complete);
+    // 释放相关资源
+    freeFileReq(fr);
+}
+
+/**
+ * @brief 文件夹处理函数
+ */
+template <typename T>
+static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
+{
+    const char* msg;
+    int code, r;
+    char *app_path, *temp_str;
+    FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
+    if (!fr) {
+        FILE_ERROR("malloc fail");
+        msg = "malloc fail";
+        code = GENERAL;
+        goto fail;
+    }
+    initFileReq(fr);
+
+    if (!param->_uri) {
+        msg = "invalid path";
+        code = ARGSERROR;
+        goto fail;
+    }
+    temp_str = strdup(param->_uri);
+    app_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    free(temp_str);
+    if (!app_path) {
+        FILE_ERROR("invalid parameter :path");
+        msg = "invalid file path";
+        code = ARGSERROR;
+        goto fail;
+    }
+
+    fr->filename = app_path;
+    fr->req.data = fr;
+    fr->handle = feature;
+    fr->success = param->_success;
+    fr->fail = param->_fail;
+    fr->complete = param->_complete;
+    fr->type = type;
+    if constexpr (std::is_same_v<T, file_list_param_t>) {
+        fr->flags = -1;
+    } else {
+        fr->flags = param->_recursive;
+    }
+    // 使用 libuv 线程池，处理需要多次回调的接口
+    r = uv_queue_work(fc->loop, &fr->req, __load_dir_work_cb,
+        __load_dir_after_work_cb);
+    if (r != 0) {
+        FILE_ERROR("execute uv_queue_work fail");
+    }
+    return;
+fail:
+    INVOKE_FAIL_CB(param->_fail, msg, code);
+    INVOKE_COMPLET_CB(param->_complete);
+    freeFileReq(fr);
+}
+
 void file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, file_mkdir_param_t* param)
 {
+    __dir_load(feature, param, FILE_MKDIR);
 }
 void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file_rmdir_param_t* param)
 {
+    __dir_load(feature, param, FILE_RMDIR);
 }
 void file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, file_list_param_t* param)
 {
+    __dir_load(feature, param, FILE_LIST);
 }
 void file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, file_get_param_t* param)
 {
+    __dir_load(feature, param, FILE_GET);
 }
