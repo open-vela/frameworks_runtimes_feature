@@ -57,7 +57,7 @@ private:
     bool makeAttachment(NativeSymbol* symbol, const FeatureDescription* description, int index);
 
     void* wamr_env_;
-    std::vector<NativeSymbol*> nativesymbol_;
+    std::vector<NativeSymbol*> native_symbols_;
     std::map<wasm_obj_t, FeatureInstance*> feature_instance_map_;
     std::map<NativeSymbol*, WamrAttachment> symbol_attachment_map_;
 };
