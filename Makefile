@@ -92,10 +92,13 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device_impl.cpp
 FEATURELIST += device
 
+ifeq ($(CONFIG_LIBUV_EXTENSION),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration_impl.cpp
 FEATURELIST += configuration
+endif
 
+ifeq ($(CONFIG_CRYPTO_MBEDTLS) && $(CONFIG_LIBUV_EXTENSION),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_native.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto.cpp
@@ -105,6 +108,7 @@ FEATURELIST += system_crypto
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher_impl.cpp
 FEATURELIST += system_cipher
+endif
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/net_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch.cpp
