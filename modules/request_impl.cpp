@@ -386,11 +386,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
 
     if (!AIOTJS::check_disk_limit()) {
-#ifdef CONFIG_QUICKAPP_VAPP_XMS
-        AIOTJS::notify_disk_space_insufficient(th->pkg_name, GET_QJS_CTX(FeatureGetContext(feature)));
-#else
-        AIOTJS::notify_disk_space_insufficient(th->pkg_name);
-#endif
+        AIOTJS::notify_disk_space_insufficient(th->pkg_name, GET_QJS_CTX(ft_ctx));
         FEATURE_LOG_ERROR("insufficient memory to download file");
         code = GENERAL;
         msg = "no space to download file";
