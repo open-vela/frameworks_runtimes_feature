@@ -357,7 +357,10 @@ namespace FeatureFFIQjs {
     bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
         context_ref ctx, feature_value_t& value)
     {
-        FEATURE_CHECK_NE(ptr, nullptr);
+        if (!ptr) {
+            FEATURE_LOG_ERROR("ptr is null and return false!");
+            return false;
+        }
         bool isRef = FT_IS_REFERENCE(featureType);
         if (isRef) {
             ptr = *(void**)ptr;
