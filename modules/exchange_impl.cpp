@@ -148,7 +148,7 @@ static int exchange_args_get_and_check(ExchangeHandle* handle) {
 
     /* Get value property and check */
     if (handle->op == EXCHANGE_OP_SET) {
-        if (strcmp(handle->value, "") == 0) {
+        if (handle->value == NULL) {
             FEATURE_LOG_ERROR("set operation,value property is null");
             goto error;
         }
@@ -166,7 +166,7 @@ static int exchange_args_get_and_check(ExchangeHandle* handle) {
             handle->scope = strdup(handle->package);
         }
     } else if (strcmp(handle->scope, "application") == 0) {
-        if (strcmp(handle->package, "") == 0 || strcmp(handle->sign, "") == 0) {
+        if ((handle->package == NULL) || (handle->sign==NULL)) {
             FEATURE_LOG_ERROR(
                     "exchange must provide the package and sign when scope is application");
             goto error;
@@ -174,7 +174,7 @@ static int exchange_args_get_and_check(ExchangeHandle* handle) {
         free(handle->scope);
         handle->scope = strdup(handle->package);
     } else if (strcmp(handle->scope, "vendor") == 0 || strcmp(handle->scope, "global") == 0) {
-        if (strcmp(handle->package, "") != 0 || strcmp(handle->sign, "") != 0) {
+        if (strcmp(handle->package,"")!=0 || strcmp(handle->sign,"")!=0 ) {
             FEATURE_LOG_ERROR("exchange vendor or global scope not support package and sign");
             goto error;
         }
@@ -233,6 +233,13 @@ static void finish_callback(int status, FeatureInstanceHandle feature, FtCallbac
     exchange_free(handle);
 }
 
+static char* copyStr(const char* src) {
+    if(src == NULL) {
+        return NULL;
+    }
+    return strdup(src);
+}
+
 void exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, exchange_SetInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
     FEATURE_LOG_DEBUG("key=%s,value=%s,scpoe=%s,package=%s,sign=%s", info->_key, info->_value,
@@ -243,12 +250,12 @@ void exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, exchange_
         return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
                                "exchange malloc fail", handle);
     }
-    handle->key = strdup(info->_key);
+    handle->key = copyStr(info->_key);
     handle->op = EXCHANGE_OP_SET;
-    handle->value = strdup(info->_value);
-    handle->scope = strdup(info->_scope);
-    handle->package = strdup(info->_package);
-    handle->sign = strdup(info->_sign);
+    handle->value = copyStr(info->_value);
+    handle->scope = copyStr(info->_scope);
+    handle->package = copyStr(info->_package);
+    handle->sign = copyStr(info->_sign);
     handle->success = info->_success;
     handle->fail = info->_fail;
     handle->complete = info->_complete;
@@ -281,11 +288,11 @@ void exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, exchange_
                                "exchange malloc fail", handle);
     }
 
-    handle->key = strdup(info->_key);
+    handle->key = copyStr(info->_key);
     handle->op = EXCHANGE_OP_GET;
-    handle->scope = strdup(info->_scope);
-    handle->package = strdup(info->_package);
-    handle->sign = strdup(info->_sign);
+    handle->scope = copyStr(info->_scope);
+    handle->package = copyStr(info->_package);
+    handle->sign = copyStr(info->_sign);
     handle->success = info->_success;
     handle->fail = info->_fail;
     handle->complete = info->_complete;
@@ -317,10 +324,10 @@ void exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
         return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
                                "exchange malloc fail", handle);
     }
-    handle->key = strdup(info->_key);
+    handle->key = copyStr(info->_key);
     handle->op = EXCHANGE_OP_REMOVE;
-    handle->package = strdup(info->_package);
-    handle->sign = strdup(info->_sign);
+    handle->package = copyStr(info->_package);
+    handle->sign = copyStr(info->_sign);
     handle->success = info->_success;
     handle->fail = info->_fail;
     handle->complete = info->_complete;
@@ -442,7 +449,7 @@ void exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData da
     }
     char* key = (char*)FeatureMalloc(key_len, FT_CHAR);
     snprintf(key, key_len, "%s%s%s%s", EXCHANGE_PERSIST, info->_package, ".", info->_key);
-    handle->key = strdup(key);
+    handle->key = copyStr(key);
     FeatureFreeValue(key);
     FEATURE_LOG_INFO("[revokePermission] key=%s", handle->key);
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
