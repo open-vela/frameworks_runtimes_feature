@@ -220,25 +220,25 @@ static void fetch_request_cb(int state, uv_response_t* response) {
               response->headers);
   if (state == UV_REQUEST_DONE) {
     fetch_SuccessRes res;
-    res._code = response->httpcode;
-    res._data = (ft_value_t*)FeatureMalloc(
+    res.code = response->httpcode;
+    res.data = (ft_value_t*)FeatureMalloc(
         sizeof(ft_value_t) + strlen(response->body), FT_ANY);
-    res._headers = (ft_value_t*)FeatureMalloc(
+    res.headers = (ft_value_t*)FeatureMalloc(
         sizeof(ft_value_t) + strlen(response->headers), FT_ANY);
     ft_value_t ft_data = ft_from_string(p->ft_ctx, response->body);
     ft_value_t ft_header = ft_from_string(p->ft_ctx, response->headers);
-    memcpy(res._data, &ft_data, strlen(response->body));
-    memcpy(res._headers, &ft_header, strlen(response->headers));
+    memcpy(res.data, &ft_data, strlen(response->body));
+    memcpy(res.headers, &ft_header, strlen(response->headers));
 
-    if (check_any(res._data)) {
+    if (check_any(res.data)) {
       INVOKE_SUCCESS_CB(p->success_cb, &res);
     } else {
       INVOKE_FAIL_CB(p->fail_cb, "responseType dosen't match response data",
                      ErrorCode::IOERROR);
     }
 
-    FeatureFreeValue(res._data);
-    FeatureFreeValue(res._headers);
+    FeatureFreeValue(res.data);
+    FeatureFreeValue(res.headers);
 
   } else {
     if (state == REQUEST_CANCEL) {
@@ -266,7 +266,7 @@ static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
   ASSERT_RET_NULL(0 == uv_request_create(&fetch->request));
   FETCH_DEBUG("request:%p", fetch->request);
   // set url
-  uv_request_set_url(fetch->request, obj->_url);
+  uv_request_set_url(fetch->request, obj->url);
 
   // set method
   uv_request_set_method(fetch->request, method);
@@ -284,8 +284,8 @@ static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
   }
 
   // set timeout
-  if (!obj->_timeout) {
-    uv_request_set_timeout(fetch->request, obj->_timeout);
+  if (!obj->timeout) {
+    uv_request_set_timeout(fetch->request, obj->timeout);
   }
 
   // Set request to DOWNLOAD or FETCH
@@ -308,15 +308,15 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
   fetch->ft_ctx = ft_ctx;
   fetch->feature = feature;
 
-  fetch->success_cb = obj->_success;
-  fetch->fail_cb = obj->_fail;
-  fetch->complete_cb = obj->_complete;
+  fetch->success_cb = obj->success;
+  fetch->fail_cb = obj->fail;
+  fetch->complete_cb = obj->complete;
 
-  fetch->type = strcmp(obj->_responseType, Fetch::response_type[Fetch::FILE])
+  fetch->type = strcmp(obj->responseType, Fetch::response_type[Fetch::FILE])
                     ? UV_REQUEST
                     : UV_DOWNLOAD;
   if (fetch->type == UV_DOWNLOAD) {
-    std::string url(obj->_url);
+    std::string url(obj->url);
 
     fetch->filename = url.substr(url.find_last_of("/") + 1);
 
@@ -426,26 +426,26 @@ void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
   FETCH_DEBUG(
       "url:%s\ndata:%p\nheader:%p\nmethod:%p\nresponseType:%p\nsuccess:%"
       "d\nfail:%d\ncomplete:%d",
-      obj->_url, obj->_data, obj->_header, obj->_method, obj->_responseType,
-      obj->_success, obj->_fail, obj->_complete);
+      obj->url, obj->data, obj->header, obj->method, obj->responseType,
+      obj->success, obj->fail, obj->complete);
 
   // Check necessary parameters
-  obj->_timeout = obj->_timeout > 0 ? obj->_timeout : DEFAULT_TIMEOUT;
-  SET_ARGERROR(check_url(obj->_url), "invalid url");
+  obj->timeout = obj->timeout > 0 ? obj->timeout : DEFAULT_TIMEOUT;
+  SET_ARGERROR(check_url(obj->url), "invalid url");
 
   // Check for non-essential parameters
-  if (check_str(obj->_method)) {
-    SET_ARGERROR(get_method(obj->_method, method), "invalid method");
+  if (check_str(obj->method)) {
+    SET_ARGERROR(get_method(obj->method, method), "invalid method");
   }
 
-  if (check_any(obj->_header)) {
-    SET_ARGERROR(check_header(ft_ctx, obj->_header, headers),
+  if (check_any(obj->header)) {
+    SET_ARGERROR(check_header(ft_ctx, obj->header, headers),
                  "invalid headers");
   }
 
-  if (check_any(obj->_data)) {
+  if (check_any(obj->data)) {
     SET_ARGERROR(get_pdata_and_content_type(
-                     ft_ctx, obj->_data, get_cy_from_header(headers), &content),
+                     ft_ctx, obj->data, get_cy_from_header(headers), &content),
                  "invalid data");
   }
 
@@ -472,6 +472,6 @@ void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
   return;
 err:
   FETCH_DEBUG("msg:%s,code:%d", msg, code);
-  INVOKE_FAIL_CB(obj->_fail, msg, code);
-  INVOKE_COMPLET_CB(obj->_complete);
+  INVOKE_FAIL_CB(obj->fail, msg, code);
+  INVOKE_COMPLET_CB(obj->complete);
 }
