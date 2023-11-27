@@ -29,9 +29,9 @@
 
 /****** for JIDL struct 'SuccessRes' ******/
 static ObjectMember fetch_SuccessRes_struct_members[] = {
-    { "code", FT_INT, offsetof(fetch_SuccessRes, _code), sizeof(FtInt) },
-    { "data", FT_ANY_REF, offsetof(fetch_SuccessRes, _data), sizeof(FtAny) },
-    { "headers", FT_ANY_REF, offsetof(fetch_SuccessRes, _headers), sizeof(FtAny) },
+    { "code", FT_INT, offsetof(fetch_SuccessRes, code), sizeof(FtInt) },
+    { "data", FT_ANY_REF, offsetof(fetch_SuccessRes, data), sizeof(FtAny) },
+    { "headers", FT_ANY_REF, offsetof(fetch_SuccessRes, headers), sizeof(FtAny) },
     { nullptr },
 };
 
@@ -62,7 +62,7 @@ static const CallbackType fetch_success_cb_callback_type {
 
 /****** for JIDL callback 'fail_cb' ******/
 static const FeatureType fetch_fail_cb_parameters[] = {
-    FT_ANY_REF,
+    FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
@@ -88,15 +88,15 @@ static const CallbackType fetch_complete_cb_callback_type {
 
 /****** for JIDL struct 'FetchPara' ******/
 static ObjectMember fetch_FetchPara_struct_members[] = {
-    { "url", FT_STRING, offsetof(fetch_FetchPara, _url), sizeof(FtString) },
-    { "data", FT_ANY_REF, offsetof(fetch_FetchPara, _data), sizeof(FtAny) },
-    { "header", FT_ANY_REF, offsetof(fetch_FetchPara, _header), sizeof(FtAny) },
-    { "method", FT_STRING, offsetof(fetch_FetchPara, _method), sizeof(FtString) },
-    { "responseType", FT_STRING, offsetof(fetch_FetchPara, _responseType), sizeof(FtString) },
-    { "timeout", FT_INT, offsetof(fetch_FetchPara, _timeout), sizeof(FtInt) },
-    { "success", FT_MK_COMPLEX(&fetch_success_cb_callback_type), offsetof(fetch_FetchPara, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&fetch_fail_cb_callback_type), offsetof(fetch_FetchPara, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&fetch_complete_cb_callback_type), offsetof(fetch_FetchPara, _complete), sizeof(FtCallbackId) },
+    { "url", FT_STRING, offsetof(fetch_FetchPara, url), sizeof(FtString) },
+    { "data", FT_ANY_REF, offsetof(fetch_FetchPara, data), sizeof(FtAny) },
+    { "header", FT_ANY_REF, offsetof(fetch_FetchPara, header), sizeof(FtAny) },
+    { "method", FT_STRING, offsetof(fetch_FetchPara, method), sizeof(FtString) },
+    { "responseType", FT_STRING, offsetof(fetch_FetchPara, responseType), sizeof(FtString) },
+    { "timeout", FT_INT, offsetof(fetch_FetchPara, timeout), sizeof(FtInt) },
+    { "success", FT_MK_COMPLEX(&fetch_success_cb_callback_type), offsetof(fetch_FetchPara, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&fetch_fail_cb_callback_type), offsetof(fetch_FetchPara, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&fetch_complete_cb_callback_type), offsetof(fetch_FetchPara, complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 

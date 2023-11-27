@@ -33,7 +33,7 @@ struct SuccessRes {
 }
 
 callback success_cb(SuccessRes res)
-callback fail_cb(object data, int code)
+callback fail_cb(string data, int code)
 callback complete_cb()
 
 struct FetchPara{
