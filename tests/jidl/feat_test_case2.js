@@ -7,13 +7,13 @@ feat_async_test("no timeout1", "add", (done) => {
     });
 });
 
-feat_async_test("timeout", "set timeout", ()=> {
+feat_async_test("timeout", "set timeout", (done)=> {
     new Promise(function (resolve, reject) {
         setTimeout(() => {
             resolve(1);
         }, 4000);
     }).then((res) => {
-        feat_expect_true(res == 3, "async add 1 + 1 == 3");
+        feat_expect_true(res == 3, "async add 1 == 3");
         done();
     });
 });
