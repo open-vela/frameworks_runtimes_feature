@@ -21,8 +21,8 @@
 
  /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_DEVICE_H_
-#define JSON_AST_GEN_MODULE_DEVICE_H_
+#ifndef JSON_AST_GEN_MODULE_SYSTEM_DEVICE_H_
+#define JSON_AST_GEN_MODULE_SYSTEM_DEVICE_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,44 +35,56 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void device_onRegister(const char* feature_name);
-void device_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void device_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void device_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void device_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void device_onUnregister(const char* feature_name);
+void system_device_onRegister(const char* feature_name);
+void system_device_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void system_device_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void system_device_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void system_device_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void system_device_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _Device {
-  FtString _brand;
-  FtString _IMEI;
-  FtString _manufacturer;
-  FtString _model;
-  FtString _product;
-  FtString _osType;
-  FtString _osVersionName;
-  FtInt _osVersionCode;
-  FtString _platformVersionName;
-  FtInt _platformVersionCode;
-  FtInt _APILevel;
-  FtString _language;
-  FtString _region;
-  FtInt _screenWidth;
-  FtInt _screenHeight;
-  FtString _deviceType;
-  FtString _screenShape;
-} device_Device;
+  FtString brand;
+  FtString IMEI;
+  FtString manufacturer;
+  FtString model;
+  FtString product;
+  FtString osType;
+  FtString osVersionName;
+  FtInt osVersionCode;
+  FtString platformVersionName;
+  FtInt platformVersionCode;
+  FtInt APILevel;
+  FtString language;
+  FtString region;
+  FtInt screenWidth;
+  FtInt screenHeight;
+  FtString deviceType;
+  FtString screenShape;
+  FtString deviceId;
+  FtString serial;
+  FtString totalStorage;
+  FtString availableStorage;
+} system_device_Device;
 
-device_Device* deviceMallocDevice();
+system_device_Device* system_deviceMallocDevice();
+
+typedef struct _CallBack {
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
+} system_device_CallBack;
+
+system_device_CallBack* system_deviceMallocCallBack();
 
 
 // Function wrappers to be implemented
-device_Device * device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append_data);
-FtString device_wrap_getDeviceid(FeatureInstanceHandle feature, AppendData append_data);
-FtString device_wrap_getid(FeatureInstanceHandle feature, AppendData append_data);
-FtString device_wrap_getserial(FeatureInstanceHandle feature, AppendData append_data);
-FtString device_wrap_gettotalstorage(FeatureInstanceHandle feature, AppendData append_data);
-FtString device_wrap_getavailablestorage(FeatureInstanceHandle feature, AppendData append_data);
+system_device_Device * system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack * cb);
+FtString system_device_wrap_getDeviceId(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack * cb);
+FtString system_device_wrap_getId(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack * cb);
+FtString system_device_wrap_getSerial(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack * cb);
+FtString system_device_wrap_getTotalStorage(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack * cb);
+FtString system_device_wrap_getAvailableStorage(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack * cb);
 
 // Interface constructors
 
@@ -82,5 +94,5 @@ FtString device_wrap_getavailablestorage(FeatureInstanceHandle feature, AppendDa
 
 // Array malloc functions
 
-#endif // JSON_AST_GEN_MODULE_DEVICE_H_
+#endif // JSON_AST_GEN_MODULE_SYSTEM_DEVICE_H_
 /* clang-format on */
