@@ -90,7 +90,7 @@ FEATURELIST += Error
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device_impl.cpp
-FEATURELIST += device
+FEATURELIST += system_device
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/net_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch.cpp
