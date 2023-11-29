@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-module file@1.0
+module system.file@1.0
 
 // move
-callback move_success_cb(string uri)
+callback move_succ_cb(string uri)
 callback move_fail_cb(string msg, int code)
-callback move_complete_cb()
+callback move_cmpl_cb()
 
 struct move_param_t {
     string srcUri
     string dstUri
-    move_success_cb success
+    move_succ_cb success
     move_fail_cb fail
-    move_complete_cb complete
+    move_cmpl_cb complete
 }
 void move(move_param_t param)
 
 // copy
-callback copy_success_cb(string uri)
+callback copy_succ_cb(string uri)
 callback copy_fail_cb(string msg, int code)
-callback copy_complete_cb()
+callback copy_cmpl_cb()
 
 struct copy_param_t {
     string srcUri
     string dstUri
-    copy_success_cb success
+    copy_succ_cb success
     copy_fail_cb fail
-    copy_complete_cb complete
+    copy_cmpl_cb complete
 }
 void copy(copy_param_t param)
 
@@ -55,15 +55,15 @@ struct list_succ_param {
     // file_info_t array
     object[] fileList;
 }
-callback list_success_cb(list_succ_param param)
+callback list_succ_cb(list_succ_param param)
 callback list_fail_cb(string msg, int code)
-callback list_complete_cb()
+callback list_cmpl_cb()
 
 struct list_param_t {
     string uri
-    list_success_cb success
+    list_succ_cb success
     list_fail_cb fail
-    list_complete_cb complete
+    list_cmpl_cb complete
 }
 void list(list_param_t param)
 
@@ -76,61 +76,61 @@ struct extended_file_info_t {
     // file_info_t array
     object[] subFiles;
 }
-callback get_success_cb(extended_file_info_t uri)
+callback get_succ_cb(extended_file_info_t uri)
 callback get_fail_cb(string msg, int code)
-callback get_complete_cb()
+callback get_cmpl_cb()
 
 struct get_param_t {
     string uri
     boolean recursive = false
-    get_success_cb success
+    get_succ_cb success
     get_fail_cb fail
-    get_complete_cb complete
+    get_cmpl_cb complete
 }
 void get(get_param_t param)
 
 // delete
-callback delete_success_cb()
+callback delete_succ_cb()
 callback delete_fail_cb(string msg, int code)
-callback delete_complete_cb()
+callback delete_cmpl_cb()
 
 struct delete_param_t {
     string uri
-    delete_success_cb success
+    delete_succ_cb success
     delete_fail_cb fail
-    delete_complete_cb complete
+    delete_cmpl_cb complete
 }
 void delete(delete_param_t param)
 
 // writeText
-callback writeText_success_cb()
+callback writeText_succ_cb()
 callback writeText_fail_cb(string msg, int code)
-callback writeText_complete_cb()
+callback writeText_cmpl_cb()
 
 struct write_text_param_t {
     string uri
     string text
     string encoding = "UTF-8"
     boolean append = false
-    writeText_success_cb success
+    writeText_succ_cb success
     writeText_fail_cb fail
-    writeText_complete_cb complete
+    writeText_cmpl_cb complete
 }
 void writeText(write_text_param_t param)
 
 // writeArrayBuffer
-callback writeArrBuf_success_cb()
+callback writeArrBuf_succ_cb()
 callback writeArrBuf_fail_cb(string msg, int code)
-callback writeArrBuf_complete_cb()
+callback writeArrBuf_cmpl_cb()
 
 struct write_arr_buf_param_t {
     string uri
     object buffer // uint8Array
     int position = 0
     boolean append = false
-    writeArrBuf_success_cb success
+    writeArrBuf_succ_cb success
     writeArrBuf_fail_cb fail
-    writeArrBuf_complete_cb complete
+    writeArrBuf_cmpl_cb complete
 }
 void writeArrayBuffer(write_arr_buf_param_t param)
 
@@ -138,16 +138,16 @@ void writeArrayBuffer(write_arr_buf_param_t param)
 struct read_txt_succ_t {
     string text
 }
-callback readText_success_cb(read_txt_succ_t data)
+callback readText_succ_cb(read_txt_succ_t data)
 callback readText_fail_cb(string msg, int code)
-callback readText_complete_cb()
+callback readText_cmpl_cb()
 
 struct read_text_param_t {
     string uri
     string encoding = "UTF-8"
-    readText_success_cb success
+    readText_succ_cb success
     readText_fail_cb fail
-    readText_complete_cb complete
+    readText_cmpl_cb complete
 }
 void readText(read_text_param_t param)
 
@@ -170,42 +170,42 @@ struct read_arr_buf_t {
 void readArrayBuffer(read_arr_buf_t param)
 
 // access
-callback access_success_cb()
+callback access_succ_cb()
 callback access_fail_cb(string msg, int code)
 callback access_compl_cb()
 
 struct access_param_t {
     string uri
-    access_success_cb success
+    access_succ_cb success
     access_fail_cb fail
     access_compl_cb complete
 }
 void access(access_param_t param)
 
 // mkdir
-callback mkdir_success_cb()
+callback mkdir_succ_cb()
 callback mkdir_fail_cb(string msg, int code)
 callback mkdir_compl_cb()
 
 struct mkdir_param_t {
     string uri
     boolean recursive = false
-    mkdir_success_cb success
+    mkdir_succ_cb success
     mkdir_fail_cb fail
     mkdir_compl_cb complete
 }
 void mkdir(mkdir_param_t param)
 
 // rmdir
-callback rmdir_success_cb()
+callback rmdir_succ_cb()
 callback rmdir_fail_cb(string msg, int code)
-callback rmdir_compl_cb()
+callback rmdir_cmpl_cb()
 
 struct rmdir_param_t {
     string uri
     boolean recursive = false
-    rmdir_success_cb success
+    rmdir_succ_cb success
     rmdir_fail_cb fail
-    rmdir_compl_cb complete
+    rmdir_cmpl_cb complete
 }
 void rmdir(rmdir_param_t param)
