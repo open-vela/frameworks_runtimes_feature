@@ -185,6 +185,7 @@ FEATURELIST += feat_test
 PROGNAME += feat_test
 PRIORITY += 100
 STACKSIZE += 4096
+CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/builtin/builtin_console.cpp
 MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
 endif
 

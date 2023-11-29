@@ -13,3 +13,6 @@ feat_async_test("async", "add", (done) => {
         done();
     });
 });
+
+console.log("hello:", [1,2,3], {"x":1, "y": "i am y"});
+console.error("hello:", [1,2,3], {"x":1, "y": "i am y"});

@@ -5,6 +5,8 @@
 
 #include <set>
 
+#include "builtin/builtin_console.h"
+#include "builtin/console.h"
 #include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
@@ -263,6 +265,9 @@ extern "C" int main(int argc, char** argv)
     JS_SetPropertyStr(env.ctx, global_obj, "setTimeout", setTimeout);
 
     JS_FreeValue(env.ctx, global_obj);
+
+    // add console
+    builtin::addConsoleModule(env.ctx, "console.js", builtin::CONSOLE_JS);
 
     // 加载 test frame work
     // TODO: ues qjs bytecode

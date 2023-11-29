@@ -237,7 +237,7 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap
     }
     int idx = resolve ? 0 : 1;
     if (feature_is_undefined(promiseData->resolveFuncs[idx])) {
-        FEATURE_LOG_ERROR("callback is undefined!");
+        FEATURE_LOG_ERROR("callback in undefined !");
         return -1;
     }
 
