@@ -28,292 +28,292 @@
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
 /****** for JIDL callback 'success_cb' ******/
-static const FeatureType storage_success_cb_parameters[] = {
+static const FeatureType system_storage_success_cb_parameters[] = {
     FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType storage_success_cb_callback_type {
+static const CallbackType system_storage_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = storage_success_cb_parameters,
+    .parameters = system_storage_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'fail_cb' ******/
-static const FeatureType storage_fail_cb_parameters[] = {
+static const FeatureType system_storage_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType storage_fail_cb_callback_type {
+static const CallbackType system_storage_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = storage_fail_cb_parameters,
+    .parameters = system_storage_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'complete_cb' ******/
-static const FeatureType storage_complete_cb_parameters[] = {
+static const FeatureType system_storage_complete_cb_parameters[] = {
     FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType storage_complete_cb_callback_type {
+static const CallbackType system_storage_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = storage_complete_cb_parameters,
+    .parameters = system_storage_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType storage_GetInfo_member_default_opt_type = {
+static OptionalType system_storage_GetInfo_member_default_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
 /****** for JIDL struct 'GetInfo' ******/
-static ObjectMember storage_GetInfo_struct_members[] = {
-    { "key", FT_STRING, offsetof(storage_GetInfo, _key), sizeof(FtString) },
-    { "default", FT_MK_OPTIONAL(&storage_GetInfo_member_default_opt_type), offsetof(storage_GetInfo, _default), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&storage_success_cb_callback_type), offsetof(storage_GetInfo, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&storage_fail_cb_callback_type), offsetof(storage_GetInfo, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&storage_complete_cb_callback_type), offsetof(storage_GetInfo, _complete), sizeof(FtCallbackId) },
+static ObjectMember system_storage_GetInfo_struct_members[] = {
+    { "key", FT_STRING, offsetof(system_storage_GetInfo, key), sizeof(FtString) },
+    { "_default", FT_MK_OPTIONAL(&system_storage_GetInfo_member_default_opt_type), offsetof(system_storage_GetInfo, _default), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_GetInfo, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_GetInfo, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_GetInfo, complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType storage_GetInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(storage_GetInfo) },
-    .members = storage_GetInfo_struct_members
+static const ObjectMapType system_storage_GetInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_GetInfo) },
+    .members = system_storage_GetInfo_struct_members
 };
 
-storage_GetInfo* storageMallocGetInfo () {
-    return (storage_GetInfo*)FeatureMalloc(
-        sizeof(storage_GetInfo), FT_MK_COMPLEX(&storage_GetInfo_struct_type));
+system_storage_GetInfo* system_storageMallocGetInfo () {
+    return (system_storage_GetInfo*)FeatureMalloc(
+        sizeof(system_storage_GetInfo), FT_MK_COMPLEX(&system_storage_GetInfo_struct_type));
 }
 
 
-static OptionalType storage_SetInfo_member_value_opt_type = {
+static OptionalType system_storage_SetInfo_member_value_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
 /****** for JIDL struct 'SetInfo' ******/
-static ObjectMember storage_SetInfo_struct_members[] = {
-    { "key", FT_STRING, offsetof(storage_SetInfo, _key), sizeof(FtString) },
-    { "value", FT_MK_OPTIONAL(&storage_SetInfo_member_value_opt_type), offsetof(storage_SetInfo, _value), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&storage_success_cb_callback_type), offsetof(storage_SetInfo, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&storage_fail_cb_callback_type), offsetof(storage_SetInfo, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&storage_complete_cb_callback_type), offsetof(storage_SetInfo, _complete), sizeof(FtCallbackId) },
+static ObjectMember system_storage_SetInfo_struct_members[] = {
+    { "key", FT_STRING, offsetof(system_storage_SetInfo, key), sizeof(FtString) },
+    { "value", FT_MK_OPTIONAL(&system_storage_SetInfo_member_value_opt_type), offsetof(system_storage_SetInfo, value), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_SetInfo, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_SetInfo, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_SetInfo, complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType storage_SetInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(storage_SetInfo) },
-    .members = storage_SetInfo_struct_members
+static const ObjectMapType system_storage_SetInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_SetInfo) },
+    .members = system_storage_SetInfo_struct_members
 };
 
-storage_SetInfo* storageMallocSetInfo () {
-    return (storage_SetInfo*)FeatureMalloc(
-        sizeof(storage_SetInfo), FT_MK_COMPLEX(&storage_SetInfo_struct_type));
+system_storage_SetInfo* system_storageMallocSetInfo () {
+    return (system_storage_SetInfo*)FeatureMalloc(
+        sizeof(system_storage_SetInfo), FT_MK_COMPLEX(&system_storage_SetInfo_struct_type));
 }
 
 
 /****** for JIDL struct 'ClearInfo' ******/
-static ObjectMember storage_ClearInfo_struct_members[] = {
-    { "success", FT_MK_COMPLEX(&storage_success_cb_callback_type), offsetof(storage_ClearInfo, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&storage_fail_cb_callback_type), offsetof(storage_ClearInfo, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&storage_complete_cb_callback_type), offsetof(storage_ClearInfo, _complete), sizeof(FtCallbackId) },
+static ObjectMember system_storage_ClearInfo_struct_members[] = {
+    { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_ClearInfo, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_ClearInfo, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_ClearInfo, complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType storage_ClearInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(storage_ClearInfo) },
-    .members = storage_ClearInfo_struct_members
+static const ObjectMapType system_storage_ClearInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_ClearInfo) },
+    .members = system_storage_ClearInfo_struct_members
 };
 
-storage_ClearInfo* storageMallocClearInfo () {
-    return (storage_ClearInfo*)FeatureMalloc(
-        sizeof(storage_ClearInfo), FT_MK_COMPLEX(&storage_ClearInfo_struct_type));
+system_storage_ClearInfo* system_storageMallocClearInfo () {
+    return (system_storage_ClearInfo*)FeatureMalloc(
+        sizeof(system_storage_ClearInfo), FT_MK_COMPLEX(&system_storage_ClearInfo_struct_type));
 }
 
 
 /****** for JIDL struct 'DeleteInfo' ******/
-static ObjectMember storage_DeleteInfo_struct_members[] = {
-    { "key", FT_STRING, offsetof(storage_DeleteInfo, _key), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&storage_success_cb_callback_type), offsetof(storage_DeleteInfo, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&storage_fail_cb_callback_type), offsetof(storage_DeleteInfo, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&storage_complete_cb_callback_type), offsetof(storage_DeleteInfo, _complete), sizeof(FtCallbackId) },
+static ObjectMember system_storage_DeleteInfo_struct_members[] = {
+    { "key", FT_STRING, offsetof(system_storage_DeleteInfo, key), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_DeleteInfo, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_DeleteInfo, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_DeleteInfo, complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType storage_DeleteInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(storage_DeleteInfo) },
-    .members = storage_DeleteInfo_struct_members
+static const ObjectMapType system_storage_DeleteInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_DeleteInfo) },
+    .members = system_storage_DeleteInfo_struct_members
 };
 
-storage_DeleteInfo* storageMallocDeleteInfo () {
-    return (storage_DeleteInfo*)FeatureMalloc(
-        sizeof(storage_DeleteInfo), FT_MK_COMPLEX(&storage_DeleteInfo_struct_type));
+system_storage_DeleteInfo* system_storageMallocDeleteInfo () {
+    return (system_storage_DeleteInfo*)FeatureMalloc(
+        sizeof(system_storage_DeleteInfo), FT_MK_COMPLEX(&system_storage_DeleteInfo_struct_type));
 }
 
 
 /****** for JIDL struct 'KeyInfo' ******/
-static ObjectMember storage_KeyInfo_struct_members[] = {
-    { "index", FT_INT, offsetof(storage_KeyInfo, _index), sizeof(FtInt) },
-    { "success", FT_MK_COMPLEX(&storage_success_cb_callback_type), offsetof(storage_KeyInfo, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&storage_fail_cb_callback_type), offsetof(storage_KeyInfo, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&storage_complete_cb_callback_type), offsetof(storage_KeyInfo, _complete), sizeof(FtCallbackId) },
+static ObjectMember system_storage_KeyInfo_struct_members[] = {
+    { "index", FT_INT, offsetof(system_storage_KeyInfo, index), sizeof(FtInt) },
+    { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_KeyInfo, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_KeyInfo, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_KeyInfo, complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType storage_KeyInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(storage_KeyInfo) },
-    .members = storage_KeyInfo_struct_members
+static const ObjectMapType system_storage_KeyInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_KeyInfo) },
+    .members = system_storage_KeyInfo_struct_members
 };
 
-storage_KeyInfo* storageMallocKeyInfo () {
-    return (storage_KeyInfo*)FeatureMalloc(
-        sizeof(storage_KeyInfo), FT_MK_COMPLEX(&storage_KeyInfo_struct_type));
+system_storage_KeyInfo* system_storageMallocKeyInfo () {
+    return (system_storage_KeyInfo*)FeatureMalloc(
+        sizeof(system_storage_KeyInfo), FT_MK_COMPLEX(&system_storage_KeyInfo_struct_type));
 }
 
 
 /****** for JIDL function 'get' ******/
-static const FeatureType storage_get_parameters[] = {
-    FT_MK_COMPLEX_REF(&storage_GetInfo_struct_type),
+static const FeatureType system_storage_get_parameters[] = {
+    FT_MK_COMPLEX_REF(&system_storage_GetInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod storage_get_member_method = {
-    .func = { .callback = FFI_FN(storage_wrap_get) },
-    .parameters = storage_get_parameters,
+static const MemberMethod system_storage_get_member_method = {
+    .func = { .callback = FFI_FN(system_storage_wrap_get) },
+    .parameters = system_storage_get_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'set' ******/
-static const FeatureType storage_set_parameters[] = {
-    FT_MK_COMPLEX_REF(&storage_SetInfo_struct_type),
+static const FeatureType system_storage_set_parameters[] = {
+    FT_MK_COMPLEX_REF(&system_storage_SetInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod storage_set_member_method = {
-    .func = { .callback = FFI_FN(storage_wrap_set) },
-    .parameters = storage_set_parameters,
+static const MemberMethod system_storage_set_member_method = {
+    .func = { .callback = FFI_FN(system_storage_wrap_set) },
+    .parameters = system_storage_set_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'clear' ******/
-static const FeatureType storage_clear_parameters[] = {
-    FT_MK_COMPLEX_REF(&storage_ClearInfo_struct_type),
+static const FeatureType system_storage_clear_parameters[] = {
+    FT_MK_COMPLEX_REF(&system_storage_ClearInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod storage_clear_member_method = {
-    .func = { .callback = FFI_FN(storage_wrap_clear) },
-    .parameters = storage_clear_parameters,
+static const MemberMethod system_storage_clear_member_method = {
+    .func = { .callback = FFI_FN(system_storage_wrap_clear) },
+    .parameters = system_storage_clear_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'delete' ******/
-static const FeatureType storage_delete_parameters[] = {
-    FT_MK_COMPLEX_REF(&storage_DeleteInfo_struct_type),
+static const FeatureType system_storage_delete_parameters[] = {
+    FT_MK_COMPLEX_REF(&system_storage_DeleteInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod storage_delete_member_method = {
-    .func = { .callback = FFI_FN(storage_wrap_delete) },
-    .parameters = storage_delete_parameters,
+static const MemberMethod system_storage_delete_member_method = {
+    .func = { .callback = FFI_FN(system_storage_wrap_delete) },
+    .parameters = system_storage_delete_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'key' ******/
-static const FeatureType storage_key_parameters[] = {
-    FT_MK_COMPLEX_REF(&storage_KeyInfo_struct_type),
+static const FeatureType system_storage_key_parameters[] = {
+    FT_MK_COMPLEX_REF(&system_storage_KeyInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod storage_key_member_method = {
-    .func = { .callback = FFI_FN(storage_wrap_key) },
-    .parameters = storage_key_parameters,
+static const MemberMethod system_storage_key_member_method = {
+    .func = { .callback = FFI_FN(system_storage_wrap_key) },
+    .parameters = system_storage_key_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL property 'length' ******/
-static const MemberAccessor storage_length_member_accessor = {
-    .getter = { .callback = FFI_FN(storage_get_length) },
-    .setter = { .callback = FFI_FN(storage_set_length) },
+static const MemberAccessor system_storage_length_member_accessor = {
+    .getter = { .callback = FFI_FN(system_storage_get_length) },
+    .setter = { .callback = FFI_FN(system_storage_set_length) },
     .type = FT_INT,
 };
 
 
 // members
-static const Member storage_members[] = {
+static const Member system_storage_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "get",
-        .method = storage_get_member_method,
+        .method = system_storage_get_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "set",
-        .method = storage_set_member_method,
+        .method = system_storage_set_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "clear",
-        .method = storage_clear_member_method,
+        .method = system_storage_clear_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "delete",
-        .method = storage_delete_member_method,
+        .method = system_storage_delete_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "key",
-        .method = storage_key_member_method,
+        .method = system_storage_key_member_method,
     },
     {
         .type = MEMBER_ACCESSOR,
         .name = "length",
-        .accessor = storage_length_member_accessor,
+        .accessor = system_storage_length_member_accessor,
     },
 };
 
 // callbacks
-static const struct FeatureCallbacks storage_callbacks {
-    storage_onRegister,
-    storage_onCreate,
-    storage_onRequired,
-    storage_onDetached,
-    storage_onDestroy,
-    storage_onUnregister
+static const struct FeatureCallbacks system_storage_callbacks {
+    system_storage_onRegister,
+    system_storage_onCreate,
+    system_storage_onRequired,
+    system_storage_onDetached,
+    system_storage_onDestroy,
+    system_storage_onUnregister
 };
 
-static const FeatureDescription storage_desc = {
+static const FeatureDescription system_storage_desc = {
     .version = 1,
-    .name = "storage",
-    .description = "storage",
+    .name = "system.storage",
+    .description = "system.storage",
     { .dynamic = false },
-    .native_callbacks = &storage_callbacks,
-    .member_count = countof(storage_members),
-    .members = storage_members,
+    .native_callbacks = &system_storage_callbacks,
+    .member_count = countof(system_storage_members),
+    .members = system_storage_members,
 };
 
-QAPPFEATURE_INIT(storage)
+QAPPFEATURE_INIT(system_storage)
 {
-    return mgr->registerFeature(features, &storage_desc);
+    return mgr->registerFeature(features, &system_storage_desc);
 }
 /* clang-format on */

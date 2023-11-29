@@ -136,13 +136,13 @@ ifeq ($(CONFIG_LIBUV_EXTENSION),y)
 ifeq ($(CONFIG_UNQLITE),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
-FEATURELIST += storage
+FEATURELIST += system_storage
 endif
 
 ifeq ($(CONFIG_KVDB),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
-FEATURELIST += exchange
+FEATURELIST += service_exchange
 endif
 
 ifeq ($(CONFIG_CRYPTO_MBEDTLS),y)

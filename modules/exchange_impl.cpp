@@ -48,27 +48,27 @@ typedef struct {
                                             */
 } ExchangeHandle;
 
-void exchange_onRegister(const char* feature_name) {
+void service_exchange_onRegister(const char* feature_name) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void exchange_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void service_exchange_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void exchange_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void service_exchange_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void exchange_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void service_exchange_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void exchange_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void service_exchange_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void exchange_onUnregister(const char* feature_name) {
+void service_exchange_onUnregister(const char* feature_name) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
@@ -240,30 +240,30 @@ static char* copyStr(const char* src) {
     return strdup(src);
 }
 
-void exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, exchange_SetInfo* info) {
+void service_exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, service_exchange_SetInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
     FEATURE_LOG_DEBUG("key=%s,value=%s,scpoe=%s,package=%s,sign=%s", info->_key, info->_value,
                       info->_scope, info->_package, info->_sign);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[SET] exchange handle malloc failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "exchange malloc fail", handle);
     }
-    handle->key = copyStr(info->_key);
+    handle->key = copyStr(info->key);
     handle->op = EXCHANGE_OP_SET;
-    handle->value = copyStr(info->_value);
-    handle->scope = copyStr(info->_scope);
-    handle->package = copyStr(info->_package);
-    handle->sign = copyStr(info->_sign);
-    handle->success = info->_success;
-    handle->fail = info->_fail;
-    handle->complete = info->_complete;
+    handle->value = copyStr(info->value);
+    handle->scope = copyStr(info->scope);
+    handle->package = copyStr(info->package);
+    handle->sign = copyStr(info->sign);
+    handle->success = info->success;
+    handle->fail = info->fail;
+    handle->complete = info->complete;
 
     int ret = exchange_args_get_and_check(handle);
     if (ret != 0) {
         FEATURE_LOG_ERROR("[SET] exchange input argurments invalid");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "param is invalid", handle);
     }
 
@@ -272,35 +272,35 @@ void exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, exchange_
                                  (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[SET] uv_property_set failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "uv_property_set fail", handle);
     }
 }
 
-void exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, exchange_GetInfo* info) {
+void service_exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, service_exchange_GetInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     FEATURE_LOG_DEBUG("key=%s,scope=%s,package=%s,sign=%s", info->_key, info->_scope,
                       info->_package, info->_sign);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[GET] exchange handle malloc failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "exchange malloc fail", handle);
     }
 
-    handle->key = copyStr(info->_key);
+    handle->key = copyStr(info->key);
     handle->op = EXCHANGE_OP_GET;
-    handle->scope = copyStr(info->_scope);
-    handle->package = copyStr(info->_package);
-    handle->sign = copyStr(info->_sign);
-    handle->success = info->_success;
-    handle->fail = info->_fail;
-    handle->complete = info->_complete;
+    handle->scope = copyStr(info->scope);
+    handle->package = copyStr(info->package);
+    handle->sign = copyStr(info->sign);
+    handle->success = info->success;
+    handle->fail = info->fail;
+    handle->complete = info->complete;
 
     int ret = exchange_args_get_and_check(handle);
     if (ret != 0) {
         FEATURE_LOG_ERROR("[GET] exchange input argurments invalid");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "param is invalid", handle);
     }
 
@@ -309,33 +309,33 @@ void exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, exchange_
                                  exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[GET] uv_property_get failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "uv_property_get failed", handle);
     }
 }
 
-void exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
-                          exchange_RemoveInfo* info) {
+void service_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
+                          service_exchange_RemoveInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
-    FEATURE_LOG_DEBUG("key=%s,package=%s,sign=%s", info->_key, info->_package, info->_sign);
+    FEATURE_LOG_DEBUG("key=%s,package=%s,sign=%s", info->key, info->package, info->sign);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[REMOVE] exchange handle malloc failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "exchange malloc fail", handle);
     }
-    handle->key = copyStr(info->_key);
+    handle->key = copyStr(info->key);
     handle->op = EXCHANGE_OP_REMOVE;
-    handle->package = copyStr(info->_package);
-    handle->sign = copyStr(info->_sign);
-    handle->success = info->_success;
-    handle->fail = info->_fail;
-    handle->complete = info->_complete;
+    handle->package = copyStr(info->package);
+    handle->sign = copyStr(info->sign);
+    handle->success = info->success;
+    handle->fail = info->fail;
+    handle->complete = info->complete;
 
     int ret = exchange_args_get_and_check(handle);
     if (ret != 0) {
         FEATURE_LOG_ERROR("[REMOVE] exchange input argurments invalid");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "param is invalid", handle);
     }
 
@@ -343,66 +343,66 @@ void exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
     int status = uv_property_delete(FeatureGetUVLoop(manager), handle->key, exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[REMOVE] uv_property_delete failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "uv_property_delete failed", handle);
     }
 }
 
-void exchange_wrap_clear(FeatureInstanceHandle feature, AppendData data, exchange_ClearInfo* info) {
+void service_exchange_wrap_clear(FeatureInstanceHandle feature, AppendData data, service_exchange_ClearInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[CLEAR] exchange handle malloc failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "exchange malloc fail", handle);
     }
     handle->op = EXCHANGE_OP_CLEAR;
-    handle->success = info->_success;
-    handle->fail = info->_fail;
-    handle->complete = info->_complete;
+    handle->success = info->success;
+    handle->fail = info->fail;
+    handle->complete = info->complete;
     int ret = exchange_args_get_and_check(handle);
     if (ret != 0) {
         FEATURE_LOG_ERROR("[CLEAR] exchange input argurments invalid");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "param is invalid", handle);
     }
 
     /* Exchange clear operation only clear current application space data, not support yet */
-    finish_callback(0, feature, info->_success, info->_fail, info->_complete, "success", handle);
+    finish_callback(0, feature, info->success, info->fail, info->complete, "success", handle);
 }
 
-void exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData data,
-                                   exchange_GrantPermissionInfo* info) {
+void service_exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData data,
+                                   service_exchange_GrantPermissionInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[grantPermission] exchange handle malloc failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "exchange malloc fail", handle);
     }
 
-    handle->success = info->_success;
-    handle->fail = info->_fail;
-    handle->complete = info->_complete;
+    handle->success = info->success;
+    handle->fail = info->fail;
+    handle->complete = info->complete;
 
-    if (strcmp(info->_package, "") == 0 || strcmp(info->_sign, "") == 0) {
+    if (strcmp(info->package, "") == 0 || strcmp(info->sign, "") == 0) {
         FEATURE_LOG_ERROR("[grantPermission] exchange input argurments invalid");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "param is invalid", handle);
     }
 
-    int key_len = EXCHANGE_PERSIST_LEN + strlen(info->_package) + 1;
-    if (strlen(info->_key) != 0) {
-        key_len += strlen(info->_key) + 1;
+    int key_len = EXCHANGE_PERSIST_LEN + strlen(info->package) + 1;
+    if (strlen(info->key) != 0) {
+        key_len += strlen(info->key) + 1;
     }
     char* key = (char*)FeatureMalloc(key_len, FT_CHAR);
-    snprintf(key, key_len, "%s%s%s%s", EXCHANGE_PERSIST, info->_package, ".", info->_key);
+    snprintf(key, key_len, "%s%s%s%s", EXCHANGE_PERSIST, info->package, ".", info->key);
     char* value = (char*)FeatureMalloc(4, FT_CHAR);
     /* get set remove
      *  1   1    1
      */
     int permission = 0b111;
-    if (!info->_writable) {
+    if (!info->writable) {
         permission = 0b100;
     }
     snprintf(value, 4, "%d", permission);
@@ -418,37 +418,37 @@ void exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData dat
                                  (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[grantPermission] uv_property_set failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "uv_property_set fail", handle);
     }
 }
 
-void exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData data,
-                                    exchange_RevokePermissionInfo* info) {
+void service_exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData data,
+                                    service_exchange_RevokePermissionInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[revokePermission] exchange handle malloc failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "exchange malloc fail", handle);
     }
 
-    handle->success = info->_success;
-    handle->fail = info->_fail;
-    handle->complete = info->_complete;
+    handle->success = info->success;
+    handle->fail = info->fail;
+    handle->complete = info->complete;
 
-    if (strcmp(info->_package, "") == 0) {
+    if (strcmp(info->package, "") == 0) {
         FEATURE_LOG_ERROR("[revokePermission] exchange input argurments invalid");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "param is invalid", handle);
     }
 
-    int key_len = EXCHANGE_PERSIST_LEN + strlen(info->_package) + 1;
-    if (strlen(info->_key) != 0) {
-        key_len += strlen(info->_key) + 1;
+    int key_len = EXCHANGE_PERSIST_LEN + strlen(info->package) + 1;
+    if (strlen(info->key) != 0) {
+        key_len += strlen(info->key) + 1;
     }
     char* key = (char*)FeatureMalloc(key_len, FT_CHAR);
-    snprintf(key, key_len, "%s%s%s%s", EXCHANGE_PERSIST, info->_package, ".", info->_key);
+    snprintf(key, key_len, "%s%s%s%s", EXCHANGE_PERSIST, info->package, ".", info->key);
     handle->key = copyStr(key);
     FeatureFreeValue(key);
     FEATURE_LOG_INFO("[revokePermission] key=%s", handle->key);
@@ -456,7 +456,7 @@ void exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData da
     int status = uv_property_delete(FeatureGetUVLoop(manager), handle->key, exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[revokePermission] uv_property_delete failed");
-        return finish_callback(ERROR_CODE, feature, info->_success, info->_fail, info->_complete,
+        return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
                                "uv_property_delete failed", handle);
     }
 }
