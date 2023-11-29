@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-let storage = require('storage')
+let storage = require('system.storage')
 
 feat_test("storage","clear",()=>{
     storage.clear({
