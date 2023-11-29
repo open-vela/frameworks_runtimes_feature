@@ -47,7 +47,6 @@ class Render:
     if 'out-dir' in configs:
       self.outdir = configs['out-dir']
     self.module = self.LoadJSON()
-    self.interface_extends_map = {}
 
   def LoadJSON(self):
     with open(self.json_file, 'r', encoding='UTF-8') as f:
@@ -67,64 +66,6 @@ class Render:
     if self.outdir:
       return os.path.join(self.outdir, filename)
     return os.path.join(script_dir, filename)
-
-  def _MapType(self, ast_type, type_map):
-    if not isinstance(ast_type, str):
-      raise Exception('not a valid str type: {}'.format(ast_type))
-    if ast_type not in type_map:
-      raise Exception('can not map type: {}'.format(ast_type))
-    return type_map[ast_type]
-
-  def IsStruct(self, ast_node):
-    if not isinstance(ast_node, dict):
-      return False
-    if ast_node['type'] == 'struct':
-      return True
-    return False
-
-  def PropertyHasGetter(self, ast_type):
-    if not (isinstance(ast_type, dict) \
-        and 'type' in ast_type and ast_type['type'] == 'property'):
-      raise Exception('invalid property type: {}'.format(ast_type))
-    if 'readable' in ast_type or 'const' in ast_type:
-      return True
-    return False
-
-  def PropertyHasSetter(self, ast_type):
-    if not (isinstance(ast_type, dict) \
-        and 'type' in ast_type and ast_type['type'] == 'property'):
-      raise Exception('invalid property type: {}'.format(ast_type))
-    if ('writeable' in ast_type) and ('const' not in ast_type):
-      return True
-    return False
-
-  def CacheInterfaceExtend(self, name, extend):
-    if name in self.interface_extends_map:
-      extend_list = self.interface_extends_map[name]
-    else:
-      extend_list = []
-      self.interface_extends_map[name] = extend_list
-    extend_list.append(extend)
-
-  def GetInterfaceExtends(self, name):
-    if not name in self.interface_extends_map:
-      return []
-    return self.interface_extends_map[name]
-
-  def GetInterfaceCtorInfo(self, ast_node):
-    ctor_info = {}
-    if isinstance(ast_node, dict) \
-        and ast_node['type'] == 'function' \
-        and 'meta' in ast_node \
-        and 'ctor' in ast_node['meta'] \
-        and 'target' in ast_node['meta'] \
-        and ast_node['meta']['ctor'] == 'true' \
-        and isinstance(ast_node['return_type'], dict) \
-        and 'referred_type' in ast_node['return_type'] \
-        and ast_node['return_type']['referred_type'] == 'interface':
-      ctor_info['target'] = ast_node['meta']['target']
-      ctor_info['interface'] = ast_node['return_type']['referred_name']
-    return ctor_info
 
 ### CPP Render
 class CPPRender(Render):
@@ -273,6 +214,7 @@ class CPPRender(Render):
     self.struct_name_set = set()
     self.interface_name_set = set()
     self.vtable_map = {}
+    self.interface_extends_map = {}
     self.interface_members_map = {}
     self.feature_type_set = set()
     self.array_malloc_func_set = set()
@@ -317,6 +259,13 @@ class CPPRender(Render):
       return self.MakeOutPath(self.source_file)
     file_name = '%s.cpp' % (self.GetModuleName())
     return self.MakeOutPath(file_name)
+
+  def _MapType(self, ast_type, type_map):
+    if not isinstance(ast_type, str):
+      raise Exception('not a valid str type: {}'.format(ast_type))
+    if ast_type not in type_map:
+      raise Exception('can not map type: {}'.format(ast_type))
+    return type_map[ast_type]
 
   def GenerateCppType(self, ast_type):
     if isinstance(ast_type, str):
@@ -570,21 +519,21 @@ class CPPRender(Render):
     raise Exception('cannot find the called function for the use node: {}'.format(node))
 
   def GenerateParamCallList(self, param_calls):
-    call_list = ''
+    p_call_str = ''
     is_first_param = True
     for param_call in param_calls:
-      call_type = param_call["type"]
-      call_value = param_call["value"]
+      p_call_type = param_call["type"]
+      p_call_value = param_call["value"]
       if not is_first_param:
-        call_list += ", "
+        p_call_str += ", "
       else:
         is_first_param = False
 
-      if call_type == 'ellipse':
-        call_list += "vari_params"
+      if p_call_type == 'ellipse':
+        p_call_str += "vari_params"
       else:
-        call_list += f"{call_value}"
-    return call_list
+        p_call_str += f"{p_call_value}"
+    return p_call_str
 
   def TryCacheCallbackId(self, id):                                                                                                                                                                                                             
     if not id in self.callback_id_set:
@@ -610,6 +559,19 @@ class CPPRender(Render):
       self.interface_name_set.add(name)
       return True
     return False
+
+  def CacheInterfaceExtend(self, name, extend):
+    if name in self.interface_extends_map:
+      extend_list = self.interface_extends_map[name]
+    else:
+      extend_list = []
+      self.interface_extends_map[name] = extend_list
+    extend_list.append(extend)
+
+  def GetInterfaceExtends(self, name):
+    if not name in self.interface_extends_map:
+      return []
+    return self.interface_extends_map[name]
 
   def CacheInterfaceMember(self, name, member_info):
     if name in self.interface_members_map:
@@ -704,6 +666,38 @@ class CPPRender(Render):
     final_size += len(self.vtable_map[interface_name])
     return final_size
 
+  def GetInterfaceCtorInfo(self, ast_node):
+    ctor_info = {}
+    if isinstance(ast_node, dict) \
+        and ast_node['type'] == 'function' \
+        and 'meta' in ast_node \
+        and 'ctor' in ast_node['meta'] \
+        and 'target' in ast_node['meta'] \
+        and ast_node['meta']['ctor'] == 'true' \
+        and isinstance(ast_node['return_type'], dict) \
+        and 'referred_type' in ast_node['return_type'] \
+        and ast_node['return_type']['referred_type'] == 'interface':
+      ctor_info['target'] = ast_node['meta']['target']
+      ctor_info['interface'] = ast_node['return_type']['referred_name']
+    return ctor_info
+
+  def IsStruct(self, ast_node):
+    if not isinstance(ast_node, dict):
+      return False
+    if ast_node['type'] == 'struct':
+      return True
+    return False
+
+  def PropertyHasGetter(self, node):
+    if 'readable' in node or 'const' in node:
+      return True
+    return False
+
+  def PropertyHasSetter(self, node):
+    if ('writeable' in node) and ('const' not in node):
+      return True
+    return False
+
   def GetMemberInfo(self, member):
     member_info = {}
     if member['type'] == 'function' or member['type'] == 'use':
@@ -731,228 +725,11 @@ class CPPRender(Render):
       member_info['name'] = ''
     return member_info
 
-### TS Render
-class TSRender(Render):
-
-  ts_type_map = {
-    'int' : 'number',
-    'int' : 'number',
-    'long' : 'number',
-    'ulong' : 'number',
-    'float' : 'number',
-    'double' : 'number',
-    'boolean' : 'boolean',
-    'string': 'string',
-    'uint8' : 'number',
-    'int8'  : 'number',
-    'uint16' : 'number',
-    'int16' : 'number',
-    'uint32' : 'number',
-    'int32' : 'number',
-    'uint64' : 'number',
-    'int64' : 'number',
-    'void' : 'void',
-    'object' : 'any',
-    'ellipse' : '...rest: any[]',
-    'callback' : 'callback',
-    'Int8Array' : 'array',
-    'Uint8Array' : 'array',
-    'Int16Array' : 'array',
-    'Uint16Array' : 'array',
-    'Int32Array' : 'array',
-    'Uint32Array' : 'array',
-    'Int64Array' : 'array',
-    'Uint64Array' : 'array',
-    'IntArray' : 'array',
-    'UintArray' : 'array',
-    'LongArray' : 'array',
-    'UlongArray' : 'array',
-    'FloatArray' : 'array',
-    'DoubleArray' : 'array',
-  }
-
-  def __init__(self, json_file, d_ts_file, configs):
-    self.d_ts_tmpl = GetTemplate('json_ast_d_ts.mt')
-    self.d_ts_file = d_ts_file
-    self.callback_map = {}
-    self.func_ret_node_map = {}
-    self.interface_member_map = {}
-    Render.__init__(self, json_file, configs)
-    # cache types
-    self._cacheTypes()
-
-  def _cacheTypes(self):
-    for child in self.module["members"]:
-      if not "type" in child: continue
-      t = child["type"]
-      if t == "callback":
-        self.TryCacheCallback(child)
-
-  def Generate(self):
-    self._GenerateFromTemplate(self.d_ts_tmpl, self.GetDTSFilePath())
-
-  def _GenerateFromTemplate(self, tmpl, out):
-    WriteFile(tmpl.render(render=self), out)
-
-  def GenHeaderDefine(self):
-    return 'JSON_AST_GEN_MODULE_%s_H_' % (self.GetModuleName().upper())
-
-  def GetDTSFileName(self):
-    if self.d_ts_file:
-      return GetFileName(self.d_ts_file)
-    return '%s.d.ts' % (self.GetModuleName())
-
-  def GetDTSFilePath(self):
-    if self.d_ts_file:
-      return self.MakeOutPath(self.d_ts_file)
-    file_name = '%s.d.ts' % (self.GetModuleName())
-    return self.MakeOutPath(file_name)
-
-  def GenerateTsType(self, ast_type):
-    if isinstance(ast_type, str):
-      return self._MapType(ast_type, self.ts_type_map)
-
-    if not (isinstance(ast_type, dict) and 'type' in ast_type):
-      raise Exception('invalid complex type: {}'.format(ast_type))
-
-    # print("ast_type: {}".format(ast_type))
-    if 'element' in ast_type:
-      ts_type = self.GenerateTsType(ast_type['element'])
-      return ts_type + '[]'
-    elif 'referred_type' in ast_type:
-      referred_type = ast_type['referred_type']
-      if referred_type == 'callback':
-        referred_name = ast_type['referred_name']
-        if referred_name not in self.callback_map:
-          raise Exception('invalid callback type: {}'.format(referred_name))
-        return self.callback_map[referred_name]
-      elif referred_type == 'struct' or referred_type == 'interface':
-        return ast_type['referred_name']
-    elif ast_type['type'] == 'promise':
-      return 'any'
-    else:
-      raise Exception('invalid complex type: {}'.format(ast_type))
-
-  def GenerateParamList(self, params):
-    param_list = []
-    param_count = len(params)
-    if param_count == 0:
-      return ''
-    for index, param in enumerate(params):
-      param_type = param["type"]
-      if index < param_count -1 and param_type == 'ellipse':
-        raise Exception('wrong ellipse param position: {}'.format(params))
-      param_str = self.GenerateTsType(param_type)
-      if 'name' in param:
-        p_name = param["name"]
-        param_str = f"{p_name}: {param_str}"
-      param_list.append(param_str)
-    return ", ".join(param_list)
-
-  def GenerateFunctionDefine(self, node):
-    if node['type'] != 'function':
-      return None
-
-    identifier = node["identifier"]
-    ret_type = self.GenerateTsType(node["return_type"])
-    params = ''
-    if 'params' in node:
-      params = self.GenerateParamList(node["params"])
-    func_define = f"{identifier}({params}): {ret_type}"
-    return func_define
-
-  def TryCacheCallback(self, ast_type):
-    if not (isinstance(ast_type, dict) and \
-        'type' in ast_type and ast_type['type'] == 'callback'):
-      raise Exception('invalid callback node: {}'.format(ast_type))
-    id = ast_type['identifier']
-    if id in self.callback_map:
-      return False
-    params = ''
-    if 'params' in ast_type:
-      params = self.GenerateParamList(ast_type['params'])
-    cb_def = f"({params}) => void"
-    self.callback_map[id] = cb_def
-    return True
-
-  def CacheFuncReturnNode(self, id, node):
-    self.func_ret_node_map[id] = node
-
-  def GetUseReturnNode(self, identifier):
-    if identifier in self.func_ret_node_map:
-      return self.func_ret_node_map[identifier]
-    raise Exception('cannot find the called function for the use node: {}'.format(node))
-
-  def GenerateParamNameList(self, params):
-    param_count = len(params)
-    if param_count == 0:
-      return ''
-    name_list = []
-    for index, param in enumerate(params):
-      param_type = param["type"]
-      if index < param_count -1 and param_type == 'ellipse':
-        raise Exception('wrong ellipse param position: {}'.format(params))
-      if param_type == 'ellipse':
-        name_list.append('rest')
-      elif 'name' in param:
-        name_list.append(param["name"])
-    return ", ".join(name_list)
-
-  def GenerateParamCallList(self, param_calls):
-    call_list = ''
-    is_first_param = True
-    for param_call in param_calls:
-      call_type = param_call["type"]
-      call_value = ''
-      if 'value' not in param_call:
-        if call_type != 'ellipse':
-          raise Exception('invalid param_call param: {}'.format(param_call))
-      else:
-        call_value = param_call["value"]
-
-      if not is_first_param:
-        call_list += ", "
-      else:
-        is_first_param = False
-
-      if call_type == 'ellipse':
-        call_list += 'rest'
-      else:
-        call_list += f"{call_value}"
-    return call_list
-
-  def _CacheToListMap(self, list_map, list_key, value):
-    if list_key in list_map:
-      list = list_map[list_key]
-    else:
-      list = []
-      list_map[list_key] = list
-    list.append(value)
-
-  def CacheInterfaceMember(self, interface_name, method_def):
-    # print("cache Interface({}) member: {}".format(interface_name, method_def))
-    self._CacheToListMap(self.interface_member_map, interface_name, method_def)
-
-  def GetFinalInterfaceMembers(self, interface_name):
-    # print("get Interface({}) members".format(interface_name))
-    method_list = []
-    extends = self.GetInterfaceExtends(interface_name)
-    for extend in extends:
-      method_list.extend(self.GetFinalInterfaceMembers(extend))
-
-    if not interface_name in self.interface_member_map:
-      return method_list
-      # raise Exception('cannot find methods for interface: {}'.format(interface_name))
-    method_list.extend(self.interface_member_map[interface_name])
-    return method_list
-
-### Usage and main entry point
 def Usage():
    print("usage %s <jidl-file|json-ast-file> -out-dir <outdir> [-options]" % sys.argv[0])
 
 lang_keys = {
-  'c++': ['header', 'source'],
-  'ts': ['dts']
+  'c++': ['header', 'source']
 }
 
 def CheckArgs(configs):
@@ -1023,7 +800,5 @@ if __name__ == '__main__':
   if configs['lang'] == 'c++':
     print("generating c/c++ glue files from: '%s' ..." % (json_file))
     render = CPPRender(json_file, configs['header'], configs['source'], configs)
-  elif configs['lang'] == 'ts':
-    render = TSRender(json_file, configs['dts'], configs)
     render.Generate()
 
