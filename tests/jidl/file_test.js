@@ -18,61 +18,36 @@
  * limitations under the License.
  */
 
-let request = require('request');
-let file = require('file');
+let request = require('system.request');
+let file = require('system.file');
 
-var token;
-feat_async_test("request", "download", (done) => {
+feat_async_test("file", "writeText", (done) => {
     return new Promise(function(resolve, reject) {
-        request.download({
-            url : 'https://www.quickapp.cn/assets/images/home/logo_quickApp.png',
-            filename : 'quickAppLogo.png', // 指定文件名
-            success : function(ret) {
-                token = ret.token
-                request.print('### request.download.success ###')
-                request.print('token = ', ret.token)
+        file.writeText({
+            uri : 'internal://files/demo.txt',
+            text : 'write by file.writeText. ',
+            success : function() {
+                request.print("### writeText success ### ");
                 resolve(true);
             },
-            fail : function(data, code) {
-                request.print('### handling fail ###')
-                request.print('code = ', code, 'data = ', data)
+            fail : function(errmsg, errcode) {
+                var fileCopyData = errcode + '---' + errmsg
+                request.print("### writeText fail ### ", fileCopyData);
                 reject(false);
             }
         })
     }).then((res) => {
-        feat_expect_true(res, "request download success");
-        done(); }, (err) => {
-        feat_expect_true(err, "request download fail");
-        done(); });
-})
-
-feat_async_test("request", "onDownloadComplete", (done) => {
-    return new Promise(function(resolve, reject) {
-        request.onDownloadComplete({
-            token : token,
-            success : function(data) {
-                request.print("### request onDownloadComplete success ###");
-                request.print('data = ', data)
-                resolve(true);
-            },
-            fail : function(data, code) {
-                request.print("### request onDownloadComplete fail ###");
-                request.print('code = ', code, 'data = ', data)
-                reject(false);
-            }
-        })
-    }).then((res) => {
-        feat_expect_true(res, "request onDownloadComplete success");
-        done(); }, (err) => {
-        feat_expect_true(err, "request onDownloadComplete fail");
-        done(); });
+    feat_expect_true(res, "file writeText success");
+    done(); }, (err) => {
+    feat_expect_true(err, "file writeText fail");
+    done(); });
 })
 
 feat_async_test("file", "copy", (done) => {
     return new Promise(function(resolve, reject) {
         file.copy({
-            srcUri : "internal://files/quickAppLogo.png",
-            dstUri : "internal://files/copy_quickAppLogo.png",
+            srcUri : "internal://files/demo.txt",
+            dstUri : "internal://files/copy_demo.txt",
             success : function(ret) {
                 request.print("### copy success ### ", ret);
                 resolve(true);
@@ -92,7 +67,7 @@ feat_async_test("file", "copy", (done) => {
 feat_async_test("file", "access", (done) => {
     return new Promise(function(resolve, reject) {
         file.access({
-            uri : "internal://files/quickAppLogo.png",
+            uri : "internal://files/demo.txt",
             success : function() {
                 request.print("### access success ### ");
                 resolve(true);
@@ -113,8 +88,8 @@ feat_async_test("file", "access", (done) => {
 feat_async_test("file", "move", (done) => {
     return new Promise(function(resolve, reject) {
         file.move({
-            srcUri : "internal://files/quickAppLogo.png",
-            dstUri : "internal://files/move_quickAppLogo.png",
+            srcUri : "internal://files/demo.txt",
+            dstUri : "internal://files/move_demo.txt",
             success : function(ret) {
                 request.print("### move success ### ", ret);
                 resolve(true);
@@ -135,7 +110,7 @@ feat_async_test("file", "move", (done) => {
 feat_async_test("file", "delete", (done) => {
     return new Promise(function(resolve, reject) {
         file.delete({
-            uri : "internal://files/move_quickAppLogo.png",
+            uri : "internal://files/move_demo.txt",
             success : function() {
                 request.print("### delete success ### ");
                 resolve(true);

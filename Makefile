@@ -198,9 +198,11 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request_impl.cpp
 FEATURELIST += system_request
 endif
 
+ifeq ($(CONFIG_QUICKAPP),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file_impl.cpp
-FEATURELIST += file
+FEATURELIST += system_file
+endif
 
 endif
 
