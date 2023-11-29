@@ -103,7 +103,17 @@ void ${feature_name}_wrap_${method['identifier']}(FeatureInstanceHandle feature,
   int buf_len = snprintf(szbuf, sizeof(szbuf), "{ ");
     %for k, v in param_out.items():
       %if k != 'callbacks':
+        ## to_msg = 'bool' || to_msg = 'int' || to_msg = 'double'
+        %if v.endswith("\"true\" : \"false\"") or "std::to_string" in v:
+  buf_len += snprintf(szbuf + buf_len, sizeof(szbuf) - buf_len, "\"%s\":%s,", "${k}", ${v});
+        ## to_msg = '(char*)ft_to_string'
+        %elif v.startswith("(char*)ft_to_string"):
+  char* cstr_${k} = ${v};
+  buf_len += snprintf(szbuf + buf_len, sizeof(szbuf) - buf_len, "\"%s\":%s,", "${k}", cstr_${k});
+  ft_free_string(conn->GetFeatureContext(), cstr_${k});
+        %else:
   buf_len += snprintf(szbuf + buf_len, sizeof(szbuf) - buf_len, "\"%s\":\"%s\",", "${k}", ${v});
+        %endif
       %endif
     %endfor
   // -1 to remove the last ','
