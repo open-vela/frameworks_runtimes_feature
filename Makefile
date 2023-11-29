@@ -155,7 +155,7 @@ endif
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration_impl.cpp
-FEATURELIST += configuration
+FEATURELIST += system_configuration
 endif
 
 
