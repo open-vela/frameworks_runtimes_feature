@@ -1,12 +1,12 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-#include "miplay_1_0.h"
+#include "miplay.h"
 #include "uv.h"
 #include <thread>
 #include <sstream>
 #include <string>
 
-static const char* file_tag = "[jidl_feature] miplay_1_0_impl";
+static const char* file_tag = "[jidl_feature] miplay_impl";
 static uv_loop_t* loop = nullptr;
 static struct{
     std::string state;
@@ -18,13 +18,13 @@ static struct{
 static FeatureInstanceHandle gFeature;
 static FtCallbackId gMediainfoCb;
 
-void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+static void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     buf->base = (char*) malloc(suggested_size);
     buf->len = suggested_size;
 }
 
-void on_close(uv_handle_t *handle) {
+static void on_close(uv_handle_t *handle) {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     if (handle != NULL)
     {
@@ -32,11 +32,10 @@ void on_close(uv_handle_t *handle) {
     }
 }
 
-void read_cb(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
+static void read_cb(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     if (nread > 0) {
         printf("%s::read_cb: recv buf %s\n", file_tag,  buf->base);
-        // std::string revc_str(buf->base);
         std::istringstream iss(buf->base);
         char split = '+';
         std::getline(iss, gMediainfo.state, split);
@@ -66,7 +65,7 @@ void read_cb(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
     }
 }
 
-void on_new_connection(uv_stream_t *server, int status) {
+static void on_new_connection(uv_stream_t *server, int status) {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     if (status < 0) {
         fprintf(stderr, "New connection error %s\n", uv_strerror(status));
@@ -85,13 +84,13 @@ void on_new_connection(uv_stream_t *server, int status) {
     }
 }
 
-int runloop()
+static int runloop()
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
-
-    loop = (uv_loop_t*) malloc(sizeof(uv_loop_t));
-    memset(loop, 0, sizeof(uv_loop_t));
-    uv_loop_init(loop);
+    if (loop == nullptr) {
+        printf("%s::%s()  loop == nullptr\n", file_tag,  __FUNCTION__);
+        return 0;
+    }
 
     uv_tcp_t server;
     uv_tcp_init(loop, &server);
@@ -104,60 +103,64 @@ int runloop()
     int r = uv_listen((uv_stream_t*) &server, 16, on_new_connection);
     if (r) {
         fprintf(stderr, "Listen error %s\n", uv_strerror(r));
-        return 1;
+        return 0;
     }
-    return uv_run(loop, UV_RUN_DEFAULT);
+    return 1;
 }
 
 // FeatureCallbacks to be implemented
-void Miplay_onRegister(const char* feature_name)
+void service_miplay_onRegister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Miplay_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void service_miplay_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Miplay_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void service_miplay_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Miplay_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void service_miplay_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
-void Miplay_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void service_miplay_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
-    uv_loop_close(loop);
-    free(loop);
     loop = nullptr;
     FeatureRemoveCallback(gFeature, gMediainfoCb);
     gFeature = nullptr;
     gMediainfoCb = 0;
 }
 
-void Miplay_onUnregister(const char* feature_name)
+void service_miplay_onUnregister(const char* feature_name)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
 
 // Function wrappers to be implemented
-void Miplay_wrap_init(FeatureInstanceHandle feature, AppendData data, FtCallbackId cb)
+void service_miplay_wrap_init(FeatureInstanceHandle feature, AppendData data, FtCallbackId cb)
 {
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     gFeature = feature;
     gMediainfoCb = cb;
-    std::thread t1(runloop);
-    t1.detach();
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(feature);
+    loop = FeatureGetUVLoop(manager);
+    int ret = runloop();
+    if (ret) {
+        printf("%s::%s()  runloop ok.\n", file_tag,  __FUNCTION__);
+    } else {
+        printf("%s::%s()  runloop error.\n", file_tag,  __FUNCTION__);
+    }
     printf("%s::%s()  END\n", file_tag,  __FUNCTION__);
 }
 
-void Miplay_wrap_uninit(FeatureInstanceHandle feature, AppendData data)
+void service_miplay_wrap_uninit(FeatureInstanceHandle feature, AppendData data)
 {
     FeatureRemoveCallback(gFeature, gMediainfoCb);
     gFeature = nullptr;

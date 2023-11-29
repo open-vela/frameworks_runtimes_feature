@@ -123,9 +123,9 @@ endif
 FEATURELIST += jumpApp
 
 ifeq ($(CONFIG_MIPLAY),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0_impl.cpp
-FEATURELIST += Miplay
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_impl.cpp
+FEATURELIST += service_miplay
 endif
 
 ifeq ($(CONFIG_LIBUV_EXTENSION),y)
