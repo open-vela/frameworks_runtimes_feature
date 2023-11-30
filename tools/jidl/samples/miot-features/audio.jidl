@@ -109,13 +109,35 @@ struct CommonParam {
 ]
 void getPlayState(CommonParam p);
 
+struct AudioSeekParam {
+  string id;
+  string type;
+  [msg_key = "currentTime", to_msg = "int"]
+  int currentTime;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
 [
   json_method = "audio.seek",
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
   msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
   msg_sub_type = "Jsonmsg"
 ]
-void seek(CommonParam p);
+void seek(AudioSeekParam p);
+
+struct AudioLoopParam {
+  string audioId;
+  string type;
+  [msg_key = "currentTime", to_msg = "int"]
+  int currentTime;
+  [msg_key = "loop", to_msg = "int"]
+  int loop;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
 
 [
   json_method = "audio.loop",
@@ -123,4 +145,4 @@ void seek(CommonParam p);
   msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
   msg_sub_type = "Jsonmsg"
 ]
-void loop(CommonParam p);
+void loop(AudioLoopParam p);
