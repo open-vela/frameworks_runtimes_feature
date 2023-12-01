@@ -1,4 +1,4 @@
-module audiosync@1.0
+module audiofocus@1.0
 
 callback on_void();
 callback on_fail(string data, int code);
@@ -28,7 +28,7 @@ void requestFocus(FocusParam p);
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__AUDIOFOCUSABANDON",
-  msg_arg_id = "MIOTMSG__MSGSUBTYPE__AUDIOFOCUSABANDON",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_AUDIOFOCUSABANDONARG",
   msg_sub_type = "Audiofocusrequestmsg"
 ]
 void abandonFocus(FocusParam p);
