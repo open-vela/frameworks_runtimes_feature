@@ -19,10 +19,10 @@
  *
  */
 
+#include "app_path.h"
 #include "feature_config.h"
 #include "feature_utils.h"
 #include "file.h"
-#include "jse_apppath.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -182,15 +182,15 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
     }
 
     temp_str = strdup(param->srcUri);
-    path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
     if (!path) {
-        path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
+        path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
     temp_str = strdup(param->dstUri);
-    new_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    new_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
     if (!new_path) {
-        new_path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
+        new_path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
     if (path == NULL || new_path == NULL) {
@@ -246,9 +246,9 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     }
 
     temp_str = strdup(param->uri);
-    path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
     if (!path) {
-        path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
+        path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
     if (path == NULL) {
@@ -445,7 +445,7 @@ static void __load_file_work_cb(uv_work_t* wk)
     fr->offset = ((int)fr->offset == -1) ? 0 : fr->offset;
 
     FILE_INFO("file open file: %s, %d, %d", fr->filename, fr->flags, fr->offset);
-    if (oflags != O_RDONLY && !AIOTJS::check_disk_limit()) {
+    if (oflags != O_RDONLY && !check_disk_limit()) {
         fr->r = -ENOSPC;
         FILE_ERROR("file write failed: No space left on device");
         return;
@@ -489,7 +489,7 @@ static void __load_file_work_cb(uv_work_t* wk)
             }
         }
     } else {
-        if (!AIOTJS::check_disk_limit()) {
+        if (!check_disk_limit()) {
             r = -ENOSPC;
             FILE_ERROR("file write failed: No space left on device");
         } else if (fr->buf != NULL && fr->len != 0) {
@@ -574,7 +574,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
     temp_str = strdup(param->uri);
-    app_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
     free(temp_str);
     if (!app_path) {
         FILE_ERROR("invalid parameter :path");
@@ -675,7 +675,7 @@ static FileInfo* __get_info_c(char* path, FileReq* fr)
         goto error;
     }
 
-    app_path = AIOTJS::app_absolute_to_relative_path(fc->pkg_name, path);
+    app_path = app_absolute_to_relative_path(fc->pkg_name, path);
     if (app_path == NULL) {
         FILE_ERROR("src path:%s, pkg:%s\n", path, fc->pkg_name);
         goto error;
@@ -924,7 +924,7 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
     temp_str = strdup(param->uri);
-    app_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
     free(temp_str);
     if (!app_path) {
         FILE_ERROR("invalid parameter :path");
