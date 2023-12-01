@@ -189,21 +189,17 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/builtin/builtin_console.
 MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
 endif
 
-ifeq ($(CONFIG_UTILS_CURL)$(CONFIG_QUICKAPP),yy)
+ifeq ($(CONFIG_UTILS_CURL), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
-CXXSRCS += ${APPDIR}/frameworks/quickapp/src/jse/modules/system/jse_apppath.cpp
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/jse/modules/system/
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request_impl.cpp
 FEATURELIST += system_request
 endif
 
-ifeq ($(CONFIG_QUICKAPP),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file_impl.cpp
 FEATURELIST += system_file
-endif
 
 endif
 

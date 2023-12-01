@@ -44,7 +44,7 @@ static const char* type_list[] = { "cache", "file", "mass", "tmp" };
 char* app_relative_to_absolute_path(const char* pkg, const char* relative_path)
 {
     char* absolute_path = NULL;
-    char *rel_path = NULL;
+    char* rel_path = NULL;
     char *offset, *type, *filename = NULL;
 
     if (!relative_path || !pkg) {
@@ -101,7 +101,7 @@ char* app_relative_to_absolute_path(const char* pkg, const char* relative_path)
 char* app_absolute_to_relative_path(const char* pkg, const char* absolute_path)
 {
     char* relative_path = NULL;
-    char *abs_path = NULL;
+    char* abs_path = NULL;
     char *offset = NULL, *type = NULL, *filename = NULL;
     int len = 0;
 
@@ -210,4 +210,28 @@ int app_check_path(const char* path)
 
     free(data);
     return res;
+}
+
+#ifndef CONFIG_QUICKAPP_DISK_RESERVED
+#define CONFIG_QUICKAPP_DISK_RESERVED (-1LL)
+#endif
+
+bool check_disk_limit(void)
+{
+#if CONFIG_QUICKAPP_DISK_RESERVED > 0
+    uint64_t freeDisk;
+    struct statfs diskInfo;
+
+    int res = statfs("/data", &diskInfo);
+    if (res != 0) {
+        return false;
+    }
+
+    freeDisk = diskInfo.f_bfree * diskInfo.f_bsize;
+    if (freeDisk < CONFIG_QUICKAPP_DISK_RESERVED) {
+        return false;
+    }
+
+#endif
+    return true;
 }

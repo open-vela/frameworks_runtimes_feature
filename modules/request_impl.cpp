@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+#include "app_path.h"
 #include "feature.h"
 #include "feature_config.h"
 #include "feature_context_qjs.h"
 #include "feature_description.h"
 #include "feature_exports.h"
-#include "jse_apppath.h"
 #include "request.h"
 #include "uv_ext.h"
 #include <cstddef>
@@ -208,7 +208,7 @@ static void __request_cb(int state, uv_response_t* response)
             // REQUEST_INFO("==========> success = %d", info->success);
             system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
             // REQUEST_INFO("==========> response->body = %s", response->body);
-            char* body = AIOTJS::app_absolute_to_relative_path(th->pkg_name, response->body);
+            char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
             char* uri = static_cast<char*>(FeatureMalloc(strlen(body) + 1, FT_CHAR));
             memcpy(uri, body, strlen(body));
             param->uri = uri;
@@ -372,9 +372,9 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
     // REQUEST_INFO("info->filename = %s", info->filename);
 
-    absolute_path = AIOTJS::app_relative_to_absolute_path(th->pkg_name, info->filename);
+    absolute_path = app_relative_to_absolute_path(th->pkg_name, info->filename);
     if (!absolute_path) {
-        absolute_path = AIOTJS::app_absolute_path_generator(th->pkg_name, "files", info->filename);
+        absolute_path = app_absolute_path_generator(th->pkg_name, "files", info->filename);
         assert(absolute_path);
     }
     // REQUEST_INFO("absolute_path = %s", absolute_path);
@@ -385,8 +385,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
         assert(uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb) == 0);
     }
 
-    if (!AIOTJS::check_disk_limit()) {
-        AIOTJS::notify_disk_space_insufficient(th->pkg_name, GET_QJS_CTX(ft_ctx));
+    if (!check_disk_limit()) {
         FEATURE_LOG_ERROR("insufficient memory to download file");
         code = GENERAL;
         msg = "no space to download file";
