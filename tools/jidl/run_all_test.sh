@@ -80,6 +80,7 @@ run_miot_services() {
   run_miot_service_gen $CUR_DIR/samples/miot-features/miai.jidl
   run_miot_service_gen $CUR_DIR/samples/miot-features/brightness.jidl
   run_miot_service_gen $CUR_DIR/samples/miot-features/settings.jidl
+  run_miot_service_gen $CUR_DIR/samples/miot-features/audiofocus.jidl
 }
 
 run_all() {

@@ -16,26 +16,104 @@ struct CommonParam {
 ]
 void getDeviceList(CommonParam p);
 
+struct CommonDeviceParam {
+  [msg_key = "id", to_msg = "char*"]
+  string did;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__SUBDEV",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_SUBARG",
+  msg_sub_type = "Submsg"
 ]
-void subscribe(CommonParam p);
+void subdev(CommonDeviceParam p);
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__UNSUBDEV",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_SUBARG",
+  msg_sub_type = "Submsg"
 ]
-void unsubscribe(CommonParam p);
+void unsubdev(CommonDeviceParam p);
+
+struct SetPropParam {
+  [msg_key = "did", to_msg = "char*"]
+  string did;
+  [msg_key = "name", to_msg = "char*"]
+  string propId;
+  [msg_key = "val", to_msg = "char*"]
+  string value;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+struct GetPropParam {
+  [msg_key = "did", to_msg = "char*"]
+  string did;
+  [msg_key = "name", to_msg = "char*"]
+  string propId;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETDEVPROP",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_PROPARG",
+  msg_sub_type = "Propmsg"
 ]
-void get(CommonParam p);
+void getprop(GetPropParam p);
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETDEVPROP",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_PROPARG",
+  msg_sub_type = "Propmsg"
 ]
-void set(CommonParam p);
+void setprop(SetPropParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETSCENELST",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_SCENEARG"
+]
+void getSceneList(CommonParam p);
+
+struct ExecSceneParam {
+  [msg_key = "sid", to_msg = "char*"]
+  string sid;
+  int ver;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+struct CommonSceneParam {
+  [msg_key = "sid", to_msg = "char*"]
+  string sid;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+};
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__EXESCENE",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_SCENEARG",
+  msg_sub_type = "Scenemsg"
+]
+void exec(ExecSceneParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SUBSCENE",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_SCENEARG",
+  msg_sub_type = "Scenemsg"
+]
+void subscene(CommonSceneParam p);
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__UNSUBSCENE",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_SCENEARG",
+  msg_sub_type = "Scenemsg"
+]
+void unsubscene(CommonSceneParam p);
