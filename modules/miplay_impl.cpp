@@ -5,7 +5,11 @@
 #include <thread>
 #include <sstream>
 #include <string>
+#include <spawn.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
+#define MIPLAY_QAPP_THREAD_STACK_SIZE 14336
 static const char* file_tag = "[jidl_feature] miplay_impl";
 static uv_loop_t* loop = nullptr;
 static struct{
@@ -84,28 +88,26 @@ static void on_new_connection(uv_stream_t *server, int status) {
     }
 }
 
-static int runloop()
+void* runloop(void* arg)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
-    if (loop == nullptr) {
-        printf("%s::%s()  loop == nullptr\n", file_tag,  __FUNCTION__);
-        return 0;
-    }
+    loop = (uv_loop_t*) malloc(sizeof(uv_loop_t));
+    memset(loop, 0, sizeof(uv_loop_t));
+    uv_loop_init(loop);
 
     uv_tcp_t server;
     uv_tcp_init(loop, &server);
 
     sockaddr_in addr;
-
     uv_ip4_addr("0.0.0.0", 7979, &addr);
 
     uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
-    int r = uv_listen((uv_stream_t*) &server, 16, on_new_connection);
+    int r = uv_listen((uv_stream_t*)&server, 16, on_new_connection);
     if (r) {
         fprintf(stderr, "Listen error %s\n", uv_strerror(r));
-        return 0;
+        return nullptr;
     }
-    return 1;
+    uv_run(loop, UV_RUN_DEFAULT);
+    return nullptr;
 }
 
 // FeatureCallbacks to be implemented
@@ -149,15 +151,20 @@ void service_miplay_wrap_init(FeatureInstanceHandle feature, AppendData data, Ft
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
     gFeature = feature;
     gMediainfoCb = cb;
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(feature);
-    loop = FeatureGetUVLoop(manager);
-    int ret = runloop();
-    if (ret) {
-        printf("%s::%s()  runloop ok.\n", file_tag,  __FUNCTION__);
-    } else {
-        printf("%s::%s()  runloop error.\n", file_tag,  __FUNCTION__);
+
+    pthread_attr_t thread_attr; 
+    pthread_t thread_info; 
+    if (pthread_attr_init(&thread_attr) != 0) {
+        return;
     }
-    printf("%s::%s()  END\n", file_tag,  __FUNCTION__);
+    pthread_attr_setstacksize(&thread_attr, MIPLAY_QAPP_THREAD_STACK_SIZE);
+    if (pthread_create(&thread_info, &thread_attr, runloop, NULL) != 0) {
+        return;
+    }
+    if (pthread_setname_np(thread_info, "quickapp_miplay") != 0) {
+        return;
+    }
+    pthread_detach(thread_info);
 }
 
 void service_miplay_wrap_uninit(FeatureInstanceHandle feature, AppendData data)
