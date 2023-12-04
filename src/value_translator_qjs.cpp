@@ -91,7 +91,6 @@ bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, si
     return true;
 }
 
-
 // to target values
 bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget) {
     if (native.type == FT_TYPE_NONE) {
@@ -170,7 +169,7 @@ bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValu
     return true;
 }
 
-bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue& field) {
+bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field) {
     if (!JS_IsObject(obj))
         return false;
 
