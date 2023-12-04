@@ -174,3 +174,69 @@ void service_miplay_wrap_uninit(FeatureInstanceHandle feature, AppendData data)
     gMediainfoCb = 0;
     printf("%s::%s()\n", file_tag,  __FUNCTION__);
 }
+
+static void miplay_ctrl_task(char* args[])
+{
+    const char* command = "reverseCtrl";
+    char *const vapp_argv[] = {const_cast<char*>(command), args[0], args[1], nullptr };
+    posix_spawn_file_actions_t actions;
+    posix_spawn_file_actions_init(&actions);    
+    pid_t pid;
+    if (posix_spawn(&pid, command, &actions, NULL, vapp_argv, environ) != 0) {
+        // Error occurred while spawning the process
+        FEATURE_LOG_ERROR("posix_spawn %s error\n", command);
+        return;
+    }
+
+    int status;
+    if (waitpid(pid, &status, 0) == -1) {
+        FEATURE_LOG_ERROR("waitpid error %d\n", status);
+        return;
+    }
+
+    if (WIFEXITED(status)) {
+        int exitStatus = WEXITSTATUS(status);
+        FEATURE_LOG_WARN("Child process exited with status:%d", exitStatus);
+    }
+
+    return;
+}
+
+void service_miplay_wrap_ctrlcmd(FeatureInstanceHandle feature, AppendData data, FtString cmd)
+{
+    FEATURE_LOG_WARN("%s app click callback cmd:%s..\n", __FUNCTION__, cmd);
+    char* args[3] = {nullptr};
+    
+    if (strcmp(cmd, "pause") == 0) {
+        args[0] = const_cast<char*>("ctrl");
+        args[1] = const_cast<char*>("pause");
+    } else if (strcmp(cmd, "resume") == 0) {
+        args[0] = const_cast<char*>("ctrl");
+        args[1] = const_cast<char*>("resume");
+    } else if (strcmp(cmd, "next") == 0) {
+        args[0] = const_cast<char*>("ctrl");
+        args[1] = const_cast<char*>("next");
+    } else if (strcmp(cmd, "prev") == 0) {
+        args[0] = const_cast<char*>("ctrl");
+        args[1] = const_cast<char*>("prev");
+    } else if (strcmp(cmd, "stop") == 0) {
+        args[0] = const_cast<char*>("ctrl");
+        args[1] = const_cast<char*>("stop");
+    }
+    miplay_ctrl_task(args);
+}
+
+void service_miplay_wrap_volumeCtrl(FeatureInstanceHandle feature, AppendData append_data, FtInt type)
+{
+    FEATURE_LOG_WARN("%s volumeCtrl click callback cmd:%d..\n", __FUNCTION__, type);
+    char* args[3] = {nullptr};
+
+    if (type == 1) {
+        args[0] = const_cast<char*>("volumeCtrl");
+        args[1] = const_cast<char*>("up");
+    } else {
+        args[0] = const_cast<char*>("volumeCtrl");
+        args[1] = const_cast<char*>("down");
+    }
+    miplay_ctrl_task(args);
+}
