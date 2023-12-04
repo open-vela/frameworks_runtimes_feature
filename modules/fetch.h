@@ -44,23 +44,23 @@ void fetch_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _SuccessRes {
-  FtInt code;
-  FtAny data;
-  FtAny headers;
+  FtInt _code;
+  FtAny _data;
+  FtAny _headers;
 } fetch_SuccessRes;
 
 fetch_SuccessRes* fetchMallocSuccessRes();
 
 typedef struct _FetchPara {
-  FtString url;
-  FtAny data;
-  FtAny header;
-  FtString method;
-  FtString responseType;
-  FtInt timeout;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
+  FtString _url;
+  FtAny _data;
+  FtAny _header;
+  FtString _method;
+  FtString _responseType;
+  FtInt _timeout;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
 } fetch_FetchPara;
 
 fetch_FetchPara* fetchMallocFetchPara();

@@ -21,8 +21,8 @@
 
 /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_SYSTEM_FILE_H_
-#define JSON_AST_GEN_MODULE_SYSTEM_FILE_H_
+#ifndef JSON_AST_GEN_MODULE_FILE_H_
+#define JSON_AST_GEN_MODULE_FILE_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,186 +35,186 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void system_file_onRegister(const char* feature_name);
-void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_file_onUnregister(const char* feature_name);
+void file_onRegister(const char* feature_name);
+void file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void file_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _move_param_t {
-  FtString srcUri;
-  FtString dstUri;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_move_param_t;
+  FtString _srcUri;
+  FtString _dstUri;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_move_param_t;
 
-system_file_move_param_t* system_fileMallocmove_param_t();
+file_move_param_t* fileMallocmove_param_t();
 
 typedef struct _copy_param_t {
-  FtString srcUri;
-  FtString dstUri;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_copy_param_t;
+  FtString _srcUri;
+  FtString _dstUri;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_copy_param_t;
 
-system_file_copy_param_t* system_fileMalloccopy_param_t();
+file_copy_param_t* fileMalloccopy_param_t();
 
 typedef struct _file_info_t {
-  FtString uri;
-  FtInt length;
-  FtString lastModifiedTime;
-} system_file_file_info_t;
+  FtString _uri;
+  FtInt _length;
+  FtInt _lastModifiedTime;
+} file_file_info_t;
 
-system_file_file_info_t* system_fileMallocfile_info_t();
+file_file_info_t* fileMallocfile_info_t();
 
 typedef struct _list_succ_param {
-  FtArray* fileList;
-} system_file_list_succ_param;
+  FtAny _fileList;
+} file_list_succ_param;
 
-system_file_list_succ_param* system_fileMalloclist_succ_param();
+file_list_succ_param* fileMalloclist_succ_param();
 
 typedef struct _list_param_t {
-  FtString uri;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_list_param_t;
+  FtString _uri;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_list_param_t;
 
-system_file_list_param_t* system_fileMalloclist_param_t();
+file_list_param_t* fileMalloclist_param_t();
 
 typedef struct _extended_file_info_t {
-  FtString uri;
-  FtInt length;
-  FtString lastModifiedTime;
-  FtString type;
-  FtArray* subFiles;
-} system_file_extended_file_info_t;
+  FtString _uri;
+  FtInt _length;
+  FtInt _lastModifiedTime;
+  FtString _type;
+  FtAny _subFiles;
+} file_extended_file_info_t;
 
-system_file_extended_file_info_t* system_fileMallocextended_file_info_t();
+file_extended_file_info_t* fileMallocextended_file_info_t();
 
 typedef struct _get_param_t {
-  FtString uri;
-  FtBool recursive;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_get_param_t;
+  FtString _uri;
+  FtBool _recursive;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_get_param_t;
 
-system_file_get_param_t* system_fileMallocget_param_t();
+file_get_param_t* fileMallocget_param_t();
 
 typedef struct _delete_param_t {
-  FtString uri;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_delete_param_t;
+  FtString _uri;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_delete_param_t;
 
-system_file_delete_param_t* system_fileMallocdelete_param_t();
+file_delete_param_t* fileMallocdelete_param_t();
 
 typedef struct _write_text_param_t {
-  FtString uri;
-  FtString text;
-  FtString encoding;
-  FtBool append;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_write_text_param_t;
+  FtString _uri;
+  FtString _text;
+  FtString _encoding;
+  FtBool _append;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_write_text_param_t;
 
-system_file_write_text_param_t* system_fileMallocwrite_text_param_t();
+file_write_text_param_t* fileMallocwrite_text_param_t();
 
 typedef struct _write_arr_buf_param_t {
-  FtString uri;
-  FtAny buffer;
-  FtInt position;
-  FtBool append;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_write_arr_buf_param_t;
+  FtString _uri;
+  FtAny _buffer;
+  FtInt _position;
+  FtBool _append;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_write_arr_buf_param_t;
 
-system_file_write_arr_buf_param_t* system_fileMallocwrite_arr_buf_param_t();
+file_write_arr_buf_param_t* fileMallocwrite_arr_buf_param_t();
 
 typedef struct _read_txt_succ_t {
-  FtString text;
-} system_file_read_txt_succ_t;
+  FtString _text;
+} file_read_txt_succ_t;
 
-system_file_read_txt_succ_t* system_fileMallocread_txt_succ_t();
+file_read_txt_succ_t* fileMallocread_txt_succ_t();
 
 typedef struct _read_text_param_t {
-  FtString uri;
-  FtString encoding;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_read_text_param_t;
+  FtString _uri;
+  FtString _encoding;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_read_text_param_t;
 
-system_file_read_text_param_t* system_fileMallocread_text_param_t();
+file_read_text_param_t* fileMallocread_text_param_t();
 
 typedef struct _read_arr_buf_succ_t {
-  FtAny buffer;
-} system_file_read_arr_buf_succ_t;
+  FtAny _buffer;
+} file_read_arr_buf_succ_t;
 
-system_file_read_arr_buf_succ_t* system_fileMallocread_arr_buf_succ_t();
+file_read_arr_buf_succ_t* fileMallocread_arr_buf_succ_t();
 
 typedef struct _read_arr_buf_t {
-  FtString uri;
-  FtInt position;
-  FtInt length;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_read_arr_buf_t;
+  FtString _uri;
+  FtInt _position;
+  FtInt _length;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_read_arr_buf_t;
 
-system_file_read_arr_buf_t* system_fileMallocread_arr_buf_t();
+file_read_arr_buf_t* fileMallocread_arr_buf_t();
 
 typedef struct _access_param_t {
-  FtString uri;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_access_param_t;
+  FtString _uri;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_access_param_t;
 
-system_file_access_param_t* system_fileMallocaccess_param_t();
+file_access_param_t* fileMallocaccess_param_t();
 
 typedef struct _mkdir_param_t {
-  FtString uri;
-  FtBool recursive;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_mkdir_param_t;
+  FtString _uri;
+  FtBool _recursive;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_mkdir_param_t;
 
-system_file_mkdir_param_t* system_fileMallocmkdir_param_t();
+file_mkdir_param_t* fileMallocmkdir_param_t();
 
 typedef struct _rmdir_param_t {
-  FtString uri;
-  FtBool recursive;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_file_rmdir_param_t;
+  FtString _uri;
+  FtBool _recursive;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} file_rmdir_param_t;
 
-system_file_rmdir_param_t* system_fileMallocrmdir_param_t();
+file_rmdir_param_t* fileMallocrmdir_param_t();
 
 
 // Function wrappers to be implemented
-void system_file_wrap_move(FeatureInstanceHandle feature, AppendData append_data, system_file_move_param_t * param);
-void system_file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data, system_file_copy_param_t * param);
-void system_file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, system_file_list_param_t * param);
-void system_file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, system_file_get_param_t * param);
-void system_file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, system_file_delete_param_t * param);
-void system_file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, system_file_write_text_param_t * param);
-void system_file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, system_file_write_arr_buf_param_t * param);
-void system_file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, system_file_read_text_param_t * param);
-void system_file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, system_file_read_arr_buf_t * param);
-void system_file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, system_file_access_param_t * param);
-void system_file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, system_file_mkdir_param_t * param);
-void system_file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, system_file_rmdir_param_t * param);
+void file_wrap_move(FeatureInstanceHandle feature, AppendData append_data, file_move_param_t * param);
+void file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data, file_copy_param_t * param);
+void file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, file_list_param_t * param);
+void file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, file_get_param_t * param);
+void file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, file_delete_param_t * param);
+void file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, file_write_text_param_t * param);
+void file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_write_arr_buf_param_t * param);
+void file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, file_read_text_param_t * param);
+void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_read_arr_buf_t * param);
+void file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, file_access_param_t * param);
+void file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, file_mkdir_param_t * param);
+void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file_rmdir_param_t * param);
 
 // Interface constructors
 
@@ -223,8 +223,6 @@ void system_file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_dat
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* system_file_malloc_object_array();
-FtArray* system_file_malloc_struct_array();
 
-#endif // JSON_AST_GEN_MODULE_SYSTEM_FILE_H_
+#endif // JSON_AST_GEN_MODULE_FILE_H_
 /* clang-format on */

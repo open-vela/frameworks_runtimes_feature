@@ -35,14 +35,13 @@ typedef enum ft_type {
     FT_TYPE_TYPED_BUFFER,
     FT_TYPE_OBJECT
 } ft_type;
-    
+
 typedef struct ft_value_t {
 #if INTPTR_MAX >= INT64_MAX
     uint64_t val[2];
 #else
     uint64_t val;
 #endif
-    ft_type type;
 } ft_value_t;
 
 typedef ft_value_t* ft_value_ref;

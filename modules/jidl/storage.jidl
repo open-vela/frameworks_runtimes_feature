@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module system.storage @1.0
+module storage @1.0
 
 callback success_cb(string value)
 callback fail_cb(string errorMsg, int code)

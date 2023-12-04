@@ -21,8 +21,8 @@
 
  /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_SYSTEM_STORAGE_H_
-#define JSON_AST_GEN_MODULE_SYSTEM_STORAGE_H_
+#ifndef JSON_AST_GEN_MODULE_STORAGE_H_
+#define JSON_AST_GEN_MODULE_STORAGE_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,77 +35,77 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void system_storage_onRegister(const char* feature_name);
-void system_storage_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_storage_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_storage_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_storage_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_storage_onUnregister(const char* feature_name);
+void storage_onRegister(const char* feature_name);
+void storage_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void storage_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void storage_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void storage_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void storage_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _GetInfo {
-  FtString key;
+  FtString _key;
   FtString _default;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_storage_GetInfo;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} storage_GetInfo;
 
-system_storage_GetInfo* system_storageMallocGetInfo();
+storage_GetInfo* storageMallocGetInfo();
 
 typedef struct _SetInfo {
-  FtString key;
-  FtString value;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_storage_SetInfo;
+  FtString _key;
+  FtString _value;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} storage_SetInfo;
 
-system_storage_SetInfo* system_storageMallocSetInfo();
+storage_SetInfo* storageMallocSetInfo();
 
 typedef struct _ClearInfo {
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_storage_ClearInfo;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} storage_ClearInfo;
 
-system_storage_ClearInfo* system_storageMallocClearInfo();
+storage_ClearInfo* storageMallocClearInfo();
 
 typedef struct _DeleteInfo {
-  FtString key;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_storage_DeleteInfo;
+  FtString _key;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} storage_DeleteInfo;
 
-system_storage_DeleteInfo* system_storageMallocDeleteInfo();
+storage_DeleteInfo* storageMallocDeleteInfo();
 
 typedef struct _KeyInfo {
-  FtInt index;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_storage_KeyInfo;
+  FtInt _index;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} storage_KeyInfo;
 
-system_storage_KeyInfo* system_storageMallocKeyInfo();
+storage_KeyInfo* storageMallocKeyInfo();
 
 
 // Function wrappers to be implemented
-void system_storage_wrap_get(FeatureInstanceHandle feature, AppendData append_data, system_storage_GetInfo * info);
-void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData append_data, system_storage_SetInfo * info);
-void system_storage_wrap_clear(FeatureInstanceHandle feature, AppendData append_data, system_storage_ClearInfo * info);
-void system_storage_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, system_storage_DeleteInfo * info);
-void system_storage_wrap_key(FeatureInstanceHandle feature, AppendData append_data, system_storage_KeyInfo * info);
+void storage_wrap_get(FeatureInstanceHandle feature, AppendData append_data, storage_GetInfo * info);
+void storage_wrap_set(FeatureInstanceHandle feature, AppendData append_data, storage_SetInfo * info);
+void storage_wrap_clear(FeatureInstanceHandle feature, AppendData append_data, storage_ClearInfo * info);
+void storage_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, storage_DeleteInfo * info);
+void storage_wrap_key(FeatureInstanceHandle feature, AppendData append_data, storage_KeyInfo * info);
 
 // Interface constructors
 
 // interface vtable functions to be implemented
 
 // Property getters and setters to be implemented
-FtInt system_storage_get_length(void* feature, AppendData append_data);
-void system_storage_set_length(void* feature, AppendData append_data, FtInt length);
+FtInt storage_get_length(void* feature, AppendData append_data);
+void storage_set_length(void* feature, AppendData append_data, FtInt length);
 
 // Array malloc functions
 
-#endif // JSON_AST_GEN_MODULE_SYSTEM_STORAGE_H_
+#endif // JSON_AST_GEN_MODULE_STORAGE_H_
 /* clang-format on */

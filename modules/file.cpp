@@ -27,1152 +27,1132 @@
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
-/****** for JIDL callback 'move_succ_cb' ******/
-static const FeatureType system_file_move_succ_cb_parameters[] = {
+/****** for JIDL callback 'move_success_cb' ******/
+static const FeatureType file_move_success_cb_parameters[] = {
     FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_move_succ_cb_callback_type {
+static const CallbackType file_move_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_move_succ_cb_parameters,
+    .parameters = file_move_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'move_fail_cb' ******/
-static const FeatureType system_file_move_fail_cb_parameters[] = {
+static const FeatureType file_move_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_move_fail_cb_callback_type {
+static const CallbackType file_move_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_move_fail_cb_parameters,
+    .parameters = file_move_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'move_cmpl_cb' ******/
-static const FeatureType system_file_move_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'move_complete_cb' ******/
+static const FeatureType file_move_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_move_cmpl_cb_callback_type {
+static const CallbackType file_move_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_move_cmpl_cb_parameters,
+    .parameters = file_move_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL struct 'move_param_t' ******/
-static ObjectMember system_file_move_param_t_struct_members[] = {
-    { "srcUri", FT_STRING, offsetof(system_file_move_param_t, srcUri), sizeof(FtString) },
-    { "dstUri", FT_STRING, offsetof(system_file_move_param_t, dstUri), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_file_move_succ_cb_callback_type), offsetof(system_file_move_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_move_fail_cb_callback_type), offsetof(system_file_move_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_move_cmpl_cb_callback_type), offsetof(system_file_move_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_move_param_t_struct_members[] = {
+    { "srcUri", FT_STRING, offsetof(file_move_param_t, _srcUri), sizeof(FtString) },
+    { "dstUri", FT_STRING, offsetof(file_move_param_t, _dstUri), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&file_move_success_cb_callback_type), offsetof(file_move_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_move_fail_cb_callback_type), offsetof(file_move_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_move_complete_cb_callback_type), offsetof(file_move_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_move_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_move_param_t) },
-    .members = system_file_move_param_t_struct_members
+static const ObjectMapType file_move_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_move_param_t) },
+    .members = file_move_param_t_struct_members
 };
 
-system_file_move_param_t* system_fileMallocmove_param_t () {
-    return (system_file_move_param_t*)FeatureMalloc(
-        sizeof(system_file_move_param_t), FT_MK_COMPLEX(&system_file_move_param_t_struct_type));
+file_move_param_t* fileMallocmove_param_t () {
+    return (file_move_param_t*)FeatureMalloc(
+        sizeof(file_move_param_t), FT_MK_COMPLEX(&file_move_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'move' ******/
-static const FeatureType system_file_move_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_move_param_t_struct_type),
+static const FeatureType file_move_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_move_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_move_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_move) },
-    .parameters = system_file_move_parameters,
+static const MemberMethod file_move_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_move) },
+    .parameters = file_move_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'copy_succ_cb' ******/
-static const FeatureType system_file_copy_succ_cb_parameters[] = {
+/****** for JIDL callback 'copy_success_cb' ******/
+static const FeatureType file_copy_success_cb_parameters[] = {
     FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_copy_succ_cb_callback_type {
+static const CallbackType file_copy_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_copy_succ_cb_parameters,
+    .parameters = file_copy_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'copy_fail_cb' ******/
-static const FeatureType system_file_copy_fail_cb_parameters[] = {
+static const FeatureType file_copy_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_copy_fail_cb_callback_type {
+static const CallbackType file_copy_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_copy_fail_cb_parameters,
+    .parameters = file_copy_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'copy_cmpl_cb' ******/
-static const FeatureType system_file_copy_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'copy_complete_cb' ******/
+static const FeatureType file_copy_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_copy_cmpl_cb_callback_type {
+static const CallbackType file_copy_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_copy_cmpl_cb_parameters,
+    .parameters = file_copy_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL struct 'copy_param_t' ******/
-static ObjectMember system_file_copy_param_t_struct_members[] = {
-    { "srcUri", FT_STRING, offsetof(system_file_copy_param_t, srcUri), sizeof(FtString) },
-    { "dstUri", FT_STRING, offsetof(system_file_copy_param_t, dstUri), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_file_copy_succ_cb_callback_type), offsetof(system_file_copy_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_copy_fail_cb_callback_type), offsetof(system_file_copy_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_copy_cmpl_cb_callback_type), offsetof(system_file_copy_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_copy_param_t_struct_members[] = {
+    { "srcUri", FT_STRING, offsetof(file_copy_param_t, _srcUri), sizeof(FtString) },
+    { "dstUri", FT_STRING, offsetof(file_copy_param_t, _dstUri), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&file_copy_success_cb_callback_type), offsetof(file_copy_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_copy_fail_cb_callback_type), offsetof(file_copy_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_copy_complete_cb_callback_type), offsetof(file_copy_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_copy_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_copy_param_t) },
-    .members = system_file_copy_param_t_struct_members
+static const ObjectMapType file_copy_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_copy_param_t) },
+    .members = file_copy_param_t_struct_members
 };
 
-system_file_copy_param_t* system_fileMalloccopy_param_t () {
-    return (system_file_copy_param_t*)FeatureMalloc(
-        sizeof(system_file_copy_param_t), FT_MK_COMPLEX(&system_file_copy_param_t_struct_type));
+file_copy_param_t* fileMalloccopy_param_t () {
+    return (file_copy_param_t*)FeatureMalloc(
+        sizeof(file_copy_param_t), FT_MK_COMPLEX(&file_copy_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'copy' ******/
-static const FeatureType system_file_copy_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_copy_param_t_struct_type),
+static const FeatureType file_copy_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_copy_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_copy_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_copy) },
-    .parameters = system_file_copy_parameters,
+static const MemberMethod file_copy_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_copy) },
+    .parameters = file_copy_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL struct 'file_info_t' ******/
-static ObjectMember system_file_file_info_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_file_info_t, uri), sizeof(FtString) },
-    { "length", FT_INT, offsetof(system_file_file_info_t, length), sizeof(FtInt) },
-    { "lastModifiedTime", FT_STRING, offsetof(system_file_file_info_t, lastModifiedTime), sizeof(FtString) },
+static ObjectMember file_file_info_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_file_info_t, _uri), sizeof(FtString) },
+    { "length", FT_INT, offsetof(file_file_info_t, _length), sizeof(FtInt) },
+    { "lastModifiedTime", FT_INT, offsetof(file_file_info_t, _lastModifiedTime), sizeof(FtInt) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_file_info_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_file_info_t) },
-    .members = system_file_file_info_t_struct_members
+static const ObjectMapType file_file_info_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_file_info_t) },
+    .members = file_file_info_t_struct_members
 };
 
-system_file_file_info_t* system_fileMallocfile_info_t () {
-    return (system_file_file_info_t*)FeatureMalloc(
-        sizeof(system_file_file_info_t), FT_MK_COMPLEX(&system_file_file_info_t_struct_type));
+file_file_info_t* fileMallocfile_info_t () {
+    return (file_file_info_t*)FeatureMalloc(
+        sizeof(file_file_info_t), FT_MK_COMPLEX(&file_file_info_t_struct_type));
 }
 
-
-static const ArrayType system_file_object_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_ANY_REF
-};
-
-FtArray* system_file_malloc_object_array() {
-    return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&system_file_object_array));
-}
-
-static const ArrayType system_file_struct_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_MK_COMPLEX_REF(&system_file_file_info_t_struct_type)
-};
-
-FtArray* system_file_malloc_struct_array() {
-    return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&system_file_struct_array));
-}
 
 /****** for JIDL struct 'list_succ_param' ******/
-static ObjectMember system_file_list_succ_param_struct_members[] = {
-    { "fileList", FT_MK_COMPLEX_REF(&system_file_object_array), offsetof(system_file_list_succ_param, fileList), sizeof(FtArray*) },
+static ObjectMember file_list_succ_param_struct_members[] = {
+    { "fileList", FT_ANY_REF, offsetof(file_list_succ_param, _fileList), sizeof(FtAny) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_list_succ_param_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_list_succ_param) },
-    .members = system_file_list_succ_param_struct_members
+static const ObjectMapType file_list_succ_param_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_list_succ_param) },
+    .members = file_list_succ_param_struct_members
 };
 
-system_file_list_succ_param* system_fileMalloclist_succ_param () {
-    return (system_file_list_succ_param*)FeatureMalloc(
-        sizeof(system_file_list_succ_param), FT_MK_COMPLEX(&system_file_list_succ_param_struct_type));
+file_list_succ_param* fileMalloclist_succ_param () {
+    return (file_list_succ_param*)FeatureMalloc(
+        sizeof(file_list_succ_param), FT_MK_COMPLEX(&file_list_succ_param_struct_type));
 }
 
 
-/****** for JIDL callback 'list_succ_cb' ******/
-static const FeatureType system_file_list_succ_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_list_succ_param_struct_type),
+/****** for JIDL callback 'list_success_cb' ******/
+static const FeatureType file_list_success_cb_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_list_succ_param_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType system_file_list_succ_cb_callback_type {
+static const CallbackType file_list_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_list_succ_cb_parameters,
+    .parameters = file_list_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'list_fail_cb' ******/
-static const FeatureType system_file_list_fail_cb_parameters[] = {
+static const FeatureType file_list_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_list_fail_cb_callback_type {
+static const CallbackType file_list_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_list_fail_cb_parameters,
+    .parameters = file_list_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'list_cmpl_cb' ******/
-static const FeatureType system_file_list_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'list_complete_cb' ******/
+static const FeatureType file_list_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_list_cmpl_cb_callback_type {
+static const CallbackType file_list_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_list_cmpl_cb_parameters,
+    .parameters = file_list_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL struct 'list_param_t' ******/
-static ObjectMember system_file_list_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_list_param_t, uri), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_file_list_succ_cb_callback_type), offsetof(system_file_list_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_list_fail_cb_callback_type), offsetof(system_file_list_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_list_cmpl_cb_callback_type), offsetof(system_file_list_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_list_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_list_param_t, _uri), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&file_list_success_cb_callback_type), offsetof(file_list_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_list_fail_cb_callback_type), offsetof(file_list_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_list_complete_cb_callback_type), offsetof(file_list_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_list_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_list_param_t) },
-    .members = system_file_list_param_t_struct_members
+static const ObjectMapType file_list_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_list_param_t) },
+    .members = file_list_param_t_struct_members
 };
 
-system_file_list_param_t* system_fileMalloclist_param_t () {
-    return (system_file_list_param_t*)FeatureMalloc(
-        sizeof(system_file_list_param_t), FT_MK_COMPLEX(&system_file_list_param_t_struct_type));
+file_list_param_t* fileMalloclist_param_t () {
+    return (file_list_param_t*)FeatureMalloc(
+        sizeof(file_list_param_t), FT_MK_COMPLEX(&file_list_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'list' ******/
-static const FeatureType system_file_list_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_list_param_t_struct_type),
+static const FeatureType file_list_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_list_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_list_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_list) },
-    .parameters = system_file_list_parameters,
+static const MemberMethod file_list_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_list) },
+    .parameters = file_list_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL struct 'extended_file_info_t' ******/
-static ObjectMember system_file_extended_file_info_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_extended_file_info_t, uri), sizeof(FtString) },
-    { "length", FT_INT, offsetof(system_file_extended_file_info_t, length), sizeof(FtInt) },
-    { "lastModifiedTime", FT_STRING, offsetof(system_file_extended_file_info_t, lastModifiedTime), sizeof(FtString) },
-    { "type", FT_STRING, offsetof(system_file_extended_file_info_t, type), sizeof(FtString) },
-    { "subFiles", FT_MK_COMPLEX_REF(&system_file_object_array), offsetof(system_file_extended_file_info_t, subFiles), sizeof(FtArray*) },
+static ObjectMember file_extended_file_info_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_extended_file_info_t, _uri), sizeof(FtString) },
+    { "length", FT_INT, offsetof(file_extended_file_info_t, _length), sizeof(FtInt) },
+    { "lastModifiedTime", FT_INT, offsetof(file_extended_file_info_t, _lastModifiedTime), sizeof(FtInt) },
+    { "type", FT_STRING, offsetof(file_extended_file_info_t, _type), sizeof(FtString) },
+    { "subFiles", FT_ANY_REF, offsetof(file_extended_file_info_t, _subFiles), sizeof(FtAny) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_extended_file_info_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_extended_file_info_t) },
-    .members = system_file_extended_file_info_t_struct_members
+static const ObjectMapType file_extended_file_info_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_extended_file_info_t) },
+    .members = file_extended_file_info_t_struct_members
 };
 
-system_file_extended_file_info_t* system_fileMallocextended_file_info_t () {
-    return (system_file_extended_file_info_t*)FeatureMalloc(
-        sizeof(system_file_extended_file_info_t), FT_MK_COMPLEX(&system_file_extended_file_info_t_struct_type));
+file_extended_file_info_t* fileMallocextended_file_info_t () {
+    return (file_extended_file_info_t*)FeatureMalloc(
+        sizeof(file_extended_file_info_t), FT_MK_COMPLEX(&file_extended_file_info_t_struct_type));
 }
 
 
-/****** for JIDL callback 'get_succ_cb' ******/
-static const FeatureType system_file_get_succ_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_extended_file_info_t_struct_type),
+/****** for JIDL callback 'get_success_cb' ******/
+static const FeatureType file_get_success_cb_parameters[] = {
+    FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_get_succ_cb_callback_type {
+static const CallbackType file_get_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_get_succ_cb_parameters,
+    .parameters = file_get_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'get_fail_cb' ******/
-static const FeatureType system_file_get_fail_cb_parameters[] = {
+static const FeatureType file_get_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_get_fail_cb_callback_type {
+static const CallbackType file_get_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_get_fail_cb_parameters,
+    .parameters = file_get_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'get_cmpl_cb' ******/
-static const FeatureType system_file_get_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'get_complete_cb' ******/
+static const FeatureType file_get_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_get_cmpl_cb_callback_type {
+static const CallbackType file_get_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_get_cmpl_cb_parameters,
+    .parameters = file_get_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_get_param_t_member_recursive_opt_type = {
+static OptionalType file_get_param_t_member_recursive_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = false
 };
 
 /****** for JIDL struct 'get_param_t' ******/
-static ObjectMember system_file_get_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_get_param_t, uri), sizeof(FtString) },
-    { "recursive", FT_MK_OPTIONAL(&system_file_get_param_t_member_recursive_opt_type), offsetof(system_file_get_param_t, recursive), sizeof(FtBool) },
-    { "success", FT_MK_COMPLEX(&system_file_get_succ_cb_callback_type), offsetof(system_file_get_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_get_fail_cb_callback_type), offsetof(system_file_get_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_get_cmpl_cb_callback_type), offsetof(system_file_get_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_get_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_get_param_t, _uri), sizeof(FtString) },
+    { "recursive", FT_MK_OPTIONAL(&file_get_param_t_member_recursive_opt_type), offsetof(file_get_param_t, _recursive), sizeof(FtBool) },
+    { "success", FT_MK_COMPLEX(&file_get_success_cb_callback_type), offsetof(file_get_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_get_fail_cb_callback_type), offsetof(file_get_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_get_complete_cb_callback_type), offsetof(file_get_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_get_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_get_param_t) },
-    .members = system_file_get_param_t_struct_members
+static const ObjectMapType file_get_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_get_param_t) },
+    .members = file_get_param_t_struct_members
 };
 
-system_file_get_param_t* system_fileMallocget_param_t () {
-    return (system_file_get_param_t*)FeatureMalloc(
-        sizeof(system_file_get_param_t), FT_MK_COMPLEX(&system_file_get_param_t_struct_type));
+file_get_param_t* fileMallocget_param_t () {
+    return (file_get_param_t*)FeatureMalloc(
+        sizeof(file_get_param_t), FT_MK_COMPLEX(&file_get_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'get' ******/
-static const FeatureType system_file_get_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_get_param_t_struct_type),
+static const FeatureType file_get_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_get_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_get_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_get) },
-    .parameters = system_file_get_parameters,
+static const MemberMethod file_get_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_get) },
+    .parameters = file_get_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'delete_succ_cb' ******/
-static const FeatureType system_file_delete_succ_cb_parameters[] = {
+/****** for JIDL callback 'delete_success_cb' ******/
+static const FeatureType file_delete_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_delete_succ_cb_callback_type {
+static const CallbackType file_delete_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_delete_succ_cb_parameters,
+    .parameters = file_delete_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'delete_fail_cb' ******/
-static const FeatureType system_file_delete_fail_cb_parameters[] = {
+static const FeatureType file_delete_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_delete_fail_cb_callback_type {
+static const CallbackType file_delete_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_delete_fail_cb_parameters,
+    .parameters = file_delete_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'delete_cmpl_cb' ******/
-static const FeatureType system_file_delete_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'delete_complete_cb' ******/
+static const FeatureType file_delete_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_delete_cmpl_cb_callback_type {
+static const CallbackType file_delete_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_delete_cmpl_cb_parameters,
+    .parameters = file_delete_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL struct 'delete_param_t' ******/
-static ObjectMember system_file_delete_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_delete_param_t, uri), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_file_delete_succ_cb_callback_type), offsetof(system_file_delete_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_delete_fail_cb_callback_type), offsetof(system_file_delete_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_delete_cmpl_cb_callback_type), offsetof(system_file_delete_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_delete_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_delete_param_t, _uri), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&file_delete_success_cb_callback_type), offsetof(file_delete_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_delete_fail_cb_callback_type), offsetof(file_delete_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_delete_complete_cb_callback_type), offsetof(file_delete_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_delete_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_delete_param_t) },
-    .members = system_file_delete_param_t_struct_members
+static const ObjectMapType file_delete_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_delete_param_t) },
+    .members = file_delete_param_t_struct_members
 };
 
-system_file_delete_param_t* system_fileMallocdelete_param_t () {
-    return (system_file_delete_param_t*)FeatureMalloc(
-        sizeof(system_file_delete_param_t), FT_MK_COMPLEX(&system_file_delete_param_t_struct_type));
+file_delete_param_t* fileMallocdelete_param_t () {
+    return (file_delete_param_t*)FeatureMalloc(
+        sizeof(file_delete_param_t), FT_MK_COMPLEX(&file_delete_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'delete' ******/
-static const FeatureType system_file_delete_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_delete_param_t_struct_type),
+static const FeatureType file_delete_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_delete_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_delete_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_delete) },
-    .parameters = system_file_delete_parameters,
+static const MemberMethod file_delete_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_delete) },
+    .parameters = file_delete_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'writeText_succ_cb' ******/
-static const FeatureType system_file_writeText_succ_cb_parameters[] = {
+/****** for JIDL callback 'writeText_success_cb' ******/
+static const FeatureType file_writeText_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_writeText_succ_cb_callback_type {
+static const CallbackType file_writeText_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_writeText_succ_cb_parameters,
+    .parameters = file_writeText_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'writeText_fail_cb' ******/
-static const FeatureType system_file_writeText_fail_cb_parameters[] = {
+static const FeatureType file_writeText_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_writeText_fail_cb_callback_type {
+static const CallbackType file_writeText_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_writeText_fail_cb_parameters,
+    .parameters = file_writeText_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'writeText_cmpl_cb' ******/
-static const FeatureType system_file_writeText_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'writeText_complete_cb' ******/
+static const FeatureType file_writeText_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_writeText_cmpl_cb_callback_type {
+static const CallbackType file_writeText_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_writeText_cmpl_cb_parameters,
+    .parameters = file_writeText_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_write_text_param_t_member_encoding_opt_type = {
+static OptionalType file_write_text_param_t_member_encoding_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "UTF-8"
 };
 
-static OptionalType system_file_write_text_param_t_member_append_opt_type = {
+static OptionalType file_write_text_param_t_member_append_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = false
 };
 
 /****** for JIDL struct 'write_text_param_t' ******/
-static ObjectMember system_file_write_text_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_write_text_param_t, uri), sizeof(FtString) },
-    { "text", FT_STRING, offsetof(system_file_write_text_param_t, text), sizeof(FtString) },
-    { "encoding", FT_MK_OPTIONAL(&system_file_write_text_param_t_member_encoding_opt_type), offsetof(system_file_write_text_param_t, encoding), sizeof(FtString) },
-    { "append", FT_MK_OPTIONAL(&system_file_write_text_param_t_member_append_opt_type), offsetof(system_file_write_text_param_t, append), sizeof(FtBool) },
-    { "success", FT_MK_COMPLEX(&system_file_writeText_succ_cb_callback_type), offsetof(system_file_write_text_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_writeText_fail_cb_callback_type), offsetof(system_file_write_text_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_writeText_cmpl_cb_callback_type), offsetof(system_file_write_text_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_write_text_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_write_text_param_t, _uri), sizeof(FtString) },
+    { "text", FT_STRING, offsetof(file_write_text_param_t, _text), sizeof(FtString) },
+    { "encoding", FT_MK_OPTIONAL(&file_write_text_param_t_member_encoding_opt_type), offsetof(file_write_text_param_t, _encoding), sizeof(FtString) },
+    { "append", FT_MK_OPTIONAL(&file_write_text_param_t_member_append_opt_type), offsetof(file_write_text_param_t, _append), sizeof(FtBool) },
+    { "success", FT_MK_COMPLEX(&file_writeText_success_cb_callback_type), offsetof(file_write_text_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_writeText_fail_cb_callback_type), offsetof(file_write_text_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_writeText_complete_cb_callback_type), offsetof(file_write_text_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_write_text_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_write_text_param_t) },
-    .members = system_file_write_text_param_t_struct_members
+static const ObjectMapType file_write_text_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_write_text_param_t) },
+    .members = file_write_text_param_t_struct_members
 };
 
-system_file_write_text_param_t* system_fileMallocwrite_text_param_t () {
-    return (system_file_write_text_param_t*)FeatureMalloc(
-        sizeof(system_file_write_text_param_t), FT_MK_COMPLEX(&system_file_write_text_param_t_struct_type));
+file_write_text_param_t* fileMallocwrite_text_param_t () {
+    return (file_write_text_param_t*)FeatureMalloc(
+        sizeof(file_write_text_param_t), FT_MK_COMPLEX(&file_write_text_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'writeText' ******/
-static const FeatureType system_file_writeText_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_write_text_param_t_struct_type),
+static const FeatureType file_writeText_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_write_text_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_writeText_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_writeText) },
-    .parameters = system_file_writeText_parameters,
+static const MemberMethod file_writeText_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_writeText) },
+    .parameters = file_writeText_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'writeArrBuf_succ_cb' ******/
-static const FeatureType system_file_writeArrBuf_succ_cb_parameters[] = {
+/****** for JIDL callback 'writeArrBuf_success_cb' ******/
+static const FeatureType file_writeArrBuf_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_writeArrBuf_succ_cb_callback_type {
+static const CallbackType file_writeArrBuf_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_writeArrBuf_succ_cb_parameters,
+    .parameters = file_writeArrBuf_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'writeArrBuf_fail_cb' ******/
-static const FeatureType system_file_writeArrBuf_fail_cb_parameters[] = {
+static const FeatureType file_writeArrBuf_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_writeArrBuf_fail_cb_callback_type {
+static const CallbackType file_writeArrBuf_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_writeArrBuf_fail_cb_parameters,
+    .parameters = file_writeArrBuf_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'writeArrBuf_cmpl_cb' ******/
-static const FeatureType system_file_writeArrBuf_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'writeArrBuf_complete_cb' ******/
+static const FeatureType file_writeArrBuf_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_writeArrBuf_cmpl_cb_callback_type {
+static const CallbackType file_writeArrBuf_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_writeArrBuf_cmpl_cb_parameters,
+    .parameters = file_writeArrBuf_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_write_arr_buf_param_t_member_position_opt_type = {
+static OptionalType file_write_arr_buf_param_t_member_position_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
     .ival = 0
 };
 
-static OptionalType system_file_write_arr_buf_param_t_member_append_opt_type = {
+static OptionalType file_write_arr_buf_param_t_member_append_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = false
 };
 
 /****** for JIDL struct 'write_arr_buf_param_t' ******/
-static ObjectMember system_file_write_arr_buf_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_write_arr_buf_param_t, uri), sizeof(FtString) },
-    { "buffer", FT_ANY_REF, offsetof(system_file_write_arr_buf_param_t, buffer), sizeof(FtAny) },
-    { "position", FT_MK_OPTIONAL(&system_file_write_arr_buf_param_t_member_position_opt_type), offsetof(system_file_write_arr_buf_param_t, position), sizeof(FtInt) },
-    { "append", FT_MK_OPTIONAL(&system_file_write_arr_buf_param_t_member_append_opt_type), offsetof(system_file_write_arr_buf_param_t, append), sizeof(FtBool) },
-    { "success", FT_MK_COMPLEX(&system_file_writeArrBuf_succ_cb_callback_type), offsetof(system_file_write_arr_buf_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_writeArrBuf_fail_cb_callback_type), offsetof(system_file_write_arr_buf_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_writeArrBuf_cmpl_cb_callback_type), offsetof(system_file_write_arr_buf_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_write_arr_buf_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_write_arr_buf_param_t, _uri), sizeof(FtString) },
+    { "buffer", FT_ANY_REF, offsetof(file_write_arr_buf_param_t, _buffer), sizeof(FtAny) },
+    { "position", FT_MK_OPTIONAL(&file_write_arr_buf_param_t_member_position_opt_type), offsetof(file_write_arr_buf_param_t, _position), sizeof(FtInt) },
+    { "append", FT_MK_OPTIONAL(&file_write_arr_buf_param_t_member_append_opt_type), offsetof(file_write_arr_buf_param_t, _append), sizeof(FtBool) },
+    { "success", FT_MK_COMPLEX(&file_writeArrBuf_success_cb_callback_type), offsetof(file_write_arr_buf_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_writeArrBuf_fail_cb_callback_type), offsetof(file_write_arr_buf_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_writeArrBuf_complete_cb_callback_type), offsetof(file_write_arr_buf_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_write_arr_buf_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_write_arr_buf_param_t) },
-    .members = system_file_write_arr_buf_param_t_struct_members
+static const ObjectMapType file_write_arr_buf_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_write_arr_buf_param_t) },
+    .members = file_write_arr_buf_param_t_struct_members
 };
 
-system_file_write_arr_buf_param_t* system_fileMallocwrite_arr_buf_param_t () {
-    return (system_file_write_arr_buf_param_t*)FeatureMalloc(
-        sizeof(system_file_write_arr_buf_param_t), FT_MK_COMPLEX(&system_file_write_arr_buf_param_t_struct_type));
+file_write_arr_buf_param_t* fileMallocwrite_arr_buf_param_t () {
+    return (file_write_arr_buf_param_t*)FeatureMalloc(
+        sizeof(file_write_arr_buf_param_t), FT_MK_COMPLEX(&file_write_arr_buf_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'writeArrayBuffer' ******/
-static const FeatureType system_file_writeArrayBuffer_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_write_arr_buf_param_t_struct_type),
+static const FeatureType file_writeArrayBuffer_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_write_arr_buf_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_writeArrayBuffer_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_writeArrayBuffer) },
-    .parameters = system_file_writeArrayBuffer_parameters,
+static const MemberMethod file_writeArrayBuffer_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_writeArrayBuffer) },
+    .parameters = file_writeArrayBuffer_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL struct 'read_txt_succ_t' ******/
-static ObjectMember system_file_read_txt_succ_t_struct_members[] = {
-    { "text", FT_STRING, offsetof(system_file_read_txt_succ_t, text), sizeof(FtString) },
+static ObjectMember file_read_txt_succ_t_struct_members[] = {
+    { "text", FT_STRING, offsetof(file_read_txt_succ_t, _text), sizeof(FtString) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_read_txt_succ_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_read_txt_succ_t) },
-    .members = system_file_read_txt_succ_t_struct_members
+static const ObjectMapType file_read_txt_succ_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_read_txt_succ_t) },
+    .members = file_read_txt_succ_t_struct_members
 };
 
-system_file_read_txt_succ_t* system_fileMallocread_txt_succ_t () {
-    return (system_file_read_txt_succ_t*)FeatureMalloc(
-        sizeof(system_file_read_txt_succ_t), FT_MK_COMPLEX(&system_file_read_txt_succ_t_struct_type));
+file_read_txt_succ_t* fileMallocread_txt_succ_t () {
+    return (file_read_txt_succ_t*)FeatureMalloc(
+        sizeof(file_read_txt_succ_t), FT_MK_COMPLEX(&file_read_txt_succ_t_struct_type));
 }
 
 
-/****** for JIDL callback 'readText_succ_cb' ******/
-static const FeatureType system_file_readText_succ_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_read_txt_succ_t_struct_type),
+/****** for JIDL callback 'readText_success_cb' ******/
+static const FeatureType file_readText_success_cb_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_read_txt_succ_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType system_file_readText_succ_cb_callback_type {
+static const CallbackType file_readText_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_readText_succ_cb_parameters,
+    .parameters = file_readText_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'readText_fail_cb' ******/
-static const FeatureType system_file_readText_fail_cb_parameters[] = {
+static const FeatureType file_readText_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_readText_fail_cb_callback_type {
+static const CallbackType file_readText_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_readText_fail_cb_parameters,
+    .parameters = file_readText_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'readText_cmpl_cb' ******/
-static const FeatureType system_file_readText_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'readText_complete_cb' ******/
+static const FeatureType file_readText_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_readText_cmpl_cb_callback_type {
+static const CallbackType file_readText_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_readText_cmpl_cb_parameters,
+    .parameters = file_readText_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_read_text_param_t_member_encoding_opt_type = {
+static OptionalType file_read_text_param_t_member_encoding_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "UTF-8"
 };
 
 /****** for JIDL struct 'read_text_param_t' ******/
-static ObjectMember system_file_read_text_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_read_text_param_t, uri), sizeof(FtString) },
-    { "encoding", FT_MK_OPTIONAL(&system_file_read_text_param_t_member_encoding_opt_type), offsetof(system_file_read_text_param_t, encoding), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_file_readText_succ_cb_callback_type), offsetof(system_file_read_text_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_readText_fail_cb_callback_type), offsetof(system_file_read_text_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_readText_cmpl_cb_callback_type), offsetof(system_file_read_text_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_read_text_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_read_text_param_t, _uri), sizeof(FtString) },
+    { "encoding", FT_MK_OPTIONAL(&file_read_text_param_t_member_encoding_opt_type), offsetof(file_read_text_param_t, _encoding), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&file_readText_success_cb_callback_type), offsetof(file_read_text_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_readText_fail_cb_callback_type), offsetof(file_read_text_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_readText_complete_cb_callback_type), offsetof(file_read_text_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_read_text_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_read_text_param_t) },
-    .members = system_file_read_text_param_t_struct_members
+static const ObjectMapType file_read_text_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_read_text_param_t) },
+    .members = file_read_text_param_t_struct_members
 };
 
-system_file_read_text_param_t* system_fileMallocread_text_param_t () {
-    return (system_file_read_text_param_t*)FeatureMalloc(
-        sizeof(system_file_read_text_param_t), FT_MK_COMPLEX(&system_file_read_text_param_t_struct_type));
+file_read_text_param_t* fileMallocread_text_param_t () {
+    return (file_read_text_param_t*)FeatureMalloc(
+        sizeof(file_read_text_param_t), FT_MK_COMPLEX(&file_read_text_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'readText' ******/
-static const FeatureType system_file_readText_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_read_text_param_t_struct_type),
+static const FeatureType file_readText_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_read_text_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_readText_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_readText) },
-    .parameters = system_file_readText_parameters,
+static const MemberMethod file_readText_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_readText) },
+    .parameters = file_readText_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL struct 'read_arr_buf_succ_t' ******/
-static ObjectMember system_file_read_arr_buf_succ_t_struct_members[] = {
-    { "buffer", FT_ANY_REF, offsetof(system_file_read_arr_buf_succ_t, buffer), sizeof(FtAny) },
+static ObjectMember file_read_arr_buf_succ_t_struct_members[] = {
+    { "buffer", FT_ANY_REF, offsetof(file_read_arr_buf_succ_t, _buffer), sizeof(FtAny) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_read_arr_buf_succ_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_read_arr_buf_succ_t) },
-    .members = system_file_read_arr_buf_succ_t_struct_members
+static const ObjectMapType file_read_arr_buf_succ_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_read_arr_buf_succ_t) },
+    .members = file_read_arr_buf_succ_t_struct_members
 };
 
-system_file_read_arr_buf_succ_t* system_fileMallocread_arr_buf_succ_t () {
-    return (system_file_read_arr_buf_succ_t*)FeatureMalloc(
-        sizeof(system_file_read_arr_buf_succ_t), FT_MK_COMPLEX(&system_file_read_arr_buf_succ_t_struct_type));
+file_read_arr_buf_succ_t* fileMallocread_arr_buf_succ_t () {
+    return (file_read_arr_buf_succ_t*)FeatureMalloc(
+        sizeof(file_read_arr_buf_succ_t), FT_MK_COMPLEX(&file_read_arr_buf_succ_t_struct_type));
 }
 
 
 /****** for JIDL callback 'readArrBuf_succ_cb' ******/
-static const FeatureType system_file_readArrBuf_succ_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_read_arr_buf_succ_t_struct_type),
+static const FeatureType file_readArrBuf_succ_cb_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_read_arr_buf_succ_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType system_file_readArrBuf_succ_cb_callback_type {
+static const CallbackType file_readArrBuf_succ_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_readArrBuf_succ_cb_parameters,
+    .parameters = file_readArrBuf_succ_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'readArrBuf_fail_cb' ******/
-static const FeatureType system_file_readArrBuf_fail_cb_parameters[] = {
+static const FeatureType file_readArrBuf_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_readArrBuf_fail_cb_callback_type {
+static const CallbackType file_readArrBuf_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_readArrBuf_fail_cb_parameters,
+    .parameters = file_readArrBuf_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'readArrBuf_compl_cb' ******/
-static const FeatureType system_file_readArrBuf_compl_cb_parameters[] = {
+static const FeatureType file_readArrBuf_compl_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_readArrBuf_compl_cb_callback_type {
+static const CallbackType file_readArrBuf_compl_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_readArrBuf_compl_cb_parameters,
+    .parameters = file_readArrBuf_compl_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_read_arr_buf_t_member_position_opt_type = {
+static OptionalType file_read_arr_buf_t_member_position_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
     .ival = 0
 };
 
-static OptionalType system_file_read_arr_buf_t_member_length_opt_type = {
+static OptionalType file_read_arr_buf_t_member_length_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_INT,
     .ival = 1
 };
 
 /****** for JIDL struct 'read_arr_buf_t' ******/
-static ObjectMember system_file_read_arr_buf_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_read_arr_buf_t, uri), sizeof(FtString) },
-    { "position", FT_MK_OPTIONAL(&system_file_read_arr_buf_t_member_position_opt_type), offsetof(system_file_read_arr_buf_t, position), sizeof(FtInt) },
-    { "length", FT_MK_OPTIONAL(&system_file_read_arr_buf_t_member_length_opt_type), offsetof(system_file_read_arr_buf_t, length), sizeof(FtInt) },
-    { "success", FT_MK_COMPLEX(&system_file_readArrBuf_succ_cb_callback_type), offsetof(system_file_read_arr_buf_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_readArrBuf_fail_cb_callback_type), offsetof(system_file_read_arr_buf_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_readArrBuf_compl_cb_callback_type), offsetof(system_file_read_arr_buf_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_read_arr_buf_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_read_arr_buf_t, _uri), sizeof(FtString) },
+    { "position", FT_MK_OPTIONAL(&file_read_arr_buf_t_member_position_opt_type), offsetof(file_read_arr_buf_t, _position), sizeof(FtInt) },
+    { "length", FT_MK_OPTIONAL(&file_read_arr_buf_t_member_length_opt_type), offsetof(file_read_arr_buf_t, _length), sizeof(FtInt) },
+    { "success", FT_MK_COMPLEX(&file_readArrBuf_succ_cb_callback_type), offsetof(file_read_arr_buf_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_readArrBuf_fail_cb_callback_type), offsetof(file_read_arr_buf_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_readArrBuf_compl_cb_callback_type), offsetof(file_read_arr_buf_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_read_arr_buf_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_read_arr_buf_t) },
-    .members = system_file_read_arr_buf_t_struct_members
+static const ObjectMapType file_read_arr_buf_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_read_arr_buf_t) },
+    .members = file_read_arr_buf_t_struct_members
 };
 
-system_file_read_arr_buf_t* system_fileMallocread_arr_buf_t () {
-    return (system_file_read_arr_buf_t*)FeatureMalloc(
-        sizeof(system_file_read_arr_buf_t), FT_MK_COMPLEX(&system_file_read_arr_buf_t_struct_type));
+file_read_arr_buf_t* fileMallocread_arr_buf_t () {
+    return (file_read_arr_buf_t*)FeatureMalloc(
+        sizeof(file_read_arr_buf_t), FT_MK_COMPLEX(&file_read_arr_buf_t_struct_type));
 }
 
 
 /****** for JIDL function 'readArrayBuffer' ******/
-static const FeatureType system_file_readArrayBuffer_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_read_arr_buf_t_struct_type),
+static const FeatureType file_readArrayBuffer_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_read_arr_buf_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_readArrayBuffer_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_readArrayBuffer) },
-    .parameters = system_file_readArrayBuffer_parameters,
+static const MemberMethod file_readArrayBuffer_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_readArrayBuffer) },
+    .parameters = file_readArrayBuffer_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'access_succ_cb' ******/
-static const FeatureType system_file_access_succ_cb_parameters[] = {
+/****** for JIDL callback 'access_success_cb' ******/
+static const FeatureType file_access_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_access_succ_cb_callback_type {
+static const CallbackType file_access_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_access_succ_cb_parameters,
+    .parameters = file_access_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'access_fail_cb' ******/
-static const FeatureType system_file_access_fail_cb_parameters[] = {
+static const FeatureType file_access_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_access_fail_cb_callback_type {
+static const CallbackType file_access_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_access_fail_cb_parameters,
+    .parameters = file_access_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'access_compl_cb' ******/
-static const FeatureType system_file_access_compl_cb_parameters[] = {
+static const FeatureType file_access_compl_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_access_compl_cb_callback_type {
+static const CallbackType file_access_compl_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_access_compl_cb_parameters,
+    .parameters = file_access_compl_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL struct 'access_param_t' ******/
-static ObjectMember system_file_access_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_access_param_t, uri), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_file_access_succ_cb_callback_type), offsetof(system_file_access_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_access_fail_cb_callback_type), offsetof(system_file_access_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_access_compl_cb_callback_type), offsetof(system_file_access_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_access_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_access_param_t, _uri), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&file_access_success_cb_callback_type), offsetof(file_access_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_access_fail_cb_callback_type), offsetof(file_access_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_access_compl_cb_callback_type), offsetof(file_access_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_access_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_access_param_t) },
-    .members = system_file_access_param_t_struct_members
+static const ObjectMapType file_access_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_access_param_t) },
+    .members = file_access_param_t_struct_members
 };
 
-system_file_access_param_t* system_fileMallocaccess_param_t () {
-    return (system_file_access_param_t*)FeatureMalloc(
-        sizeof(system_file_access_param_t), FT_MK_COMPLEX(&system_file_access_param_t_struct_type));
+file_access_param_t* fileMallocaccess_param_t () {
+    return (file_access_param_t*)FeatureMalloc(
+        sizeof(file_access_param_t), FT_MK_COMPLEX(&file_access_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'access' ******/
-static const FeatureType system_file_access_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_access_param_t_struct_type),
+static const FeatureType file_access_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_access_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_access_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_access) },
-    .parameters = system_file_access_parameters,
+static const MemberMethod file_access_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_access) },
+    .parameters = file_access_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'mkdir_succ_cb' ******/
-static const FeatureType system_file_mkdir_succ_cb_parameters[] = {
+/****** for JIDL callback 'mkdir_success_cb' ******/
+static const FeatureType file_mkdir_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_mkdir_succ_cb_callback_type {
+static const CallbackType file_mkdir_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_mkdir_succ_cb_parameters,
+    .parameters = file_mkdir_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'mkdir_fail_cb' ******/
-static const FeatureType system_file_mkdir_fail_cb_parameters[] = {
+static const FeatureType file_mkdir_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_mkdir_fail_cb_callback_type {
+static const CallbackType file_mkdir_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_mkdir_fail_cb_parameters,
+    .parameters = file_mkdir_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'mkdir_compl_cb' ******/
-static const FeatureType system_file_mkdir_compl_cb_parameters[] = {
+static const FeatureType file_mkdir_compl_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_mkdir_compl_cb_callback_type {
+static const CallbackType file_mkdir_compl_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_mkdir_compl_cb_parameters,
+    .parameters = file_mkdir_compl_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_mkdir_param_t_member_recursive_opt_type = {
+static OptionalType file_mkdir_param_t_member_recursive_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = false
 };
 
 /****** for JIDL struct 'mkdir_param_t' ******/
-static ObjectMember system_file_mkdir_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_mkdir_param_t, uri), sizeof(FtString) },
-    { "recursive", FT_MK_OPTIONAL(&system_file_mkdir_param_t_member_recursive_opt_type), offsetof(system_file_mkdir_param_t, recursive), sizeof(FtBool) },
-    { "success", FT_MK_COMPLEX(&system_file_mkdir_succ_cb_callback_type), offsetof(system_file_mkdir_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_mkdir_fail_cb_callback_type), offsetof(system_file_mkdir_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_mkdir_compl_cb_callback_type), offsetof(system_file_mkdir_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_mkdir_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_mkdir_param_t, _uri), sizeof(FtString) },
+    { "recursive", FT_MK_OPTIONAL(&file_mkdir_param_t_member_recursive_opt_type), offsetof(file_mkdir_param_t, _recursive), sizeof(FtBool) },
+    { "success", FT_MK_COMPLEX(&file_mkdir_success_cb_callback_type), offsetof(file_mkdir_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_mkdir_fail_cb_callback_type), offsetof(file_mkdir_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_mkdir_compl_cb_callback_type), offsetof(file_mkdir_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_mkdir_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_mkdir_param_t) },
-    .members = system_file_mkdir_param_t_struct_members
+static const ObjectMapType file_mkdir_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_mkdir_param_t) },
+    .members = file_mkdir_param_t_struct_members
 };
 
-system_file_mkdir_param_t* system_fileMallocmkdir_param_t () {
-    return (system_file_mkdir_param_t*)FeatureMalloc(
-        sizeof(system_file_mkdir_param_t), FT_MK_COMPLEX(&system_file_mkdir_param_t_struct_type));
+file_mkdir_param_t* fileMallocmkdir_param_t () {
+    return (file_mkdir_param_t*)FeatureMalloc(
+        sizeof(file_mkdir_param_t), FT_MK_COMPLEX(&file_mkdir_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'mkdir' ******/
-static const FeatureType system_file_mkdir_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_mkdir_param_t_struct_type),
+static const FeatureType file_mkdir_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_mkdir_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_mkdir_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_mkdir) },
-    .parameters = system_file_mkdir_parameters,
+static const MemberMethod file_mkdir_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_mkdir) },
+    .parameters = file_mkdir_parameters,
     .return_type = FT_VOID,
 };
 
 
-/****** for JIDL callback 'rmdir_succ_cb' ******/
-static const FeatureType system_file_rmdir_succ_cb_parameters[] = {
+/****** for JIDL callback 'rmdir_success_cb' ******/
+static const FeatureType file_rmdir_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_rmdir_succ_cb_callback_type {
+static const CallbackType file_rmdir_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_rmdir_succ_cb_parameters,
+    .parameters = file_rmdir_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'rmdir_fail_cb' ******/
-static const FeatureType system_file_rmdir_fail_cb_parameters[] = {
+static const FeatureType file_rmdir_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_file_rmdir_fail_cb_callback_type {
+static const CallbackType file_rmdir_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_rmdir_fail_cb_parameters,
+    .parameters = file_rmdir_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'rmdir_cmpl_cb' ******/
-static const FeatureType system_file_rmdir_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'rmdir_compl_cb' ******/
+static const FeatureType file_rmdir_compl_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_file_rmdir_cmpl_cb_callback_type {
+static const CallbackType file_rmdir_compl_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_file_rmdir_cmpl_cb_parameters,
+    .parameters = file_rmdir_compl_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_file_rmdir_param_t_member_recursive_opt_type = {
+static OptionalType file_rmdir_param_t_member_recursive_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = false
 };
 
 /****** for JIDL struct 'rmdir_param_t' ******/
-static ObjectMember system_file_rmdir_param_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_file_rmdir_param_t, uri), sizeof(FtString) },
-    { "recursive", FT_MK_OPTIONAL(&system_file_rmdir_param_t_member_recursive_opt_type), offsetof(system_file_rmdir_param_t, recursive), sizeof(FtBool) },
-    { "success", FT_MK_COMPLEX(&system_file_rmdir_succ_cb_callback_type), offsetof(system_file_rmdir_param_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_file_rmdir_fail_cb_callback_type), offsetof(system_file_rmdir_param_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_file_rmdir_cmpl_cb_callback_type), offsetof(system_file_rmdir_param_t, complete), sizeof(FtCallbackId) },
+static ObjectMember file_rmdir_param_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(file_rmdir_param_t, _uri), sizeof(FtString) },
+    { "recursive", FT_MK_OPTIONAL(&file_rmdir_param_t_member_recursive_opt_type), offsetof(file_rmdir_param_t, _recursive), sizeof(FtBool) },
+    { "success", FT_MK_COMPLEX(&file_rmdir_success_cb_callback_type), offsetof(file_rmdir_param_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&file_rmdir_fail_cb_callback_type), offsetof(file_rmdir_param_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&file_rmdir_compl_cb_callback_type), offsetof(file_rmdir_param_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_rmdir_param_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_rmdir_param_t) },
-    .members = system_file_rmdir_param_t_struct_members
+static const ObjectMapType file_rmdir_param_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(file_rmdir_param_t) },
+    .members = file_rmdir_param_t_struct_members
 };
 
-system_file_rmdir_param_t* system_fileMallocrmdir_param_t () {
-    return (system_file_rmdir_param_t*)FeatureMalloc(
-        sizeof(system_file_rmdir_param_t), FT_MK_COMPLEX(&system_file_rmdir_param_t_struct_type));
+file_rmdir_param_t* fileMallocrmdir_param_t () {
+    return (file_rmdir_param_t*)FeatureMalloc(
+        sizeof(file_rmdir_param_t), FT_MK_COMPLEX(&file_rmdir_param_t_struct_type));
 }
 
 
 /****** for JIDL function 'rmdir' ******/
-static const FeatureType system_file_rmdir_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_file_rmdir_param_t_struct_type),
+static const FeatureType file_rmdir_parameters[] = {
+    FT_MK_COMPLEX_REF(&file_rmdir_param_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_file_rmdir_member_method = {
-    .func = { .callback = FFI_FN(system_file_wrap_rmdir) },
-    .parameters = system_file_rmdir_parameters,
+static const MemberMethod file_rmdir_member_method = {
+    .func = { .callback = FFI_FN(file_wrap_rmdir) },
+    .parameters = file_rmdir_parameters,
     .return_type = FT_VOID,
 };
 
 
 // members
-static const Member system_file_members[] = {
+static const Member file_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "move",
-        .method = system_file_move_member_method,
+        .method = file_move_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "copy",
-        .method = system_file_copy_member_method,
+        .method = file_copy_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "list",
-        .method = system_file_list_member_method,
+        .method = file_list_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "get",
-        .method = system_file_get_member_method,
+        .method = file_get_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "delete",
-        .method = system_file_delete_member_method,
+        .method = file_delete_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "writeText",
-        .method = system_file_writeText_member_method,
+        .method = file_writeText_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "writeArrayBuffer",
-        .method = system_file_writeArrayBuffer_member_method,
+        .method = file_writeArrayBuffer_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "readText",
-        .method = system_file_readText_member_method,
+        .method = file_readText_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "readArrayBuffer",
-        .method = system_file_readArrayBuffer_member_method,
+        .method = file_readArrayBuffer_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "access",
-        .method = system_file_access_member_method,
+        .method = file_access_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "mkdir",
-        .method = system_file_mkdir_member_method,
+        .method = file_mkdir_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "rmdir",
-        .method = system_file_rmdir_member_method,
+        .method = file_rmdir_member_method,
     },
 };
 
 // callbacks
-static const struct FeatureCallbacks system_file_callbacks {
-    system_file_onRegister,
-    system_file_onCreate,
-    system_file_onRequired,
-    system_file_onDetached,
-    system_file_onDestroy,
-    system_file_onUnregister
+static const struct FeatureCallbacks file_callbacks {
+    file_onRegister,
+    file_onCreate,
+    file_onRequired,
+    file_onDetached,
+    file_onDestroy,
+    file_onUnregister
 };
 
-static const FeatureDescription system_file_desc = {
+static const FeatureDescription file_desc = {
     .version = 1,
-    .name = "system.file",
-    .description = "system.file",
+    .name = "file",
+    .description = "file",
     { .dynamic = false },
-    .native_callbacks = &system_file_callbacks,
-    .member_count = countof(system_file_members),
-    .members = system_file_members,
+    .native_callbacks = &file_callbacks,
+    .member_count = countof(file_members),
+    .members = file_members,
 };
 
-QAPPFEATURE_INIT(system_file)
+QAPPFEATURE_INIT(file)
 {
-    return mgr->registerFeature(features, &system_file_desc);
+    return mgr->registerFeature(features, &file_desc);
 }
 /* clang-format on */

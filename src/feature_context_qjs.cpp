@@ -20,12 +20,11 @@
 #include <malloc.h>
 #include <stdio.h>
 
-#define MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, func, val, ft_type) \
+#define MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, func, val) \
     do {                                                                 \
         JSContext* js_ctx = GET_QJS_CTX(ft_ctx);                         \
         qjs_val_t ret;                                                   \
         ret.js_val = func(js_ctx, val);                                  \
-        ret.type = ft_type;                                              \
         return QJS_VAL_TO_FT(ret);                                       \
     } while (false)
 
@@ -41,7 +40,6 @@
                 return QJS_VAL_TO_FT(ret);                             \
         }                                                              \
         ret.js_val = array;                                            \
-        ret.type = FT_TYPE_ARRAY;                                      \
         return QJS_VAL_TO_FT(ret);                                     \
     } while (false)
 
@@ -84,37 +82,37 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
 // value creation
 static ft_value_t _ft_int(ft_context_ref ft_ctx, int32_t val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewInt32, val, FT_TYPE_NUMBER);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewInt32, val);
 }
 
 static ft_value_t _ft_uint(ft_context_ref ft_ctx, uint32_t val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewUint32, val, FT_TYPE_NUMBER);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewUint32, val);
 }
 
 static ft_value_t _ft_int64(ft_context_ref ft_ctx, int64_t val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewInt64, val, FT_TYPE_NUMBER);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewInt64, val);
 }
 
 static ft_value_t _ft_uint64(ft_context_ref ft_ctx, uint64_t val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewBigUint64, val, FT_TYPE_NUMBER);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewBigUint64, val);
 }
 
 static ft_value_t _ft_double(ft_context_ref ft_ctx, double val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewFloat64, val, FT_TYPE_NUMBER);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewFloat64, val);
 }
 
 static ft_value_t _ft_boolean(ft_context_ref ft_ctx, bool val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewBool, val, FT_TYPE_BOOL);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewBool, val);
 }
 
 static ft_value_t _ft_string(ft_context_ref ft_ctx, const char* val)
 {
-    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewString, val, FT_TYPE_STRING);
+    MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewString, val);
 }
 
 static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size)
@@ -122,7 +120,6 @@ static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
     ret.js_val = JS_NewArrayBufferCopy(js_ctx, buff, size);
-    ret.type = FT_TYPE_BUFFER;
     return QJS_VAL_TO_FT(ret);
 }
 
@@ -144,7 +141,6 @@ static ft_value_t _ft_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32
     JSValueConst uint8array_ctr = JS_GetPropertyStr(js_ctx, global, type_names[type]);
     JSValue args[1] = { array_buffer };
     ret.js_val =  JS_CallConstructor(js_ctx, uint8array_ctr, 1, args);
-    ret.type = FT_TYPE_TYPED_BUFFER;
     JS_FreeValue(js_ctx, array_buffer);
     return QJS_VAL_TO_FT(ret);
 }
@@ -188,7 +184,6 @@ static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t 
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
-    ret.type = FT_TYPE_NONE;
     ret.js_val = JS_UNDEFINED;
     JSValue obj = JS_ParseJSON(js_ctx, buf, buf_len, filename);
     if (JS_IsException(obj)) {
@@ -196,7 +191,6 @@ static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t 
         return QJS_VAL_TO_FT(ret);
     }
     ret.js_val = obj;
-    ret.type = FT_TYPE_STRING;
     return QJS_VAL_TO_FT(ret);
 }
 

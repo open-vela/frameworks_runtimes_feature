@@ -77,6 +77,11 @@ bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative);
 bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, size_t* psize);
 
 // to target values
+static inline bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget) {
+    *ptarget = FT_VAL_GET_JS_VAL(native);
+    return true;
+}
+
 static inline bool toTarget(JSContext* ctx, int32_t native, JSValue* ptarget) {
     *ptarget = JS_NewInt32(ctx, native);
     return true;
@@ -197,6 +202,22 @@ static inline JSValue ftValToTarget(ft_value_t& ft_val)
 {
     qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
     return qjs_val->js_val;
+}
+
+static inline ft_value_t nullFtVal()
+{
+    ft_value_t ft_val;
+    qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
+    qjs_val->js_val = JS_NULL;
+    return ft_val;
+}
+
+static inline ft_value_t undefinedFtVal()
+{
+    ft_value_t ft_val;
+    qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
+    qjs_val->js_val = JS_UNDEFINED;
+    return ft_val;
 }
 
 }

@@ -28,282 +28,282 @@
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
 /****** for JIDL struct 'notify_data_t' ******/
-static ObjectMember system_request_notify_data_t_struct_members[] = {
-    { "result", FT_INT, offsetof(system_request_notify_data_t, result), sizeof(FtInt) },
-    { "percent", FT_INT, offsetof(system_request_notify_data_t, percent), sizeof(FtInt) },
+static ObjectMember request_notify_data_t_struct_members[] = {
+    { "result", FT_INT, offsetof(request_notify_data_t, _result), sizeof(FtInt) },
+    { "percent", FT_INT, offsetof(request_notify_data_t, _percent), sizeof(FtInt) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_request_notify_data_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_request_notify_data_t) },
-    .members = system_request_notify_data_t_struct_members
+static const ObjectMapType request_notify_data_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(request_notify_data_t) },
+    .members = request_notify_data_t_struct_members
 };
 
-system_request_notify_data_t* system_requestMallocnotify_data_t () {
-    return (system_request_notify_data_t*)FeatureMalloc(
-        sizeof(system_request_notify_data_t), FT_MK_COMPLEX(&system_request_notify_data_t_struct_type));
+request_notify_data_t* requestMallocnotify_data_t () {
+    return (request_notify_data_t*)FeatureMalloc(
+        sizeof(request_notify_data_t), FT_MK_COMPLEX(&request_notify_data_t_struct_type));
 }
 
 
 /****** for JIDL struct 'download_succ_t' ******/
-static ObjectMember system_request_download_succ_t_struct_members[] = {
-    { "token", FT_STRING, offsetof(system_request_download_succ_t, token), sizeof(FtString) },
+static ObjectMember request_download_succ_t_struct_members[] = {
+    { "token", FT_STRING, offsetof(request_download_succ_t, _token), sizeof(FtString) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_request_download_succ_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_request_download_succ_t) },
-    .members = system_request_download_succ_t_struct_members
+static const ObjectMapType request_download_succ_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(request_download_succ_t) },
+    .members = request_download_succ_t_struct_members
 };
 
-system_request_download_succ_t* system_requestMallocdownload_succ_t () {
-    return (system_request_download_succ_t*)FeatureMalloc(
-        sizeof(system_request_download_succ_t), FT_MK_COMPLEX(&system_request_download_succ_t_struct_type));
+request_download_succ_t* requestMallocdownload_succ_t () {
+    return (request_download_succ_t*)FeatureMalloc(
+        sizeof(request_download_succ_t), FT_MK_COMPLEX(&request_download_succ_t_struct_type));
 }
 
 
 /****** for JIDL callback 'download_notify_cb' ******/
-static const FeatureType system_request_download_notify_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_request_notify_data_t_struct_type),
+static const FeatureType request_download_notify_cb_parameters[] = {
+    FT_MK_COMPLEX_REF(&request_notify_data_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType system_request_download_notify_cb_callback_type {
+static const CallbackType request_download_notify_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_download_notify_cb_parameters,
+    .parameters = request_download_notify_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'download_succ_cb' ******/
-static const FeatureType system_request_download_succ_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_request_download_succ_t_struct_type),
+/****** for JIDL callback 'download_success_cb' ******/
+static const FeatureType request_download_success_cb_parameters[] = {
+    FT_MK_COMPLEX_REF(&request_download_succ_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType system_request_download_succ_cb_callback_type {
+static const CallbackType request_download_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_download_succ_cb_parameters,
+    .parameters = request_download_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'download_fail_cb' ******/
-static const FeatureType system_request_download_fail_cb_parameters[] = {
+static const FeatureType request_download_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType system_request_download_fail_cb_callback_type {
+static const CallbackType request_download_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_download_fail_cb_parameters,
+    .parameters = request_download_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'download_cmpl_cb' ******/
-static const FeatureType system_request_download_cmpl_cb_parameters[] = {
+/****** for JIDL callback 'download_complete_cb' ******/
+static const FeatureType request_download_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_request_download_cmpl_cb_callback_type {
+static const CallbackType request_download_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_download_cmpl_cb_parameters,
+    .parameters = request_download_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType system_request_download_t_member_share_opt_type = {
+static OptionalType request_download_t_member_share_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = true
 };
 
 /****** for JIDL struct 'download_t' ******/
-static ObjectMember system_request_download_t_struct_members[] = {
-    { "url", FT_STRING, offsetof(system_request_download_t, url), sizeof(FtString) },
-    { "header", FT_ANY_REF, offsetof(system_request_download_t, header), sizeof(FtAny) },
-    { "filename", FT_ANY_REF, offsetof(system_request_download_t, filename), sizeof(FtAny) },
-    { "share", FT_MK_OPTIONAL(&system_request_download_t_member_share_opt_type), offsetof(system_request_download_t, share), sizeof(FtBool) },
-    { "onDownLoadNotify", FT_MK_COMPLEX(&system_request_download_notify_cb_callback_type), offsetof(system_request_download_t, onDownLoadNotify), sizeof(FtCallbackId) },
-    { "success", FT_MK_COMPLEX(&system_request_download_succ_cb_callback_type), offsetof(system_request_download_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_request_download_fail_cb_callback_type), offsetof(system_request_download_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_request_download_cmpl_cb_callback_type), offsetof(system_request_download_t, complete), sizeof(FtCallbackId) },
+static ObjectMember request_download_t_struct_members[] = {
+    { "url", FT_STRING, offsetof(request_download_t, _url), sizeof(FtString) },
+    { "header", FT_ANY_REF, offsetof(request_download_t, _header), sizeof(FtAny) },
+    { "filename", FT_ANY_REF, offsetof(request_download_t, _filename), sizeof(FtAny) },
+    { "share", FT_MK_OPTIONAL(&request_download_t_member_share_opt_type), offsetof(request_download_t, _share), sizeof(FtBool) },
+    { "onDownLoadNotify", FT_MK_COMPLEX(&request_download_notify_cb_callback_type), offsetof(request_download_t, _onDownLoadNotify), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX(&request_download_success_cb_callback_type), offsetof(request_download_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&request_download_fail_cb_callback_type), offsetof(request_download_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&request_download_complete_cb_callback_type), offsetof(request_download_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_request_download_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_request_download_t) },
-    .members = system_request_download_t_struct_members
+static const ObjectMapType request_download_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(request_download_t) },
+    .members = request_download_t_struct_members
 };
 
-system_request_download_t* system_requestMallocdownload_t () {
-    return (system_request_download_t*)FeatureMalloc(
-        sizeof(system_request_download_t), FT_MK_COMPLEX(&system_request_download_t_struct_type));
+request_download_t* requestMallocdownload_t () {
+    return (request_download_t*)FeatureMalloc(
+        sizeof(request_download_t), FT_MK_COMPLEX(&request_download_t_struct_type));
 }
 
 
 /****** for JIDL function 'download' ******/
-static const FeatureType system_request_download_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_request_download_t_struct_type),
+static const FeatureType request_download_parameters[] = {
+    FT_MK_COMPLEX_REF(&request_download_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_request_download_member_method = {
-    .func = { .callback = FFI_FN(system_request_wrap_download) },
-    .parameters = system_request_download_parameters,
+static const MemberMethod request_download_member_method = {
+    .func = { .callback = FFI_FN(request_wrap_download) },
+    .parameters = request_download_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL struct 'dl_cmpl_succ_t' ******/
-static ObjectMember system_request_dl_cmpl_succ_t_struct_members[] = {
-    { "uri", FT_STRING, offsetof(system_request_dl_cmpl_succ_t, uri), sizeof(FtString) },
+static ObjectMember request_dl_cmpl_succ_t_struct_members[] = {
+    { "uri", FT_STRING, offsetof(request_dl_cmpl_succ_t, _uri), sizeof(FtString) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_request_dl_cmpl_succ_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_request_dl_cmpl_succ_t) },
-    .members = system_request_dl_cmpl_succ_t_struct_members
+static const ObjectMapType request_dl_cmpl_succ_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(request_dl_cmpl_succ_t) },
+    .members = request_dl_cmpl_succ_t_struct_members
 };
 
-system_request_dl_cmpl_succ_t* system_requestMallocdl_cmpl_succ_t () {
-    return (system_request_dl_cmpl_succ_t*)FeatureMalloc(
-        sizeof(system_request_dl_cmpl_succ_t), FT_MK_COMPLEX(&system_request_dl_cmpl_succ_t_struct_type));
+request_dl_cmpl_succ_t* requestMallocdl_cmpl_succ_t () {
+    return (request_dl_cmpl_succ_t*)FeatureMalloc(
+        sizeof(request_dl_cmpl_succ_t), FT_MK_COMPLEX(&request_dl_cmpl_succ_t_struct_type));
 }
 
 
-/****** for JIDL callback 'dl_cmpl_succ_cb' ******/
-static const FeatureType system_request_dl_cmpl_succ_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_request_dl_cmpl_succ_t_struct_type),
+/****** for JIDL callback 'dl_compl_succ_cb' ******/
+static const FeatureType request_dl_compl_succ_cb_parameters[] = {
+    FT_MK_COMPLEX_REF(&request_dl_cmpl_succ_t_struct_type),
     FT_PARAM_END
 };
 
-static const CallbackType system_request_dl_cmpl_succ_cb_callback_type {
+static const CallbackType request_dl_compl_succ_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_dl_cmpl_succ_cb_parameters,
+    .parameters = request_dl_compl_succ_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'dl_cmpl_fail_cb' ******/
-static const FeatureType system_request_dl_cmpl_fail_cb_parameters[] = {
+/****** for JIDL callback 'dl_compl_fail_cb' ******/
+static const FeatureType request_dl_compl_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT64,
     FT_PARAM_END
 };
 
-static const CallbackType system_request_dl_cmpl_fail_cb_callback_type {
+static const CallbackType request_dl_compl_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_dl_cmpl_fail_cb_parameters,
+    .parameters = request_dl_compl_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-/****** for JIDL callback 'dl_cmpl_cmpl' ******/
-static const FeatureType system_request_dl_cmpl_cmpl_parameters[] = {
+/****** for JIDL callback 'dl_compl_compl_cb' ******/
+static const FeatureType request_dl_compl_compl_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_request_dl_cmpl_cmpl_callback_type {
+static const CallbackType request_dl_compl_compl_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_request_dl_cmpl_cmpl_parameters,
+    .parameters = request_dl_compl_compl_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL struct 'dl_cmpl_t' ******/
-static ObjectMember system_request_dl_cmpl_t_struct_members[] = {
-    { "token", FT_STRING, offsetof(system_request_dl_cmpl_t, token), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_request_dl_cmpl_succ_cb_callback_type), offsetof(system_request_dl_cmpl_t, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_request_dl_cmpl_fail_cb_callback_type), offsetof(system_request_dl_cmpl_t, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_request_dl_cmpl_cmpl_callback_type), offsetof(system_request_dl_cmpl_t, complete), sizeof(FtCallbackId) },
+static ObjectMember request_dl_cmpl_t_struct_members[] = {
+    { "token", FT_STRING, offsetof(request_dl_cmpl_t, _token), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&request_dl_compl_succ_cb_callback_type), offsetof(request_dl_cmpl_t, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&request_dl_compl_fail_cb_callback_type), offsetof(request_dl_cmpl_t, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&request_dl_compl_compl_cb_callback_type), offsetof(request_dl_cmpl_t, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_request_dl_cmpl_t_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_request_dl_cmpl_t) },
-    .members = system_request_dl_cmpl_t_struct_members
+static const ObjectMapType request_dl_cmpl_t_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(request_dl_cmpl_t) },
+    .members = request_dl_cmpl_t_struct_members
 };
 
-system_request_dl_cmpl_t* system_requestMallocdl_cmpl_t () {
-    return (system_request_dl_cmpl_t*)FeatureMalloc(
-        sizeof(system_request_dl_cmpl_t), FT_MK_COMPLEX(&system_request_dl_cmpl_t_struct_type));
+request_dl_cmpl_t* requestMallocdl_cmpl_t () {
+    return (request_dl_cmpl_t*)FeatureMalloc(
+        sizeof(request_dl_cmpl_t), FT_MK_COMPLEX(&request_dl_cmpl_t_struct_type));
 }
 
 
 /****** for JIDL function 'onDownloadComplete' ******/
-static const FeatureType system_request_onDownloadComplete_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_request_dl_cmpl_t_struct_type),
+static const FeatureType request_onDownloadComplete_parameters[] = {
+    FT_MK_COMPLEX_REF(&request_dl_cmpl_t_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod system_request_onDownloadComplete_member_method = {
-    .func = { .callback = FFI_FN(system_request_wrap_onDownloadComplete) },
-    .parameters = system_request_onDownloadComplete_parameters,
+static const MemberMethod request_onDownloadComplete_member_method = {
+    .func = { .callback = FFI_FN(request_wrap_onDownloadComplete) },
+    .parameters = request_onDownloadComplete_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'print' ******/
-static const FeatureType system_request_print_parameters[] = {
+static const FeatureType request_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
-static const MemberMethod system_request_print_member_method = {
-    .func = { .callback = FFI_FN(system_request_wrap_print) },
-    .parameters = system_request_print_parameters,
+static const MemberMethod request_print_member_method = {
+    .func = { .callback = FFI_FN(request_wrap_print) },
+    .parameters = request_print_parameters,
     .return_type = FT_VOID,
 };
 
 
 // members
-static const Member system_request_members[] = {
+static const Member request_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "download",
-        .method = system_request_download_member_method,
+        .method = request_download_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "onDownloadComplete",
-        .method = system_request_onDownloadComplete_member_method,
+        .method = request_onDownloadComplete_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "print",
-        .method = system_request_print_member_method,
+        .method = request_print_member_method,
     },
 };
 
 // callbacks
-static const struct FeatureCallbacks system_request_callbacks {
-    system_request_onRegister,
-    system_request_onCreate,
-    system_request_onRequired,
-    system_request_onDetached,
-    system_request_onDestroy,
-    system_request_onUnregister
+static const struct FeatureCallbacks request_callbacks {
+    request_onRegister,
+    request_onCreate,
+    request_onRequired,
+    request_onDetached,
+    request_onDestroy,
+    request_onUnregister
 };
 
-static const FeatureDescription system_request_desc = {
+static const FeatureDescription request_desc = {
     .version = 1,
-    .name = "system.request",
-    .description = "system.request",
+    .name = "request",
+    .description = "request",
     { .dynamic = false },
-    .native_callbacks = &system_request_callbacks,
-    .member_count = countof(system_request_members),
-    .members = system_request_members,
+    .native_callbacks = &request_callbacks,
+    .member_count = countof(request_members),
+    .members = request_members,
 };
 
-QAPPFEATURE_INIT(system_request)
+QAPPFEATURE_INIT(request)
 {
-    return mgr->registerFeature(features, &system_request_desc);
+    return mgr->registerFeature(features, &request_desc);
 }
 /* clang-format on */

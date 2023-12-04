@@ -731,7 +731,7 @@ bool convertValueToTarget(FeatureInstance* instance, FeatureType ftype,
             } break;
             case FT_ANY: {
                 if (!pnative) {
-                    ft_value_t null_val = { 0 };
+                    ft_value_t null_val = value_translator::nullFtVal();
                     nativeToTarget<ft_value_t>(ctx, &null_val, target);
                 } else {
                     nativeToTarget<ft_value_t>(ctx, pnative, target);
