@@ -132,7 +132,7 @@ int getValueSize(FeatureType featureType)
  * @param description
  */
 FeaturePrototype::FeaturePrototype(const FeatureDescription* feature_desc)
-    : native(nullptr)
+    : native_(nullptr)
     , description(const_cast<FeatureDescription*>(feature_desc))
 {
     // default capacity as 10 element
