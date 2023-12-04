@@ -52,7 +52,6 @@ class FeatureInstance;
 class FeaturePrototype {
 public:
     std::vector<std::unique_ptr<FeatureInstance>> instances;
-    void* native; // the native feature object instance pointer
     ft_value_t ft_proto; // ft prototype object, it's undefined at first
     FeatureDescription* description; // description pointer, used for feature management logic
     struct weakref_list_node weak_ref_list; // weak ref list, used to release all weak ref when prototype is destroyed
@@ -106,7 +105,12 @@ public:
 
     FeatureManager* getFeatureManager() const { return feature_manager_; }
 
+    void setNative(void* native) { native_ = native; }
+
+    void* native() { return native_; }
+
 private:
+    void* native_ = nullptr;
     FeatureManager* feature_manager_ = nullptr;
 };
 

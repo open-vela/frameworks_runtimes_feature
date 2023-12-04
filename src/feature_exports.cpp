@@ -131,24 +131,24 @@ FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
 void* FeatureGetProtoData(FeatureProtoHandle handle)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
-    return proto->native;
+    return proto->native();
 }
 
 void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
 {
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
-    proto->native = data;
+    proto->setNative(data);
 }
 
 void* FeatureGetObjectData(FeatureInstanceHandle handle)
 {
-    return static_cast<FeatureInstance*>(handle)->native;
+    return static_cast<FeatureInstance*>(handle)->native();
 }
 
 void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 {
     auto instance = static_cast<FeatureInstance*>(handle);
-    instance->native = data;
+    instance->setNative(data);
 }
 
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)

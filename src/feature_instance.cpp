@@ -24,10 +24,11 @@ namespace ferry {
 
 /////////////////////////////////////////////////
 FeatureInstance::FeatureInstance(FeaturePrototype* proto, VTable* vtable)
-    : native(nullptr)
-    , proto_(proto)
-    , instance_id_(-1)
+    : instance_id_(-1)
     , vtable_(vtable)
+    , native_(nullptr)
+    , parent_(nullptr)
+    , proto_(proto)
 {
 }
 

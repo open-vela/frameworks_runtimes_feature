@@ -40,6 +40,7 @@ public:
     virtual ~FeatureInstance();
 
     virtual FeatureInstance* createInterface(VTable* vtable) = 0;
+
     /**
      * @brief remove callback from instance vai FtCallbackId
      *
@@ -56,13 +57,21 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count) = 0;
 
-    void setInstanceId(int instance_id) { instance_id_ = instance_id; }
-
     int instanceId() { return instance_id_; }
+
+    void setInstanceId(int instance_id) { instance_id_ = instance_id; }
 
     FeaturePrototype* prototype() { return proto_; }
 
     void setPrototype(FeaturePrototype* proto) { proto_ = proto; }
+
+    void* native() { return native_; }
+
+    void setNative(void* native) { native_ = native; }
+
+    FeatureInstance* parent() { return parent_; }
+
+    void setParent(FeatureInstance* parent) { parent_ = parent; }
 
     NativeFunc getVirtualFunction(int index) const
     {
@@ -70,8 +79,6 @@ public:
             return nullptr;
         return vtable_->members[index];
     }
-
-    void* native;
 
     typedef void (*dtor_func)(FeatureInstance*);
 
@@ -82,11 +89,12 @@ public:
     void sendAsnyc();
 
 private:
-    FeaturePrototype* proto_;
 
     int instance_id_; // the instance id, order in instances aray.
-    VTable* vtable_; // vtable
-
+    VTable* vtable_;
+    void* native_;
+    FeatureInstance* parent_;
+    FeaturePrototype* proto_;
     std::queue<TaskData> task_queue_;
 };
 

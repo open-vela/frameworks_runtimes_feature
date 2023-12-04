@@ -40,8 +40,9 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, VTable* vtable)
 
 FeatureInstance* FeatureInstanceQjs::createInterface(VTable* vtable)
 {
-    // null param proto to be fixed
-    return new FeatureInstanceQjs(prototype(), vtable);
+    FeatureInstance* ret = new FeatureInstanceQjs(prototype(), vtable);
+    ret->setParent(this);
+    return ret;
 }
 
 void FeatureInstanceQjs::setVmObject(feature_value_t vm_object)

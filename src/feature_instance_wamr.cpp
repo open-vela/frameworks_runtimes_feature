@@ -77,8 +77,9 @@ FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto, VTable* vtable
 
 FeatureInstance* FeatureInstanceWamr::createInterface(VTable* vtable)
 {
-    // null param proto to be fixed
-    return new FeatureInstanceWamr(prototype(), vtable);
+    FeatureInstance* ret = new FeatureInstanceWamr(prototype(), vtable);
+    ret->setParent(this);
+    return ret;
 }
 
 FeatureInstanceWamr::~FeatureInstanceWamr()
