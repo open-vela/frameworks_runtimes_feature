@@ -196,4 +196,23 @@ void FeaturePrototype::clearAllInstances()
     instances.clear();
 }
 
+FeaturePrototype* FeaturePrototype::getChild(const char* name) {
+    if (!children_.count(name))
+        return nullptr;
+    return children_[name];
+}
+
+void FeaturePrototype::addChild(const char* name, FeaturePrototype* child) {
+    children_[name] = child;
+}
+
+FeaturePrototype* FeaturePrototype::removeChild(const char* name) {
+    if (!children_.count(name))
+        return nullptr;
+
+    FeaturePrototype* child = children_[name];
+    children_.erase(name);
+    return child;
+}
+
 }

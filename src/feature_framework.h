@@ -109,9 +109,18 @@ public:
 
     void* native() { return native_; }
 
+    FeaturePrototype* getChild(const char* name);
+
+    void addChild(const char* name, FeaturePrototype* child);
+
+    FeaturePrototype* removeChild(const char* name);
+
+    std::map<const char*, FeaturePrototype*>& children() { return children_; }
+
 private:
     void* native_ = nullptr;
     FeatureManager* feature_manager_ = nullptr;
+    std::map<const char*, FeaturePrototype*> children_; // all interface instance prototype
 };
 
 /**

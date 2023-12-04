@@ -594,6 +594,10 @@ FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
 {
 }
 
+FeatureManagerQjs::~FeatureManagerQjs()
+{
+}
+
 bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototype* prototype)
 {
     auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
@@ -618,7 +622,7 @@ bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototype* prototype)
     return true;
 }
 
-feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototype* prototype, FeatureInstanceQjs* instance)
+feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototype* prototype, FeatureInstance* instance)
 {
     ft_context_ref ft_ctx = getFeatureContext();
     auto ctx = (feature_context_ref)ft_context_get_data(ft_ctx);
@@ -684,6 +688,37 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
         description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());
     }
     return js_instance;
+}
+
+feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interface, const FeatureDescription* description) {
+    FEATURE_CHECK_NE(interface, nullptr);
+    FEATURE_CHECK_NE(description, nullptr);
+    // save interface prototype in parent instance
+    auto unique_interface= std::unique_ptr<FeatureInstanceQjs>(static_cast<FeatureInstanceQjs*>(interface));
+    auto parent = unique_interface->parent();
+    FEATURE_CHECK_NE(parent, nullptr);
+
+    FeaturePrototype* child_proto = parent->prototype()->getChild(description->name);
+    if (!child_proto) {
+        // create prototype for this interface
+        child_proto = new FeaturePrototype(description);
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(child_proto->ft_proto);
+        *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        FEATURE_CHECK_NE(child_proto, nullptr);
+        child_proto->setFeatureManager(this);
+        // add interface prototype to parent prototype
+        parent->prototype()->addChild(description->name, child_proto);
+    }
+    // setup prototype
+    unique_interface->setPrototype(child_proto);
+    // create prototype class instance
+    auto js_interface = createJsInstance(child_proto, unique_interface.get());
+    // setup featureInstance WeakRef, refers to feature_object
+    unique_interface->initWeakRef(js_interface);
+
+    int iid = child_proto->addInstance(std::move(unique_interface));
+    child_proto->instances[iid]->setInstanceId(iid);
+    return js_interface;
 }
 
 void FeatureManagerQjs::uninit()
