@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef __FEATURE_FFI_H__
 #define __FEATURE_FFI_H__
+
 #include "feature_exports.h"
-#include "feature_framework.h"
 
 #include <cstdarg>
 #include <ffi.h>

@@ -16,7 +16,6 @@
 
 #include "feature_registry.h"
 #include "ajs_features_init.h"
-#include "feature_framework.h"
 #include "feature_utils.h"
 #include <assert.h>
 #include <memory>

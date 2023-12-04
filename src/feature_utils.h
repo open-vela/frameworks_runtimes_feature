@@ -13,6 +13,7 @@
 #endif
 
 #include "feature_log.h"
+#include "feature_description.h"
 #include <functional>
 #include <string>
 #include <vector>
@@ -134,5 +135,27 @@ struct weakref_list_node {
         temp = weakref_container_of(entry->member.next, type, member);     \
          &entry->member != (list); entry = temp,                           \
         temp = weakref_container_of(temp->member.next, type, member))
+
+#define TRY_GET_REAL_TYPE(featureType) \
+    if (FT_IS_COMPLEX(featureType)) { \
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        if (complexType->type == COMPLEX_OPTIONAL) { \
+            featureType = ((OptionalType*)complexType)->type; \
+        } \
+    }
+
+#define IS_INTERFACE_TYPE(featureType, ret) \
+    if (FT_IS_COMPLEX(featureType)) { \
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        ret = complexType->type == COMPLEX_INTERFACE; \
+    } else { \
+        ret = false; \
+    }
+
+int getParamCount(const FeatureType* param, bool* hasRest = NULL, int* optional_size = NULL);
+
+int getValueSize(FeatureType featureType);
+
+int countMember(ObjectMember* member);
 
 #endif // FEATURE_UTILS_H

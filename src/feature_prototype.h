@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FEATURE_FRAMEWORK_H__
-#define __FEATURE_FRAMEWORK_H__
+
+#ifndef __FEATURE_PROTOTYPE_H__
+#define __FEATURE_PROTOTYPE_H__
 
 #include "feature_description.h"
 #include "feature_manager.h"
@@ -23,22 +24,6 @@
 #include <map>
 #include <memory>
 #include <vector>
-
-#define TRY_GET_REAL_TYPE(featureType)                                                    \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == COMPLEX_OPTIONAL) {                                      \
-            featureType = ((OptionalType*)complexType)->type;                             \
-        }                                                                                 \
-    }
-
-#define IS_INTERFACE_TYPE(featureType, ret)                                               \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        ret = complexType->type == COMPLEX_INTERFACE;                                     \
-    } else {                                                                              \
-        ret = false;                                                                      \
-    }
 
 namespace ferry {
 
@@ -123,20 +108,5 @@ private:
     std::map<const char*, FeaturePrototype*> children_; // all interface instance prototype
 };
 
-/**
- * @brief initialize prototype
- *
- * @param ctx
- * @param unit
- * @param proto
- * @return int
- */
-int getParamCount(const FeatureType* param, bool* hasRest = nullptr, int* optional_size = nullptr);
-
-int getValueSize(FeatureType featureType);
-
-int countMember(ObjectMember* member);
-
 }
-
-#endif
+#endif // __FEATURE_PROTOTYPE_H__

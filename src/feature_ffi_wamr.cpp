@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "feature_ffi_wamr.h"
 #include "feature_context_qjs.h"
-#include "feature_log.h"
-#include "feature_utils.h"
 #include "feature_instance_wamr.h"
+#include "feature_log.h"
+#include "feature_prototype.h"
+#include "feature_utils.h"
 
 #include <alloca.h>
 #include <cstdint>

@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
 #include "feature_ffi_qjs.h"
 #include "feature_log.h"
+#include "feature_prototype.h"
 #include "feature_utils.h"
 #include "promise_manager.h"
 

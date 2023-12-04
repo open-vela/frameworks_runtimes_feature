@@ -23,6 +23,8 @@
 
 namespace ferry {
 
+class FeatureInstance;
+
 namespace FeatureFFIWamr {
 
     char getFeatureSignature(FeatureType featureType);

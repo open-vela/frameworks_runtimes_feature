@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "feature_ffi_qjs.h"
 #include "feature_context_qjs.h"
-#include "feature_framework.h"
-#include "feature_instance.h"
 #include "feature_instance_qjs.h"
 #include "feature_manager_qjs.h"
 #include "feature_log.h"
+#include "feature_prototype.h"
 #include "feature_utils.h"
 
 #include <alloca.h>
