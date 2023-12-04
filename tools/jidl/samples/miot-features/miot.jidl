@@ -42,6 +42,20 @@ property on_data onloginpara writeonly;
   msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
   msg_sub_type = "Otsubmsg"
 ]
+property on_data onfamilyalbumlist writeonly;
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
+property on_data onfamilyalbumstate writeonly;
+
+[
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__MIOTSETNOTIFY",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTSUBARG",
+  msg_sub_type = "Otsubmsg"
+]
 property on_data onbinddevicestate writeonly;
 
 struct SetLoginStateParam {

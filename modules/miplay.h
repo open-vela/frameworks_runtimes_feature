@@ -21,8 +21,8 @@
 
  /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_FETCH_H_
-#define JSON_AST_GEN_MODULE_FETCH_H_
+#ifndef JSON_AST_GEN_MODULE_SERVICE_MIPLAY_H_
+#define JSON_AST_GEN_MODULE_SERVICE_MIPLAY_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,39 +35,18 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void fetch_onRegister(const char* feature_name);
-void fetch_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void fetch_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void fetch_onUnregister(const char* feature_name);
+void service_miplay_onRegister(const char* feature_name);
+void service_miplay_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void service_miplay_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void service_miplay_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void service_miplay_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void service_miplay_onUnregister(const char* feature_name);
 
 // Struct defines
-typedef struct _SuccessRes {
-  FtInt code;
-  FtAny data;
-  FtAny headers;
-} fetch_SuccessRes;
-
-fetch_SuccessRes* fetchMallocSuccessRes();
-
-typedef struct _FetchPara {
-  FtString url;
-  FtAny data;
-  FtAny header;
-  FtString method;
-  FtString responseType;
-  FtInt timeout;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} fetch_FetchPara;
-
-fetch_FetchPara* fetchMallocFetchPara();
-
 
 // Function wrappers to be implemented
-void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data, fetch_FetchPara * obj);
+void service_miplay_wrap_init(FeatureInstanceHandle feature, AppendData append_data, FtCallbackId cb);
+void service_miplay_wrap_uninit(FeatureInstanceHandle feature, AppendData append_data);
 
 // Interface constructors
 
@@ -77,5 +56,5 @@ void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data, fet
 
 // Array malloc functions
 
-#endif // JSON_AST_GEN_MODULE_FETCH_H_
+#endif // JSON_AST_GEN_MODULE_SERVICE_MIPLAY_H_
 /* clang-format on */

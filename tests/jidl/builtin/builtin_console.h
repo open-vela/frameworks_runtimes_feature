@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
- module system.configuration@1.0
+#pragma once
 
- struct Configuration {
-    string language;
-    string countryOrRegion;
- }
+#include "quickjs/quickjs.h"
 
-Configuration getLocale();
+namespace builtin {
+void addConsoleModule(JSContext* ctx, const char* filename, const char* content);
+} // namespace builtin

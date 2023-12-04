@@ -1,5 +1,5 @@
-let console = require('console');
 let test = require('Simple');
+console.log("111111111", "2222", [3,4,5], {"x":6, "y":"hello world"});
 
 function show_args(pre, args) {
   test.print(pre, 'args: ')

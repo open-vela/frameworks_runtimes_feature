@@ -1,9 +1,25 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "app_path.h"
 #include "feature.h"
 #include "feature_config.h"
 #include "feature_context_qjs.h"
 #include "feature_description.h"
 #include "feature_exports.h"
-#include "jse_apppath.h"
 #include "request.h"
 #include "uv_ext.h"
 #include <cstddef>
@@ -15,6 +31,30 @@
 #include <type_traits>
 
 #define REQUEST_CANCEL 2
+#define check_any(ptr) ((ptr) && (ft_get_type(ft_ctx, *ptr) >= 0))
+#define INVOKE_SUCCESS_CB(cb, ...)                                 \
+    do {                                                           \
+        if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
+            FEATURE_LOG_ERROR("invoke success callback failed !"); \
+        }                                                          \
+        FeatureRemoveCallback(feature, cb);                        \
+    } while (0)
+
+#define INVOKE_FAIL_CB(cb, msg, code)                           \
+    do {                                                        \
+        if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
+            FEATURE_LOG_ERROR("invoke fail callback failed !"); \
+        }                                                       \
+        FeatureRemoveCallback(feature, cb);                     \
+    } while (0)
+
+#define INVOKE_COMPLET_CB(cb)                                       \
+    do {                                                            \
+        if (!FeatureInvokeCallback(feature, cb)) {                  \
+            FEATURE_LOG_ERROR("invoke complete callback failed !"); \
+        }                                                           \
+        FeatureRemoveCallback(feature, cb);                         \
+    } while (0)
 
 static const char* file_tag = "[jidl_feature] Request_impl";
 #define REQUEST_INFO(fmt, ...) \
@@ -53,11 +93,11 @@ void freeRequestInfo(RequestInfo* info);
 
 void __request_cancel(RequestInfo* info);
 
-void request_onRegister(const char* feature_name)
+void system_request_onRegister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     th = static_cast<RequestContext*>(malloc(sizeof(*th)));
@@ -68,16 +108,20 @@ void request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     th->exit = false;
     th->ctx = ctx;
     th->pkg_name = FeatureGetPackageName(handle);
+    if (th->pkg_name == NULL || strlen(th->pkg_name)) {
+        REQUEST_ERROR("package name is null!");
+        th->pkg_name = "request_test";
+    }
     weakref_list_initialize(&th->linklist);
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
 }
-void request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     // 创建一个request实例
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     // 退出页面，取消挂载在该instancehandle上的request请求
@@ -94,7 +138,7 @@ void request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
         }
     }
 }
-void request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     if (!th)
@@ -114,7 +158,7 @@ void request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 
     free(th);
 }
-void request_onUnregister(const char* feature_name)
+void system_request_onUnregister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
@@ -143,13 +187,9 @@ const char* uuid()
     srand((unsigned int)now);
     sprintf(buf, "%ld-%d", (long int)now, rand());
 
-    char* uuid = static_cast<char*>(malloc(strlen(buf) + 1));
-    if (!uuid) {
-        REQUEST_ERROR("malloc uuid fail");
-        return NULL;
-    }
-    strncpy(uuid, buf, strlen(buf) + 1);
-    return uuid;
+    char* token = static_cast<char*>(FeatureMalloc(strlen(buf) + 1, FT_CHAR));
+    strncpy(token, buf, strlen(buf));
+    return token;
 }
 
 static void __request_cb(int state, uv_response_t* response)
@@ -161,28 +201,31 @@ static void __request_cb(int state, uv_response_t* response)
     REQUEST_INFO("info = %p", info);
     if (!info)
         return;
+    FeatureInstanceHandle feature = info->feature_handle;
     if (state == UV_REQUEST_DONE) {
         if (info->request_type == UV_DOWNLOAD) {
             // 返回文件绝对地址
             // REQUEST_INFO("==========> success = %d", info->success);
-            request_dl_cmpl_succ_t* param = requestMallocdl_cmpl_succ_t();
+            system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
             // REQUEST_INFO("==========> response->body = %s", response->body);
-            char* body = AIOTJS::app_absolute_to_relative_path(th->pkg_name, response->body);
-            param->_uri = body;
-            FeatureInvokeCallback(info->feature_handle, info->success, param);
+            char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
+            char* uri = static_cast<char*>(FeatureMalloc(strlen(body) + 1, FT_CHAR));
+            memcpy(uri, body, strlen(body));
+            param->uri = uri;
+            INVOKE_SUCCESS_CB(info->success, param);
             free(body);
         }
     } else if (state == UV_REQUEST_ERROR) {
         // body内存的是绝对路径的file位置
         // REQUEST_INFO("==========> body = %s", response->body);
         // REQUEST_INFO("==========> fail = %d", info->fail);
-        FeatureInvokeCallback(info->feature_handle, info->fail, response->body, response->httpcode);
+        INVOKE_FAIL_CB(info->fail, response->body, response->httpcode);
     } else if (state == REQUEST_CANCEL) {
-        FeatureInvokeCallback(info->feature_handle, info->fail, "user cancel request", state);
+        INVOKE_FAIL_CB(info->fail, "user cancel request", state);
     }
 
     // REQUEST_INFO("==========> complete = %d", info->complete);
-    FeatureInvokeCallback(info->feature_handle, info->complete);
+    INVOKE_COMPLET_CB(info->complete);
 
     weakref_list_delete(&info->node);
     freeRequestInfo(info);
@@ -193,13 +236,13 @@ void __progress_cb(uv_request_t* request, off_t total, off_t now)
     // REQUEST_INFO("=== in __progress_cb, total = %ld, now = %ld", total, now);
     RequestInfo* info = (RequestInfo*)uv_request_get_userp(request);
     if (FeatureCheckCallbackId(info->feature_handle, info->notify_func)) {
-        request_notify_data_t* data = requestMallocnotify_data_t();
+        system_request_notify_data_t* data = system_requestMallocnotify_data_t();
         if (now != 0 && total == 0) {
-            data->_result = -1;
-            data->_percent = 0;
+            data->result = -1;
+            data->percent = 0;
         } else if (total != 0) {
-            data->_result = 0;
-            data->_percent = 100 * now / total;
+            data->result = 0;
+            data->percent = 100 * now / total;
         }
         if (now != info->pre) {
             info->pre = now;
@@ -232,14 +275,14 @@ void initInfo(RequestInfo* info)
     info->request = NULL;
 }
 
-void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, request_download_t* param)
+void system_request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, system_request_download_t* param)
 {
     const char *header, *filename, *msg;
     char *header_value, *kv, *pos_1, *pos_2, *absolute_path;
     size_t i = 1, j = 0, code;
-    request_download_succ_t* suc_param;
+    system_request_download_succ_t* suc_param;
 
-    ft_context_ref ctx = FeatureGetContext(feature);
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     RequestInfo* info = static_cast<RequestInfo*>(malloc(sizeof(RequestInfo)));
     if (!info) {
         REQUEST_ERROR("malloc fail");
@@ -249,33 +292,33 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
     }
     initInfo(info);
 
-    if (!param->_share && shareInfo) {
+    if (!param->share && shareInfo) {
         __request_cancel(shareInfo);
         shareInfo = info;
     }
 
     // 参数检查
-    if (param->_url == NULL || (param->_url) == 0) {
+    if (param->url == NULL || strlen(param->url) == 0) {
         code = ARGSERROR;
         msg = "invalid url";
         goto callFail;
     }
 
-    // REQUEST_INFO("get url = %s", param->_url);
-    // REQUEST_INFO("onDownLoadNotify = %d, suc = %d, fail = %d, compl = %d", param->_onDownLoadNotify, param->_success, param->_fail, param->_complete);
+    // REQUEST_INFO("get url = %s", param->url);
+    // REQUEST_INFO("onDownLoadNotify = %d, suc = %d, fail = %d, compl = %d", param->onDownLoadNotify, param->success, param->fail, param->complete);
 
     info->request_type = UV_DOWNLOAD;
     info->feature_handle = feature;
 
     assert(uv_request_create(&info->request) == 0);
-    assert(uv_request_set_url(info->request, param->_url) == 0);
+    assert(uv_request_set_url(info->request, param->url) == 0);
     assert(uv_request_set_method(info->request, "GET") == 0);
 
     weakref_list_initialize(&info->node);
     weakref_list_add_tail(&th->linklist, &info->node);
 
-    if (ft_get_type(ctx, *(param->_header)) > 0) {
-        header = ft_to_string(ctx, *(param->_header));
+    if (check_any(param->header)) {
+        header = ft_to_string(ft_ctx, *(param->header));
         REQUEST_INFO("header = %s", header);
         if (header == NULL || header[0] != '{' || header[strlen(header) - 1] != '}') {
             code = ARGSERROR;
@@ -289,7 +332,7 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
             REQUEST_ERROR("malloc fail");
             code = GENERAL;
             msg = "malloc fail";
-            ft_free_string(ctx, header);
+            ft_free_string(ft_ctx, header);
             goto callFail;
         }
         while (i < strlen(header) - 1) {
@@ -305,49 +348,44 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
             assert(uv_request_append_header(info->request, kv) == 0);
             kv = strtok(NULL, ",");
         }
-        ft_free_string(ctx, header);
+        ft_free_string(ft_ctx, header);
         free(header_value);
     }
 
-    if (ft_get_type(ctx, *(param->_filename)) <= 0) {
-        pos_1 = strrchr(param->_url, '?');
-        pos_2 = strrchr(param->_url, '/');
+    if (!check_any(param->filename)) {
+        pos_1 = strrchr(param->url, '?');
+        pos_2 = strrchr(param->url, '/');
         if (pos_1 == NULL) {
             info->filename = strdup(pos_2 + 1);
         } else {
             info->filename = strndup(pos_2 + 1, pos_1 - pos_2 - 1);
         }
     } else {
-        filename = ft_to_string(ctx, *(param->_filename));
+        filename = ft_to_string(ft_ctx, *(param->filename));
         if (filename == NULL || strlen(filename) == 0) {
             code = ARGSERROR;
             msg = "invalid filename";
             goto callFail;
         }
         info->filename = strdup(filename);
-        ft_free_string(ctx, filename);
+        ft_free_string(ft_ctx, filename);
     }
     // REQUEST_INFO("info->filename = %s", info->filename);
 
-    absolute_path = AIOTJS::app_relative_to_absolute_path(th->pkg_name, info->filename);
+    absolute_path = app_relative_to_absolute_path(th->pkg_name, info->filename);
     if (!absolute_path) {
-        absolute_path = AIOTJS::app_absolute_path_generator(th->pkg_name, "files", info->filename);
+        absolute_path = app_absolute_path_generator(th->pkg_name, "files", info->filename);
         assert(absolute_path);
     }
     // REQUEST_INFO("absolute_path = %s", absolute_path);
     assert(uv_request_set_atrribute(info->request, info->request_type, (void*)absolute_path) == 0);
 
-    if (FeatureCheckCallbackId(feature, param->_onDownLoadNotify)) {
-        info->notify_func = param->_onDownLoadNotify;
+    if (FeatureCheckCallbackId(feature, param->onDownLoadNotify)) {
+        info->notify_func = param->onDownLoadNotify;
         assert(uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb) == 0);
     }
 
-    if (!AIOTJS::check_disk_limit()) {
-#ifdef CONFIG_QUICKAPP_VAPP_XMS
-        AIOTJS::notify_disk_space_insufficient(th->pkg_name, GET_QJS_CTX(FeatureGetContext(feature)));
-#else
-        AIOTJS::notify_disk_space_insufficient(th->pkg_name);
-#endif
+    if (!check_disk_limit()) {
         FEATURE_LOG_ERROR("insufficient memory to download file");
         code = GENERAL;
         msg = "no space to download file";
@@ -355,19 +393,18 @@ void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data
     }
     assert(uv_request_set_userp(info->request, info) == 0);
     assert(uv_request_commit(th->handle, info->request, __request_cb) == 0);
-    suc_param = requestMallocdownload_succ_t();
+    suc_param = system_requestMallocdownload_succ_t();
 
-    suc_param->_token = uuid();
-    info->uuid = strdup(suc_param->_token);
-    // REQUEST_INFO("suc_param._token = %s, info = %p", suc_param->_token, info);
-    FeatureInvokeCallback(feature, param->_success, suc_param);
-    free((void*)suc_param->_token);
-    FeatureInvokeCallback(feature, param->_complete);
+    suc_param->token = uuid();
+    info->uuid = strdup(suc_param->token);
+    // REQUEST_INFO("suc_param._token = %s, info = %p", suc_param->token, info);
+    INVOKE_SUCCESS_CB(param->success, suc_param);
+    INVOKE_COMPLET_CB(param->complete);
     return;
 callFail:
     REQUEST_INFO("code = %d, msg = %s", code, msg);
-    FeatureInvokeCallback(feature, param->_fail, msg, code);
-    FeatureInvokeCallback(feature, param->_complete);
+    INVOKE_FAIL_CB(param->fail, msg, code);
+    INVOKE_COMPLET_CB(param->complete);
     if (info) {
         if (info->request)
             uv_request_delete(info->request);
@@ -375,13 +412,13 @@ callFail:
     }
 }
 
-void request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData append_data, request_dl_cmpl_t* param)
+void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData append_data, system_request_dl_cmpl_t* param)
 {
-    REQUEST_INFO("onDownloadComplete token = %s", param->_token);
-    // REQUEST_INFO("suc = %d, fail = %d, compl = %d", param->_success, param->_fail, param->_complete);
+    REQUEST_INFO("onDownloadComplete token = %s", param->token);
+    // REQUEST_INFO("suc = %d, fail = %d, compl = %d", param->success, param->fail, param->complete);
     int code;
     const char* msg;
-    if (param->_token == NULL) {
+    if (param->token == NULL) {
         code = ARGSERROR;
         msg = "token is missing";
         goto fail;
@@ -389,16 +426,16 @@ void request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData a
         RequestInfo *info, *temp, *res = NULL;
         weakref_list_for_every_entry_safe(&th->linklist, info, temp, RequestInfo, node)
         {
-            if (strcmp(info->uuid, param->_token) == 0) {
+            if (strcmp(info->uuid, param->token) == 0) {
                 res = info;
                 break;
             }
         }
         if (res) {
             // REQUEST_INFO("info = %p", res);
-            res->success = param->_success;
-            res->fail = param->_fail;
-            res->complete = param->_complete;
+            res->success = param->success;
+            res->fail = param->fail;
+            res->complete = param->complete;
         } else {
             code = TASK_NOT_EXISTS;
             msg = "task not exist";
@@ -407,11 +444,11 @@ void request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData a
         return;
     }
 fail:
-    FeatureInvokeCallback(feature, param->_fail, msg, code);
-    FeatureInvokeCallback(feature, param->_complete);
+    FeatureInvokeCallback(feature, param->fail, msg, code);
+    FeatureInvokeCallback(feature, param->complete);
 }
 
-void request_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
+void system_request_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
 {
     printf("========== js print ==========> [jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);

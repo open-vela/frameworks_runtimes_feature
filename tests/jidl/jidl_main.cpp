@@ -1,3 +1,5 @@
+#include "builtin/builtin_console.h"
+#include "builtin/console.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
@@ -149,6 +151,8 @@ int main(int argc, char **argv)
         feature_set_object_property(js_env.ctx, global_obj, "require", require);
         feature_free_value(js_env.ctx, global_obj);
 
+        // add console
+        builtin::addConsoleModule(js_env.ctx, "console.js", builtin::CONSOLE_JS);
         auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
 
         int err;
