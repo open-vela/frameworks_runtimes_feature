@@ -497,35 +497,15 @@ namespace FeatureFFIQjs {
                 value = feature_dup_value(ctx, promise);
             } break;
             case COMPLEX_INTERFACE: {
-                InterfaceType* interfaceType = (InterfaceType*)complexType;
-                // get interface description
-                const FeatureDescription* interfaceDesc = interfaceType->desc;
-                FEATURE_CHECK_NE(interfaceDesc, nullptr);
+                InterfaceType* interface_type = (InterfaceType*)complexType;
+                FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
-                auto interface_ptr = static_cast<FeatureInstanceQjs*>(ptr);
-                // save interface prototype in parent instance
-                auto interfaceInstance = std::unique_ptr<FeatureInstance>(interface_ptr);
-                const char* name = interfaceDesc->name;
-                FeatureManagerQjs* manager = (FeatureManagerQjs*)(instance->prototype()->getFeatureManager());
+                auto interface_ptr = static_cast<FeatureInstance*>(ptr);
+                auto parent = interface_ptr->parent();
+                FEATURE_CHECK_NE(parent, nullptr);
+                FeatureManagerQjs* manager = (FeatureManagerQjs*)(parent->prototype()->getFeatureManager());
                 FEATURE_CHECK_NE(manager, nullptr);
-                FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
-                if (!interfacePrototype) {
-                    interfacePrototype = new FeaturePrototype(interfaceDesc);
-                    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(interfacePrototype->ft_proto);
-                    *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-                    FEATURE_CHECK_NE(interfacePrototype, nullptr);
-                    interfacePrototype->setFeatureManager(manager);
-                    // add interface prototype to parent instance
-                    ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
-                }
-                // setup prototype
-                interface_ptr->setPrototype(interfacePrototype);
-                int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
-                interfacePrototype->instances[iid]->setInstanceId(iid);
-                // create prototype class instance
-                value = manager->createJsInstance(interfacePrototype, interface_ptr);
-                // setup featureInstance WeakRef, refers to feature_object
-                interface_ptr->initWeakRef(value);
+                value = manager->createTargetInterface(interface_ptr, interface_type->desc);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

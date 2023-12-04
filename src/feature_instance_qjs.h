@@ -74,30 +74,6 @@ public:
 
     void freeWeakRef();
 
-    FeaturePrototype* getInterfacePrototype(const char* name)
-    {
-        if (!prototypes_.count(name)) {
-            return nullptr;
-        }
-        return prototypes_[name];
-    }
-
-    void addInterfacePrototype(const char* name, FeaturePrototype* featurePrototype)
-    {
-        FEATURE_CHECK_EQ(prototypes_.count(name), 0);
-        prototypes_[name] = featurePrototype;
-    }
-
-    FeaturePrototype* removeInterfacePrototype(const char* name)
-    {
-        if (!prototypes_.count(name)) {
-            return nullptr;
-        }
-        FeaturePrototype* featurePrototype = prototypes_[name];
-        prototypes_.erase(name);
-        return featurePrototype;
-    }
-
 private:
     FeatureCallbackData getCallback(FtCallbackId cid);
 
@@ -109,7 +85,6 @@ private:
     PromiseManager* promise_manager_ = nullptr;
 
     std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
-    std::map<const char*, FeaturePrototype*> prototypes_; // all interface instance prototype
 };
 
 }

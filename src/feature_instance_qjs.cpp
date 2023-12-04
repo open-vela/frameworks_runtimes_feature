@@ -66,16 +66,17 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     // remove opaque binding
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
     feature_set_opaque(js_val, nullptr);
-    auto proto_type = prototype();
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto_type->getFeatureManager()->getFeatureContext());
+    auto proto = prototype();
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext());
 
     // free weakRef
     freeWeakRef();
 
     // invoke callback
-    if (proto_type->description->native_callbacks && proto_type->description->native_callbacks->onDetached) {
+    if (proto->description->native_callbacks &&
+            proto->description->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
-        proto_type->description->native_callbacks->onDetached(js_ctx, this);
+        proto->description->native_callbacks->onDetached(js_ctx, this);
     }
     // release all callbacks
     for (const auto& callback : callbacks_) {
@@ -87,7 +88,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     promise_manager_->releasePromises();
     delete promise_manager_;
 
-    auto free_instance = [js_ctx](FeaturePrototype* proto) {
+    auto free_js_proto = [js_ctx](FeaturePrototype* proto) {
         if (proto && !proto->hasInstanceAlive()) {
             FEATURE_LOG_INFO("all instance freed, free proto object...");
             auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
@@ -98,14 +99,15 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
         }
     };
     // check if all instances deleted, then clear proto object
-    free_instance(proto_type);
-    for (auto& pair : prototypes_) {
+    free_js_proto(proto);
+    auto children = proto->children();
+    for (auto& pair : children) {
         // clear all interface instances belongs to this instance.
         pair.second->clearAllInstances();
-        free_instance(pair.second);
+        free_js_proto(pair.second);
         delete pair.second;
     }
-    prototypes_.clear();
+    children.clear();
 }
 
 FeatureCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
@@ -172,7 +174,8 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
     // mark promies
     promise_manager_->markValues(rt, mark_func);
 
-    for (auto& pair : prototypes_) {
+    auto children = prototype()->children();
+    for (auto& pair : children) {
         auto js_proto = FT_VAL_GET_JS_VAL(pair.second->ft_proto);
         feature_mark_value(rt, js_proto, mark_func);
     }
