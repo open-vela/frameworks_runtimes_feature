@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 
 # Note: need pass CMAKE_TOOLCHAIN_FILE refer to vcpkg in cmdline
-set(CMAKE_TOOLCHAIN_FILE /home/gyl/vcpkg/scripts/buildsystems/vcpkg.cmake)
+set(CMAKE_TOOLCHAIN_FILE /home/lijianbin/installed/vcpkg/scripts/buildsystems/vcpkg.cmake)
 set(VCPKG_MANIFEST_MODE ON CACHE BOOL "" FORCE)
 set(VCPKG_BINARY_CACHE ON CACHE BOOL "" FORCE)
 
@@ -13,7 +13,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set (WAMR_BUILD_STRINGREF 1)
 
 # enable asan
-add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
+add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer  -g")
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fpermissive -Wall")
 
 set(UNITE_PATH ${CMAKE_CURRENT_LIST_DIR}/../../../../../apps/interpreters)
@@ -98,6 +98,7 @@ add_executable(${PROJECT_NAME}
     cipher.cpp
     cipher_impl.cpp
     jidl_main.cpp
+    builtin/builtin_console.cpp
     feature_timers.cpp
     feature_interface.cpp
     ajs_features_list.h
@@ -123,6 +124,7 @@ add_executable("feat_test"
     feat_test_impl.cpp
     feat_test.cpp
     test_main.cpp
+    builtin/builtin_console.cpp
     ajs_features_list.h
     ajs_features_init.h
 )

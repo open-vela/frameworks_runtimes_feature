@@ -40,6 +40,8 @@ public:
     FeatureInstanceWamr(struct FeaturePrototype* prototype, VTable* vtable);
     virtual ~FeatureInstanceWamr();
 
+    virtual int getSameCallback(FtCallbackId cid);
+
     virtual FeatureInstance* createInterface(VTable* vtable);
 
     virtual bool removeCallback(FtCallbackId cid);

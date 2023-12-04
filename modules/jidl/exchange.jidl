@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module exchange @1.0
+module service.exchange @1.0
 
 callback success_cb(string value)
 callback fail_cb(string errorMsg, int code)

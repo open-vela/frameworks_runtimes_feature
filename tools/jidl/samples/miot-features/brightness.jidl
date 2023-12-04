@@ -1,0 +1,59 @@
+module brightness@1.0
+
+callback on_void();
+callback on_fail(string data, int code);
+callback on_data(object data);
+
+struct CommonParam {
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "brightness.getvalue",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void getValue(CommonParam p);
+
+struct BrightnessSetValueParams {
+  [msg_key = "value", to_msg = "int"]
+  int value;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "brightness.setvalue",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void setValue(BrightnessSetValueParams p);
+
+[
+  json_method = "brightness.getmode",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void getMode(CommonParam p);
+
+struct BrightnessSetModeParams {
+  [msg_key = "mode", to_msg = "int"]
+  int mode;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "brightness.setmode",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void setMode(BrightnessSetModeParams p);

@@ -4,26 +4,16 @@ callback on_void();
 callback on_fail(string data, int code);
 callback on_data(object data);
 
-struct SetAlarmParams {
-  int hour;
-  int minute;
-  int[] days;
-  string message;
-  boolean vibrate = false;
-  string ringtone;
-  callback on_void success;
+struct CommonParam {
+  callback on_data success;
   callback on_fail fail;
   callback on_void complete;
-};
+}
 
-string setAlarm(SetAlarmParams p);
-
-string getProvider();
-
-struct StopAlarmParams {
-  [msg_key = "alarmid"]
+struct AlarmCommonParam {
+  [msg_key = "alarmid", to_msg = "char*"]
   string alarmId;
-  callback on_void success;
+  callback on_data success;
   callback on_fail fail;
   callback on_void complete;
 }
@@ -33,14 +23,14 @@ struct StopAlarmParams {
   msg_arg_id = "MIOTMSG__TEST_ONEOF_STOPALARMARG",
   msg_sub_type = "Stopalarmmsg"
 ]
-void stopAlarm(StopAlarmParams p);
+void stopAlarm(AlarmCommonParam p);
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__CANCELALARM",
   msg_arg_id = "MIOTMSG__TEST_ONEOF_CANCELALARMARG",
   msg_sub_type = "Cancelalarmmsg"
 ]
-void cancelAlarm(StopAlarmParams p);
+void cancelAlarm(AlarmCommonParam p);
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__ALARMNOTIFY",
@@ -55,3 +45,90 @@ property on_data oncreatealarm writeonly;
   msg_sub_type = "Alarmsubmsg"
 ]
 property on_data onalarmbell writeonly;
+
+struct CreateAlarmParam {
+  [msg_key = "alarmTime", to_msg = "int"]
+  int alarmTime;
+  [msg_key = "repeatType", to_msg = "int"]
+  int repeatType;
+  [msg_key = "customRepeatType", to_msg = "(char*)ft_to_string"]
+  object customRepeatType;
+  string description;
+  [msg_key = "status", to_msg = "int"]
+  int status;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "alarm.createalarm",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void createAlarm(CreateAlarmParam p);
+
+struct ModifyAlarmParam {
+  string alarmId;
+  [msg_key = "alarmTime", to_msg = "int"]
+  int alarmTime;
+  [msg_key = "repeatType", to_msg = "int"]
+  int repeatType;
+  [msg_key = "customRepeatType", to_msg = "(char*)ft_to_string"]
+  object customRepeatType;
+  string description;
+  [msg_key = "status", to_msg = "int"]
+  int status;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "alarm.modifyalarm",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void modifyAlarm(ModifyAlarmParam p);
+
+struct DeleteAlarmParam {
+  string alarmId;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "alarm.deletealarm",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void deleteAlarm(DeleteAlarmParam p);
+
+[
+  json_method = "alarm.queryalarm",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void queryAlarm(CommonParam p);
+
+struct OperationAlarmParam {
+  string alarmId;
+  [msg_key = "status", to_msg = "int"]
+  int status;
+  callback on_data success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+
+[
+  json_method = "alarm.operationalarm",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
+]
+void operationAlarm(OperationAlarmParam p);

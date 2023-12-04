@@ -26,23 +26,26 @@ struct DataParam {
 void getState(CommonParam p);
 
 [
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTAQUERY",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTAQUERYARG",
-  msg_sub_type = "Otaquerymsg"
+  json_method = "getotainfo",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
 ]
 void query(DataParam p);
 
 [
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTADOWNLOAD",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTADOWNLOADARG",
-  msg_sub_type = "Otadownloadmsg"
+  json_method = "setotadownload",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
 ]
 void download(DataParam p);
 
 [
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__OTAAPPLY",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF_OTAAPPLYARG",
-  msg_sub_type = "Otaapplymsg"
+  json_method = "setotainstall",
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__JSONDATA",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF_JSONARG",
+  msg_sub_type = "Jsonmsg"
 ]
 void apply(DataParam p);
 

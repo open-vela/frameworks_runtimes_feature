@@ -154,6 +154,17 @@ bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
     return true;
 }
 
+int FeatureInstanceQjs::getSameCallback(FtCallbackId cid)
+{
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
+    for (auto it = callbacks_.begin(); it != callbacks_.end(); it++) {
+        if (it->first != cid && feature_is_same_value(js_ctx, it->second.cb, callbacks_[cid].cb)) {
+            return it->first;
+        }
+    }
+    return 0;
+}
+
 feature_value_t FeatureInstanceQjs::getPromise(FtPromiseId pid)
 {
     return promise_manager_->getPromise(pid);

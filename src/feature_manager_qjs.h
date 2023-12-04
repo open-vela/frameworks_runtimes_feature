@@ -51,7 +51,7 @@ public:
 
     feature_value_t findFeature(feature_context_ref ctx, const char* name);
 
-    feature_value_t createFeature(feature_context_ref ctx, feature_value_t js_proto);
+    feature_value_t createFeature(feature_context_ref ctx, feature_value_t proto, feature_value_t vm_object);
 
     feature_value_t createJsInstance(FeaturePrototype* prototype, FeatureInstance* interface);
 

@@ -789,7 +789,7 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
     return feature_dup_value(ctx, js_proto);
 }
 
-feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, feature_value_t proto)
+feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, feature_value_t proto, feature_value_t vm_object)
 {
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto prototype = pair.second.second;
@@ -803,6 +803,8 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, featur
 
         // create feature instance for the required object
         auto instance = std::make_unique<FeatureInstanceQjs>(prototype, nullptr);
+        // save vm_object into instance
+        instance->setVmObject(vm_object);
         auto instance_ptr = instance.get();
         // insert into instances array, update iid
         int iid = prototype->addInstance(std::move(instance));
