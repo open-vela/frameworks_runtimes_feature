@@ -18,9 +18,7 @@
 #ifndef __FEATURE_INSTANCE_H__
 #define __FEATURE_INSTANCE_H__
 
-#include "feature_description.h"
-#include "feature_framework.h"
-#include "feature_utils.h"
+#include "feature_types.h"
 
 #include <map>
 #include <memory>

@@ -16,10 +16,10 @@
 #include "feature_instance_wamr.h"
 #include "feature_manager_wamr.h"
 
-#include "feature_framework.h"
 #include "feature_ffi_wamr.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
+#include "feature_prototype.h"
 #include "feature_utils.h"
 #include "wasm_export.h"
 

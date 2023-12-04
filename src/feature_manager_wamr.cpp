@@ -20,11 +20,11 @@
 #include "feature_context_qjs.h"
 #include "feature_exports.h"
 #include "feature_ffi_wamr.h"
-#include "feature_framework.h"
 #include "feature_instance_wamr.h"
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
+#include "feature_prototype.h"
 #include "feature_wamr_utils.h"
 
 #include "libdyntype_export.h"

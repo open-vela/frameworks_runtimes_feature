@@ -19,11 +19,12 @@
 #include "feature_context.h"
 #include "feature_context_qjs.h"
 #include "feature_ffi_qjs.h"
-#include "feature_framework.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
+#include "feature_prototype.h"
+
 #include <assert.h>
 #include <ffi.h>
 #include <memory>

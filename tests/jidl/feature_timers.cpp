@@ -1,7 +1,7 @@
 
 #include "ajs_features_init.h"
 #include "feature_exports.h"
-#include "feature_framework.h"
+#include "feature_description.h"
 #include "feature_log.h"
 #include <ffi.h>
 

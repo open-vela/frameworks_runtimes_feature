@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef __FEATURE_FFI_QJS_H__
 #define __FEATURE_FFI_QJS_H__
+
 #include "feature.h"
-#include "feature_exports.h"
 #include "feature_ffi.h"
 
 namespace ferry {
+
+class FeatureInstance;
 
 /**
  * @brief the feature ffi functions
@@ -51,7 +54,6 @@ namespace FeatureFFIQjs {
      * @return false
      */
     bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr, context_ref ctx, feature_value_t& value);
-
 }
 
 }

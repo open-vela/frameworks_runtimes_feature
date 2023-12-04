@@ -20,7 +20,6 @@
 
 #include "feature_description.h"
 #include "feature_registry.h"
-#include "feature_utils.h"
 
 namespace ferry {
 
