@@ -4,7 +4,7 @@ callback on_void();
 callback on_fail(string data, int code);
 callback on_data(object data);
 
-struct CommonParam {
+struct GetDeviceListParam {
   callback on_data success;
   callback on_fail fail;
   callback on_void complete;
@@ -12,30 +12,27 @@ struct CommonParam {
 
 [
   msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETDEVLST",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET",
+  cb_data_parser = "mihome_parse_device_list"
 ]
-void getDeviceList(CommonParam p);
+void getDeviceList(GetDeviceListParam p);
 
 [
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SUBDEV",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
+  msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETDEVLST",
+  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET",
+  cb_data_parser = "mihome_parse_scence_list"
 ]
-void subscribe(CommonParam p);
+void getSceneList(GetDeviceListParam p);
 
-[
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__UNSUBDEV",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
-]
-void unsubscribe(CommonParam p);
-
-[
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__GETDEVPROP",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
-]
-void get(CommonParam p);
-
-[
-  msg_sub_id = "MIOTMSG__MSGSUBTYPE__SETDEVPROP",
-  msg_arg_id = "MIOTMSG__TEST_ONEOF__NOT_SET"
-]
-void set(CommonParam p);
+struct FetchParam {
+  string path;
+  string arg;
+  string method;
+  string uid;
+  string srvTk;
+  string sec;
+  callback on_void success;
+  callback on_fail fail;
+  callback on_void complete;
+}
+void fetch(FetchParam p);

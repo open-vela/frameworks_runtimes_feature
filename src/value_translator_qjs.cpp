@@ -64,12 +64,10 @@ bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative) {
     if (JS_IsNull(target) || JS_IsUndefined(target)) {
         FEATURE_LOG_ERROR("object is null or undefined!");
         q_val->js_val = JS_UNDEFINED;
-        q_val->type = FT_TYPE_UNDEF;
         return false;
     }
 
     q_val->js_val = target;
-    q_val->type = FT_TYPE_OBJECT;
     return true;
 }
 
@@ -88,16 +86,6 @@ bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, si
     }
 
     *pnative = JS_GetArrayBuffer(ctx, psize, target);
-    return true;
-}
-
-// to target values
-bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget) {
-    if (native.type == FT_TYPE_NONE) {
-        *ptarget = JS_NULL;
-    } else {
-        *ptarget = FT_VAL_GET_JS_VAL(native);
-    }
     return true;
 }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-let exchange =require('service.exchange');
+let exchange =require('exchange');
 
 feat_async_test("exchange","set_application",(done)=>{
   exchange.set({

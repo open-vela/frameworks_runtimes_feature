@@ -5,8 +5,6 @@
 
 #include <set>
 
-#include "builtin/builtin_console.h"
-#include "builtin/console.h"
 #include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
@@ -22,10 +20,8 @@ bool load_file(const char* file_name, char** file_content);
 struct TimeoutHost;
 struct TimeCallback {
     TimeoutHost* host;
-    uv_timer_t* timer;
     JSContext* ctx;
     JSValue callback;
-    bool triggered;
 };
 
 struct TimeoutHost {
@@ -41,7 +37,6 @@ typedef struct FeatTestEnv {
     void* manager;
     TimeoutHost time_host;
     uv_timer_t* async_limiter;
-    uint32_t time_limit;
     JSRuntime* rt;
     JSContext* ctx;
 } FeatTestEnv;
@@ -72,10 +67,13 @@ void timeout_callback(uv_timer_t* handle)
     TimeCallback* tc = static_cast<TimeCallback*>(handle->data);
     JS_Call(tc->ctx, tc->callback, JS_UNDEFINED, 0, NULL);
     JS_FreeValue(tc->ctx, tc->callback);
-    tc->triggered = true;
+    tc->host->timers.erase(tc);
+    tc->host = NULL;
+    free(tc);
     handle->data = 0;
     uv_timer_stop(handle);
     uv_close((uv_handle_t*)handle, NULL);
+    free(handle);
 }
 
 // setTimeout
@@ -90,12 +88,10 @@ JSValue __setTimeout(JSContext* ctx, JSValue this_val, int argc, JSValue* argv,
     int t = JS_VALUE_GET_INT(argv[1]);
     TimeCallback* tc = (TimeCallback*)malloc(sizeof(TimeCallback));
     tc->callback = JS_DupValue(ctx, argv[0]);
-    tc->triggered = false;
     tc->host = time_host;
     tc->ctx = ctx;
     time_host->timers.insert(tc);
     uv_timer_t* timer = (uv_timer_t*)malloc(sizeof(uv_timer_t));
-    tc->timer = timer;
     uv_timer_init(time_host->loop, timer);
     timer->data = tc;
     uv_timer_start(timer, timeout_callback, t, 0);
@@ -110,8 +106,6 @@ static void execute_job_cb(uv_prepare_t* handle)
     for (;;) {
         err = JS_ExecutePendingJob(env->rt, &r_ctx);
         if (err <= 0) {
-            if (err < 0)
-                feature_dump_error(r_ctx);
             break;
         }
     }
@@ -137,7 +131,7 @@ static int run_loop(void* feat_test_env)
     ferry::FeatureManager* manager = static_cast<ferry::FeatureManager*>(env->manager);
     uv_timer_t* async_timer = static_cast<uv_timer_t*>(env->async_limiter);
     uv_loop_t* ploop = manager->getUVLoop();
-    uv_timer_start(async_timer, async_limit_cb, env->time_limit, 0);
+    uv_timer_start(async_timer, async_limit_cb, TIME_LIMIT, 0);
     uv_run(ploop, UV_RUN_DEFAULT);
 
     /**
@@ -149,10 +143,10 @@ static int run_loop(void* feat_test_env)
      * 其他情况属于超时，返回 1
      */
     if (uv_is_active((uv_handle_t*)async_timer)) {
-        uv_timer_stop(async_timer); // 异步测试正常结束
+        uv_timer_stop(async_timer);
         return 0;
     } else {
-        return 1; // 异步测试执行超时
+        return 1;
     }
 }
 
@@ -198,23 +192,9 @@ extern "C" int main(int argc, char** argv)
         return 0;
     }
 
-    int time_limit = TIME_LIMIT;
-
-    const char* test_all = "__feat_test_all();";
-    char* js_file = NULL;
+    char* js_file = argv[1];
     char* js_str = NULL;
-
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-t") == 0) {
-            i++;
-            if (i >= argc) break;
-            time_limit = atoi(argv[i]);
-        } else {
-            js_file = argv[i];
-        }
-    }
-
-    printf("[feat_test]: Time limit of asynchronous test execution: %d\n", time_limit);
+    const char* test_all = "__feat_test_all();";
 
     // 打开js文件
     load_file(js_file, &js_str);
@@ -245,7 +225,6 @@ extern "C" int main(int argc, char** argv)
     uv_timer_t timer;
     uv_timer_init(main_loop, &timer);
     env.async_limiter = &timer;
-    env.time_limit = time_limit;
     timer.data = &env;
     // init set time out
     env.time_host.loop = main_loop;
@@ -285,9 +264,6 @@ extern "C" int main(int argc, char** argv)
 
     JS_FreeValue(env.ctx, global_obj);
 
-    // add console
-    builtin::addConsoleModule(env.ctx, "console.js", builtin::CONSOLE_JS);
-
     // 加载 test frame work
     // TODO: ues qjs bytecode
     // original file ../test-internal.js
@@ -299,24 +275,22 @@ extern "C" int main(int argc, char** argv)
                                "// hide to outside\n    unittest.run_all_tests();\n}\n\nfunction "
                                "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
                                "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n";
-    auto res = JS_Eval(env.ctx, test_content, strlen(test_content), "test-internal.js",
+    auto res = JS_Eval(env.ctx, test_content, strlen(test_content), "<eval>",
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
         printf("[feat_test]: Exception in initializing test internal interface.: %s\n", str);
-        feature_dump_error(env.ctx);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
     }
     JS_FreeValue(env.ctx, res);
     // 加载 测试文件
-    res = JS_Eval(env.ctx, js_str, strlen(js_str), js_file,
+    res = JS_Eval(env.ctx, js_str, strlen(js_str), "add_testsuites.js",
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
 
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
         printf("[feat_test]: Exception thrown while executing test file \"%s\": %s\n", js_file, str);
-        feature_dump_error(env.ctx);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
     }
@@ -328,7 +302,6 @@ extern "C" int main(int argc, char** argv)
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
         printf("[feat_test]: Exception thrown while running all test, \"%s\"\n", str);
-        feature_dump_error(env.ctx);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
     }
@@ -338,12 +311,7 @@ extern "C" int main(int argc, char** argv)
 feat_test_done:
     // clear un-triggered timers
     for (TimeCallback* tc : env.time_host.timers) {
-        if (!tc->triggered) {
-            JS_FreeValue(tc->ctx, tc->callback);
-            uv_close((uv_handle_t*)tc->timer, NULL);
-        }
-        free(tc->timer);
-        free(tc);
+        JS_FreeValue(tc->ctx, tc->callback);
     }
     env.time_host.timers.clear();
 

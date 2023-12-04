@@ -54,8 +54,6 @@ public:
 
     virtual bool removeCallback(FtCallbackId cid);
 
-    virtual int getSameCallback(FtCallbackId cid);
-
     virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap);
 
     virtual int invokeCallback(FtCallbackId cid, va_list& ap);

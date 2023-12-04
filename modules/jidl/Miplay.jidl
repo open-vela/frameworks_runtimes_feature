@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module service.miplay@1.0
+module Miplay@1.0
 
 callback setMediainfoCb(int state, string artist, string title, int duration, int position)
 void init(setMediainfoCb cb)

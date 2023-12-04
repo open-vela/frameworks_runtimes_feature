@@ -28,236 +28,167 @@
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
 /****** for JIDL struct 'Device' ******/
-static ObjectMember system_device_Device_struct_members[] = {
-    { "brand", FT_STRING, offsetof(system_device_Device, brand), sizeof(FtString) },
-    { "IMEI", FT_STRING, offsetof(system_device_Device, IMEI), sizeof(FtString) },
-    { "manufacturer", FT_STRING, offsetof(system_device_Device, manufacturer), sizeof(FtString) },
-    { "model", FT_STRING, offsetof(system_device_Device, model), sizeof(FtString) },
-    { "product", FT_STRING, offsetof(system_device_Device, product), sizeof(FtString) },
-    { "osType", FT_STRING, offsetof(system_device_Device, osType), sizeof(FtString) },
-    { "osVersionName", FT_STRING, offsetof(system_device_Device, osVersionName), sizeof(FtString) },
-    { "osVersionCode", FT_INT, offsetof(system_device_Device, osVersionCode), sizeof(FtInt) },
-    { "platformVersionName", FT_STRING, offsetof(system_device_Device, platformVersionName), sizeof(FtString) },
-    { "platformVersionCode", FT_INT, offsetof(system_device_Device, platformVersionCode), sizeof(FtInt) },
-    { "APILevel", FT_INT, offsetof(system_device_Device, APILevel), sizeof(FtInt) },
-    { "language", FT_STRING, offsetof(system_device_Device, language), sizeof(FtString) },
-    { "region", FT_STRING, offsetof(system_device_Device, region), sizeof(FtString) },
-    { "screenWidth", FT_INT, offsetof(system_device_Device, screenWidth), sizeof(FtInt) },
-    { "screenHeight", FT_INT, offsetof(system_device_Device, screenHeight), sizeof(FtInt) },
-    { "deviceType", FT_STRING, offsetof(system_device_Device, deviceType), sizeof(FtString) },
-    { "screenShape", FT_STRING, offsetof(system_device_Device, screenShape), sizeof(FtString) },
-    { "deviceId", FT_STRING, offsetof(system_device_Device, deviceId), sizeof(FtString) },
-    { "serial", FT_STRING, offsetof(system_device_Device, serial), sizeof(FtString) },
-    { "totalStorage", FT_STRING, offsetof(system_device_Device, totalStorage), sizeof(FtString) },
-    { "availableStorage", FT_STRING, offsetof(system_device_Device, availableStorage), sizeof(FtString) },
+static ObjectMember device_Device_struct_members[] = {
+    { "brand", FT_STRING, offsetof(device_Device, _brand), sizeof(FtString) },
+    { "IMEI", FT_STRING, offsetof(device_Device, _IMEI), sizeof(FtString) },
+    { "manufacturer", FT_STRING, offsetof(device_Device, _manufacturer), sizeof(FtString) },
+    { "model", FT_STRING, offsetof(device_Device, _model), sizeof(FtString) },
+    { "product", FT_STRING, offsetof(device_Device, _product), sizeof(FtString) },
+    { "osType", FT_STRING, offsetof(device_Device, _osType), sizeof(FtString) },
+    { "osVersionName", FT_STRING, offsetof(device_Device, _osVersionName), sizeof(FtString) },
+    { "osVersionCode", FT_INT, offsetof(device_Device, _osVersionCode), sizeof(FtInt) },
+    { "platformVersionName", FT_STRING, offsetof(device_Device, _platformVersionName), sizeof(FtString) },
+    { "platformVersionCode", FT_INT, offsetof(device_Device, _platformVersionCode), sizeof(FtInt) },
+    { "APILevel", FT_INT, offsetof(device_Device, _APILevel), sizeof(FtInt) },
+    { "language", FT_STRING, offsetof(device_Device, _language), sizeof(FtString) },
+    { "region", FT_STRING, offsetof(device_Device, _region), sizeof(FtString) },
+    { "screenWidth", FT_INT, offsetof(device_Device, _screenWidth), sizeof(FtInt) },
+    { "screenHeight", FT_INT, offsetof(device_Device, _screenHeight), sizeof(FtInt) },
+    { "deviceType", FT_STRING, offsetof(device_Device, _deviceType), sizeof(FtString) },
+    { "screenShape", FT_STRING, offsetof(device_Device, _screenShape), sizeof(FtString) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_device_Device_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_device_Device) },
-    .members = system_device_Device_struct_members
+static const ObjectMapType device_Device_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(device_Device) },
+    .members = device_Device_struct_members
 };
 
-system_device_Device* system_deviceMallocDevice () {
-    return (system_device_Device*)FeatureMalloc(
-        sizeof(system_device_Device), FT_MK_COMPLEX(&system_device_Device_struct_type));
-}
-
-
-/****** for JIDL callback 'success_cb' ******/
-static const FeatureType system_device_success_cb_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_Device_struct_type),
-    FT_PARAM_END
-};
-
-static const CallbackType system_device_success_cb_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_device_success_cb_parameters,
-    .return_type = FT_VOID
-};
-
-
-/****** for JIDL callback 'fail_cb' ******/
-static const FeatureType system_device_fail_cb_parameters[] = {
-    FT_STRING,
-    FT_INT,
-    FT_PARAM_END
-};
-
-static const CallbackType system_device_fail_cb_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_device_fail_cb_parameters,
-    .return_type = FT_VOID
-};
-
-
-/****** for JIDL callback 'complete_cb' ******/
-static const FeatureType system_device_complete_cb_parameters[] = {
-    FT_PARAM_END
-};
-
-static const CallbackType system_device_complete_cb_callback_type {
-    .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = system_device_complete_cb_parameters,
-    .return_type = FT_VOID
-};
-
-
-/****** for JIDL struct 'CallBack' ******/
-static ObjectMember system_device_CallBack_struct_members[] = {
-    { "success", FT_MK_COMPLEX(&system_device_success_cb_callback_type), offsetof(system_device_CallBack, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_device_fail_cb_callback_type), offsetof(system_device_CallBack, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_device_complete_cb_callback_type), offsetof(system_device_CallBack, complete), sizeof(FtCallbackId) },
-    { nullptr },
-};
-
-// complex defination
-static const ObjectMapType system_device_CallBack_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_device_CallBack) },
-    .members = system_device_CallBack_struct_members
-};
-
-system_device_CallBack* system_deviceMallocCallBack () {
-    return (system_device_CallBack*)FeatureMalloc(
-        sizeof(system_device_CallBack), FT_MK_COMPLEX(&system_device_CallBack_struct_type));
+device_Device* deviceMallocDevice () {
+    return (device_Device*)FeatureMalloc(
+        sizeof(device_Device), FT_MK_COMPLEX(&device_Device_struct_type));
 }
 
 
 /****** for JIDL function 'getInfo' ******/
-static const FeatureType system_device_getInfo_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_CallBack_struct_type),
+static const FeatureType device_getInfo_parameters[] = {
     FT_PARAM_END
 };
 
-static const MemberMethod system_device_getInfo_member_method = {
-    .func = { .callback = FFI_FN(system_device_wrap_getInfo) },
-    .parameters = system_device_getInfo_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&system_device_Device_struct_type),
+static const MemberMethod device_getInfo_member_method = {
+    .func = { .callback = FFI_FN(device_wrap_getInfo) },
+    .parameters = device_getInfo_parameters,
+    .return_type = FT_MK_COMPLEX_REF(&device_Device_struct_type),
 };
 
 
-/****** for JIDL function 'getDeviceId' ******/
-static const FeatureType system_device_getDeviceId_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_CallBack_struct_type),
+/****** for JIDL function 'getDeviceid' ******/
+static const FeatureType device_getDeviceid_parameters[] = {
     FT_PARAM_END
 };
 
-static const MemberMethod system_device_getDeviceId_member_method = {
-    .func = { .callback = FFI_FN(system_device_wrap_getDeviceId) },
-    .parameters = system_device_getDeviceId_parameters,
+static const MemberMethod device_getDeviceid_member_method = {
+    .func = { .callback = FFI_FN(device_wrap_getDeviceid) },
+    .parameters = device_getDeviceid_parameters,
     .return_type = FT_STRING,
 };
 
 
-/****** for JIDL function 'getId' ******/
-static const FeatureType system_device_getId_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_CallBack_struct_type),
+/****** for JIDL function 'getid' ******/
+static const FeatureType device_getid_parameters[] = {
     FT_PARAM_END
 };
 
-static const MemberMethod system_device_getId_member_method = {
-    .func = { .callback = FFI_FN(system_device_wrap_getId) },
-    .parameters = system_device_getId_parameters,
+static const MemberMethod device_getid_member_method = {
+    .func = { .callback = FFI_FN(device_wrap_getid) },
+    .parameters = device_getid_parameters,
     .return_type = FT_STRING,
 };
 
 
-/****** for JIDL function 'getSerial' ******/
-static const FeatureType system_device_getSerial_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_CallBack_struct_type),
+/****** for JIDL function 'getserial' ******/
+static const FeatureType device_getserial_parameters[] = {
     FT_PARAM_END
 };
 
-static const MemberMethod system_device_getSerial_member_method = {
-    .func = { .callback = FFI_FN(system_device_wrap_getSerial) },
-    .parameters = system_device_getSerial_parameters,
+static const MemberMethod device_getserial_member_method = {
+    .func = { .callback = FFI_FN(device_wrap_getserial) },
+    .parameters = device_getserial_parameters,
     .return_type = FT_STRING,
 };
 
 
-/****** for JIDL function 'getTotalStorage' ******/
-static const FeatureType system_device_getTotalStorage_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_CallBack_struct_type),
+/****** for JIDL function 'gettotalstorage' ******/
+static const FeatureType device_gettotalstorage_parameters[] = {
     FT_PARAM_END
 };
 
-static const MemberMethod system_device_getTotalStorage_member_method = {
-    .func = { .callback = FFI_FN(system_device_wrap_getTotalStorage) },
-    .parameters = system_device_getTotalStorage_parameters,
+static const MemberMethod device_gettotalstorage_member_method = {
+    .func = { .callback = FFI_FN(device_wrap_gettotalstorage) },
+    .parameters = device_gettotalstorage_parameters,
     .return_type = FT_STRING,
 };
 
 
-/****** for JIDL function 'getAvailableStorage' ******/
-static const FeatureType system_device_getAvailableStorage_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_device_CallBack_struct_type),
+/****** for JIDL function 'getavailablestorage' ******/
+static const FeatureType device_getavailablestorage_parameters[] = {
     FT_PARAM_END
 };
 
-static const MemberMethod system_device_getAvailableStorage_member_method = {
-    .func = { .callback = FFI_FN(system_device_wrap_getAvailableStorage) },
-    .parameters = system_device_getAvailableStorage_parameters,
+static const MemberMethod device_getavailablestorage_member_method = {
+    .func = { .callback = FFI_FN(device_wrap_getavailablestorage) },
+    .parameters = device_getavailablestorage_parameters,
     .return_type = FT_STRING,
 };
 
 
 // members
-static const Member system_device_members[] = {
+static const Member device_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "getInfo",
-        .method = system_device_getInfo_member_method,
+        .method = device_getInfo_member_method,
     },
     {
         .type = MEMBER_METHOD,
-        .name = "getDeviceId",
-        .method = system_device_getDeviceId_member_method,
+        .name = "getDeviceid",
+        .method = device_getDeviceid_member_method,
     },
     {
         .type = MEMBER_METHOD,
-        .name = "getId",
-        .method = system_device_getId_member_method,
+        .name = "getid",
+        .method = device_getid_member_method,
     },
     {
         .type = MEMBER_METHOD,
-        .name = "getSerial",
-        .method = system_device_getSerial_member_method,
+        .name = "getserial",
+        .method = device_getserial_member_method,
     },
     {
         .type = MEMBER_METHOD,
-        .name = "getTotalStorage",
-        .method = system_device_getTotalStorage_member_method,
+        .name = "gettotalstorage",
+        .method = device_gettotalstorage_member_method,
     },
     {
         .type = MEMBER_METHOD,
-        .name = "getAvailableStorage",
-        .method = system_device_getAvailableStorage_member_method,
+        .name = "getavailablestorage",
+        .method = device_getavailablestorage_member_method,
     },
 };
 
 // callbacks
-static const struct FeatureCallbacks system_device_callbacks {
-    system_device_onRegister,
-    system_device_onCreate,
-    system_device_onRequired,
-    system_device_onDetached,
-    system_device_onDestroy,
-    system_device_onUnregister
+static const struct FeatureCallbacks device_callbacks {
+    device_onRegister,
+    device_onCreate,
+    device_onRequired,
+    device_onDetached,
+    device_onDestroy,
+    device_onUnregister
 };
 
-static const FeatureDescription system_device_desc = {
+static const FeatureDescription device_desc = {
     .version = 1,
-    .name = "system.device",
-    .description = "system.device",
+    .name = "device",
+    .description = "device",
     { .dynamic = false },
-    .native_callbacks = &system_device_callbacks,
-    .member_count = countof(system_device_members),
-    .members = system_device_members,
+    .native_callbacks = &device_callbacks,
+    .member_count = countof(device_members),
+    .members = device_members,
 };
 
-QAPPFEATURE_INIT(system_device)
+QAPPFEATURE_INIT(device)
 {
-    return mgr->registerFeature(features, &system_device_desc);
+    return mgr->registerFeature(features, &device_desc);
 }
 /* clang-format on */

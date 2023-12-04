@@ -21,8 +21,8 @@
 
 /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_SYSTEM_REQUEST_H_
-#define JSON_AST_GEN_MODULE_SYSTEM_REQUEST_H_
+#ifndef JSON_AST_GEN_MODULE_REQUEST_H_
+#define JSON_AST_GEN_MODULE_REQUEST_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,60 +35,60 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void system_request_onRegister(const char* feature_name);
-void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void system_request_onUnregister(const char* feature_name);
+void request_onRegister(const char* feature_name);
+void request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void request_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _notify_data_t {
-  FtInt result;
-  FtInt percent;
-} system_request_notify_data_t;
+  FtInt _result;
+  FtInt _percent;
+} request_notify_data_t;
 
-system_request_notify_data_t* system_requestMallocnotify_data_t();
+request_notify_data_t* requestMallocnotify_data_t();
 
 typedef struct _download_succ_t {
-  FtString token;
-} system_request_download_succ_t;
+  FtString _token;
+} request_download_succ_t;
 
-system_request_download_succ_t* system_requestMallocdownload_succ_t();
+request_download_succ_t* requestMallocdownload_succ_t();
 
 typedef struct _download_t {
-  FtString url;
-  FtAny header;
-  FtAny filename;
-  FtBool share;
-  FtCallbackId onDownLoadNotify;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_request_download_t;
+  FtString _url;
+  FtAny _header;
+  FtAny _filename;
+  FtBool _share;
+  FtCallbackId _onDownLoadNotify;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} request_download_t;
 
-system_request_download_t* system_requestMallocdownload_t();
+request_download_t* requestMallocdownload_t();
 
 typedef struct _dl_cmpl_succ_t {
-  FtString uri;
-} system_request_dl_cmpl_succ_t;
+  FtString _uri;
+} request_dl_cmpl_succ_t;
 
-system_request_dl_cmpl_succ_t* system_requestMallocdl_cmpl_succ_t();
+request_dl_cmpl_succ_t* requestMallocdl_cmpl_succ_t();
 
 typedef struct _dl_cmpl_t {
-  FtString token;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} system_request_dl_cmpl_t;
+  FtString _token;
+  FtCallbackId _success;
+  FtCallbackId _fail;
+  FtCallbackId _complete;
+} request_dl_cmpl_t;
 
-system_request_dl_cmpl_t* system_requestMallocdl_cmpl_t();
+request_dl_cmpl_t* requestMallocdl_cmpl_t();
 
 
 // Function wrappers to be implemented
-void system_request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, system_request_download_t * param);
-void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData append_data, system_request_dl_cmpl_t * param);
-void system_request_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
+void request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, request_download_t * param);
+void request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData append_data, request_dl_cmpl_t * param);
+void request_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
 
 // Interface constructors
 
@@ -98,5 +98,5 @@ void system_request_wrap_print(FeatureInstanceHandle feature, AppendData append_
 
 // Array malloc functions
 
-#endif // JSON_AST_GEN_MODULE_SYSTEM_REQUEST_H_
+#endif // JSON_AST_GEN_MODULE_REQUEST_H_
 /* clang-format on */

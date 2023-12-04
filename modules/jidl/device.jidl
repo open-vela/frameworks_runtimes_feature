@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module system.device@1.0
+module device@1.0
 
 struct Device {
     string brand
@@ -34,25 +34,11 @@ struct Device {
     int screenHeight
     string deviceType
     string screenShape
-    string deviceId;
-    string serial;
-    string totalStorage;
-    string availableStorage;
 }
 
-callback success_cb(Device device)
-callback fail_cb(string data, int code)
-callback complete_cb()
-
-struct CallBack {
-    callback success_cb success
-    callback fail_cb fail
-    callback complete_cb complete
-}
-
-Device getInfo(CallBack cb)
-string getDeviceId(CallBack cb)
-string getId(CallBack cb)
-string getSerial(CallBack cb)
-string getTotalStorage(CallBack cb)
-string getAvailableStorage(CallBack cb)
+Device getInfo()
+string getDeviceid()
+string getid()
+string getserial()
+string gettotalstorage()
+string getavailablestorage()

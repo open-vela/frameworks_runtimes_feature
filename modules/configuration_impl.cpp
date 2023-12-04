@@ -19,33 +19,33 @@
 
 static const char *file_tag = "[jidl_feature] Configuration_impl";
 
-void system_configuration_onRegister(const char *feature_name) {
+void configuration_onRegister(const char *feature_name) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void configuration_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void configuration_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void configuration_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void configuration_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onUnregister(const char *feature_name) {
+void configuration_onUnregister(const char *feature_name) {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-system_configuration_Configuration *system_configuration_wrap_getLocale(FeatureInstanceHandle feature, AppendData data) {
+configuration_Configuration *configuration_wrap_getLocale(FeatureInstanceHandle feature, AppendData data) {
     uv_locale_t uvlocale = {};
-    system_configuration_Configuration *config = system_configurationMallocConfiguration();
+    configuration_Configuration *config = configurationMallocConfiguration();
     int ret = uv_getlocale(&uvlocale);
 
     if (ret <= 0)
@@ -56,15 +56,13 @@ system_configuration_Configuration *system_configuration_wrap_getLocale(FeatureI
         {
             FEATURE_LOG_ERROR("%s::%s set locale failed\n", file_tag, __FUNCTION__);
         }
-        ret = uv_getlocale(&uvlocale);
     }
     char *language = (char *)FeatureMalloc(strlen(uvlocale.language) + 1, FT_CHAR);
     sprintf(language, "%s", uvlocale.language);
     char *region =
         (char *)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_CHAR);
     sprintf(region, "%s", uvlocale.country_region);
-    config->language = language;
-    config->countryOrRegion = region;
-
+    config->_language = language;
+    config->_countryOrRegion = region;
     return config;
 }

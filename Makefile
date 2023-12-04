@@ -22,10 +22,6 @@ ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
 BIN := $(APPDIR)/staging/libfeature.a
 
-ifneq ($(CONFIG_FEATURE_LOG_LEVEL),)
-CXXFLAGS += -DFEATURE_LOG_LEVEL=$(CONFIG_FEATURE_LOG_LEVEL)
-endif
-
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_exports.cpp
@@ -93,9 +89,35 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
 FEATURELIST += Error
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
+FEATURELIST += exchange
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
+FEATURELIST += storage
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
+FEATURELIST += sensor
+
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device_impl.cpp
-FEATURELIST += system_device
+FEATURELIST += device
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration_impl.cpp
+FEATURELIST += configuration
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_native.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_utils.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_impl.cpp
+FEATURELIST += system_crypto
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher_impl.cpp
+FEATURELIST += system_cipher
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/net_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch.cpp
@@ -128,46 +150,9 @@ endif
 FEATURELIST += jumpApp
 
 ifeq ($(CONFIG_MIPLAY),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_impl.cpp
-FEATURELIST += service_miplay
-endif
-
-ifeq ($(CONFIG_LIBUV_EXTENSION),y)
-ifeq ($(CONFIG_UNQLITE),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
-FEATURELIST += system_storage
-endif
-
-ifeq ($(CONFIG_KVDB),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
-FEATURELIST += service_exchange
-endif
-
-ifeq ($(CONFIG_CRYPTO_MBEDTLS),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_native.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_utils.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_impl.cpp
-FEATURELIST += system_crypto
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher_impl.cpp
-FEATURELIST += system_cipher
-endif
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration_impl.cpp
-FEATURELIST += system_configuration
-endif
-
-
-ifeq ($(CONFIG_UORB), y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
-FEATURELIST += sensor
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_1_0_impl.cpp
+FEATURELIST += Miplay
 endif
 
 ifeq ($(CONFIG_SYSTEM_PACKAGE_SERVICE), y)
@@ -190,21 +175,20 @@ FEATURELIST += feat_test
 PROGNAME += feat_test
 PRIORITY += 100
 STACKSIZE += 4096
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/builtin/builtin_console.cpp
 MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
 endif
 
-ifeq ($(CONFIG_UTILS_CURL), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
+CXXSRCS += ${APPDIR}/frameworks/quickapp/src/jse/modules/system/jse_apppath.cpp
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/jse/modules/system/
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request_impl.cpp
-FEATURELIST += system_request
-endif
+FEATURELIST += request
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file_impl.cpp
-FEATURELIST += system_file
+FEATURELIST += file
 
 endif
 

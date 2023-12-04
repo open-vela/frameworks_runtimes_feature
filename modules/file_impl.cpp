@@ -19,14 +19,11 @@
  *
  */
 
-#include "app_path.h"
 #include "feature_config.h"
-#include "feature_utils.h"
 #include "file.h"
-#include <cstdio>
+#include "jse_apppath.h"
 #include <cstdlib>
 #include <cstring>
-#include <string>
 #include <type_traits>
 #include <uv.h>
 
@@ -70,37 +67,32 @@ typedef struct
 
 FileContext* fc = NULL;
 
-void system_file_onRegister(const char* feature_name)
+void file_onRegister(const char* feature_name)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     fc = static_cast<FileContext*>(malloc(sizeof(*fc)));
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     fc->loop = FeatureGetUVLoop(manager);
     fc->pkg_name = FeatureGetPackageName(handle);
-    if (!fc->pkg_name || strlen(fc->pkg_name) == 0) {
-        FILE_ERROR("package name is null");
-        fc->pkg_name = "file_test";
-    }
-    FILE_INFO("pkg name = %s", fc->pkg_name);
 }
-void system_file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void system_file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-void system_file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     free(fc);
 }
-void system_file_onUnregister(const char* feature_name)
+void file_onUnregister(const char* feature_name)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
@@ -158,7 +150,7 @@ static void __uv_fs_req_cb(uv_fs_t* req)
     free(fr);
 }
 
-void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* param, bool move = true)
+void file_copy_or_move(FeatureInstanceHandle feature, file_move_param_t* param, bool move = true)
 {
     char *temp_str, *path, *new_path;
     const char* msg;
@@ -169,28 +161,28 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
         code = GENERAL;
         goto fail;
     }
-    fr->success = param->success;
-    fr->fail = param->fail;
-    fr->complete = param->complete;
+    fr->success = param->_success;
+    fr->fail = param->_fail;
+    fr->complete = param->_complete;
     fr->handle = feature;
 
-    if (param->srcUri == NULL || param->dstUri == NULL) {
+    if (param->_srcUri == NULL || param->_dstUri == NULL) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
         return;
     }
 
-    temp_str = strdup(param->srcUri);
-    path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    temp_str = strdup(param->_srcUri);
+    path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
     if (!path) {
-        path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
+        path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
-    temp_str = strdup(param->dstUri);
-    new_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    temp_str = strdup(param->_dstUri);
+    new_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
     if (!new_path) {
-        new_path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
+        new_path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
     if (path == NULL || new_path == NULL) {
@@ -215,15 +207,15 @@ fail:
         free(fr);
 }
 
-void system_file_wrap_move(FeatureInstanceHandle feature, AppendData append_data, system_file_move_param_t* param)
+void file_wrap_move(FeatureInstanceHandle feature, AppendData append_data, file_move_param_t* param)
 {
     file_copy_or_move(feature, param, true);
 }
-void system_file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data, system_file_copy_param_t* param)
+void file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data, file_copy_param_t* param)
 {
-    file_copy_or_move(feature, (system_file_move_param_t*)param, false);
+    file_copy_or_move(feature, (file_move_param_t*)param, false);
 }
-void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_param_t* param, bool access = true)
+void file_access_or_delete(FeatureInstanceHandle feature, file_access_param_t* param, bool access = true)
 {
     char *temp_str, *path;
     const char* msg;
@@ -234,21 +226,21 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
         code = GENERAL;
         goto fail;
     }
-    fr->success = param->success;
-    fr->fail = param->fail;
-    fr->complete = param->complete;
+    fr->success = param->_success;
+    fr->fail = param->_fail;
+    fr->complete = param->_complete;
     fr->handle = feature;
 
-    if (!param->uri) {
+    if (!param->_uri) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
 
-    temp_str = strdup(param->uri);
-    path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    temp_str = strdup(param->_uri);
+    path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
     if (!path) {
-        path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
+        path = AIOTJS::app_absolute_path_generator(fc->pkg_name, "files", temp_str);
     }
     free(temp_str);
     if (path == NULL) {
@@ -271,11 +263,11 @@ fail:
     if (fr)
         free(fr);
 }
-void system_file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, system_file_delete_param_t* param)
+void file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, file_delete_param_t* param)
 {
-    file_access_or_delete(feature, (system_file_access_param_t*)param, false);
+    file_access_or_delete(feature, (file_access_param_t*)param, false);
 }
-void system_file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, system_file_access_param_t* param)
+void file_wrap_access(FeatureInstanceHandle feature, AppendData append_data, file_access_param_t* param)
 {
     file_access_or_delete(feature, param, true);
 }
@@ -284,24 +276,8 @@ enum {
     FILE_WRITEARRBUF,
     FILE_WRITETEXT,
     FILE_READARRBUF,
-    FILE_READTEXT,
-    FILE_GET,
-    FILE_LIST,
-    FILE_MKDIR,
-    FILE_RMDIR,
+    FILE_READTEXT
 };
-
-typedef struct
-{
-    int8_t type; // 0:file 1:dir
-    char* uri;
-    uint64_t length;
-    uint64_t last_modified_time;
-    int dir_num;
-    int file_num;
-    struct weakref_list_node file_node;
-    struct weakref_list_node dir_list;
-} FileInfo;
 
 typedef struct
 {
@@ -311,7 +287,6 @@ typedef struct
     size_t offset; // 文件读写偏移
     char* filename; // 文件路径
     uint8_t* buf; // 文件读写缓冲区
-    FileInfo* root_file;
     int flags;
     int success;
     int fail;
@@ -320,17 +295,6 @@ typedef struct
     FeatureInstanceHandle handle;
 } FileReq;
 
-void freeRootFile(FileInfo* root_file)
-{
-    FileInfo *item, *temp;
-    weakref_list_for_every_entry_safe(&root_file->dir_list, item, temp, FileInfo, file_node)
-    {
-        freeRootFile(item);
-    }
-
-    free(root_file->uri);
-    free(root_file);
-}
 void freeFileReq(FileReq* fr)
 {
     if (fr) {
@@ -338,9 +302,6 @@ void freeFileReq(FileReq* fr)
             free(fr->filename);
         if (fr->buf)
             FeatureFreeValue(fr->buf);
-        if (fr->root_file) {
-            freeRootFile(fr->root_file);
-        }
         free(fr);
     }
 }
@@ -352,7 +313,6 @@ void initFileReq(FileReq* fr)
     fr->r = -1;
     fr->filename = NULL;
     fr->buf = NULL;
-    fr->root_file = NULL;
 }
 
 /**
@@ -389,36 +349,6 @@ static void __create_dir(char* path, FileReq* fr)
 }
 
 /**
- * @brief 递归删除文件夹，
- */
-static void __remove_dir(char* dirname, FileReq* fr)
-{
-    DIR* dir;
-    struct dirent* entry;
-    char path[CONFIG_PATH_MAX];
-
-    dir = opendir(dirname);
-    if (dir == NULL) {
-        fr->r = -errno;
-        FILE_ERROR("file opendir failed, path:%s\n", path);
-        return;
-    }
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-            snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
-            if (entry->d_type == DT_DIR && fr->flags == 1) {
-                __remove_dir(path, fr);
-            } else {
-                unlink(path);
-            }
-        }
-    }
-    closedir(dir);
-    rmdir(dirname);
-}
-
-/**
  * @brief 文件读写处理, uv_work 处理回调
  */
 static void __load_file_work_cb(uv_work_t* wk)
@@ -445,7 +375,7 @@ static void __load_file_work_cb(uv_work_t* wk)
     fr->offset = ((int)fr->offset == -1) ? 0 : fr->offset;
 
     FILE_INFO("file open file: %s, %d, %d", fr->filename, fr->flags, fr->offset);
-    if (oflags != O_RDONLY && !check_disk_limit()) {
+    if (oflags != O_RDONLY && !AIOTJS::check_disk_limit()) {
         fr->r = -ENOSPC;
         FILE_ERROR("file write failed: No space left on device");
         return;
@@ -489,7 +419,7 @@ static void __load_file_work_cb(uv_work_t* wk)
             }
         }
     } else {
-        if (!check_disk_limit()) {
+        if (!AIOTJS::check_disk_limit()) {
             r = -ENOSPC;
             FILE_ERROR("file write failed: No space left on device");
         } else if (fr->buf != NULL && fr->len != 0) {
@@ -534,15 +464,15 @@ static void __load_after_work_cb(uv_work_t* req, int status)
         INVOKE_FAIL_CB(fr->fail, uv_strerror(fr->r), __error_code_map(fr->r));
     } else if (fr->type == FILE_READTEXT) {
         // 将读取的文件内容写入 String
-        system_file_read_txt_succ_t* data = system_fileMallocread_txt_succ_t();
-        data->text = (const char*)fr->buf;
+        file_read_txt_succ_t* data = fileMallocread_txt_succ_t();
+        data->_text = (const char*)fr->buf;
         INVOKE_SUCCESS_CB(fr->success, data);
     } else if (fr->type == FILE_READARRBUF) {
         // 将读取的文件内容写入ArrayBuffer
         ft_value_t* buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
         *buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
-        system_file_read_arr_buf_succ_t* data = system_fileMallocread_arr_buf_succ_t();
-        data->buffer = buffer;
+        file_read_arr_buf_succ_t* data = fileMallocread_arr_buf_succ_t();
+        data->_buffer = buffer;
         INVOKE_SUCCESS_CB(fr->success, data);
         FeatureFreeValue(buffer);
     } else if (fr->type == FILE_WRITETEXT || fr->type == FILE_WRITEARRBUF) {
@@ -568,13 +498,13 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
     }
     initFileReq(fr);
 
-    if (!param->uri) {
+    if (!param->_uri) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
-    temp_str = strdup(param->uri);
-    app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    temp_str = strdup(param->_uri);
+    app_path = AIOTJS::app_relative_to_absolute_path(fc->pkg_name, temp_str);
     free(temp_str);
     if (!app_path) {
         FILE_ERROR("invalid parameter :path");
@@ -586,42 +516,42 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
     fr->filename = app_path;
     fr->req.data = fr;
     fr->handle = feature;
-    fr->success = param->success;
-    fr->fail = param->fail;
-    fr->complete = param->complete;
+    fr->success = param->_success;
+    fr->fail = param->_fail;
+    fr->complete = param->_complete;
     fr->type = type;
-    if constexpr (std::is_same_v<T, system_file_write_text_param_t>) {
+    if constexpr (std::is_same_v<T, file_write_text_param_t>) {
         fr->offset = 0;
-        if (param->append) {
+        if (param->_append) {
             fr->flags = O_APPEND;
         } else {
             fr->flags = O_TRUNC;
         }
         fr->flags |= O_WRONLY | O_CREAT;
-        fr->len = strlen(param->text) + 1;
+        fr->len = strlen(param->_text) + 1;
         fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
-        memcpy(fr->buf, param->text, fr->len);
-    } else if constexpr (std::is_same_v<T, system_file_write_arr_buf_param_t>) {
-        fr->offset = param->position;
-        if (param->append) {
+        memcpy(fr->buf, param->_text, fr->len);
+    } else if constexpr (std::is_same_v<T, file_write_arr_buf_param_t>) {
+        fr->offset = param->_position;
+        if (param->_append) {
             fr->flags = O_APPEND;
             fr->offset = 0;
         } else {
             fr->flags = O_TRUNC;
         }
         fr->flags |= O_WRONLY | O_CREAT;
-        // FILE_INFO("buf type = %d", ft_get_type(FeatureGetContext(feature), *(param->buffer)));
-        uint8_t* buffer = ft_to_buffer(FeatureGetContext(feature), &(fr->len), *(param->buffer));
+        // FILE_INFO("buf type = %d", ft_get_type(FeatureGetContext(feature), *(param->_buffer)));
+        uint8_t* buffer = ft_to_buffer(FeatureGetContext(feature), &(fr->len), *(param->_buffer));
         fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
         memcpy(fr->buf, buffer, fr->len);
-    } else if constexpr (std::is_same_v<T, system_file_read_text_param_t>) {
+    } else if constexpr (std::is_same_v<T, file_read_text_param_t>) {
         fr->offset = 0;
         fr->len = -1;
         fr->flags = O_RDONLY;
-    } else if constexpr (std::is_same_v<T, system_file_read_arr_buf_t>) {
-        fr->offset = param->position;
+    } else if constexpr (std::is_same_v<T, file_read_arr_buf_t>) {
+        fr->offset = param->_position;
         fr->flags = O_RDONLY;
-        fr->len = param->length;
+        fr->len = param->_length;
     }
     // 使用 libuv 线程池，处理需要多次回调的接口
     r = uv_queue_work(fc->loop, &fr->req, __load_file_work_cb,
@@ -631,346 +561,39 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
     }
     return;
 fail:
-    INVOKE_FAIL_CB(param->fail, msg, code);
-    INVOKE_COMPLET_CB(param->complete);
+    INVOKE_FAIL_CB(param->_fail, msg, code);
+    INVOKE_COMPLET_CB(param->_complete);
     freeFileReq(fr);
 }
 
-void system_file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, system_file_write_text_param_t* param)
+void file_wrap_writeText(FeatureInstanceHandle feature, AppendData append_data, file_write_text_param_t* param)
 {
     __file_load(feature, param, FILE_WRITETEXT);
 }
 
-void system_file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, system_file_write_arr_buf_param_t* param)
+void file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_write_arr_buf_param_t* param)
 {
     __file_load(feature, param, FILE_WRITEARRBUF);
 }
 
-void system_file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, system_file_read_text_param_t* param)
+void file_wrap_readText(FeatureInstanceHandle feature, AppendData append_data, file_read_text_param_t* param)
 {
     __file_load(feature, param, FILE_READTEXT);
 }
-void system_file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, system_file_read_arr_buf_t* param)
+void file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, file_read_arr_buf_t* param)
 {
     __file_load(feature, param, FILE_READARRBUF);
 }
 
-/**
- * @brief 获取文件信息，返回FileInfo数据结构
- */
-static FileInfo* __get_info_c(char* path, FileReq* fr)
+void file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, file_mkdir_param_t* param)
 {
-    struct stat statbuf;
-    char* app_path = NULL;
-    FileInfo* file_info = (FileInfo*)malloc(sizeof(FileInfo));
-    if (file_info == NULL || fc->pkg_name == NULL) {
-        FILE_ERROR("fc->pkg_name=%p\n", fc->pkg_name);
-        goto error;
-    }
-
-    fr->r = stat(path, &statbuf);
-    if (fr->r != 0) {
-        fr->r = -errno;
-        FILE_ERROR("file doesn't exist, path: %s\n", path);
-        goto error;
-    }
-
-    app_path = app_absolute_to_relative_path(fc->pkg_name, path);
-    if (app_path == NULL) {
-        FILE_ERROR("src path:%s, pkg:%s\n", path, fc->pkg_name);
-        goto error;
-    }
-
-    weakref_list_initialize(&file_info->dir_list);
-    weakref_list_initialize(&file_info->file_node);
-    if (S_ISDIR(statbuf.st_mode)) {
-        file_info->type = 1;
-        file_info->length = 0;
-    } else {
-        file_info->type = 0;
-        file_info->length = statbuf.st_size;
-    }
-    file_info->uri = app_path;
-    file_info->last_modified_time = statbuf.st_mtim.tv_sec;
-    file_info->file_num = 0;
-    file_info->dir_num = 0;
-
-    return file_info;
-error:
-    if (file_info) {
-        free(file_info);
-    }
-    return NULL;
 }
-/**
- * @brief 递归读取文件夹信息，添加到list中
- */
-static void __read_dir_c(char* dirname, FileReq* fr, weakref_list_node* dir_list)
+void file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, file_rmdir_param_t* param)
 {
-    DIR* dir;
-    struct dirent* entry;
-    char path[CONFIG_PATH_MAX];
-    FileInfo* file_info = NULL;
-    FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
-    root_file_ptr->file_num = 0;
-    root_file_ptr->dir_num = 0;
-    FILE_INFO("in __read_dir_c, cur dir = %s", root_file_ptr->uri);
-
-    dir = opendir(dirname);
-    if (dir == NULL) {
-        fr->r = -errno;
-        FILE_ERROR("file opendir failed, error: %d:%s path:%s", errno, uv_strerror(errno), dirname);
-        return;
-    }
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) {
-            continue;
-        }
-
-        snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
-
-        file_info = __get_info_c(path, fr);
-        if (file_info == NULL) {
-            continue;
-        }
-        if (fr->type == FILE_GET) {
-            if (entry->d_type == DT_DIR) {
-                __read_dir_c(path, fr, &file_info->dir_list);
-            }
-        }
-        weakref_list_add_tail(dir_list, &file_info->file_node);
-
-        if (file_info->type == 0) {
-            root_file_ptr->file_num++;
-        } else {
-            root_file_ptr->dir_num++;
-        }
-        FILE_INFO("add child num, file = %s", file_info->uri);
-    }
-    closedir(dir);
 }
-
-/**
- * @brief 文件夹处理 uv_work 回调
- */
-static void __load_dir_work_cb(uv_work_t* wk)
+void file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, file_list_param_t* param)
 {
-    FileReq* fr = static_cast<FileReq*>(wk->data);
-    if (!fr)
-        return;
-
-    fr->r = 0;
-    fr->offset = 0;
-
-    switch (fr->type) {
-    case FILE_MKDIR:
-        __create_dir(fr->filename, fr);
-        break;
-    case FILE_RMDIR:
-        __remove_dir(fr->filename, fr);
-        break;
-    case FILE_GET:
-    case FILE_LIST:
-        fr->flags = -1;
-        fr->offset = 0;
-        fr->root_file = __get_info_c(fr->filename, fr);
-        if (fr->root_file && fr->root_file->type == 1) {
-            __read_dir_c(fr->filename, fr, &fr->root_file->dir_list);
-        }
-        break;
-    }
 }
-static FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list);
-
-system_file_file_info_t* get_file_info(FileInfo* info)
+void file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, file_get_param_t* param)
 {
-    system_file_file_info_t* file_info = system_fileMallocfile_info_t();
-    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_CHAR));
-    strncpy(uri, info->uri, strlen(info->uri));
-    file_info->uri = uri;
-    file_info->length = info->length;
-    unsigned long long int num = static_cast<unsigned long long>(info->last_modified_time) * 1000;
-    std::string time = std::to_string(num);
-    char* lastModifiedTime = static_cast<char*>(FeatureMalloc(time.length() + 1, FT_CHAR));
-    memcpy(lastModifiedTime, time.c_str(), time.length());
-    file_info->lastModifiedTime = lastModifiedTime;
-    return file_info;
-}
-
-system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* info)
-{
-    system_file_extended_file_info_t* file_info = system_fileMallocextended_file_info_t();
-    if (!info)
-        return NULL;
-    char* type = static_cast<char*>(FeatureMalloc(strlen(info->type == 0 ? "file" : "dir") + 1, FT_CHAR));
-    sprintf(type, info->type == 0 ? "file" : "dir");
-    file_info->type = type;
-    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_CHAR));
-    strncpy(uri, info->uri, strlen(info->uri));
-    file_info->uri = uri;
-    file_info->length = info->length;
-    unsigned long long int num = static_cast<unsigned long long>(info->last_modified_time) * 1000;
-    std::string time = std::to_string(num);
-    char* lastModifiedTime = static_cast<char*>(FeatureMalloc(time.length() + 1, FT_CHAR));
-    memcpy(lastModifiedTime, time.c_str(), time.length());
-    file_info->lastModifiedTime = lastModifiedTime;
-    file_info->subFiles = __get_dir_list(fr, &info->dir_list);
-
-    return file_info;
-}
-
-/**
- * @brief 获取FileList
- */
-FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
-{
-    if (!fr) {
-        return NULL;
-    }
-
-    if (!dir_list) {
-        FILE_ERROR("__get_dir_list failed, path:%s\n", fr->filename);
-        return NULL;
-    }
-
-    FtArray* array;
-    FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
-    FILE_INFO("=====> __get_dir_list, root_file_ptr->uri = %s, dir_num = %d, file_num = %d", root_file_ptr->uri, root_file_ptr->dir_num, root_file_ptr->file_num);
-    if (fr->type == FILE_GET) {
-        array = system_file_malloc_object_array();
-        array->_size = root_file_ptr->dir_num + root_file_ptr->file_num;
-        array->_element = malloc(sizeof(system_file_extended_file_info_t*) * array->_size);
-    } else {
-        array = system_file_malloc_struct_array();
-        array->_size = root_file_ptr->file_num;
-        array->_element = malloc(sizeof(system_file_file_info_t*) * array->_size);
-    }
-    FILE_INFO("array.size = %d", array->_size);
-
-    int index = 0;
-    FileInfo *item, *temp;
-    weakref_list_for_every_entry_safe(dir_list, item, temp, FileInfo, file_node)
-    {
-        if (fr->type == FILE_LIST) {
-            if (item->type == 0) {
-                system_file_file_info_t* file_info = get_file_info(item);
-                FILE_INFO("index = %d, get file_info->uri = %s", index, file_info->uri);
-                ((system_file_file_info_t**)array->_element)[index++] = file_info;
-            }
-        } else {
-            ((system_file_extended_file_info_t**)array->_element)[index++] = get_extended_file_info(fr, item);
-            FILE_INFO("index = %d, get file_info->uri: %s", index, ((system_file_extended_file_info_t**)array->_element)[index - 1]->uri);
-        }
-    }
-    return array;
-}
-
-/**
- * @brief uv_work 处理完成回调，返回执行结果，释放内存
- */
-static void __load_dir_after_work_cb(uv_work_t* req, int status)
-{
-    FileReq* fr = static_cast<FileReq*>(req->data);
-    if (!fr)
-        return;
-    FeatureInstanceHandle feature = fr->handle;
-
-    // 0 表示成功完成
-    if (status != 0) {
-        FILE_ERROR("file failed: file:%s, errno = %d", fr->filename, fr->r);
-        INVOKE_FAIL_CB(fr->fail, uv_strerror(status), __error_code_map(status));
-    } else if (fr->r < 0) {
-        FILE_ERROR("file failed: file:%s, errno = %d", fr->filename, fr->r);
-        INVOKE_FAIL_CB(fr->fail, uv_strerror(fr->r), __error_code_map(fr->r));
-    } else if (fr->type == FILE_GET) {
-        system_file_extended_file_info_t* file_info = get_extended_file_info(fr, fr->root_file);
-        INVOKE_SUCCESS_CB(fr->success, file_info);
-    } else if (fr->type == FILE_LIST) {
-        system_file_list_succ_param* data = system_fileMalloclist_succ_param();
-        if (fr->root_file) {
-            data->fileList = __get_dir_list(fr, &fr->root_file->dir_list);
-        }
-        INVOKE_SUCCESS_CB(fr->success, data);
-    } else {
-        INVOKE_SUCCESS_CB(fr->success);
-    }
-    INVOKE_COMPLET_CB(fr->complete);
-    // 释放相关资源
-    freeFileReq(fr);
-}
-
-/**
- * @brief 文件夹处理函数
- */
-template <typename T>
-static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
-{
-    const char* msg;
-    int code, r;
-    char *app_path, *temp_str;
-    FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
-    if (!fr) {
-        FILE_ERROR("malloc fail");
-        msg = "malloc fail";
-        code = GENERAL;
-        goto fail;
-    }
-    initFileReq(fr);
-
-    if (!param->uri) {
-        msg = "invalid path";
-        code = ARGSERROR;
-        goto fail;
-    }
-    temp_str = strdup(param->uri);
-    app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    free(temp_str);
-    if (!app_path) {
-        FILE_ERROR("invalid parameter :path");
-        msg = "invalid file path";
-        code = ARGSERROR;
-        goto fail;
-    }
-
-    fr->filename = app_path;
-    fr->req.data = fr;
-    fr->handle = feature;
-    fr->success = param->success;
-    fr->fail = param->fail;
-    fr->complete = param->complete;
-    fr->type = type;
-    if constexpr (std::is_same_v<T, system_file_list_param_t>) {
-        fr->flags = -1;
-    } else {
-        fr->flags = param->recursive;
-    }
-    // 使用 libuv 线程池，处理需要多次回调的接口
-    r = uv_queue_work(fc->loop, &fr->req, __load_dir_work_cb,
-        __load_dir_after_work_cb);
-    if (r != 0) {
-        FILE_ERROR("execute uv_queue_work fail");
-    }
-    return;
-fail:
-    INVOKE_FAIL_CB(param->fail, msg, code);
-    INVOKE_COMPLET_CB(param->complete);
-    freeFileReq(fr);
-}
-
-void system_file_wrap_mkdir(FeatureInstanceHandle feature, AppendData append_data, system_file_mkdir_param_t* param)
-{
-    __dir_load(feature, param, FILE_MKDIR);
-}
-void system_file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_data, system_file_rmdir_param_t* param)
-{
-    __dir_load(feature, param, FILE_RMDIR);
-}
-void system_file_wrap_list(FeatureInstanceHandle feature, AppendData append_data, system_file_list_param_t* param)
-{
-    __dir_load(feature, param, FILE_LIST);
-}
-void system_file_wrap_get(FeatureInstanceHandle feature, AppendData append_data, system_file_get_param_t* param)
-{
-    __dir_load(feature, param, FILE_GET);
 }

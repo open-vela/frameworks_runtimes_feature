@@ -31,8 +31,4 @@ config FEATURE_LOG_LEVEL
 		4 - ALERT
 		5 - OFF
 
-config FEATURE_USE_SCHED_NOTE
-	bool "Enable Feature Sched Note"
-	default n
-
 endif

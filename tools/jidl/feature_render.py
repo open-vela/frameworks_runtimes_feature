@@ -108,25 +108,11 @@ class FeatureUtils(render.Utils):
   def needGenerator(self, m):
     return not ('meta' in m and 'external' in m['meta'] and m['meta']['external'] == 'true')
 
-  def genToMsg(self, out, param, prefix):
-    p_name = param['name']
-    ft_ctx = '(ft_context_ref)conn->GetFeatureContext()'
-    key_name, to_key = self.getMsgKey(param)
-
-    if to_key == "char*":
-      out[key_name] = '(%s)(%s%s)' %(to_key, prefix, p_name)
-    elif to_key == "(char*)ft_to_string":
-      out[key_name] = '%s(%s, *(%s%s))' %(to_key, ft_ctx, prefix, p_name)
-    elif to_key == "int" or to_key == "double":
-      out[key_name] = '(char*)(std::to_string(%s%s).c_str())' %(prefix, p_name)
-    elif to_key == "bool":
-      out[key_name] = '(%s%s) ? "true" : "false"' %(prefix, p_name)
-    else:
-      out[key_name] = '%s%s' %(prefix, p_name)
-
   def genParam(self, out, param, prefix):
     p_type = 'value_type' in param and param['value_type'] or param['type']
     p_name = param['name']
+    key_name, to_key = self.getMsgKey(param)
+    ft_ctx = '(ft_context_ref)conn->GetFeatureContext()'
     if self.isStructType(p_type):
       s = self.getUserType('struct', p_type['referred_name'])
       if s:
@@ -137,7 +123,7 @@ class FeatureUtils(render.Utils):
         if not 'callbacks' in out: out['callbacks'] = {}
         out['callbacks'][p_name] = '%s%s' % (prefix, p_name)
     else:
-      self.genToMsg(out, param, prefix)
+      out[key_name] = len(to_key) > 0 and '%s(%s, *(%s%s))' %(to_key, ft_ctx, prefix, p_name) or '%s%s' %(prefix, p_name)
 
   def genParams(self, method):
     out = {}

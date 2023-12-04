@@ -233,7 +233,6 @@ namespace FeatureFFIQjs {
                     ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
                     qjs_val_t* q_val = (qjs_val_t*)f_val;
                     q_val->js_val = value;
-                    q_val->type = FT_TYPE_OBJECT;
                     ptr = f_val;
                 }
             } break;
@@ -357,10 +356,7 @@ namespace FeatureFFIQjs {
     bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
         context_ref ctx, feature_value_t& value)
     {
-        if (!ptr) {
-            FEATURE_LOG_ERROR("ptr is null and return false!");
-            return false;
-        }
+        FEATURE_CHECK_NE(ptr, nullptr);
         bool isRef = FT_IS_REFERENCE(featureType);
         if (isRef) {
             ptr = *(void**)ptr;

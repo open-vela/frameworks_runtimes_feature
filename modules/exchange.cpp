@@ -28,383 +28,383 @@
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
 /****** for JIDL callback 'success_cb' ******/
-static const FeatureType service_exchange_success_cb_parameters[] = {
+static const FeatureType exchange_success_cb_parameters[] = {
     FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType service_exchange_success_cb_callback_type {
+static const CallbackType exchange_success_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = service_exchange_success_cb_parameters,
+    .parameters = exchange_success_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'fail_cb' ******/
-static const FeatureType service_exchange_fail_cb_parameters[] = {
+static const FeatureType exchange_fail_cb_parameters[] = {
     FT_STRING,
     FT_INT,
     FT_PARAM_END
 };
 
-static const CallbackType service_exchange_fail_cb_callback_type {
+static const CallbackType exchange_fail_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = service_exchange_fail_cb_parameters,
+    .parameters = exchange_fail_cb_parameters,
     .return_type = FT_VOID
 };
 
 
 /****** for JIDL callback 'complete_cb' ******/
-static const FeatureType service_exchange_complete_cb_parameters[] = {
+static const FeatureType exchange_complete_cb_parameters[] = {
     FT_STRING,
     FT_PARAM_END
 };
 
-static const CallbackType service_exchange_complete_cb_callback_type {
+static const CallbackType exchange_complete_cb_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = service_exchange_complete_cb_parameters,
+    .parameters = exchange_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
 
-static OptionalType service_exchange_GetInfo_member_package_opt_type = {
+static OptionalType exchange_GetInfo_member_package_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
-static OptionalType service_exchange_GetInfo_member_sign_opt_type = {
+static OptionalType exchange_GetInfo_member_sign_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
-static OptionalType service_exchange_GetInfo_member_scope_opt_type = {
+static OptionalType exchange_GetInfo_member_scope_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "application"
 };
 
 /****** for JIDL struct 'GetInfo' ******/
-static ObjectMember service_exchange_GetInfo_struct_members[] = {
-    { "package", FT_MK_OPTIONAL(&service_exchange_GetInfo_member_package_opt_type), offsetof(service_exchange_GetInfo, package), sizeof(FtString) },
-    { "sign", FT_MK_OPTIONAL(&service_exchange_GetInfo_member_sign_opt_type), offsetof(service_exchange_GetInfo, sign), sizeof(FtString) },
-    { "key", FT_STRING, offsetof(service_exchange_GetInfo, key), sizeof(FtString) },
-    { "scope", FT_MK_OPTIONAL(&service_exchange_GetInfo_member_scope_opt_type), offsetof(service_exchange_GetInfo, scope), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&service_exchange_success_cb_callback_type), offsetof(service_exchange_GetInfo, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&service_exchange_fail_cb_callback_type), offsetof(service_exchange_GetInfo, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&service_exchange_complete_cb_callback_type), offsetof(service_exchange_GetInfo, complete), sizeof(FtCallbackId) },
+static ObjectMember exchange_GetInfo_struct_members[] = {
+    { "package", FT_MK_OPTIONAL(&exchange_GetInfo_member_package_opt_type), offsetof(exchange_GetInfo, _package), sizeof(FtString) },
+    { "sign", FT_MK_OPTIONAL(&exchange_GetInfo_member_sign_opt_type), offsetof(exchange_GetInfo, _sign), sizeof(FtString) },
+    { "key", FT_STRING, offsetof(exchange_GetInfo, _key), sizeof(FtString) },
+    { "scope", FT_MK_OPTIONAL(&exchange_GetInfo_member_scope_opt_type), offsetof(exchange_GetInfo, _scope), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&exchange_success_cb_callback_type), offsetof(exchange_GetInfo, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&exchange_fail_cb_callback_type), offsetof(exchange_GetInfo, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&exchange_complete_cb_callback_type), offsetof(exchange_GetInfo, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType service_exchange_GetInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(service_exchange_GetInfo) },
-    .members = service_exchange_GetInfo_struct_members
+static const ObjectMapType exchange_GetInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(exchange_GetInfo) },
+    .members = exchange_GetInfo_struct_members
 };
 
-service_exchange_GetInfo* service_exchangeMallocGetInfo () {
-    return (service_exchange_GetInfo*)FeatureMalloc(
-        sizeof(service_exchange_GetInfo), FT_MK_COMPLEX(&service_exchange_GetInfo_struct_type));
+exchange_GetInfo* exchangeMallocGetInfo () {
+    return (exchange_GetInfo*)FeatureMalloc(
+        sizeof(exchange_GetInfo), FT_MK_COMPLEX(&exchange_GetInfo_struct_type));
 }
 
 
-static OptionalType service_exchange_SetInfo_member_scope_opt_type = {
+static OptionalType exchange_SetInfo_member_scope_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "application"
 };
 
-static OptionalType service_exchange_SetInfo_member_package_opt_type = {
+static OptionalType exchange_SetInfo_member_package_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
-static OptionalType service_exchange_SetInfo_member_sign_opt_type = {
+static OptionalType exchange_SetInfo_member_sign_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
 /****** for JIDL struct 'SetInfo' ******/
-static ObjectMember service_exchange_SetInfo_struct_members[] = {
-    { "key", FT_STRING, offsetof(service_exchange_SetInfo, key), sizeof(FtString) },
-    { "value", FT_STRING, offsetof(service_exchange_SetInfo, value), sizeof(FtString) },
-    { "scope", FT_MK_OPTIONAL(&service_exchange_SetInfo_member_scope_opt_type), offsetof(service_exchange_SetInfo, scope), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&service_exchange_success_cb_callback_type), offsetof(service_exchange_SetInfo, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&service_exchange_fail_cb_callback_type), offsetof(service_exchange_SetInfo, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&service_exchange_complete_cb_callback_type), offsetof(service_exchange_SetInfo, complete), sizeof(FtCallbackId) },
-    { "package", FT_MK_OPTIONAL(&service_exchange_SetInfo_member_package_opt_type), offsetof(service_exchange_SetInfo, package), sizeof(FtString) },
-    { "sign", FT_MK_OPTIONAL(&service_exchange_SetInfo_member_sign_opt_type), offsetof(service_exchange_SetInfo, sign), sizeof(FtString) },
+static ObjectMember exchange_SetInfo_struct_members[] = {
+    { "key", FT_STRING, offsetof(exchange_SetInfo, _key), sizeof(FtString) },
+    { "value", FT_STRING, offsetof(exchange_SetInfo, _value), sizeof(FtString) },
+    { "scope", FT_MK_OPTIONAL(&exchange_SetInfo_member_scope_opt_type), offsetof(exchange_SetInfo, _scope), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&exchange_success_cb_callback_type), offsetof(exchange_SetInfo, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&exchange_fail_cb_callback_type), offsetof(exchange_SetInfo, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&exchange_complete_cb_callback_type), offsetof(exchange_SetInfo, _complete), sizeof(FtCallbackId) },
+    { "package", FT_MK_OPTIONAL(&exchange_SetInfo_member_package_opt_type), offsetof(exchange_SetInfo, _package), sizeof(FtString) },
+    { "sign", FT_MK_OPTIONAL(&exchange_SetInfo_member_sign_opt_type), offsetof(exchange_SetInfo, _sign), sizeof(FtString) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType service_exchange_SetInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(service_exchange_SetInfo) },
-    .members = service_exchange_SetInfo_struct_members
+static const ObjectMapType exchange_SetInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(exchange_SetInfo) },
+    .members = exchange_SetInfo_struct_members
 };
 
-service_exchange_SetInfo* service_exchangeMallocSetInfo () {
-    return (service_exchange_SetInfo*)FeatureMalloc(
-        sizeof(service_exchange_SetInfo), FT_MK_COMPLEX(&service_exchange_SetInfo_struct_type));
+exchange_SetInfo* exchangeMallocSetInfo () {
+    return (exchange_SetInfo*)FeatureMalloc(
+        sizeof(exchange_SetInfo), FT_MK_COMPLEX(&exchange_SetInfo_struct_type));
 }
 
 
-static OptionalType service_exchange_RemoveInfo_member_package_opt_type = {
+static OptionalType exchange_RemoveInfo_member_package_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
-static OptionalType service_exchange_RemoveInfo_member_sign_opt_type = {
+static OptionalType exchange_RemoveInfo_member_sign_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
 /****** for JIDL struct 'RemoveInfo' ******/
-static ObjectMember service_exchange_RemoveInfo_struct_members[] = {
-    { "key", FT_STRING, offsetof(service_exchange_RemoveInfo, key), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&service_exchange_success_cb_callback_type), offsetof(service_exchange_RemoveInfo, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&service_exchange_fail_cb_callback_type), offsetof(service_exchange_RemoveInfo, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&service_exchange_complete_cb_callback_type), offsetof(service_exchange_RemoveInfo, complete), sizeof(FtCallbackId) },
-    { "package", FT_MK_OPTIONAL(&service_exchange_RemoveInfo_member_package_opt_type), offsetof(service_exchange_RemoveInfo, package), sizeof(FtString) },
-    { "sign", FT_MK_OPTIONAL(&service_exchange_RemoveInfo_member_sign_opt_type), offsetof(service_exchange_RemoveInfo, sign), sizeof(FtString) },
+static ObjectMember exchange_RemoveInfo_struct_members[] = {
+    { "key", FT_STRING, offsetof(exchange_RemoveInfo, _key), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&exchange_success_cb_callback_type), offsetof(exchange_RemoveInfo, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&exchange_fail_cb_callback_type), offsetof(exchange_RemoveInfo, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&exchange_complete_cb_callback_type), offsetof(exchange_RemoveInfo, _complete), sizeof(FtCallbackId) },
+    { "package", FT_MK_OPTIONAL(&exchange_RemoveInfo_member_package_opt_type), offsetof(exchange_RemoveInfo, _package), sizeof(FtString) },
+    { "sign", FT_MK_OPTIONAL(&exchange_RemoveInfo_member_sign_opt_type), offsetof(exchange_RemoveInfo, _sign), sizeof(FtString) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType service_exchange_RemoveInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(service_exchange_RemoveInfo) },
-    .members = service_exchange_RemoveInfo_struct_members
+static const ObjectMapType exchange_RemoveInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(exchange_RemoveInfo) },
+    .members = exchange_RemoveInfo_struct_members
 };
 
-service_exchange_RemoveInfo* service_exchangeMallocRemoveInfo () {
-    return (service_exchange_RemoveInfo*)FeatureMalloc(
-        sizeof(service_exchange_RemoveInfo), FT_MK_COMPLEX(&service_exchange_RemoveInfo_struct_type));
+exchange_RemoveInfo* exchangeMallocRemoveInfo () {
+    return (exchange_RemoveInfo*)FeatureMalloc(
+        sizeof(exchange_RemoveInfo), FT_MK_COMPLEX(&exchange_RemoveInfo_struct_type));
 }
 
 
 /****** for JIDL struct 'ClearInfo' ******/
-static ObjectMember service_exchange_ClearInfo_struct_members[] = {
-    { "success", FT_MK_COMPLEX(&service_exchange_success_cb_callback_type), offsetof(service_exchange_ClearInfo, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&service_exchange_fail_cb_callback_type), offsetof(service_exchange_ClearInfo, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&service_exchange_complete_cb_callback_type), offsetof(service_exchange_ClearInfo, complete), sizeof(FtCallbackId) },
+static ObjectMember exchange_ClearInfo_struct_members[] = {
+    { "success", FT_MK_COMPLEX(&exchange_success_cb_callback_type), offsetof(exchange_ClearInfo, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&exchange_fail_cb_callback_type), offsetof(exchange_ClearInfo, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&exchange_complete_cb_callback_type), offsetof(exchange_ClearInfo, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType service_exchange_ClearInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(service_exchange_ClearInfo) },
-    .members = service_exchange_ClearInfo_struct_members
+static const ObjectMapType exchange_ClearInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(exchange_ClearInfo) },
+    .members = exchange_ClearInfo_struct_members
 };
 
-service_exchange_ClearInfo* service_exchangeMallocClearInfo () {
-    return (service_exchange_ClearInfo*)FeatureMalloc(
-        sizeof(service_exchange_ClearInfo), FT_MK_COMPLEX(&service_exchange_ClearInfo_struct_type));
+exchange_ClearInfo* exchangeMallocClearInfo () {
+    return (exchange_ClearInfo*)FeatureMalloc(
+        sizeof(exchange_ClearInfo), FT_MK_COMPLEX(&exchange_ClearInfo_struct_type));
 }
 
 
-static OptionalType service_exchange_GrantPermissionInfo_member_key_opt_type = {
+static OptionalType exchange_GrantPermissionInfo_member_key_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
-static OptionalType service_exchange_GrantPermissionInfo_member_writable_opt_type = {
+static OptionalType exchange_GrantPermissionInfo_member_writable_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_BOOLEAN,
     .ival = false
 };
 
 /****** for JIDL struct 'GrantPermissionInfo' ******/
-static ObjectMember service_exchange_GrantPermissionInfo_struct_members[] = {
-    { "package", FT_STRING, offsetof(service_exchange_GrantPermissionInfo, package), sizeof(FtString) },
-    { "sign", FT_STRING, offsetof(service_exchange_GrantPermissionInfo, sign), sizeof(FtString) },
-    { "key", FT_MK_OPTIONAL(&service_exchange_GrantPermissionInfo_member_key_opt_type), offsetof(service_exchange_GrantPermissionInfo, key), sizeof(FtString) },
-    { "writable", FT_MK_OPTIONAL(&service_exchange_GrantPermissionInfo_member_writable_opt_type), offsetof(service_exchange_GrantPermissionInfo, writable), sizeof(FtBool) },
-    { "success", FT_MK_COMPLEX(&service_exchange_success_cb_callback_type), offsetof(service_exchange_GrantPermissionInfo, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&service_exchange_fail_cb_callback_type), offsetof(service_exchange_GrantPermissionInfo, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&service_exchange_complete_cb_callback_type), offsetof(service_exchange_GrantPermissionInfo, complete), sizeof(FtCallbackId) },
+static ObjectMember exchange_GrantPermissionInfo_struct_members[] = {
+    { "package", FT_STRING, offsetof(exchange_GrantPermissionInfo, _package), sizeof(FtString) },
+    { "sign", FT_STRING, offsetof(exchange_GrantPermissionInfo, _sign), sizeof(FtString) },
+    { "key", FT_MK_OPTIONAL(&exchange_GrantPermissionInfo_member_key_opt_type), offsetof(exchange_GrantPermissionInfo, _key), sizeof(FtString) },
+    { "writable", FT_MK_OPTIONAL(&exchange_GrantPermissionInfo_member_writable_opt_type), offsetof(exchange_GrantPermissionInfo, _writable), sizeof(FtBool) },
+    { "success", FT_MK_COMPLEX(&exchange_success_cb_callback_type), offsetof(exchange_GrantPermissionInfo, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&exchange_fail_cb_callback_type), offsetof(exchange_GrantPermissionInfo, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&exchange_complete_cb_callback_type), offsetof(exchange_GrantPermissionInfo, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType service_exchange_GrantPermissionInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(service_exchange_GrantPermissionInfo) },
-    .members = service_exchange_GrantPermissionInfo_struct_members
+static const ObjectMapType exchange_GrantPermissionInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(exchange_GrantPermissionInfo) },
+    .members = exchange_GrantPermissionInfo_struct_members
 };
 
-service_exchange_GrantPermissionInfo* service_exchangeMallocGrantPermissionInfo () {
-    return (service_exchange_GrantPermissionInfo*)FeatureMalloc(
-        sizeof(service_exchange_GrantPermissionInfo), FT_MK_COMPLEX(&service_exchange_GrantPermissionInfo_struct_type));
+exchange_GrantPermissionInfo* exchangeMallocGrantPermissionInfo () {
+    return (exchange_GrantPermissionInfo*)FeatureMalloc(
+        sizeof(exchange_GrantPermissionInfo), FT_MK_COMPLEX(&exchange_GrantPermissionInfo_struct_type));
 }
 
 
-static OptionalType service_exchange_RevokePermissionInfo_member_key_opt_type = {
+static OptionalType exchange_RevokePermissionInfo_member_key_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
 /****** for JIDL struct 'RevokePermissionInfo' ******/
-static ObjectMember service_exchange_RevokePermissionInfo_struct_members[] = {
-    { "package", FT_STRING, offsetof(service_exchange_RevokePermissionInfo, package), sizeof(FtString) },
-    { "key", FT_MK_OPTIONAL(&service_exchange_RevokePermissionInfo_member_key_opt_type), offsetof(service_exchange_RevokePermissionInfo, key), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&service_exchange_success_cb_callback_type), offsetof(service_exchange_RevokePermissionInfo, success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&service_exchange_fail_cb_callback_type), offsetof(service_exchange_RevokePermissionInfo, fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&service_exchange_complete_cb_callback_type), offsetof(service_exchange_RevokePermissionInfo, complete), sizeof(FtCallbackId) },
+static ObjectMember exchange_RevokePermissionInfo_struct_members[] = {
+    { "package", FT_STRING, offsetof(exchange_RevokePermissionInfo, _package), sizeof(FtString) },
+    { "key", FT_MK_OPTIONAL(&exchange_RevokePermissionInfo_member_key_opt_type), offsetof(exchange_RevokePermissionInfo, _key), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&exchange_success_cb_callback_type), offsetof(exchange_RevokePermissionInfo, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&exchange_fail_cb_callback_type), offsetof(exchange_RevokePermissionInfo, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&exchange_complete_cb_callback_type), offsetof(exchange_RevokePermissionInfo, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType service_exchange_RevokePermissionInfo_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(service_exchange_RevokePermissionInfo) },
-    .members = service_exchange_RevokePermissionInfo_struct_members
+static const ObjectMapType exchange_RevokePermissionInfo_struct_type {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(exchange_RevokePermissionInfo) },
+    .members = exchange_RevokePermissionInfo_struct_members
 };
 
-service_exchange_RevokePermissionInfo* service_exchangeMallocRevokePermissionInfo () {
-    return (service_exchange_RevokePermissionInfo*)FeatureMalloc(
-        sizeof(service_exchange_RevokePermissionInfo), FT_MK_COMPLEX(&service_exchange_RevokePermissionInfo_struct_type));
+exchange_RevokePermissionInfo* exchangeMallocRevokePermissionInfo () {
+    return (exchange_RevokePermissionInfo*)FeatureMalloc(
+        sizeof(exchange_RevokePermissionInfo), FT_MK_COMPLEX(&exchange_RevokePermissionInfo_struct_type));
 }
 
 
 /****** for JIDL function 'set' ******/
-static const FeatureType service_exchange_set_parameters[] = {
-    FT_MK_COMPLEX_REF(&service_exchange_SetInfo_struct_type),
+static const FeatureType exchange_set_parameters[] = {
+    FT_MK_COMPLEX_REF(&exchange_SetInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod service_exchange_set_member_method = {
-    .func = { .callback = FFI_FN(service_exchange_wrap_set) },
-    .parameters = service_exchange_set_parameters,
+static const MemberMethod exchange_set_member_method = {
+    .func = { .callback = FFI_FN(exchange_wrap_set) },
+    .parameters = exchange_set_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'get' ******/
-static const FeatureType service_exchange_get_parameters[] = {
-    FT_MK_COMPLEX_REF(&service_exchange_GetInfo_struct_type),
+static const FeatureType exchange_get_parameters[] = {
+    FT_MK_COMPLEX_REF(&exchange_GetInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod service_exchange_get_member_method = {
-    .func = { .callback = FFI_FN(service_exchange_wrap_get) },
-    .parameters = service_exchange_get_parameters,
+static const MemberMethod exchange_get_member_method = {
+    .func = { .callback = FFI_FN(exchange_wrap_get) },
+    .parameters = exchange_get_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'remove' ******/
-static const FeatureType service_exchange_remove_parameters[] = {
-    FT_MK_COMPLEX_REF(&service_exchange_RemoveInfo_struct_type),
+static const FeatureType exchange_remove_parameters[] = {
+    FT_MK_COMPLEX_REF(&exchange_RemoveInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod service_exchange_remove_member_method = {
-    .func = { .callback = FFI_FN(service_exchange_wrap_remove) },
-    .parameters = service_exchange_remove_parameters,
+static const MemberMethod exchange_remove_member_method = {
+    .func = { .callback = FFI_FN(exchange_wrap_remove) },
+    .parameters = exchange_remove_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'clear' ******/
-static const FeatureType service_exchange_clear_parameters[] = {
-    FT_MK_COMPLEX_REF(&service_exchange_ClearInfo_struct_type),
+static const FeatureType exchange_clear_parameters[] = {
+    FT_MK_COMPLEX_REF(&exchange_ClearInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod service_exchange_clear_member_method = {
-    .func = { .callback = FFI_FN(service_exchange_wrap_clear) },
-    .parameters = service_exchange_clear_parameters,
+static const MemberMethod exchange_clear_member_method = {
+    .func = { .callback = FFI_FN(exchange_wrap_clear) },
+    .parameters = exchange_clear_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'grantPermission' ******/
-static const FeatureType service_exchange_grantPermission_parameters[] = {
-    FT_MK_COMPLEX_REF(&service_exchange_GrantPermissionInfo_struct_type),
+static const FeatureType exchange_grantPermission_parameters[] = {
+    FT_MK_COMPLEX_REF(&exchange_GrantPermissionInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod service_exchange_grantPermission_member_method = {
-    .func = { .callback = FFI_FN(service_exchange_wrap_grantPermission) },
-    .parameters = service_exchange_grantPermission_parameters,
+static const MemberMethod exchange_grantPermission_member_method = {
+    .func = { .callback = FFI_FN(exchange_wrap_grantPermission) },
+    .parameters = exchange_grantPermission_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL function 'revokePermission' ******/
-static const FeatureType service_exchange_revokePermission_parameters[] = {
-    FT_MK_COMPLEX_REF(&service_exchange_RevokePermissionInfo_struct_type),
+static const FeatureType exchange_revokePermission_parameters[] = {
+    FT_MK_COMPLEX_REF(&exchange_RevokePermissionInfo_struct_type),
     FT_PARAM_END
 };
 
-static const MemberMethod service_exchange_revokePermission_member_method = {
-    .func = { .callback = FFI_FN(service_exchange_wrap_revokePermission) },
-    .parameters = service_exchange_revokePermission_parameters,
+static const MemberMethod exchange_revokePermission_member_method = {
+    .func = { .callback = FFI_FN(exchange_wrap_revokePermission) },
+    .parameters = exchange_revokePermission_parameters,
     .return_type = FT_VOID,
 };
 
 
 // members
-static const Member service_exchange_members[] = {
+static const Member exchange_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "set",
-        .method = service_exchange_set_member_method,
+        .method = exchange_set_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "get",
-        .method = service_exchange_get_member_method,
+        .method = exchange_get_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "remove",
-        .method = service_exchange_remove_member_method,
+        .method = exchange_remove_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "clear",
-        .method = service_exchange_clear_member_method,
+        .method = exchange_clear_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "grantPermission",
-        .method = service_exchange_grantPermission_member_method,
+        .method = exchange_grantPermission_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "revokePermission",
-        .method = service_exchange_revokePermission_member_method,
+        .method = exchange_revokePermission_member_method,
     },
 };
 
 // callbacks
-static const struct FeatureCallbacks service_exchange_callbacks {
-    service_exchange_onRegister,
-    service_exchange_onCreate,
-    service_exchange_onRequired,
-    service_exchange_onDetached,
-    service_exchange_onDestroy,
-    service_exchange_onUnregister
+static const struct FeatureCallbacks exchange_callbacks {
+    exchange_onRegister,
+    exchange_onCreate,
+    exchange_onRequired,
+    exchange_onDetached,
+    exchange_onDestroy,
+    exchange_onUnregister
 };
 
-static const FeatureDescription service_exchange_desc = {
+static const FeatureDescription exchange_desc = {
     .version = 1,
-    .name = "service.exchange",
-    .description = "service.exchange",
+    .name = "exchange",
+    .description = "exchange",
     { .dynamic = false },
-    .native_callbacks = &service_exchange_callbacks,
-    .member_count = countof(service_exchange_members),
-    .members = service_exchange_members,
+    .native_callbacks = &exchange_callbacks,
+    .member_count = countof(exchange_members),
+    .members = exchange_members,
 };
 
-QAPPFEATURE_INIT(service_exchange)
+QAPPFEATURE_INIT(exchange)
 {
-    return mgr->registerFeature(features, &service_exchange_desc);
+    return mgr->registerFeature(features, &exchange_desc);
 }
 /* clang-format on */

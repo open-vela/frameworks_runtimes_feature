@@ -30,7 +30,6 @@
 static const char* file_tag = "[net_utils ]";
 
 bool check_url(FtString url) {
-  ASSERT_RET_NULL(check_str(url));
   std::string _url(url);
   std::regex url_regex(
       R"(^http(([^:\/?#]+):)?(//([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
@@ -90,11 +89,4 @@ bool check_header(ft_context_ref ft_ctx, FtAny js_headers,
                   std::map<std::string, std::string>& headers) {
   return ft_map_for_every_entry(ft_ctx, js_headers, (void*)&headers,
                                 parse_header_cb);
-}
-
-bool type_contain(const char** type_array, int size, const char* type) {
-  for (int i = 0; i < size; ++i) {
-    if (strcmp(type, type_array[i]) == 0) return true;
-  }
-  return false;
 }
