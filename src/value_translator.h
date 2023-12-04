@@ -1,0 +1,99 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef __VALUE_TRANSLATOR_H__
+#define __VALUE_TRANSLATOR_H__
+
+#include "value_translator_qjs.h"
+
+namespace value_translator {
+
+template<typename TNumberNative, typename TCtx, typename TTarget, typename TNumberLike>
+static bool toNumberLike(TCtx ctx, const TTarget& target, TNumberLike* pnative) {
+  TNumberNative ival;
+  if (toNative(ctx, &ival, target)) {
+    *pnative = (TNumberLike)ival;
+    return true;
+  }
+  return false;
+}
+
+// toNative for int8_t, uint8_t, int16_t, uint16_t and float
+template<typename TCtx, typename TTarget>
+static bool toNative(TCtx ctx, const TTarget& target, int8_t* pnative) {
+  return toNumberLike<int32_t>(ctx, target, pnative);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toNative(TCtx ctx, const TTarget& target, int16_t* pnative) {
+  return toNumberLike<int32_t>(ctx, target, pnative);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toNative(TCtx ctx, const TTarget& target, uint8_t* pnative) {
+  return toNumberLike<uint32_t>(ctx, target, pnative);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toNative(TCtx ctx, const TTarget& target, uint16_t* pnative) {
+  return toNumberLike<uint32_t>(ctx, target, pnative);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toNative(TCtx ctx, const TTarget& target, float* pnative) {
+  return toNumberLike<double>(ctx, target, pnative);
+}
+
+// for argToNative
+template<typename TCtx, typename TArg, typename TNative>
+static bool argToNative(TCtx ctx, const TArg& arg, TNative* pnative)
+{
+  return toNative(ctx, arg, pnative);
+}
+
+// toTargetIntLike
+template<typename TNumberNative, typename TCtx, typename TNumberLike, typename TTarget>
+static bool toTargetNumberLike(TCtx ctx, const TNumberLike& native, TTarget* ptarget) {
+  return toTarget(ctx, native, ptarget);
+}
+
+// toTarget for int8_t, uint8_t, int16_t, uint16_t and float
+template<typename TCtx, typename TTarget>
+static bool toTarget(TCtx ctx, const int8_t& native, TTarget* ptarget) {
+  return toTargetNumberLike<int32_t>(ctx, native, ptarget);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toTarget(TCtx ctx, const int16_t& native, TTarget* ptarget) {
+  return toTargetNumberLike<int32_t>(ctx, native, ptarget);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toTarget(TCtx ctx, const uint8_t& native, TTarget* ptarget) {
+  return toTargetNumberLike<uint32_t>(ctx, native, ptarget);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toTarget(TCtx ctx, const uint16_t& native, TTarget* ptarget) {
+  return toTargetNumberLike<uint32_t>(ctx, native, ptarget);
+}
+
+template<typename TCtx, typename TTarget>
+static bool toTarget(TCtx ctx, const float& native, TTarget* ptarget) {
+  return toTargetNumberLike<double>(ctx, native, ptarget);
+}
+}
+#endif // __VALUE_TRANSLATOR_H__
