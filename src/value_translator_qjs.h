@@ -145,7 +145,7 @@ static inline JSValue newObject (JSContext* ctx) {
 
 bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue* pfield);
 
-bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue& field);
+bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field);
 
 // function for handling arrays
 static inline JSValue newArray (JSContext* ctx) {
@@ -174,7 +174,7 @@ static inline bool isArray(JSContext* ctx, const JSValue& target) {
     return !!JS_IsArray(ctx, target);
 }
 
-static inline void freeValue(JSContext* ctx, JSValue& target) {
+static inline void freeValue(JSContext* ctx, JSValue target) {
     JS_FreeValue(ctx, target);
     target = JS_UNDEFINED;
 }
@@ -184,6 +184,20 @@ static inline void freeString(JSContext* ctx, const char* str) {
 }
 
 JSValue parseJson(JSContext* ctx, const char* buf, size_t buf_len, const char* file_name);
+
+static inline ft_value_t targetToFtVal(JSValue& target)
+{
+    ft_value_t ft_val;
+    qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
+    qjs_val->js_val = target;
+    return ft_val;
+}
+
+static inline JSValue ftValToTarget(ft_value_t& ft_val)
+{
+    qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
+    return qjs_val->js_val;
+}
 
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__
