@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "feature_ffi.h"
 #include "feature_log.h"
 #include "feature_utils.h"
@@ -665,6 +666,196 @@ bool convertValueToNatvie(FeatureInstance* instance, FeatureType ftype,
             }
         }
     }
+}
+
+template<typename TNative, typename TCtx, typename TTarget>
+static void nativeToTarget(TCtx ctx, void* ptr, TTarget& target) {
+  value_translator::toTarget(ctx, *((TNative*)ptr), &target);
+}
+
+template<typename TCtx, typename TTarget>
+bool convertValueToTarget(FeatureInstance* instance, FeatureType ftype,
+    TCtx ctx, void* pnative, TTarget& target)
+{
+    FEATURE_CHECK_NE(pnative, nullptr);
+    if (FT_IS_REFERENCE(ftype)) {
+            pnative = *(void**)pnative;
+    }
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (FT_GET_VALUE(ftype)) {
+            case FT_VOID: {
+                FEATURE_LOG_ERROR("void not supported !");
+                return false;
+            } break;
+            case FT_INT: {
+                nativeToTarget<int32_t>(ctx, pnative, target);
+            } break;
+            case FT_INT8: {
+                nativeToTarget<int8_t>(ctx, pnative, target);
+            } break;
+            case FT_UINT8: {
+                nativeToTarget<uint8_t>(ctx, pnative, target);
+            } break;
+            case FT_INT16: {
+                nativeToTarget<int16_t>(ctx, pnative, target);
+            } break;
+            case FT_UINT16: {
+                nativeToTarget<uint16_t>(ctx, pnative, target);
+            } break;
+            case FT_INT32: {
+                nativeToTarget<int32_t>(ctx, pnative, target);
+            } break;
+            case FT_UINT32: {
+                nativeToTarget<uint32_t>(ctx, pnative, target);
+            } break;
+            case FT_INT64: {
+                nativeToTarget<int64_t>(ctx, pnative, target);
+            } break;
+            case FT_UINT64: {
+                nativeToTarget<uint64_t>(ctx, pnative, target);
+            } break;
+            case FT_FLOAT: {
+                nativeToTarget<float>(ctx, pnative, target);
+            } break;
+            case FT_DOUBLE: {
+                nativeToTarget<double>(ctx, pnative, target);
+            } break;
+            case FT_BOOLEAN: {
+                nativeToTarget<bool>(ctx, pnative, target);
+            } break;
+            case FT_CHAR: {
+                if (!pnative)
+                    nativeToTarget<const char*>(ctx, "", target);
+                else
+                    nativeToTarget<const char*>(ctx, pnative, target);
+            } break;
+            case FT_ANY: {
+                if (!pnative) {
+                    ft_value_t null_val = { 0 };
+                    nativeToTarget<ft_value_t>(ctx, &null_val, target);
+                } else {
+                    nativeToTarget<ft_value_t>(ctx, pnative, target);
+                }
+            } break;
+            default: {
+                FEATURE_LOG_WARN("unsupported type detected !");
+                return false;
+            }
+        }
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+        switch (complex_type->type) {
+            case COMPLEX_STRUCT_MAP: {
+                ObjectMapType& objMapType = *(ObjectMapType*)complex_type;
+                auto member = objMapType.members;
+                auto member_count = countMember(member);
+                target = value_translator::newObject(ctx);
+                for (int i = 0; i < member_count; i++) {
+                    // fill it
+                    void* member_ptr = (void*)((char*)pnative + member->offset);
+                    TTarget prop;
+                    bool ret = convertValueToTarget(instance, member->type, ctx, member_ptr, prop);
+                    if (!ret) {
+                        value_translator::freeValue(ctx, prop);
+                        FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
+                        return false;
+                    }
+                    value_translator::setObjectField(ctx, target, member->name, prop);
+                    member++;
+                }
+            } break;
+            case COMPLEX_OPTIONAL: {
+                OptionalType* opt_type = (OptionalType*)complex_type;
+                bool ret = convertValueToTarget(instance, opt_type->type, ctx, pnative, target);
+                if (!ret) {
+                    value_translator::freeValue(ctx, target);
+                    feature_free_value(ctx, target);
+                    FEATURE_LOG_ERROR("convert optional to guest failed !");
+                    return false;
+                }
+            } break;
+            case COMPLEX_CALLBACK: {
+                // unreachable
+                FEATURE_LOG_ERROR("convert callback to guest is unreachable");
+            } break;
+            case COMPLEX_ARRAY: {
+                // convert to guest
+                ArrayType* array_type = (ArrayType*)complex_type;
+                FtArray* array_data = (FtArray*)pnative;
+                auto elem_type = array_type->element_type;
+                FEATURE_CHECK_EQ(FT_IS_REFERENCE(elem_type), true);
+                size_t elem_size = sizeof(uintptr_t);
+                // exact and create js target
+                target = value_translator::newArray(ctx);
+                for (int32_t i = 0; i < array_data->_size; i++) {
+                    void* elem_ptr = ((char*)array_data->_element + elem_size * i);
+                    // convert element target
+                    TTarget elem_val;
+                    if (!convertValueToTarget(instance, elem_type, ctx, elem_ptr, elem_val)) {
+                        FEATURE_LOG_ERROR("convert array element to guest failed !");
+                        value_translator::freeValue(ctx, elem_val);
+                        value_translator::freeValue(ctx, target);
+                        return false;
+                    }
+                    value_translator::arraySet(ctx, target, i, elem_val);
+                }
+            } break;
+            case COMPLEX_PROMISE: {
+                    /* to do by wjf
+                if (!instance) {
+                    FEATURE_LOG_ERROR("convert promise need instance provided !");
+                }
+                FEATURE_CHECK_NE(instance, nullptr);
+                FtPromiseId pid = *(FtPromiseId*)pnative;
+                feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
+                if (feature_is_undefined(promise)) {
+                    FEATURE_LOG_ERROR("get promise with pid: %" PRId32 " failed !", pid);
+                    return false;
+                }
+                target = feature_dup_value(ctx, promise);
+            */
+            } break;
+            case COMPLEX_INTERFACE: {
+                /* to do by wjf
+                InterfaceType* interfaceType = (InterfaceType*)complex_type;
+                // get interface description
+                const FeatureDescription* interfaceDesc = interfaceType->desc;
+                FEATURE_CHECK_NE(interfaceDesc, nullptr);
+                FEATURE_CHECK_NE(pnative, nullptr);
+                auto interface_ptr = static_cast<FeatureInstanceQjs*>(pnative);
+                // save interface prototype in parent instance
+                auto interfaceInstance = std::unique_ptr<FeatureInstance>(interface_ptr);
+                const char* name = interfaceDesc->name;
+                FeatureManagerQjs* manager = (FeatureManagerQjs*)(instance->prototype()->getFeatureManager());
+                FEATURE_CHECK_NE(manager, nullptr);
+                FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
+                if (!interfacePrototype) {
+                    interfacePrototype = new FeaturePrototype(interfaceDesc);
+                    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(interfacePrototype->ft_proto);
+                    *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+                    FEATURE_CHECK_NE(interfacePrototype, nullptr);
+                    interfacePrototype->setFeatureManager(manager);
+                    // add interface prototype to parent instance
+                    ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
+                }
+                // setup prototype
+                interface_ptr->setPrototype(interfacePrototype);
+                int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
+                interfacePrototype->instances[iid]->setInstanceId(iid);
+                // create prototype class instance
+                target = manager->createJsInstance(interfacePrototype, interface_ptr);
+                // setup featureInstance WeakRef, refers to feature_object
+                interface_ptr->initWeakRef(target);
+            */
+            } break;
+            default: {
+                FEATURE_LOG_ERROR("unsupported complex type !");
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 } // namespace ferry
