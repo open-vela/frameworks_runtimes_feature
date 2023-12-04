@@ -69,6 +69,30 @@ static const MemberMethod service_miplay_uninit_member_method = {
 };
 
 
+/****** for JIDL function 'ctrlcmd' ******/
+static const FeatureType service_miplay_ctrlcmd_parameters[] = {
+    FT_STRING,
+    FT_PARAM_END
+};
+
+static const MemberMethod service_miplay_ctrlcmd_member_method = {
+    .func = { .callback = FFI_FN(service_miplay_wrap_ctrlcmd) },
+    .parameters = service_miplay_ctrlcmd_parameters,
+    .return_type = FT_VOID,
+};
+
+
+/****** for JIDL function 'volumeCtrl' ******/
+static const FeatureType service_miplay_volumeCtrl_parameters[] = {
+    FT_INT,
+    FT_PARAM_END
+};
+
+static const MemberMethod service_miplay_volumeCtrl_member_method = {
+    .func = { .callback = FFI_FN(service_miplay_wrap_volumeCtrl) },
+    .parameters = service_miplay_volumeCtrl_parameters,
+    .return_type = FT_VOID,
+};
 // members
 static const Member service_miplay_members[] = {
     {
@@ -80,6 +104,16 @@ static const Member service_miplay_members[] = {
         .type = MEMBER_METHOD,
         .name = "uninit",
         .method = service_miplay_uninit_member_method,
+    },
+    {
+        .type = MEMBER_METHOD,
+        .name = "ctrlcmd",
+        .method = service_miplay_ctrlcmd_member_method,
+    },
+    {
+        .type = MEMBER_METHOD,
+        .name = "volumeCtrl",
+        .method = service_miplay_volumeCtrl_member_method,
     },
 };
 

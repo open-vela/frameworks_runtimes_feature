@@ -19,3 +19,6 @@ module service.miplay@1.0
 callback setMediainfoCb(int state, string artist, string title, int duration, int position)
 void init(setMediainfoCb cb)
 void uninit()
+
+void ctrlcmd(string cmd)
+void volumeCtrl(int type)
