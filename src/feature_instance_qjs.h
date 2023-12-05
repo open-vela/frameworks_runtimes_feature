@@ -20,6 +20,7 @@
 
 #include "feature.h"
 #include "feature_instance.h"
+#include "feature_common.h"
 
 #include <map>
 #include <memory>

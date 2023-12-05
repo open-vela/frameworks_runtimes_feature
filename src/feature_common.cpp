@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#include "feature_utils.h"
-#include "feature_log.h"
+#include "feature_common.h"
 
 int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
 {

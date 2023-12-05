@@ -15,8 +15,9 @@
  */
 
 #include "feature_registry.h"
+#include "feature_common.h"
 #include "ajs_features_init.h"
-#include "feature_utils.h"
+
 #include <assert.h>
 #include <memory>
 #include <rapidjson/document.h>

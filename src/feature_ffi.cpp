@@ -20,7 +20,7 @@
 
 #include "value_translator.h"
 #include "feature_instance.h"
-#include "feature_utils.h"
+#include "feature_common.h"
 
 #include <alloca.h>
 #include <cstdint>

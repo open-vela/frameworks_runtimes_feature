@@ -19,7 +19,7 @@
 
 #include "feature_description.h"
 #include "feature_manager.h"
-#include "feature_utils.h"
+#include "feature_common.h"
 
 #include <map>
 #include <memory>
