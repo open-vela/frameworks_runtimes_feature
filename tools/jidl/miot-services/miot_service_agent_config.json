@@ -1,7 +1,0 @@
-{
-    "includes": [
-        "feature_exports.h",
-        "MiotConnect.h",
-        "MessageCodec.h"
-    ]
-}
