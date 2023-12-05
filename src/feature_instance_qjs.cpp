@@ -75,8 +75,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     freeWeakRef();
 
     // invoke callback
-    if (proto->description->native_callbacks &&
-            proto->description->native_callbacks->onDetached) {
+    if (proto->description->native_callbacks && proto->description->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
         proto->description->native_callbacks->onDetached(js_ctx, this);
     }
@@ -261,6 +260,9 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap
 int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
 {
     const auto callback = getCallback(cid);
+    if (feature_is_undefined(callback.cb) || callback.cb_type == nullptr) {
+        return -1;
+    }
     bool has_rest_param = false;
     CallbackType* callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
