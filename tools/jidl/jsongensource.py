@@ -222,6 +222,7 @@ class CPPRender(Render):
     'UlongArray' : 'FT_ARRAY',
     'FloatArray' : 'FT_ARRAY',
     'DoubleArray' : 'FT_ARRAY',
+    'StructArray' : 'FT_STRUCT_ARRAY',
   }
 
   array_feature_type_map = {
@@ -387,11 +388,13 @@ class CPPRender(Render):
     ft_info['is_complex_ref'] = True
     return ft_info
 
-  def _GenArrayFeatureInfo(self, array_type, is_complex):
+  def _GenArrayFeatureInfo(self, array_type, is_complex, is_complex_ref):
+    module_name = self.GetModuleName()
     ft_info = self._GenComplexRefFeatureInfo(array_type, 'array')
     if self._TryCacheFeatureType(ft_info['type']):
-      self.ArrayTypeGenerator.Generate(array_type, is_complex)
-      module_name = self.GetModuleName()
+      if array_type.find(module_name) != -1:
+        array_type = array_type.replace(module_name + "_", "")
+      self.ArrayTypeGenerator.Generate(array_type, is_complex, is_complex_ref)
       array_malloc_func_str = f"FtArray* {module_name}_malloc_{array_type}_array()"
       self._TryCacheArrayMallocFunc(array_malloc_func_str)
     return ft_info
@@ -405,6 +408,21 @@ class CPPRender(Render):
       feature_type = self._MapType(ast_type, self.array_feature_type_map)
     return feature_type
 
+  def GenerateFeatureStructArray(self, ast_type):
+    if not isinstance(ast_type, dict) or ('element' not in ast_type):
+      raise Exception('not a valid array type: {}'.format(ast_type))
+    element_type_info = ast_type['element']
+    if not isinstance(element_type_info, dict) or ('referred_type' not in element_type_info):
+      raise Exception('not a valid array type: {}'.format(ast_type))
+    referred_type = element_type_info['referred_type']
+    if referred_type != 'struct':
+      raise Exception('not a valid array type: {}'.format(ast_type))
+    referred_name = element_type_info['referred_name']
+    module_name = self.GetModuleName()
+    struct_array_name = f"{module_name}_{referred_name}"
+    struct_array_info = self._GenComplexRefFeatureInfo(struct_array_name, 'struct_type')
+    return struct_array_info
+
   def GenerateFeatureInfo(self, ast_type):
     ft_info = {}
     ft_info['is_complex'] = False
@@ -414,7 +432,9 @@ class CPPRender(Render):
       feature_type = self._MapType(ast_type, self.base_feature_type_map)
       if feature_type == 'FT_ARRAY':
         # void bar(array arr); // same as object[]
-        ft_info = self._GenArrayFeatureInfo("object", True)
+        ft_info = self._GenArrayFeatureInfo("object", True, False)
+      elif feature_type == 'FT_STRUCT_ARRAY':
+        ft_info = self._GenArrayFeatureInfo("struct", True, True)
       else:
         ft_info['type'] = feature_type
       return ft_info
@@ -424,12 +444,15 @@ class CPPRender(Render):
 
     if 'element' in ast_type:
       elem_ast_type = ast_type['element']
-      elem_ft_info = self.GenerateFeatureInfo(elem_ast_type)
+      if 'referred_type' in elem_ast_type:
+        elem_ft_info = self.GenerateFeatureStructArray(ast_type)
+      else:
+        elem_ft_info = self.GenerateFeatureInfo(elem_ast_type)
       if elem_ft_info['is_complex']:
         elem_ft_type = elem_ft_info['type']
-        ft_info = self._GenArrayFeatureInfo(elem_ft_type, True)
+        ft_info = self._GenArrayFeatureInfo(elem_ft_type, True, True)
       else:
-        ft_info = self._GenArrayFeatureInfo(elem_ast_type, False)
+        ft_info = self._GenArrayFeatureInfo(elem_ast_type, False, False)
     elif 'referred_type' in ast_type:
       if ast_type['referred_type'] == 'callback':
         callback_name = ast_type['referred_name']
@@ -461,6 +484,8 @@ class CPPRender(Render):
     ft_expr = info['type']
     if info['is_complex_ref'] or info['is_complex']:
       module_name = self.GetModuleName()
+      if ft_expr.find(module_name) != -1:
+        ft_expr = ft_expr.replace(module_name + "_", "")
       ft_expr = f"{module_name}_{ft_expr}"
 
     if info['is_complex_ref']:
