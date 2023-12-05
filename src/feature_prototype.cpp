@@ -22,7 +22,8 @@
 
 #include <cstdarg>
 #include <cstdint>
-#include <string.h>
+#include <string>
+#include <functional>
 
 using namespace FEATURE;
 

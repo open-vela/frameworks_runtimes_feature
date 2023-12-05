@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "promise_manager.h"
+#include "feature_common.h"
 #include "feature_log.h"
 
 using namespace FEATURE;

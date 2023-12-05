@@ -26,7 +26,7 @@ ifneq ($(CONFIG_FEATURE_LOG_LEVEL),)
 CXXFLAGS += -DFEATURE_LOG_LEVEL=$(CONFIG_FEATURE_LOG_LEVEL)
 endif
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_utils.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_common.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_exports.cpp
