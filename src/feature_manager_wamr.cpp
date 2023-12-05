@@ -113,7 +113,6 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t* wasm_ret_p = args;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
-    wasm_val_t wasm_ret_val;
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
@@ -159,31 +158,9 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
         // invoke
         ffi_call(&cif, callback, ret_value, ffi_arg_values);
         // process return value
-        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, wasm_ret_val)) {
+        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, wasm_ret_p)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
-            // feature_free_value(instance->prototype()->ctx, wasm_ret_val);
-            // wasm_ret_val = JSE_EXCEPTION;
         }
-        switch (wasm_ret_val.kind) {
-            case WASM_I32: {
-                native_raw_return_type(double, wasm_ret_p);
-                native_raw_set_return(wasm_ret_val.of.i32);
-            } break;
-            case WASM_F64: {
-                native_raw_return_type(double, wasm_ret_p);
-                native_raw_set_return(wasm_ret_val.of.f64);
-            } break;
-            case WASM_ANYREF: {
-                native_raw_return_type(void *, wasm_ret_p);
-                const char *str = (char *)wasm_ret_val.of.foreign;
-                wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
-                native_raw_set_return(obj);
-
-            } break;
-            default:
-                break;
-        }
-
     } while (0);
 
     // free resources
@@ -194,7 +171,6 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
 static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
 {
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
-    wasm_val_t wasm_ret_val;
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
@@ -253,7 +229,6 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t *wasm_ret_p = args;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
-    wasm_val_t wasm_ret_val;
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
@@ -261,92 +236,18 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
     MemberConst& member_const = member->value;
     do {
-        if (!FeatureFFIWamr::convertConstToGuest(
-                member_const.type, member_const.data, wasm_ret_val)) {
+        if (!FeatureFFIWamr::convertConstToGuest(exec_env,
+                member_const.type, member_const.data, wasm_ret_p)) {
             FEATURE_LOG_ERROR("can not convert const value to guest!");
             break;
         }
-        switch (wasm_ret_val.kind) {
-            case WASM_I32: {
-                native_raw_return_type(double, wasm_ret_p);
-                native_raw_set_return(wasm_ret_val.of.i32);
-            } break;
-            case WASM_I64: {
-                native_raw_return_type(int64_t, wasm_ret_p);
-                native_raw_set_return(wasm_ret_val.of.i64);
-            } break;
-            case WASM_F32: {
-                native_raw_return_type(float, wasm_ret_p);
-                native_raw_set_return(wasm_ret_val.of.f32);
-            } break;
-            case WASM_F64: {
-                native_raw_return_type(double, wasm_ret_p);
-                native_raw_set_return(wasm_ret_val.of.f64);
-            } break;
-            case WASM_ANYREF: {
-                native_raw_return_type(void *, wasm_ret_p);
-                const char *str = (char *)wasm_ret_val.of.foreign;
-                wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
-                native_raw_set_return(obj);
-            } break;
-            default:
-                break;
-        }
     } while (0);
-}
-
-static inline void fill_struct_data(ObjectMapType &obj_type, uint64_t ptr, ts_value_t obj_arr[], uint32_t count)
-{
-    if (count <= 0) {
-        FEATURE_LOG_ERROR("need fill struct is null!");
-    }
-    ts_value_t obj_field;
-    for (uint32_t i = 0; i < count; i++) {
-        // fill it
-        auto member = obj_type.members[i];
-        void *member_ptr = (void *)((char *)ptr + member.offset);
-        FeatureType featureType = member.type;
-        TRY_GET_REAL_TYPE(featureType);
-        if (FT_IS_PRIMITIVE(featureType)) {
-            switch (FT_GET_VALUE(featureType)) {
-                case FT_BOOLEAN: {
-                    obj_field.of.i32 = *(int32_t *)member_ptr;
-                    obj_field.type = TS_BOOLEAN;
-                    obj_arr[i] = obj_field;
-                } break;
-                case FT_INT:
-                case FT_INT8:
-                case FT_UINT8:
-                case FT_INT16:
-                case FT_UINT16:
-                case FT_INT32:
-                case FT_UINT32:
-                case FT_INT64:
-                case FT_UINT64:
-                case FT_FLOAT:
-                case FT_DOUBLE: {
-                    obj_field.of.f64 = *(int64_t *)member_ptr;
-                    obj_field.type = TS_NUMBER;
-                    obj_arr[i] = obj_field;
-                } break;
-                case FT_CHAR: {
-                    char **title_ptr = (char **)member_ptr;
-                    obj_field.of.ref = *title_ptr;
-                    obj_field.type = TS_STRING;
-                    obj_arr[i] = obj_field;
-                } break;
-                default:
-                    break;
-            }
-        }
-    }
 }
 
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
     bool got_error = false;
     feature_value_t* ret_promise;
-    wasm_val_t wasm_ret_val;
     uint64_t* wasm_ret_p = args;
     native_raw_get_arg(void*, thiz_ptr, args);
 
@@ -549,62 +450,10 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method.return_type != FT_VOID) {
             //process return value
-            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret_val)) {
+            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret_p)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(js_ctx, tmp_p);
-                // wasm_ret_val = FEATURE_EXCEPTION;
                 got_error = true;
-            }
-            switch (wasm_ret_val.kind) {
-                case WASM_I32: {
-                    native_raw_return_type(double, wasm_ret_p);
-                    native_raw_set_return(wasm_ret_val.of.i32);
-                } break;
-                case WASM_F64: {
-                    native_raw_return_type(double, wasm_ret_p);
-                    native_raw_set_return(wasm_ret_val.of.f64);
-                } break;
-                case WASM_ANYREF: {
-                    wasm_struct_obj_t obj = nullptr;
-                    if (FT_IS_PRIMITIVE(method.return_type)) {
-                        native_raw_return_type(void *, wasm_ret_p);
-                        const char *str = (char *)wasm_ret_val.of.foreign;
-                        printf("return str is %s\n", str);
-                        wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
-                        native_raw_set_return(obj);
-                    } else if (FT_IS_COMPLEX(method.return_type)) {
-                        /* if return type is complex, and then is array or struct type.*/
-                        ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
-                        switch (complex_type->type) {
-                            case COMPLEX_STRUCT_MAP: {
-                                native_raw_return_type(void *, wasm_ret_p);
-                                ObjectMapType &obj_map_type = *(ObjectMapType *)complex_type;
-                                auto member_count = countMember(obj_map_type.members);
-                                ts_value_t obj_arr[member_count];
-                                /* call fill_struct_data api to fill data in obj array as above */
-                                fill_struct_data(obj_map_type, wasm_ret_val.of.foreign, obj_arr, member_count);
-                                /* call create_wasm_class_struct api from feature_wamr_utils.h */
-                                wasm_struct_obj_t obj = create_wasm_class_struct(exec_env, obj_arr, member_count);
-                                native_raw_set_return(obj);
-                            } break;
-                            case COMPLEX_ARRAY: {
-                                native_raw_return_type(void *, wasm_ret_p);
-                                FtArray *array = (FtArray *)wasm_ret_val.of.foreign;
-                                uint32_t len = array->_size;
-                                wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, array->_element, len);
-                                native_raw_set_return(obj);
-                            } break;
-                            case COMPLEX_INTERFACE: {
-                                native_raw_return_type(void *, wasm_ret_p);
-                                native_raw_set_return((void *)wasm_ret_val.of.foreign);
-                            } break;
-                            default:
-                                break;
-                        }
-                    }
-                } break;
-                default:
-                    break;
             }
         } else if (is_promise) {
             //把promise返回给ts层

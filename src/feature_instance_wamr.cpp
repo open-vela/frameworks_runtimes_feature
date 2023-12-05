@@ -256,31 +256,37 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
                 // got_error = true;
                 break;
             }
-            wasm_val_t val;
-            if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, val)) {
+
+            uint64_t wasm_ret;
+            if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, &wasm_ret)) {
                 FEATURE_LOG_ERROR("convert callback param failed !");
                 free(ptr);
                 break;
             }
-            switch (val.kind) {
-                case WASM_I32: {
-                    *(double *)(argv + occupied_slots) = val.of.i32;
-                    occupied_slots += sizeof(double) / sizeof(uint32);
-                } break;
-                case WASM_F64: {
-                    *(double *)(argv + occupied_slots) = val.of.f64;
-                    occupied_slots += sizeof(double) / sizeof(uint32);
-                } break;
-                case WASM_ANYREF: {
-                    const char *str = (char *)val.of.foreign;
-                    wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
-                    b_memcpy_s(argv + occupied_slots, sizeof(argv) - occupied_slots, &(obj),
-                                sizeof(wasm_stringref_obj_t));
-                    occupied_slots += sizeof(wasm_stringref_obj_t) / sizeof(uint32);
-                } break;
-                default:
-                    break;
-            }
+            if (FT_IS_PRIMITIVE(featureType)) {
+                switch (FT_GET_VALUE(featureType)) {
+                    case FT_VOID: {
+                        FEATURE_LOG_ERROR("void feature type not supported !");
+                    } break;
+                    case FT_INT:
+                    case FT_INT32:
+                    case FT_UINT32:
+                    case FT_DOUBLE: {
+                        *(double *)(argv + occupied_slots) = (double)wasm_ret;
+                        occupied_slots += sizeof(double) / sizeof(uint32);
+                    } break;
+                    case FT_CHAR: {
+                        wasm_stringref_obj_t obj = (wasm_stringref_obj_t)wasm_ret;
+                        b_memcpy_s(argv + occupied_slots, sizeof(argv) - occupied_slots, &(obj),
+                                    sizeof(wasm_stringref_obj_t));
+                        occupied_slots += sizeof(wasm_stringref_obj_t) / sizeof(uint32);
+                        break;
+                    }
+                    default:{
+                        FEATURE_LOG_ERROR("feature type not supported !");
+                    } break;
+                }
+	    }
             free(ptr);
         }
 
@@ -307,44 +313,52 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
             void *arg = va_arg(ap, void *);
             void *header_ptr = ((char *)arg - FT_OBJ_HEADER_SIZE);
             FTObjHeader *header = (FTObjHeader *)header_ptr;
-            wasm_val_t val;
-            if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, exec_env, val)) {
+            uint64_t wasm_ret;
+            if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, exec_env, &wasm_ret)) {
                 FEATURE_LOG_ERROR("convert callback param failed !");
                 break;
             }
-            switch (val.kind) {
-                case WASM_I32: {
-                    wasm_value_t tmp_val = { 0 };
-                    /* call return_box_anyref api to box element as any */
-                    wasm_anyref_obj_t any_obj = nullptr;
-                    if (val.of.i32 == 1 || val.of.i32 == 0) {
-                        any_obj = return_box_anyref(exec_env, dyntype_new_boolean(dyn_ctx, val.of.i32));
-                    } else {
-                        any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.i32));
-                    }
-                    // wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.i32));
-                    tmp_val.gc_obj = (wasm_obj_t)any_obj;
-                    wasm_array_obj_set_elem(any_array, i, &tmp_val);
-                } break;
-                case WASM_F64: {
-                    wasm_value_t tmp_val = { 0 };
-                    /* call return_box_anyref api to box element as any */
-                    wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.f64));
-                    tmp_val.gc_obj = (wasm_obj_t)any_obj;
-                    wasm_array_obj_set_elem(any_array, i, &tmp_val);
-                } break;
-                case WASM_ANYREF: {
-                    const char *str = (char *)val.of.foreign;
-                    wasm_stringref_obj_t obj = create_wasm_string_with_len(exec_env, str, strlen(str));
-                    wasm_value_t tmp_val = {0};
-                    /* call return_box_anyref api to box element as any */
-                    wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_string(dyn_ctx, (void *)wasm_stringref_obj_get_value(obj)));
-                    tmp_val.gc_obj = (wasm_obj_t)any_obj;
-                    wasm_array_obj_set_elem(any_array, i, &tmp_val);
-                } break;
-                default:
-                    break;
-            }
+            if (FT_IS_PRIMITIVE(header->featureType)) {
+                switch (FT_GET_VALUE(header->featureType)) {
+                    case FT_VOID: {
+                        FEATURE_LOG_ERROR("void feature type not supported !");
+                    } break;
+                    case FT_INT:
+                    case FT_INT32:
+                    case FT_UINT32: {
+                        wasm_value_t tmp_val = { 0 };
+                        /* call return_box_anyref api to box element as any */
+                        wasm_anyref_obj_t any_obj = nullptr;
+                        int32_t i32_ret = (int32_t)wasm_ret;
+                        if (i32_ret == 1 || i32_ret == 0) {
+                            any_obj = return_box_anyref(exec_env, dyntype_new_boolean(dyn_ctx, i32_ret));
+                        } else {
+                            any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, i32_ret));
+                        }
+                        // wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, val.of.i32));
+                        tmp_val.gc_obj = (wasm_obj_t)any_obj;
+                        wasm_array_obj_set_elem(any_array, i, &tmp_val);
+                    } break;
+                    case FT_DOUBLE: {
+                        wasm_value_t tmp_val = { 0 };
+                        /* call return_box_anyref api to box element as any */
+                        wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_number(dyn_ctx, (double)wasm_ret));
+                        tmp_val.gc_obj = (wasm_obj_t)any_obj;
+                        wasm_array_obj_set_elem(any_array, i, &tmp_val);
+                    } break;
+                    case FT_CHAR: {
+                        wasm_stringref_obj_t obj = (wasm_stringref_obj_t)wasm_ret;
+                        wasm_value_t tmp_val = {0};
+                        /* call return_box_anyref api to box element as any */
+                        wasm_anyref_obj_t any_obj = return_box_anyref(exec_env, dyntype_new_string(dyn_ctx, (void *)wasm_stringref_obj_get_value(obj)));
+                        tmp_val.gc_obj = (wasm_obj_t)any_obj;
+                        wasm_array_obj_set_elem(any_array, i, &tmp_val);
+                    } break;
+                    default:{
+                        FEATURE_LOG_ERROR("feature type not supported !");
+                    } break;
+                }
+	    }
             /* at least, add the any array object to the return parameter argv */
             b_memcpy_s(argv + occupied_slots, sizeof(argv) - occupied_slots, &(obj_ref),
                         sizeof(wasm_struct_obj_t));
