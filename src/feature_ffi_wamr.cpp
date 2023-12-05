@@ -20,6 +20,7 @@
 #include "feature_log.h"
 #include "feature_prototype.h"
 #include "feature_utils.h"
+#include "feature_wamr_utils.h"
 
 #include <alloca.h>
 #include <cstdint>
@@ -32,21 +33,60 @@ using namespace FEATURE;
 using namespace ferry;
 
 namespace ferry {
-extern "C" int get_array_length(wasm_struct_obj_t obj);
-
-extern "C" wasm_array_obj_t get_array_ref(wasm_struct_obj_t obj);
-
-extern "C" {
-    uint32_t wasm_string_get_length(wasm_stringref_obj_t str_obj);
-    uint32_t wasm_string_to_cstring(wasm_stringref_obj_t str_obj, char *buffer, uint32_t len);
-}
 
 namespace FeatureFFIWamr {
 
-char getFeatureSignature(FeatureType featureType)
+static inline void fill_struct_data(ObjectMapType &obj_type, uint64_t ptr, ts_value_t obj_arr[], uint32_t count)
 {
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+    if (count <= 0) {
+        FEATURE_LOG_ERROR("need fill struct is null!");
+    }
+    ts_value_t obj_field;
+    for (uint32_t i = 0; i < count; i++) {
+        // fill it
+        auto member = obj_type.members[i];
+        void *member_ptr = (void *)((char *)ptr + member.offset);
+        FeatureType ftype = member.type;
+        TRY_GET_REAL_TYPE(ftype);
+        if (FT_IS_PRIMITIVE(ftype)) {
+            switch (FT_GET_VALUE(ftype)) {
+                case FT_BOOLEAN: {
+                    obj_field.of.i32 = *(int32_t *)member_ptr;
+                    obj_field.type = TS_BOOLEAN;
+                    obj_arr[i] = obj_field;
+                } break;
+                case FT_INT:
+                case FT_INT8:
+                case FT_UINT8:
+                case FT_INT16:
+                case FT_UINT16:
+                case FT_INT32:
+                case FT_UINT32:
+                case FT_INT64:
+                case FT_UINT64:
+                case FT_FLOAT:
+                case FT_DOUBLE: {
+                    obj_field.of.f64 = *(int64_t *)member_ptr;
+                    obj_field.type = TS_NUMBER;
+                    obj_arr[i] = obj_field;
+                } break;
+                case FT_CHAR: {
+                    char **title_ptr = (char **)member_ptr;
+                    obj_field.of.ref = *title_ptr;
+                    obj_field.type = TS_STRING;
+                    obj_arr[i] = obj_field;
+                } break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+char getFeatureSignature(FeatureType ftype)
+{
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (FT_GET_VALUE(ftype)) {
             case FT_VOID:
                 return 0;
             case FT_BOOLEAN:
@@ -71,8 +111,8 @@ char getFeatureSignature(FeatureType featureType)
                 return 0;
             }
         }
-    } else if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(featureType);
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(ftype);
         switch (complexType->type) {
             case COMPLEX_OPTIONAL: {
                 OptionalType *optionalType = (OptionalType *)complexType;
@@ -92,14 +132,14 @@ char getFeatureSignature(FeatureType featureType)
     return 0;
 }
 
-bool convertConstToGuest(FeatureType featureType, AppendData& const_data, wasm_val_t& value)
+bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData& const_data, uint64_t* value)
 {
-    if (!FT_IS_PRIMITIVE(featureType)) {
+    if (!FT_IS_PRIMITIVE(ftype)) {
         FEATURE_LOG_ERROR("complex is not supported for const!");
         return false;
     }
 
-    switch (FT_GET_VALUE(featureType)) {
+    switch (FT_GET_VALUE(ftype)) {
         case FT_VOID: {
             FEATURE_LOG_ERROR("void not supported !");
             return false;
@@ -108,42 +148,46 @@ bool convertConstToGuest(FeatureType featureType, AppendData& const_data, wasm_v
         case FT_INT16:
         case FT_INT32:
         case FT_INT: {
-            value.of.i32 = const_data.i32;
-            value.kind = WASM_I32;
+            native_raw_return_type(int32_t, value);
+            native_raw_set_return(const_data.i32);
             break;
         }
         case FT_UINT8:
         case FT_UINT16:
         case FT_UINT32: {
-            value.of.i32 = const_data.u32;
-            value.kind = WASM_I32;
+            native_raw_return_type(uint32_t, value);
+            native_raw_set_return(const_data.u32);
             break;
         }
         case FT_INT64: {
-            value.of.i64 = const_data.i64;
-            value.kind = WASM_I64;
+            native_raw_return_type(int64_t, value);
+            native_raw_set_return(const_data.i64);
             break;
         }
         case FT_UINT64: {
-            value.of.i64 = const_data.u64;
-            value.kind = WASM_I64;
+            native_raw_return_type(uint64_t, value);
+            native_raw_set_return(const_data.u64);
             break;
         }
         case FT_FLOAT: {
-            value.of.f32 = const_data.f32;
-            value.kind = WASM_F32;
+            native_raw_return_type(float, value);
+            native_raw_set_return(const_data.f32);
             break;
         }
         case FT_DOUBLE: {
-            value.of.f64 = const_data.f64;
-            value.kind = WASM_F64;
+            native_raw_return_type(double, value);
+            native_raw_set_return(const_data.f64);
         } break;
-        // case FT_BOOLEAN: {
-        //     value = feature_boolean(ctx, *((bool*)ptr));
-        // } break;
+        case FT_BOOLEAN: {
+            native_raw_return_type(uint32_t, value);
+            native_raw_set_return(const_data.u32);
+        } break;
         case FT_CHAR: {
-            value.of.foreign = (uintptr_t)const_data.str;
-            value.kind = WASM_ANYREF;
+            native_raw_return_type(void *, value);
+            const char *str = (char *)const_data.str;
+            printf("return str is %s\n", str);
+            wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
+            native_raw_set_return(obj);
             break;
         }
         default: {
@@ -155,122 +199,132 @@ bool convertConstToGuest(FeatureType featureType, AppendData& const_data, wasm_v
     return true;
 }
 
-bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
-    wasm_exec_env_t exec_env,  wasm_val_t& value)
+bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr,
+    wasm_exec_env_t exec_env,  uint64_t* value)
 {
     FEATURE_CHECK_NE(ptr, nullptr);
-    bool isRef = FT_IS_REFERENCE(featureType);
-    if (isRef) {
+    if (FT_IS_REFERENCE(ftype)) {
         ptr = *(void**)ptr;
     }
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (FT_GET_VALUE(ftype)) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
             }
             case FT_INT: {
-                //value = feature_int(ctx, *((int32_t*)ptr));
-                value.of.i32 = *((int32_t*)ptr);
-                value.kind = WASM_I32;
-                break;
-            }
-            // case FT_INT8: {
-            //     value = feature_int(ctx, *((int8_t*)ptr));
-            // } break;
-            // case FT_UINT8: {
-            //     value = feature_uint(ctx, *((uint8_t*)ptr));
-            // } break;
-            // case FT_INT16: {
-            //     value = feature_int(ctx, *((int16_t*)ptr));
-            // } break;
-            // case FT_UINT16: {
-            //     value = feature_uint(ctx, *((uint16_t*)ptr));
-            // } break;
-            case FT_INT32: {
-                //value = feature_int(ctx, *((int32_t*)ptr));
-                value.of.i32 = *((int32_t*)ptr);
-                value.kind = WASM_I32;
-                break;
-            }
-            case FT_UINT32: {
-                //value = feature_uint(ctx, *((uint32_t*)ptr));
-                value.of.i32 = *((int32_t*)ptr);
-                value.kind = WASM_I32;
-                break;
-            }
-            // case FT_INT64: {
-            //     value = feature_int64(ctx, *((int64_t*)ptr));
-            // } break;
-            // case FT_UINT64: {
-            //     value = feature_uint64(ctx, *((uint64_t*)ptr));
-            // } break;
-            // case FT_FLOAT: {
-            //     value = feature_double(ctx, *((float*)ptr));
-            // } break;
-            case FT_DOUBLE: {
-                value.of.f64 = *((double*)ptr);
-                value.kind = WASM_F64;
+                native_raw_return_type(int64_t, value);
+                native_raw_set_return(*((int32_t*)ptr));
             } break;
-            // case FT_BOOLEAN: {
-            //     value = feature_boolean(ctx, *((bool*)ptr));
-            // } break;
+            case FT_INT8: {
+                native_raw_return_type(int64_t, value);
+                native_raw_set_return(*((int8_t*)ptr));
+            } break;
+            case FT_UINT8: {
+                native_raw_return_type(uint64_t, value);
+                native_raw_set_return(*((uint8_t*)ptr));
+            } break;
+            case FT_INT16: {
+                native_raw_return_type(int64_t, value);
+                native_raw_set_return(*((int16_t*)ptr));
+            } break;
+            case FT_UINT16: {
+                native_raw_return_type(uint64_t, value);
+                native_raw_set_return(*((uint16_t*)ptr));
+            } break;
+            case FT_INT32: {
+                native_raw_return_type(int64_t, value);
+                native_raw_set_return(*((int32_t*)ptr));
+            } break;
+            case FT_UINT32: {
+                native_raw_return_type(uint64_t, value);
+                native_raw_set_return(*((uint32_t*)ptr));
+            } break;
+            case FT_INT64: {
+                native_raw_return_type(int64_t, value);
+                native_raw_set_return(*((int64_t*)ptr));
+            } break;
+            case FT_UINT64: {
+                native_raw_return_type(uint64_t, value);
+                native_raw_set_return(*((uint64_t*)ptr));
+            } break;
+            case FT_FLOAT: {
+                native_raw_return_type(float, value);
+                native_raw_set_return(*((float*)ptr));
+            } break;
+            case FT_DOUBLE: {
+                native_raw_return_type(double, value);
+                native_raw_set_return(*((double*)ptr));
+            } break;
+            case FT_BOOLEAN: {
+                native_raw_return_type(uint64_t, value);
+                native_raw_set_return(*((bool*)ptr));
+            } break;
             case FT_CHAR: {
-                value.of.foreign = (uintptr_t)ptr;
-                value.kind = WASM_ANYREF;
-                // value = feature_string(ctx, (const char*)ptr);
-                break;
-            }
+                native_raw_return_type(void *, value);
+                const char *str = (char *)ptr;
+                printf("return str is %s\n", str);
+                wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
+                native_raw_set_return(obj);
+            } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
                 return false;
             }
         }
-    } else if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(featureType);
-        switch (complexType->type) {
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(ftype);
+        switch (complex_type->type) {
             case COMPLEX_STRUCT_MAP: {
-                value.of.foreign = (uintptr_t)ptr;
-                value.kind = WASM_ANYREF;
+                native_raw_return_type(void *, value);
+                ObjectMapType &obj_map_type = *(ObjectMapType *)complex_type;
+                auto member_count = countMember(obj_map_type.members);
+                ts_value_t obj_arr[member_count];
+                /* call fill_struct_data api to fill data in obj array as above */
+                fill_struct_data(obj_map_type, (uintptr_t)ptr, obj_arr, member_count);
+                /* call createWasmStruct api from feature_wamr_utils.h */
+                wasm_struct_obj_t obj = create_wasm_struct(exec_env, obj_arr, member_count);
+                native_raw_set_return(obj);
             }
             break;
             case COMPLEX_ARRAY: {
-                // convert to guest
-                // FtArray* arrayData = (FtArray*)ptr;
-                value.of.foreign = (uintptr_t)ptr;
-                value.kind = WASM_ANYREF;
+                native_raw_return_type(void *, value);
+                FtArray *array = (FtArray *)ptr;
+                uint32_t len = array->_size;
+                wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, array->_element, len);
+                native_raw_set_return(obj);
             }
             break;
             case COMPLEX_INTERFACE: {
-                value.of.foreign = (uintptr_t)ptr;
-                value.kind = WASM_ANYREF;
+                native_raw_return_type(void *, value);
+                native_raw_set_return(ptr);
             } break;
         }
     }
     return true;
 }
 
-bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
+bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr,
 	wasm_exec_env_t exec_env, uint64_t* value)
 {
     // special step: get real type of complex type
-    TRY_GET_REAL_TYPE(featureType);
+    TRY_GET_REAL_TYPE(ftype);
     if (!ptr) {
-        if (!createHostValue(featureType, ptr)) {
+        if (!createHostValue(ftype, ptr)) {
             FEATURE_LOG_ERROR("create host value failed !");
             return false;
         }
     }
-    if (FT_IS_REFERENCE(featureType)) {
+    if (FT_IS_REFERENCE(ftype)) {
         void*& value_ptr = *(void**)ptr;
-        if (!convertValueToHost(instance, FT_REMOVE_REFERENCE(featureType), value_ptr, exec_env, value)) {
+        if (!convertValueToHost(instance, FT_REMOVE_REFERENCE(ftype), value_ptr, exec_env, value)) {
             FEATURE_LOG_ERROR("convert value to host failed !");
             return false;
         }
         return true;
     }
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (FT_GET_VALUE(ftype)) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -283,28 +337,28 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
             case FT_UINT16:
             case FT_INT32:
             case FT_UINT32: {
-                native_raw_get_arg(double, number_value, value);
-                *(int32_t*)ptr = (int32_t)number_value;
+                native_raw_get_arg(double, num_val, value);
+                *(int32_t*)ptr = (int32_t)num_val;
             }
             break;
             case FT_INT64: {
-                native_raw_get_arg(double, number_value, value);
-                *(int64_t*)ptr = (int64_t)number_value;
+                native_raw_get_arg(double, num_val, value);
+                *(int64_t*)ptr = (int64_t)num_val;
             }
             break;
             case FT_UINT64: {
-                native_raw_get_arg(double, number_value, value);
-                *(u_int64_t*)ptr = (u_int64_t)number_value;
+                native_raw_get_arg(double, num_val, value);
+                *(u_int64_t*)ptr = (u_int64_t)num_val;
             }
             break;
             case FT_FLOAT: {
-                native_raw_get_arg(double, number_value, value);
-                *(float*)ptr = (float)number_value;
+                native_raw_get_arg(double, num_val, value);
+                *(float*)ptr = (float)num_val;
             }
             break;
             case FT_DOUBLE: {
-                native_raw_get_arg(double, number_value, value);
-                *(float64*)ptr = (float64)number_value;
+                native_raw_get_arg(double, num_val, value);
+                *(float64*)ptr = (float64)num_val;
             }
             break;
             case FT_CHAR: {
@@ -339,8 +393,8 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 return false;
             }
         }
-    } else if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
         switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
                 wasm_value_t val = {0};
@@ -371,7 +425,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void
                 // save into instance
                 CallbackType *callbackType = (CallbackType *)complexType;
                 native_raw_get_arg(wasm_obj_t, cb_value, value);
-                //*(int32_t*)ptr = (int32_t)number_value;
+                //*(int32_t*)ptr = (int32_t)num_val;
                 FtCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(cb_value, callbackType);
                 *(FtCallbackId *)ptr = id; // write callback id to pointer.
             } break;
