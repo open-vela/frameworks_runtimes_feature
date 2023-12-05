@@ -821,11 +821,18 @@ class JIDL(Parser):
     """
     value_type : array_object_type
                | typed_array_type
+               | id_array_type
                | primary_type
                | unique_buffer_type
                | id
     """
     p[0] = p[1]
+
+  def p_id_array_type(self, p):
+    """
+    id_array_type : id LBRACKET RBRACKET
+    """
+    CreateASTNode(p, ast.IDArrayType, p[1])
 
   def p_array_object_type(self, p):
     "array_object_type : primary_type LBRACKET RBRACKET"

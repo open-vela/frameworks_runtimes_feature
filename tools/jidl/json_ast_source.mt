@@ -362,10 +362,12 @@ const InterfaceType ${module_name}_${parent_prefix}type {
 /****** JIDL interface '${iname}' glue code end ******/
 </%def>\
 
-<%def name="GenerateArrayType(array_type, is_complex)">\
+<%def name="GenerateArrayType(array_type, is_complex, is_complex_ref)">\
 static const ArrayType ${module_name}_${array_type}_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-%if is_complex:
+%if is_complex_ref:
+    .element_type = FT_MK_COMPLEX_REF(&${module_name}_${array_type})
+%elif is_complex:
     .element_type = FT_MK_COMPLEX(&${array_type})
 %else:
 <% ft_type = render.ToBaseFeatureType(array_type) %>\
@@ -384,8 +386,8 @@ FtArray* ${module_name}_malloc_${array_type}_array() {
     def __init__(self, gen_func):
       self.gen_func = gen_func
 
-    def Generate(self, array_type, is_complex):
-      self.gen_func(array_type, is_complex)
+    def Generate(self, array_type, is_complex, is_complex_ref):
+      self.gen_func(array_type, is_complex, is_complex_ref)
 %>\
 <%
   render.SetArrayTypeGenerator(ArrayTypeGenerator(GenerateArrayType))
@@ -397,7 +399,10 @@ FtArray* ${module_name}_malloc_${array_type}_array() {
   param_infos = []
   if 'params' in node:
     for param in node['params']:
-      p_info = render.GenerateFeatureInfo(param["type"])
+      if 'element' in param and 'referred_type' in param["element"]:
+        p_info = render.GenerateFeatureInfo(param)
+      else:
+        p_info = render.GenerateFeatureInfo(param["type"])
       ft_expr = render.GenerateFtExpression(p_info)
       if 'name' in param and 'default' in param:
         if p_info['is_complex_ref'] or p_info['is_complex']:

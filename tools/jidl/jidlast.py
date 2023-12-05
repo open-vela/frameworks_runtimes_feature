@@ -199,6 +199,20 @@ class PrimaryArrayType(Type):
     out['type'] = 'array'
     out['element'] = self.base_type.name
 
+class IDArrayType(Type):
+  def __init__(self, name):
+    Type.__init__(self, name, ID)
+    self.name = name
+
+  def __str__(self):
+    return str(self.name) + '[]'
+  def ToJson(self, out):
+    out['type'] = 'array'
+    out['element'] = {'type': 'reference',
+            'referred_type' : 'struct',
+            'referred_name': str(self.name)
+    }
+
 class TypedArrayType(Type):
   def __init__(self, base_type):
     Node.__init__(self, TYPED_ARRAY_TYPE)
@@ -1060,7 +1074,7 @@ def GetPrimaryType(tp_name):
 def InitPrimaryTypes():
   types = ["int", "float", "double", "string", "boolean",
       "long", "uint", "ulong", "jsvalue", "jscontext",
-      "array", "object", "void"]
+      "array", "object", "void", "struct"]
   for t in types:
     primary_types[t] = PrimaryType(t)
 
@@ -1069,7 +1083,7 @@ InitPrimaryTypes()
 typed_array_elements ={}
 def InitTypedArrayElement():
   types = ['uint8', 'int8', 'uint16', 'int16', 'uint32', 'int32', 'uint', 'int',
-          'uint64', 'int64', 'ulong', 'long', 'float', 'double', 'void']
+          'uint64', 'int64', 'ulong', 'long', 'float', 'double', 'void', 'struct']
   for t in types:
     typed_array_elements[t] = PrimaryType(t)
 
@@ -1109,6 +1123,7 @@ class IDTable:
 struct_member_accepted_types = (
   PrimaryType,
   PrimaryArrayType,
+  IDArrayType,
   TypedArrayType,
   StructDefine,
   InterfaceDefine,
@@ -1120,6 +1135,7 @@ struct_member_accepted_types = (
 param_accepted_types = (
   PrimaryType,
   PrimaryArrayType,
+  IDArrayType,
   CallbackDefine,
   StructDefine,
   InterfaceDefine,
@@ -1131,6 +1147,7 @@ param_accepted_types = (
 return_accepted_type = (
   PrimaryType,
   PrimaryArrayType,
+  IDArrayType,
   InterfaceDefine,
   StructDefine,
   EnumDefine,
@@ -1141,6 +1158,7 @@ return_accepted_type = (
 value_accepted_type = (
   PrimaryType,
   PrimaryArrayType,
+  IDArrayType,
   InterfaceDefine,
   EnumDefine,
   StructDefine,
@@ -1149,6 +1167,7 @@ value_accepted_type = (
 direct_resolve_types = (
   PrimaryType,
   PrimaryArrayType,
+  IDArrayType,
   PromiseType,
   TypedArrayType,
   UniqueBufferType
