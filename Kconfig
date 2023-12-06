@@ -17,6 +17,7 @@ config FEATURE_FRAMEWORK
 	bool "Enable Feature Framework Manager"
 	default n
   depends on NETUTILS_CJSON
+  depends on LIB_FFI
 
 if FEATURE_FRAMEWORK
 
