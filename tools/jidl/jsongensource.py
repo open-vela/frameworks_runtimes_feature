@@ -1025,5 +1025,5 @@ if __name__ == '__main__':
     render = CPPRender(json_file, configs['header'], configs['source'], configs)
   elif configs['lang'] == 'ts':
     render = TSRender(json_file, configs['dts'], configs)
-    render.Generate()
+  render.Generate()
 
