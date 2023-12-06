@@ -284,7 +284,6 @@ void system_storage_wrap_clear(FeatureInstanceHandle feature, AppendData data, s
     int ret = uv_db_close(th->db);
     STORAGE_CHECK_IF(ret, "uv_db_close fail");
     ret = unlink(th->db_path);
-    STORAGE_CHECK_IF(ret, "unlink fail");
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     ret = uv_db_init(FeatureGetUVLoop(manager), &th->db, th->db_path);
     STORAGE_CHECK_IF(ret, "uv_db_init fail");
