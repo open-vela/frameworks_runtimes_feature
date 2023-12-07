@@ -21,8 +21,8 @@
 
  /* clang-format off */
 
-#ifndef JSON_AST_GEN_MODULE_SERVICE_EXCHANGE_H_
-#define JSON_AST_GEN_MODULE_SERVICE_EXCHANGE_H_
+#ifndef JSON_AST_GEN_MODULE_SYSTEM_EXCHANGE_H_
+#define JSON_AST_GEN_MODULE_SYSTEM_EXCHANGE_H_
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -35,25 +35,23 @@
 #include <string.h>
 
 // FeatureCallbacks to be implemented
-void service_exchange_onRegister(const char* feature_name);
-void service_exchange_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void service_exchange_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void service_exchange_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
-void service_exchange_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void service_exchange_onUnregister(const char* feature_name);
+void system_exchange_onRegister(const char* feature_name);
+void system_exchange_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void system_exchange_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void system_exchange_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
+void system_exchange_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void system_exchange_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _GetInfo {
-  FtString package;
-  FtString sign;
   FtString key;
   FtString scope;
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
-} service_exchange_GetInfo;
+} system_exchange_GetInfo;
 
-service_exchange_GetInfo* service_exchangeMallocGetInfo();
+system_exchange_GetInfo* system_exchangeMallocGetInfo();
 
 typedef struct _SetInfo {
   FtString key;
@@ -62,61 +60,35 @@ typedef struct _SetInfo {
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
-  FtString package;
-  FtString sign;
-} service_exchange_SetInfo;
+} system_exchange_SetInfo;
 
-service_exchange_SetInfo* service_exchangeMallocSetInfo();
+system_exchange_SetInfo* system_exchangeMallocSetInfo();
 
 typedef struct _RemoveInfo {
   FtString key;
+  FtString scope;
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
-  FtString package;
-  FtString sign;
-} service_exchange_RemoveInfo;
+} system_exchange_RemoveInfo;
 
-service_exchange_RemoveInfo* service_exchangeMallocRemoveInfo();
+system_exchange_RemoveInfo* system_exchangeMallocRemoveInfo();
 
 typedef struct _ClearInfo {
+  FtString scope;
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
-} service_exchange_ClearInfo;
+} system_exchange_ClearInfo;
 
-service_exchange_ClearInfo* service_exchangeMallocClearInfo();
-
-typedef struct _GrantPermissionInfo {
-  FtString package;
-  FtString sign;
-  FtString key;
-  FtBool writable;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} service_exchange_GrantPermissionInfo;
-
-service_exchange_GrantPermissionInfo* service_exchangeMallocGrantPermissionInfo();
-
-typedef struct _RevokePermissionInfo {
-  FtString package;
-  FtString key;
-  FtCallbackId success;
-  FtCallbackId fail;
-  FtCallbackId complete;
-} service_exchange_RevokePermissionInfo;
-
-service_exchange_RevokePermissionInfo* service_exchangeMallocRevokePermissionInfo();
+system_exchange_ClearInfo* system_exchangeMallocClearInfo();
 
 
 // Function wrappers to be implemented
-void service_exchange_wrap_set(FeatureInstanceHandle feature, AppendData append_data, service_exchange_SetInfo * info);
-void service_exchange_wrap_get(FeatureInstanceHandle feature, AppendData append_data, service_exchange_GetInfo * info);
-void service_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData append_data, service_exchange_RemoveInfo * info);
-void service_exchange_wrap_clear(FeatureInstanceHandle feature, AppendData append_data, service_exchange_ClearInfo * info);
-void service_exchange_wrap_grantPermission(FeatureInstanceHandle feature, AppendData append_data, service_exchange_GrantPermissionInfo * info);
-void service_exchange_wrap_revokePermission(FeatureInstanceHandle feature, AppendData append_data, service_exchange_RevokePermissionInfo * info);
+void system_exchange_wrap_set(FeatureInstanceHandle feature, AppendData append_data, system_exchange_SetInfo * info);
+void system_exchange_wrap_get(FeatureInstanceHandle feature, AppendData append_data, system_exchange_GetInfo * info);
+void system_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData append_data, system_exchange_RemoveInfo * info);
+void system_exchange_wrap_clear(FeatureInstanceHandle feature, AppendData append_data, system_exchange_ClearInfo * info);
 
 // Interface constructors
 
@@ -126,5 +98,5 @@ void service_exchange_wrap_revokePermission(FeatureInstanceHandle feature, Appen
 
 // Array malloc functions
 
-#endif // JSON_AST_GEN_MODULE_SERVICE_EXCHANGE_H_
+#endif // JSON_AST_GEN_MODULE_SYSTEM_EXCHANGE_H_
 /* clang-format on */
