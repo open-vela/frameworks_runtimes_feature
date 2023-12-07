@@ -93,7 +93,7 @@ bool check_header(ft_context_ref ft_ctx, FtAny js_headers,
 }
 
 bool type_contain(const char** type_array, int size, const char* type) {
-  for (int i = 0; i < size; ++i) {
+  for (int i = 1; i < size; ++i) {
     if (strcmp(type, type_array[i]) == 0) return true;
   }
   return false;

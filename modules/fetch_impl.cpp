@@ -201,6 +201,8 @@ void request_cancel(fetch_t* fetch) {
 void fetch_onUnregister(const char* feature_name) { FETCH_DEBUG(""); }
 
 bool get_method(FtString method, std::string& out) {
+  FETCH_DEBUG("len:%d method:%s", strlen(method), method);
+
   if (!check_str(method)) {
     out.assign(Fetch::method_type[Fetch::MethodType::GET]);
     return true;
@@ -258,7 +260,7 @@ static void fetch_request_cb(int state, uv_response_t* response) {
 }
 
 static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
-                           const char* method,
+                           std::string& method,
                            std::map<std::string, std::string>& headers,
                            content_t* ct) {
   request_context_t* p = get_request_context(fetch->feature);
@@ -269,7 +271,9 @@ static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
   uv_request_set_url(fetch->request, obj->url);
 
   // set method
-  uv_request_set_method(fetch->request, method);
+  if (method.size()) {
+    uv_request_set_method(fetch->request, method.c_str());
+  }
 
   uv_request_set_data(
       fetch->request,
@@ -434,9 +438,7 @@ void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
   SET_ARGERROR(check_url(obj->url), "invalid url");
 
   // Check for non-essential parameters
-  if (check_str(obj->method)) {
     SET_ARGERROR(get_method(obj->method, method), "invalid method");
-  }
 
   if (check_any(obj->header)) {
     SET_ARGERROR(check_header(ft_ctx, obj->header, headers),
@@ -460,7 +462,7 @@ void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
   SET_JS_ERROR(fetch, ErrorCode::GENERAL, "create native fetch err");
 
   // create curl request
-  SET_JS_ERROR(request_create(fetch, obj, method.c_str(), headers, &content),
+  SET_JS_ERROR(request_create(fetch, obj, method, headers, &content),
                ErrorCode::GENERAL, "create request err");
 
   FETCH_DEBUG("method:%s, request type:%d", method.c_str(), fetch->type);
