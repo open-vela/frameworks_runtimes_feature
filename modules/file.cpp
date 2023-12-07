@@ -195,29 +195,19 @@ system_file_file_info_t* system_fileMallocfile_info_t () {
 }
 
 
-static const ArrayType system_file_object_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_ANY_REF
-};
-
-FtArray* system_file_malloc_object_array() {
-    return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&system_file_object_array));
-}
-
-static const ArrayType system_file_struct_array = {
+static const ArrayType system_file_file_info_t_struct_type_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_MK_COMPLEX_REF(&system_file_file_info_t_struct_type)
 };
 
-FtArray* system_file_malloc_struct_array() {
+FtArray* system_file_malloc_file_info_t_struct_type_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&system_file_struct_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&system_file_file_info_t_struct_type_array));
 }
 
 /****** for JIDL struct 'list_succ_param' ******/
 static ObjectMember system_file_list_succ_param_struct_members[] = {
-    { "fileList", FT_MK_COMPLEX_REF(&system_file_object_array), offsetof(system_file_list_succ_param, fileList), sizeof(FtArray*) },
+    { "fileList", FT_MK_COMPLEX_REF(&system_file_file_info_t_struct_type_array), offsetof(system_file_list_succ_param, fileList), sizeof(FtArray*) },
     { nullptr },
 };
 
@@ -306,25 +296,39 @@ static const MemberMethod system_file_list_member_method = {
 };
 
 
+struct extended_file_info_t_struct_type {
+    static const ObjectMapType system_file_extended_file_info_t_struct_type;
+};
+
+static const ArrayType system_file_extended_file_info_t_struct_type_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_MK_COMPLEX_REF(&(extended_file_info_t_struct_type::system_file_extended_file_info_t_struct_type))
+};
+
+FtArray* system_file_malloc_extended_file_info_t_struct_type_array() {
+    return (FtArray*)FeatureMalloc(
+        sizeof(FtArray), FT_MK_COMPLEX(&system_file_extended_file_info_t_struct_type_array));
+}
+
 /****** for JIDL struct 'extended_file_info_t' ******/
 static ObjectMember system_file_extended_file_info_t_struct_members[] = {
     { "uri", FT_STRING, offsetof(system_file_extended_file_info_t, uri), sizeof(FtString) },
     { "length", FT_INT, offsetof(system_file_extended_file_info_t, length), sizeof(FtInt) },
     { "lastModifiedTime", FT_STRING, offsetof(system_file_extended_file_info_t, lastModifiedTime), sizeof(FtString) },
     { "type", FT_STRING, offsetof(system_file_extended_file_info_t, type), sizeof(FtString) },
-    { "subFiles", FT_MK_COMPLEX_REF(&system_file_object_array), offsetof(system_file_extended_file_info_t, subFiles), sizeof(FtArray*) },
+    { "subFiles", FT_MK_COMPLEX_REF(&system_file_extended_file_info_t_struct_type_array), offsetof(system_file_extended_file_info_t, subFiles), sizeof(FtArray*) },
     { nullptr },
 };
 
 // complex defination
-static const ObjectMapType system_file_extended_file_info_t_struct_type {
+const ObjectMapType extended_file_info_t_struct_type::system_file_extended_file_info_t_struct_type {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_file_extended_file_info_t) },
     .members = system_file_extended_file_info_t_struct_members
 };
 
 system_file_extended_file_info_t* system_fileMallocextended_file_info_t () {
     return (system_file_extended_file_info_t*)FeatureMalloc(
-        sizeof(system_file_extended_file_info_t), FT_MK_COMPLEX(&system_file_extended_file_info_t_struct_type));
+        sizeof(system_file_extended_file_info_t), FT_MK_COMPLEX(&(extended_file_info_t_struct_type::system_file_extended_file_info_t_struct_type)));
 }
 
 
