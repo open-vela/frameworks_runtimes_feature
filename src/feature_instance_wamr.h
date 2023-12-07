@@ -60,10 +60,8 @@ public:
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 
-    void addPromise_wamr(feature_value_t data);
     feature_value_t getPromise(FtPromiseId pid);
 
-    std::vector<feature_value_t> promises_wamr;
     void release();
 
 private:

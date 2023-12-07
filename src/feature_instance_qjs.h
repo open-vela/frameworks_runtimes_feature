@@ -78,8 +78,14 @@ public:
 
     void freeWeakRef();
 
+    FtPromiseId addWamrPromise(FeatureType resolve_type, FeatureType reject_type);
+
+    int settleWamrPromise(bool resolve, FtPromiseId pid, va_list& ap);
+
 private:
     QjsCallbackData getCallback(FtCallbackId cid);
+
+    int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 

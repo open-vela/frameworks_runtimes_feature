@@ -69,12 +69,6 @@ static void module_object_finalizer(wasm_obj_t obj, void *data)
     FeatureManagerWamr* manager = (FeatureManagerWamr*)data;
     FeatureInstanceWamr* instance = (FeatureInstanceWamr*)(manager->getFeatureInstance(obj));
     printf("module object finalizer:%p, featureinstance:%p\n", obj, instance);
-
-    for (const auto& prom : instance->promises_wamr) {
-        JSContext* js_ctx = (JSContext*)ft_context_get_data(manager->getFeatureContext());
-        feature_free_value(js_ctx, prom);
-    }
-    instance->promises_wamr.clear();
     instance->release();
 }
 
@@ -243,7 +237,6 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
     bool got_error = false;
-    feature_value_t* ret_promise;
     uint64_t* wasm_ret_p = args;
     native_raw_get_arg(void*, thiz_ptr, args);
 
@@ -421,22 +414,17 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         }
 
         // special handle for promise
-        feature_value_t tmp_p;
-        // instance->prototype()->ft_ctx =  dyntype_get_context()->js_ctx;
+        feature_value_t promise;
+        auto w_instance = (FeatureInstanceWamr*)instance;
         if (is_promise) {
             ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
             // create promise
             PromiseType* promise_type = (PromiseType*)complex_type;
             // create promise and add to instance
-            pid = ((FeatureInstanceWamr*)instance)->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
-            feature_value_t promise = ((FeatureInstanceWamr*)instance)->getPromise(pid);
-            ((FeatureInstanceWamr*)instance)->addPromise_wamr(promise);
+            pid = w_instance->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
+            promise = feature_dup_value(js_ctx, w_instance->getPromise(pid));
             // pass pid to native function
             ffi_arg_values[2] = &pid;
-            // dup and return promise object.
-            //ret_promise = feature_dup_value(instance->prototype()->ctx, promiseData->promise);
-            feature_value_t tmp_p = feature_dup_value(js_ctx, promise);
-            ret_promise = dynamic_dup_value(js_ctx, tmp_p);
         }
 
         // invoke method
@@ -448,15 +436,14 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
             //process return value
             if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret_p)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
-                feature_free_value(js_ctx, tmp_p);
                 got_error = true;
             }
         } else if (is_promise) {
+            feature_value_t* ppromise = dynamic_dup_value(js_ctx, promise);
             //把promise返回给ts层
             native_raw_return_type(void*, wasm_ret_p);
-            wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ret_promise);
+            wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ppromise);
             native_raw_set_return(p_obj);
-            //feature_free_value(js_ctx, tmp_p);
         }
     } while (0);
 
