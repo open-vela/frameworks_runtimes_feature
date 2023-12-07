@@ -234,27 +234,46 @@ void FeatureInstanceQjs::freeWeakRef()
 
 int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
-    // get feature instance
-    FeaturePromiseData* promiseData = promise_manager_->getPromiseData(pid);
-    if (!promiseData) {
-        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
-        return -1;
-    }
-    int idx = resolve ? 0 : 1;
-    if (feature_is_undefined(promiseData->resolveFuncs[idx])) {
-        FEATURE_LOG_ERROR("callback is undefined!");
-        return -1;
-    }
-
-    FeatureType param_types[2] = { promiseData->resolveTypes[idx], FT_VOID };
-    CallbackType cb_type = { .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID };
-    int ret = doInvokeCallback(&cb_type, promiseData->resolveFuncs[idx], ap, 1, 0);
+    int ret = doSettlePromise(resolve, pid, ap);
     if (!promise_manager_->removePromise(pid)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
         ret = -2;
     }
-
     return ret;
+}
+
+FtPromiseId FeatureInstanceQjs::addWamrPromise(FeatureType resolve_type, FeatureType reject_type)
+{
+    return promise_manager_->addWamrPromise(resolve_type, reject_type);
+}
+
+int FeatureInstanceQjs::settleWamrPromise(bool resolve, FtPromiseId pid, va_list& ap)
+{
+    int ret = doSettlePromise(resolve, pid, ap);
+    if (!promise_manager_->freeWamrPromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
+        ret = -2;
+    }
+    return ret;
+}
+
+int FeatureInstanceQjs::doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap)
+{
+    // get feature instance
+    PromiseData* promise_data = promise_manager_->getPromiseData(pid);
+    if (!promise_data) {
+        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
+        return -1;
+    }
+    int idx = resolve ? 0 : 1;
+    if (feature_is_undefined(promise_data->resolve_funcs[idx])) {
+        FEATURE_LOG_ERROR("callback is undefined!");
+        return -1;
+    }
+
+    FeatureType param_types[2] = { promise_data->resolve_types[idx], FT_VOID };
+    CallbackType cb_type = { .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID };
+    return doInvokeCallback(&cb_type, promise_data->resolve_funcs[idx], ap, 1, 0);
 }
 
 int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)

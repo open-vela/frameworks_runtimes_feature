@@ -190,7 +190,7 @@ static wasm_struct_obj_t creat_any_array_obj(wasm_exec_env_t exec_env, uint32_t 
 
 int FeatureInstanceWamr::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
-    return instance_qjs_->settlePromise(resolve, pid, ap);
+    return instance_qjs_->settleWamrPromise(resolve, pid, ap);
 }
 
 int FeatureInstanceWamr::invokeCallback(FtCallbackId cid, va_list &ap)
@@ -373,17 +373,12 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
 
 FtPromiseId FeatureInstanceWamr::addPromise(FeatureType resolve_type, FeatureType reject_type)
 {
-    return instance_qjs_->addPromise(resolve_type, reject_type);
+    return instance_qjs_->addWamrPromise(resolve_type, reject_type);
 }
 
 feature_value_t FeatureInstanceWamr::getPromise(FtPromiseId pid)
 {
     return instance_qjs_->getPromise(pid);
-}
-
-void FeatureInstanceWamr::addPromise_wamr(feature_value_t data)
-{
-    promises_wamr.push_back(data);
 }
 
 void FeatureInstanceWamr::release()

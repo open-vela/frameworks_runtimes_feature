@@ -26,11 +26,12 @@
 
 namespace ferry {
 
-typedef struct FeaturePromiseData {
+typedef struct PromiseData {
     feature_value_t promise; // 保存promise对象
-    feature_value_t resolveFuncs[2]; //functions
-    FeatureType resolveTypes[2];
-} FeaturePromiseData;
+    feature_value_t resolve_funcs[2]; //functions
+    FeatureType resolve_types[2];
+    bool is_wamr;
+} PromiseData;
 
 class PromiseManager {
 public:
@@ -39,11 +40,15 @@ public:
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 
+    FtPromiseId addWamrPromise(FeatureType resolve_type, FeatureType reject_type);
+
     bool removePromise(FtPromiseId pid);
+
+    bool freeWamrPromise(FtPromiseId pid);
 
     void releasePromises();
 
-    FeaturePromiseData* getPromiseData(FtPromiseId pid);
+    PromiseData* getPromiseData(FtPromiseId pid);
 
     feature_value_t getPromise(FtPromiseId pid);
 
@@ -53,7 +58,7 @@ private:
 
     FtPromiseId curr_pid_ = 0;
     JSContext* js_ctx_ = nullptr;
-    std::map<FtPromiseId, FeaturePromiseData*> promises_;   // all promises created by native feature
+    std::map<FtPromiseId, PromiseData*> promises_;   // all promises created by native feature
 };
 
 }
