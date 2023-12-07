@@ -52,8 +52,7 @@ struct file_info_t {
 }
 
 struct list_succ_param {
-    // file_info_t array
-    object[] fileList;
+    file_info_t[] fileList;
 }
 callback list_succ_cb(list_succ_param param)
 callback list_fail_cb(string msg, int code)
@@ -73,8 +72,7 @@ struct extended_file_info_t {
     int length
     string lastModifiedTime
     string type
-    // file_info_t array
-    object[] subFiles;
+    extended_file_info_t[] subFiles;
 }
 callback get_succ_cb(extended_file_info_t uri)
 callback get_fail_cb(string msg, int code)

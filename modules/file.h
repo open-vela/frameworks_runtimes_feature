@@ -223,8 +223,8 @@ void system_file_wrap_rmdir(FeatureInstanceHandle feature, AppendData append_dat
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* system_file_malloc_object_array();
-FtArray* system_file_malloc_struct_array();
+FtArray* system_file_malloc_file_info_t_struct_type_array();
+FtArray* system_file_malloc_extended_file_info_t_struct_type_array();
 
 #endif // JSON_AST_GEN_MODULE_SYSTEM_FILE_H_
 /* clang-format on */

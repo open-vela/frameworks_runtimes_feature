@@ -800,9 +800,9 @@ system_file_file_info_t* get_file_info(FileInfo* info)
 
 system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* info)
 {
-    system_file_extended_file_info_t* file_info = system_fileMallocextended_file_info_t();
-    if (!info)
+    if (!fr || !info)
         return NULL;
+    system_file_extended_file_info_t* file_info = system_fileMallocextended_file_info_t();
     char* type = static_cast<char*>(FeatureMalloc(strlen(info->type == 0 ? "file" : "dir") + 1, FT_CHAR));
     sprintf(type, info->type == 0 ? "file" : "dir");
     file_info->type = type;
@@ -825,10 +825,6 @@ system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* 
  */
 FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
 {
-    if (!fr) {
-        return NULL;
-    }
-
     if (!dir_list) {
         FILE_ERROR("__get_dir_list failed, path:%s\n", fr->filename);
         return NULL;
@@ -838,11 +834,11 @@ FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
     FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
     FILE_INFO("=====> __get_dir_list, root_file_ptr->uri = %s, dir_num = %d, file_num = %d", root_file_ptr->uri, root_file_ptr->dir_num, root_file_ptr->file_num);
     if (fr->type == FILE_GET) {
-        array = system_file_malloc_object_array();
+        array = system_file_malloc_extended_file_info_t_struct_type_array();
         array->_size = root_file_ptr->dir_num + root_file_ptr->file_num;
         array->_element = malloc(sizeof(system_file_extended_file_info_t*) * array->_size);
     } else {
-        array = system_file_malloc_struct_array();
+        array = system_file_malloc_file_info_t_struct_type_array();
         array->_size = root_file_ptr->file_num;
         array->_element = malloc(sizeof(system_file_file_info_t*) * array->_size);
     }
