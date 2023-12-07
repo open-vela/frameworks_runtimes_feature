@@ -167,13 +167,6 @@ ifeq ($(CONFIG_MEDIA_FEATURE),y)
 FEATURELIST += system_volume
 endif
 
-ifeq ($(CONFIG_MIPLAY),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_impl.cpp
-JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/miplay.jidl
-OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
-FEATURELIST += service_miplay
-endif
-
 ifeq ($(CONFIG_LIBUV_EXTENSION),y)
 ifeq ($(CONFIG_UNQLITE),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
