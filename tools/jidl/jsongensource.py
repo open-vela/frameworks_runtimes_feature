@@ -388,13 +388,13 @@ class CPPRender(Render):
     ft_info['is_complex_ref'] = True
     return ft_info
 
-  def _GenArrayFeatureInfo(self, array_type, is_complex, is_complex_ref):
+  def _GenArrayFeatureInfo(self, array_type, is_complex, ref_type):
     module_name = self.GetModuleName()
     ft_info = self._GenComplexRefFeatureInfo(array_type, 'array')
     if self._TryCacheFeatureType(ft_info['type']):
       if array_type.find(module_name) != -1:
         array_type = array_type.replace(module_name + "_", "")
-      self.ArrayTypeGenerator.Generate(array_type, is_complex, is_complex_ref)
+      self.ArrayTypeGenerator.Generate(array_type, is_complex, ref_type)
       array_malloc_func_str = f"FtArray* {module_name}_malloc_{array_type}_array()"
       self._TryCacheArrayMallocFunc(array_malloc_func_str)
     return ft_info
@@ -423,18 +423,30 @@ class CPPRender(Render):
     struct_array_info = self._GenComplexRefFeatureInfo(struct_array_name, 'struct_type')
     return struct_array_info
 
+  def CheckStructSelfRef(self, members, struct_name):
+    struct_self_reference = 'not_self_ref'
+    for member in members:
+      if 'type' in member and 'element' in member['type'] and 'referred_name' in member['type']['element']:
+        if member['type']['element']['referred_name'] == struct_name:
+          struct_self_reference = 'array_struct_self_ref'
+          break
+      if 'type' in member and 'referred_name' in member['type']:
+        if member['type']['referred_name'] == struct_name:
+          struct_self_reference = 'struct_self_ref'
+          break
+    return struct_self_reference
+
   def GenerateFeatureInfo(self, ast_type):
     ft_info = {}
     ft_info['is_complex'] = False
     ft_info['is_complex_ref'] = False
-
     if isinstance(ast_type, str):
       feature_type = self._MapType(ast_type, self.base_feature_type_map)
       if feature_type == 'FT_ARRAY':
         # void bar(array arr); // same as object[]
-        ft_info = self._GenArrayFeatureInfo("object", True, False)
+        ft_info = self._GenArrayFeatureInfo("object", True, 'not_ref')
       elif feature_type == 'FT_STRUCT_ARRAY':
-        ft_info = self._GenArrayFeatureInfo("struct", True, True)
+        ft_info = self._GenArrayFeatureInfo("struct", True, 'is_complex_ref')
       else:
         ft_info['type'] = feature_type
       return ft_info
@@ -450,9 +462,12 @@ class CPPRender(Render):
         elem_ft_info = self.GenerateFeatureInfo(elem_ast_type)
       if elem_ft_info['is_complex']:
         elem_ft_type = elem_ft_info['type']
-        ft_info = self._GenArrayFeatureInfo(elem_ft_type, True, True)
+        if 'self_reference' in ast_type:
+          ft_info = self._GenArrayFeatureInfo(elem_ft_type, True, 'array_struct_self_ref')
+        else:
+          ft_info = self._GenArrayFeatureInfo(elem_ft_type, True, 'is_complex_ref')
       else:
-        ft_info = self._GenArrayFeatureInfo(elem_ast_type, False, False)
+        ft_info = self._GenArrayFeatureInfo(elem_ast_type, False, 'not_ref')
     elif 'referred_type' in ast_type:
       if ast_type['referred_type'] == 'callback':
         callback_name = ast_type['referred_name']
