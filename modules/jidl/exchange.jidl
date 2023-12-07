@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-module service.exchange @1.0
+module system.exchange @1.0
 
 callback success_cb(string value)
 callback fail_cb(string errorMsg, int code)
 callback complete_cb(string msg)
 
 struct GetInfo {
-    string package = ""
-    string sign = ""
     string key
-    string scope = "application"
+    string scope
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
@@ -33,42 +31,22 @@ struct GetInfo {
 struct SetInfo {
     string key
     string value
-    string scope = "application"
+    string scope
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
-    string package = ""
-    string sign = ""
 }
 
 struct RemoveInfo {
     string key
+    string scope
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
-    string package = ""
-    string sign = ""
 }
 
 struct ClearInfo {
-    callback success_cb success
-    callback fail_cb fail
-    callback complete_cb complete
-}
-
-struct GrantPermissionInfo {
-    string package
-    string sign
-    string key = ""
-    boolean writable = false
-    callback success_cb success
-    callback fail_cb fail
-    callback complete_cb complete
-}
-
-struct RevokePermissionInfo {
-    string package
-    string key = ""
+    string scope
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
@@ -78,5 +56,3 @@ void set(SetInfo info)
 void get(GetInfo info)
 void remove(RemoveInfo info)
 void clear(ClearInfo info)
-void grantPermission(GrantPermissionInfo info)
-void revokePermission(RevokePermissionInfo info)

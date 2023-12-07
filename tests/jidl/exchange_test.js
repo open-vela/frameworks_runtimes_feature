@@ -14,65 +14,12 @@
  * limitations under the License.
  */
 
-let exchange =require('service.exchange');
+let exchange =require('system.exchange');
 
-feat_async_test("exchange","set_application",(done)=>{
-  exchange.set({
-    key: 'A1',
-    value: 'V1',
-    scope:'application',
-    package:'com.xiaomi.application',
-    sign:'7a12ec1d66233f20a20141035b1f7937',
-    success: function(data) {
-      feat_expect_true(true, "exchange set_application success");
-      done();
-    },
-    fail: function(data, code) {
-      feat_expect_true(false, "exchange set_application fail");
-      done();
-    }
-  })
-})
-
-feat_async_test("exchange","get_application",(done)=>{
-  exchange.get({
-    key: 'A1',
-    scope:'application',
-    package:'com.xiaomi.application',
-    sign:'7a12ec1d66233f20a20141035b1f7937',
-    success: function(data) {
-       var res = false;
-       if(data == 'V1') { 
-        res = true;
-       }
-       feat_expect_true(res, "exchange get_application success");
-       done();
-    },
-    fail: function(data, code) {
-      feat_expect_true(false, "exchange get_application fail");
-      done();
-    }
-  })
-})
-
-feat_async_test("exchange","remove",(done)=>{
-  exchange.remove({
-    key: 'A1',
-    package:'com.xiaomi.application',
-    success: function(data) {
-      feat_expect_true(true, "exchange remove success");
-      done();
-    },
-    fail: function(data, code) {
-      feat_expect_true(false, "exchange remove fail");
-      done();
-    }
-  })
-})
 
 feat_async_test("exchange","set_global",(done)=>{
   exchange.set({
-    key: 'A2',
+    key: 'A1',
     scope:'global',
     value:'V2',
     success: function(data) {
@@ -88,7 +35,7 @@ feat_async_test("exchange","set_global",(done)=>{
 
 feat_async_test("exchange","get_global",(done)=>{
   exchange.get({
-    key: 'A2',
+    key: 'A1',
     scope:'global',
     success: function(data) {
        var res =false;
@@ -105,51 +52,16 @@ feat_async_test("exchange","get_global",(done)=>{
   })
 })
 
-feat_test("exchange","setParamError1",(done)=>{
-  exchange.set({
-    key: 'A1',
-    scope:'application',
-    sign:'7a12ec1d66233f20a20141035b1f7937',
-    success: function(data) {
-       feat_expect_true(false, "exchange setParamError1 expect false,fail");
-       done();
-    },
-    fail: function(data, code) {
-      feat_expect_true(true, "exchange setParamError1 expect false,success");
-      done();
-    }
-  })
-})
-
-feat_test("exchange","setParamError2",(done)=>{
-  exchange.set({
-    key: 'A1',
+feat_async_test("exchange","remove",(done)=>{
+  exchange.remove({
+    key: 'A2',
     scope:'global',
-    package:'com.xiaomi.application',
-    sign:'7a12ec1d66233f20a20141035b1f7937',
     success: function(data) {
-       feat_expect_true(false, "exchange setParamError2 expect false,fail");
-       done();
+       feat_expect_true(true, "exchange get_global success");
+        done();
     },
     fail: function(data, code) {
-      feat_expect_true(true, "exchange setParamError2 expect false,success");
-      done();
-    }
-  })
-})
-
-feat_test("exchange","setParamError3",(done)=>{
-  exchange.get({
-    key: 'A1',
-    scope:'global',
-    package:'com.xiaomi.application',
-    sign:'7a12ec1d66233f20a20141035b1f7937',
-    success: function(data) {
-       feat_expect_true(false, "exchange setParamError3 expect false,fail");
-       done();
-    },
-    fail: function(data, code) {
-      feat_expect_true(true, "exchange setParamError3 expect false,success");
+      feat_expect_true(false, "exchange get_global fail");
       done();
     }
   })
@@ -166,37 +78,16 @@ feat_test("exchange","clear",()=>{
   })
 })
 
-feat_async_test("exchange","grantPermission",(done)=>{
-  exchange.grantPermission({
-    package:'com.xiaomi.application',
-    key:'V3',
-    sign:"7a12ec1d66233f20a20141035b1f7937",
+feat_test("exchange","set_application",()=>{
+  exchange.set({
+    key: 'A1',
+    scope:'application',
+    value:'V2',
     success: function(data) {
-      var res =false; 
-      if(data == '4') {
-        res=true;
-      }
-      feat_expect_true(res, "exchange grantPermission success");
-      done();
+      feat_expect_true(false, "exchange set_application success");
     },
     fail: function(data, code) {
-      feat_expect_true(err, "exchange grantPermission fail");
-      done();
-    }
-  })  
-})
-
-feat_async_test("exchange","revokePermission",(done)=>{
-  exchange.revokePermission({
-    package:'com.xiaomi.application',
-    key:'V3',
-    success: function(data) {
-      feat_expect_true(true, "exchange revokePermission success");
-      done();
-    },
-    fail: function(data, code) {
-      feat_expect_true(false, "exchange revokePermission fail");
-      done();
+      feat_expect_true(true, "exchange set_application fail");
     }
   })
 })

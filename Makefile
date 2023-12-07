@@ -144,7 +144,7 @@ endif
 ifeq ($(CONFIG_KVDB),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
-FEATURELIST += service_exchange
+FEATURELIST += system_exchange
 endif
 
 ifeq ($(CONFIG_CRYPTO_MBEDTLS),y)
