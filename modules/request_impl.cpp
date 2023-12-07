@@ -108,7 +108,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
     th->exit = false;
     th->ctx = ctx;
     th->pkg_name = FeatureGetPackageName(handle);
-    if (th->pkg_name == NULL || strlen(th->pkg_name)) {
+    if (!th->pkg_name || strlen(th->pkg_name) == 0) {
         REQUEST_ERROR("package name is null!");
         th->pkg_name = "request_test";
     }
