@@ -15,8 +15,8 @@
  */
 
 #include "feature_registry.h"
-#include "feature_common.h"
 #include "ajs_features_init.h"
+#include "feature_common.h"
 
 #include <assert.h>
 #include <memory>
@@ -64,13 +64,13 @@ const char* ManifestParser::getPackageName()
     return package.GetString();
 }
 
-bool FeatureRegistry::init(char* manifest)
+bool FeatureRegistry::init(char* manifest, const char* package_name)
 {
     // register features
     ManifestParser parser;
     std::vector<std::string> features;
 
-    if (manifest != NULL) {
+    if (manifest) {
         FEATURE_LOG_DEBUG("manifest is %s!", manifest);
         if (!parser.parse(manifest)) {
             FEATURE_LOG_ERROR("parse manifest failed !");
@@ -78,9 +78,16 @@ bool FeatureRegistry::init(char* manifest)
         }
 
         package_name_ = parser.getPackageName();
-        FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
+    }
+
+    if (package_name) {
+        package_name_ = package_name;
+    }
+
+    if (package_name_.empty()) {
+        FEATURE_LOG_ERROR("manifest or package_name is null");
     } else {
-        FEATURE_LOG_DEBUG("manifest is null!");
+        FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
     }
 
 // register features

@@ -222,29 +222,6 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data);
 
 /**
- * @brief create a FeatureManagerHandle
- * @param manifest
- * @return FeatureManagerHandle
- */
-FeatureManagerHandle FeatureCreateManager(char* manifest);
-
-/**
- * @brief free a FeatureManagerHandle
- * @param handle
- * @return void
- */
-void FeatureFreeManager(FeatureManagerHandle handle);
-
-/**
- * @brief set feature uvloop to FeatureManagerHandle
- * @param handle
- * @param loop
- * @return void
- * @note: must be called before FeatureCreateInstance
- */
-void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop);
-
-/**
  * @brief get feature uvloop from FeatureManagerHandle
  *
  * @param handle
@@ -270,25 +247,6 @@ void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* dat
  * @return void*
  */
 void* FeatureGetUserData(FeatureManagerHandle handle, const char* name);
-
-/**
- * @brief uninit with FeatureManagerHandle
- *
- * @param handle
- * @return void
- */
-void FeatureUninit(FeatureManagerHandle handle);
-
-/**
- * @brief require a feature with feature name
- *
- * @param handle
- * @param ctx
- * @param binding_object
- * @param name
- * @return JSValue
- */
-JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_object, const char* name);
 
 /**
  * @brief get feature manager handle from feature instance

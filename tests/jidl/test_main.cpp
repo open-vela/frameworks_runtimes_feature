@@ -8,6 +8,7 @@
 #include "builtin/builtin_console.h"
 #include "builtin/console.h"
 #include "feature_exports.h"
+#include "feature_main_exports.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
@@ -263,7 +264,7 @@ extern "C" int main(int argc, char** argv)
 #endif
 
     // init feature framework
-    JS_SetRuntimeOpaque(env.rt, env.ctx);
+    // JS_SetRuntimeOpaque(env.rt, env.ctx);
 
     // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
     FeatureManagerHandle manager = FeatureCreateManager(mfst_content);
