@@ -15,6 +15,7 @@
  */
 
 #include "feature_exports.h"
+#include "feature_main_exports.h"
 #include "feature_instance.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
@@ -253,10 +254,19 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     instance->sendAsnyc();
 }
 
-FeatureManagerHandle FeatureCreateManager(char* manifest)
+FeatureManagerHandle FeatureCreateManager(char* manifest_content)
 {
     FeatureRegistry* registry = new ferry::FeatureRegistry();
-    registry->init(manifest);
+    registry->init(manifest_content, nullptr);
+    FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
+
+    return manager;
+}
+
+FeatureManagerHandle FeatureCreateManagerEx(const char* package_name)
+{
+    FeatureRegistry* registry = new ferry::FeatureRegistry();
+    registry->init(nullptr, package_name);
     FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
 
     return manager;
@@ -302,6 +312,18 @@ JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_o
 {
     FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
     return manager->featureRequire(ctx, binding_object, name);
+}
+
+JSValue FeatureFindFeature(FeatureManagerHandle handle, feature_context_ref ctx, const char* module_name)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    return manager->findFeature(ctx, module_name);
+}
+
+JSValue FeatureCreateFeature(FeatureManagerHandle handle, feature_context_ref ctx, JSValue prototype, JSValue vm_object)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    return manager->createFeature(ctx, prototype, vm_object);
 }
 
 FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
