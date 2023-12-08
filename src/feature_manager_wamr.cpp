@@ -64,10 +64,6 @@ get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 extern "C" uint32_t
 get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 
-using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
-
-static std::map<std::string, FeatureRegistryPair> registered_interfaces_;
-
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
     FeatureManagerWamr* manager = (FeatureManagerWamr*)data;
@@ -567,12 +563,12 @@ void FeatureManagerWamr::release()
     if (!getFeatureRegistry())
         return;
 
-    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        auto proto = pair.second.second;
-        auto description = pair.second.first;
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
+    auto release_proto = [js_ctx](const FeatureRegistryPair& pair) {
+        auto proto = pair.second;
+        auto description = pair.first;
         FEATURE_CHECK_NE(description, nullptr);
         if (proto) {
-            JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
             // clear all feature instance at first, it will free all feature instance and call onDetach for them
             proto->clearAllInstances();
             // call feature's onDestroy
@@ -580,14 +576,19 @@ void FeatureManagerWamr::release()
                 FEATURE_LOG_DEBUG("invoke onDestroy callback...");
                 description->native_callbacks->onDestroy(js_ctx, proto);
             }
-            auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
-            if (!feature_is_undefined(*js_proto_ptr)) {
-                feature_free_value(js_ctx, *js_proto_ptr);
-                *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-            }
         }
         // delete prototype
-        delete pair.second.second;
+        delete proto;
+    };
+
+    // release interface prototypes and its instances 
+    for (const auto& interface_pair : registered_interfaces_) {
+        release_proto(interface_pair.second);
+    }
+
+    // check if all instances deleted, then clear proto object
+    for (const auto& feature_pair : getFeatureRegistry()->getRegisteredFeatures()) {
+        release_proto(feature_pair.second);
     }
     // uninit registery
     delete getFeatureRegistry();
@@ -691,27 +692,24 @@ bool FeatureManagerWamr::makeAttachment(NativeSymbol* symbol, const FeatureDescr
 }
 
 int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
-{ 
+{
    /* register interface api */
     if (description->members->type == MEMBER_METHOD) {
         for (size_t i = 0; i < description->member_count; i++) {
             Member member = description->members[i];
             FeatureType feature_type =  member.method.return_type;
-            if (feature_type != FT_VOID && FT_IS_COMPLEX(feature_type)) {
-                ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(feature_type);
-                switch (complexType->type) {
-                    case COMPLEX_INTERFACE: {
-                        InterfaceType *interfaceType = (InterfaceType *)complexType;
-                        const FeatureDescription *interfaceDesc = interfaceType->desc;
-                        if (interfaceDesc->name) {
-                            registered_interfaces_[interfaceDesc->name] = std::pair<const FeatureDescription *, FeaturePrototype *>(interfaceDesc, nullptr);
-                        }
-                        registerFeature(interfaceDesc);
-                    } break;
-                    default:
-                        break;
-                }
+            if (feature_type == FT_VOID || !FT_IS_COMPLEX(feature_type))
+                continue;
+            ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(feature_type);
+            if (complex_type->type != COMPLEX_INTERFACE)
+                continue;
+
+            InterfaceType *interface_type = (InterfaceType *)complex_type;
+            const FeatureDescription* description = interface_type->desc;
+            if (description->name) {
+                registered_interfaces_[description->name] = std::pair<const FeatureDescription *, FeaturePrototype *>(description, nullptr);
             }
+            registerFeature(description);
         }
     }
 
