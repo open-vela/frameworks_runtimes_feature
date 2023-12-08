@@ -272,6 +272,7 @@ class CPPRender(Render):
     self.callback_id_set = set()
     self.promise_type_set = set()
     self.struct_name_set = set()
+    self.selfref_struct_name_set = set()
     self.interface_name_set = set()
     self.vtable_map = {}
     self.interface_members_map = {}
@@ -423,18 +424,27 @@ class CPPRender(Render):
     struct_array_info = self._GenComplexRefFeatureInfo(struct_array_name, 'struct_type')
     return struct_array_info
 
+  def CacheSelfRefStructName(self, name):
+    if not name in self.selfref_struct_name_set:
+      self.selfref_struct_name_set.add(name)
+
   def CheckStructSelfRef(self, members, struct_name):
     struct_self_reference = 'not_self_ref'
     for member in members:
       if 'type' in member and 'element' in member['type'] and 'referred_name' in member['type']['element']:
         if member['type']['element']['referred_name'] == struct_name:
           struct_self_reference = 'array_struct_self_ref'
+          self.CacheSelfRefStructName(struct_name)
           break
       if 'type' in member and 'referred_name' in member['type']:
         if member['type']['referred_name'] == struct_name:
           struct_self_reference = 'struct_self_ref'
+          self.CacheSelfRefStructName(struct_name)
           break
     return struct_self_reference
+
+  def CheckRefNameISStructSelfRef(self, ref_name):
+    return ref_name in self.selfref_struct_name_set
 
   def GenerateFeatureInfo(self, ast_type):
     ft_info = {}
@@ -479,7 +489,11 @@ class CPPRender(Render):
         struct_name = ast_type['referred_name']
         if not struct_name in self.struct_name_set:
           raise Exception('undefined struct: {}'.format(struct_name))
-        ft_info = self._GenComplexRefFeatureInfo(struct_name, 'struct_type')
+        if 'self_reference' in ast_type:
+          struct_self_reference = f"{struct_name}_struct_type::{struct_name}"
+          ft_info = self._GenComplexRefFeatureInfo(struct_self_reference, 'struct_type')
+        else:
+          ft_info = self._GenComplexRefFeatureInfo(struct_name, 'struct_type')
       elif ast_type['referred_type'] == 'interface':
         interface_name = ast_type['referred_name']
         if not interface_name in self.interface_name_set:
@@ -501,7 +515,10 @@ class CPPRender(Render):
       module_name = self.GetModuleName()
       if ft_expr.find(module_name) != -1:
         ft_expr = ft_expr.replace(module_name + "_", "")
-      ft_expr = f"{module_name}_{ft_expr}"
+      if 'is_self_ref' in info:
+        ft_expr = f"{ft_expr}::{module_name}_{ft_expr}"
+      else:
+        ft_expr = f"{module_name}_{ft_expr}"
 
     if info['is_complex_ref']:
       ft_expr = f"FT_MK_COMPLEX_REF(&{ft_expr})"

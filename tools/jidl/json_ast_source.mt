@@ -434,8 +434,13 @@ FtArray* ${module_name}_malloc_${array_type}_array() {
       if 'element' in param and 'referred_type' in param["element"]:
         p_info = render.GenerateFeatureInfo(param)
       else:
-        p_info = render.GenerateFeatureInfo(param["type"])
+        p_info = render.GenerateFeatureInfo(param['type'])
+      if 'type' in param['type']:
+        if 'referred_name' in param['type']:
+          if render.CheckRefNameISStructSelfRef(param['type']['referred_name']):
+            p_info['is_self_ref'] = True
       ft_expr = render.GenerateFtExpression(p_info)
+
       if 'name' in param and 'default' in param:
         if p_info['is_complex_ref'] or p_info['is_complex']:
           raise Exception('wrong default param type: {}'.format(p_info['type']))
