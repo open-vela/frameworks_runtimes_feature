@@ -301,8 +301,17 @@ class Utils:
   def getModuleName(self):
     return self.toIdName(self.doc['name'])
 
+  def getRawModuleName(self, s):
+    module_name_without_version = s[0:(s.find("@"))]
+    return self.toIdName(module_name_without_version)
+
   def getFeatureName(self, s):
-    return s[0:(s.find("@"))]
+    feature_name_without_version = s[0:(s.find("@"))]
+    feature_name = feature_name_without_version
+    last_dot_index = feature_name_without_version.rfind(".")
+    if last_dot_index != -1:
+      feature_name = feature_name_without_version[(last_dot_index + 1):]
+    return feature_name;
 
   def toTypeName(self, tp):
     if isinstance(tp, str):
