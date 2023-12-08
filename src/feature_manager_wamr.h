@@ -60,6 +60,8 @@ private:
     std::vector<NativeSymbol*> native_symbols_;
     std::map<wasm_obj_t, FeatureInstance*> feature_instance_map_;
     std::map<NativeSymbol*, WamrAttachment> symbol_attachment_map_;
+    using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
+    std::map<std::string, FeatureRegistryPair> registered_interfaces_;
 };
 
 }
