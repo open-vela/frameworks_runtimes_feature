@@ -87,9 +87,11 @@ void jumpApp_wrap_launchQuickApp(FeatureInstanceHandle feature, AppendData appen
 
     os::app::Context* xms_context = static_cast<os::app::Context*>(app->getXmsContext());
     if (xms_context == NULL) {
-        FEATURE_LOG_INFO("no xms_context");
+        FEATURE_LOG_ERROR("[jump native] no xms_context");
         return;
     }
     xms_context->startActivity(intent);
+#else
+    FEATURE_LOG_ERROR("[jump native] Failed to jump for no CONFIG_QUICKAPP_VAPP_XMS.");
 #endif
 }
