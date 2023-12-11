@@ -111,10 +111,10 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     children.clear();
 }
 
-FeatureCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
+QjsCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
 {
     if (!callbacks_.count(cid)) {
-        FeatureCallbackData callback;
+        QjsCallbackData callback;
         callback.cb = FEATURE_VALUE_UNDEFINED;
         callback.cb_type = nullptr;
         return callback;
@@ -125,7 +125,7 @@ FeatureCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
 FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
-    FeatureCallbackData callback;
+    QjsCallbackData callback;
     callback.cb = feature_dup_value(js_ctx, value);
     callback.cb_type = callbackType;
     callbacks_[++curr_cid_] = callback;

@@ -18,6 +18,7 @@
 #ifndef __FEATURE_INSTANCE_QJS_H__
 #define __FEATURE_INSTANCE_QJS_H__
 
+#include "callback_manager.h"
 #include "feature.h"
 #include "feature_instance.h"
 #include "feature_common.h"
@@ -35,12 +36,12 @@ typedef struct WeakRef {
     struct weakref_list_node link;
 } WeakRef;
 
-typedef struct FeatureCallbackData {
+typedef struct QjsCallbackData {
     feature_value_t cb;
     CallbackType* cb_type;
-} FeatureCallbackData;
+} QjsCallbackData;
 
-class FeatureInstanceQjs : public FeatureInstance {
+class FeatureInstanceQjs : public FeatureInstance, CallbackManager<feature_value_t> {
 public:
     FeatureInstanceQjs(FeaturePrototype* prototype, VTable* vtable);
     virtual ~FeatureInstanceQjs();
@@ -63,7 +64,7 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    FtCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
+    virtual FtCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
 
     bool checkCallback(FtCallbackId cid);
 
@@ -78,7 +79,7 @@ public:
     void freeWeakRef();
 
 private:
-    FeatureCallbackData getCallback(FtCallbackId cid);
+    QjsCallbackData getCallback(FtCallbackId cid);
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
@@ -87,7 +88,7 @@ private:
     FtCallbackId curr_cid_ = 0;
     PromiseManager* promise_manager_ = nullptr;
 
-    std::map<FtCallbackId, FeatureCallbackData> callbacks_; // instance should save feature resources
+    std::map<FtCallbackId, QjsCallbackData> callbacks_; // instance should save feature resources
 };
 
 }
