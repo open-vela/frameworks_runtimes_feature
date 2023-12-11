@@ -88,27 +88,6 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     // release all promises
     promise_manager_->releasePromises();
     delete promise_manager_;
-
-    auto free_js_proto = [js_ctx](FeaturePrototype* prototype) {
-        if (prototype && !prototype->hasInstanceAlive()) {
-            FEATURE_LOG_INFO("all instance freed, free prototype object...");
-            auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
-            if (!feature_is_undefined(*js_proto_ptr)) {
-                feature_free_value(js_ctx, *js_proto_ptr);
-                *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-            }
-        }
-    };
-    // check if all instances deleted, then clear proto object
-    free_js_proto(proto);
-    auto children = proto->children();
-    for (auto& pair : children) {
-        // clear all interface instances belongs to this instance.
-        pair.second->clearAllInstances();
-        free_js_proto(pair.second);
-        delete pair.second;
-    }
-    children.clear();
 }
 
 QjsCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)

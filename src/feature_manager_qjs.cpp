@@ -724,28 +724,43 @@ feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interf
 
 void FeatureManagerQjs::uninit()
 {
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
+    auto free_prototype = [js_ctx](FeaturePrototype* prototype) {
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
+        if (!feature_is_undefined(*js_proto_ptr)) {
+            feature_free_value(js_ctx, *js_proto_ptr);
+            *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        }
+        delete prototype;
+    };
+
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto proto = pair.second.second;
         auto description = pair.second.first;
         FEATURE_CHECK_NE(description, nullptr);
-        if (proto) {
-            JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
-            // clear all feature instance at first, it will free all feature instance and call onDetach for them
-            proto->clearAllInstances();
-            // call feature's onDestroy
-            if (proto->description->native_callbacks && description->native_callbacks->onDestroy) {
-                FEATURE_LOG_DEBUG("invoke onDestroy callback...");
-                description->native_callbacks->onDestroy(js_ctx, proto);
-            }
-            auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(proto->ft_proto);
-            if (!feature_is_undefined(*js_proto_ptr)) {
-                feature_free_value(js_ctx, *js_proto_ptr);
-                *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-            }
+        if (!proto)
+            continue;
+
+        auto children = proto->children();
+        for (auto& proto_pair : children) {
+            // clear all interface instances belongs to this instance.
+            proto_pair.second->clearAllInstances();
+            FEATURE_LOG_INFO("free interface prototype '%s'", proto_pair.first);
+            free_prototype(proto_pair.second);
         }
-        // delete prototype
-        delete pair.second.second;
+        children.clear();
+
+        // clear all feature instance at first, it will free all feature instance and call onDetach for them
+        proto->clearAllInstances();
+        // call feature's onDestroy
+        if (proto->description->native_callbacks && description->native_callbacks->onDestroy) {
+            FEATURE_LOG_DEBUG("invoke onDestroy callback...");
+            description->native_callbacks->onDestroy(js_ctx, proto);
+        }
+        FEATURE_LOG_INFO("free feature prototype '%s'", proto->description->name);
+        free_prototype(proto);
     }
+
     // uninit registery
     delete getFeatureRegistry();
 
@@ -792,13 +807,13 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
 
 feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, feature_value_t proto, feature_value_t vm_object)
 {
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto prototype = pair.second.second;
         if (!prototype)
             continue;
 
         auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
-        JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
         if (!feature_is_same_value(js_ctx, js_proto, proto))
             continue;
 

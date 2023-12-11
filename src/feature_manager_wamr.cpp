@@ -551,31 +551,31 @@ void FeatureManagerWamr::release()
         return;
 
     JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
-    auto release_proto = [js_ctx](const FeatureRegistryPair& pair) {
+    auto release_prototype = [js_ctx](const FeatureRegistryPair& pair) {
         auto proto = pair.second;
+        if (!proto)
+            return;
+
         auto description = pair.first;
         FEATURE_CHECK_NE(description, nullptr);
-        if (proto) {
-            // clear all feature instance at first, it will free all feature instance and call onDetach for them
-            proto->clearAllInstances();
-            // call feature's onDestroy
-            if (description->native_callbacks && description->native_callbacks->onDestroy) {
-                FEATURE_LOG_DEBUG("invoke onDestroy callback...");
-                description->native_callbacks->onDestroy(js_ctx, proto);
-            }
+        // clear all feature instance at first, it will free all feature instance and call onDetach for them
+        proto->clearAllInstances();
+        // call feature's onDestroy
+        if (description->native_callbacks && description->native_callbacks->onDestroy) {
+            FEATURE_LOG_DEBUG("invoke onDestroy callback...");
+            description->native_callbacks->onDestroy(js_ctx, proto);
         }
-        // delete prototype
         delete proto;
     };
 
     // release interface prototypes and its instances 
     for (const auto& interface_pair : registered_interfaces_) {
-        release_proto(interface_pair.second);
+        release_prototype(interface_pair.second);
     }
 
     // check if all instances deleted, then clear proto object
     for (const auto& feature_pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        release_proto(feature_pair.second);
+        release_prototype(feature_pair.second);
     }
     // uninit registery
     delete getFeatureRegistry();
@@ -876,6 +876,10 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
         }
     }
     return 0;
+}
+
+FeatureInstance* FeatureManagerWamr::createTargetInterface(FeatureInstance* interface, const FeatureDescription* description) {
+    return interface;
 }
 
 }
