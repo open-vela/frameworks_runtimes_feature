@@ -469,8 +469,9 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                 }
             } break;
             case COMPLEX_INTERFACE: {
-                native_raw_get_arg(void*, param, value);
-                ptr = param;
+                FeatureManagerWamr* manager = (FeatureManagerWamr*)(instance->prototype()->getFeatureManager());
+                FEATURE_CHECK_NE(manager, nullptr);
+                ptr = manager->getNativeInterface(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

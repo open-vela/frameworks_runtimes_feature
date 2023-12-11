@@ -878,8 +878,13 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
     return 0;
 }
 
-FeatureInstance* FeatureManagerWamr::createTargetInterface(FeatureInstance* interface, const FeatureDescription* description) {
-    return interface;
+uint64_t* FeatureManagerWamr::createTargetInterface(FeatureInstance* interface, const FeatureDescription* description) {
+    return (uint64_t*)interface;
+}
+
+void* FeatureManagerWamr::getNativeInterface(uint64_t*& target) {
+    native_raw_get_arg(void*, param, target);
+    return param;
 }
 
 }

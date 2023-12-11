@@ -722,6 +722,13 @@ feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interf
     return js_interface;
 }
 
+void* FeatureManagerQjs::getNativeInterface(feature_value_t target) {
+    auto opaque = feature_get_opaque(target, FeatureManagerQjs::jsClassId());
+    FEATURE_LOG_DEBUG("value: %p, get opaque: %p", JS_VALUE_GET_PTR(target), opaque);
+    FEATURE_CHECK_NE(opaque, nullptr);
+    return opaque;
+}
+
 void FeatureManagerQjs::uninit()
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
