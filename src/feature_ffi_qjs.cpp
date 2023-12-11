@@ -338,11 +338,9 @@ namespace FeatureFFIQjs {
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
-                // get interface ptr from js object
-                auto opaque_ptr = feature_get_opaque(value, FeatureManagerQjs::jsClassId());
-                FEATURE_LOG_DEBUG("value: %p, get opaque_ptr: %p", JS_VALUE_GET_PTR(value), opaque_ptr);
-                FEATURE_CHECK_NE(opaque_ptr, nullptr);
-                ptr = opaque_ptr;
+                FeatureManagerQjs* manager = (FeatureManagerQjs*)(instance->prototype()->getFeatureManager());
+                FEATURE_CHECK_NE(manager, nullptr);
+                ptr = manager->getNativeInterface(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

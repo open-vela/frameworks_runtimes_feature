@@ -51,7 +51,8 @@ public:
     FeatureInstance* getFeatureInstance(wasm_obj_t obj);
     bool require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name);
     void* wamrEnv() { return wamr_env_; }
-    FeatureInstance* createTargetInterface(FeatureInstance* interface, const FeatureDescription* description);
+    uint64_t* createTargetInterface(FeatureInstance* interface, const FeatureDescription* description);
+    void* getNativeInterface(uint64_t*& target);
 
 private:
     int registerFeature(const FeatureDescription* description);
