@@ -424,9 +424,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
             case COMPLEX_CALLBACK: {
                 // save into instance
                 CallbackType *callbackType = (CallbackType *)complexType;
-                native_raw_get_arg(wasm_obj_t, cb_value, value);
-                //*(int32_t*)ptr = (int32_t)num_val;
-                FtCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(cb_value, callbackType);
+                FtCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(value, callbackType);
                 *(FtCallbackId *)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {

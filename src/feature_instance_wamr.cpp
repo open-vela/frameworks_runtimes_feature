@@ -107,11 +107,11 @@ WamrCallbackData FeatureInstanceWamr::getCallback(FtCallbackId cid)
     return callbacks_[cid];
 }
 
-FtCallbackId FeatureInstanceWamr::addCallback(wasm_obj_t value, CallbackType* callbackType)
+FtCallbackId FeatureInstanceWamr::addCallback(uint64_t*& value, CallbackType* callbackType)
 {
-    //auto ctx = proto->ctx;
+    native_raw_get_arg(wasm_obj_t, cb_value, value);
     WamrCallbackData callback;
-    callback.cb = value;
+    callback.cb = cb_value;
     callback.cb_type = callbackType;
     callbacks_[curr_cid_] = callback;
     return curr_cid_++;
