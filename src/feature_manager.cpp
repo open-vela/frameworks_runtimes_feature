@@ -37,6 +37,9 @@ FeatureManager::FeatureManager(FeatureRegistry* registry)
 FeatureManager::~FeatureManager()
 {
     ft_ctx_ = nullptr;
+    uv_close((uv_handle_t*)async_, [](uv_handle_t* handler) {
+        free(reinterpret_cast<uv_async_t*>(handler));
+    });
 }
 
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
@@ -54,8 +57,9 @@ static void feature_async_cb(uv_async_t* handle)
 void FeatureManager::setUVLoop(uv_loop_t* loop)
 {
     loop_ = loop;
-    uv_async_init(loop_, &async, feature_async_cb);
-    async.data = this;
+    async_ = (uv_async_t*)calloc(1, sizeof(uv_async_t));
+    uv_async_init(loop_, async_, feature_async_cb);
+    async_->data = this;
 }
 
 void FeatureManager::setPackageName(const char* package_name)
