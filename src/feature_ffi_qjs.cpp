@@ -334,7 +334,7 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_DEBUG("array data: %p", ptr);
             } break;
             case COMPLEX_PROMISE: {
-                FEATURE_LOG_ERROR("do not support convert promise to guest !");
+                FEATURE_LOG_ERROR("do not support convert promise to host !");
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
@@ -426,92 +426,92 @@ namespace FeatureFFIQjs {
         } else if (FT_IS_COMPLEX(featureType)) {
             ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
             switch (complexType->type) {
-            case COMPLEX_STRUCT_MAP: {
-                ObjectMapType& objMapType = *(ObjectMapType*)complexType;
-                auto member = objMapType.members;
-                auto member_count = countMember(member);
-                value = feature_object(ctx);
-                for (int i = 0; i < member_count; i++) {
-                    // fill it
-                    void* member_ptr = (void*)((char*)ptr + member->offset);
-                    feature_value_t prop;
-                    bool ret = convertValueToGuest(instance, member->type, member_ptr, ctx, prop);
+                case COMPLEX_STRUCT_MAP: {
+                    ObjectMapType& objMapType = *(ObjectMapType*)complexType;
+                    auto member = objMapType.members;
+                    auto member_count = countMember(member);
+                    value = feature_object(ctx);
+                    for (int i = 0; i < member_count; i++) {
+                        // fill it
+                        void* member_ptr = (void*)((char*)ptr + member->offset);
+                        feature_value_t prop;
+                        bool ret = convertValueToGuest(instance, member->type, member_ptr, ctx, prop);
+                        if (!ret) {
+                            feature_free_value(ctx, prop);
+                            FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
+                            return false;
+                        }
+                        feature_set_object_property(ctx, value, member->name, prop);
+                        member++;
+                    }
+                } break;
+                case COMPLEX_OPTIONAL: {
+                    OptionalType* optinalType = (OptionalType*)complexType;
+                    bool ret = convertValueToGuest(instance, optinalType->type, ptr, ctx, value);
                     if (!ret) {
-                        feature_free_value(ctx, prop);
-                        FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
-                        return false;
-                    }
-                    feature_set_object_property(ctx, value, member->name, prop);
-                    member++;
-                }
-            } break;
-            case COMPLEX_OPTIONAL: {
-                OptionalType* optinalType = (OptionalType*)complexType;
-                bool ret = convertValueToGuest(instance, optinalType->type, ptr, ctx, value);
-                if (!ret) {
-                    feature_free_value(ctx, value);
-                    value = FEATURE_UNDEFINED;
-                    FEATURE_LOG_ERROR("convert optional to guest failed !");
-                    return false;
-                }
-            } break;
-            case COMPLEX_CALLBACK: {
-                // unreachable
-                FEATURE_LOG_ERROR("convert callback to guest is unreachable");
-            } break;
-            case COMPLEX_ARRAY: {
-                // convert to guest
-                ArrayType* arrayType = (ArrayType*)complexType;
-                FtArray* arrayData = (FtArray*)ptr;
-                auto element_type = arrayType->element_type;
-                FEATURE_CHECK_EQ(FT_IS_REFERENCE(element_type), true);
-                size_t element_size = sizeof(uintptr_t);
-                // exact and create js value
-                value = feature_array(ctx);
-                for (int32_t i = 0; i < arrayData->_size; i++) {
-                    void* element_ptr = ((char*)arrayData->_element + element_size * i);
-                    // convert element value
-                    feature_value_t element_obj = FEATURE_UNDEFINED;
-                    if (!convertValueToGuest(instance, element_type, element_ptr, ctx, element_obj)) {
-                        FEATURE_LOG_ERROR("convert array element to guest failed !");
-                        feature_free_value(ctx, element_obj);
                         feature_free_value(ctx, value);
+                        value = FEATURE_UNDEFINED;
+                        FEATURE_LOG_ERROR("convert optional to guest failed !");
                         return false;
                     }
-                    feature_set_array_idx(static_cast<feature_context_ref>(ctx), value, i, element_obj);
-                }
-            } break;
-            case COMPLEX_PROMISE: {
-                // convert to guest means return promise object back.
-                // PromiseType* promiseType = (PromiseType*)complexType;
-                // get promise data back.
-                if (!instance) {
-                    FEATURE_LOG_ERROR("convert promise need instance provided !");
-                }
-                FEATURE_CHECK_NE(instance, nullptr);
-                FtPromiseId pid = *(FtPromiseId*)ptr;
-                feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
-                if (feature_is_undefined(promise)) {
-                    FEATURE_LOG_ERROR("get promise with pid: %" PRId32 " failed !", pid);
+                } break;
+                case COMPLEX_CALLBACK: {
+                    // unreachable
+                    FEATURE_LOG_ERROR("convert callback to guest is unreachable");
+                } break;
+                case COMPLEX_ARRAY: {
+                    // convert to guest
+                    ArrayType* arrayType = (ArrayType*)complexType;
+                    FtArray* arrayData = (FtArray*)ptr;
+                    auto element_type = arrayType->element_type;
+                    FEATURE_CHECK_EQ(FT_IS_REFERENCE(element_type), true);
+                    size_t element_size = sizeof(uintptr_t);
+                    // exact and create js value
+                    value = feature_array(ctx);
+                    for (int32_t i = 0; i < arrayData->_size; i++) {
+                        void* element_ptr = ((char*)arrayData->_element + element_size * i);
+                        // convert element value
+                        feature_value_t element_obj = FEATURE_UNDEFINED;
+                        if (!convertValueToGuest(instance, element_type, element_ptr, ctx, element_obj)) {
+                            FEATURE_LOG_ERROR("convert array element to guest failed !");
+                            feature_free_value(ctx, element_obj);
+                            feature_free_value(ctx, value);
+                            return false;
+                        }
+                        feature_set_array_idx(static_cast<feature_context_ref>(ctx), value, i, element_obj);
+                    }
+                } break;
+                case COMPLEX_PROMISE: {
+                    // convert to guest means return promise object back.
+                    // PromiseType* promiseType = (PromiseType*)complexType;
+                    // get promise data back.
+                    if (!instance) {
+                        FEATURE_LOG_ERROR("convert promise need instance provided !");
+                    }
+                    FEATURE_CHECK_NE(instance, nullptr);
+                    FtPromiseId pid = *(FtPromiseId*)ptr;
+                    feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
+                    if (feature_is_undefined(promise)) {
+                        FEATURE_LOG_ERROR("get promise with pid: %" PRId32 " failed !", pid);
+                        return false;
+                    }
+                    value = feature_dup_value(ctx, promise);
+                } break;
+                case COMPLEX_INTERFACE: {
+                    InterfaceType* interface_type = (InterfaceType*)complexType;
+                    FEATURE_CHECK_NE(interface_type->desc, nullptr);
+                    FEATURE_CHECK_NE(ptr, nullptr);
+                    auto interface_ptr = static_cast<FeatureInstance*>(ptr);
+                    auto parent = interface_ptr->parent();
+                    FEATURE_CHECK_NE(parent, nullptr);
+                    FeatureManagerQjs* manager = (FeatureManagerQjs*)(parent->prototype()->getFeatureManager());
+                    FEATURE_CHECK_NE(manager, nullptr);
+                    value = manager->createTargetInterface(interface_ptr, interface_type->desc);
+                } break;
+                default: {
+                    FEATURE_LOG_ERROR("unsupported complex type !");
                     return false;
                 }
-                value = feature_dup_value(ctx, promise);
-            } break;
-            case COMPLEX_INTERFACE: {
-                InterfaceType* interface_type = (InterfaceType*)complexType;
-                FEATURE_CHECK_NE(interface_type->desc, nullptr);
-                FEATURE_CHECK_NE(ptr, nullptr);
-                auto interface_ptr = static_cast<FeatureInstance*>(ptr);
-                auto parent = interface_ptr->parent();
-                FEATURE_CHECK_NE(parent, nullptr);
-                FeatureManagerQjs* manager = (FeatureManagerQjs*)(parent->prototype()->getFeatureManager());
-                FEATURE_CHECK_NE(manager, nullptr);
-                value = manager->createTargetInterface(interface_ptr, interface_type->desc);
-            } break;
-            default: {
-                FEATURE_LOG_ERROR("unsupported complex type !");
-                return false;
-            }
             }
         }
         return true;
