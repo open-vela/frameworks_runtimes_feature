@@ -220,5 +220,14 @@ static inline ft_value_t undefinedFtVal()
     return ft_val;
 }
 
+static inline ft_value_t getVariArg(JSContext* ctx, ft_value_t& arg)
+{
+    return arg;
+}
+
+static inline void toTargetPromise(JSContext* ctx, const JSValue& promise, JSValue& ret_val)
+{
+}
+
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__
