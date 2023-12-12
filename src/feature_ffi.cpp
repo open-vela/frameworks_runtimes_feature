@@ -435,8 +435,8 @@ static void argToNativePtr(TCtx ctx, const TTarget& target, void* ptr) {
   value_translator::toNative(ctx, target, (TNative*)ptr);
 }
 
-template<typename TCtx, typename TTarget>
-bool convertValueToNatvie(FeatureInstance* instance, FeatureType ftype,
+template<typename TInstance, typename TCtx, typename TTarget>
+bool convertValueToNatvie(TInstance* instance, FeatureType ftype,
         TCtx ctx, const TTarget& target, void*& pnative) {
     TRY_GET_REAL_TYPE(ftype);
     if (!pnative) {
@@ -612,11 +612,9 @@ bool convertValueToNatvie(FeatureInstance* instance, FeatureType ftype,
             } break;
             case COMPLEX_CALLBACK: {
                 // save into instance
-                CallbackType *cb_type = (CallbackType *)complex_type;
-                ft_value_t cb_value;
-                value_translator::argToNative(ctx, target, &cb_value);  // to do by wjf
-                // FtCallbackId id = instance->addCallback(cb_value, cb_type);
-                // *(FtCallbackId *)pnative = id; // write callback id to pointer.
+                CallbackType *callbackType = (CallbackType *)complex_type;
+                FtCallbackId id = instance->addCallback(target, callbackType);
+                *(FtCallbackId *)pnative = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {
                 ArrayType& array_type = *(ArrayType*)complex_type;
@@ -655,10 +653,7 @@ bool convertValueToNatvie(FeatureInstance* instance, FeatureType ftype,
                 return false;
             } break;
             case COMPLEX_INTERFACE: {  // to do by wjf
-                // get interface ptr from js object
-                // auto opaque_ptr = feature_get_opaque(target, FeatureManagerQjs::jsClassId());
-                // FEATURE_CHECK_NE(opaque_ptr, nullptr);
-                // pnative = opaque_ptr;
+                pnative = instance->getNativeInterface(target);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -673,8 +668,8 @@ static void nativeToTarget(TCtx ctx, void* ptr, TTarget& target) {
   value_translator::toTarget(ctx, *((TNative*)ptr), &target);
 }
 
-template<typename TCtx, typename TTarget>
-bool convertValueToTarget(FeatureInstance* instance, FeatureType ftype,
+template<typename TInstance, typename TCtx, typename TTarget>
+bool convertValueToTarget(TInstance* instance, FeatureType ftype,
     TCtx ctx, void* pnative, TTarget& target)
 {
     FEATURE_CHECK_NE(pnative, nullptr);
@@ -769,7 +764,6 @@ bool convertValueToTarget(FeatureInstance* instance, FeatureType ftype,
                 bool ret = convertValueToTarget(instance, opt_type->type, ctx, pnative, target);
                 if (!ret) {
                     value_translator::freeValue(ctx, target);
-                    feature_free_value(ctx, target);
                     FEATURE_LOG_ERROR("convert optional to guest failed !");
                     return false;
                 }
@@ -801,52 +795,15 @@ bool convertValueToTarget(FeatureInstance* instance, FeatureType ftype,
                 }
             } break;
             case COMPLEX_PROMISE: {
-                    /* to do by wjf
-                if (!instance) {
-                    FEATURE_LOG_ERROR("convert promise need instance provided !");
-                }
-                FEATURE_CHECK_NE(instance, nullptr);
-                FtPromiseId pid = *(FtPromiseId*)pnative;
-                feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
-                if (feature_is_undefined(promise)) {
-                    FEATURE_LOG_ERROR("get promise with pid: %" PRId32 " failed !", pid);
-                    return false;
-                }
-                target = feature_dup_value(ctx, promise);
-            */
+                FEATURE_LOG_ERROR("do not support convert promise to host !");
+                return false;
             } break;
             case COMPLEX_INTERFACE: {
-                /* to do by wjf
-                InterfaceType* interfaceType = (InterfaceType*)complex_type;
-                // get interface description
-                const FeatureDescription* interfaceDesc = interfaceType->desc;
-                FEATURE_CHECK_NE(interfaceDesc, nullptr);
+                InterfaceType* interface_type = (InterfaceType*)complex_type;
+                FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(pnative, nullptr);
-                auto interface_ptr = static_cast<FeatureInstanceQjs*>(pnative);
-                // save interface prototype in parent instance
-                auto interfaceInstance = std::unique_ptr<FeatureInstance>(interface_ptr);
-                const char* name = interfaceDesc->name;
-                FeatureManagerQjs* manager = (FeatureManagerQjs*)(instance->prototype()->getFeatureManager());
-                FEATURE_CHECK_NE(manager, nullptr);
-                FeaturePrototype* interfacePrototype = ((FeatureInstanceQjs*)instance)->getInterfacePrototype(name);
-                if (!interfacePrototype) {
-                    interfacePrototype = new FeaturePrototype(interfaceDesc);
-                    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(interfacePrototype->ft_proto);
-                    *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-                    FEATURE_CHECK_NE(interfacePrototype, nullptr);
-                    interfacePrototype->setFeatureManager(manager);
-                    // add interface prototype to parent instance
-                    ((FeatureInstanceQjs*)instance)->addInterfacePrototype(name, interfacePrototype);
-                }
-                // setup prototype
-                interface_ptr->setPrototype(interfacePrototype);
-                int iid = interfacePrototype->addInstance(std::move(interfaceInstance));
-                interfacePrototype->instances[iid]->setInstanceId(iid);
-                // create prototype class instance
-                target = manager->createJsInstance(interfacePrototype, interface_ptr);
-                // setup featureInstance WeakRef, refers to feature_object
-                interface_ptr->initWeakRef(target);
-            */
+                auto interface_ptr = static_cast<TInstance*>(pnative);
+                target = interface_ptr->createTargetInterface(interface_type->desc);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
