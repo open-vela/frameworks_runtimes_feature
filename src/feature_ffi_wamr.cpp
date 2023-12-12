@@ -288,6 +288,14 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 native_raw_set_return(obj);
             }
             break;
+            case COMPLEX_OPTIONAL: {
+                OptionalType* opt_type = (OptionalType*)complex_type;
+                bool ret = convertValueToGuest(instance, opt_type->type, ptr, exec_env, value);
+                if (!ret) {
+                    FEATURE_LOG_ERROR("convert optional to guest failed !");
+                    return false;
+                }
+            } break;
             case COMPLEX_ARRAY: {
                 native_raw_return_type(void *, value);
                 FtArray *array = (FtArray *)ptr;
@@ -310,6 +318,10 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 native_raw_return_type(void *, value);
                 native_raw_set_return(ptr);
             } break;
+            default: {
+                FEATURE_LOG_ERROR("unsupported complex type !");
+                return false;
+            }
         }
     }
     return true;
@@ -405,11 +417,11 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
             }
         }
     } else if (FT_IS_COMPLEX(ftype)) {
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
-        switch (complexType->type) {
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+        switch (complex_type->type) {
             case COMPLEX_STRUCT_MAP: {
                 wasm_value_t val = {0};
-                ObjectMapType &objMapType = *(ObjectMapType *)complexType;
+                ObjectMapType &objMapType = *(ObjectMapType *)complex_type;
                 ObjectMember *member = (ObjectMember *)objMapType.members;
                 int member_count = 0;
                 while (member->name) {
@@ -432,16 +444,24 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                     }
                 }
             } break;
+            case COMPLEX_OPTIONAL: {
+                OptionalType* opt_type = (OptionalType*)complex_type;
+                bool ret = convertValueToHost(instance, opt_type->type, ptr, exec_env, value);
+                if (!ret) {
+                    FEATURE_LOG_ERROR("convert optional type failed !");
+                    return false;
+                }
+            } break;
             case COMPLEX_CALLBACK: {
                 // save into instance
-                CallbackType *callbackType = (CallbackType *)complexType;
+                CallbackType *callbackType = (CallbackType *)complex_type;
                 FtCallbackId id = ((FeatureInstanceWamr *)instance)->addCallback(value, callbackType);
                 *(FtCallbackId *)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {
                 uint32_t len;
                 wasm_value_t value1 = {0};
-                ArrayType &arrayType = *(ArrayType *)complexType;
+                ArrayType &arrayType = *(ArrayType *)complex_type;
                 auto element_type = arrayType.element_type;
                 native_raw_get_arg(wasm_struct_obj_t, arrayValue, value);
                 wasm_array_obj_t arr_ref = get_array_ref(arrayValue);
