@@ -17,6 +17,7 @@
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
 #include "feature_ffi_qjs.h"
+#include "feature_manager_qjs.h"
 #include "feature_log.h"
 #include "feature_prototype.h"
 #include "feature_utils.h"
@@ -101,7 +102,7 @@ QjsCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
     return callbacks_[cid];
 }
 
-FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType* callbackType)
+FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t& value, CallbackType* callbackType)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
     QjsCallbackData callback;
@@ -109,6 +110,21 @@ FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t value, CallbackType
     callback.cb_type = callbackType;
     callbacks_[++curr_cid_] = callback;
     return curr_cid_;
+}
+
+feature_value_t FeatureInstanceQjs::createTargetInterface(const FeatureDescription* description)
+{
+    FeatureManagerQjs* manager = (FeatureManagerQjs*)(prototype()->getFeatureManager());
+    FEATURE_CHECK_NE(manager, nullptr);
+    return manager->createTargetInterface(this, description);
+}
+
+void* FeatureInstanceQjs::getNativeInterface(feature_value_t& target)
+{
+    auto opaque = feature_get_opaque(target, FeatureManagerQjs::jsClassId());
+    FEATURE_LOG_DEBUG("value: %p, get opaque: %p", JS_VALUE_GET_PTR(target), opaque);
+    FEATURE_CHECK_NE(opaque, nullptr);
+    return opaque;
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)

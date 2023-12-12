@@ -308,13 +308,8 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 InterfaceType* interface_type = (InterfaceType*)complex_type;
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
-                auto interface_ptr = static_cast<FeatureInstance*>(ptr);
-                auto parent = interface_ptr->parent();
-                FEATURE_CHECK_NE(parent, nullptr);
-                FeatureManagerWamr* manager = (FeatureManagerWamr*)(parent->prototype()->getFeatureManager());
-                FEATURE_CHECK_NE(manager, nullptr);
-                ptr = manager->createTargetInterface(interface_ptr, interface_type->desc);
-
+                auto interface_ptr = static_cast<FeatureInstanceWamr*>(ptr);
+                ptr = interface_ptr->createTargetInterface(interface_type->desc);
                 native_raw_return_type(void *, value);
                 native_raw_set_return(ptr);
             } break;
@@ -489,9 +484,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                 }
             } break;
             case COMPLEX_INTERFACE: {
-                FeatureManagerWamr* manager = (FeatureManagerWamr*)(instance->prototype()->getFeatureManager());
-                FEATURE_CHECK_NE(manager, nullptr);
-                ptr = manager->getNativeInterface(value);
+                ptr = ((FeatureInstanceWamr*)instance)->getNativeInterface(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

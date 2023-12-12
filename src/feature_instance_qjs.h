@@ -18,10 +18,10 @@
 #ifndef __FEATURE_INSTANCE_QJS_H__
 #define __FEATURE_INSTANCE_QJS_H__
 
-#include "callback_manager.h"
 #include "feature.h"
 #include "feature_instance.h"
 #include "feature_common.h"
+#include "instance_base.h"
 
 #include <map>
 #include <memory>
@@ -41,7 +41,7 @@ typedef struct QjsCallbackData {
     CallbackType* cb_type;
 } QjsCallbackData;
 
-class FeatureInstanceQjs : public FeatureInstance, CallbackManager<feature_value_t> {
+class FeatureInstanceQjs : public FeatureInstance, InstanceBase<feature_value_t> {
 public:
     FeatureInstanceQjs(FeaturePrototype* prototype, VTable* vtable);
     virtual ~FeatureInstanceQjs();
@@ -64,7 +64,11 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    virtual FtCallbackId addCallback(feature_value_t value, CallbackType* callbackType);
+    virtual FtCallbackId addCallback(feature_value_t& value, CallbackType* callbackType);
+
+    virtual feature_value_t createTargetInterface(const FeatureDescription* description);
+
+    virtual void* getNativeInterface(feature_value_t& target);
 
     bool checkCallback(FtCallbackId cid);
 

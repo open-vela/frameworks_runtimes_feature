@@ -57,8 +57,6 @@ public:
 
     feature_value_t createTargetInterface(FeatureInstance* instance, const FeatureDescription* description);
 
-    void* getNativeInterface(feature_value_t target);
-
     static feature_classid_t jsClassId() { return js_class_id_; }
 
 private:
