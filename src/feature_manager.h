@@ -59,7 +59,7 @@ public:
 
     void unlockAsync();
 
-    uv_async_t async;
+    uv_async_t* async_;
     uv_mutex_t mutex;
 
 private:

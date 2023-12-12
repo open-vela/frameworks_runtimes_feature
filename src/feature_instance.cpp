@@ -65,7 +65,7 @@ void FeatureInstance::sendAsnyc()
 {
     FeatureManager* manager = prototype()->getFeatureManager();
     manager->lockAsync();
-    uv_async_send(&manager->async);
+    uv_async_send(manager->async_);
     manager->unlockAsync();
 }
 
