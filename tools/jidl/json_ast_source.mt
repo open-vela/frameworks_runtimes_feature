@@ -424,8 +424,9 @@ FtArray* ${module_name}_malloc_${array_type}_array() {
 <%
   render.SetArrayTypeGenerator(ArrayTypeGenerator(GenerateArrayType))
 %>\
-<%def name="GenParamsFeatureType(node, parent_prefix = '')">\
+<%def name="GenParamsFeatureType(node, parent_prefix)">\
 <%
+  if not parent_prefix: parent_prefix = ''
   identifier = node['identifier']
   has_ellipse_param = render.HasEllipseParam(node)
   param_infos = []
@@ -558,7 +559,7 @@ ${func_def} {
 ${GenInterfaceCtorFunction(func_node, ctor_info)}
 %endif
 /****** for JIDL function '${identifier}' ******/
-${GenParamsFeatureType(func_node)}
+${GenParamsFeatureType(func_node, '')}
 ${GenMemberMethod(identifier, ret_type)}
 </%def>\
 <%def name="GenUse(use_node)">\
@@ -599,7 +600,7 @@ static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params})
     ${func_call};
 }
 
-${GenParamsFeatureType(func_node)}
+${GenParamsFeatureType(func_node, '')}
 ${GenMemberMethod(identifier, ret_type_node)}
 </%def>\
 <%def name="GenCallback(cb_node)">\
@@ -609,7 +610,7 @@ ${GenMemberMethod(identifier, ret_type_node)}
 %>\
 %if success:
 /****** for JIDL callback '${identifier}' ******/
-${GenParamsFeatureType(cb_node)}
+${GenParamsFeatureType(cb_node, '')}
 static const CallbackType ${module_name}_${identifier}_callback_type {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = ${module_name}_${identifier}_parameters,
