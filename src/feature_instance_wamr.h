@@ -18,10 +18,10 @@
 #ifndef __FEATURE_INSTANCE_WAMR_H__
 #define __FEATURE_INSTANCE_WAMR_H__
 
-#include "callback_manager.h"
 #include "feature.h"
 #include "feature_instance.h"
 #include "feature_common.h"
+#include "instance_base.h"
 #include "gc_object.h"
 
 #include <map>
@@ -37,7 +37,7 @@ typedef struct WamrCallbackData {
    CallbackType* cb_type;
 } WamrCallbackData;
 
-class FeatureInstanceWamr : public FeatureInstance, CallbackManager<uint64_t*&> {
+class FeatureInstanceWamr : public FeatureInstance, InstanceBase<uint64_t*> {
 public:
     FeatureInstanceWamr(struct FeaturePrototype* prototype, VTable* vtable);
     virtual ~FeatureInstanceWamr();
@@ -57,6 +57,10 @@ public:
     WamrCallbackData getCallback(FtCallbackId cid);
 
     virtual FtCallbackId addCallback(uint64_t*& value, CallbackType* callbackType);
+
+    virtual uint64_t* createTargetInterface(const FeatureDescription* description);
+
+    virtual void* getNativeInterface(uint64_t*& target);
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 

@@ -15,19 +15,23 @@
  * limitations under the License.
  */
 
-#ifndef __CALLBACK_MANAGER_H__
-#define __CALLBACK_MANAGER_H__
+#ifndef __INSTANCE_BASE_H__
+#define __INSTANCE_BASE_H__
 
 #include "feature_description.h"
 
 namespace ferry {
 
-template<typename TCallback>
-class CallbackManager {
+template<typename TTarget>
+class InstanceBase {
 public:
-    virtual FtCallbackId addCallback(TCallback value, CallbackType* callbackType) = 0;
+    virtual FtCallbackId addCallback(TTarget& value, CallbackType* callbackType) = 0;
+
+    virtual TTarget createTargetInterface(const FeatureDescription* description) = 0;
+
+    virtual void* getNativeInterface(TTarget& target) = 0;
 };
 
 }
-#endif // __CALLBACK_MANAGER_H__
+#endif // __INSTANCE_BASE_H__
 

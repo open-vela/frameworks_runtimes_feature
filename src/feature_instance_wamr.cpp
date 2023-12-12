@@ -117,6 +117,17 @@ FtCallbackId FeatureInstanceWamr::addCallback(uint64_t*& value, CallbackType* ca
     return curr_cid_++;
 }
 
+uint64_t* FeatureInstanceWamr::createTargetInterface(const FeatureDescription* description)
+{
+    return (uint64_t*)this;
+}
+
+void* FeatureInstanceWamr::getNativeInterface(uint64_t*& target)
+{
+    native_raw_get_arg(void*, param, target);
+    return param;
+}
+
 static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_array_type_t)
 {
     uint32_t i, type_count;

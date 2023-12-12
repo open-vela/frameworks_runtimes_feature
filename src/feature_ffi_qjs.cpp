@@ -338,9 +338,7 @@ namespace FeatureFFIQjs {
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
-                FeatureManagerQjs* manager = (FeatureManagerQjs*)(instance->prototype()->getFeatureManager());
-                FEATURE_CHECK_NE(manager, nullptr);
-                ptr = manager->getNativeInterface(value);
+                ptr = ((FeatureInstanceQjs*)instance)->getNativeInterface(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -501,12 +499,8 @@ namespace FeatureFFIQjs {
                     InterfaceType* interface_type = (InterfaceType*)complexType;
                     FEATURE_CHECK_NE(interface_type->desc, nullptr);
                     FEATURE_CHECK_NE(ptr, nullptr);
-                    auto interface_ptr = static_cast<FeatureInstance*>(ptr);
-                    auto parent = interface_ptr->parent();
-                    FEATURE_CHECK_NE(parent, nullptr);
-                    FeatureManagerQjs* manager = (FeatureManagerQjs*)(parent->prototype()->getFeatureManager());
-                    FEATURE_CHECK_NE(manager, nullptr);
-                    value = manager->createTargetInterface(interface_ptr, interface_type->desc);
+                    auto interface_ptr = static_cast<FeatureInstanceQjs*>(ptr);
+                    value = interface_ptr->createTargetInterface(interface_type->desc);
                 } break;
                 default: {
                     FEATURE_LOG_ERROR("unsupported complex type !");
