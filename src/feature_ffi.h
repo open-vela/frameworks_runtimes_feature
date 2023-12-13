@@ -70,13 +70,13 @@ void* exactVariadicParameter(va_list& ap, FeatureType featureType);
 
 // templeate functions
 template<typename TNative, typename TCtx, typename TTarget>
-static void argToNativePtr(TCtx ctx, const TTarget& target, void* ptr) {
+void argToNativePtr(TCtx ctx, TTarget& target, void* ptr) {
   value_translator::toNative(ctx, target, (TNative*)ptr);
 }
 
 template<typename TInstance, typename TCtx, typename TTarget>
 bool convertValueToNative(TInstance* instance, FeatureType ftype,
-        TCtx ctx, const TTarget& target, void*& pnative) {
+        TCtx ctx, TTarget& target, void*& pnative) {
     TRY_GET_REAL_TYPE(ftype);
     if (!pnative) {
         if (!createHostValue(ftype, pnative)) {
@@ -169,7 +169,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     return false;
                 } else {
                     const char* str = NULL;
-                    if (!argToNativePtr<const char*>(ctx, target, &str)) {
+                    if (!argToNativePtr<const char*>(ctx, target, (void*)(&str))) {
                         FEATURE_LOG_ERROR("convert to const char* failed !");
                         return false;
                     }
@@ -275,9 +275,9 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     for (size_t i = 0; i < asize; i++) {
                         // fill it
                         TTarget elem_val = value_translator::arrayGet(ctx, target, i);
-                        FEATURE_CHECK_NE(value_translator::isUndefined(elem_val), true);
+                        FEATURE_CHECK_NE(value_translator::isUndefined(ctx, elem_val), true);
                         void* elem_ptr = ((char*)array_data->_element + elem_size * i);
-                        if (!convertValueToNative(instance, elem_type, elem_ptr, ctx, elem_val)) {
+                        if (!convertValueToNative(instance, elem_type, ctx, elem_ptr, elem_val)) {
                             FEATURE_LOG_ERROR("convert array element failed ");
                             value_translator::freeValue(ctx, elem_val);
                             break;
@@ -303,7 +303,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
 }
 
 template<typename TNative, typename TCtx, typename TTarget>
-static void nativeToTarget(TCtx ctx, void* ptr, TTarget& target) {
+void nativeToTarget(TCtx ctx, void* ptr, TTarget& target) {
   value_translator::toTarget(ctx, *((TNative*)ptr), &target);
 }
 
@@ -359,7 +359,7 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
             } break;
             case FT_CHAR: {
                 if (!pnative)
-                    nativeToTarget<const char*>(ctx, "", target);
+                    nativeToTarget<const char*>(ctx, (void*)(""), target);
                 else
                     nativeToTarget<const char*>(ctx, pnative, target);
             } break;
