@@ -70,8 +70,8 @@ void* exactVariadicParameter(va_list& ap, FeatureType featureType);
 
 // templeate functions
 template<typename TNative, typename TCtx, typename TTarget>
-void argToNativePtr(TCtx ctx, TTarget& target, void* ptr) {
-  value_translator::toNative(ctx, target, (TNative*)ptr);
+bool argToNativePtr(TCtx ctx, TTarget& target, void* native_ptr) {
+    return value_translator::toNative(ctx, target, (TNative*)native_ptr);
 }
 
 template<typename TInstance, typename TCtx, typename TTarget>
@@ -277,7 +277,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                         TTarget elem_val = value_translator::arrayGet(ctx, target, i);
                         FEATURE_CHECK_NE(value_translator::isUndefined(ctx, elem_val), true);
                         void* elem_ptr = ((char*)array_data->_element + elem_size * i);
-                        if (!convertValueToNative(instance, elem_type, ctx, elem_ptr, elem_val)) {
+                        if (!convertValueToNative(instance, elem_type, ctx, elem_val, elem_ptr)) {
                             FEATURE_LOG_ERROR("convert array element failed ");
                             value_translator::freeValue(ctx, elem_val);
                             break;
@@ -528,7 +528,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
                 got_error = true;
                 break;
             }
-            if (!convertValueToNative(instance, param_type, ffi_arg_values[extra_argc + i], ctx, curr_arg)) {
+            if (!convertValueToNative(instance, param_type, ctx, curr_arg, ffi_arg_values[extra_argc + i])) {
                 FEATURE_LOG_ERROR("convert argument %d failed !", i);
                 got_error = true;
                 break;
@@ -625,7 +625,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method.return_type != FT_VOID) {
             // process return value
-            if (!convertValueToTarget(instance, method.return_type, ffi_ret_value, ctx, ret_val)) {
+            if (!convertValueToTarget(instance, method.return_type, ctx, ffi_ret_value, ret_val)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 value_translator::freeValue(ctx, ret_val);
                 got_error = true;
@@ -711,7 +711,7 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
         // invoke
         ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
         // process return value
-        if (!convertValueToTarget(instance, feature_type, ffi_ret_value, ctx, ret_val)) {
+        if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             value_translator::freeValue(ctx, ret_val);
         }
@@ -755,7 +755,7 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
             break;
         }
         // fill third param using guest value and accesor type
-        if (!convertValueToNative(instance, accessor->type, arg_value_input, ctx, val)) {
+        if (!convertValueToNative(instance, accessor->type, ctx, val, arg_value_input)) {
             FEATURE_LOG_ERROR("convert value to native failed !");
             got_error = true;
             break;
