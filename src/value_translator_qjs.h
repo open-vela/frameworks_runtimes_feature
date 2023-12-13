@@ -220,7 +220,7 @@ static inline ft_value_t undefinedFtVal()
     return ft_val;
 }
 
-static inline ft_value_t getVariArg(JSContext* ctx, ft_value_t& arg)
+static inline JSValue getVariArg(JSContext* ctx, JSValue& arg)
 {
     return arg;
 }
