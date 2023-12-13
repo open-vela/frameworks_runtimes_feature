@@ -8,8 +8,8 @@
 #include "builtin/builtin_console.h"
 #include "builtin/console.h"
 #include "feature_exports.h"
-#include "feature_main_exports.h"
 #include "feature_log.h"
+#include "feature_main_exports.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
 #if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
@@ -191,64 +191,29 @@ static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
 }
 #endif
 
-// 支持cli来读取 js 文件去执行，命令为：./feature_jidl_test
-extern "C" int main(int argc, char** argv)
+void feat_test_once(char* js_file, char* js_str, char* test_all, char* mfst_content, int time_limit)
 {
-    if (argc < 2) {
-        printf("please input js file, like ./test.js \n");
-        return 0;
-    }
-
-    int time_limit = TIME_LIMIT;
-
-    const char* test_all = "__feat_test_all();";
-    char* js_file = NULL;
-    char* js_str = NULL;
-
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-t") == 0) {
-            i++;
-            if (i >= argc) break;
-            time_limit = atoi(argv[i]);
-        } else {
-            js_file = argv[i];
-        }
-    }
-
-    printf("[feat_test]: Time limit of asynchronous test execution: %d\n", time_limit);
-
-    // 打开js文件
-    load_file(js_file, &js_str);
-    if (js_str == NULL) {
-        printf("malloc js file failed!\n");
-        return 0;
-    }
-    // 打开 manifest 文件
-    char* mfst_content = NULL;
-    if (argc > 2) {
-        char* mfst_file = argv[2];
-        load_file(mfst_file, &mfst_content);
-    }
-
     FeatTestEnv env;
     env.filename = js_file;
     // initialize quickjs engine
     env.rt = JS_NewRuntime();
     env.ctx = JS_NewContext(env.rt);
 
-    // init uv_loop
-    uv_loop_t* main_loop = uv_default_loop();
+    // 初始化
+    uv_loop_t* main_loop = (uv_loop_t*)malloc(sizeof(uv_loop_t));
+    uv_loop_init(main_loop);
     uv_prepare_t prepare;
     uv_prepare_init(main_loop, &prepare);
+    uv_timer_t timer;
+    uv_timer_init(main_loop, &timer);
+
     prepare.data = &env;
     uv_prepare_start(&prepare, execute_job_cb);
 
-    uv_timer_t timer;
-    uv_timer_init(main_loop, &timer);
     env.async_limiter = &timer;
     env.time_limit = time_limit;
     timer.data = &env;
-    // init set time out
+
     env.time_host.loop = main_loop;
 #if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
     // init binder
@@ -264,8 +229,6 @@ extern "C" int main(int argc, char** argv)
 #endif
 
     // init feature framework
-    // JS_SetRuntimeOpaque(env.rt, env.ctx);
-
     // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
     FeatureManagerHandle manager = FeatureCreateManager(mfst_content);
     env.manager = manager;
@@ -281,15 +244,14 @@ extern "C" int main(int argc, char** argv)
     JS_SetPropertyStr(env.ctx, global_obj, "require", require);
 
     JSValue setTimeout = getTimeoutObject(&env);
-
     JS_SetPropertyStr(env.ctx, global_obj, "setTimeout", setTimeout);
 
     JS_FreeValue(env.ctx, global_obj);
 
     // add console
     builtin::addConsoleModule(env.ctx, "console.js", builtin::CONSOLE_JS);
-
     // 加载 test frame work
+
     // TODO: ues qjs bytecode
     // original file ../test-internal.js
     const char* test_content = "let unittest = require('feat_test');\n\nfunction feat_test(name, desc, cb) "
@@ -300,6 +262,7 @@ extern "C" int main(int argc, char** argv)
                                "// hide to outside\n    unittest.run_all_tests();\n}\n\nfunction "
                                "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
                                "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n";
+
     auto res = JS_Eval(env.ctx, test_content, strlen(test_content), "test-internal.js",
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
     if (JS_IsException(res)) {
@@ -310,6 +273,7 @@ extern "C" int main(int argc, char** argv)
         goto feat_test_done;
     }
     JS_FreeValue(env.ctx, res);
+
     // 加载 测试文件
     res = JS_Eval(env.ctx, js_str, strlen(js_str), js_file,
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
@@ -334,32 +298,93 @@ extern "C" int main(int argc, char** argv)
         goto feat_test_done;
     }
     JS_FreeValue(env.ctx, res);
-    // uv_run(main_loop, UV_RUN_DEFAULT);
 
 feat_test_done:
-    // clear un-triggered timers
+    // release manager first
+    FeatureUninit(manager);
+    FeatureFreeManager(manager);
+
     for (TimeCallback* tc : env.time_host.timers) {
         if (!tc->triggered) {
             JS_FreeValue(tc->ctx, tc->callback);
             uv_close((uv_handle_t*)tc->timer, NULL);
         }
         free(tc->timer);
+        tc->timer = NULL;
+
         free(tc);
+        tc = NULL;
     }
     env.time_host.timers.clear();
 
-    // release manager first
-    FeatureUninit(manager);
+    uv_close((uv_handle_t*)&prepare, NULL);
+    uv_close((uv_handle_t*)&timer, NULL);
+    if (uv_loop_alive(main_loop)) {
+        uv_loop_close(main_loop);
+        free(main_loop);
+        main_loop = NULL;
+    }
+
     JS_FreeContext(env.ctx);
     JS_FreeRuntime(env.rt);
+    return;
+}
 
-    uv_loop_close(main_loop);
+// 支持cli来读取 js 文件去执行，命令为：./feature_jidl_test
+extern "C" int main(int argc, char** argv)
+{
+    if (argc < 2) {
+        printf("please input js file, like ./test.js \n");
+        return 0;
+    }
+
+    int time_limit = TIME_LIMIT;
+    int times = 1;
+
+    char* test_all = "__feat_test_all();";
+    char* js_file = NULL;
+    char* js_str = NULL;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-t") == 0) {
+            i++;
+            if (i >= argc)
+                break;
+            time_limit = atoi(argv[i]);
+        } else if (strcmp(argv[i], "-times") == 0) {
+            i++;
+            if (i >= argc)
+                break;
+            times = atoi(argv[i]);
+        } else {
+            js_file = argv[i];
+        }
+    }
+
+    printf("[feat_test]: Time limit of asynchronous test execution: %d\n", time_limit);
+
+    // 打开js文件
+    load_file(js_file, &js_str);
+    if (js_str == NULL) {
+        printf("malloc js file failed!\n");
+        return 0;
+    }
+    // 打开 manifest 文件
+    char* mfst_content = NULL;
+    if (argc > 2) {
+        char* mfst_file = argv[2];
+        load_file(mfst_file, &mfst_content);
+    }
+
+    for (int i = 0; i < times; i++) {
+        printf("[feat_test]:  the number of times you want to repeat the test is %d, Current number of tests is %d\n", times, i);
+        feat_test_once(js_file, js_str, test_all, mfst_content, time_limit);
+    }
+
     // free js_str
     free(js_str);
     if (mfst_content)
         free(mfst_content);
-    // free manager
-    FeatureFreeManager(manager);
 
     return 0;
 }
