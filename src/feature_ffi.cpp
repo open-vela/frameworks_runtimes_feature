@@ -15,12 +15,6 @@
  */
 
 #include "feature_ffi.h"
-#include "feature_log.h"
-#include "feature_utils.h"
-
-#include "value_translator.h"
-#include "feature_instance.h"
-#include "feature_common.h"
 
 #include <alloca.h>
 #include <cstdint>
