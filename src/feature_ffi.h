@@ -300,6 +300,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
             }
         }
     }
+    return true;
 }
 
 template<typename TNative, typename TCtx, typename TTarget>
@@ -450,7 +451,6 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
             }
         }
     }
-
     return true;
 }
 
@@ -779,6 +779,69 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
 
     if (got_error) {
         FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native accessorSet failed !");
+        return false;
+    }
+    return true;
+}
+
+template<typename TInstance, typename TCtx, typename TTarget>
+bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
+{
+    FEATURE_CHECK_NE(instance, nullptr);
+    FEATURE_CHECK_NE(member, nullptr);
+    FEATURE_CHECK_EQ(member->type == MEMBER_CONST, true);
+
+    bool got_error = false;
+    bool is_dynamic = instance->prototype()->description->dynamic;
+    MemberConst* member_const = &member->value;
+    void* data_ptr = &member_const->data;
+    FeatureType feature_type = member_const->type;
+    NativeFunc callback = is_dynamic ?
+            instance->getVirtualFunction(member_const->func.vtable_idx) : member_const->func.callback;
+    FEATURE_CHECK_NE(feature_type, FT_VOID);
+    FEATURE_CHECK_NE(callback, nullptr);
+
+    // handle parameter
+    // 1. FeatureInstance pointer
+    // 2. data
+    ffi_type* ffi_arg_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
+    ffi_type* ffi_ret_type = nullptr;
+    void* ffi_arg_values[2] = { &instance, data_ptr };
+    void* ffi_ret_value = nullptr;
+    do {
+        if (!createTypeDeclaration(feature_type, ffi_ret_type)) {
+            FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
+            got_error = true;
+            break;
+        }
+        if (!createHostValue(feature_type, ffi_ret_value, true)) {
+            FEATURE_LOG_ERROR("create return value failed !");
+            got_error = true;
+            break;
+        }
+
+        // prepare and call method
+        ffi_cif cif;
+        ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
+        if (ret) {
+            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+            got_error = true;
+            break;
+        }
+        // invoke
+        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+        // process return value
+        if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
+            FEATURE_LOG_ERROR("can not convert return value to guest!");
+            value_translator::freeValue(ctx, ret_val);
+        }
+    } while (0);
+
+    freeTypeDeclaration(ffi_ret_type);
+    FeatureFreeValue(ffi_ret_value);
+
+    if (got_error) {
+        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native accessorGet failed !");
         return false;
     }
     return true;

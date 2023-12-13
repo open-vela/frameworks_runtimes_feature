@@ -87,6 +87,75 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     feature_mark_value(rt, js_proto, mark_func);
 }
 
+static feature_value_t new_method_call(feature_context_ref ctx, feature_value_t this_val,
+    int argc, feature_value_t* argv, int magic)
+{
+    int index = magic;
+    FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto description = instance->prototype()->description;
+    Member* member = const_cast<Member*>(&description->members[index]);
+    FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
+    feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
+    bool ret = methodCall(instance, ctx, ctx, member, argc, argv, ret_val);
+    if (!ret) {
+        ret_val = FEATURE_EXCEPTION;
+    }
+    return ret_val;
+}
+
+static feature_value_t new_accessor_get(feature_context_ref ctx, feature_value_t this_val, int magic)
+{
+    int index = magic;
+    FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto description = instance->prototype()->description;
+    Member* member = const_cast<Member*>(&description->members[index]);
+    FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
+    feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
+    bool ret = accessorGet(instance, ctx, member, ret_val);
+    if (!ret) {
+        ret_val = FEATURE_EXCEPTION;
+    }
+    return ret_val;
+}
+
+static feature_value_t new_accessor_set(feature_context_ref ctx, feature_value_t this_val, feature_value_t val, int magic)
+{
+    int index = magic;
+    FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto description = instance->prototype()->description;
+    Member* member = const_cast<Member*>(&description->members[index]);
+    FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
+    feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
+    bool ret = accessorSet(instance, ctx, member, val);
+    if (!ret) {
+        ret_val = FEATURE_EXCEPTION;
+    }
+    return ret_val;
+}
+
+static feature_value_t new_const_get(feature_context_ref ctx, feature_value_t this_val, int magic)
+{
+    int index = magic;
+    FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto description = instance->prototype()->description;
+    Member* member = const_cast<Member*>(&description->members[index]);
+    FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
+    feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
+    bool ret = constGet(instance, ctx, member, ret_val);
+    if (!ret) {
+        ret_val = FEATURE_EXCEPTION;
+    }
+
+    // for const value, redefine the property with result value
+    JS_DefinePropertyValueStr(static_cast<feature_context_ref>(ctx), this_val, member->name,
+        feature_dup_value(ctx, ret_val), FEATURE_PROP_CONFIGURABLE);
+    return ret_val;
+}
+
 /**
  * @brief invoke method, support：
  * 1. parameter and return value auto convert
