@@ -37,6 +37,8 @@ public:
 
     void setUVLoop(uv_loop_t* loop);
 
+    void unsetUVLoop();
+
     void setPackageName(const char* package_name);
 
     const char* getPackageName() const;

@@ -57,6 +57,13 @@ void FeatureFreeManager(FeatureManagerHandle handle);
 void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop);
 
 /**
+ * @brief unset feature uvloop to FeatureManagerHandle
+ * @param handle
+ * @return void
+ * @note: must be called before FeatureFreeManager
+ */
+void FeatureUnsetUVLoop(FeatureManagerHandle handle);
+/**
  * @brief uninit with FeatureManagerHandle
  *
  * @param handle
