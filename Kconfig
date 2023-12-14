@@ -36,4 +36,8 @@ config FEATURE_USE_SCHED_NOTE
 	bool "Enable Feature Sched Note"
 	default n
 
+config FEATURE_USE_WAMR
+	bool "Enable WAMR engine"
+	default n
+
 endif

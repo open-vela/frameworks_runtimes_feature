@@ -16,7 +16,7 @@
 
 #include "feature_context_private.h"
 #include "feature_context_qjs.h"
-#ifdef ENABLE_FEATURE_WAMR
+#ifdef CONFIG_FEATURE_USE_WAMR
 #include "feature_context_wamr.h"
 #endif
 
@@ -43,7 +43,7 @@ void ReleaseFeatureContextQjs(ft_context_ref ft_ctx)
 
 ft_context_ref CreateFeatureContextWamr(void* data0, void* data1) {
     FeatureContext* ft_ctx = NULL;
-#ifdef ENABLE_FEATURE_WAMR
+#ifdef CONFIG_FEATURE_USE_WAMR
     ft_ctx = (FeatureContext*)malloc(sizeof(FeatureContext));
     memset(ft_ctx, 0, sizeof(FeatureContext));
     InitFeatureContextWamr(ft_ctx, data0, data1);
@@ -52,7 +52,7 @@ ft_context_ref CreateFeatureContextWamr(void* data0, void* data1) {
 }
 
 void ReleaseFeatureContextWamr(ft_context_ref ft_ctx) {
-#ifdef ENABLE_FEATURE_WAMR
+#ifdef CONFIG_FEATURE_USE_WAMR
     if (!ft_ctx)
         return;
 
