@@ -102,6 +102,7 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
 static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t* wasm_ret_p = args;
+    uint64_t wasm_ret;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
@@ -148,7 +149,7 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
         // invoke
         ffi_call(&cif, callback, ret_value, ffi_arg_values);
         // process return value
-        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, wasm_ret_p)) {
+        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ret_value, exec_env, wasm_ret)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
         }
     } while (0);
@@ -156,6 +157,7 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
     // free resources
     freeTypeDeclaration(ffi_ret);
     FeatureFreeValue(ret_value);
+    *wasm_ret_p = wasm_ret;
 }
 
 static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
@@ -194,7 +196,7 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
             break;
         }
         // fill third param using guest value and accesor type
-        if (!FeatureFFIWamr::convertValueToHost(instance, accessor->type, arg_value_input, exec_env, args++)) {
+        if (!FeatureFFIWamr::convertValueToHost(instance, accessor->type, arg_value_input, exec_env, *args)) {
             FEATURE_LOG_ERROR("convert to host value failed !");
             break;
         }
@@ -218,6 +220,7 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
 static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t *wasm_ret_p = args;
+    uint64_t wasm_ret;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
@@ -227,17 +230,19 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
     MemberConst& member_const = member->value;
     do {
         if (!FeatureFFIWamr::convertConstToGuest(exec_env,
-                member_const.type, member_const.data, wasm_ret_p)) {
+                member_const.type, member_const.data, wasm_ret)) {
             FEATURE_LOG_ERROR("can not convert const value to guest!");
             break;
         }
     } while (0);
+    *wasm_ret_p = wasm_ret;
 }
 
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
     bool got_error = false;
     uint64_t* wasm_ret_p = args;
+    uint64_t wasm_ret;
     native_raw_get_arg(void*, thiz_ptr, args);
 
     // wasm array values for rest parameters
@@ -323,7 +328,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 
     do {
         for (int i = 0; i < fixed_argc; i++) {
-            //feature_value_t currArg = argv[i];
+            uint64_t curr_arg = args[i];
             auto param = method_params[i];
             if (FT_IS_PROMISE(param)) {
                 FEATURE_LOG_ERROR("do not support promise as input param !");
@@ -335,7 +340,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
                 got_error = true;
                 break;
             }
-            if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_values[extra_argc + i], exec_env, args++)) {
+            if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_values[extra_argc + i], exec_env, curr_arg)) {
                 FEATURE_LOG_ERROR("convert argument %d failed !", i);
                 got_error = true;
                 break;
@@ -434,14 +439,14 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method.return_type != FT_VOID) {
             //process return value
-            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret_p)) {
+            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 got_error = true;
             }
         } else if (is_promise) {
             feature_value_t* ppromise = dynamic_dup_value(js_ctx, promise);
             //把promise返回给ts层
-            native_raw_return_type(void*, wasm_ret_p);
+            native_raw_return_type(void*, &wasm_ret);
             wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ppromise);
             native_raw_set_return(p_obj);
         }
@@ -469,6 +474,8 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     if (vari_params.vari_args) {
         delete[] vari_params.vari_args;
     }
+
+    *wasm_ret_p = wasm_ret;
 
     // if error occurred, throw internal error
     // if (got_error) {
