@@ -69,4 +69,8 @@ typedef struct ts_value_t {
 wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_arr[],
                          uint32_t member_count);
 
+#define set_wasm_var_by_type(type, val, var) ((type &)(var) = (val))
+
+#define get_wasm_args_by_type(type, args) (*((type *)(&args)))
+
 #endif // __FEATURE_WAMR_UTILS_H__

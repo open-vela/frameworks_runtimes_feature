@@ -18,6 +18,8 @@
 #include "feature.h"
 #include "feature_context.h"
 #include "feature_context_qjs.h"
+#include "value_translator_qjs.h"
+#include "feature_ffi_template.h"
 #include "feature_ffi_qjs.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"

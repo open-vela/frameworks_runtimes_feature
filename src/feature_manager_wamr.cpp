@@ -19,6 +19,8 @@
 #include "feature_context_wamr.h"
 #include "feature_context_qjs.h"
 #include "feature_exports.h"
+#include "value_translator_wamr.h"
+#include "feature_ffi_template.h"
 #include "feature_ffi_wamr.h"
 #include "feature_instance_wamr.h"
 #include "feature_log.h"

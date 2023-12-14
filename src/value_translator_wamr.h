@@ -19,30 +19,46 @@
 
 #include "feature.h"
 #include "feature_context_qjs.h"
-#include "feature_ffi_wamr.h"
+#include "wasm_export.h"
 #include "feature_log.h"
 
-#include <cstdarg>
-#include <stdalign.h>
-
 namespace value_translator {
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, int32_t* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, uint32_t* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, int64_t* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, uint64_t* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, float* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, double* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, bool* pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, const char** pnative);
-static bool toNative(wasm_exec_env_t* exec_env, const uint64_t* pval, ft_value_t* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, int32_t* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, uint32_t* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, int64_t* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, uint64_t* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, float* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, double* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, bool* pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, const char** pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, ft_value_t* pnative);
 
-static bool toTarget(wasm_exec_env_t* exec_env, const int32_t native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const uint32_t native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const int64_t native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const uint64_t native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const float native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const double native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const bool native, uint64_t* ptarget);
-static bool toTarget(wasm_exec_env_t* exec_env, const char* native, uint64_t* ptarget);
+
+bool toTarget(wasm_exec_env_t exec_env, int32_t native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, uint32_t native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, int64_t native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, uint64_t native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, float native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, double native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, bool native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, char* native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget);
+
+bool isNull(wasm_exec_env_t exec_env,const uint64_t& value);
+bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value);
+bool isString(wasm_exec_env_t exec_env,const uint64_t& value);
+void freeString(wasm_exec_env_t exec_env,const char* str);
+bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t* pfield);
+void freeValue(wasm_exec_env_t exec_env, uint64_t& target);
+bool isArray(wasm_exec_env_t exec_env, uint64_t& target);
+uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array);
+uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx);
+uint64_t newObject (wasm_exec_env_t exec_env);
+bool setObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t field);
+uint64_t newArray (wasm_exec_env_t exec_env);
+bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint64_t val);
+ft_value_t nullFtVal();
+uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg);
+void toTargetPromise(wasm_exec_env_t exec_env, const uint64_t& promise, uint64_t& ret_val);
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__
