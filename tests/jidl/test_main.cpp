@@ -301,6 +301,7 @@ void feat_test_once(char* js_file, char* js_str, char* test_all, char* mfst_cont
 
 feat_test_done:
     // release manager first
+    FeatureUnsetUVLoop(manager);
     FeatureUninit(manager);
     FeatureFreeManager(manager);
 

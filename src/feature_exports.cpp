@@ -284,6 +284,12 @@ void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
     manager->setUVLoop(loop);
 }
 
+void FeatureUnsetUVLoop(FeatureManagerHandle handle)
+{
+    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    manager->unsetUVLoop();
+}
+
 uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 {
     FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
