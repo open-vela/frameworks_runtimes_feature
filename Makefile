@@ -123,6 +123,10 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch_impl.cpp
 FEATURELIST += fetch
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/prompt_impl.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/prompt.cpp
+FEATURELIST += system_prompt
+
 ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE),y)
 PROGNAME += feature_test_cli
 PRIORITY += 100
