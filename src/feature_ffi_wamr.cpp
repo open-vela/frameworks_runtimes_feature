@@ -33,9 +33,9 @@
 using namespace FEATURE;
 using namespace ferry;
 
-#define set_wasm_var_by_type(type, val, var) (*((type *)(var)) = (val))
+#define set_wasm_var_by_type(type, val, var) ((type &)(var) = (val))
 
-#define get_wasm_args_by_type(type, args) (*((type *)(args++)))
+#define get_wasm_args_by_type(type, args) (*((type *)(&args)))
 
 namespace ferry {
 
@@ -137,7 +137,7 @@ char getFeatureSignature(FeatureType ftype)
     return 0;
 }
 
-bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData& const_data, uint64_t* value)
+bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData& const_data, uint64_t& value)
 {
     if (!FT_IS_PRIMITIVE(ftype)) {
         FEATURE_LOG_ERROR("complex is not supported for const!");
@@ -197,7 +197,7 @@ bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData
 }
 
 bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr,
-    wasm_exec_env_t exec_env,  uint64_t* value)
+    wasm_exec_env_t exec_env,  uint64_t& value)
 {
     FEATURE_CHECK_NE(ptr, nullptr);
     if (FT_IS_REFERENCE(ftype)) {
@@ -290,8 +290,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
                 auto interface_ptr = static_cast<FeatureInstanceWamr*>(ptr);
-                ptr = interface_ptr->createTargetInterface(interface_type->desc);
-                set_wasm_var_by_type(void*, ptr, value);
+                value = interface_ptr->createTargetInterface(interface_type->desc);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -303,7 +302,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
 }
 
 bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr,
-	wasm_exec_env_t exec_env, uint64_t* value)
+	wasm_exec_env_t exec_env, uint64_t value)
 {
     // special step: get real type of complex type
     TRY_GET_REAL_TYPE(ftype);
@@ -327,7 +326,10 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
             }
-            case FT_BOOLEAN:
+            case FT_BOOLEAN: {
+                *(bool*)ptr = (bool)get_wasm_args_by_type(double, value);
+            }
+            break;
             case FT_INT:
             case FT_INT8:
             case FT_UINT8:
@@ -405,7 +407,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                     auto member = &objMapType.members[i];
                     wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
                     void *member_ptr = (void *)((char *)ptr + member->offset);
-                    bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, (uint64_t *)&val);
+                    bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, *((uint64_t*)&val));
                     // feature_free_value(ctx, propValue);
                     if (!ret) {
                         printf("get property value for key: %s failed !",
@@ -449,7 +451,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                         // fill it
                         wasm_array_obj_get_elem(arr_ref, i, false, &value1);
                         void *element_ptr = ((char *)arrayData->_element + element_size * i);
-                        if (!convertValueToHost(instance, element_type, element_ptr, exec_env, (uint64_t *)&value1)) {
+                        if (!convertValueToHost(instance, element_type, element_ptr, exec_env, *((uint64_t*)&value1))) {
                             FEATURE_LOG_ERROR("convert array element failed ");
                             // feature_free_value(ctx, elementValue);
                         break;

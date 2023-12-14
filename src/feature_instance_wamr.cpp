@@ -107,9 +107,9 @@ WamrCallbackData FeatureInstanceWamr::getCallback(FtCallbackId cid)
     return callbacks_[cid];
 }
 
-FtCallbackId FeatureInstanceWamr::addCallback(uint64_t*& value, CallbackType* callbackType)
+FtCallbackId FeatureInstanceWamr::addCallback(uint64_t& value, CallbackType* callbackType)
 {
-    native_raw_get_arg(wasm_obj_t, cb_value, value);
+    wasm_obj_t cb_value = *((wasm_obj_t *)(&value));
     WamrCallbackData callback;
     callback.cb = cb_value;
     callback.cb_type = callbackType;
@@ -117,14 +117,14 @@ FtCallbackId FeatureInstanceWamr::addCallback(uint64_t*& value, CallbackType* ca
     return curr_cid_++;
 }
 
-uint64_t* FeatureInstanceWamr::createTargetInterface(const FeatureDescription* description)
+uint64_t FeatureInstanceWamr::createTargetInterface(const FeatureDescription* description)
 {
-    return (uint64_t*)this;
+    return (uint64_t)this;
 }
 
-void* FeatureInstanceWamr::getNativeInterface(uint64_t*& target)
+void* FeatureInstanceWamr::getNativeInterface(uint64_t& target)
 {
-    native_raw_get_arg(void*, param, target);
+    void* param = *((void **)(&target));
     return param;
 }
 
@@ -269,7 +269,7 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
             }
 
             uint64_t wasm_ret;
-            if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, &wasm_ret)) {
+            if (!FeatureFFIWamr::convertValueToGuest(this, featureType, ptr, exec_env, wasm_ret)) {
                 FEATURE_LOG_ERROR("convert callback param failed !");
                 free(ptr);
                 break;
@@ -325,7 +325,7 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
             void *header_ptr = ((char *)arg - FT_OBJ_HEADER_SIZE);
             FTObjHeader *header = (FTObjHeader *)header_ptr;
             uint64_t wasm_ret;
-            if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, exec_env, &wasm_ret)) {
+            if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, exec_env, wasm_ret)) {
                 FEATURE_LOG_ERROR("convert callback param failed !");
                 break;
             }

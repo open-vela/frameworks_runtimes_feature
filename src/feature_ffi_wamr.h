@@ -29,13 +29,13 @@ namespace FeatureFFIWamr {
 
 char getFeatureSignature(FeatureType ftype);
 
-bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData& adata, uint64_t* value);
+bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData& adata, uint64_t& value);
 
 bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr,
-    wasm_exec_env_t exec_env, uint64_t* value);
+    wasm_exec_env_t exec_env, uint64_t value);
 
 bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr,
-    wasm_exec_env_t exec_env, uint64_t* value);
+    wasm_exec_env_t exec_env, uint64_t& value);
 }
 
 }
