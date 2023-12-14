@@ -15,6 +15,7 @@
  */
 
 #include "feature_context_qjs.h"
+#include "value_translator_qjs.h"
 #include "feature_value_translator.h"
 
 #include <malloc.h>

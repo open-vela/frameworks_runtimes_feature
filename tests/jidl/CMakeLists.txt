@@ -13,7 +13,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set (WAMR_BUILD_STRINGREF 1)
 
 # enable asan
-add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer  -g")
+add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer  -DCONFIG_FEATURE_USE_WAMR -g")
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fpermissive -Wall")
 
 set(UNITE_PATH ${CMAKE_CURRENT_LIST_DIR}/../../../../../apps/interpreters)

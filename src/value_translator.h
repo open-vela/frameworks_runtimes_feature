@@ -17,8 +17,6 @@
 #ifndef __VALUE_TRANSLATOR_H__
 #define __VALUE_TRANSLATOR_H__
 
-#include "value_translator_qjs.h"
-
 namespace value_translator {
 
 template<typename TNumberNative, typename TCtx, typename TTarget, typename TNumberLike>

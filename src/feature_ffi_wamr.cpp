@@ -33,10 +33,6 @@
 using namespace FEATURE;
 using namespace ferry;
 
-#define set_wasm_var_by_type(type, val, var) ((type &)(var) = (val))
-
-#define get_wasm_args_by_type(type, args) (*((type *)(&args)))
-
 namespace ferry {
 
 namespace FeatureFFIWamr {
