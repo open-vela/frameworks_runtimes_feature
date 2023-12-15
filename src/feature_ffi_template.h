@@ -250,7 +250,6 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                         value_translator::freeValue(ctx, elem_val);
                     }
                 }
-                FEATURE_LOG_DEBUG("array data: %p", ptr);
             } break;
             case COMPLEX_PROMISE: {
                 FEATURE_LOG_ERROR("do not support convert promise to guest !");
