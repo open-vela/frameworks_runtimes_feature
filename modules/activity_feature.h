@@ -44,8 +44,8 @@ void system_internal_activity_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _ServiceConnection {
-  FtCallbackId _connectCallBack;
-  FtCallbackId _disconnectCallBack;
+  FtCallbackId connectCallBack;
+  FtCallbackId disconnectCallBack;
 } system_internal_activity_ServiceConnection;
 
 system_internal_activity_ServiceConnection* system_internal_activityMallocServiceConnection();

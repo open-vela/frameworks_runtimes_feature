@@ -49,7 +49,7 @@ void locale_onUnregister(const char* feature_name) {
 
 locale_Locale* locale_wrap_get(FeatureInstanceHandle feature, AppendData data) {
   uv_locale_t uvlocale = {};
-  locale_Locale* locale = mallocLocale();
+  locale_Locale* locale = localeMallocLocale();
   int ret = uv_getlocale(&uvlocale);
   if (ret <= 0) {
     FEATURE_LOG_ERROR("%s::%s getlocale failed\n", file_tag, __FUNCTION__);
@@ -59,7 +59,7 @@ locale_Locale* locale_wrap_get(FeatureInstanceHandle feature, AppendData data) {
   char* region =
       (char*)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_CHAR);
   sprintf(region, "%s", uvlocale.country_region);
-  locale->_language = language;
-  locale->_countryOrRegion = region;
+  locale->language = language;
+  locale->countryOrRegion = region;
   return locale;
 }

@@ -43,9 +43,9 @@ static const CallbackType sensor_fail_cb_callback_type {
 
 /****** for JIDL struct 'AccelerometerRet' ******/
 static ObjectMember sensor_AccelerometerRet_struct_members[] = {
-    { "x", FT_INT, offsetof(sensor_AccelerometerRet, _x), sizeof(FtInt) },
-    { "y", FT_INT, offsetof(sensor_AccelerometerRet, _y), sizeof(FtInt) },
-    { "z", FT_INT, offsetof(sensor_AccelerometerRet, _z), sizeof(FtInt) },
+    { "x", FT_INT, offsetof(sensor_AccelerometerRet, x), sizeof(FtInt) },
+    { "y", FT_INT, offsetof(sensor_AccelerometerRet, y), sizeof(FtInt) },
+    { "z", FT_INT, offsetof(sensor_AccelerometerRet, z), sizeof(FtInt) },
     { nullptr },
 };
 
@@ -88,9 +88,9 @@ static OptionalType sensor_Accelerometer_member_interval_opt_type = {
 
 /****** for JIDL struct 'Accelerometer' ******/
 static ObjectMember sensor_Accelerometer_struct_members[] = {
-    { "reserved", FT_MK_OPTIONAL(&sensor_Accelerometer_member_reserved_opt_type), offsetof(sensor_Accelerometer, _reserved), sizeof(FtBool) },
-    { "interval", FT_MK_OPTIONAL(&sensor_Accelerometer_member_interval_opt_type), offsetof(sensor_Accelerometer, _interval), sizeof(FtString) },
-    { "callback", FT_MK_COMPLEX(&sensor_accelerometer_cb_callback_type), offsetof(sensor_Accelerometer, _callback), sizeof(FtCallbackId) },
+    { "reserved", FT_MK_OPTIONAL(&sensor_Accelerometer_member_reserved_opt_type), offsetof(sensor_Accelerometer, reserved), sizeof(FtBool) },
+    { "interval", FT_MK_OPTIONAL(&sensor_Accelerometer_member_interval_opt_type), offsetof(sensor_Accelerometer, interval), sizeof(FtString) },
+    { "callback", FT_MK_COMPLEX(&sensor_accelerometer_cb_callback_type), offsetof(sensor_Accelerometer, callback), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -133,8 +133,8 @@ static const MemberMethod sensor_unsubscribeAccelerometer_member_method = {
 
 /****** for JIDL struct 'CompassRet' ******/
 static ObjectMember sensor_CompassRet_struct_members[] = {
-    { "direction", FT_DOUBLE, offsetof(sensor_CompassRet, _direction), sizeof(FtDouble) },
-    { "accuracy", FT_DOUBLE, offsetof(sensor_CompassRet, _accuracy), sizeof(FtDouble) },
+    { "direction", FT_DOUBLE, offsetof(sensor_CompassRet, direction), sizeof(FtDouble) },
+    { "accuracy", FT_DOUBLE, offsetof(sensor_CompassRet, accuracy), sizeof(FtDouble) },
     { nullptr },
 };
 
@@ -171,8 +171,8 @@ static OptionalType sensor_Compass_member_reserved_opt_type = {
 
 /****** for JIDL struct 'Compass' ******/
 static ObjectMember sensor_Compass_struct_members[] = {
-    { "reserved", FT_MK_OPTIONAL(&sensor_Compass_member_reserved_opt_type), offsetof(sensor_Compass, _reserved), sizeof(FtBool) },
-    { "callback", FT_MK_COMPLEX(&sensor_compass_cb_callback_type), offsetof(sensor_Compass, _callback), sizeof(FtCallbackId) },
+    { "reserved", FT_MK_OPTIONAL(&sensor_Compass_member_reserved_opt_type), offsetof(sensor_Compass, reserved), sizeof(FtBool) },
+    { "callback", FT_MK_COMPLEX(&sensor_compass_cb_callback_type), offsetof(sensor_Compass, callback), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -215,7 +215,7 @@ static const MemberMethod sensor_unsubscribeCompass_member_method = {
 
 /****** for JIDL struct 'ProximityRet' ******/
 static ObjectMember sensor_ProximityRet_struct_members[] = {
-    { "distance", FT_DOUBLE, offsetof(sensor_ProximityRet, _distance), sizeof(FtDouble) },
+    { "distance", FT_DOUBLE, offsetof(sensor_ProximityRet, distance), sizeof(FtDouble) },
     { nullptr },
 };
 
@@ -252,9 +252,9 @@ static OptionalType sensor_Proximity_member_reserved_opt_type = {
 
 /****** for JIDL struct 'Proximity' ******/
 static ObjectMember sensor_Proximity_struct_members[] = {
-    { "reserved", FT_MK_OPTIONAL(&sensor_Proximity_member_reserved_opt_type), offsetof(sensor_Proximity, _reserved), sizeof(FtBool) },
-    { "callback", FT_MK_COMPLEX(&sensor_Proximity_cb_callback_type), offsetof(sensor_Proximity, _callback), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&sensor_fail_cb_callback_type), offsetof(sensor_Proximity, _fail), sizeof(FtCallbackId) },
+    { "reserved", FT_MK_OPTIONAL(&sensor_Proximity_member_reserved_opt_type), offsetof(sensor_Proximity, reserved), sizeof(FtBool) },
+    { "callback", FT_MK_COMPLEX(&sensor_Proximity_cb_callback_type), offsetof(sensor_Proximity, callback), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&sensor_fail_cb_callback_type), offsetof(sensor_Proximity, fail), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -297,7 +297,7 @@ static const MemberMethod sensor_unsubscribeProximity_member_method = {
 
 /****** for JIDL struct 'LightRet' ******/
 static ObjectMember sensor_LightRet_struct_members[] = {
-    { "intensity", FT_DOUBLE, offsetof(sensor_LightRet, _intensity), sizeof(FtDouble) },
+    { "intensity", FT_DOUBLE, offsetof(sensor_LightRet, intensity), sizeof(FtDouble) },
     { nullptr },
 };
 
@@ -334,8 +334,8 @@ static OptionalType sensor_Light_member_reserved_opt_type = {
 
 /****** for JIDL struct 'Light' ******/
 static ObjectMember sensor_Light_struct_members[] = {
-    { "reserved", FT_MK_OPTIONAL(&sensor_Light_member_reserved_opt_type), offsetof(sensor_Light, _reserved), sizeof(FtBool) },
-    { "callback", FT_MK_COMPLEX(&sensor_light_cb_callback_type), offsetof(sensor_Light, _callback), sizeof(FtCallbackId) },
+    { "reserved", FT_MK_OPTIONAL(&sensor_Light_member_reserved_opt_type), offsetof(sensor_Light, reserved), sizeof(FtBool) },
+    { "callback", FT_MK_COMPLEX(&sensor_light_cb_callback_type), offsetof(sensor_Light, callback), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -378,7 +378,7 @@ static const MemberMethod sensor_unsubscribeLight_member_method = {
 
 /****** for JIDL struct 'StepCountRet' ******/
 static ObjectMember sensor_StepCountRet_struct_members[] = {
-    { "steps", FT_DOUBLE, offsetof(sensor_StepCountRet, _steps), sizeof(FtDouble) },
+    { "steps", FT_DOUBLE, offsetof(sensor_StepCountRet, steps), sizeof(FtDouble) },
     { nullptr },
 };
 
@@ -415,9 +415,9 @@ static OptionalType sensor_StepCount_member_reserved_opt_type = {
 
 /****** for JIDL struct 'StepCount' ******/
 static ObjectMember sensor_StepCount_struct_members[] = {
-    { "reserved", FT_MK_OPTIONAL(&sensor_StepCount_member_reserved_opt_type), offsetof(sensor_StepCount, _reserved), sizeof(FtBool) },
-    { "callback", FT_MK_COMPLEX(&sensor_StepCount_cb_callback_type), offsetof(sensor_StepCount, _callback), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&sensor_fail_cb_callback_type), offsetof(sensor_StepCount, _fail), sizeof(FtCallbackId) },
+    { "reserved", FT_MK_OPTIONAL(&sensor_StepCount_member_reserved_opt_type), offsetof(sensor_StepCount, reserved), sizeof(FtBool) },
+    { "callback", FT_MK_COMPLEX(&sensor_StepCount_cb_callback_type), offsetof(sensor_StepCount, callback), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&sensor_fail_cb_callback_type), offsetof(sensor_StepCount, fail), sizeof(FtCallbackId) },
     { nullptr },
 };
 

@@ -61,9 +61,9 @@ static void sensor_accel_topic_cb(uv_topic_t *topic, int status, void *data, siz
     sensor_event_t *event = container_of(topic, sensor_event_t, topic);
     sensor_accel *t_r = static_cast<sensor_accel *>(data);
     sensor_AccelerometerRet *accelRet = sensorMallocAccelerometerRet();
-    accelRet->_x = t_r->x;
-    accelRet->_y = t_r->y;
-    accelRet->_z = t_r->z;
+    accelRet->x = t_r->x;
+    accelRet->y = t_r->y;
+    accelRet->z = t_r->z;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, accelRet);
     FeatureFreeValue(accelRet);
 }
@@ -76,7 +76,7 @@ static void sensor_prox_topic_cb(uv_topic_t *topic, int status, void *data, size
     sensor_event_t *event = container_of(topic, sensor_event_t, topic);
     sensor_prox *t_r = static_cast<sensor_prox *>(data);
     sensor_ProximityRet *proxRet = sensorMallocProximityRet();
-    proxRet->_distance = t_r->proximity;
+    proxRet->distance = t_r->proximity;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, proxRet);
     FeatureFreeValue(proxRet);
 }
@@ -89,7 +89,7 @@ static void sensor_light_topic_cb(uv_topic_t *topic, int status, void *data, siz
     sensor_event_t *event = container_of(topic, sensor_event_t, topic);
     sensor_light *t_r = static_cast<sensor_light *>(data);
     sensor_LightRet *lightRet = sensorMallocLightRet();
-    lightRet->_intensity = t_r->light;
+    lightRet->intensity = t_r->light;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, lightRet);
     FeatureFreeValue(lightRet);
 }
@@ -196,15 +196,15 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     }
 
     int interval = 0;
-    if (strcmp(param->_interval, "game") == 0) {
+    if (strcmp(param->interval, "game") == 0) {
         interval = 20000;
-    } else if (strcmp(param->_interval, "ui") == 0) {
+    } else if (strcmp(param->interval, "ui") == 0) {
         interval = 60000;
-    } else if (strcmp(param->_interval, "normal") == 0) {
+    } else if (strcmp(param->interval, "normal") == 0) {
         interval = 200000;
     } else {
         FEATURE_LOG_ERROR("%s::%s() param interval is invalid:%s\n", file_tag, __FUNCTION__,
-                          param->_interval);
+                          param->interval);
         return;
     }
 
@@ -217,8 +217,8 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     event = static_cast<sensor_event_t *>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
-    meta.reserved = param->_reserved;
-    meta.id = param->_callback;
+    meta.reserved = param->reserved;
+    meta.id = param->callback;
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_ACCEL] = event;
@@ -265,8 +265,8 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
     event = static_cast<sensor_event_t *>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
-    meta.reserved = param->_reserved;
-    meta.id = param->_callback;
+    meta.reserved = param->reserved;
+    meta.id = param->callback;
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_PROX] = event;
@@ -277,7 +277,7 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
     if (ret < 0) {
         th->events[SENSOR_MAGIC_PROX] = NULL;
         free(event);
-        FeatureInvokeCallback(feature, param->_fail,
+        FeatureInvokeCallback(feature, param->fail,
                               "The current device does not support the distance sensor", 203);
         FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
     }
@@ -306,8 +306,8 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
     event = static_cast<sensor_event_t *>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
-    meta.reserved = param->_reserved;
-    meta.id = param->_callback;
+    meta.reserved = param->reserved;
+    meta.id = param->callback;
     event->meta = meta;
 
     th->events[SENSOR_MAGIC_LIGHT] = event;
@@ -328,7 +328,7 @@ void sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data
 
 void sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
                                       sensor_StepCount *param) {
-    FeatureInvokeCallback(feature, param->_fail, "Current device does not support pedometer sensor",
+    FeatureInvokeCallback(feature, param->fail, "Current device does not support pedometer sensor",
                           1000);
 }
 

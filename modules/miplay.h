@@ -49,6 +49,7 @@ void service_miplay_wrap_init(FeatureInstanceHandle feature, AppendData append_d
 void service_miplay_wrap_uninit(FeatureInstanceHandle feature, AppendData append_data);
 void service_miplay_wrap_ctrlcmd(FeatureInstanceHandle feature, AppendData append_data, FtString cmd);
 void service_miplay_wrap_volumeCtrl(FeatureInstanceHandle feature, AppendData append_data, FtInt type);
+
 // Interface constructors
 
 // interface vtable functions to be implemented

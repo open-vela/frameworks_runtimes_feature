@@ -184,7 +184,7 @@ FtInt system_internal_activity_wrap_bindService(FeatureInstanceHandle feature,
     if (nativeContext) {
         auto manager = (ServiceConnectManager*)FeatureGetObjectData(feature);
         sp<FtServiceConnection> ftConn =
-                new FtServiceConnection(feature, conn->_connectCallBack, conn->_disconnectCallBack);
+                new FtServiceConnection(feature, conn->connectCallBack, conn->disconnectCallBack);
         bindId = manager->addServiceConnect(ftConn);
         if (bindId > 0) {
             Intent intent(target);

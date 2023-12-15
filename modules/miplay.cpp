@@ -93,6 +93,8 @@ static const MemberMethod service_miplay_volumeCtrl_member_method = {
     .parameters = service_miplay_volumeCtrl_parameters,
     .return_type = FT_VOID,
 };
+
+
 // members
 static const Member service_miplay_members[] = {
     {
