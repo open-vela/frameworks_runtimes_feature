@@ -242,8 +242,7 @@ static char* copyStr(const char* src) {
 
 void system_exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, system_exchange_SetInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
-    FEATURE_LOG_DEBUG("key=%s,value=%s,scpoe=%s,package=%s,sign=%s", info->_key, info->_value,
-                      info->_scope, info->_package, info->_sign);
+    FEATURE_LOG_DEBUG("key=%s,value=%s,scpoe=%s", info->key, info->value,info->scope);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[SET] exchange handle malloc failed");
@@ -277,8 +276,7 @@ void system_exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, sy
 
 void system_exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, system_exchange_GetInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
-    FEATURE_LOG_DEBUG("key=%s,scope=%s,package=%s,sign=%s", info->_key, info->_scope,
-                      info->_package, info->_sign);
+    FEATURE_LOG_DEBUG("key=%s,scope=%s", info->key, info->scope);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[GET] exchange handle malloc failed");
@@ -313,7 +311,7 @@ void system_exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, sy
 void system_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
                           system_exchange_RemoveInfo* info) {
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
-    FEATURE_LOG_DEBUG("key=%s,package=%s,sign=%s", info->key, info->package, info->sign);
+    FEATURE_LOG_DEBUG("key=%s,scope=%s", info->key, info->scope);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[REMOVE] exchange handle malloc failed");
