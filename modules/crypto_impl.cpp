@@ -147,29 +147,29 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
 
     FtString result = NULL;
     // set default value SHA256
-    if (!check_str(options->_algo)) {
-        options->_algo = hash_types[SHA256];
-    } else if (!has_type(hash_types, arrayof(hash_types), options->_algo)) {
-        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, options->_algo);
+    if (!check_str(options->algo)) {
+        options->algo = hash_types[SHA256];
+    } else if (!has_type(hash_types, arrayof(hash_types), options->algo)) {
+        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, options->algo);
     }
 
-    if (!(check_any(options->_data) || check_str(options->_uri))) {
+    if (!(check_any(options->data) || check_str(options->uri))) {
         FEATURE_LOG_ERROR("%s %s", file_tag, "arguments data or uri is needed");
-    } else if (check_any(options->_data) && !check_str(options->_uri)) {
+    } else if (check_any(options->data) && !check_str(options->uri)) {
         size_t size;
         bool is_text;
-        uint8_t* buff = get_buff(ft_ctx, *(options->_data), &size, &is_text);
+        uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff) {
             FEATURE_LOG_ERROR("%s %s, %s", file_tag, "invalid data type!");
         } else {
-            result = digest(options->_algo, buff, size, NULL);
+            result = digest(options->algo, buff, size, NULL);
             if (!result && crypto_err) {
                 FEATURE_LOG_ERROR("%s %s, native digest error: %s", file_tag, crypto_err);
             }
             FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
         }
-    } else if (!check_any(options->_data) && check_str(options->_uri)) {
-        result = digest_file(options->_algo, options->_uri, pkg_name);
+    } else if (!check_any(options->data) && check_str(options->uri)) {
+        result = digest_file(options->algo, options->uri, pkg_name);
         if (!result && crypto_err) {
             FEATURE_LOG_ERROR("%s %s, native digest_file error: %s", file_tag, crypto_err);
         }
@@ -190,11 +190,11 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    if (!(check_str(options->_data) && check_str(options->_key))) {
+    if (!(check_str(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
         code = ARGSERROR;
     } else {
-        result = digest(options->_algo, (uint8_t*)(options->_data), strlen(options->_data), options->_key);
+        result = digest(options->algo, (uint8_t*)(options->data), strlen(options->data), options->key);
         if (!result) {
             msg = crypto_err ? crypto_err : "digest error";
             code = GENERAL;
@@ -202,17 +202,17 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
         FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
-    if (result && options->_success) {
+    if (result && options->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
-    } else if (options->_fail) {
-        INVOKE_FAIL_CB(options->_fail, msg, code);
+        INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+    } else if (options->fail) {
+        INVOKE_FAIL_CB(options->fail, msg, code);
     }
 
-    if (options->_complete) {
-        INVOKE_COMPLET_CB(options->_complete);
+    if (options->complete) {
+        INVOKE_COMPLET_CB(options->complete);
     }
 
     if (result)
@@ -230,11 +230,11 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     char* result = NULL;
     const char* algo = NULL;
     int seg_count;
-    char** algo_segs = split_str(options->_algo, "-", &seg_count);
+    char** algo_segs = split_str(options->algo, "-", &seg_count);
     // set default value for algo and deal with value
-    if (!check_str(options->_algo)) {
+    if (!check_str(options->algo)) {
         algo = "SHA256";
-    } else if (has_type(sign_hash_types, arrayof(sign_hash_types), options->_algo)) {
+    } else if (has_type(sign_hash_types, arrayof(sign_hash_types), options->algo)) {
         algo = algo_segs[1];
     } else {
         msg = "invalid algo param!";
@@ -244,27 +244,27 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     // excute native function
     bool is_text = true;
     size_t size = 0;
-    if (!check_str(options->_privateKey)) {
+    if (!check_str(options->privateKey)) {
         msg = "arguments privateKey is needed";
         code = ARGSERROR;
-    } else if (!(check_any(options->_data) || check_str(options->_uri))) {
+    } else if (!(check_any(options->data) || check_str(options->uri))) {
         msg = "arguments data or uri is needed";
         code = ARGSERROR;
-    } else if (check_any(options->_data) && !check_str(options->_uri)) {
+    } else if (check_any(options->data) && !check_str(options->uri)) {
         // judge data type
-        uint8_t* buff = get_buff(ft_ctx, *(options->_data), &size, &is_text);
+        uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff || size == 0) {
             msg = "invalid data type!";
             code = ARGSERROR;
         } else {
-            result = rsa_sign(algo, options->_privateKey, buff, &size, &is_text);
+            result = rsa_sign(algo, options->privateKey, buff, &size, &is_text);
             if (!result) {
                 msg = crypto_err ? crypto_err : "rsa sign error";
                 code = GENERAL;
             }
         }
-    } else if (!check_any(options->_data) && check_str(options->_uri)) {
-        result = rsa_sign_file(algo, options->_privateKey, options->_uri, pkg_name);
+    } else if (!check_any(options->data) && check_str(options->uri)) {
+        result = rsa_sign_file(algo, options->privateKey, options->uri, pkg_name);
         if (!result) {
             msg = crypto_err ? crypto_err : "rsa sign file error";
             code = GENERAL;
@@ -277,17 +277,17 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
 
     // deal with result
-    if (result && options->_success) {
+    if (result && options->success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
-    } else if (options->_fail) {
-        INVOKE_FAIL_CB(options->_fail, msg, code);
+        INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+    } else if (options->fail) {
+        INVOKE_FAIL_CB(options->fail, msg, code);
     }
 
-    if (options->_complete) {
-        INVOKE_COMPLET_CB(options->_complete);
+    if (options->complete) {
+        INVOKE_COMPLET_CB(options->complete);
     }
 
     free_str_array(algo_segs, seg_count);
@@ -305,11 +305,11 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     bool result = false;
     const char* algo = NULL;
     int seg_count;
-    char** algo_segs = split_str(options->_algo, "-", &seg_count);
+    char** algo_segs = split_str(options->algo, "-", &seg_count);
     // set default value for algo and deal with value
-    if (!check_str(options->_algo)) {
+    if (!check_str(options->algo)) {
         algo = "SHA256";
-    } else if (has_type(sign_hash_types, arrayof(sign_hash_types), options->_algo)) {
+    } else if (has_type(sign_hash_types, arrayof(sign_hash_types), options->algo)) {
         algo = algo_segs[1];
     } else {
         msg = "invalid algo param!";
@@ -321,24 +321,24 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     bool is_text = false;
     size_t has_result = false;
     // excute native function
-    if (!(check_str(options->_publicKey) && check_any(options->_signature))) {
+    if (!(check_str(options->publicKey) && check_any(options->signature))) {
         msg = "arguments publicKey and signature are needed";
         code = ARGSERROR;
-    } else if (!(check_any(options->_data) || check_str(options->_uri))) {
+    } else if (!(check_any(options->data) || check_str(options->uri))) {
         msg = "arguments data or uri is needed";
         code = ARGSERROR;
-    } else if(check_any(options->_data) && !check_str(options->_uri)) {
+    } else if(check_any(options->data) && !check_str(options->uri)) {
         // deal with data type of data param
-        uint8_t* buff = get_buff(ft_ctx, *(options->_data), &size, &is_text);
+        uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff || size == 0) {
             msg = "data: invalid data type!";
             code = ARGSERROR;
-        } else if (!check_any(options->_signature)) {
+        } else if (!check_any(options->signature)) {
             msg = "signature: invalid data type!";
             code = ARGSERROR;
         }  else {
-            uint8_t* sig_buff = get_buff(ft_ctx, *(options->_signature), &sig_size, &is_text);
-            result = rsa_verify(algo, options->_publicKey, buff, size, sig_buff, sig_size, is_text);
+            uint8_t* sig_buff = get_buff(ft_ctx, *(options->signature), &sig_size, &is_text);
+            result = rsa_verify(algo, options->publicKey, buff, size, sig_buff, sig_size, is_text);
             if (crypto_err) {
                 msg = crypto_err;
                 code = GENERAL;
@@ -346,14 +346,14 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
                 has_result = true;
             }
         }
-    } else if(!check_any(options->_data) && check_str(options->_uri)) {
+    } else if(!check_any(options->data) && check_str(options->uri)) {
         // deal with data type of signature
-        if (!check_any(options->_signature)) {
+        if (!check_any(options->signature)) {
             msg = "signature: invalid data type!";
             code = ARGSERROR;
         } else {
-            char* sig_buff = (char*)get_buff(ft_ctx, *(options->_signature), &sig_size, &is_text);
-            result = rsa_verify_file(algo, options->_publicKey, options->_uri, sig_buff, pkg_name);
+            char* sig_buff = (char*)get_buff(ft_ctx, *(options->signature), &sig_size, &is_text);
+            result = rsa_verify_file(algo, options->publicKey, options->uri, sig_buff, pkg_name);
             if (!crypto_err) {
                 msg = crypto_err;
                 code = GENERAL;
@@ -368,14 +368,14 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     FEATURE_LOG_INFO("%s, result: %d", file_tag, result);
 
     // deal with result
-    if (has_result && options->_success) {
-        INVOKE_SUCCESS_CB(options->_success, result);
-    } else if (options->_fail) {
-        INVOKE_FAIL_CB(options->_fail, msg, code);
+    if (has_result && options->success) {
+        INVOKE_SUCCESS_CB(options->success, result);
+    } else if (options->fail) {
+        INVOKE_FAIL_CB(options->fail, msg, code);
     }
 
-    if (options->_complete) {
-        INVOKE_COMPLET_CB(options->_complete);
+    if (options->complete) {
+        INVOKE_COMPLET_CB(options->complete);
     }
 
     free_str_array(algo_segs, seg_count);
@@ -390,41 +390,41 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    const char* algo = check_str(options->_algo) ? options->_algo: "RSA";
+    const char* algo = check_str(options->algo) ? options->algo: "RSA";
     bool is_text = true;
     size_t size = 0;
 
     const char* transformation = "";
-    const char* iv = options->_key;
+    const char* iv = options->key;
     int ivOffset = 0;
     int ivLen = 16;
     int mode = 5;  // encryptCfgs.AES.mode.CBC
     int padding = 0;  // encryptCfgs.AES.padding.PKCS7Padding
     // excute native function
-    if (!(check_any(options->_data) && check_str(options->_key))) {
+    if (!(check_any(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
         code = ARGSERROR;
     } else {
         // judge data type
-        uint8_t* buff = get_buff(ft_ctx, *(options->_data), &size, &is_text);
+        uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff || size == 0) {
             msg = "invalid data type!";
             code = ARGSERROR;
         } else {
             if (strcmp(algo, "RSA") == 0) {
-                result = rsa_encrypt(options->_key, buff, &size, &is_text);
+                result = rsa_encrypt(options->key, buff, &size, &is_text);
                 if (!result) {
                     msg = crypto_err ? crypto_err : "rsa encrypt error";
                     code = GENERAL;
                 }
             } else if (strcmp(algo, "AES") == 0) {
                 // deal with default value of options
-                if (options->_options) {
-                    system_crypto_MixinCryptOption * opts = options->_options;
-                    transformation = opts->_transformation;
-                    iv = opts->_iv ? opts->_iv : iv;
-                    ivOffset = opts->_ivOffset ? opts->_ivOffset : ivOffset;
-                    ivLen = opts->_ivLen ? opts->_ivLen : ivLen;
+                if (options->options) {
+                    system_crypto_MixinCryptOption * opts = options->options;
+                    transformation = opts->transformation;
+                    iv = opts->iv ? opts->iv : iv;
+                    ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
+                    ivLen = opts->ivLen ? opts->ivLen : ivLen;
                 }
 
                 if (transformation) {
@@ -451,7 +451,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     free_str_array(cfg_keys, seg_count);
                 }
 
-                result = aes_encrypt(mode, padding, options->_key, iv, ivOffset, ivLen, buff, &size, &is_text);
+                result = aes_encrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
                 if (!result) {
                     msg = crypto_err ? crypto_err : "aes encrypt error";
                     code = GENERAL;
@@ -465,17 +465,17 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     }
 
     // deal with result
-    if (result && options->_success) {
+    if (result && options->success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
-    } else if (options->_fail) {
-        INVOKE_FAIL_CB(options->_fail, msg, code);
+        INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+    } else if (options->fail) {
+        INVOKE_FAIL_CB(options->fail, msg, code);
     }
 
-    if (options->_complete) {
-        INVOKE_COMPLET_CB(options->_complete);
+    if (options->complete) {
+        INVOKE_COMPLET_CB(options->complete);
     }
 
     if (result) free(result);
@@ -490,40 +490,40 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    const char* algo = check_str(options->_algo) ? options->_algo: "RSA";
+    const char* algo = check_str(options->algo) ? options->algo: "RSA";
     bool is_text = true;
     size_t size = 0;
 
-    const char* iv = options->_key;
+    const char* iv = options->key;
     int ivOffset = 0;
     int ivLen = 16;
     int mode = 5;  // encryptCfgs.AES.mode.CBC
     int padding = 0;  // encryptCfgs.AES.padding.PKCS7Padding
     // excute native function
-    if (!(check_any(options->_data) && check_str(options->_key))) {
+    if (!(check_any(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
         code = ARGSERROR;
     } else {
        // judge data type
-        uint8_t* buff = get_buff(ft_ctx, *(options->_data), &size, &is_text);
+        uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff || size == 0) {
             msg = "invalid data type!";
             code = ARGSERROR;
         } else {
             if (strcmp(algo, "RSA") == 0) {
-                result = rsa_decrypt(options->_key, buff, &size, &is_text);
+                result = rsa_decrypt(options->key, buff, &size, &is_text);
                 if (!result) {
                     msg = crypto_err ? crypto_err : "rsa encrypt error";
                     code = GENERAL;
                 }
             } else if (strcmp(algo, "AES") == 0) {
-                if (options->_options) {
-                    system_crypto_MixinCryptOption * opts = options->_options;
-                    iv = opts->_iv ? opts->_iv : iv;
-                    ivOffset = opts->_ivOffset ? opts->_ivOffset : ivOffset;
-                    ivLen = opts->_ivLen ? opts->_ivLen : ivLen;
+                if (options->options) {
+                    system_crypto_MixinCryptOption * opts = options->options;
+                    iv = opts->iv ? opts->iv : iv;
+                    ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
+                    ivLen = opts->ivLen ? opts->ivLen : ivLen;
                 }
-                result = aes_decrypt(mode, padding, options->_key, iv, ivOffset, ivLen, buff, &size, &is_text);
+                result = aes_decrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
                 if (!result) {
                     msg = crypto_err ? crypto_err : "aes encrypt error";
                     code = GENERAL;
@@ -534,17 +534,17 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     }
 
     // deal with result
-    if (result && options->_success) {
+    if (result && options->success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
-        INVOKE_SUCCESS_CB(options->_success, (&ret_obj));
-    } else if (options->_fail) {
-        INVOKE_FAIL_CB(options->_fail, msg, code);
+        INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+    } else if (options->fail) {
+        INVOKE_FAIL_CB(options->fail, msg, code);
     }
 
-    if (options->_complete) {
-        INVOKE_COMPLET_CB(options->_complete);
+    if (options->complete) {
+        INVOKE_COMPLET_CB(options->complete);
     }
 
     if (result) free(result);

@@ -29,16 +29,16 @@
 
 /****** for JIDL struct 'PackageInfo' ******/
 static ObjectMember system_internal_package_PackageInfo_struct_members[] = {
-    { "packageName", FT_STRING, offsetof(system_internal_package_PackageInfo, _packageName), sizeof(FtString) },
-    { "name", FT_STRING, offsetof(system_internal_package_PackageInfo, _name), sizeof(FtString) },
-    { "icon", FT_STRING, offsetof(system_internal_package_PackageInfo, _icon), sizeof(FtString) },
-    { "installedPath", FT_STRING, offsetof(system_internal_package_PackageInfo, _installedPath), sizeof(FtString) },
-    { "manifest", FT_STRING, offsetof(system_internal_package_PackageInfo, _manifest), sizeof(FtString) },
-    { "appType", FT_STRING, offsetof(system_internal_package_PackageInfo, _appType), sizeof(FtString) },
-    { "version", FT_STRING, offsetof(system_internal_package_PackageInfo, _version), sizeof(FtString) },
-    { "installTime", FT_STRING, offsetof(system_internal_package_PackageInfo, _installTime), sizeof(FtString) },
-    { "appSize", FT_INT, offsetof(system_internal_package_PackageInfo, _appSize), sizeof(FtInt) },
-    { "extra", FT_STRING, offsetof(system_internal_package_PackageInfo, _extra), sizeof(FtString) },
+    { "packageName", FT_STRING, offsetof(system_internal_package_PackageInfo, packageName), sizeof(FtString) },
+    { "name", FT_STRING, offsetof(system_internal_package_PackageInfo, name), sizeof(FtString) },
+    { "icon", FT_STRING, offsetof(system_internal_package_PackageInfo, icon), sizeof(FtString) },
+    { "installedPath", FT_STRING, offsetof(system_internal_package_PackageInfo, installedPath), sizeof(FtString) },
+    { "manifest", FT_STRING, offsetof(system_internal_package_PackageInfo, manifest), sizeof(FtString) },
+    { "appType", FT_STRING, offsetof(system_internal_package_PackageInfo, appType), sizeof(FtString) },
+    { "version", FT_STRING, offsetof(system_internal_package_PackageInfo, version), sizeof(FtString) },
+    { "installTime", FT_STRING, offsetof(system_internal_package_PackageInfo, installTime), sizeof(FtString) },
+    { "appSize", FT_INT, offsetof(system_internal_package_PackageInfo, appSize), sizeof(FtInt) },
+    { "extra", FT_STRING, offsetof(system_internal_package_PackageInfo, extra), sizeof(FtString) },
     { nullptr },
 };
 
@@ -91,10 +91,10 @@ static OptionalType system_internal_package_InstallInfo_member_isForce_opt_type 
 
 /****** for JIDL struct 'InstallInfo' ******/
 static ObjectMember system_internal_package_InstallInfo_struct_members[] = {
-    { "path", FT_STRING, offsetof(system_internal_package_InstallInfo, _path), sizeof(FtString) },
-    { "isForce", FT_MK_OPTIONAL(&system_internal_package_InstallInfo_member_isForce_opt_type), offsetof(system_internal_package_InstallInfo, _isForce), sizeof(FtBool) },
-    { "progress", FT_MK_COMPLEX(&system_internal_package_installProgress_cb_callback_type), offsetof(system_internal_package_InstallInfo, _progress), sizeof(FtCallbackId) },
-    { "result", FT_MK_COMPLEX(&system_internal_package_installResult_cb_callback_type), offsetof(system_internal_package_InstallInfo, _result), sizeof(FtCallbackId) },
+    { "path", FT_STRING, offsetof(system_internal_package_InstallInfo, path), sizeof(FtString) },
+    { "isForce", FT_MK_OPTIONAL(&system_internal_package_InstallInfo_member_isForce_opt_type), offsetof(system_internal_package_InstallInfo, isForce), sizeof(FtBool) },
+    { "progress", FT_MK_COMPLEX(&system_internal_package_installProgress_cb_callback_type), offsetof(system_internal_package_InstallInfo, progress), sizeof(FtCallbackId) },
+    { "result", FT_MK_COMPLEX(&system_internal_package_installResult_cb_callback_type), offsetof(system_internal_package_InstallInfo, result), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -133,9 +133,9 @@ static OptionalType system_internal_package_UninstallInfo_member_isClearCache_op
 
 /****** for JIDL struct 'UninstallInfo' ******/
 static ObjectMember system_internal_package_UninstallInfo_struct_members[] = {
-    { "packageName", FT_STRING, offsetof(system_internal_package_UninstallInfo, _packageName), sizeof(FtString) },
-    { "isClearCache", FT_MK_OPTIONAL(&system_internal_package_UninstallInfo_member_isClearCache_opt_type), offsetof(system_internal_package_UninstallInfo, _isClearCache), sizeof(FtBool) },
-    { "result", FT_MK_COMPLEX(&system_internal_package_uninstallResult_cb_callback_type), offsetof(system_internal_package_UninstallInfo, _result), sizeof(FtCallbackId) },
+    { "packageName", FT_STRING, offsetof(system_internal_package_UninstallInfo, packageName), sizeof(FtString) },
+    { "isClearCache", FT_MK_OPTIONAL(&system_internal_package_UninstallInfo_member_isClearCache_opt_type), offsetof(system_internal_package_UninstallInfo, isClearCache), sizeof(FtBool) },
+    { "result", FT_MK_COMPLEX(&system_internal_package_uninstallResult_cb_callback_type), offsetof(system_internal_package_UninstallInfo, result), sizeof(FtCallbackId) },
     { nullptr },
 };
 

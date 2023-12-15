@@ -66,16 +66,16 @@ static void NativePackageInfoToJSPackageInfo(PackageInfo info,
         return;
     }
 
-    js_info->_packageName = StringToFtString(info.packageName);
-    js_info->_name = StringToFtString(info.name);
-    js_info->_icon = StringToFtString(info.icon);
-    js_info->_installedPath = StringToFtString(info.installedPath);
-    js_info->_manifest = StringToFtString(info.manifest);
-    js_info->_appType = StringToFtString(info.appType);
-    js_info->_version = StringToFtString(info.version);
-    js_info->_installTime = StringToFtString(info.installTime);
-    js_info->_appSize = info.size;
-    js_info->_extra = StringToFtString("");
+    js_info->packageName = StringToFtString(info.packageName);
+    js_info->name = StringToFtString(info.name);
+    js_info->icon = StringToFtString(info.icon);
+    js_info->installedPath = StringToFtString(info.installedPath);
+    js_info->manifest = StringToFtString(info.manifest);
+    js_info->appType = StringToFtString(info.appType);
+    js_info->version = StringToFtString(info.version);
+    js_info->installTime = StringToFtString(info.installTime);
+    js_info->appSize = info.size;
+    js_info->extra = StringToFtString("");
 }
 
 class FeatureInstallListener : public BnInstallObserver {
@@ -130,10 +130,10 @@ FtArray* system_internal_package_wrap_getAllPackageInfo(FeatureInstanceHandle fe
         return NULL;
     }
     FtArray* strArray = system_internal_package_malloc_string_array();
-    strArray->_size = pkgInfos.size();
-    strArray->_element = malloc(sizeof(char*) * strArray->_size);
+    strArray->size = pkgInfos.size();
+    strArray->element = malloc(sizeof(char*) * strArray->size);
     for (size_t i = 0; i < pkgInfos.size(); i++) {
-        ((char**)strArray->_element)[i] = StringToFtString(pkgInfos[i].packageName);
+        ((char**)strArray->element)[i] = StringToFtString(pkgInfos[i].packageName);
     }
     return strArray;
 }
@@ -175,10 +175,10 @@ void system_internal_package_wrap_installPackage(FeatureInstanceHandle feature,
         return;
     }
     InstallParam installParam;
-    installParam.force = info->_isForce;
-    installParam.path = info->_path;
+    installParam.force = info->isForce;
+    installParam.path = info->path;
     sp<FeatureInstallListener> listener =
-            new FeatureInstallListener(feature, info->_progress, info->_result);
+            new FeatureInstallListener(feature, info->progress, info->result);
     int status = pm->installPackage(installParam, listener);
     if (status) {
         FEATURE_LOG_ERROR("%s::%s() installPackage failed, status = %d\n", file_tag, __FUNCTION__,
@@ -195,9 +195,9 @@ void system_internal_package_wrap_uninstallPackage(FeatureInstanceHandle feature
         return;
     }
     UninstallParam uninstallparam;
-    uninstallparam.packageName = info->_packageName;
-    uninstallparam.clearCache = info->_isClearCache;
-    sp<FeatureUninstallListener> listener = new FeatureUninstallListener(feature, info->_result);
+    uninstallparam.packageName = info->packageName;
+    uninstallparam.clearCache = info->isClearCache;
+    sp<FeatureUninstallListener> listener = new FeatureUninstallListener(feature, info->result);
     int status = pm->uninstallPackage(uninstallparam, listener);
     if (status) {
         FEATURE_LOG_ERROR("%s::%s() uninstallPackage failed, status = %d\n", file_tag, __FUNCTION__,

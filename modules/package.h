@@ -44,33 +44,33 @@ void system_internal_package_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _PackageInfo {
-  FtString _packageName;
-  FtString _name;
-  FtString _icon;
-  FtString _installedPath;
-  FtString _manifest;
-  FtString _appType;
-  FtString _version;
-  FtString _installTime;
-  FtInt _appSize;
-  FtString _extra;
+  FtString packageName;
+  FtString name;
+  FtString icon;
+  FtString installedPath;
+  FtString manifest;
+  FtString appType;
+  FtString version;
+  FtString installTime;
+  FtInt appSize;
+  FtString extra;
 } system_internal_package_PackageInfo;
 
 system_internal_package_PackageInfo* system_internal_packageMallocPackageInfo();
 
 typedef struct _InstallInfo {
-  FtString _path;
-  FtBool _isForce;
-  FtCallbackId _progress;
-  FtCallbackId _result;
+  FtString path;
+  FtBool isForce;
+  FtCallbackId progress;
+  FtCallbackId result;
 } system_internal_package_InstallInfo;
 
 system_internal_package_InstallInfo* system_internal_packageMallocInstallInfo();
 
 typedef struct _UninstallInfo {
-  FtString _packageName;
-  FtBool _isClearCache;
-  FtCallbackId _result;
+  FtString packageName;
+  FtBool isClearCache;
+  FtCallbackId result;
 } system_internal_package_UninstallInfo;
 
 system_internal_package_UninstallInfo* system_internal_packageMallocUninstallInfo();

@@ -44,72 +44,72 @@ void sensor_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _AccelerometerRet {
-  FtInt _x;
-  FtInt _y;
-  FtInt _z;
+  FtInt x;
+  FtInt y;
+  FtInt z;
 } sensor_AccelerometerRet;
 
 sensor_AccelerometerRet* sensorMallocAccelerometerRet();
 
 typedef struct _Accelerometer {
-  FtBool _reserved;
-  FtString _interval;
-  FtCallbackId _callback;
+  FtBool reserved;
+  FtString interval;
+  FtCallbackId callback;
 } sensor_Accelerometer;
 
 sensor_Accelerometer* sensorMallocAccelerometer();
 
 typedef struct _CompassRet {
-  FtDouble _direction;
-  FtDouble _accuracy;
+  FtDouble direction;
+  FtDouble accuracy;
 } sensor_CompassRet;
 
 sensor_CompassRet* sensorMallocCompassRet();
 
 typedef struct _Compass {
-  FtBool _reserved;
-  FtCallbackId _callback;
+  FtBool reserved;
+  FtCallbackId callback;
 } sensor_Compass;
 
 sensor_Compass* sensorMallocCompass();
 
 typedef struct _ProximityRet {
-  FtDouble _distance;
+  FtDouble distance;
 } sensor_ProximityRet;
 
 sensor_ProximityRet* sensorMallocProximityRet();
 
 typedef struct _Proximity {
-  FtBool _reserved;
-  FtCallbackId _callback;
-  FtCallbackId _fail;
+  FtBool reserved;
+  FtCallbackId callback;
+  FtCallbackId fail;
 } sensor_Proximity;
 
 sensor_Proximity* sensorMallocProximity();
 
 typedef struct _LightRet {
-  FtDouble _intensity;
+  FtDouble intensity;
 } sensor_LightRet;
 
 sensor_LightRet* sensorMallocLightRet();
 
 typedef struct _Light {
-  FtBool _reserved;
-  FtCallbackId _callback;
+  FtBool reserved;
+  FtCallbackId callback;
 } sensor_Light;
 
 sensor_Light* sensorMallocLight();
 
 typedef struct _StepCountRet {
-  FtDouble _steps;
+  FtDouble steps;
 } sensor_StepCountRet;
 
 sensor_StepCountRet* sensorMallocStepCountRet();
 
 typedef struct _StepCount {
-  FtBool _reserved;
-  FtCallbackId _callback;
-  FtCallbackId _fail;
+  FtBool reserved;
+  FtCallbackId callback;
+  FtCallbackId fail;
 } sensor_StepCount;
 
 sensor_StepCount* sensorMallocStepCount();
