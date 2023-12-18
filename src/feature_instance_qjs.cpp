@@ -275,6 +275,7 @@ int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
 {
     const auto callback = getCallback(cid);
     if (feature_is_undefined(callback.cb) || callback.cb_type == nullptr) {
+        FEATURE_LOG_ERROR("callback is undefined !");
         return -1;
     }
     bool has_rest_param = false;
@@ -291,6 +292,10 @@ int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
 int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int count)
 {
     const auto callback = getCallback(cid);
+    if (feature_is_undefined(callback.cb) || callback.cb_type == nullptr) {
+        FEATURE_LOG_ERROR("callback is undefined !");
+        return -1;
+    }
     bool has_rest_param = false;
     CallbackType* callbackType = callback.cb_type;
     int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
@@ -309,7 +314,7 @@ int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, featu
     feature_value_t ret = FEATURE_VALUE_UNDEFINED;
 
     if (feature_is_undefined(callback)) {
-        FEATURE_LOG_ERROR("callback in undefined !");
+        FEATURE_LOG_ERROR("callback is undefined !");
         return -1;
     }
     // create argv list and initialize to undefined
