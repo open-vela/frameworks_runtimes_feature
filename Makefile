@@ -41,6 +41,26 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
 
+ifeq ($(CONFIG_FEATURE_USE_WAMR),y)
+CXXFLAGS += -DWASM_ENABLE_GC=1
+CXXFLAGS += -DWASM_ENABLE_STRINGREF=1
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/include
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/interpreter
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/common/gc
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/utils
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/platform/nuttx
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/runtime-library/libdyntype
+
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_ffi_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_instance_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_wamr_utils.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/value_translator_wamr.cpp
+endif
+
 GTEST_DIR = $(APPDIR)/external/googletest/googletest/googletest
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include

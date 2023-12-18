@@ -39,5 +39,6 @@ config FEATURE_USE_SCHED_NOTE
 config FEATURE_USE_WAMR
 	bool "Enable WAMR engine"
 	default n
+	depends on INTERPRETERS_WAMR
 
 endif
