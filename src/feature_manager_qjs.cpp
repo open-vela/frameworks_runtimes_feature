@@ -343,7 +343,13 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method.return_type != FT_VOID) {
             // process return value
-            if (!FeatureFFIQjs::convertValueToGuest(instance, method.return_type, ffi_ret_value, ctx, ret_val)) {
+            if ((FT_IS_COMPLEX(method.return_type)) && (((ComplexTypeHeader*)(FT_GET_COMPLEX(method.return_type)))->type == COMPLEX_STRUCT_MAP)
+                && (*(void**)ffi_ret_value == nullptr)) {
+                FEATURE_LOG_ERROR("struct ffi_ret_value is null !");
+                feature_free_value(ctx, ret_val);
+                ret_val = FEATURE_UNDEFINED;
+                got_error = true;
+            } else if (!FeatureFFIQjs::convertValueToGuest(instance, method.return_type, ffi_ret_value, ctx, ret_val)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(ctx, ret_val);
                 ret_val = FEATURE_EXCEPTION;
