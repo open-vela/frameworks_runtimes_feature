@@ -47,7 +47,7 @@ public:
      * @return true
      * @return false
      */
-    bool init(char* manifest, const char* package_name = nullptr);
+    bool init(const char* package_name = nullptr);
 
     /**
      * @brief register FeatureRegistry

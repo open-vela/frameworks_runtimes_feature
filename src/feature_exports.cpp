@@ -15,10 +15,10 @@
  */
 
 #include "feature_exports.h"
-#include "feature_main_exports.h"
 #include "feature_instance.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
+#include "feature_main_exports.h"
 #include "feature_manager.h"
 #include "feature_manager_qjs.h"
 #include "feature_prototype.h"
@@ -47,8 +47,7 @@ void* FeatureMalloc(size_t size, FeatureType featureType)
 
 void* FeatureDupValue(void* ptr)
 {
-    if (!ptr)
-    {
+    if (!ptr) {
         FEATURE_LOG_ERROR("ptr is null !");
         return nullptr;
     }
@@ -59,8 +58,7 @@ void* FeatureDupValue(void* ptr)
 
 void FeatureFreeValue(void* ptr)
 {
-    if (!ptr)
-    {
+    if (!ptr) {
         FEATURE_LOG_ERROR("ptr is null !");
         return;
     }
@@ -138,8 +136,7 @@ void FeatureFreeValue(void* ptr)
 
 FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -149,8 +146,7 @@ FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
 
 void* FeatureGetProtoData(FeatureProtoHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -160,8 +156,7 @@ void* FeatureGetProtoData(FeatureProtoHandle handle)
 
 void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -171,8 +166,7 @@ void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
 
 void* FeatureGetObjectData(FeatureInstanceHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -181,8 +175,7 @@ void* FeatureGetObjectData(FeatureInstanceHandle handle)
 
 void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -192,8 +185,7 @@ void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -202,8 +194,7 @@ ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 
 JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return JS_UNDEFINED;
     }
@@ -213,8 +204,7 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 
 const char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -224,8 +214,7 @@ const char* FeatureGetPackageName(FeatureProtoHandle handle)
 
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -236,8 +225,7 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 void* FeatureInstanceGetUserData(FeatureInstanceHandle handle,
     const char* name)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -248,8 +236,7 @@ void* FeatureInstanceGetUserData(FeatureInstanceHandle handle,
 bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid,
     ...)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return false;
     }
@@ -265,8 +252,7 @@ bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid,
 bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
     int count, ...)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return false;
     }
@@ -281,8 +267,7 @@ bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
 
 bool FeatureRemoveCallback(FeatureInstanceHandle handle, FtCallbackId cid)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return false;
     }
@@ -298,8 +283,7 @@ int FeatureGetSameCallback(FeatureInstanceHandle handle, FtCallbackId cid)
 
 bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return false;
     }
@@ -326,8 +310,7 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
     VTable* vtable)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -338,8 +321,7 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
 void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -348,19 +330,10 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     instance->sendAsnyc();
 }
 
-FeatureManagerHandle FeatureCreateManager(char* manifest_content)
+FeatureManagerHandle FeatureCreateManager(const char* package_name)
 {
     FeatureRegistry* registry = new ferry::FeatureRegistry();
-    registry->init(manifest_content, nullptr);
-    FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
-
-    return manager;
-}
-
-FeatureManagerHandle FeatureCreateManagerEx(const char* package_name)
-{
-    FeatureRegistry* registry = new ferry::FeatureRegistry();
-    registry->init(nullptr, package_name);
+    registry->init(package_name);
     FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
 
     return manager;
@@ -368,8 +341,7 @@ FeatureManagerHandle FeatureCreateManagerEx(const char* package_name)
 
 void FeatureFreeManager(FeatureManagerHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -379,8 +351,7 @@ void FeatureFreeManager(FeatureManagerHandle handle)
 
 void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -390,8 +361,7 @@ void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
 
 void FeatureUnsetUVLoop(FeatureManagerHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -401,8 +371,7 @@ void FeatureUnsetUVLoop(FeatureManagerHandle handle)
 
 uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -412,8 +381,7 @@ uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 
 void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* data)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -423,8 +391,7 @@ void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* dat
 
 void* FeatureGetUserData(FeatureManagerHandle handle, const char* name)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -434,8 +401,7 @@ void* FeatureGetUserData(FeatureManagerHandle handle, const char* name)
 
 void FeatureUninit(FeatureManagerHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
@@ -445,8 +411,7 @@ void FeatureUninit(FeatureManagerHandle handle)
 
 JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_object, const char* name)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return JS_UNDEFINED;
     }
@@ -456,8 +421,7 @@ JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_o
 
 JSValue FeatureFindFeature(FeatureManagerHandle handle, feature_context_ref ctx, const char* module_name)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return JS_UNDEFINED;
     }
@@ -467,8 +431,7 @@ JSValue FeatureFindFeature(FeatureManagerHandle handle, feature_context_ref ctx,
 
 JSValue FeatureCreateFeature(FeatureManagerHandle handle, feature_context_ref ctx, JSValue prototype, JSValue vm_object)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return JS_UNDEFINED;
     }
@@ -478,8 +441,7 @@ JSValue FeatureCreateFeature(FeatureManagerHandle handle, feature_context_ref ct
 
 FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -489,8 +451,7 @@ FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle h
 
 FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return nullptr;
     }
@@ -500,8 +461,7 @@ FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
 
 bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid)
 {
-    if (!handle)
-    {
+    if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
         return false;
     }
