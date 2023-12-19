@@ -26,6 +26,10 @@ ifneq ($(CONFIG_FEATURE_LOG_LEVEL),)
 CXXFLAGS += -DFEATURE_LOG_LEVEL=$(CONFIG_FEATURE_LOG_LEVEL)
 endif
 
+JIDL_PATH :=
+OUT_PATH :=
+TEST_PATH :=
+
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_common.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context.cpp
@@ -106,21 +110,25 @@ FEATURELIST += timers
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/app_path.cpp
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/locale.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += locale
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/error_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/error.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += Error
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/device_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/device.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_device
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/net_utils.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/fetch.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += fetch
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/prompt_impl.cpp
@@ -138,23 +146,26 @@ AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
 CXXSRCS += $(patsubst %.aidl,%$(CXXEXT),$(AIDLSRCS))
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/modules/aidl
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_transport.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/message_channel_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/message_channel.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_messageChannel
 endif
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/jumpapp_impl.cpp
 ifeq ($(CONFIG_QUICKAPP_VAPP_XMS), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/framework
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/jse
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/am/include/app
 endif
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/jumpapp.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += jumpApp
 
 ifeq ($(CONFIG_MIPLAY),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/miplay.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += service_miplay
 endif
 
@@ -166,38 +177,44 @@ FEATURELIST += system_storage
 endif
 
 ifeq ($(CONFIG_KVDB),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/exchange_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/exchange.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_exchange
 endif
 
 ifeq ($(CONFIG_CRYPTO_MBEDTLS),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_native.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_utils.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/crypto_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/crypto.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_crypto
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/cipher_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/cipher.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_cipher
 endif
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/configuration_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/configuration.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_configuration
 endif
 
 
 ifeq ($(CONFIG_UORB), y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/sensor.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += sensor
 endif
 
 ifeq ($(CONFIG_SYSTEM_PACKAGE_SERVICE), y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/package.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/package_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/package.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_internal_package
 endif
 
@@ -222,12 +239,14 @@ endif
 ifeq ($(CONFIG_UTILS_CURL), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/request.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/request_impl.cpp
 FEATURELIST += system_request
 endif
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/file.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/file_impl.cpp
 FEATURELIST += system_file
 
@@ -239,8 +258,22 @@ endif
 
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 
-context::
+CXXSRCS += $(strip $(foreach i, $(shell seq 1 $(words $(JIDL_PATH))),\
+	$(eval jidl_path=$(word $(i), $(JIDL_PATH)))\
+	$(eval out_path=$(word $(i), $(OUT_PATH)))\
+	$(eval file_name=$(strip $(basename $(notdir $(word $(i), $(JIDL_PATH))) .jidl)))\
+	$(out_path)/$(file_name).cpp\
+))
 
+context:: 
+	@echo "-------------------generate files----------------------"
+	$(foreach i,$(shell seq 1 $(words $(JIDL_PATH))), \
+		$(eval jidl_path=$(word $(i),$(JIDL_PATH))) \
+		$(eval out_path=$(word $(i),$(OUT_PATH))) \
+		$(eval file_name=$(strip $(basename $(notdir $(word $(i),$(JIDL_PATH))) .jidl))) \
+		echo "python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp"; \
+		python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp; \
+	)
 
 clean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
