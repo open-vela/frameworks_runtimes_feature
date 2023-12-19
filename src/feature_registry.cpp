@@ -20,65 +20,15 @@
 
 #include <assert.h>
 #include <memory>
-#include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
 #include <string.h>
 #include <string>
 
-typedef rapidjson::Document JSONDocument;
-
 namespace ferry {
 
-class ManifestParser {
-public:
-    ManifestParser() = default;
-    bool parse(char* json);
-    const char* getPackageName();
-
-private:
-    JSONDocument doc_;
-};
-
-bool ManifestParser::parse(char* manifest)
-{
-    doc_.ParseInsitu(manifest);
-    if (doc_.HasParseError()) {
-        FEATURE_LOG_ERROR("%s: parse json failed: %s", __func__,
-            GetParseError_En(doc_.GetParseError()));
-        return false;
-    }
-    return true;
-}
-
-const char* ManifestParser::getPackageName()
-{
-    if (!doc_.HasMember("package")) {
-        FEATURE_LOG_WARN("manifest do not have package variable !");
-        return "";
-    }
-    const auto& package = doc_.GetObject()["package"];
-    if (!package.IsString()) {
-        FEATURE_LOG_WARN("manifest.package is not string !");
-        return "";
-    }
-    return package.GetString();
-}
-
-bool FeatureRegistry::init(char* manifest, const char* package_name)
+bool FeatureRegistry::init(const char* package_name)
 {
     // register features
-    ManifestParser parser;
     std::vector<std::string> features;
-
-    if (manifest) {
-        FEATURE_LOG_DEBUG("manifest is %s!", manifest);
-        if (!parser.parse(manifest)) {
-            FEATURE_LOG_ERROR("parse manifest failed !");
-            return false;
-        }
-
-        package_name_ = parser.getPackageName();
-    }
 
     if (package_name) {
         package_name_ = package_name;

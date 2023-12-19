@@ -11,25 +11,24 @@
 
 /* about wasmr api */
 #include "feature_manager_wamr.h"
-#include "wasm_export.h"
 #include "libdyntype_export.h"
+#include "wasm_export.h"
 
 using namespace ferry;
 using namespace FEATURE;
 
-static ferry::FeatureManagerQjs *g_manager_qjs;
-static ferry::FeatureManagerWamr *g_manager_wamr;
+static ferry::FeatureManagerQjs* g_manager_qjs;
+static ferry::FeatureManagerWamr* g_manager_wamr;
 
-typedef struct feature_env_t
-{
-    JSRuntime *rt;
-    JSContext *ctx;
+typedef struct feature_env_t {
+    JSRuntime* rt;
+    JSContext* ctx;
 } feature_env_t;
 
 extern "C" dyn_value_t
-dyntype_callback_wasm_dispatcher(void *exec_env_v, dyn_ctx_t ctx, void *vfunc,
-                                 dyn_value_t this_obj, int argc,
-                                 dyn_value_t *args);
+dyntype_callback_wasm_dispatcher(void* exec_env_v, dyn_ctx_t ctx, void* vfunc,
+    dyn_value_t this_obj, int argc,
+    dyn_value_t* args);
 
 int events_poll(wasm_exec_env_t exec_env)
 {
@@ -59,7 +58,7 @@ void execute_micro_tasks(wasm_exec_env_t exec_env, dyn_ctx_t ctx)
 }
 
 // __require
-feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t *argv)
+feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
 {
     if (argc < 1) {
         FEATURE_THROW_INTERNAL_ERROR(ctx, "require need module name!");
@@ -73,14 +72,14 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int
     return feature_obj;
 }
 
-int load_file(char *file_name, char **file_content)
+int load_file(char* file_name, char** file_content)
 {
     if (file_name == NULL || file_content == NULL) {
         printf("file_name or file_content is NULL!\n");
         return false;
     }
 
-    FILE *fp = fopen(file_name, "r");
+    FILE* fp = fopen(file_name, "r");
     if (fp == NULL) {
         printf("open file_name is %s failed!\n", file_name);
         return false;
@@ -90,7 +89,7 @@ int load_file(char *file_name, char **file_content)
     int len = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    *file_content = (char *)malloc(len + 1);
+    *file_content = (char*)malloc(len + 1);
     memset(*file_content, 0, len + 1);
     // 读取文件内容到file_content字符串中
     fread(*file_content, len, 1, fp);
@@ -99,26 +98,20 @@ int load_file(char *file_name, char **file_content)
     return len;
 }
 
-// 支持cli来读取manitest.json以及js文件去执行，命令为：./feature_jidl_test ./test.js ../manifest.json
-int main(int argc, char **argv)
+// 支持cli来读取包名以及js文件去执行，命令为：./feature_jidl_test ./test.js package_name
+int main(int argc, char** argv)
 {
     if (argc < 2) {
-        printf("please input manifest.json file and js file, like ./jidl_main ./test.js!\n");
+        printf("please input js file and package_name, like ./feature_jidl_test ./test.js, or ./feature_jidl_test ./test.js package_name!\n");
         return 0;
     }
 
-    char *js_file = argv[1];
-    char *js_str = NULL;
-    char *manifast_str = NULL;
+    char* js_file = argv[1];
+    char* js_str = NULL;
+    char* package_name = NULL;
 
     if (argc == 3) {
-        char *manifest_file = argv[2];
-        load_file(manifest_file, &manifast_str);
-
-        if (manifast_str == NULL) {
-            printf("malloc manifest.json failed!\n");
-            return 0;
-        }
+        package_name = argv[2];
     }
 
     // 打开manifest.json文件,读取内容到一个字符串中
@@ -126,9 +119,8 @@ int main(int argc, char **argv)
     int js_filelen = load_file(js_file, &js_str);
     if (js_str == NULL) {
         printf("malloc js file failed!\n");
-        if (manifast_str != NULL) {
-            free(manifast_str);
-            manifast_str = NULL;
+        if (package_name != NULL) {
+            package_name = NULL;
         }
         return 0;
     }
@@ -140,9 +132,9 @@ int main(int argc, char **argv)
 
         js_env.rt = JS_NewRuntime();
         js_env.ctx = JS_NewContext(js_env.rt);
-        //JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
+        // JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
         auto registry = new ferry::FeatureRegistry();
-        registry->init(manifast_str);
+        registry->init(package_name);
         g_manager_qjs = new ferry::FeatureManagerQjs(registry);
 
         // register global require
@@ -172,9 +164,8 @@ int main(int argc, char **argv)
         JS_FreeRuntime(js_env.rt);
 
         // 释放manifast_str
-        if (manifast_str != NULL) {
-            free(manifast_str);
-            manifast_str = NULL;
+        if (package_name != NULL) {
+            package_name = NULL;
         }
         // 释放js_str
         if (js_str != NULL) {
@@ -188,13 +179,13 @@ int main(int argc, char **argv)
         wasm_module_inst_t wasm_module_inst = NULL;
         wasm_exec_env_t exec_env = NULL;
         uint stack_size = 64 * 1024, heap_size = 16 * 1024;
-        char error_buf[128] = {0};
+        char error_buf[128] = { 0 };
         RuntimeInitArgs init_args;
         memset(&init_args, 0, sizeof(RuntimeInitArgs));
         init_args.mem_alloc_type = Alloc_With_Allocator;
-        init_args.mem_alloc_option.allocator.malloc_func = (void *)malloc;
-        init_args.mem_alloc_option.allocator.realloc_func = (void *)realloc;
-        init_args.mem_alloc_option.allocator.free_func = (void *)free;
+        init_args.mem_alloc_option.allocator.malloc_func = (void*)malloc;
+        init_args.mem_alloc_option.allocator.realloc_func = (void*)realloc;
+        init_args.mem_alloc_option.allocator.free_func = (void*)free;
         init_args.gc_heap_size = 16 * 1024;
 
         if (!wasm_runtime_full_init(&init_args)) {
@@ -208,22 +199,20 @@ int main(int argc, char **argv)
 
         /* init feature about wasm */
         auto registry = new ferry::FeatureRegistry();
-        registry->init(manifast_str);
+        registry->init(package_name);
         g_manager_wamr = new ferry::FeatureManagerWamr(registry);
-        if (!g_manager_wamr->init())
-        {
+        if (!g_manager_wamr->init()) {
             printf(" wamr init error!\n");
             return 0;
         }
 
-        if (!(wasm_module = wasm_runtime_load((uint8_t *)js_str, js_filelen,
-                                              error_buf, sizeof(error_buf)))) {
+        if (!(wasm_module = wasm_runtime_load((uint8_t*)js_str, js_filelen,
+                  error_buf, sizeof(error_buf)))) {
             printf("%s\n", error_buf);
             return 0;
         }
-        if (!(wasm_module_inst =
-                  wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
-                                           error_buf, sizeof(error_buf)))) {
+        if (!(wasm_module_inst = wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
+                  error_buf, sizeof(error_buf)))) {
             printf("%s\n", error_buf);
             return 0;
         }
@@ -233,7 +222,7 @@ int main(int argc, char **argv)
             printf("%s\n", wasm_runtime_get_exception(wasm_module_inst));
         }
 
-        const char *exception;
+        const char* exception;
         wasm_application_execute_main(wasm_module_inst, 0, NULL);
         if ((exception = wasm_runtime_get_exception(wasm_module_inst)))
             printf("%s\n", exception);
@@ -253,9 +242,8 @@ int main(int argc, char **argv)
         wasm_runtime_destroy();
 
         // 释放manifast_str
-        if (manifast_str != NULL) {
-            free(manifast_str);
-            manifast_str = NULL;
+        if (package_name != NULL) {
+            package_name = NULL;
         }
         // 释放js_str
         if (js_str != NULL) {

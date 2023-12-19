@@ -31,14 +31,7 @@ extern "C" {
  * @param manifest
  * @return FeatureManagerHandle
  */
-FeatureManagerHandle FeatureCreateManager(char* manifest_content);
-
-/**
- * @brief create a FeatureManagerHandle
- * @param package-name
- * @return FeatureManagerHandle
- */
-FeatureManagerHandle FeatureCreateManagerEx(const char* package_name);
+FeatureManagerHandle FeatureCreateManager(const char* package_name);
 
 /**
  * @brief free a FeatureManagerHandle

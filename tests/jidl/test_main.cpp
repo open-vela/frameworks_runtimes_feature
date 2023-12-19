@@ -191,7 +191,7 @@ static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
 }
 #endif
 
-void feat_test_once(char* js_file, char* js_str, const char* test_all, char* mfst_content, int time_limit)
+void feat_test_once(char* js_file, char* js_str, const char* test_all, char* package_name, int time_limit)
 {
     FeatTestEnv env;
     env.filename = js_file;
@@ -230,7 +230,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* mfs
 
     // init feature framework
     // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
-    FeatureManagerHandle manager = FeatureCreateManager(mfst_content);
+    FeatureManagerHandle manager = FeatureCreateManager(package_name);
     env.manager = manager;
     env.run_loop = run_loop;
     env.stop_loop = stop_loop;
@@ -345,6 +345,7 @@ extern "C" int main(int argc, char** argv)
     const char* test_all = "__feat_test_all();";
     char* js_file = NULL;
     char* js_str = NULL;
+    char* package_name = NULL;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-t") == 0) {
@@ -357,6 +358,11 @@ extern "C" int main(int argc, char** argv)
             if (i >= argc)
                 break;
             times = atoi(argv[i]);
+        } else if (strcmp(argv[i], "-package_name") == 0) {
+            i++;
+            if (i >= argc)
+                break;
+            package_name = argv[i];
         } else {
             js_file = argv[i];
         }
@@ -371,21 +377,14 @@ extern "C" int main(int argc, char** argv)
         return 0;
     }
     // 打开 manifest 文件
-    char* mfst_content = NULL;
-    if (argc > 2) {
-        char* mfst_file = argv[2];
-        load_file(mfst_file, &mfst_content);
-    }
 
     for (int i = 0; i < times; i++) {
         printf("[feat_test]:  the number of times you want to repeat the test is %d, Current number of tests is %d\n", times, i);
-        feat_test_once(js_file, js_str, test_all, mfst_content, time_limit);
+        feat_test_once(js_file, js_str, test_all, package_name, time_limit);
     }
 
     // free js_str
     free(js_str);
-    if (mfst_content)
-        free(mfst_content);
 
     return 0;
 }
