@@ -90,7 +90,7 @@ void system_internal_package_wrap_uninstallPackage(FeatureInstanceHandle feature
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* system_internal_package_malloc_string_array();
+FtArray* system_internal_package_malloc_PackageInfo_struct_type_array();
 
 #endif // JSON_AST_GEN_MODULE_SYSTEM_INTERNAL_PACKAGE_H_
 /* clang-format on */

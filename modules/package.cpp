@@ -156,20 +156,20 @@ static const FeatureType system_internal_package_getAllPackageInfo_parameters[] 
     FT_PARAM_END
 };
 
-static const ArrayType system_internal_package_string_array = {
+static const ArrayType system_internal_package_PackageInfo_struct_type_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_STRING
+    .element_type = FT_MK_COMPLEX_REF(&system_internal_package_PackageInfo_struct_type)
 };
 
-FtArray* system_internal_package_malloc_string_array() {
+FtArray* system_internal_package_malloc_PackageInfo_struct_type_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&system_internal_package_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&system_internal_package_PackageInfo_struct_type_array));
 }
 
 static const MemberMethod system_internal_package_getAllPackageInfo_member_method = {
     .func = { .callback = FFI_FN(system_internal_package_wrap_getAllPackageInfo) },
     .parameters = system_internal_package_getAllPackageInfo_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&system_internal_package_string_array),
+    .return_type = FT_MK_COMPLEX_REF(&system_internal_package_PackageInfo_struct_type_array),
 };
 
 
