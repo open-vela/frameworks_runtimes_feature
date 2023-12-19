@@ -65,7 +65,6 @@ static const char* file_tag = "[jidl_feature] Request_impl";
 
 typedef struct
 {
-    FeatureRuntimeContext ctx;
     uv_request_session_t* handle;
     struct weakref_list_node linklist;
     const char* pkg_name;
@@ -106,7 +105,6 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         return;
     }
     th->exit = false;
-    th->ctx = ctx;
     th->pkg_name = FeatureGetPackageName(handle);
     if (!th->pkg_name || strlen(th->pkg_name) == 0) {
         REQUEST_ERROR("package name is null!");
