@@ -22,21 +22,25 @@ static const char* file_tag = "[jidl_feature] package_impl";
 using namespace os::pm;
 using android::binder::Status;
 
-void system_internal_package_onRegister(const char* feature_name) {
+void system_internal_package_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_internal_package_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_internal_package_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_internal_package_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_internal_package_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     PackageManager* pm = new PackageManager();
     FeatureSetObjectData(handle, pm);
 }
 
-void system_internal_package_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_internal_package_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetObjectData(handle));
     if (pm) {
@@ -45,15 +49,18 @@ void system_internal_package_onDetached(FeatureRuntimeContext ctx, FeatureInstan
     }
 }
 
-void system_internal_package_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_internal_package_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_internal_package_onUnregister(const char* feature_name) {
+void system_internal_package_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-static char* StringToFtString(std::string str) {
+static char* StringToFtString(std::string str)
+{
     int len = str.length();
     char* ftStr = (char*)FeatureMalloc(len + 1, FT_CHAR);
     strcpy(ftStr, str.c_str());
@@ -61,7 +68,8 @@ static char* StringToFtString(std::string str) {
 }
 
 static void NativePackageInfoToJSPackageInfo(PackageInfo info,
-                                             system_internal_package_PackageInfo* js_info) {
+    system_internal_package_PackageInfo* js_info)
+{
     if (js_info == NULL) {
         return;
     }
@@ -81,15 +89,21 @@ static void NativePackageInfoToJSPackageInfo(PackageInfo info,
 class FeatureInstallListener : public BnInstallObserver {
 public:
     FeatureInstallListener(FeatureInstanceHandle handle, FtCallbackId progress_cb,
-                           FtCallbackId result_cb)
-          : mHandle(handle), mProgressCb(progress_cb), mResultCb(result_cb) {}
-    Status onInstallProcess(const std::string& packageName, int32_t process) override {
+        FtCallbackId result_cb)
+        : mHandle(handle)
+        , mProgressCb(progress_cb)
+        , mResultCb(result_cb)
+    {
+    }
+    Status onInstallProcess(const std::string& packageName, int32_t process) override
+    {
         FeatureInvokeCallback(mHandle, mProgressCb, packageName, process);
         return Status::ok();
     }
 
     Status onInstallResult(const std::string& packageName, int32_t code,
-                           const std::string& msg) override {
+        const std::string& msg) override
+    {
         FeatureInvokeCallback(mHandle, mResultCb, packageName.c_str(), code, msg.c_str());
         return Status::ok();
     }
@@ -103,9 +117,13 @@ private:
 class FeatureUninstallListener : public BnUninstallObserver {
 public:
     FeatureUninstallListener(FeatureInstanceHandle handle, FtCallbackId result_cb)
-          : mHandle(handle), mResultCb(result_cb) {}
+        : mHandle(handle)
+        , mResultCb(result_cb)
+    {
+    }
     Status onUninstallResult(const std::string& packageName, int32_t code,
-                             const std::string& msg) override {
+        const std::string& msg) override
+    {
         FeatureInvokeCallback(mHandle, mResultCb, packageName.c_str(), code, msg.c_str());
         return Status::ok();
     }
@@ -116,7 +134,8 @@ private:
 };
 
 FtArray* system_internal_package_wrap_getAllPackageInfo(FeatureInstanceHandle feature,
-                                                        AppendData append_data) {
+    AppendData append_data)
+{
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetObjectData(feature));
     if (pm == NULL) {
         FEATURE_LOG_ERROR("%s::%s() pm is NULL\n", file_tag, __FUNCTION__);
@@ -126,20 +145,23 @@ FtArray* system_internal_package_wrap_getAllPackageInfo(FeatureInstanceHandle fe
     int status = pm->getAllPackageInfo(&pkgInfos);
     if (status) {
         FEATURE_LOG_ERROR("%s::%s() getAllPackageInfo failed, status:%d\n", file_tag, __FUNCTION__,
-                          status);
+            status);
         return NULL;
     }
-    FtArray* strArray = system_internal_package_malloc_string_array();
-    strArray->size = pkgInfos.size();
-    strArray->element = malloc(sizeof(char*) * strArray->size);
+    FtArray* strArray = system_internal_package_malloc_PackageInfo_struct_type_array();
+    strArray->_size = pkgInfos.size();
+    strArray->_element = malloc(sizeof(char*) * strArray->_size);
     for (size_t i = 0; i < pkgInfos.size(); i++) {
-        ((char**)strArray->element)[i] = StringToFtString(pkgInfos[i].packageName);
+        system_internal_package_PackageInfo* js_pkg = system_internal_packageMallocPackageInfo();
+        NativePackageInfoToJSPackageInfo(pkgInfos[i], js_pkg);
+        ((system_internal_package_PackageInfo**)strArray->_element)[i] = js_pkg;
     }
     return strArray;
 }
 
 system_internal_package_PackageInfo* system_internal_package_wrap_getPackageInfo(
-        FeatureInstanceHandle feature, AppendData append_data, FtString packageName) {
+    FeatureInstanceHandle feature, AppendData append_data, FtString packageName)
+{
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetObjectData(feature));
     if (pm == NULL) {
         FEATURE_LOG_ERROR("%s::%s() pm is NULL\n", file_tag, __FUNCTION__);
@@ -157,7 +179,8 @@ system_internal_package_PackageInfo* system_internal_package_wrap_getPackageInfo
 }
 
 FtInt system_internal_package_wrap_clearAppCache(FeatureInstanceHandle feature,
-                                                 AppendData append_data, FtString packageName) {
+    AppendData append_data, FtString packageName)
+{
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetObjectData(feature));
     if (pm == NULL) {
         FEATURE_LOG_ERROR("%s::%s() pm is NULL\n", file_tag, __FUNCTION__);
@@ -167,8 +190,9 @@ FtInt system_internal_package_wrap_clearAppCache(FeatureInstanceHandle feature,
 }
 
 void system_internal_package_wrap_installPackage(FeatureInstanceHandle feature,
-                                                 AppendData append_data,
-                                                 system_internal_package_InstallInfo* info) {
+    AppendData append_data,
+    system_internal_package_InstallInfo* info)
+{
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetObjectData(feature));
     if (pm == NULL) {
         FEATURE_LOG_ERROR("%s::%s() pm is NULL\n", file_tag, __FUNCTION__);
@@ -177,18 +201,18 @@ void system_internal_package_wrap_installPackage(FeatureInstanceHandle feature,
     InstallParam installParam;
     installParam.force = info->isForce;
     installParam.path = info->path;
-    sp<FeatureInstallListener> listener =
-            new FeatureInstallListener(feature, info->progress, info->result);
+    sp<FeatureInstallListener> listener = new FeatureInstallListener(feature, info->progress, info->result);
     int status = pm->installPackage(installParam, listener);
     if (status) {
         FEATURE_LOG_ERROR("%s::%s() installPackage failed, status = %d\n", file_tag, __FUNCTION__,
-                          status);
+            status);
     }
 }
 
 void system_internal_package_wrap_uninstallPackage(FeatureInstanceHandle feature,
-                                                   AppendData append_data,
-                                                   system_internal_package_UninstallInfo* info) {
+    AppendData append_data,
+    system_internal_package_UninstallInfo* info)
+{
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetObjectData(feature));
     if (pm == NULL) {
         FEATURE_LOG_ERROR("%s::%s() pm is NULL\n", file_tag, __FUNCTION__);
@@ -201,6 +225,6 @@ void system_internal_package_wrap_uninstallPackage(FeatureInstanceHandle feature
     int status = pm->uninstallPackage(uninstallparam, listener);
     if (status) {
         FEATURE_LOG_ERROR("%s::%s() uninstallPackage failed, status = %d\n", file_tag, __FUNCTION__,
-                          status);
+            status);
     }
 }

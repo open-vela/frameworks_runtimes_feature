@@ -45,7 +45,7 @@ struct UninstallInfo {
     callback uninstallResult_cb result
 }
 
-string[] getAllPackageInfo()
+PackageInfo[] getAllPackageInfo()
 PackageInfo getPackageInfo(string packageName)
 int clearAppCache(string packageName)
 void installPackage(InstallInfo info)
