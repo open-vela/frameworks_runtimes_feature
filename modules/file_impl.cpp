@@ -169,6 +169,12 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
         code = GENERAL;
         goto fail;
     }
+    if (!fc->loop) {
+        FILE_ERROR("uvloop is null");
+        msg = "uvloop is null";
+        code = GENERAL;
+        goto fail;
+    }
     fr->success = param->success;
     fr->fail = param->fail;
     fr->complete = param->complete;
@@ -231,6 +237,12 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     FsReq* fr = static_cast<FsReq*>(malloc(sizeof(*fr)));
     if (!fr) {
         msg = "malloc fail";
+        code = GENERAL;
+        goto fail;
+    }
+    if (!fc->loop) {
+        FILE_ERROR("uvloop is null");
+        msg = "uvloop is null";
         code = GENERAL;
         goto fail;
     }
@@ -567,6 +579,13 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
     initFileReq(fr);
+
+    if (!fc->loop) {
+        FILE_ERROR("uvloop is null");
+        msg = "uvloop is null";
+        code = GENERAL;
+        goto fail;
+    }
 
     if (!param->uri) {
         msg = "invalid file path";
@@ -913,6 +932,13 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
     initFileReq(fr);
+
+    if (!fc->loop) {
+        FILE_ERROR("uvloop is null");
+        msg = "uvloop is null";
+        code = GENERAL;
+        goto fail;
+    }
 
     if (!param->uri) {
         msg = "invalid path";
