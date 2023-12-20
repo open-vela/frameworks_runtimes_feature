@@ -69,7 +69,7 @@ static inline bool toNative(JSContext* ctx, const JSValue& target, double* pnati
 
 bool toNative(JSContext* ctx, const JSValue& target, bool* pnative);
 
-bool toNative(JSContext* ctx, const JSValue& target, const char** pnative);
+bool toNative(JSContext* ctx, const JSValue& target, char** pnative);
 
 bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative);
 
@@ -184,7 +184,7 @@ static inline void freeValue(JSContext* ctx, JSValue target) {
     target = JS_UNDEFINED;
 }
 
-static inline void freeString(JSContext* ctx, const char* str) {
+static inline void freeCString(JSContext* ctx, char* str) {
     JS_FreeCString(ctx, str);
 }
 

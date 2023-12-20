@@ -93,8 +93,8 @@ struct FtValTranslator {
         value_translator::freeValue((TCtx)(ctx_ref->data), value_translator::ftValToTarget(ft_val));
     }
 
-    static void freeString(ft_context_ref ctx_ref, const char* str) {
-        value_translator::freeString((TCtx)(ctx_ref->data), str);
+    static void freeCString(ft_context_ref ctx_ref, const char* str) {
+        value_translator::freeCString((TCtx)(ctx_ref->data), (char*)str);
     }
 
     static ft_value_t parseJson(ft_context_ref ctx_ref, const char* buf, size_t buf_len, const char* file_name) {
