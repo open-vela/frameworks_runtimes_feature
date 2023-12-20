@@ -170,15 +170,15 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     pnative = NULL;
                     break;
                 }
-                ObjectMapType &objMapType = *(ObjectMapType *)complex_type;
-                ObjectMember *members = (ObjectMember *)objMapType.members;
+                ObjectMapType &obj_map_type = *(ObjectMapType *)complex_type;
+                ObjectMember *members = (ObjectMember *)obj_map_type.members;
                 auto member_count = countMember(members);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
                     bool ret;
                     TTarget field;
                     auto member = &members[i];
-                    if (!value_translator::getObjectField(ctx, target, member->name, &field)) {
+                    if (!value_translator::getObjectField(ctx, target, member->name, i, &field)) {
                         // check field is js_undefined or not
                         if (FT_IS_COMPLEX(member->type)) {
                             ComplexTypeHeader* cmp_type = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
@@ -347,8 +347,8 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
         ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
         switch (complex_type->type) {
             case COMPLEX_STRUCT_MAP: {
-                ObjectMapType& objMapType = *(ObjectMapType*)complex_type;
-                auto member = objMapType.members;
+                ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
+                auto member = obj_map_type.members;
                 auto member_count = countMember(member);
                 target = value_translator::newObject(ctx);
                 for (int i = 0; i < member_count; i++) {

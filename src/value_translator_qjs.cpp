@@ -150,7 +150,7 @@ bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* pta
 
 
 // funcitons for handling objcects
-bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue* pfield) {
+bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield) {
     *pfield = JS_GetPropertyStr(ctx, obj, name);
     if (JS_IsUndefined(*pfield))
         return false;
