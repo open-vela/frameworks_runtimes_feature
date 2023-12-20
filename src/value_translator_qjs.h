@@ -148,7 +148,7 @@ static inline JSValue newObject (JSContext* ctx) {
     return JS_NewObject(ctx);
 }
 
-bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue* pfield);
+bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield);
 
 bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field);
 

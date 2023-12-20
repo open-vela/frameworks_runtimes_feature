@@ -48,7 +48,7 @@ bool isNull(wasm_exec_env_t exec_env,const uint64_t& value);
 bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value);
 bool isString(wasm_exec_env_t exec_env,const uint64_t& value);
 void freeCString(wasm_exec_env_t exec_env, char* str);
-bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t* pfield);
+bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, int idx, uint64_t* pfield);
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target);
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target);
 uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array);

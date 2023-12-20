@@ -117,7 +117,7 @@ bool toTarget(wasm_exec_env_t exec_env, int32_t native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(int64_t, *((int32_t*)(&native)), ptarget);
+    set_wasm_var_by_type(int64_t, native, *ptarget);
     return true;
 }
 bool toTarget(wasm_exec_env_t exec_env, uint32_t native, uint64_t* ptarget)
@@ -125,7 +125,7 @@ bool toTarget(wasm_exec_env_t exec_env, uint32_t native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(int64_t, *((uint32_t*)(&native)), ptarget);
+    set_wasm_var_by_type(int64_t, native, *ptarget);
     return true;
 }
 
@@ -134,7 +134,7 @@ bool toTarget(wasm_exec_env_t exec_env, int64_t native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(int64_t, *((int64_t*)(&native)), ptarget);
+    set_wasm_var_by_type(int64_t, native, *ptarget);
     return true;
 }
 
@@ -143,7 +143,7 @@ bool toTarget(wasm_exec_env_t exec_env, uint64_t native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(int64_t, *((int64_t*)(&native)), ptarget);
+    set_wasm_var_by_type(uint64_t, native, *ptarget);
     return true;
 }
 
@@ -181,7 +181,7 @@ bool toTarget(wasm_exec_env_t exec_env, char* native, uint64_t* ptarget)
     }
     const char* str = (char*)native;
     wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
-    set_wasm_var_by_type(void*, obj, ptarget);
+    set_wasm_var_by_type(void*, obj, *ptarget);
     return true;
 }
 
@@ -205,7 +205,7 @@ bool isNull(wasm_exec_env_t exec_env,const uint64_t& value)
 
 bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value)
 {
-    return false;
+    return value == 0;
 }
 
 bool isString(wasm_exec_env_t exec_env,const uint64_t& value)
@@ -222,9 +222,16 @@ void freeCString(wasm_exec_env_t exec_env, char* str)
     free(str);
 }
 
-bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t* pfield)
+bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, int idx, uint64_t* pfield)
 {
-    return 0;
+    wasm_struct_obj_t wasm_obj = get_wasm_args_by_type(wasm_struct_obj_t, obj);
+    WASMValue feild = { 0 };
+    wasm_struct_obj_get_field(wasm_obj, idx + 1, false, &feild);
+    if (feild.u64 == 0)
+        return false;
+
+    *pfield = *((uint64_t*)(&feild));
+    return true;
 }
 
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target)
@@ -234,17 +241,33 @@ void freeValue(wasm_exec_env_t exec_env, uint64_t& target)
 
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target)
 {
-    return false;
+    wasm_struct_obj_t struct_obj = get_wasm_args_by_type(wasm_struct_obj_t, target);
+    if (!wasm_obj_is_struct_obj((wasm_obj_t)struct_obj))
+        return false;
+
+    wasm_array_obj_t arr_ref = get_array_ref(struct_obj);
+    return wasm_obj_is_array_obj((wasm_obj_t)arr_ref);
 }
 
 uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array)
 {
-    return 0;
+    wasm_struct_obj_t struct_obj = get_wasm_args_by_type(wasm_struct_obj_t, array);
+    if (!wasm_obj_is_struct_obj((wasm_obj_t)struct_obj))
+        return 0;
+
+    return get_array_length(struct_obj);
 }
 
 uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx)
 {
-    return 0;
+    WASMValue ret = { 0 };
+    wasm_struct_obj_t struct_obj = get_wasm_args_by_type(wasm_struct_obj_t, array);
+    if (!wasm_obj_is_struct_obj((wasm_obj_t)struct_obj))
+        return 0;
+
+    wasm_array_obj_t arr_ref = get_array_ref(struct_obj);
+    wasm_array_obj_get_elem(arr_ref, idx, false, &ret);
+    return *((uint64_t*)(&ret));
 }
 
 uint64_t newObject (wasm_exec_env_t exec_env)
