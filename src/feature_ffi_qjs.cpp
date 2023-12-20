@@ -473,6 +473,10 @@ namespace FeatureFFIQjs {
                 } break;
                 case COMPLEX_ARRAY: {
                     // convert to guest
+                    if (!ptr) {
+                        FEATURE_LOG_ERROR("convert array need ptr provided !");
+                        return false;
+                    }
                     ArrayType* arrayType = (ArrayType*)complexType;
                     FtArray* arrayData = (FtArray*)ptr;
                     auto element_type = arrayType->element_type;
