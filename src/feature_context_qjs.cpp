@@ -419,7 +419,7 @@ struct InitContext {
         rt_ctx->ft_obj_set_property = TransType<int>::objectSetProperty;
         // free value
         rt_ctx->ft_free_value = TransType<int>::freeValue;
-        rt_ctx->ft_free_string = TransType<int>::freeString;
+        rt_ctx->ft_free_string = TransType<int>::freeCString;
         rt_ctx->ft_parse_json = TransType<int>::parseJson;
     }
 };

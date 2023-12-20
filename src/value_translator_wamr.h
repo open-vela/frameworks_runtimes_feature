@@ -30,7 +30,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, uint64_t* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, float* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, double* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, bool* pnative);
-bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, const char** pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, ft_value_t* pnative);
 
 
@@ -47,7 +47,7 @@ bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget);
 bool isNull(wasm_exec_env_t exec_env,const uint64_t& value);
 bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value);
 bool isString(wasm_exec_env_t exec_env,const uint64_t& value);
-void freeString(wasm_exec_env_t exec_env,const char* str);
+void freeCString(wasm_exec_env_t exec_env, char* str);
 bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t* pfield);
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target);
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target);

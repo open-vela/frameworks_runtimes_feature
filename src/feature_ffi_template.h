@@ -133,14 +133,14 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     FEATURE_LOG_ERROR("arg type mismatch, need string !");
                     return false;
                 } else {
-                    const char* str = NULL;
-                    if (!argToNativePtr<const char*>(ctx, target, (void*)(&str))) {
+                    char* str = NULL;
+                    if (!argToNativePtr<char*>(ctx, target, (void*)(&str))) {
                         FEATURE_LOG_ERROR("convert to const char* failed !");
                         return false;
                     }
                     char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
                     strcpy(alloc_ptr, str);
-                    value_translator::freeString(ctx, str); // to do by wjf
+                    value_translator::freeCString(ctx, str); // to do by wjf
                     pnative = alloc_ptr;
                 } break;
             case FT_ANY:

@@ -84,23 +84,22 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, bool* pnative)
     return true;
 }
 
-bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, const char** pnative)
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative)
 {
-    if (pnative == NULL) {
+    if (pnative == NULL)
         return false;
-    }
+
     void* str = get_wasm_args_by_type(void*, val);
-    uint32_t str_len = 0, len = 0;
-    if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
-        str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
-    }
+    if (!wasm_obj_is_stringref_obj((wasm_obj_t)str))
+        return false;
+
+    uint32_t len = 0;
+    uint32_t str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
     char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
     if (buffer != nullptr) {
         len = wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
     }
-    char* alloc_ptr = (char*)FeatureMalloc(strlen(buffer) + 1, FT_CHAR);
-    strcpy(alloc_ptr, buffer);
-    *pnative = alloc_ptr;
+    *pnative = buffer;
     return true;
 }
 
@@ -108,10 +107,8 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, ft_value_t* pnative
 {
     void* param = get_wasm_args_by_type(void*, val);
     JSValue* js_value = (JSValue*)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
-    ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
-    qjs_val_t* q_val = (qjs_val_t*)f_val;
+    qjs_val_t* q_val = (qjs_val_t*)pnative;
     q_val->js_val = *js_value;
-    pnative = f_val;
     return true;
 }
 
@@ -155,7 +152,7 @@ bool toTarget(wasm_exec_env_t exec_env, float native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(float, *((float*)(&native)), ptarget);
+    set_wasm_var_by_type(float, native, *ptarget);
     return true;
 }
 
@@ -164,7 +161,7 @@ bool toTarget(wasm_exec_env_t exec_env, double native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(double, *((double*)(&native)), ptarget);
+    set_wasm_var_by_type(double, native, *ptarget);
     return true;
 }
 
@@ -173,7 +170,7 @@ bool toTarget(wasm_exec_env_t exec_env, bool native, uint64_t* ptarget)
     if (ptarget == NULL) {
         return false;
     }
-    set_wasm_var_by_type(uint64_t, *((bool*)(&native)), ptarget);
+    set_wasm_var_by_type(uint64_t, native, *ptarget);
     return true;
 }
 
@@ -213,12 +210,16 @@ bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value)
 
 bool isString(wasm_exec_env_t exec_env,const uint64_t& value)
 {
-    return false;
+    void* str = get_wasm_args_by_type(void*, value);
+    if (!wasm_obj_is_stringref_obj((wasm_obj_t)str))
+        return false;
+
+    return true;
 }
 
-void freeString(wasm_exec_env_t exec_env,const char* str)
+void freeCString(wasm_exec_env_t exec_env, char* str)
 {
-
+    free(str);
 }
 
 bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t* pfield)

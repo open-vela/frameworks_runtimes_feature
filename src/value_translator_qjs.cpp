@@ -41,21 +41,21 @@ bool toNative(JSContext* ctx, const JSValue& target, bool* pnative) {
     return false;
 }
 
-bool toNative(JSContext* ctx, const JSValue& target, const char** pnative) {
+bool toNative(JSContext* ctx, const JSValue& target, char** pnative) {
     if (JS_IsString(target)) {
-        *pnative = JS_ToCString(ctx, target);
+        *((const char**)pnative) = JS_ToCString(ctx, target);
         return true;
     }
 
     if (JS_IsObject(target)) {
         JSValue json_str = JS_JSONStringify(ctx, target, JS_UNDEFINED, JS_UNDEFINED);
-        *pnative = JS_ToCString(ctx, json_str);
+        *((const char**)pnative) = JS_ToCString(ctx, json_str);
         JS_FreeValue(ctx, json_str);
         return true;
     }
 
     JSValue js_str = JS_ToString(ctx, target);
-    *pnative = JS_ToCString(ctx, js_str);
+    *((const char**)pnative) = JS_ToCString(ctx, js_str);
     JS_FreeValue(ctx, js_str);
     return true;
 }
