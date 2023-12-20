@@ -21,9 +21,10 @@
         JSValue array = JS_NewArray(ctx); \
         for (uint32_t i = 0; i < argc; ++i) { \
             JSValue elem = func(ctx, argv[i]); \
-            if (!JS_SetPropertyUint32(ctx, array, i, elem)) \
+            if (!JS_SetPropertyUint32(ctx, array, i, elem)) { \
                 *ptarget = JS_UNDEFINED; \
                 break; \
+            } \
         } \
         *ptarget = array; \
     } while (false)
