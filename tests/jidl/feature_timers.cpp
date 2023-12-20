@@ -90,7 +90,7 @@ static Point* __with_optional(FeatureInstanceHandle handle, int64_t data, const 
 static void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t data, FtArray& array)
 {
     FTArrayHelper<Point*> point_array(&array);
-    printf("%s: point_array size: %d\n", __func__, point_array.size());
+    printf("%s: point_array size: %" PRIi32 "\n", __func__, point_array.size());
     printf("point_array = [\n");
     for (int32_t i = 0; i < point_array.size(); i++) {
         Point& p = *point_array[i];
@@ -102,10 +102,10 @@ static void __recv_point_ptr_array_ptr(FeatureInstanceHandle handle, int64_t dat
 static void __recv_string_array_ptr(FeatureInstanceHandle handle, AppendData data, FtArray& array)
 {
     FTArrayHelper<const char*> point_array(&array);
-    printf("%s: point_array size: %d\n", __func__, point_array.size());
+    printf("%s: point_array size: %" PRIi32 "\n", __func__, point_array.size());
     printf("point_array = [\n");
     for (int32_t i = 0; i < point_array.size(); i++) {
-        printf("    %d: %s\n", i, point_array[i]);
+        printf("    %" PRIi32 ": %s\n", i, point_array[i]);
     }
     printf("]\n");
 }

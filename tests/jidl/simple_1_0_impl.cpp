@@ -333,10 +333,10 @@ void Simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData da
 FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray& values)
 {
     FTArrayHelper<int> int_array(&values);
-    printf("%s::%s(), int_array size: %d\n", file_tag,  __FUNCTION__, int_array.size());
+    printf("%s::%s(), int_array size: %" PRIi32 "\n", file_tag,  __FUNCTION__, int_array.size());
     printf("int_array = [\n");
     for (int32_t i = 0; i < int_array.size(); i++) {
-        printf("  index %d: %d\n", i, int_array[i]);
+        printf("  index %" PRIi32 ": %d\n", i, int_array[i]);
     }
     printf("]\n");
     return -1;
@@ -404,7 +404,7 @@ FtInt Simple_wrap_bar7(FeatureInstanceHandle feature, AppendData data, FtArray& 
     //FTArrayHelper<struct_test_Array> struct_array(&values);
     printf("struct_array = [\n");
     for (int32_t i = 0; i < values._size; i++) {
-        printf("  index %d:", i);
+        printf("  index %" PRIi32 ":", i);
         struct_test_Array* struct_array = ((struct_test_Array**)values._element)[i];
         printf("  page_count: %d, title: %s, is_end: %d\n", struct_array->_page_count, struct_array->_title, struct_array->_is_end);
     }
