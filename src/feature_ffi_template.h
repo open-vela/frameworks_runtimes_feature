@@ -323,10 +323,12 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
                 nativeToTarget<bool>(ctx, pnative, target);
             } break;
             case FT_CHAR: {
-                if (!pnative)
-                    nativeToTarget<const char*>(ctx, (void*)(""), target);
-                else
-                    nativeToTarget<const char*>(ctx, pnative, target);
+                if (!pnative) {
+                    const char* empty_str = "";
+                    nativeToTarget<const char*>(ctx, &empty_str, target);
+                } else {
+                    nativeToTarget<const char*>(ctx, &pnative, target);
+                }
             } break;
             case FT_ANY: {
                 if (!pnative) {
