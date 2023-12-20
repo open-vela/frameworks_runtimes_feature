@@ -191,7 +191,7 @@ static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
 }
 #endif
 
-void feat_test_once(char* js_file, char* js_str, char* test_all, char* mfst_content, int time_limit)
+void feat_test_once(char* js_file, char* js_str, const char* test_all, char* mfst_content, int time_limit)
 {
     FeatTestEnv env;
     env.filename = js_file;
@@ -342,7 +342,7 @@ extern "C" int main(int argc, char** argv)
     int time_limit = TIME_LIMIT;
     int times = 1;
 
-    char* test_all = "__feat_test_all();";
+    const char* test_all = "__feat_test_all();";
     char* js_file = NULL;
     char* js_str = NULL;
 

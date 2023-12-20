@@ -89,6 +89,7 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     feature_mark_value(rt, js_proto, mark_func);
 }
 
+#if 0
 static feature_value_t new_method_call(feature_context_ref ctx, feature_value_t this_val,
     int argc, feature_value_t* argv, int magic)
 {
@@ -157,6 +158,7 @@ static feature_value_t new_const_get(feature_context_ref ctx, feature_value_t th
         feature_dup_value(ctx, ret_val), FEATURE_PROP_CONFIGURABLE);
     return ret_val;
 }
+#endif
 
 /**
  * @brief invoke method, support：
