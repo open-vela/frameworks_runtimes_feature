@@ -227,6 +227,7 @@ static inline JSValue getVariArg(JSContext* ctx, JSValue& arg)
 
 static inline void toTargetPromise(JSContext* ctx, const JSValue& promise, JSValue& ret_val)
 {
+    ret_val = promise;
 }
 
 }
