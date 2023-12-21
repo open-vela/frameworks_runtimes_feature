@@ -355,13 +355,13 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
             case FT_CHAR: {
                 void* str = get_wasm_args_by_type(void*, value);
                 /* get cstring from wasm string (stringref path) */
-                uint32_t str_len = 0, len = 0;
+                uint32_t str_len = 0;
                 if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
                     str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
                 }
                 char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
                 if (buffer != nullptr) {
-                    len = wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
+                    wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
                 }
                 char* alloc_ptr = (char*)FeatureMalloc(strlen(buffer) + 1, FT_CHAR);
                 strcpy(alloc_ptr, buffer);
@@ -400,7 +400,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                 wasm_struct_obj_t wasm_obj = get_wasm_args_by_type(wasm_struct_obj_t, value);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
-                    auto member = &objMapType.members[i];
+                    member = &objMapType.members[i];
                     wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
                     void *member_ptr = (void *)((char *)ptr + member->offset);
                     bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, *((uint64_t*)&val));

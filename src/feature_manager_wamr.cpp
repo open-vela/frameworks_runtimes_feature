@@ -78,17 +78,16 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
     native_raw_get_arg(void*, thiz_ptr, args);
     native_raw_get_arg(void *, str, args);
 
-    wasm_value_t arr_obj = { 0 };
     wasm_stringref_obj_t str_ref = (wasm_stringref_obj_t)str;
 
     /* get cstring from wasm string (stringref args) */
-    uint32_t str_len = 0, len = 0;
+    uint32_t str_len = 0;
     if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
         str_len = wasm_string_get_length(str_ref);
     }
     char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
     if (buffer != nullptr) {
-        len = wasm_string_to_cstring(str_ref, buffer, str_len + 1);
+        wasm_string_to_cstring(str_ref, buffer, str_len + 1);
     }
 
     FEATURE_LOG_INFO("class name: %s", buffer);
@@ -98,7 +97,7 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
     manager->require(exec_env, (wasm_obj_t)thiz_ptr, buffer);
 
     // set object destructor func
-    bool ret = wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)thiz_ptr,(wasm_obj_finalizer_t)module_object_finalizer, manager);
+    wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)thiz_ptr,(wasm_obj_finalizer_t)module_object_finalizer, manager);
 }
 
 static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
@@ -223,10 +222,8 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t *wasm_ret_p = args;
     uint64_t wasm_ret;
-    native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
-    FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
     MemberConst& member_const = member->value;
@@ -249,7 +246,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 
     // wasm array values for rest parameters
     wasm_value_t wasm_array_data = { 0 }, wasm_array_len = { 0 };
-    wasm_array_obj_t wasm_arr_ref;
+    wasm_array_obj_t wasm_arr_ref = NULL;
 
     WamrAttachment* attachment = (WamrAttachment*)wasm_runtime_get_function_attachment(exec_env);
     FeatureManagerWamr* manager = attachment->manager;
@@ -329,7 +326,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     }
 
     do {
-        for (int i = 0; i < fixed_argc; i++) {
+        for (size_t i = 0; i < fixed_argc; i++) {
             uint64_t curr_arg = args[i];
             auto param = method_params[i];
             if (FT_IS_PROMISE(param)) {
@@ -368,13 +365,13 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
             for (int i = 0; i + fixed_argc < argc; i++) {
                 void *addr = wasm_array_obj_elem_addr(wasm_arr_ref, i);
                 wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
-                feature_value_t *js_any_ptr = (feature_value_t *)wasm_anyref_obj_get_value(anyref);	
+                feature_value_t *js_any_ptr = (feature_value_t *)wasm_anyref_obj_get_value(anyref);
                 // just passthrough guest param pointers
                 auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
                 *js_val_ptr = *js_any_ptr;
             }
         } else if (optional_argc > 0) {
-            for (int i = argc; i < fixed_argc; i++) {
+            for (size_t i = argc; i < fixed_argc; i++) {
                 auto param = method_params[i];
                 FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
                 OptionalType* optional_type = (OptionalType*)FT_GET_COMPLEX(param);
@@ -455,7 +452,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     } while (0);
 
     // free ffi call resources
-    for (int i = 0; i < fixed_argc; i++) {
+    for (size_t i = 0; i < fixed_argc; i++) {
         // free type
         if (ffi_arg_types[i + extra_argc]) {
             freeTypeDeclaration(ffi_arg_types[i + extra_argc]);
@@ -536,7 +533,6 @@ bool FeatureManagerWamr::init()
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto name = pair.first;
         auto description = pair.second.first;
-        auto proto = pair.second.second;
         FEATURE_CHECK_NE(description, nullptr);
 
         if (strcmp(name.data(), "ATest") != 0 &&
@@ -591,7 +587,7 @@ void FeatureManagerWamr::release()
 
     /* delete nativesymbol */
     if(!native_symbols_.empty()){
-      for(int i = 0; i < native_symbols_.size(); i++){
+      for(size_t i = 0; i < native_symbols_.size(); i++){
         delete native_symbols_[i];
       }
     }
@@ -691,7 +687,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 {
    /* register interface api */
     if (description->members->type == MEMBER_METHOD) {
-        for (size_t i = 0; i < description->member_count; i++) {
+        for (int i = 0; i < description->member_count; i++) {
             Member member = description->members[i];
             FeatureType feature_type =  member.method.return_type;
             if (feature_type == FT_VOID || !FT_IS_COMPLEX(feature_type))
@@ -701,11 +697,11 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 continue;
 
             InterfaceType *interface_type = (InterfaceType *)complex_type;
-            const FeatureDescription* description = interface_type->desc;
-            if (description->name) {
-                registered_interfaces_[description->name] = std::pair<const FeatureDescription *, FeaturePrototype *>(description, nullptr);
+            const FeatureDescription* desc = interface_type->desc;
+            if (desc->name) {
+                registered_interfaces_[desc->name] = std::pair<const FeatureDescription *, FeaturePrototype *>(desc, nullptr);
             }
-            registerFeature(description);
+            registerFeature(desc);
         }
     }
 

@@ -93,11 +93,10 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative)
     if (!wasm_obj_is_stringref_obj((wasm_obj_t)str))
         return false;
 
-    uint32_t len = 0;
     uint32_t str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
     char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
     if (buffer != nullptr) {
-        len = wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
+        wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
     }
     *pnative = buffer;
     return true;

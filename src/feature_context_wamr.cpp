@@ -30,13 +30,11 @@ typedef struct WamrContext {
 } WamrContext;
 
 static ft_type _ft_get_type (ft_context_ref ft_ctx, ft_value_t ft_val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     return FT_TYPE_NONE;
 }
 
 // value creation
 static ft_value_t _ft_int(ft_context_ref ft_ctx, int32_t val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     wamr_val_t ret;
     ret.wm_val.of.i32 = val;
     ret.wm_val.kind = WASM_I32;
@@ -44,7 +42,6 @@ static ft_value_t _ft_int(ft_context_ref ft_ctx, int32_t val) {
 }
 
 static ft_value_t _ft_uint(ft_context_ref ft_ctx, uint32_t val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     wamr_val_t ret;
     ret.wm_val.of.i32 = (int32_t)val; // to be fixed
     ret.wm_val.kind = WASM_I32;
@@ -52,7 +49,6 @@ static ft_value_t _ft_uint(ft_context_ref ft_ctx, uint32_t val) {
 }
 
 static ft_value_t _ft_int64(ft_context_ref ft_ctx, int64_t val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     wamr_val_t ret;
     ret.wm_val.of.i64 = val;
     ret.wm_val.kind = WASM_I64;
@@ -60,7 +56,6 @@ static ft_value_t _ft_int64(ft_context_ref ft_ctx, int64_t val) {
 }
 
 static ft_value_t _ft_uint64(ft_context_ref ft_ctx, uint64_t val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     wamr_val_t ret;
     ret.wm_val.of.i64 = (int64_t)val;  // to be fixed
     ret.wm_val.kind = WASM_I64;
@@ -68,7 +63,6 @@ static ft_value_t _ft_uint64(ft_context_ref ft_ctx, uint64_t val) {
 }
 
 static ft_value_t _ft_double(ft_context_ref ft_ctx, double val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     wamr_val_t ret;
     ret.wm_val.of.f64 = val;
     ret.wm_val.kind = WASM_F64;
@@ -77,7 +71,6 @@ static ft_value_t _ft_double(ft_context_ref ft_ctx, double val) {
 }
 
 static ft_value_t _ft_boolean(ft_context_ref ft_ctx, bool val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     wamr_val_t ret;
     ret.wm_val.of.i32 = (int32_t)val; // to be fixed
     ret.wm_val.kind = WASM_I32;
@@ -85,141 +78,120 @@ static ft_value_t _ft_boolean(ft_context_ref ft_ctx, bool val) {
 }
 
 static ft_value_t _ft_string(ft_context_ref ft_ctx, const char* val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // wasm_struct_obj_t str_obj = to_wamr_str(wasm_env, val);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_int_array (ft_context_ref ft_ctx, int32_t* val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_uint_array (ft_context_ref ft_ctx, uint32_t* val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_int64_array (ft_context_ref ft_ctx, int64_t* val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_uint64_array (ft_context_ref ft_ctx, uint64_t* val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_double_array (ft_context_ref ft_ctx, double* val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_bool_array (ft_context_ref ft_ctx, bool* val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 static ft_value_t _ft_string_array (ft_context_ref ft_ctx, const char** val, uint32_t size) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     // to be implemented
     return WM_VAL_TO_FT(ret);
 }
 
 // convert
 static const char* _ft_to_string(ft_context_ref ft_ctx, ft_value_t f_val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     const char* ret_str = "hellp";
     return ret_str;
 }
 
 static bool _ft_to_int(ft_context_ref ft_ctx, ft_value_t f_val, int32_t* pres) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 static bool _ft_to_uint(ft_context_ref ft_ctx, ft_value_t f_val, uint32_t* pres) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 static bool _ft_to_int64(ft_context_ref ft_ctx, ft_value_t f_val, int64_t* pres) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 static bool _ft_to_uint64(ft_context_ref ft_ctx, ft_value_t f_val, uint64_t* pres) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 static bool _ft_to_double(ft_context_ref ft_ctx, ft_value_t f_val, double* pres) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 static bool _ft_to_bool(ft_context_ref ft_ctx, ft_value_t f_val, bool* b) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 static uint32_t _ft_array_size(ft_context_ref ft_ctx, const ft_value_t f_obj) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return 0;
 }
 
 static ft_value_t _ft_array_at(ft_context_ref ft_ctx, const ft_value_t f_obj, uint32_t idx) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     return WM_VAL_TO_FT(ret);
 }
 
 // object operations
 static ft_value_t _ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t f_obj, const char* key) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
-    wamr_val_t ret;
+    wamr_val_t ret = { 0 };
     return WM_VAL_TO_FT(ret);
 }
 
 static bool _ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t f_obj, const char* prop, ft_value_t f_val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
     return true;
 }
 
 // free value
 static void _ft_free_value(ft_context_ref ft_ctx, ft_value_t f_val) {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
 }
 
 static void _ft_free_string (ft_context_ref ft_ctx, const char* str)  {
-    wasm_exec_env_t wasm_env = GET_WAMR_ENV(ft_ctx);
     // to be implemented
 }
 
