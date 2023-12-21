@@ -76,7 +76,7 @@ void ClientConnection::sessionSend(SessionId id, const std::string &msg) {
     // TODO:目前认为binder线程与js线程在同一个线程, 后续需要做兼容
     // 判断服务是否alive；如果alive，再发送消息
     if (!android::IInterface::asBinder(service)->isBinderAlive()) {
-      ALOGE("imessagetransport service is not alive:%d", id);
+      ALOGE("imessagetransport service is not alive:%" PRIi32 "", id);
       return;
     }
     sp<SessionMessageReply> reply;
@@ -90,7 +90,7 @@ void ClientConnection::sessionSend(SessionId id, const std::string &msg) {
     }
     Status status = service->sendSessionMessage(msg, reply);
     if (!status.isOk()) {
-      ALOGE("sendSessionMessage error: %s. SessionId(%d)",
+      ALOGE("sendSessionMessage error: %s. SessionId(%" PRIi32 ")",
             status.toString8().c_str(), id);
     }
   }
