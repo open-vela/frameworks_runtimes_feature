@@ -132,7 +132,6 @@ static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_ar
 {
     uint32_t i, type_count;
     bool is_mutable = true;
-    wasm_value_t val = {0};
     type_count = wasm_get_defined_type_count(module);
     for (i = 0; i < type_count; i++) {
         wasm_defined_type_t type = wasm_get_defined_type(module, i);
@@ -375,8 +374,8 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *callbackType, Wamr
                         sizeof(wasm_struct_obj_t));
             occupied_slots += sizeof(wasm_struct_obj_t) / sizeof(uint32);
         }
-        bool ret = wasm_runtime_call_func_ref(exec_env, (wasm_func_obj_t)func_obj.gc_obj,
-                                                occupied_slots, argv);
+        wasm_runtime_call_func_ref(exec_env, (wasm_func_obj_t)func_obj.gc_obj,
+                                        occupied_slots, argv);
     } while (0);
 
     return 0;
