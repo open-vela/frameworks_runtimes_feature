@@ -33,6 +33,19 @@ namespace ferry {
 
 namespace FeatureFFIQjs {
 
+    static void* interface_from_target(feature_value_t& target)
+    {
+        auto opaque = feature_get_opaque(target, FeatureManagerQjs::jsClassId());
+        FEATURE_LOG_DEBUG("value: %p, get opaque: %p", JS_VALUE_GET_PTR(target), opaque);
+        FEATURE_CHECK_NE(opaque, nullptr);
+        return opaque;
+    }
+
+    static feature_value_t target_from_interface(FeatureInstance* instance)
+    {
+        return ((FeatureInstanceQjs*)instance)->createTargetInterface();
+    }
+
     bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
         context_ref ctx, feature_value_t value)
     {
@@ -339,7 +352,7 @@ namespace FeatureFFIQjs {
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
-                ptr = ((FeatureInstanceQjs*)instance)->getNativeInterface(value);
+                ptr = interface_from_target(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -500,8 +513,14 @@ namespace FeatureFFIQjs {
                     InterfaceType* interface_type = (InterfaceType*)complexType;
                     FEATURE_CHECK_NE(interface_type->desc, nullptr);
                     FEATURE_CHECK_NE(ptr, nullptr);
-                    auto interface_ptr = static_cast<FeatureInstanceQjs*>(ptr);
-                    value = interface_ptr->createTargetInterface(interface_type->desc);
+                    auto pinstance = static_cast<FeatureInstance*>(ptr);
+                    if (pinstance->isInterface() && !pinstance->isInitialized()) {
+                        FeaturePrototype* module_proto = pinstance->prototype();
+                        FeaturePrototype* intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
+                        pinstance->setPrototype(intf_proto);
+                        pinstance->setInitialized();
+                    }
+                    value = target_from_interface(pinstance);
                 } break;
                 default: {
                     FEATURE_LOG_ERROR("unsupported complex type !");

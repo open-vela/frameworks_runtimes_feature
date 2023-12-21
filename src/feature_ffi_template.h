@@ -257,7 +257,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                 return false;
             } break;
             case COMPLEX_INTERFACE: {  // to do by wjf
-                pnative = instance->getNativeInterface(target);
+                pnative = value_translator::interfaceFromTarget(target);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -409,8 +409,14 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
                 InterfaceType* interface_type = (InterfaceType*)complex_type;
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(pnative, nullptr);
-                auto interface_ptr = static_cast<TInstance*>(pnative);
-                target = interface_ptr->createTargetInterface(interface_type->desc);
+                auto pinstance = static_cast<FeatureInstance*>(pnative);
+                if (pinstance->isInterface() && !pinstance->isInitialized()) {
+                    FeaturePrototype* module_proto = pinstance->prototype();
+                    FeaturePrototype* intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
+                    pinstance->setPrototype(intf_proto);
+                    pinstance->setInitialized();
+                }
+                target = value_translator::targetFromInterface(pinstance);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -428,7 +434,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     FEATURE_CHECK_NE(instance, nullptr);
     FEATURE_CHECK_NE(member, nullptr);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     const auto& method = member->method;
     auto param_types = method.parameters;
 
@@ -643,7 +649,7 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     void* data_ptr = &accessor->data;
     FeatureType feature_type = accessor->type;
     FEATURE_CHECK_NE(feature_type, FT_VOID);
-    bool is_dynamic = instance->prototype()->description->dynamic;
+    bool is_dynamic = instance->prototype()->description()->dynamic;
     NativeFunc callback = is_dynamic ?
             instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
@@ -702,7 +708,7 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
     FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR, true);
     MemberAccessor* accessor = &member->accessor;
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
-    bool is_dynamic = instance->prototype()->description->dynamic;
+    bool is_dynamic = instance->prototype()->description()->dynamic;
     NativeFunc callback = is_dynamic ?
             instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
@@ -759,7 +765,7 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
     FEATURE_CHECK_EQ(member->type == MEMBER_CONST, true);
 
     bool got_error = false;
-    bool is_dynamic = instance->prototype()->description->dynamic;
+    bool is_dynamic = instance->prototype()->description()->dynamic;
     MemberConst* member_const = &member->value;
     void* data_ptr = &member_const->data;
     FeatureType feature_type = member_const->type;

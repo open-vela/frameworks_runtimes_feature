@@ -15,6 +15,8 @@
  */
 
 #include "value_translator_qjs.h"
+#include "feature_manager_qjs.h"
+#include "feature_instance_qjs.h"
 
 #define MAKE_JS_ARRAY(ctx, func, argv, argc, ptarget) \
     do { \
@@ -207,6 +209,19 @@ JSValue parseJson(JSContext* ctx, const char* buf, size_t buf_len, const char* f
         return JS_UNDEFINED;
     }
     return obj;
+}
+
+void* interfaceFromTarget(JSValue& target)
+{
+    auto opaque = JS_GetOpaque(target, ferry::FeatureManagerQjs::jsClassId());
+    FEATURE_LOG_DEBUG("value: %p, get opaque: %p", JS_VALUE_GET_PTR(target), opaque);
+    FEATURE_CHECK_NE(opaque, nullptr);
+    return opaque;
+}
+
+JSValue targetFromInterface(void* instance)
+{
+    return ((ferry::FeatureInstanceQjs*)instance)->createTargetInterface();
 }
 
 }

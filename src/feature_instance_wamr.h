@@ -39,12 +39,11 @@ typedef struct WamrCallbackData {
 
 class FeatureInstanceWamr : public FeatureInstance, InstanceBase<uint64_t> {
 public:
-    FeatureInstanceWamr(struct FeaturePrototype* prototype, VTable* vtable);
+    FeatureInstanceWamr(FeaturePrototype* proto);
+    FeatureInstanceWamr(FeaturePrototype* module_proto, VTable* vtable);
     virtual ~FeatureInstanceWamr();
 
     virtual int getSameCallback(FtCallbackId cid);
-
-    virtual FeatureInstance* createInterface(VTable* vtable);
 
     virtual bool removeCallback(FtCallbackId cid);
 
@@ -57,10 +56,6 @@ public:
     WamrCallbackData getCallback(FtCallbackId cid);
 
     virtual FtCallbackId addCallback(uint64_t& value, CallbackType* callbackType);
-
-    virtual uint64_t createTargetInterface(const FeatureDescription* description);
-
-    virtual void* getNativeInterface(uint64_t& target);
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 

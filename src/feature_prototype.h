@@ -19,7 +19,6 @@
 
 #include "feature_description.h"
 #include "feature_manager.h"
-#include "feature_common.h"
 
 #include <map>
 #include <memory>
@@ -29,61 +28,18 @@ namespace ferry {
 
 class FeatureInstance;
 
-/**
- * @brief Feature Protoype struct
- * all informations needed by JS prototype is saved in it
- *
- */
 class FeaturePrototype {
+
 public:
-    std::vector<std::unique_ptr<FeatureInstance>> instances;
-    ft_value_t ft_proto; // ft prototype object, it's undefined at first
-    FeatureDescription* description; // description pointer, used for feature management logic
-    struct weakref_list_node weak_ref_list; // weak ref list, used to release all weak ref when prototype is destroyed
-    int weak_ref_count = 0; // weak ref count
+    FeaturePrototype(const FeatureDescription* description);
+    virtual ~FeaturePrototype();
 
-    /**
-     * @brief FeaturePrototype constructor
-     *
-     * @param description
-     */
-    FeaturePrototype(const FeatureDescription* feature_desc);
-
-    /**
-     * @brief Destroy the Feature Prototype object
-     *
-     */
-    ~FeaturePrototype();
-
-    /**
-     * @brief add FeatureInstance
-     *
-     * @param inst
-     * @return int
-     */
     int addInstance(std::unique_ptr<FeatureInstance>&& inst);
 
-    /**
-     * @brief Remove FeatureInstance by index
-     *
-     * @param pos
-     * @return true
-     * @return false
-     */
     bool removeInstance(size_t pos);
 
-    /**
-     * @brief if there has any instance alive
-     *
-     * @return true
-     * @return false
-     */
     bool hasInstanceAlive();
 
-    /**
-     * @brief free instance that hold by this class
-     *
-     */
     void clearAllInstances();
 
     void setFeatureManager(FeatureManager* manager) { feature_manager_ = manager; }
@@ -94,18 +50,30 @@ public:
 
     void* native() { return native_; }
 
-    FeaturePrototype* getChild(const char* name);
+    std::map<const char*, std::unique_ptr<FeaturePrototype>>& children() { return children_; }
 
-    void addChild(const char* name, FeaturePrototype* child);
+    std::vector<std::unique_ptr<FeatureInstance>>& instances() { return instances_; }
 
-    FeaturePrototype* removeChild(const char* name);
+    const FeatureDescription* description() { return description_; }
 
-    std::map<const char*, FeaturePrototype*>& children() { return children_; }
+    void setModulePrototype(FeaturePrototype* proto) { module_proto_ = proto; }
+
+    FeaturePrototype* modulePrototype() { return module_proto_; }
+
+    FeaturePrototype* getInterfacePrototype(const FeatureDescription* description);
+
+    virtual FeatureInstance* createInterface(VTable* vtable) = 0;
+
+protected:
+    virtual FeaturePrototype* createInterfacePrototype(const FeatureDescription* description) = 0;
 
 private:
     void* native_ = nullptr;
+    const FeatureDescription* description_;
     FeatureManager* feature_manager_ = nullptr;
-    std::map<const char*, FeaturePrototype*> children_; // all interface instance prototype
+    FeaturePrototype* module_proto_ = nullptr;
+    std::map<const char*, std::unique_ptr<FeaturePrototype>> children_; // all interface instance prototype
+    std::vector<std::unique_ptr<FeatureInstance>> instances_;
 };
 
 }

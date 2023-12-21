@@ -23,10 +23,10 @@
 #include "feature_ffi_template.h"
 #include "feature_ffi_wamr.h"
 #include "feature_instance_wamr.h"
+#include "feature_prototype_wamr.h"
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
-#include "feature_prototype.h"
 #include "feature_wamr_utils.h"
 
 #include "libdyntype_export.h"
@@ -111,7 +111,7 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor *accessor = &member->accessor;
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     /* deal with interface real instance (include member vatable) */
     wasm_value_t val = { 0 };
     if (description->dynamic) {
@@ -170,7 +170,7 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
     Member* member = manager->getFeatureMember(attachment->description, attachment->index);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor *accessor = &member->accessor;
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     /* deal with interface real instance (include member vatable) */
     wasm_value_t val = { 0 };
     if (description->dynamic) {
@@ -252,7 +252,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     FeatureManagerWamr* manager = attachment->manager;
     FeatureInstance *instance = manager->getFeatureInstance((wasm_obj_t)thiz_ptr);
     JSContext* js_ctx = (JSContext*)ft_context_get_data(manager->getFeatureContext());
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
 
     /* deal with interface real instance (include member vatable) */
     wasm_value_t val = { 0 };
@@ -632,7 +632,7 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
     if (!feature_pair || !feature_pair->first) {
         FEATURE_LOG_WARN("can't find native feature '%s'!", name);
         return false;
-    } 
+    }
     auto description = feature_pair->first;
 
     wamr_env_ = ctx;
@@ -645,7 +645,7 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
 
     if (!proto) {
         // create proto
-        proto = new FeaturePrototype(feature_pair->first);
+        proto = new FeaturePrototypeWamr(description);
         if (!description->dynamic && description->native_callbacks->onCreate) {
             FEATURE_LOG_DEBUG("invoke onCreate callback...");
             description->native_callbacks->onCreate(ctx, proto);
@@ -656,17 +656,18 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
     }
 
     // create feature instance for the required object
-    auto featureInstance = std::make_unique<FeatureInstanceWamr>(proto, nullptr);
-    feature_instance_map_[thiz] = featureInstance.get();
+    auto instance = std::make_unique<FeatureInstanceWamr>(proto, nullptr);
+    auto instance_ptr = instance.get();
+    feature_instance_map_[thiz] = instance_ptr;
 
     // insert into instances array, update iid
-    int iid = proto->addInstance(std::move(featureInstance));
-    proto->instances[iid]->setInstanceId(iid);
-    
+    int iid = proto->addInstance(std::move(instance));
+    instance_ptr->setInstanceId(iid);
+
     // create prototype class instance
     if (description->native_callbacks && description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        description->native_callbacks->onRequired(ctx, proto->instances[iid].get());
+        description->native_callbacks->onRequired(ctx, instance_ptr);
     }
 
     return true;

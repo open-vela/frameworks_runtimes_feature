@@ -26,10 +26,6 @@ template<typename TTarget>
 class InstanceBase {
 public:
     virtual FtCallbackId addCallback(TTarget& value, CallbackType* callbackType) = 0;
-
-    virtual TTarget createTargetInterface(const FeatureDescription* description) = 0;
-
-    virtual void* getNativeInterface(TTarget& target) = 0;
 };
 
 }

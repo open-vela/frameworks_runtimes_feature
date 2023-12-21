@@ -15,8 +15,6 @@
  */
 
 #include "feature_prototype.h"
-#include "feature_context_private.h"
-#include "feature_description.h"
 #include "feature_instance.h"
 #include "feature_log.h"
 
@@ -28,64 +26,48 @@
 using namespace FEATURE;
 
 namespace ferry {
-/**
- * @brief FeaturePrototype constructor
- *
- * @param description
- */
-FeaturePrototype::FeaturePrototype(const FeatureDescription* feature_desc)
-    : description(const_cast<FeatureDescription*>(feature_desc))
-    , native_(nullptr)
+
+FeaturePrototype::FeaturePrototype(const FeatureDescription* description)
+    : native_(nullptr)
+    , description_(description)
+    , module_proto_(this)
 {
     // default capacity as 10 element
-    instances.reserve(10);
-    weakref_list_initialize(&weak_ref_list);
+    instances_.reserve(10);
 }
 
 FeaturePrototype::~FeaturePrototype()
 {
     clearAllInstances();
+    children_.clear();
 }
 
-/**
- * @brief add FeatureInstance
- *
- * @param inst
- * @return int
- */
 int FeaturePrototype::addInstance(std::unique_ptr<FeatureInstance>&& inst)
 {
-    auto pos = std::find_if(instances.begin(), instances.end(), [](const std::unique_ptr<FeatureInstance>& target) {
+    auto pos = std::find_if(instances_.begin(), instances_.end(), [](const std::unique_ptr<FeatureInstance>& target) {
         return target == nullptr;
     });
     // it's full, append at end
-    if (pos == instances.end()) {
-        instances.emplace_back(std::move(inst));
-        return instances.size() - 1;
+    if (pos == instances_.end()) {
+        instances_.emplace_back(std::move(inst));
+        return instances_.size() - 1;
     }
     // insert into pos
     *pos = std::move(inst);
-    return std::distance(instances.begin(), pos);
+    return std::distance(instances_.begin(), pos);
 }
 
-/**
- * @brief Remove FeatureInstance by index
- *
- * @param pos
- * @return true
- * @return false
- */
 bool FeaturePrototype::removeInstance(size_t pos)
 {
-    if (pos >= instances.size())
+    if (pos >= instances_.size())
         return false;
-    instances[pos] = nullptr;
+    instances_[pos] = nullptr;
     return true;
 }
 
 bool FeaturePrototype::hasInstanceAlive()
 {
-    for (auto& inst : instances) {
+    for (auto& inst : instances_) {
         if (inst) {
             return true;
         }
@@ -95,26 +77,17 @@ bool FeaturePrototype::hasInstanceAlive()
 
 void FeaturePrototype::clearAllInstances()
 {
-    instances.clear();
+    instances_.clear();
 }
 
-FeaturePrototype* FeaturePrototype::getChild(const char* name) {
-    if (!children_.count(name))
-        return nullptr;
-    return children_[name];
-}
-
-void FeaturePrototype::addChild(const char* name, FeaturePrototype* child) {
-    children_[name] = child;
-}
-
-FeaturePrototype* FeaturePrototype::removeChild(const char* name) {
-    if (!children_.count(name))
-        return nullptr;
-
-    FeaturePrototype* child = children_[name];
-    children_.erase(name);
-    return child;
+FeaturePrototype* FeaturePrototype::getInterfacePrototype(const FeatureDescription* description) {
+    const char* name = description->name;
+    std::unique_ptr<FeaturePrototype>& intf_proto = children_[name];
+    if (!intf_proto) {
+        intf_proto.reset(createInterfacePrototype(description));
+        intf_proto->setModulePrototype(this);
+    }
+    return intf_proto.get();
 }
 
 }

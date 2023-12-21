@@ -17,7 +17,6 @@
 #include "feature_instance.h"
 #include "feature_context.h"
 #include "feature_log.h"
-#include "feature_prototype.h"
 #include "feature_utils.h"
 
 #include <string.h>
@@ -26,12 +25,23 @@ using namespace FEATURE;
 namespace ferry {
 
 /////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* proto, VTable* vtable)
+FeatureInstance::FeatureInstance(FeaturePrototype* proto)
     : instance_id_(-1)
+    , is_interface_(0)
+    , initialized_(0)
+    , vtable_(nullptr)
+    , native_(nullptr)
+    , proto_(proto)
+{
+}
+
+FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, VTable* vtable)
+    : instance_id_(-1)
+    , is_interface_(vtable ? 1 : 0)
+    , initialized_(0)
     , vtable_(vtable)
     , native_(nullptr)
-    , parent_(nullptr)
-    , proto_(proto)
+    , proto_(module_proto)
 {
 }
 
