@@ -25,7 +25,7 @@
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
-#include "feature_prototype.h"
+#include "feature_prototype_qjs.h"
 
 #include <assert.h>
 #include <ffi.h>
@@ -71,6 +71,11 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
     // check if all instance be deleted and we can delete the FeaturePrototype
 }
 
+static inline FeaturePrototypeQjs* getPrototype(FeatureInstance* instance)
+{
+    return static_cast<FeaturePrototypeQjs*>(instance->prototype());
+}
+
 static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_mark_func mark_func)
 {
     FeatureInstance* instance = getInstance(val);
@@ -79,13 +84,13 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
         return;
     }
 
-    auto proto = instance->prototype();
+    auto proto = getPrototype(instance);
     FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
     // mark all instance values
     instance_qjs->markValues(rt, mark_func);
 
     // should mark feature prototype object.
-    auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto);
+    auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto());
     feature_mark_value(rt, js_proto, mark_func);
 }
 
@@ -96,7 +101,7 @@ static feature_value_t new_method_call(feature_context_ref ctx, feature_value_t 
     int index = magic;
     FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     Member* member = const_cast<Member*>(&description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
@@ -112,7 +117,7 @@ static feature_value_t new_accessor_get(feature_context_ref ctx, feature_value_t
     int index = magic;
     FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     Member* member = const_cast<Member*>(&description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
@@ -128,7 +133,7 @@ static feature_value_t new_accessor_set(feature_context_ref ctx, feature_value_t
     int index = magic;
     FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     Member* member = const_cast<Member*>(&description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
@@ -144,7 +149,7 @@ static feature_value_t new_const_get(feature_context_ref ctx, feature_value_t th
     int index = magic;
     FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     Member* member = const_cast<Member*>(&description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
@@ -182,7 +187,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    auto description = instance->prototype()->description;
+    auto description = instance->prototype()->description();
     Member* member = const_cast<Member*>(&description->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto& method = member->method;
@@ -399,9 +404,9 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
+    Member* member = const_cast<Member*>(&instance->prototype()->description()->members[index]);
     FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR || member->type == MEMBER_CONST, true);
-    bool is_dynamic = instance->prototype()->description->dynamic;
+    bool is_dynamic = instance->prototype()->description()->dynamic;
     if (member->type == MEMBER_ACCESSOR) {
         MemberAccessor* accessor = &member->accessor;
         data_ptr = &accessor->data;
@@ -467,11 +472,11 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(&instance->prototype()->description->members[index]);
+    Member* member = const_cast<Member*>(&instance->prototype()->description()->members[index]);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor* accessor = &member->accessor;
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
-    bool is_dynamic = instance->prototype()->description->dynamic;
+    bool is_dynamic = instance->prototype()->description()->dynamic;
     NativeFunc callback = is_dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
     // handle parameter
@@ -514,7 +519,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
     FEATURE_CHECK_NE(member_const.type, FT_VOID);
     // we do not handle interface intializer here, handle it as getter function.
-    FEATURE_CHECK_EQ(prototype->description->dynamic && member_const.func.vtable_idx != -1, false);
+    FEATURE_CHECK_EQ(prototype->description()->dynamic && member_const.func.vtable_idx != -1, false);
     // invoke callback to get constant value
     if (member_const.func.callback) {
         // create type using featureType description
@@ -566,7 +571,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
     return ret_val;
 }
 
-static int initialize_prototype(context_ref ctx, FeatureDescription* description, FeaturePrototype* prototype, feature_value_t js_proto)
+static int initialize_prototype(context_ref ctx, const FeatureDescription* description, FeaturePrototype* prototype, feature_value_t js_proto)
 {
     FEATURE_CHECK(description != nullptr && prototype != nullptr);
     for (int i = 0; i < description->member_count; i++) {
@@ -678,9 +683,9 @@ FeatureManagerQjs::~FeatureManagerQjs()
 {
 }
 
-bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototype* prototype)
+bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototypeQjs* prototype)
 {
-    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
+    auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto());
     if (!feature_is_undefined(*js_proto_ptr))
         return true;
 
@@ -691,18 +696,18 @@ bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototype* prototype)
         return false;
     }
 
-    initialize_prototype(ctx, prototype->description, prototype, js_proto);
+    initialize_prototype(ctx, prototype->description(), prototype, js_proto);
     // TODO: initialize js_proto using description
-    if (prototype->description->native_callbacks && prototype->description->native_callbacks->onCreate) {
+    if (prototype->description()->native_callbacks && prototype->description()->native_callbacks->onCreate) {
         FEATURE_LOG_DEBUG("invoke onCreate callback...");
-        prototype->description->native_callbacks->onCreate(ctx, prototype);
+        prototype->description()->native_callbacks->onCreate(ctx, prototype);
     }
 
     *js_proto_ptr = js_proto;
     return true;
 }
 
-feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototype* prototype, FeatureInstance* instance)
+feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototypeQjs* prototype, FeatureInstance* instance)
 {
     ft_context_ref ft_ctx = getFeatureContext();
     auto ctx = (feature_context_ref)ft_context_get_data(ft_ctx);
@@ -718,9 +723,11 @@ feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototype* prototype,
 
     // create instance with prototype and set opaque refers to FeatureInstance
     FEATURE_LOG_INFO("created js instance with class_id: %d.", js_class_id_);
-    auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
+    auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto());
     feature_value_t js_instance = JS_NewObjectProtoClass(ctx, js_proto, js_class_id_);
     feature_set_opaque(js_instance, instance);
+    // setup instance WeakRef, refers to js_instance
+    ((FeatureInstanceQjs*)instance)->initWeakRef(js_instance);
     return js_instance;
 }
 
@@ -742,62 +749,39 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     auto& prototype = feature_pair->second;
     if (!prototype) {
         // create proto
-        prototype = new FeaturePrototype(description);
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
-        *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        prototype = new FeaturePrototypeQjs(description);
         prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
 
     // create feature instance for the required object
-    auto instance = std::make_unique<FeatureInstanceQjs>(prototype, nullptr);
+    auto instance = std::make_unique<FeatureInstanceQjs>(prototype);
     auto instance_ptr = instance.get();
     // save vm_object into instance
     instance->setVmObject(vm_object);
 
     // insert into instances array, update iid
     int iid = prototype->addInstance(std::move(instance));
-    prototype->instances[iid]->setInstanceId(iid);
+    instance_ptr->setInstanceId(iid);
 
-    auto js_instance = createJsInstance(prototype, instance_ptr);
-    // setup instance WeakRef, refers to js_instance
-    instance_ptr->initWeakRef(js_instance);
+    auto js_instance = createJsInstance((FeaturePrototypeQjs*)prototype, instance_ptr);
     if (description->native_callbacks && description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());
+        description->native_callbacks->onRequired(ctx, instance_ptr);
     }
     return js_instance;
 }
 
-feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interface, const FeatureDescription* description) {
-    FEATURE_CHECK_NE(interface, nullptr);
-    FEATURE_CHECK_NE(description, nullptr);
-    // save interface prototype in parent instance
-    auto unique_interface= std::unique_ptr<FeatureInstanceQjs>(static_cast<FeatureInstanceQjs*>(interface));
-    auto parent = unique_interface->parent();
-    FEATURE_CHECK_NE(parent, nullptr);
+feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interf) {
+    FEATURE_CHECK_NE(interf, nullptr);
+    FeaturePrototypeQjs* proto = static_cast<FeaturePrototypeQjs*>(interf->prototype());
+    FEATURE_CHECK_NE(proto, nullptr);
+    auto unique_interf= std::unique_ptr<FeatureInstance>(interf);
+    int iid = proto->addInstance(std::move(unique_interf));
+    interf->setInstanceId(iid);
 
-    FeaturePrototype* child_proto = parent->prototype()->getChild(description->name);
-    if (!child_proto) {
-        // create prototype for this interface
-        child_proto = new FeaturePrototype(description);
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(child_proto->ft_proto);
-        *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
-        FEATURE_CHECK_NE(child_proto, nullptr);
-        child_proto->setFeatureManager(this);
-        // add interface prototype to parent prototype
-        parent->prototype()->addChild(description->name, child_proto);
-    }
-    // setup prototype
-    unique_interface->setPrototype(child_proto);
-    // create prototype class instance
-    auto js_interface = createJsInstance(child_proto, unique_interface.get());
-    // setup featureInstance WeakRef, refers to feature_object
-    unique_interface->initWeakRef(js_interface);
-
-    int iid = child_proto->addInstance(std::move(unique_interface));
-    child_proto->instances[iid]->setInstanceId(iid);
+    auto js_interface = createJsInstance(proto, interf);
     return js_interface;
 }
 
@@ -810,40 +794,39 @@ void FeatureManagerQjs::uninit()
     }
 
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
-    auto free_prototype = [js_ctx](FeaturePrototype* prototype) {
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
+    auto free_prototype = [js_ctx](FeaturePrototypeQjs* prototype) {
+        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto());
         if (!feature_is_undefined(*js_proto_ptr)) {
             feature_free_value(js_ctx, *js_proto_ptr);
             *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         }
-        delete prototype;
     };
 
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        auto proto = pair.second.second;
+        auto proto = static_cast<FeaturePrototypeQjs*>(pair.second.second);
         auto description = pair.second.first;
         FEATURE_CHECK_NE(description, nullptr);
         if (!proto)
             continue;
 
-        auto children = proto->children();
-        for (auto& proto_pair : children) {
+        for (auto& proto_pair : proto->children()) {
             // clear all interface instances belongs to this instance.
-            proto_pair.second->clearAllInstances();
+            auto child_proto = static_cast<FeaturePrototypeQjs*>(proto_pair.second.get());
+            child_proto->clearAllInstances();
             FEATURE_LOG_INFO("free interface prototype '%s'", proto_pair.first);
-            free_prototype(proto_pair.second);
+            free_prototype(child_proto);
         }
-        children.clear();
 
         // clear all feature instance at first, it will free all feature instance and call onDetach for them
         proto->clearAllInstances();
         // call feature's onDestroy
-        if (proto->description->native_callbacks && description->native_callbacks->onDestroy) {
+        if (description->native_callbacks && description->native_callbacks->onDestroy) {
             FEATURE_LOG_DEBUG("invoke onDestroy callback...");
             description->native_callbacks->onDestroy(js_ctx, proto);
         }
-        FEATURE_LOG_INFO("free feature prototype '%s'", proto->description->name);
+        FEATURE_LOG_INFO("free feature prototype '%s'", description->name);
         free_prototype(proto);
+        delete pair.second.second;
     }
 
     // uninit registery
@@ -873,20 +856,18 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
     const FeatureDescription* description = feature_pair->first;
     auto& prototype = feature_pair->second;
     if (!prototype) {
-        prototype = new FeaturePrototype(description);
-        auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
-        *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
+        prototype = new FeaturePrototypeQjs(description);
         prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
     }
 
-    if (!ensureJsPrototype(prototype)) {
+    if (!ensureJsPrototype((FeaturePrototypeQjs*)prototype)) {
         FEATURE_LOG_ERROR("ensure js prototype failed !");
         return FEATURE_VALUE_UNDEFINED;
     }
 
-    auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
+    auto js_proto = FT_VAL_GET_JS_VAL(((FeaturePrototypeQjs*)prototype)->ft_proto());
     return feature_dup_value(ctx, js_proto);
 }
 
@@ -894,30 +875,29 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, featur
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        auto prototype = pair.second.second;
+        auto prototype = static_cast<FeaturePrototypeQjs*>(pair.second.second);
         if (!prototype)
             continue;
 
-        auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto);
+        auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto());
         if (!feature_is_same_value(js_ctx, js_proto, proto))
             continue;
 
         // create feature instance for the required object
-        auto instance = std::make_unique<FeatureInstanceQjs>(prototype, nullptr);
+        auto instance = std::make_unique<FeatureInstanceQjs>(prototype);
         // save vm_object into instance
         instance->setVmObject(vm_object);
         auto instance_ptr = instance.get();
         // insert into instances array, update iid
         int iid = prototype->addInstance(std::move(instance));
-        prototype->instances[iid]->setInstanceId(iid);
+        instance_ptr->setInstanceId(iid);
 
         // create prototype class instance
         auto description = pair.second.first;
         auto js_instance = createJsInstance(prototype, instance_ptr);
-        instance_ptr->initWeakRef(js_instance);
         if (description->native_callbacks && description->native_callbacks->onRequired) {
             FEATURE_LOG_DEBUG("invoke onRequired callback...");
-            description->native_callbacks->onRequired(ctx, prototype->instances[iid].get());
+            description->native_callbacks->onRequired(ctx, instance_ptr);
         }
         return js_instance;
     }

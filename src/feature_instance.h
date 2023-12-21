@@ -19,6 +19,7 @@
 #define __FEATURE_INSTANCE_H__
 
 #include "feature_types.h"
+#include "feature_prototype.h"
 
 #include <map>
 #include <memory>
@@ -34,10 +35,9 @@ struct TaskData {
 
 class FeatureInstance {
 public:
-    FeatureInstance(struct FeaturePrototype* prototype, VTable* vtable);
+    FeatureInstance(FeaturePrototype* proto);
+    FeatureInstance(FeaturePrototype* module_proto, VTable* vtable);
     virtual ~FeatureInstance();
-
-    virtual FeatureInstance* createInterface(VTable* vtable) = 0;
 
     /**
      * @brief remove callback from instance vai FtCallbackId
@@ -69,13 +69,15 @@ public:
 
     void setNative(void* native) { native_ = native; }
 
-    FeatureInstance* parent() { return parent_; }
+    void setInitialized() { initialized_ = 1; }
 
-    void setParent(FeatureInstance* parent) { parent_ = parent; }
+    bool isInitialized() { return initialized_ == 1; }
+
+    bool isInterface() { return is_interface_ == 1; }
 
     NativeFunc getVirtualFunction(int index) const
     {
-        if (index < 0 || index >= vtable_->size)
+        if (!vtable_ || index < 0 || index >= vtable_->size)
             return nullptr;
         return vtable_->members[index];
     }
@@ -90,10 +92,11 @@ public:
 
 private:
 
-    int instance_id_; // the instance id, order in instances aray.
+    int instance_id_:30;
+    uint32_t is_interface_:1;
+    uint32_t initialized_:1;
     VTable* vtable_;
     void* native_;
-    FeatureInstance* parent_;
     FeaturePrototype* proto_;
     std::queue<TaskData> task_queue_;
 };

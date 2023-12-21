@@ -43,7 +43,8 @@ typedef struct QjsCallbackData {
 
 class FeatureInstanceQjs : public FeatureInstance, InstanceBase<feature_value_t> {
 public:
-    FeatureInstanceQjs(FeaturePrototype* prototype, VTable* vtable);
+    FeatureInstanceQjs(FeaturePrototype* proto);
+    FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable);
     virtual ~FeatureInstanceQjs();
 
     void setVmObject(feature_value_t vm_object);
@@ -51,8 +52,6 @@ public:
     feature_value_t getVmObject() const;
 
     feature_value_t getFeatureJsvalue(ft_value_t ft_value);
-
-    virtual FeatureInstance* createInterface(VTable* vtable);
 
     virtual bool removeCallback(FtCallbackId cid);
 
@@ -66,9 +65,7 @@ public:
 
     virtual FtCallbackId addCallback(feature_value_t& value, CallbackType* callbackType);
 
-    virtual feature_value_t createTargetInterface(const FeatureDescription* description);
-
-    virtual void* getNativeInterface(feature_value_t& target);
+    feature_value_t createTargetInterface();
 
     bool checkCallback(FtCallbackId cid);
 

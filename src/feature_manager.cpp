@@ -101,7 +101,7 @@ void FeatureManager::runAllTasks(int mode)
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         FeaturePrototype* prototype = pair.second.second;
         if (prototype) {
-            for (const auto& instance : prototype->instances) {
+            for (const auto& instance : prototype->instances()) {
                 if (instance) {
                     instance->runAsyncTasks(mode);
                 }

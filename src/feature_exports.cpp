@@ -315,7 +315,8 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
         return nullptr;
     }
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    return instance->createInterface(vtable);
+    FeaturePrototype* module_proto = instance->prototype()->modulePrototype();
+    return module_proto->createInterface(vtable);
 }
 
 void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,

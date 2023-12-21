@@ -60,5 +60,7 @@ bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint
 ft_value_t nullFtVal();
 uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg);
 void toTargetPromise(wasm_exec_env_t exec_env, const uint64_t& promise, uint64_t& ret_val);
+void* interfaceFromTarget(uint64_t& target);
+uint64_t targetFromInterface(void* instance);
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__

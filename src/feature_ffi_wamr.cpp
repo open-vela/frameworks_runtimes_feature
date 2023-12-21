@@ -37,6 +37,17 @@ namespace ferry {
 
 namespace FeatureFFIWamr {
 
+static void* interface_from_target(uint64_t& target)
+{
+    void* param = *((void **)(&target));
+    return param;
+}
+
+static uint64_t target_from_interface(FeatureInstance* instance)
+{
+    return (uint64_t)instance;
+}
+
 static inline void fill_struct_data(ObjectMapType &obj_type, uint64_t ptr, ts_value_t obj_arr[], uint32_t count)
 {
     if (count <= 0) {
@@ -285,8 +296,15 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 InterfaceType* interface_type = (InterfaceType*)complex_type;
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
-                auto interface_ptr = static_cast<FeatureInstanceWamr*>(ptr);
-                value = interface_ptr->createTargetInterface(interface_type->desc);
+                auto pinstance = static_cast<FeatureInstance*>(ptr);
+                if (pinstance->isInterface() && !pinstance->isInitialized()) {
+                    FeaturePrototype* module_proto = pinstance->prototype();
+                    FeaturePrototype* intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
+                    pinstance->setPrototype(intf_proto);
+                    pinstance->setInitialized();
+                }
+                value = target_from_interface(pinstance);
+
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -457,7 +475,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                 }
             } break;
             case COMPLEX_INTERFACE: {
-                ptr = ((FeatureInstanceWamr*)instance)->getNativeInterface(value);
+                ptr = interface_from_target(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

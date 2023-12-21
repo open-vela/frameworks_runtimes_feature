@@ -230,5 +230,9 @@ static inline void toTargetPromise(JSContext* ctx, const JSValue& promise, JSVal
     ret_val = promise;
 }
 
+void* interfaceFromTarget(JSValue& target);
+
+JSValue targetFromInterface(void* instance);
+
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__

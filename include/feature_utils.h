@@ -14,10 +14,10 @@
 #define weakref_container_of(ptr, type, member) \
     ((type*)((uintptr_t)(ptr)-offsetof(type, member)))
 
-struct weakref_list_node {
+typedef struct weakref_list_node {
     struct weakref_list_node* prev;
     struct weakref_list_node* next;
-};
+} weakref_list_node;
 
 #define weakref_list_initialize(list)              \
     do {                                           \

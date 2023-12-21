@@ -19,7 +19,7 @@
 #include "feature_ffi_qjs.h"
 #include "feature_manager_qjs.h"
 #include "feature_log.h"
-#include "feature_prototype.h"
+#include "feature_prototype_qjs.h"
 #include "feature_utils.h"
 #include "promise_manager.h"
 
@@ -34,18 +34,22 @@ using namespace FEATURE;
 
 namespace ferry {
 
-FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto, VTable* vtable)
-    : FeatureInstance(proto, vtable)
+FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
+    : FeatureInstance(proto)
     , vm_object_(FEATURE_VALUE_UNDEFINED)
 {
-    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext()));
+    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
+    *js_val_ptr = JS_UNDEFINED;
+    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext()));
 }
 
-FeatureInstance* FeatureInstanceQjs::createInterface(VTable* vtable)
+FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable)
+    : FeatureInstance(module_proto, vtable)
+    , vm_object_(FEATURE_VALUE_UNDEFINED)
 {
-    FeatureInstance* ret = new FeatureInstanceQjs(prototype(), vtable);
-    ret->setParent(this);
-    return ret;
+    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
+    *js_val_ptr = JS_UNDEFINED;
+    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext()));
 }
 
 void FeatureInstanceQjs::setVmObject(feature_value_t vm_object)
@@ -68,17 +72,20 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
 {
     // remove opaque binding
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
-    feature_set_opaque(js_val, nullptr);
+
     auto proto = prototype();
     JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext());
 
     // free weakRef
-    freeWeakRef();
+    if (!JS_IsUndefined(js_val)) {
+        feature_set_opaque(js_val, nullptr);
+        freeWeakRef();
+    }
 
     // invoke callback
-    if (proto->description->native_callbacks && proto->description->native_callbacks->onDetached) {
+    if (proto->description()->native_callbacks && proto->description()->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
-        proto->description->native_callbacks->onDetached(js_ctx, this);
+        proto->description()->native_callbacks->onDetached(js_ctx, this);
     }
     // release all callbacks
     for (const auto& callback : callbacks_) {
@@ -112,19 +119,11 @@ FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t& value, CallbackTyp
     return curr_cid_;
 }
 
-feature_value_t FeatureInstanceQjs::createTargetInterface(const FeatureDescription* description)
+feature_value_t FeatureInstanceQjs::createTargetInterface()
 {
     FeatureManagerQjs* manager = (FeatureManagerQjs*)(prototype()->getFeatureManager());
     FEATURE_CHECK_NE(manager, nullptr);
-    return manager->createTargetInterface(this, description);
-}
-
-void* FeatureInstanceQjs::getNativeInterface(feature_value_t& target)
-{
-    auto opaque = feature_get_opaque(target, FeatureManagerQjs::jsClassId());
-    FEATURE_LOG_DEBUG("value: %p, get opaque: %p", JS_VALUE_GET_PTR(target), opaque);
-    FEATURE_CHECK_NE(opaque, nullptr);
-    return opaque;
+    return manager->createTargetInterface(this);
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
@@ -181,9 +180,9 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
     // mark promies
     promise_manager_->markValues(rt, mark_func);
 
-    auto children = prototype()->children();
-    for (auto& pair : children) {
-        auto js_proto = FT_VAL_GET_JS_VAL(pair.second->ft_proto);
+    for (auto& pair : prototype()->children()) {
+        FeaturePrototypeQjs* proto_qjs = static_cast<FeaturePrototypeQjs*>(pair.second.get());
+        auto js_proto = FT_VAL_GET_JS_VAL(proto_qjs->ft_proto());
         feature_mark_value(rt, js_proto, mark_func);
     }
 }
@@ -191,18 +190,18 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
 bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
 {
     if (!prototype()) {
-        FEATURE_LOG_ERROR("WeakRefInit() get FeatureInstance failed");
+        FEATURE_LOG_ERROR("prototype missing");
         return false;
     }
 
-    auto proto = prototype();
+    auto proto = static_cast<FeaturePrototypeQjs*>(prototype());
     WeakRef* node = &weak_self_;
     weakref_list_initialize(&node->link);
-    weakref_list_add_tail(&node->link, &proto->weak_ref_list);
+    weakref_list_add_tail(&node->link, &proto->weak_ref_list());
 
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
     *js_val_ptr = feature_object;
-    proto->weak_ref_count++;
+    proto->inc_ref_count();
 
     return true;
 }
@@ -210,16 +209,16 @@ bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
 void FeatureInstanceQjs::freeWeakRef()
 {
     if (!prototype()) {
-        FEATURE_LOG_ERROR("freeWeakRef() get FeatureInstance failed");
+        FEATURE_LOG_ERROR("prototype missing");
         return;
     }
 
-    auto proto = prototype();
+    auto proto = static_cast<FeaturePrototypeQjs*>(prototype());
     // 遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
     WeakRef* node;
     WeakRef* node_temp;
-    if (--proto->weak_ref_count <= 0) {
-        weakref_list_for_every_entry_safe(&proto->weak_ref_list, node, node_temp, WeakRef, link)
+    if (proto->dec_ref_count() <= 0) {
+        weakref_list_for_every_entry_safe(&proto->weak_ref_list(), node, node_temp, WeakRef, link)
         {
             auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
             *js_val_ptr = FEATURE_VALUE_UNDEFINED;

@@ -302,6 +302,17 @@ uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg)
 
 void toTargetPromise(wasm_exec_env_t exec_env, const uint64_t& promise, uint64_t& ret_val)
 {
-    
+
+}
+
+void* interfaceFromTarget(uint64_t& target)
+{
+    void* param = *((void **)(&target));
+    return param;
+}
+
+uint64_t targetFromInterface(void* instance)
+{
+    return (uint64_t)instance;
 }
 }

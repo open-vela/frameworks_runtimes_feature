@@ -69,17 +69,16 @@ static wasm_anyref_obj_t return_box_anyref(wasm_exec_env_t exec_env, const void 
 }
 namespace ferry {
 
-FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto, VTable* vtable)
-    : FeatureInstance(proto, vtable)
-    , instance_qjs_(new FeatureInstanceQjs(proto, nullptr))
+FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
+    : FeatureInstance(proto)
+    , instance_qjs_(new FeatureInstanceQjs(prototype()))
 {
 }
 
-FeatureInstance* FeatureInstanceWamr::createInterface(VTable* vtable)
+FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* module_proto, VTable* vtable)
+    : FeatureInstance(module_proto, vtable)
+    , instance_qjs_(new FeatureInstanceQjs(prototype()))
 {
-    FeatureInstance* ret = new FeatureInstanceWamr(prototype(), vtable);
-    ret->setParent(this);
-    return ret;
 }
 
 FeatureInstanceWamr::~FeatureInstanceWamr()
@@ -115,17 +114,6 @@ FtCallbackId FeatureInstanceWamr::addCallback(uint64_t& value, CallbackType* cal
     callback.cb_type = callbackType;
     callbacks_[curr_cid_] = callback;
     return curr_cid_++;
-}
-
-uint64_t FeatureInstanceWamr::createTargetInterface(const FeatureDescription* description)
-{
-    return (uint64_t)this;
-}
-
-void* FeatureInstanceWamr::getNativeInterface(uint64_t& target)
-{
-    void* param = *((void **)(&target));
-    return param;
 }
 
 static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_array_type_t)
