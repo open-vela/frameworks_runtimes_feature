@@ -132,7 +132,8 @@ OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += fetch
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/prompt_impl.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/prompt.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/prompt.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += system_prompt
 
 ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE),y)
