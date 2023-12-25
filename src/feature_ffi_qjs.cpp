@@ -261,10 +261,10 @@ namespace FeatureFFIQjs {
                     // check propValue is js_undefined or not
                     if (feature_is_undefined(propValue)) {
                         if (FT_IS_COMPLEX(member->type)) {
-                            ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
-                            if (complexType1->type == COMPLEX_OPTIONAL) {
+                            ComplexTypeHeader* cmplx_type = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
+                            if (cmplx_type->type == COMPLEX_OPTIONAL) {
                                 FEATURE_LOG_DEBUG("propValue is undefined will get value with optinalType!");
-                                OptionalType* optinalType = (OptionalType*)complexType1;
+                                OptionalType* optinalType = (OptionalType*)cmplx_type;
                                 ret = convertValueToGuest(instance, optinalType->type, &optinalType->fval, ctx, propValue);
                                 if (!ret) {
                                     feature_free_value(ctx, propValue);
@@ -274,7 +274,8 @@ namespace FeatureFFIQjs {
                                 }
                             }
                         } else {
-                            FEATURE_LOG_DEBUG("COMPLEX_STRUCT_MAP member->type is %d!", member->type);
+                            FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
+                            return false;
                         }
                     }
 

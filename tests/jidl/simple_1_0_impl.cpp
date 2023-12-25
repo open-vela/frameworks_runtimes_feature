@@ -1,6 +1,7 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
 #include "simple_1_0.h"
+#include <inttypes.h>
 
 static const char* file_tag = "[jidl_feature] simple_1_0_impl";
 
