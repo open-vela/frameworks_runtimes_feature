@@ -193,7 +193,8 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                                 }
                             }
                         } else {
-                            FEATURE_LOG_DEBUG("COMPLEX_STRUCT_MAP member->type is %d!", member->type);
+                            FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
+                            return false;
                         }
                     }
 
