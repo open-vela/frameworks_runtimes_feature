@@ -163,6 +163,10 @@ JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/jumpapp.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += jumpApp
 
+ifeq ($(CONFIG_MEDIA_FEATURE),y)
+FEATURELIST += system_volume
+endif
+
 ifeq ($(CONFIG_MIPLAY),y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/miplay_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/miplay.jidl
