@@ -9,7 +9,7 @@ cpp_type_map = {
   'ulong' : 'unsigned long',
   'float' : 'FtFloat',
   'double' : 'FtDouble',
-  'boolean' : 'FtBoolean',
+  'boolean' : 'FtBool',
   'string': 'FtString',
   'uint8' : 'FtUint8',
   'int8'  : 'FtInt8',
