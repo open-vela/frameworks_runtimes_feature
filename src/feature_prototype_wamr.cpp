@@ -42,8 +42,7 @@ FeatureInstance* FeaturePrototypeWamr::createInterface(VTable* vtable)
 
 FeaturePrototype* FeaturePrototypeWamr::createInterfacePrototype(const FeatureDescription* description) {
     FeaturePrototypeWamr* proto = new FeaturePrototypeWamr(description);
-    auto manager = getFeatureManager();
-    proto->setFeatureManager(manager);
+    proto->setFeatureManager(featureManager());
     return proto;
 }
 

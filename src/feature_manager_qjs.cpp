@@ -35,7 +35,8 @@
 #include <string>
 #include <vector>
 
-using namespace FEATURE;
+#define FEATURE_ENV_NAME "quickjs"
+
 namespace ferry {
 
 static inline FeatureInstance* getInstance(feature_value_t val)
@@ -752,7 +753,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
         prototype = new FeaturePrototypeQjs(description);
         prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
-        setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+        setEnvName(FEATURE_ENV_NAME);
     }
 
     // create feature instance for the required object
@@ -859,7 +860,7 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const ch
         prototype = new FeaturePrototypeQjs(description);
         prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
-        setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+        setEnvName(FEATURE_ENV_NAME);
     }
 
     if (!ensureJsPrototype((FeaturePrototypeQjs*)prototype)) {

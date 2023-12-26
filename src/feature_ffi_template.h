@@ -217,8 +217,9 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
             } break;
             case COMPLEX_CALLBACK: {
                 // save into instance
-                CallbackType *callbackType = (CallbackType *)complex_type;
-                FtCallbackId id = instance->addCallback(target, callbackType);
+                CallbackType *callback_type = (CallbackType *)complex_type;
+                auto cb_val = value_translator::toCallbackValue(target);
+                FtCallbackId id = instance->addCallback(cb_val, callback_type);
                 *(FtCallbackId *)pnative = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {

@@ -17,10 +17,8 @@
 #ifndef __VALUE_TRANSLATOR_WAMR_H__
 #define __VALUE_TRANSLATOR_WAMR_H__
 
-#include "feature.h"
-#include "feature_context_qjs.h"
-#include "wasm_export.h"
-#include "feature_log.h"
+#include "feature_context.h"
+#include "gc_export.h"
 
 namespace value_translator {
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, int32_t* pnative);
@@ -62,5 +60,12 @@ uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg);
 void toTargetPromise(wasm_exec_env_t exec_env, const uint64_t& promise, uint64_t& ret_val);
 void* interfaceFromTarget(uint64_t& target);
 uint64_t targetFromInterface(void* instance);
+
+static inline wasm_obj_t toCallbackValue(uint64_t& target)
+{
+    wasm_obj_t cb_value = *((wasm_obj_t *)(&target));
+    return cb_value;
+}
+
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__

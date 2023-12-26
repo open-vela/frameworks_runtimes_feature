@@ -46,8 +46,7 @@ FeatureInstance* FeaturePrototypeQjs::createInterface(VTable* vtable)
 
 FeaturePrototype* FeaturePrototypeQjs::createInterfacePrototype(const FeatureDescription* description) {
     FeaturePrototypeQjs* proto = new FeaturePrototypeQjs(description);
-    auto manager = getFeatureManager();
-    proto->setFeatureManager(manager);
+    proto->setFeatureManager(featureManager());
    return proto;
 }
 

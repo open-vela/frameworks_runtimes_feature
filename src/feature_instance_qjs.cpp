@@ -32,6 +32,16 @@ using namespace FEATURE;
 
 #define CFUNCDATA_FN(f) ((feature_value_t(*)(feature_context_ref ctx, feature_value_t, int, feature_value_t*, int, feature_value_t*))f)
 
+static inline void _free_arg(JSContext* ctx, JSValue& arg)
+{
+    JS_FreeValue(ctx, arg);
+}
+
+static inline JSValue _get_undefined_arg(JSContext* ctx)
+{
+    return JS_UNDEFINED;
+}
+
 namespace ferry {
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
@@ -40,7 +50,7 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
 {
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
     *js_val_ptr = JS_UNDEFINED;
-    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext()));
+    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->featureManager()->getFeatureContext()));
 }
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable)
@@ -49,7 +59,7 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* v
 {
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
     *js_val_ptr = JS_UNDEFINED;
-    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext()));
+    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->featureManager()->getFeatureContext()));
 }
 
 void FeatureInstanceQjs::setVmObject(feature_value_t vm_object)
@@ -68,13 +78,18 @@ feature_value_t FeatureInstanceQjs::getFeatureJsvalue(ft_value_t value)
     return q_val.js_val;
 }
 
+JSContext* FeatureInstanceQjs::getContext()
+{
+    return (JSContext*)ft_context_get_data(prototype()->featureManager()->getFeatureContext());
+}
+
 FeatureInstanceQjs::~FeatureInstanceQjs()
 {
     // remove opaque binding
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
 
     auto proto = prototype();
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(proto->getFeatureManager()->getFeatureContext());
+    JSContext* js_ctx = getContext();
 
     // free weakRef
     if (!JS_IsUndefined(js_val)) {
@@ -87,50 +102,24 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
         proto->description()->native_callbacks->onDetached(js_ctx, this);
     }
-    // release all callbacks
-    for (const auto& callback : callbacks_) {
-        feature_free_value(js_ctx, callback.second.cb);
-    }
-    callbacks_.clear();
 
     // release all promises
     promise_manager_->releasePromises();
     delete promise_manager_;
 }
 
-QjsCallbackData FeatureInstanceQjs::getCallback(FtCallbackId cid)
-{
-    if (!callbacks_.count(cid)) {
-        QjsCallbackData callback;
-        callback.cb = FEATURE_VALUE_UNDEFINED;
-        callback.cb_type = nullptr;
-        return callback;
-    }
-    return callbacks_[cid];
-}
-
-FtCallbackId FeatureInstanceQjs::addCallback(feature_value_t& value, CallbackType* callbackType)
-{
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
-    QjsCallbackData callback;
-    callback.cb = feature_dup_value(js_ctx, value);
-    callback.cb_type = callbackType;
-    callbacks_[++curr_cid_] = callback;
-    return curr_cid_;
-}
-
 feature_value_t FeatureInstanceQjs::createTargetInterface()
 {
-    FeatureManagerQjs* manager = (FeatureManagerQjs*)(prototype()->getFeatureManager());
+    FeatureManagerQjs* manager = (FeatureManagerQjs*)(prototype()->featureManager());
     FEATURE_CHECK_NE(manager, nullptr);
     return manager->createTargetInterface(this);
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
 {
-    const auto callback = getCallback(cid);
-    if (feature_is_undefined(callback.cb)) {
-        FEATURE_LOG_DEBUG("callback in undefined !");
+    auto cb_data = getCallbackData(cid);
+    if (!cb_data) {
+        FEATURE_LOG_DEBUG("callback is undefined !");
         return false;
     } else {
         return true;
@@ -139,25 +128,12 @@ bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
 
 bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
-    if (!callbacks_.count(cid)) {
-        FEATURE_LOG_ERROR("callback id %d in instance: %p not exist !", cid, this);
-        return false;
-    }
-    feature_free_value(js_ctx, callbacks_[cid].cb);
-    callbacks_.erase(cid);
-    return true;
+    return eraseCallback(cid);
 }
 
 int FeatureInstanceQjs::getSameCallback(FtCallbackId cid)
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
-    for (auto it = callbacks_.begin(); it != callbacks_.end(); it++) {
-        if (it->first != cid && feature_is_same_value(js_ctx, it->second.cb, callbacks_[cid].cb)) {
-            return it->first;
-        }
-    }
-    return 0;
+    return getInitialCallbackId(cid);
 }
 
 feature_value_t FeatureInstanceQjs::getPromise(FtPromiseId pid)
@@ -173,8 +149,9 @@ FtPromiseId FeatureInstanceQjs::addPromise(FeatureType resolve_type, FeatureType
 void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
 {
     // mark callbacks
-    for (auto& pair : callbacks_) {
-        feature_mark_value(rt, pair.second.cb, mark_func);
+    auto callbacks = getCallbacks();
+    for (auto& pair : callbacks) {
+        feature_mark_value(rt, pair.second->cb, mark_func);
     }
 
     // mark promies
@@ -272,98 +249,90 @@ int FeatureInstanceQjs::doSettlePromise(bool resolve, FtPromiseId pid, va_list& 
 
 int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
 {
-    const auto callback = getCallback(cid);
-    if (feature_is_undefined(callback.cb) || callback.cb_type == nullptr) {
+    auto cb_data = getCallbackData(cid);
+    if (!cb_data) {
         FEATURE_LOG_ERROR("callback is undefined !");
         return -1;
     }
     bool has_rest_param = false;
-    CallbackType* callbackType = callback.cb_type;
-    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
+    CallbackType* callbackType = cb_data->type;
+    int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param);
     if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
         return -1;
     }
 
-    return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, 0);
+    return callCallback(cb_data, ap, fixed_argc, 0);
 }
 
 int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int count)
 {
-    const auto callback = getCallback(cid);
-    if (feature_is_undefined(callback.cb) || callback.cb_type == nullptr) {
+    auto cb_data = getCallbackData(cid);
+    if (!cb_data) {
         FEATURE_LOG_ERROR("callback is undefined !");
         return -1;
     }
     bool has_rest_param = false;
-    CallbackType* callbackType = callback.cb_type;
-    int method_param_count = getParamCount(callbackType->parameters, &has_rest_param);
-    if (!has_rest_param || count < method_param_count) {
+    CallbackType* callbackType = cb_data->type;
+    int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param);
+    if (!has_rest_param || count < fixed_argc) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
         return -1;
     }
 
-    return doInvokeCallback(callbackType, callback.cb, ap, method_param_count, count - method_param_count);
+    return callCallback(cb_data, ap, fixed_argc, count - fixed_argc);
 }
 
-int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count)
+bool FeatureInstanceQjs::argToTarget(va_list &ap, FeatureType ftype, JSValue& target)
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(prototype()->getFeatureManager()->getFeatureContext());
-    bool got_error = false;
-    feature_value_t ret = FEATURE_VALUE_UNDEFINED;
+    JSContext* ctx = getContext();
+    void *param = extractVariadicParam(ap, ftype);
+    if (!param) {
+        FEATURE_LOG_ERROR("extract callback param failed !");
+        return false;
+    }
+    if (!FeatureFFIQjs::convertValueToGuest(this, ftype, param, ctx, target)) {
+        FEATURE_LOG_ERROR("convert callback param failed !");
+        free(param);
+        return false;
+    }
+    free(param);
+    return true;
+}
 
+int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
+{
+    JSContext* js_ctx = getContext();
     if (feature_is_undefined(callback)) {
         FEATURE_LOG_ERROR("callback is undefined !");
         return -1;
     }
+
     // create argv list and initialize to undefined
-    feature_value_t* argv = new feature_value_t[method_param_count + rest_param_count];
-    for (int i = 0; i < method_param_count + rest_param_count; i++) {
-        argv[i] = FEATURE_VALUE_UNDEFINED;
+    AutoArgs<JSContext*, JSValue> argv(js_ctx, fixed_argc + rest_argc);
+    // convert parameters to feature_value_t
+    for (int i = 0; i < fixed_argc; i++) {
+        FeatureType ftype = callbackType->parameters[i];
+        if (!argToTarget(ap, ftype, argv[i])) {
+            FEATURE_LOG_ERROR("extract callback param failed !");
+            return 0;
+        }
     }
 
-    do {
-        // convert parameters to feature_value_t
-        for (int i = 0; i < method_param_count; i++) {
-            FeatureType featureType = callbackType->parameters[i];
-            void* ptr = exactVariadicParameter(ap, featureType);
-            if (!ptr) {
-                got_error = true;
-                break;
-            }
-            if (!FeatureFFIQjs::convertValueToGuest(this, featureType, ptr, js_ctx, argv[i])) {
-                FEATURE_LOG_ERROR("convert callback param failed !");
-                free(ptr);
-                got_error = true;
-                break;
-            }
-            free(ptr);
+    // prepare for rest parameters
+    for (int i = fixed_argc; i < fixed_argc + rest_argc; i++) {
+        // it must be FtMalloced.
+        void* arg = va_arg(ap, void*);
+        void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
+        FTObjHeader* header = (FTObjHeader*)header_ptr;
+        if (!FeatureFFIQjs::convertValueToGuest(this, header->featureType, arg, js_ctx, argv[i])) {
+            FEATURE_LOG_ERROR("convert callback rest param failed !");
+            argv[i] = FEATURE_VALUE_UNDEFINED;
         }
-        if (got_error) {
-            FEATURE_LOG_ERROR("invoke callback failed !");
-            break;
-        }
-        // prepare for rest parameters
-        for (int i = method_param_count; i < method_param_count + rest_param_count; i++) {
-            // it must be FtMalloced.
-            void* arg = va_arg(ap, void*);
-            void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
-            FTObjHeader* header = (FTObjHeader*)header_ptr;
-            if (!FeatureFFIQjs::convertValueToGuest(this, header->featureType, arg, js_ctx, argv[i])) {
-                FEATURE_LOG_ERROR("convert callback rest param failed !");
-                argv[i] = FEATURE_VALUE_UNDEFINED;
-            }
-        }
-
-        ret = feature_call(js_ctx, callback, FEATURE_VALUE_UNDEFINED, method_param_count + rest_param_count, argv);
-    } while (0);
-
-    for (int i = 0; i < method_param_count + rest_param_count; i++) {
-        feature_free_value(js_ctx, argv[i]);
     }
-    delete[] argv;
+
+    feature_value_t ret = feature_call(js_ctx, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
     feature_free_value(js_ctx, ret);
-
     return 0;
 }
 

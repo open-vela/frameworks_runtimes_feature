@@ -21,9 +21,14 @@
 #include "feature_description.h"
 #include "feature_registry.h"
 
+#include <queue>
+
 namespace ferry {
 
-// class FeatureRegistry;
+struct TaskData {
+    FeatureTaskCallback task_cb;
+    void* data;
+};
 
 class FeatureManager {
 public:
@@ -39,13 +44,13 @@ public:
 
     void unsetUVLoop();
 
-    void setPackageName(const char* package_name);
+    void setPackageName(const char* pkg_name) { pkg_name_ = pkg_name; }
 
-    const char* getPackageName() const;
+    const char* packageName() const { return pkg_name_; };
 
-    void setEnvironmentName(const char* environment_name);
+    void setEnvName(const char* env_name)  { env_name_ = env_name; }
 
-    const char* getEnvironmentName() const { return environment_name_; }
+    const char* envName() const { return env_name_; }
 
     void setUserData(const char* name, void* data) { user_data_[name] = data; }
 
@@ -55,22 +60,20 @@ public:
         return it != user_data_.end() ? it->second : nullptr;
     }
 
+    void addTask(FeatureTaskCallback task_cb, void* data);
+
     void runAllTasks(int mode);
-
-    void lockAsync();
-
-    void unlockAsync();
-
-    uv_async_t* async_;
-    uv_mutex_t mutex;
 
 private:
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
-    uv_loop_t* loop_ = nullptr;
-    const char* package_name_ = nullptr;
-    const char* environment_name_ = nullptr;
+    const char* pkg_name_ = nullptr;
+    const char* env_name_ = nullptr;
     std::map<std::string, void*> user_data_;
+    uv_mutex_t mutex_;
+    uv_async_t* async_ = nullptr;
+    uv_loop_t* loop_ = nullptr;
+    std::queue<TaskData> task_queue_;
 };
 
 }
