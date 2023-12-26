@@ -108,8 +108,8 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test_impl.cpp
 FEATURELIST += struct_test
 
 ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
-CFLAGS += $(APPDIR)/frameworks/account/include
-CXXFLAGS += $(APPDIR)/frameworks/account/include
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
 CXXSRCS += $(APPDIR)/frameworks/account/feature/account_1_0.cpp
 CXXSRCS += $(APPDIR)/frameworks/account/feature/account_1_0_impl.cpp
 FEATURELIST += service_internal_account
