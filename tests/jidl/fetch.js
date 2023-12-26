@@ -1,4 +1,4 @@
-let fetch = require('fetch');
+let fetch = require('system.fetch');
 
 feat_async_test("fetch", "fetch", (done) => {
   return new Promise(function (resolve, reject) {
