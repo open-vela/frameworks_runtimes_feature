@@ -15,10 +15,12 @@
  */
 
 #include "value_translator_wamr.h"
-#include "libdyntype.h"
-#include "libdyntype_export.h"
+#include "feature_log.h"
+#include "feature_context_qjs.h"
 #include "feature_ffi_wamr.h"
 #include "feature_wamr_utils.h"
+#include "libdyntype.h"
+#include "libdyntype_export.h"
 
 namespace value_translator {
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, int32_t* pnative)

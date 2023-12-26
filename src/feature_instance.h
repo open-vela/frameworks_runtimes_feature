@@ -23,39 +23,27 @@
 
 #include <map>
 #include <memory>
-#include <queue>
 #include <vector>
 
 namespace ferry {
 
-struct TaskData {
-    FeatureTaskCallback task_cb;
-    void* data;
-};
-
 class FeatureInstance {
 public:
     FeatureInstance(FeaturePrototype* proto);
-    FeatureInstance(FeaturePrototype* module_proto, VTable* vtable);
+
+    FeatureInstance(FeaturePrototype* module_proto, const VTable* vtable);
+
     virtual ~FeatureInstance();
 
-    /**
-     * @brief remove callback from instance vai FtCallbackId
-     *
-     & @param ctx
-     * @param id
-     * @return true
-     * @return false
-     */
     virtual bool removeCallback(FtCallbackId cid) = 0;
 
     virtual int getSameCallback(FtCallbackId cid) = 0;
 
-    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap) = 0;
-
     virtual int invokeCallback(FtCallbackId cid, va_list& ap) = 0;
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count) = 0;
+
+    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap) = 0;
 
     int instanceId() { return instance_id_; }
 
@@ -82,23 +70,13 @@ public:
         return vtable_->members[index];
     }
 
-    typedef void (*dtor_func)(FeatureInstance*);
-
-    void addCallback(FeatureTaskCallback task_cb, void* data);
-
-    void runAsyncTasks(int task_run_mode);
-
-    void sendAsnyc();
-
 private:
-
     int instance_id_:30;
     uint32_t is_interface_:1;
     uint32_t initialized_:1;
-    VTable* vtable_;
+    const VTable* vtable_;
     void* native_;
     FeaturePrototype* proto_;
-    std::queue<TaskData> task_queue_;
 };
 
 }

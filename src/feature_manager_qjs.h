@@ -19,8 +19,6 @@
 #include "feature.h"
 #include "feature_manager.h"
 
-#define FEATURE_ENVIRONMENT_NAME "quickjs"
-
 namespace ferry {
 
 class FeatureRegistry;

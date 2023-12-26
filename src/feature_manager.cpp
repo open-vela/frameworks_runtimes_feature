@@ -31,12 +31,13 @@ FeatureManager::FeatureManager(FeatureRegistry* registry)
     : registry_(registry)
     , ft_ctx_(nullptr)
 {
-    uv_mutex_init(&mutex);
+    uv_mutex_init(&mutex_);
 }
 
 FeatureManager::~FeatureManager()
 {
     ft_ctx_ = nullptr;
+    runAllTasks(FEATURE_TASK_MODE_FREE);
 }
 
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
@@ -70,46 +71,28 @@ void FeatureManager::unsetUVLoop()
     }
 }
 
-void FeatureManager::setPackageName(const char* package_name)
+void FeatureManager::addTask(FeatureTaskCallback task_cb, void* data)
 {
-    package_name_ = package_name;
-}
-
-const char* FeatureManager::getPackageName() const
-{
-    return package_name_;
-}
-
-void FeatureManager::setEnvironmentName(const char* environment_name)
-{
-    environment_name_ = environment_name;
-}
-
-void FeatureManager::lockAsync()
-{
-    uv_mutex_lock(&mutex);
-}
-
-void FeatureManager::unlockAsync()
-{
-    uv_mutex_unlock(&mutex);
+    TaskData task_data;
+    task_data.task_cb = task_cb;
+    task_data.data = data;
+    uv_mutex_lock(&mutex_);
+    task_queue_.push(task_data);
+    if (async_)
+        uv_async_send(async_);
+    uv_mutex_unlock(&mutex_);
 }
 
 void FeatureManager::runAllTasks(int mode)
 {
-    uv_mutex_lock(&mutex);
-    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        FeaturePrototype* prototype = pair.second.second;
-        if (prototype) {
-            for (const auto& instance : prototype->instances()) {
-                if (instance) {
-                    instance->runAsyncTasks(mode);
-                }
-            }
-        }
+    uv_mutex_lock(&mutex_);
+    int task_queue_size = task_queue_.size();
+    for (int i = 0; i < task_queue_size; i++) {
+        TaskData task_data = task_queue_.front();
+        task_data.task_cb(mode, task_data.data);
+        task_queue_.pop();
     }
-
-    uv_mutex_unlock(&mutex);
+    uv_mutex_unlock(&mutex_);
 }
 
 }

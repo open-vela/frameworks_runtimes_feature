@@ -65,7 +65,7 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly = f
  * @param featureType
  * @return void*
  */
-void* exactVariadicParameter(va_list& ap, FeatureType featureType);
+void* extractVariadicParam(va_list& ap, FeatureType featureType);
 
 };
 #endif

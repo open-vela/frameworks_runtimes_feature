@@ -234,5 +234,10 @@ void* interfaceFromTarget(JSValue& target);
 
 JSValue targetFromInterface(void* instance);
 
+static inline JSValue toCallbackValue(JSValue& target)
+{
+    return target;
+}
+
 }
 #endif // __VALUE_TRANSLATOR_QJS_H__

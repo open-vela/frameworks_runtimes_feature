@@ -21,7 +21,8 @@
 #include "feature.h"
 #include "feature_instance.h"
 #include "feature_common.h"
-#include "instance_base.h"
+#include "callback_manager_wamr.h"
+#include "callback_manager.h"
 #include "gc_object.h"
 
 #include <map>
@@ -32,12 +33,7 @@ namespace ferry {
 class FeaturePrototype;
 class FeatureInstanceQjs;
 
-typedef struct WamrCallbackData {
-   wasm_obj_t cb;
-   CallbackType* cb_type;
-} WamrCallbackData;
-
-class FeatureInstanceWamr : public FeatureInstance, InstanceBase<uint64_t> {
+class FeatureInstanceWamr : public FeatureInstance, public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
 public:
     FeatureInstanceWamr(FeaturePrototype* proto);
     FeatureInstanceWamr(FeaturePrototype* module_proto, VTable* vtable);
@@ -53,21 +49,22 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    WamrCallbackData getCallback(FtCallbackId cid);
-
-    virtual FtCallbackId addCallback(uint64_t& value, CallbackType* callbackType);
-
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 
     feature_value_t getPromise(FtPromiseId pid);
 
     void release();
 
+    wasm_exec_env_t getContext();
+
+    int doInvokeCallback(const CallbackType* callbackType, wasm_obj_t callback, va_list& ap, int method_param_count, int rest_param_count);
+
 private:
-    int doInvokeCallback(const CallbackType* callbackType, WamrCallbackData callback, va_list& ap, int method_param_count, int rest_param_count);
-    FtCallbackId curr_cid_ = 0;
+    bool argToTarget(va_list &ap, FeatureType ftype, uint64_t& target);
+
+    bool variArgToTarget(void *arg, wasm_value_t& target);
+
     std::unique_ptr<FeatureInstanceQjs> instance_qjs_;
-    std::map<FtCallbackId, WamrCallbackData> callbacks_;
 };
 
 }

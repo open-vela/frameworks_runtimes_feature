@@ -312,7 +312,8 @@ namespace FeatureFFIQjs {
             case COMPLEX_CALLBACK: {
                 // save into instance
                 CallbackType* callbackType = (CallbackType*)complexType;
-                FtCallbackId id = ((FeatureInstanceQjs*)instance)->addCallback(value, callbackType);
+                auto callback_manager = static_cast<FeatureInstanceQjs*>(instance);
+                FtCallbackId id = callback_manager->addCallback(value, callbackType);
                 *(FtCallbackId*)ptr = id; // write callback id to pointer.
             } break;
             case COMPLEX_ARRAY: {

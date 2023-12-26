@@ -44,7 +44,7 @@ public:
 
     void setFeatureManager(FeatureManager* manager) { feature_manager_ = manager; }
 
-    FeatureManager* getFeatureManager() const { return feature_manager_; }
+    FeatureManager* featureManager() const { return feature_manager_; }
 
     void setNative(void* native) { native_ = native; }
 

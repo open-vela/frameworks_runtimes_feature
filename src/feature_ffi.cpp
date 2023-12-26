@@ -272,7 +272,7 @@ void freeTypeDeclaration(ffi_type*& type)
     }
 }
 
-void* exactVariadicParameter(va_list& ap, FeatureType featureType)
+void* extractVariadicParam(va_list& ap, FeatureType featureType)
 {
     void* result = nullptr;
     bool isPtr = FT_IS_REFERENCE(featureType);

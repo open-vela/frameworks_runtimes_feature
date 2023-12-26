@@ -21,7 +21,8 @@
 #include "feature.h"
 #include "feature_instance.h"
 #include "feature_common.h"
-#include "instance_base.h"
+#include "callback_manager_qjs.h"
+#include "callback_manager.h"
 
 #include <map>
 #include <memory>
@@ -36,12 +37,7 @@ typedef struct WeakRef {
     struct weakref_list_node link;
 } WeakRef;
 
-typedef struct QjsCallbackData {
-    feature_value_t cb;
-    CallbackType* cb_type;
-} QjsCallbackData;
-
-class FeatureInstanceQjs : public FeatureInstance, InstanceBase<feature_value_t> {
+class FeatureInstanceQjs : public FeatureInstance, public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs> {
 public:
     FeatureInstanceQjs(FeaturePrototype* proto);
     FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable);
@@ -63,8 +59,6 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    virtual FtCallbackId addCallback(feature_value_t& value, CallbackType* callbackType);
-
     feature_value_t createTargetInterface();
 
     bool checkCallback(FtCallbackId cid);
@@ -83,19 +77,18 @@ public:
 
     int settleWamrPromise(bool resolve, FtPromiseId pid, va_list& ap);
 
-private:
-    QjsCallbackData getCallback(FtCallbackId cid);
-
-    int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
+    JSContext* getContext();
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
+private:
+    int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
+	
+    bool argToTarget(va_list &ap, FeatureType ftype, JSValue& target);
+
     feature_value_t vm_object_;
     WeakRef weak_self_;
-    FtCallbackId curr_cid_ = 0;
     PromiseManager* promise_manager_ = nullptr;
-
-    std::map<FtCallbackId, QjsCallbackData> callbacks_; // instance should save feature resources
 };
 
 }

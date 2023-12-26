@@ -36,7 +36,7 @@
 #include <memory>
 #include <string>
 
-#define FEATURE_ENVIRONMENT_NAME "wamr"
+#define FEATURE_ENV_NAME "wamr"
 
 typedef struct DynTypeContext {
     JSRuntime *js_rt;
@@ -652,7 +652,7 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
         }
         proto->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
-        setEnvironmentName(FEATURE_ENVIRONMENT_NAME);
+        setEnvName(FEATURE_ENV_NAME);
     }
 
     // create feature instance for the required object
