@@ -298,6 +298,10 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
   // set to userp
   uv_request_set_userp(fetch->request, fetch);
 
+#if CONFIG_FEATURE_LOG_LEVEL == FEATURE_LOG_LEVEL_DEBUG
+  uv_request_set_verbose(fetch->request);
+#endif
+
   // start upload
   uv_request_commit(p->handle, fetch->request, fetch_request_cb);
 
