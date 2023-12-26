@@ -131,7 +131,7 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/net_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/fetch_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/fetch.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
-FEATURELIST += fetch
+FEATURELIST += system_fetch
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/prompt_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/prompt.jidl

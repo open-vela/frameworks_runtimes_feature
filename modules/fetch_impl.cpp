@@ -136,8 +136,8 @@ void fetch_free(fetch_t* p) {
   }
 }
 
-void fetch_onRegister(const char* feature_name) { FETCH_DEBUG(""); }
-void fetch_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_fetch_onRegister(const char* feature_name) { FETCH_DEBUG(""); }
+void system_fetch_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   request_context_t* p =
       static_cast<request_context_t*>(malloc(sizeof(request_context_t)));
   ASSERT_RET_ECHO(p, "malloc err!");
@@ -151,10 +151,10 @@ void fetch_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   weakref_list_initialize(&p->linklist);
   FeatureSetProtoData(handle, p);
 }
-void fetch_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_fetch_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
   FETCH_DEBUG("");
 }
-void fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
   request_context_t* p = get_request_context(handle);
   REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t) {
     if (req->exit) {
@@ -166,7 +166,7 @@ void fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
   }
 }
 
-void fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
   request_context_t* p =
       static_cast<request_context_t*>(FeatureGetProtoData(handle));
   assert(p);
@@ -198,7 +198,7 @@ void request_cancel(fetch_t* fetch) {
   fetch_request_cb(REQUEST_CANCEL, &response);
 }
 
-void fetch_onUnregister(const char* feature_name) { FETCH_DEBUG(""); }
+void system_fetch_onUnregister(const char* feature_name) { FETCH_DEBUG(""); }
 
 bool get_method(FtString method, std::string& out) {
   FETCH_DEBUG("len:%d method:%s", strlen(method), method);
@@ -221,7 +221,7 @@ static void fetch_request_cb(int state, uv_response_t* response) {
   FETCH_DEBUG("state:%d \nbody:%s \nheaders:%s", state, response->body,
               response->headers);
   if (state == UV_REQUEST_DONE) {
-    fetch_SuccessRes res;
+    system_fetch_SuccessRes res;
     res.code = response->httpcode;
     res.data = (ft_value_t*)FeatureMalloc(
         sizeof(ft_value_t) + strlen(response->body), FT_ANY);
@@ -259,7 +259,7 @@ static void fetch_request_cb(int state, uv_response_t* response) {
   p->request = NULL;
 }
 
-static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
+static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
                            std::string& method,
                            std::map<std::string, std::string>& headers,
                            content_t* ct) {
@@ -305,7 +305,7 @@ static bool request_create(fetch_t* fetch, fetch_FetchPara* obj,
 }
 
 static fetch_t* fetch_create(FeatureInstanceHandle feature,
-                             ft_context_ref ft_ctx, fetch_FetchPara* obj,
+                             ft_context_ref ft_ctx, system_fetch_FetchPara* obj,
                              const char* pkg) {
   fetch_t* fetch = new fetch_t;
   assert(fetch);
@@ -415,8 +415,8 @@ Fetch::ContentType get_cy_from_header(
   return (Fetch::ContentType)0;
 }
 
-void fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
-                      fetch_FetchPara* obj) {
+void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
+                      system_fetch_FetchPara* obj) {
   ft_context_ref ft_ctx = FeatureGetContext(feature);
   assert(ft_ctx);
   const char* msg = "";

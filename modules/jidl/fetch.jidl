@@ -1,4 +1,4 @@
-module fetch@1.0
+module system.fetch@1.0
 
 /*
 enum MethodType {
