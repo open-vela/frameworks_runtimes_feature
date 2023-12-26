@@ -593,7 +593,19 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
     temp_str = strdup(param->uri);
-    app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    if (*temp_str == '/' && (type == FILE_READTEXT || type == FILE_READARRBUF)) {
+        app_path = (char*)malloc(CONFIG_PATH_MAX);
+        memset(app_path, 0, CONFIG_PATH_MAX);
+#ifdef CONFIG_QUICKAPP
+        sprintf(app_path, "%s/app/%s%s", CONFIG_HAP_APP_PATH, fc->pkg_name, param->uri);
+#else
+        // CONFIG_QUICK_APP 未打开，采取默认值
+        sprintf(app_path, "data/app/%s%s", fc->pkg_name, param->uri);
+#endif
+    } else {
+        app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    }
+
     free(temp_str);
     if (!app_path) {
         FILE_ERROR("invalid parameter :path");
