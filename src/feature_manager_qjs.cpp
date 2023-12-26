@@ -803,7 +803,13 @@ feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interf
 
 void FeatureManagerQjs::uninit()
 {
-    JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
+    auto ft_ctx = getFeatureContext();
+    if (!ft_ctx) {
+        FEATURE_LOG_INFO("ft_ctx is missing");
+        return;
+    }
+
+    JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     auto free_prototype = [js_ctx](FeaturePrototype* prototype) {
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto);
         if (!feature_is_undefined(*js_proto_ptr)) {
