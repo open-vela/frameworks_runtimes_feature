@@ -287,8 +287,10 @@ namespace FeatureFFIQjs {
                                 }
                             }
                         } else {
-                            FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
-                            return false;
+                            if (FT_GET_VALUE(member->type) != FT_ANY) {
+                                FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
+                                return false;
+                            }
                         }
                     }
 

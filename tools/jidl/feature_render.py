@@ -110,17 +110,29 @@ class FeatureUtils(render.Utils):
 
   def genToMsg(self, out, param, prefix):
     p_name = param['name']
-    ft_ctx = '(ft_context_ref)conn->GetFeatureContext()'
     key_name, to_key = self.getMsgKey(param)
 
+    # char* only be used in protobuf message, all message will be change to json message, no changes for now.
     if to_key == "char*":
       out[key_name] = '(%s)(%s%s)' %(to_key, prefix, p_name)
-    elif to_key == "(char*)ft_to_string":
-      out[key_name] = '%s(%s, *(%s%s))' %(to_key, ft_ctx, prefix, p_name)
-    elif to_key == "int" or to_key == "double":
-      out[key_name] = '(char*)(std::to_string(%s%s).c_str())' %(prefix, p_name)
-    elif to_key == "bool":
-      out[key_name] = '(%s%s) ? "true" : "false"' %(prefix, p_name)
+    elif to_key == "int_to_str":
+      out[key_name] = 'MicoFeatureUtils::num_to_str<int>(szbuf, buf_len, %s%s)' %(prefix, p_name)
+    elif to_key == "double_to_str":
+      out[key_name] = 'MicoFeatureUtils::num_to_str<double>(szbuf, buf_len, %s%s)' %(prefix, p_name)
+    elif to_key == "bool_to_str":
+      out[key_name] = 'MicoFeatureUtils::num_to_str<double>(szbuf, buf_len, %s%s)' %(prefix, p_name)
+    elif to_key == "any_to_str":
+      out[key_name] = 'MicoFeatureUtils::any_to_str(szbuf, buf_len, %s%s, conn)' %(prefix, p_name)
+    elif to_key == "int_arr_to_str":
+      out[key_name] = 'MicoFeatureUtils::arr_to_str<int>(szbuf, buf_len, %s%s, ArrayType::INT)' %(prefix, p_name)
+    elif to_key == "double_arr_to_str":
+      out[key_name] = 'MicoFeatureUtils::arr_to_str<double>(szbuf, buf_len, %s%s, ArrayType::DOUBLE)' %(prefix, p_name)
+    elif to_key == "str_arr_to_str":
+      out[key_name] = 'MicoFeatureUtils::arr_to_str<char*>(szbuf, buf_len, %s%s, ArrayType::STRING)' %(prefix, p_name)
+    elif to_key == "bool_arr_to_str":
+      out[key_name] = 'MicoFeatureUtils::arr_to_str<bool>(szbuf, buf_len, %s%s, ArrayType::BOOL)' %(prefix, p_name)
+    elif to_key == "str_to_json_str":
+      out[key_name] = 'MicoFeatureUtils::str_to_json_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     else:
       out[key_name] = '%s%s' %(prefix, p_name)
 
