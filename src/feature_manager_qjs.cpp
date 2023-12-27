@@ -296,6 +296,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                     break;
                 }
                 ffi_arg_values[extra_argc + i] = &optionalType->fval;
+                FeatureDupValue(ffi_arg_values[extra_argc + i]);
             }
         }
 
