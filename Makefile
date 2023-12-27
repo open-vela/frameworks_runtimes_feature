@@ -20,8 +20,6 @@ CXXEXT     := .cpp
 CXXFLAGS   += -std=c++17
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
-BIN := $(APPDIR)/staging/libfeature.a
-
 ifneq ($(CONFIG_FEATURE_LOG_LEVEL),)
 CXXFLAGS += -DFEATURE_LOG_LEVEL=$(CONFIG_FEATURE_LOG_LEVEL)
 endif
@@ -272,6 +270,20 @@ CXXSRCS += $(strip $(foreach i, $(shell seq 1 $(words $(JIDL_PATH))),\
 	$(eval file_name=$(strip $(basename $(notdir $(word $(i), $(JIDL_PATH))) .jidl)))\
 	$(out_path)/$(file_name).cpp\
 ))
+
+ASRCS := $(wildcard $(ASRCS))
+CSRCS := $(wildcard $(CSRCS))
+CXXSRCS := $(wildcard $(CXXSRCS))
+MAINSRC := $(wildcard $(MAINSRC))
+NOEXPORTSRCS = $(ASRCS)$(CSRCS)$(CXXSRCS)$(MAINSRC)
+
+ifneq ($(NOEXPORTSRCS),)
+BIN := $(APPDIR)/staging/libfeature.a
+endif
+
+EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_descriptors.h \
+                include/feature_exports.h include/feature_main_exports.h
+
 
 context:: 
 	@echo "-------------------generate files----------------------"
