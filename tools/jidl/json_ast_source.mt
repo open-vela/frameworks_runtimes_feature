@@ -92,29 +92,29 @@ static ObjectMember ${module_name}_${struct_name}_struct_members[] = {
 %>\
     { "${member_name}", ${member_ft}, offsetof(${module_name}_${struct_name}, ${member_name}), sizeof(${cpp_type}) },
 %endfor
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
 %if render.CheckStructSelfRef(struct_node['members'], struct_name) != 'not_self_ref':
-const ObjectMapType ${struct_name}_struct_type::${module_name}_${struct_name}_struct_type {
+const ObjectMapType ${struct_name}_struct_type::${module_name}_${struct_name}_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(${module_name}_${struct_name}) },
     .members = ${module_name}_${struct_name}_struct_members
 };
 
 ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
     return (${module_name}_${struct_name}*)FeatureMalloc(
-        sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&(${struct_name}_struct_type::${module_name}_${struct_name}_struct_type)));
+        sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX_REF(&(${struct_name}_struct_type::${module_name}_${struct_name}_struct_type)));
 }
 %else:
-static const ObjectMapType ${module_name}_${struct_name}_struct_type {
+static const ObjectMapType ${module_name}_${struct_name}_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(${module_name}_${struct_name}) },
     .members = ${module_name}_${struct_name}_struct_members
 };
 
 ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
     return (${module_name}_${struct_name}*)FeatureMalloc(
-        sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type));
+        sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX_REF(&${module_name}_${struct_name}_struct_type));
 }
 %endif
 
@@ -128,7 +128,7 @@ ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
     p_ft = {}
     GenPromiseType(ret_type, p_ft)
     ret_ft = p_ft['feature_type']
-    ret_ft = f"FT_MK_COMPLEX_REF(&{ret_ft})"
+    ret_ft = f"FT_MK_COMPLEX(&{ret_ft})"
   else:
     ret_info = render.GenerateFeatureInfo(ret_type)
     ret_ft = render.GenerateFtExpression(ret_info)
@@ -301,7 +301,7 @@ static const MemberAccessor ${module_name}_${iname}_${member_val} = {
   member_name = member['member_name']
   member_val_type = member['member_val_type']
   member_val = member['member_val']
-  member_val = f"{module_name}_{iname}_{member_val}"
+  member_val = f"&{module_name}_{iname}_{member_val}"
 %>\
   {
       .type = ${member_type},
@@ -319,7 +319,7 @@ static const MemberAccessor ${module_name}_${iname}_${member_val} = {
   member_suffix = member_info['suffix']
   member_val_type = member_info['val_type']
   parent_prefix = f"{iname}_interface_"
-  member_val = f"{module_name}_{parent_prefix}{member_name}{member_suffix}"
+  member_val = f"&{module_name}_{parent_prefix}{member_name}{member_suffix}"
   is_valid_member = member_type != 'MEMBER_NULL'
 %>\
 %if is_valid_member:
@@ -379,7 +379,7 @@ static const FeatureDescription ${module_name}_${parent_prefix}desc = {
 };
 
 // InterfaceType
-const InterfaceType ${module_name}_${parent_prefix}type {
+const InterfaceType ${module_name}_${parent_prefix}type = {
     .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &${module_name}_${parent_prefix}desc
 };
@@ -396,9 +396,9 @@ struct ${array_type} {
 static const ArrayType ${module_name}_${array_type}_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
 %if ref_type == 'is_complex_ref':
-    .element_type = FT_MK_COMPLEX_REF(&${module_name}_${array_type})
+    .element_type = FT_MK_COMPLEX(&${module_name}_${array_type})
 %elif ref_type == 'array_struct_self_ref':
-    .element_type = FT_MK_COMPLEX_REF(&(${array_type}::${module_name}_${array_type}))
+    .element_type = FT_MK_COMPLEX(&(${array_type}::${module_name}_${array_type}))
 %elif is_complex:
     .element_type = FT_MK_COMPLEX(&${array_type})
 %else:
@@ -409,7 +409,7 @@ static const ArrayType ${module_name}_${array_type}_array = {
 
 FtArray* ${module_name}_malloc_${array_type}_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&${module_name}_${array_type}_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&${module_name}_${array_type}_array));
 }
 
 </%def>\
@@ -491,7 +491,7 @@ static const PromiseType ${p_feature_type} = {
     p_ft = {}
     GenPromiseType(ret_type, p_ft)
     ret_ft = p_ft['feature_type']
-    ret_ft = f"FT_MK_COMPLEX_REF(&{ret_ft})"
+    ret_ft = f"FT_MK_COMPLEX(&{ret_ft})"
   else:
     ret_info = render.GenerateFeatureInfo(ret_type)
     ret_ft = render.GenerateFtExpression(ret_info)
@@ -591,12 +591,12 @@ ${GenMemberMethod(identifier, ret_type)}
     func_call += f", {params_call_list}"
   func_call += ")"
 
-  prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
+  prefix_params = 'FeatureInstanceHandle feature, union AppendData append_data'
   if is_promise:
     prefix_params += ', FtPromiseId pid'
 %>\
 /****** for JIDL use '${identifier}' ******/
-static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params}) {
+static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params}) = {
     ${func_call};
 }
 
@@ -611,7 +611,7 @@ ${GenMemberMethod(identifier, ret_type_node)}
 %if success:
 /****** for JIDL callback '${identifier}' ******/
 ${GenParamsFeatureType(cb_node, '')}
-static const CallbackType ${module_name}_${identifier}_callback_type {
+static const CallbackType ${module_name}_${identifier}_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = ${module_name}_${identifier}_parameters,
     .return_type = FT_VOID
@@ -669,7 +669,7 @@ static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
   else:
     const_def += f" = {const_value}"
     const_func_def = f"{cpp_type} "
-  const_func_def += f"{module_name}_init_const_{const_name}(FeatureInstanceHandle feature, AppendData append_data) {{ return {module_name}_g_const_{const_name}; }}"
+  const_func_def += f"{module_name}_init_const_{const_name}(FeatureInstanceHandle feature, union AppendData append_data) {{ return {module_name}_g_const_{const_name}; }}"
 %>\
 /****** for JIDL const '${const_name}' ******/
 ${const_def};
@@ -698,7 +698,7 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
     {
         .type = ${member_type},
         .name = "${member_name}",
-        .${member_val_type} = ${module_name}_${member_name}${member_suffix},
+        .${member_val_type} = &${module_name}_${member_name}${member_suffix},
     },
 %endif
 %endfor
@@ -706,6 +706,7 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
 #include "${header_name}"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -732,7 +733,7 @@ ${GenMembers(module['members'])}\
 };
 
 // callbacks
-static const struct FeatureCallbacks ${module_name}_callbacks {
+static const struct FeatureCallbacks ${module_name}_callbacks = {
     ${module_name}_onRegister,
     ${module_name}_onCreate,
     ${module_name}_onRequired,
@@ -753,6 +754,6 @@ static const FeatureDescription ${module_name}_desc = {
 
 QAPPFEATURE_INIT(${module_name})
 {
-    return mgr->registerFeature(features, &${module_name}_desc);
+    return FeatureRegisterFeature(handle, &${module_name}_desc);
 }
 /* clang-format on */

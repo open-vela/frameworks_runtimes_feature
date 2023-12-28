@@ -15,21 +15,20 @@
  */
 
 #include "feature_registry.h"
-#include "ajs_features_init.h"
 #include "feature_common.h"
+#include "ajs_features_init.h"
 
 #include <assert.h>
 #include <memory>
 #include <string.h>
 #include <string>
-
+extern "C" {
+#include "ajs_cfeatures_init.h"
+}
 namespace ferry {
 
 bool FeatureRegistry::init(const char* package_name)
 {
-    // register features
-    std::vector<std::string> features;
-
     if (package_name) {
         package_name_ = package_name;
     }
@@ -39,15 +38,13 @@ bool FeatureRegistry::init(const char* package_name)
     } else {
         FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
     }
-
+    FeatureRegistryHandle handle = this;
 // register features
 #include "ajs_features_list.h"
-
     return true;
 }
 
-bool FeatureRegistry::registerFeature(std::vector<std::string>& features,
-    const FeatureDescription* description)
+bool FeatureRegistry::registerFeature(const FeatureDescription* description)
 {
     if (!description)
         return false;

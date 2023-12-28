@@ -108,20 +108,17 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/simple_1_0.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/simple_1_0_impl.cpp
 FEATURELIST += Simple
 
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test_impl.cpp
-FEATURELIST += struct_test
+CSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test.c
+CSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test_impl.c
+CFEATURELIST += struct_test
 
 ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
-CXXSRCS += $(APPDIR)/frameworks/account/feature/account_1_0.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/account_1_0.cpp
 CXXSRCS += $(APPDIR)/frameworks/account/feature/account_1_0_impl.cpp
 FEATURELIST += service_internal_account
 endif
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feature_timers.cpp
-FEATURELIST += timers
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/app_path.cpp
 
@@ -273,6 +270,7 @@ FEATURELIST += system_file
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/folme.cpp
 FEATURELIST += system_folme
 endif
 

@@ -22,7 +22,7 @@ int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
     if (optional_size) {
         *optional_size = 0;
     }
-    while (param && FT_GET_VALUE(*param)) {
+    while (param && (((*param)) != 1) && ((*param) != 0)) {
         count++;
         if (optional_size && FT_IS_COMPLEX(*param)) {
             ComplexTypeHeader* complexHeader = (ComplexTypeHeader*)FT_GET_COMPLEX(*param);
@@ -55,7 +55,7 @@ int getValueSize(FeatureType featureType)
         return sizeof(uintptr_t);
     }
     if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+        switch (FT_ADD_REFERENCE(featureType)) {
         case FT_VOID: {
             return 0;
         } break;

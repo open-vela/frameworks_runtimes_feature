@@ -111,24 +111,24 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
     auto instance = instance_from_target((wasm_obj_t)thiz_ptr);
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
-    auto& accessor = member->accessor;
+    MemberAccessor *accessor = const_cast<MemberAccessor*>(member->accessor);
     auto description = instance->prototype()->description();
 
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor.getter.vtable_idx) : accessor.getter.callback;
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
 
     ffi_type *ffi_arg_types[2] = {&ffi_type_pointer, &ffi_type_sint64};
-    void *ffi_arg_values[2] = {&instance, (void*)(&accessor.data)};
+    void *ffi_arg_values[2] = {&instance, (void*)(&accessor->data)};
     AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
     AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
-    if (!createTypeDeclaration(accessor.type, ffi_ret_type)) {
+    if (!createTypeDeclaration(accessor->type, ffi_ret_type)) {
         FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
         return;
     }
-    if (!createHostValue(accessor.type, ffi_ret_value, true)) {
+    if (!createHostValue(accessor->type, ffi_ret_value, true)) {
         FEATURE_LOG_ERROR("create return value failed!");
         return;
     }
@@ -141,10 +141,11 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
         return;
     }
 
+
     // invoke
     ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
     // process return value
-    if (!FeatureFFIWamr::convertValueToGuest(instance, accessor.type, ffi_ret_value, exec_env, ret_val)) {
+    if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ffi_ret_value, exec_env, ret_val)) {
         FEATURE_LOG_ERROR("can not convert return value to guest!");
         return;
     }
@@ -157,28 +158,28 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
     auto instance = instance_from_target((wasm_obj_t)thiz_ptr);
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
-    auto& accessor = member->accessor;
+    MemberAccessor *accessor = const_cast<MemberAccessor*>(member->accessor);
     auto description = instance->prototype()->description();
 
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type *ffi_arg_types[3] = {&ffi_type_pointer, &ffi_type_sint64, nullptr};
-    void *ffi_arg_values[3] = {&instance, (void*)(&accessor.data), nullptr};
+    void *ffi_arg_values[3] = {&instance, (void*)(&accessor->data), nullptr};
     AutoPtr<void*> arg_value(FeatureFreeValue);
     AutoPtr<ffi_type*> arg_type(free_ffi_type);
 
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor.setter.vtable_idx) : accessor.setter.callback;
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
 
     // prepare third param type declaration, create by accessor type
-    if (!createTypeDeclaration(accessor.type, arg_type)) {
+    if (!createTypeDeclaration(accessor->type, arg_type)) {
         FEATURE_LOG_ERROR("create type declaration for input failed!");
         return;
     }
     ffi_arg_types[2] = arg_type;
     // fill third param using guest value and accesor type
-    if (!FeatureFFIWamr::convertValueToHost(instance, accessor.type, arg_value, exec_env, *args)) {
+    if (!FeatureFFIWamr::convertValueToHost(instance, accessor->type, arg_value, exec_env, *args)) {
         FEATURE_LOG_ERROR("convert to host value failed!");
         return;
     }
@@ -203,15 +204,16 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
     // FeatureInstance *instance = instance_from_target((wasm_obj_t)thiz_ptr);
     const Member* member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
-    auto& member_const = member->value;
+    MemberConst* member_const = const_cast<MemberConst*>(member->value);
 
     if (!FeatureFFIWamr::convertConstToGuest(exec_env,
-            member_const.type, member_const.data, ret_val)) {
+            member_const->type, member_const->data, ret_val)) {
         FEATURE_LOG_ERROR("can not convert const value to guest!");
         return;
     }
 
     *ret_ptr = ret_val;
+
 }
 
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
@@ -232,8 +234,8 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     auto description = instance->prototype()->description();
 
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
-    const auto& method = member->method;
-    auto method_params = method.parameters;
+    const auto method = member->method;
+    auto method_params = method->parameters;
     FtPromiseId pid = -1;
 
     // count size
@@ -274,7 +276,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 
     // prepare and get args
     int32_t packed_argc = has_rest_params ? fixed_argc + 1 : fixed_argc;
-    bool is_promise = FT_IS_PROMISE(method.return_type);
+    bool is_promise = FT_IS_PROMISE(method->return_type);
     int extra_argc = is_promise ? 3 : 2;
 
     // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
@@ -294,7 +296,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         ffi_arg_types[2] = &ffi_type_sint32;
     }
     ffi_arg_values[0] = &instance;
-    ffi_arg_values[1] = (void*)&method.data;
+    ffi_arg_values[1] = (void*)&method->data;
 
     for (size_t i = 0; i < fixed_argc; i++) {
         uint64_t curr_arg = args[i];
@@ -351,13 +353,13 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     }
 
     // prepeare return type
-    if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
+    if (!createTypeDeclaration(method->return_type, ffi_ret_type)) {
         FEATURE_LOG_ERROR("prepareType for complex type failed!");
         return;
     }
     // create return value pointer inneed.
-    if (!is_promise && method.return_type != FT_VOID) {
-        if (!createHostValue(method.return_type, ffi_ret_value, true)) {
+    if (!is_promise && method->return_type != FT_VOID) {
+        if (!createHostValue(method->return_type, ffi_ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed!");
             return;
         }
@@ -381,7 +383,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     feature_value_t promise;
     auto w_instance = (FeatureInstanceWamr*)instance;
     if (is_promise) {
-        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method->return_type);
         // create promise
         PromiseType* promise_type = (PromiseType*)complex_type;
         // create promise and add to instance
@@ -392,13 +394,13 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     }
 
     // invoke method
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method->func.vtable_idx) : method->func.callback;
     FEATURE_CHECK_NE(callback, nullptr);
     ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
     // process return value, do not handle promise, it is handled before we invoke ffi_call.
-    if (!is_promise && method.return_type != FT_VOID) {
+    if (!is_promise && method->return_type != FT_VOID) {
         //process return value
-        if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, ret_val)) {
+        if (!FeatureFFIWamr::convertValueToGuest(instance, method->return_type, ffi_ret_value, exec_env, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             return;
         }
@@ -604,8 +606,10 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
    /* register interface api */
     if (description->members->type == MEMBER_METHOD) {
         for (int i = 0; i < description->member_count; i++) {
-            Member member = description->members[i];
-            FeatureType feature_type =  member.method.return_type;
+            const Member& member = description->members[i];
+            if (member.type != MEMBER_METHOD)
+                continue;
+            FeatureType feature_type = member.method->return_type;
             if (feature_type == FT_VOID || !FT_IS_COMPLEX(feature_type))
                 continue;
             ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(feature_type);
@@ -628,8 +632,8 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
     }
 
     for (int i = 0; i < description->member_count; i++) {
-        const Member& member = description->members[i];
-        switch (member.type) {
+        const Member* member = &(description->members[i]);
+        switch (member->type) {
             case MEMBER_NULL: {
                 // not allowed
                 FEATURE_CHECK(false && "invalid member type!");
@@ -637,25 +641,25 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             }
             case MEMBER_METHOD: {
                 // register different type
-                auto& method = member.method;
+                auto method = member->method;
                 char *method_name = new char[128];
                 native_strings_.push_back(method_name);
                 strcpy(method_name, description->name);
                 /* special treat for interface */
-                if (FT_IS_COMPLEX(method.return_type)) {
-                    ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
+                if (FT_IS_COMPLEX(method->return_type)) {
+                    ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method->return_type);
                     (complexType->type == COMPLEX_INTERFACE) ? strcat(method_name, "__") : strcat(method_name, "_");
                 } else {
                     /* method->return_type is PRIMITIVE TYPE, method_name as before */
                     strcat(method_name, "_");
                 }
 
-                strcat(method_name, member.name);
+                strcat(method_name, member->name);
                 char *signature = new char[64];
                 native_strings_.push_back(signature);
                 memset(signature, 0, 64);
                 strcpy(signature, "(r");
-                const FeatureType *ftype = (FeatureType *)method.parameters;
+                const FeatureType *ftype = (FeatureType *)method->parameters;
                 while ((*ftype) != 0) {
                     if (FT_PARAM_REST_END == *ftype) {
                         signature[strlen(signature)] = 'r';
@@ -670,66 +674,66 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 strcat(signature, ")");
                 /* if method->return_type is COMPLEX_INTERFACE, it's means the method is createxxx, and return is feature instance ptr
                 there use f64 express it's return type */
-                if (FT_IS_COMPLEX(method.return_type)) {
-                    ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method.return_type);
+                if (FT_IS_COMPLEX(method->return_type)) {
+                    ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method->return_type);
                     /* special treat for interface */
                     if (complexType->type == COMPLEX_INTERFACE) {
                         signature[strlen(signature)] = 'F';
                     } else {
                         /* COMPLEX TYPE, such as FTArray, deal with is as brefore */
-                        char retc = FeatureFFIWamr::getFeatureSignature(method.return_type);
+                        char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
                         if (retc != 0)
                             signature[strlen(signature)] = retc;
                     }
                 } else {
                     /* PRIMITIVE TYPE, deal with is as brefore */
-                    char retc = FeatureFFIWamr::getFeatureSignature(method.return_type);
+                    char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
                     if (retc != 0)
                         signature[strlen(signature)] = retc;
                 }
-                if (!registerSymbol((void*)method_call, method_name, signature, (void*)(&member))) {
+                if (!registerSymbol((void*)method_call, method_name, signature, (void*)(member))) {
                     return false;
                 }
                 break;
             }
             case MEMBER_ACCESSOR: {
                 // register accessor_get and accessor_set
-                const MemberAccessor& accessor = member.accessor;
-                if (accessor.getter.vtable_idx >= 0 || accessor.getter.callback) {
+                const MemberAccessor *accessor = member->accessor;
+                if (accessor->getter.vtable_idx >= 0 || accessor->getter.callback) {
                     char *getter_name = new char[128];
                     native_strings_.push_back(getter_name);
                     strcpy(getter_name, description->name);
                     strcat(getter_name, "_get_");
-                    strcat(getter_name, member.name);
+                    strcat(getter_name, member->name);
                     strcat(getter_name, "_0");
                     char *signature = new char[64];
                     native_strings_.push_back(signature);
                     memset(signature, 0, 64);
                     strcpy(signature, "(r");
-                    char type = FeatureFFIWamr::getFeatureSignature(accessor.type);
+                    char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
                     strcat(signature, ")");
                     if (type != 0)
                         signature[strlen(signature)] = type;
-                    if (!registerSymbol((void*)accessor_get, getter_name, signature, (void*)(&member))) {
+                    if (!registerSymbol((void*)accessor_get, getter_name, signature, (void*)(member))) {
                         return false;
                     }
                 }
-                if(accessor.setter.vtable_idx >= 0 || accessor.setter.callback) {
+                if(accessor->setter.vtable_idx >= 0 || accessor->setter.callback) {
                     char *setter_name = new char[128];
                     native_strings_.push_back(setter_name);
                     strcpy(setter_name, description->name);
                     strcat(setter_name, "_set_");
-                    strcat(setter_name, member.name);
+                    strcat(setter_name, member->name);
                     strcat(setter_name, "_0");
                     char *signature = new char[64];
                     native_strings_.push_back(signature);
                     memset(signature, 0, 64);
                     strcpy(signature, "(r");
-                    char sig = FeatureFFIWamr::getFeatureSignature(accessor.type);
+                    char sig = FeatureFFIWamr::getFeatureSignature(accessor->type);
                     if (sig != 0)
                         signature[strlen(signature)] = sig;
                     strcat(signature, ")");
-                    if (!registerSymbol((void*)accessor_set, setter_name, signature, (void*)(&member))) {
+                    if (!registerSymbol((void*)accessor_set, setter_name, signature, (void*)(member))) {
                         return false;
                     }
                 }
@@ -737,17 +741,17 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             }
             case MEMBER_CONST: {
                 // handle member const
-                const MemberConst& member_const = member.value;
+                const MemberConst *member_const = member->value;
                 char *const_name = new char[128];
                 native_strings_.push_back(const_name);
                 strcpy(const_name, description->name);
                 strcat(const_name, "_const_");
-                strcat(const_name, member.name);
+                strcat(const_name, member->name);
                 char *signature = new char[64];
                 native_strings_.push_back(signature);
                 memset(signature, 0, 64);
                 strcpy(signature, "(r");
-                char sig = FeatureFFIWamr::getFeatureSignature(member_const.type);
+                char sig = FeatureFFIWamr::getFeatureSignature(member_const->type);
                 strcat(signature, ")");
                 if (sig != 0)
                     signature[strlen(signature)] = sig;

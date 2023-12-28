@@ -24,6 +24,7 @@
 #include "arraybuffer_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -83,22 +84,22 @@ static const Member arraybuffer_test_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "setArraybuffer",
-        .method = arraybuffer_test_setArraybuffer_member_method,
+        .method = &arraybuffer_test_setArraybuffer_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "getArraybuffer",
-        .method = arraybuffer_test_getArraybuffer_member_method,
+        .method = &arraybuffer_test_getArraybuffer_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "getTypedArraybuffer",
-        .method = arraybuffer_test_getTypedArraybuffer_member_method,
+        .method = &arraybuffer_test_getTypedArraybuffer_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "print",
-        .method = arraybuffer_test_print_member_method,
+        .method = &arraybuffer_test_print_member_method,
     },
 };
 
@@ -124,6 +125,6 @@ static const FeatureDescription arraybuffer_test_desc = {
 
 QAPPFEATURE_INIT(arraybuffer_test)
 {
-    return mgr->registerFeature(features, &arraybuffer_test_desc);
+    return FeatureRegisterFeature(handle, &arraybuffer_test_desc);
 }
 /* clang-format on */

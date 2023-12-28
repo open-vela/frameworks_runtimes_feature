@@ -335,7 +335,7 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
     }
     if (FT_IS_REFERENCE(ftype)) {
         void*& value_ptr = *(void**)ptr;
-        if (!convertValueToHost(instance, FT_REMOVE_REFERENCE(ftype), value_ptr, exec_env, value)) {
+        if (!convertValueToHost(instance, FT_ADD_REFERENCE(ftype), value_ptr, exec_env, value)) {
             FEATURE_LOG_ERROR("convert value to host failed !");
             return false;
         }

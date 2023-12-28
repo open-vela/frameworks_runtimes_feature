@@ -44,7 +44,7 @@ ${dtor_def};
   i_type = vtable_item['type']
   i_params = vtable_item['params']
   i_ret_type = vtable_item['return_type']
-  params = "FeatureInterfaceHandle handle, AppendData append_data"
+  params = "FeatureInterfaceHandle handle, union AppendData append_data"
   if i_params != '':
     params = f"{params}, {i_params}"
   func_def = f"{i_ret_type} {item_prefix}"
@@ -77,7 +77,7 @@ ${render.GenerateInterfaceCtorDefine(func_node)};
   cpp_type = render.GenerateCppType(prop_type)
   if cpp_type == 'FtArray':
     cpp_type += '*'
-  getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, AppendData append_data)"
+  getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, union AppendData append_data)"
 %>\
 ${getter_def};
 %endif
@@ -86,7 +86,7 @@ ${getter_def};
   cpp_type = render.GenerateCppType(prop_type)
   if render.IsParamRefType(cpp_type):
     cpp_type += '&'
-  setter_def = f"void {module_name}_set_{prop_name}(void* feature, AppendData append_data, {cpp_type} {prop_name})"
+  setter_def = f"void {module_name}_set_{prop_name}(void* feature, union AppendData append_data, {cpp_type} {prop_name})"
 %>\
 ${setter_def};
 %endif
@@ -115,7 +115,7 @@ typedef struct _${struct_name} {
 %endfor
 } ${module_name}_${struct_name};
 
-${module_name}_${struct_name}* ${module_name}Malloc${struct_name}();
+${module_name}_${struct_name}* ${module_name}Malloc${struct_name}(void);
 
 </%def>\
 <%def name="GenArrayMallocFuncDefines()">\
@@ -135,7 +135,7 @@ ${malloc_def};
 
 #include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

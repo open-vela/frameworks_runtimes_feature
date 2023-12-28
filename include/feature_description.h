@@ -22,31 +22,29 @@ extern "C" {
 #endif
 
 #include "feature_types.h"
-#include <cstdint>
+#include <stdint.h>
 #include <inttypes.h>
 #include <stdlib.h>
 
-#define FT_COMPLEX_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 1)))
-#define FT_VALUE_MASK (~(FT_COMPLEX_BIT | FT_REFERENCE_BIT))
+#define FT_COMPLEX_BIT ((uintptr_t)1)
 
-#define FT_IS_PRIMITIVE(type) (((((uintptr_t)type) >> ((sizeof(uintptr_t) * 8 - 1))) & 1) == 0)
-#define FT_IS_COMPLEX(type) (((((uintptr_t)type) >> ((sizeof(uintptr_t) * 8 - 1))) & 1) == 1)
-// check if is reference
-#define FT_IS_REFERENCE(type) (((((uintptr_t)type) >> ((sizeof(uintptr_t) * 8 - 2))) & 1) == 1)
-#define FT_SET_REFERENCE(type) ((uintptr_t)(type) | FT_REFERENCE_BIT)
-#define FT_REMOVE_REFERENCE(type) ((uintptr_t)(type) & ~FT_REFERENCE_BIT)
+#define FT_IS_PRIMITIVE(type) (((((uintptr_t)type)) & FT_COMPLEX_BIT) == 1)
+#define FT_IS_COMPLEX(type) (((((uintptr_t)type)) & FT_COMPLEX_BIT) == 0)
 
-#define FT_GET_VALUE(type) (((uintptr_t)type) & FT_VALUE_MASK)
-#define FT_MK_COMPLEX(ptr) ((uintptr_t)((((uintptr_t)ptr) >> 2) | FT_COMPLEX_BIT))
-#define FT_MK_COMPLEX_REF(ptr) (FT_SET_REFERENCE(FT_MK_COMPLEX(ptr)))
+#define FT_ADD_REFERENCE(type) ((uintptr_t)(type) | FT_REFERENCE_BIT)
 
-#define FT_MK_OPTIONAL(ptr) FT_MK_COMPLEX(ptr)
+#define FT_GET_VALUE FT_ADD_REFERENCE
+#define FT_MK_COMPLEX_REF(ptr) (uintptr_t)(FT_ADD_REFERENCE((uintptr_t)ptr))
+#define FT_MK_COMPLEX(ptr) ((uintptr_t)ptr)
 
-#define FT_PARAM_REST_END ((uintptr_t)(0) | FT_REFERENCE_BIT)
+#define FT_MK_OPTIONAL(ptr) (uintptr_t)(ptr)
+
+#define FT_PARAM_REST_END ((uintptr_t)(1))
 #define FT_PARAM_END (0)
-#define FT_GET_COMPLEX(ptr) (((uintptr_t)ptr) << 2)
+#define FT_GET_COMPLEX(ptr) (((uintptr_t)ptr & ~(FT_COMPLEX_BIT | FT_REFERENCE_BIT)))
 
 #define FT_IS_PROMISE(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
+#define FT_IS_CALLBACK(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_CALLBACK)
 
 typedef struct FTObjHeader {
     int32_t ref_count;
@@ -61,7 +59,7 @@ inline void* FT_GET_OBJ(void* ptr)
     if (FT_IS_MANAGEMENT_OBJ(ptr)) {
         return (char*)ptr + FT_OBJ_HEADER_SIZE;
     }
-    return nullptr;
+    return NULL;
 }
 
 enum MemberType {
@@ -70,11 +68,6 @@ enum MemberType {
     MEMBER_ACCESSOR,
     MEMBER_CONST
 };
-
-inline bool isPrimitiveType(FeatureType type)
-{
-    return type < FT_PRIMITIVE_END;
-}
 
 enum ComplexType {
     COMPLEX_STRUCT_MAP = 1, // object map
@@ -98,37 +91,37 @@ typedef struct ObjectMember {
 } ObjectMember;
 
 typedef struct MemberMethod {
-    FuncData func;
+    union FuncData func;
     const FeatureType* parameters; // 参数描述数组, 以空结束
     FeatureType return_type;
-    AppendData data; // 附加数据
+    union AppendData data; // 附加数据
 } MemberMethod;
 
 typedef struct MemberAccessor {
-    FuncData getter; // getter & setter可以有一个为空
-    FuncData setter;
+    union FuncData getter; // getter & setter可以有一个为空
+    union FuncData setter;
     FeatureType type;
-    AppendData data; // 附加数据
+    union AppendData data; // 附加数据
 } MemberAccessor;
 
 typedef struct MemberConst {
     FeatureType type;
-    FuncData func;
-    AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
+    union FuncData func;
+    union AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
 } MemberConst;
 
 typedef struct Member {
-    MemberType type;
+    enum MemberType type;
     const char* name; // member的名称
     union {
-        MemberMethod method;
-        MemberAccessor accessor;
-        MemberConst value;
+        const MemberMethod *method;
+        const MemberAccessor *accessor;
+        const MemberConst *value;
     };
 } Member;
 
 typedef struct ComplexTypeHeader {
-    ComplexType type; // type值必须在最前面
+    enum ComplexType type; // type值必须在最前面
     size_t size; /* Note: 此处是实际对象大小，并不是Complex对象大小，例如CallbackType里描述了回调信息，但实际的callback只是一个cid */
 } ComplexTypeHeader;
 
@@ -199,6 +192,21 @@ typedef struct FeatureDescription {
     int member_count; // 成员数量
     const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
+
+#define TRY_GET_REAL_TYPE(featureType) \
+    if (FT_IS_COMPLEX(featureType)) { \
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
+        if (complexType->type == COMPLEX_OPTIONAL) { \
+            featureType = ((OptionalType*)complexType)->type; \
+        } \
+    }
+// check if is reference
+static inline int FT_IS_REFERENCE(FeatureType featureType)
+{
+    TRY_GET_REAL_TYPE(featureType);
+    int isRef = (((uintptr_t)featureType) & FT_REFERENCE_BIT) == 0;
+    return isRef;
+}
 
 #ifdef __cplusplus
 }

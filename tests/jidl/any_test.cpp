@@ -24,6 +24,7 @@
 #include "any_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -70,17 +71,17 @@ static const Member any_test_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "setAny",
-        .method = any_test_setAny_member_method,
+        .method = &any_test_setAny_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "getAny",
-        .method = any_test_getAny_member_method,
+        .method = &any_test_getAny_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "print",
-        .method = any_test_print_member_method,
+        .method = &any_test_print_member_method,
     },
 };
 
@@ -106,6 +107,6 @@ static const FeatureDescription any_test_desc = {
 
 QAPPFEATURE_INIT(any_test)
 {
-    return mgr->registerFeature(features, &any_test_desc);
+    return FeatureRegisterFeature(handle, &any_test_desc);
 }
 /* clang-format on */

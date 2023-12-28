@@ -24,7 +24,7 @@ extern "C" {
 #include "feature_context.h"
 #include <stdbool.h>
 
-#define FT_REFERENCE_BIT ((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 2)))
+#define FT_REFERENCE_BIT ((uintptr_t)2)
 
 // primitive type definations
 typedef int FtInt;
@@ -46,6 +46,7 @@ typedef int32_t FtPromiseId; // feature promise id
 
 typedef void* FeatureRuntimeContext; // guest runtime context, e.g qucikjs RuntimeContext
 
+typedef void* FeatureRegistryHandle; // feature registry handle.
 typedef void* FeatureManagerHandle; // feature manage handle.
 typedef void* FeatureProtoHandle; // feature prototype handle.
 typedef void* FeatureInstanceHandle; // feature instance handle.
@@ -67,28 +68,50 @@ typedef struct VTable {
     const NativeFunc* members;
 } VTable;
 
+#define FT_REMOVE_REFERENCE(type) ((uintptr_t)(type) & ~FT_REFERENCE_BIT)
+
+enum FeaturePrimitiveTypeIndex {
+    FT_VOID_INDEX = 0,
+    FT_INT_INDEX,
+    FT_INT8_INDEX,
+    FT_UINT8_INDEX,
+    FT_INT16_INDEX,
+    FT_UINT16_INDEX,
+    FT_INT32_INDEX,
+    FT_UINT32_INDEX,
+    FT_INT64_INDEX,
+    FT_UINT64_INDEX,
+    FT_FLOAT_INDEX,
+    FT_DOUBLE_INDEX,
+    FT_BOOLEAN_INDEX,
+    FT_CHAR_INDEX,
+    FT_ANY_INDEX,
+    FT_POINTER_INDEX = (0x800), // pointer index
+    FT_RAWPOINTER_INDEX, // raw pointer index
+};
+//
+#define FT_SET_PRIMITIVE_TYPE(index) ((index << 2) | 3)
+
 enum FeaturePrimitiveType {
-    FT_VOID = 0, // void defination
-    FT_INT,
-    FT_INT8,
-    FT_UINT8,
-    FT_INT16,
-    FT_UINT16,
-    FT_INT32,
-    FT_UINT32,
-    FT_INT64,
-    FT_UINT64,
-    FT_FLOAT,
-    FT_DOUBLE,
-    FT_BOOLEAN,
-    FT_CHAR, // char
-    FT_ANY, // any means guest value
-    FT_PRIMITIVE_END = FT_REFERENCE_BIT - 1,
-    FT_POINTER, // pointer
-    FT_RAWPOINTER, // raw pointer point to a native C struct which has no ref
-                   // count header
-    FT_STRING = FT_REFERENCE_BIT | FT_CHAR, // string
-    FT_ANY_REF = FT_REFERENCE_BIT | FT_ANY, // any ref
+    FT_VOID = FT_SET_PRIMITIVE_TYPE(FT_VOID_INDEX), // void defination
+    FT_INT = FT_SET_PRIMITIVE_TYPE(FT_INT_INDEX), 
+    FT_INT8 = FT_SET_PRIMITIVE_TYPE(FT_INT8_INDEX),
+    FT_UINT8 = FT_SET_PRIMITIVE_TYPE(FT_UINT8_INDEX),
+    FT_INT16 = FT_SET_PRIMITIVE_TYPE(FT_INT16_INDEX),
+    FT_UINT16 = FT_SET_PRIMITIVE_TYPE(FT_UINT16_INDEX),
+    FT_INT32 = FT_SET_PRIMITIVE_TYPE(FT_INT32_INDEX),
+    FT_UINT32 = FT_SET_PRIMITIVE_TYPE(FT_UINT32_INDEX),
+    FT_INT64 = FT_SET_PRIMITIVE_TYPE(FT_INT64_INDEX),
+    FT_UINT64 = FT_SET_PRIMITIVE_TYPE(FT_UINT64_INDEX),
+    FT_FLOAT = FT_SET_PRIMITIVE_TYPE(FT_FLOAT_INDEX),
+    FT_DOUBLE = FT_SET_PRIMITIVE_TYPE(FT_DOUBLE_INDEX),
+    FT_BOOLEAN = FT_SET_PRIMITIVE_TYPE(FT_BOOLEAN_INDEX),
+    FT_CHAR = FT_SET_PRIMITIVE_TYPE(FT_CHAR_INDEX), // char
+    FT_ANY = FT_SET_PRIMITIVE_TYPE(FT_ANY_INDEX), // any means guest value
+    FT_POINTER = FT_REMOVE_REFERENCE(FT_SET_PRIMITIVE_TYPE(FT_POINTER_INDEX)), // pointer
+    FT_RAWPOINTER = FT_REMOVE_REFERENCE((FT_SET_PRIMITIVE_TYPE(FT_RAWPOINTER_INDEX))), // raw pointer
+    FT_STRING = (FT_REMOVE_REFERENCE(FT_CHAR)), // string
+    FT_ANY_REF = (FT_REMOVE_REFERENCE(FT_ANY)), // any ref
 };
 
 union AppendData {

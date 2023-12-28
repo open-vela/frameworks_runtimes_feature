@@ -24,3 +24,4 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/modules

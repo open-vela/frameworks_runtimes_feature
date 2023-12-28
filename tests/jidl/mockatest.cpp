@@ -4,6 +4,7 @@
 #include "mockatest.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -23,7 +24,7 @@
   static const FeatureType mockatest_test_parameters[] = {
     FT_STRING,
     FT_STRING,
-    FT_MK_COMPLEX(&mockatest_test_body_callback_type),
+    FT_MK_COMPLEX_REF(&mockatest_test_body_callback_type),
     FT_PARAM_END
   };
 
@@ -71,17 +72,17 @@
     {
       .type = MEMBER_METHOD,
       .name = "test",
-      .method = mockatest_test_member_method,
+      .method = &mockatest_test_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "expect_true",
-      .method = mockatest_expect_true_member_method,
+      .method = &mockatest_expect_true_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "runAllOnce",
-      .method = mockatest_runAllOnce_member_method,
+      .method = &mockatest_runAllOnce_member_method,
     },
   };
 
@@ -107,5 +108,5 @@
 
 QAPPFEATURE_INIT(mockatest)
 {
-    return mgr->registerFeature(features, &mockatest_desc);
+    return FeatureRegisterFeature(handle, &mockatest_desc);
 }
