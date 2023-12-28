@@ -122,6 +122,7 @@ int main(int argc, char** argv)
         // JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
         auto registry = new ferry::FeatureRegistry();
         registry->init(pkg_name);
+
         g_manager_qjs = new ferry::FeatureManagerQjs(registry);
 
         // register global require

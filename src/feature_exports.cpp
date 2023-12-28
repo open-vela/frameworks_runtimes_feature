@@ -22,6 +22,7 @@
 #include "feature_manager.h"
 #include "feature_manager_qjs.h"
 #include "feature_prototype.h"
+#include "feature_registry.h"
 #include "feature_utils.h"
 
 #include <cstdarg>
@@ -92,7 +93,11 @@ void FeatureFreeValue(void* ptr)
                 TRY_GET_REAL_TYPE(member_type);
                 if (FT_IS_REFERENCE(member_type)) {
                     void* member_ptr = (void*)((char*)ptr + member->offset);
-                    FeatureFreeValue(*(void**)member_ptr);
+                    if (FT_IS_CALLBACK(member_type)) {
+                        continue;
+                    } else {
+                        FeatureFreeValue(*(void**)member_ptr);
+                    }
                 }
             }
             free(header);
@@ -469,4 +474,18 @@ bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid)
     }
     FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
     return instance->checkCallback(cid);
+}
+
+bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescription* description)
+{
+    if (!description) {
+        FEATURE_LOG_ERROR("description is null !");
+        return false;
+    }
+    FeatureRegistry* registry = static_cast<FeatureRegistry*>(handle);
+    if (!registry) {
+        FEATURE_LOG_ERROR("Failed to get FeatureRegistry instance!");
+        return false;
+    }
+    return registry->registerFeature(description);
 }

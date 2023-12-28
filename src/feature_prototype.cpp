@@ -23,8 +23,6 @@
 #include <string>
 #include <functional>
 
-using namespace FEATURE;
-
 namespace ferry {
 
 FeaturePrototype::FeaturePrototype(const FeatureDescription* description)

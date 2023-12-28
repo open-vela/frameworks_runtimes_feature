@@ -24,6 +24,7 @@
 #include "promise_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -42,7 +43,7 @@ static const PromiseType promise_test_promise_FT_INT_FT_INT_type = {
 static const MemberMethod promise_test_foo_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_foo) },
     .parameters = promise_test_foo_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_FT_INT_FT_INT_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_INT_type),
 };
 
 
@@ -59,7 +60,7 @@ static const FeatureType promise_test_use_foo_parameters[] = {
 static const MemberMethod promise_test_use_foo_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_use_foo) },
     .parameters = promise_test_use_foo_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_FT_INT_FT_INT_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_INT_type),
 };
 
 
@@ -77,7 +78,7 @@ static const PromiseType promise_test_promise_FT_INT_FT_STRING_type = {
 static const MemberMethod promise_test_foo1_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_foo1) },
     .parameters = promise_test_foo1_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_FT_INT_FT_STRING_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_STRING_type),
 };
 
 
@@ -89,7 +90,7 @@ static const FeatureType promise_test_foo2_parameters[] = {
 static const MemberMethod promise_test_foo2_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_foo2) },
     .parameters = promise_test_foo2_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_FT_INT_FT_STRING_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_STRING_type),
 };
 
 
@@ -105,7 +106,7 @@ static const ArrayType promise_test_int_array = {
 
 FtArray* promise_test_malloc_int_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&promise_test_int_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&promise_test_int_array));
 }
 
 static const ArrayType promise_test_string_array = {
@@ -115,18 +116,18 @@ static const ArrayType promise_test_string_array = {
 
 FtArray* promise_test_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&promise_test_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&promise_test_string_array));
 }
 
 static const PromiseType promise_test_promise_int_array_string_array_type = {
     .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
-    .resolveTypes = { FT_MK_COMPLEX_REF(&promise_test_int_array), FT_MK_COMPLEX_REF(&promise_test_string_array) }
+    .resolveTypes = { FT_MK_COMPLEX(&promise_test_int_array), FT_MK_COMPLEX(&promise_test_string_array) }
 };
 
 static const MemberMethod promise_test_bar_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_bar) },
     .parameters = promise_test_bar_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_int_array_string_array_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_int_array_string_array_type),
 };
 
 
@@ -138,7 +139,7 @@ static const FeatureType promise_test_bar1_parameters[] = {
 static const MemberMethod promise_test_bar1_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_bar1) },
     .parameters = promise_test_bar1_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_int_array_string_array_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_int_array_string_array_type),
 };
 
 
@@ -149,13 +150,13 @@ static const FeatureType promise_test_bar2_parameters[] = {
 
 static const PromiseType promise_test_promise_int_array_FT_STRING_type = {
     .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
-    .resolveTypes = { FT_MK_COMPLEX_REF(&promise_test_int_array), FT_STRING }
+    .resolveTypes = { FT_MK_COMPLEX(&promise_test_int_array), FT_STRING }
 };
 
 static const MemberMethod promise_test_bar2_member_method = {
     .func = { .callback = FFI_FN(promise_test_wrap_bar2) },
     .parameters = promise_test_bar2_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&promise_test_promise_int_array_FT_STRING_type),
+    .return_type = FT_MK_COMPLEX(&promise_test_promise_int_array_FT_STRING_type),
 };
 
 
@@ -176,42 +177,42 @@ static const Member promise_test_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "foo",
-        .method = promise_test_foo_member_method,
+        .method = &promise_test_foo_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "use_foo",
-        .method = promise_test_use_foo_member_method,
+        .method = &promise_test_use_foo_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "foo1",
-        .method = promise_test_foo1_member_method,
+        .method = &promise_test_foo1_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "foo2",
-        .method = promise_test_foo2_member_method,
+        .method = &promise_test_foo2_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar",
-        .method = promise_test_bar_member_method,
+        .method = &promise_test_bar_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar1",
-        .method = promise_test_bar1_member_method,
+        .method = &promise_test_bar1_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar2",
-        .method = promise_test_bar2_member_method,
+        .method = &promise_test_bar2_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "print",
-        .method = promise_test_print_member_method,
+        .method = &promise_test_print_member_method,
     },
 };
 
@@ -237,6 +238,6 @@ static const FeatureDescription promise_test_desc = {
 
 QAPPFEATURE_INIT(promise_test)
 {
-    return mgr->registerFeature(features, &promise_test_desc);
+    return FeatureRegisterFeature(handle, &promise_test_desc);
 }
 /* clang-format on */

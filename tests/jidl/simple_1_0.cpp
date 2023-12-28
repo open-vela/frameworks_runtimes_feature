@@ -24,6 +24,7 @@
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -187,7 +188,7 @@ static const CallbackType Simple_cb4_callback_type {
 static const FeatureType Simple_goo_parameters[] = {
     FT_INT,
     FT_INT,
-    FT_MK_COMPLEX(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -200,9 +201,9 @@ static const MemberMethod Simple_goo_member_method = {
 
 /****** for JIDL function 'goo2' ******/
 static const FeatureType Simple_goo2_parameters[] = {
-    FT_MK_COMPLEX(&Simple_cb2_callback_type),
-    FT_MK_COMPLEX(&Simple_cb3_callback_type),
-    FT_MK_COMPLEX(&Simple_cb4_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb2_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb3_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb4_callback_type),
     FT_PARAM_END
 };
 
@@ -219,7 +220,7 @@ static void Simple_wrap_goo3 (FeatureInstanceHandle feature, AppendData append_d
 }
 
 static const FeatureType Simple_goo3_parameters[] = {
-    FT_MK_COMPLEX(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -234,8 +235,8 @@ static const MemberMethod Simple_goo3_member_method = {
 static const FeatureType Simple_foo2_parameters[] = {
     FT_INT,
     FT_DOUBLE,
-    FT_MK_COMPLEX(&Simple_cb1_callback_type),
-    FT_MK_COMPLEX(&Simple_cb2_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb2_callback_type),
     FT_PARAM_END
 };
 
@@ -250,7 +251,7 @@ static const MemberMethod Simple_foo2_member_method = {
 static const FeatureType Simple_foo3_parameters[] = {
     FT_INT,
     FT_DOUBLE,
-    FT_MK_COMPLEX(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -293,11 +294,11 @@ static const ArrayType Simple_int_array = {
 
 FtArray* Simple_malloc_int_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&Simple_int_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&Simple_int_array));
 }
 
 static const FeatureType Simple_bar2_parameters[] = {
-    FT_MK_COMPLEX_REF(&Simple_int_array),
+    FT_MK_COMPLEX(&Simple_int_array),
     FT_PARAM_END
 };
 
@@ -320,13 +321,13 @@ static const ArrayType Simple_string_array = {
 
 FtArray* Simple_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&Simple_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&Simple_string_array));
 }
 
 static const MemberMethod Simple_bar3_member_method = {
     .func = { .callback = FFI_FN(Simple_wrap_bar3) },
     .parameters = Simple_bar3_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&Simple_string_array),
+    .return_type = FT_MK_COMPLEX(&Simple_string_array),
 };
 
 /****** for JIDL struct 'Chapter' ******/
@@ -360,7 +361,7 @@ static const ObjectMapType struct_test_Array_struct_type {
 
 struct_test_Array* struct_testMallocArray () {
     return (struct_test_Array*)FeatureMalloc(
-        sizeof(struct_test_Array), FT_MK_COMPLEX(&struct_test_Array_struct_type));
+        sizeof(struct_test_Array), FT_MK_COMPLEX_REF(&struct_test_Array_struct_type));
 }
 
 /****** for JIDL function 'bar4' ******/
@@ -370,18 +371,18 @@ static const FeatureType Simple_bar4_parameters[] = {
 
 static const ArrayType Simple_struct_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_MK_COMPLEX_REF(&struct_test_Array_struct_type)
+    .element_type = FT_MK_COMPLEX(&struct_test_Array_struct_type)
 };
 
 FtArray* Simple_malloc_struct_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&Simple_struct_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&Simple_struct_array));
 }
 
 static const MemberMethod Simple_bar4_member_method = {
     .func = { .callback = FFI_FN(Simple_wrap_bar4) },
     .parameters = Simple_bar4_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&Simple_struct_array),
+    .return_type = FT_MK_COMPLEX(&Simple_struct_array),
 };
 
 
@@ -390,7 +391,7 @@ static const MemberMethod Simple_bar4_member_method = {
 
 /****** for JIDL function 'bar7' ******/
 static const FeatureType Simple_bar7_parameters[] = {
-    FT_MK_COMPLEX_REF(&Simple_struct_array),
+    FT_MK_COMPLEX(&Simple_struct_array),
     FT_PARAM_END
 };
 
@@ -451,7 +452,7 @@ static const MemberAccessor Simple_version_member_accessor = {
 /****** for JIDL property 'args' ******/
 static const MemberAccessor Simple_args_member_accessor = {
     .getter = { .callback = FFI_FN(Simple_get_args) },
-    .type = FT_MK_COMPLEX_REF(&Simple_string_array),
+    .type = FT_MK_COMPLEX(&Simple_string_array),
 };
 
 
@@ -460,122 +461,122 @@ static const Member Simple_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "printStr",
-        .method = Simple_printStr_member_method,
+        .method = &Simple_printStr_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "print",
-        .method = Simple_print_member_method,
+        .method = &Simple_print_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "foo",
-        .method = Simple_foo_member_method,
+        .method = &Simple_foo_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar",
-        .method = Simple_bar_member_method,
+        .method = &Simple_bar_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar5",
-        .method = Simple_bar5_member_method,
+        .method = &Simple_bar5_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar6",
-        .method = Simple_bar6_member_method,
+        .method = &Simple_bar6_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "ubar6",
-        .method = Simple_ubar6_member_method,
+        .method = &Simple_ubar6_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "goo",
-        .method = Simple_goo_member_method,
+        .method = &Simple_goo_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "goo2",
-        .method = Simple_goo2_member_method,
+        .method = &Simple_goo2_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "goo3",
-        .method = Simple_goo3_member_method,
+        .method = &Simple_goo3_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "foo2",
-        .method = Simple_foo2_member_method,
+        .method = &Simple_foo2_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "foo3",
-        .method = Simple_foo3_member_method,
+        .method = &Simple_foo3_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "justTestNeverCall1",
-        .method = Simple_justTestNeverCall1_member_method,
+        .method = &Simple_justTestNeverCall1_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "justTestNeverCall2",
-        .method = Simple_justTestNeverCall2_member_method,
+        .method = &Simple_justTestNeverCall2_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar2",
-        .method = Simple_bar2_member_method,
+        .method = &Simple_bar2_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar3",
-        .method = Simple_bar3_member_method,
+        .method = &Simple_bar3_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar4",
-        .method = Simple_bar4_member_method,
+        .method = &Simple_bar4_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bar7",
-        .method = Simple_bar7_member_method,
+        .method = &Simple_bar7_member_method,
     },
     {
         .type = MEMBER_CONST,
         .name = "x",
-        .value = Simple_x_member_const,
+        .value = &Simple_x_member_const,
     },
     {
         .type = MEMBER_CONST,
         .name = "y",
-        .value = Simple_y_member_const,
+        .value = &Simple_y_member_const,
     },
     {
         .type = MEMBER_CONST,
         .name = "z",
-        .value = Simple_z_member_const,
+        .value = &Simple_z_member_const,
     },
     {
         .type = MEMBER_ACCESSOR,
         .name = "name",
-        .accessor = Simple_name_member_accessor,
+        .accessor = &Simple_name_member_accessor,
     },
     {
         .type = MEMBER_ACCESSOR,
         .name = "version",
-        .accessor = Simple_version_member_accessor,
+        .accessor = &Simple_version_member_accessor,
     },
     {
         .type = MEMBER_ACCESSOR,
         .name = "args",
-        .accessor = Simple_args_member_accessor,
+        .accessor = &Simple_args_member_accessor,
     },
 };
 
@@ -601,6 +602,6 @@ static const FeatureDescription Simple_desc = {
 
 QAPPFEATURE_INIT(Simple)
 {
-    return mgr->registerFeature(features, &Simple_desc);
+    return FeatureRegisterFeature(handle, &Simple_desc);
 }
 /* clang-format on */

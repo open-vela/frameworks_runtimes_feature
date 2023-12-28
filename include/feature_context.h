@@ -22,6 +22,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 typedef enum ft_type {
     FT_TYPE_NULL = -2,

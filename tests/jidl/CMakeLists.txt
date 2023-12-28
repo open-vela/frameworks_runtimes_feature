@@ -84,8 +84,8 @@ add_executable(${PROJECT_NAME}
     record_1_0_impl.cpp
     ATest_1_0.cpp
     ATest_1_0_impl.cpp
-    struct_test.cpp
-    struct_test_impl.cpp
+    struct_test.c
+    struct_test_impl.c
     promise_test.cpp
     promise_test_impl.cpp
     interface_test.cpp
@@ -102,10 +102,9 @@ add_executable(${PROJECT_NAME}
     cipher_impl.cpp
     jidl_main.cpp
     builtin/builtin_console.cpp
-    feature_timers.cpp
-    feature_interface.cpp
     ajs_features_list.h
     ajs_features_init.h
+    ajs_cfeatures_init.h
     ${LIBDYNTYPE_SRC}
     ${STDLIB_SOURCE}
     ${STRUCT_INDIRECT_SOURCE}

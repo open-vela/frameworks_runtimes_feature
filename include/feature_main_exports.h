@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+#include "feature_description.h"
 #include "feature_types.h"
 #include "quickjs/quickjs.h"
 #include "uv.h"
@@ -98,6 +99,15 @@ JSValue FeatureFindFeature(FeatureManagerHandle handle, JSContext* ctx,
  */
 JSValue FeatureCreateFeature(FeatureManagerHandle handle, JSContext* ctx,
     JSValue prototype, JSValue vm_object);
+
+/**
+ * @brief register feature to feature registry
+ *
+ * @param handle
+ * @param description
+ * @return bool
+ */
+bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescription* description);
 
 #ifdef __cplusplus
 }

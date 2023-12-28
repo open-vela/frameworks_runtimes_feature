@@ -52,7 +52,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
 
     if (FT_IS_REFERENCE(ftype)) {
         void*& value_ptr = *(void**)pnative;
-        if (!convertValueToNative(instance, FT_REMOVE_REFERENCE(ftype), ctx, target, value_ptr)) {
+        if (!convertValueToNative(instance, FT_ADD_REFERENCE(ftype), ctx, target, value_ptr)) {
             FEATURE_LOG_ERROR("convert target to native failed !");
             return false;
         }
@@ -456,8 +456,8 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     FEATURE_CHECK_NE(member, nullptr);
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     auto description = instance->prototype()->description();
-    const auto& method = member->method;
-    auto param_types = method.parameters;
+    const auto method = member->method;
+    auto param_types = method->parameters;
 
     FtPromiseId pid = -1;
     bool has_rest_params = false;
@@ -486,7 +486,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
 
     // prepare and get args
     int32_t packed_argc = has_rest_params ? fixed_argc + 1 : fixed_argc;
-    bool is_promise = FT_IS_PROMISE(method.return_type);
+    bool is_promise = FT_IS_PROMISE(method->return_type);
     int extra_argc = is_promise ? 3 : 2;
     // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
     AutoArgs<void*, ffi_type*> ffi_arg_types(nullptr, free_arg_type, nullptr,
@@ -506,7 +506,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         ffi_arg_types[2] = &ffi_type_sint32;
     }
     ffi_arg_values[0] = &instance;
-    ffi_arg_values[1] = (void*)&method.data;
+    ffi_arg_values[1] = (void*)&method->data;
 
     for (int i = 0; i < fixed_argc; i++) {
         TTarget curr_arg = argv[i];
@@ -560,13 +560,13 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     }
 
     // prepeare return type
-    if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
+    if (!createTypeDeclaration(method->return_type, ffi_ret_type)) {
         FEATURE_LOG_ERROR("prepareType for complex type failed!");
         return false;
     }
     // create return value pointer inneed.
-    if (!is_promise && method.return_type != FT_VOID) {
-        if (!createHostValue(method.return_type, ffi_ret_value, true)) {
+    if (!is_promise && method->return_type != FT_VOID) {
+        if (!createHostValue(method->return_type, ffi_ret_value, true)) {
             FEATURE_LOG_ERROR("create return value failed!");
             return false;
         }
@@ -589,7 +589,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     // special handle for promise
     feature_value_t promise;
     if (is_promise) {
-        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method->return_type);
         // create promise
         PromiseType* promise_type = (PromiseType*)complex_type;
         // create promise and add to instance
@@ -600,13 +600,13 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     }
 
     // invoke method
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method->func.vtable_idx) : method->func.callback;
     FEATURE_CHECK_NE(callback, nullptr);
     ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
     // process return value, do not handle promise, it is handled before we invoke ffi_call.
-    if (!is_promise && method.return_type != FT_VOID) {
+    if (!is_promise && method->return_type != FT_VOID) {
         // process return value
-        if (!convertValueToTarget(instance, method.return_type, ctx, ffi_ret_value, ret_val)) {
+        if (!convertValueToTarget(instance, method->return_type, ctx, ffi_ret_value, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             value_translator::freeValue(ctx, ret_val);
             return false;
@@ -625,8 +625,8 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     FEATURE_CHECK_NE(member, nullptr);
     FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR, true);
 
-    MemberAccessor* accessor = &member->accessor;
-    void* data_ptr = &accessor->data;
+    const MemberAccessor* accessor = member->accessor;
+    const void* data_ptr = &accessor->data;
     FeatureType feature_type = accessor->type;
     FEATURE_CHECK_NE(feature_type, FT_VOID);
     bool is_dynamic = instance->prototype()->description()->dynamic;
@@ -675,7 +675,7 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
     FEATURE_CHECK_NE(instance, nullptr);
     FEATURE_CHECK_NE(member, nullptr);
     FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR, true);
-    MemberAccessor* accessor = &member->accessor;
+    const MemberAccessor* accessor = member->accessor;
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
     bool is_dynamic = instance->prototype()->description()->dynamic;
     NativeFunc callback = is_dynamic ?
@@ -724,8 +724,8 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
     FEATURE_CHECK_EQ(member->type == MEMBER_CONST, true);
 
     bool is_dynamic = instance->prototype()->description()->dynamic;
-    MemberConst* member_const = &member->value;
-    void* data_ptr = &member_const->data;
+    const MemberConst* member_const = member->value;
+    const void* data_ptr = &member_const->data;
     FeatureType feature_type = member_const->type;
     NativeFunc callback = is_dynamic ?
             instance->getVirtualFunction(member_const->func.vtable_idx) : member_const->func.callback;

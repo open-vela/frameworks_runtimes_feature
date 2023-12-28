@@ -6,6 +6,7 @@
 #include "record_1_0.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -85,9 +86,9 @@
     FT_MK_OPTIONAL(&Record_start_param_numberOfChannels_opt_type),
     FT_MK_OPTIONAL(&Record_start_param_encodeBitRate_opt_type),
     FT_MK_OPTIONAL(&Record_start_param_format_opt_type),
-    FT_MK_COMPLEX(&Record_success_cb_callback_type),
-    FT_MK_COMPLEX(&Record_fail_cb_callback_type),
-    FT_MK_COMPLEX(&Record_complete_cb_callback_type),
+    FT_MK_COMPLEX_REF(&Record_success_cb_callback_type),
+    FT_MK_COMPLEX_REF(&Record_fail_cb_callback_type),
+    FT_MK_COMPLEX_REF(&Record_complete_cb_callback_type),
     FT_PARAM_END
   };
 
@@ -115,12 +116,12 @@
     {
       .type = MEMBER_METHOD,
       .name = "start",
-      .method = Record_start_member_method,
+      .method = &Record_start_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "stop",
-      .method = Record_stop_member_method,
+      .method = &Record_stop_member_method,
     },
   };
 
@@ -146,5 +147,5 @@
 
 QAPPFEATURE_INIT(Record)
 {
-    return mgr->registerFeature(features, &Record_desc);
+    return FeatureRegisterFeature(handle, &Record_desc);
 }

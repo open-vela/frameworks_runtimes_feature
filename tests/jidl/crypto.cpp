@@ -24,6 +24,7 @@
 #include "crypto.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -55,13 +56,13 @@ static const ObjectMapType system_crypto_HashDigestParam_struct_type {
 
 system_crypto_HashDigestParam* system_cryptoMallocHashDigestParam () {
     return (system_crypto_HashDigestParam*)FeatureMalloc(
-        sizeof(system_crypto_HashDigestParam), FT_MK_COMPLEX(&system_crypto_HashDigestParam_struct_type));
+        sizeof(system_crypto_HashDigestParam), FT_MK_COMPLEX_REF(&system_crypto_HashDigestParam_struct_type));
 }
 
 
 /****** for JIDL function 'hashDigest' ******/
 static const FeatureType system_crypto_hashDigest_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_crypto_HashDigestParam_struct_type),
+    FT_MK_COMPLEX(&system_crypto_HashDigestParam_struct_type),
     FT_PARAM_END
 };
 
@@ -148,9 +149,9 @@ static ObjectMember system_crypto_HmacDigestParam_struct_members[] = {
     { "data", FT_STRING, offsetof(system_crypto_HmacDigestParam, _data), sizeof(FtString) },
     { "algo", FT_MK_OPTIONAL(&system_crypto_HmacDigestParam_member_algo_opt_type), offsetof(system_crypto_HmacDigestParam, _algo), sizeof(FtString) },
     { "key", FT_STRING, offsetof(system_crypto_HmacDigestParam, _key), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_opt_callback_type), offsetof(system_crypto_HmacDigestParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_HmacDigestParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_HmacDigestParam, _complete), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX_REF(&system_crypto_success_cb_obj_str_opt_callback_type), offsetof(system_crypto_HmacDigestParam, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX_REF(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_HmacDigestParam, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX_REF(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_HmacDigestParam, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -162,13 +163,13 @@ static const ObjectMapType system_crypto_HmacDigestParam_struct_type {
 
 system_crypto_HmacDigestParam* system_cryptoMallocHmacDigestParam () {
     return (system_crypto_HmacDigestParam*)FeatureMalloc(
-        sizeof(system_crypto_HmacDigestParam), FT_MK_COMPLEX(&system_crypto_HmacDigestParam_struct_type));
+        sizeof(system_crypto_HmacDigestParam), FT_MK_COMPLEX_REF(&system_crypto_HmacDigestParam_struct_type));
 }
 
 
 /****** for JIDL function 'hmacDigest' ******/
 static const FeatureType system_crypto_hmacDigest_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_crypto_HmacDigestParam_struct_type),
+    FT_MK_COMPLEX(&system_crypto_HmacDigestParam_struct_type),
     FT_PARAM_END
 };
 
@@ -197,9 +198,9 @@ static ObjectMember system_crypto_SignParam_struct_members[] = {
     { "uri", FT_MK_OPTIONAL(&system_crypto_SignParam_member_uri_opt_type), offsetof(system_crypto_SignParam, _uri), sizeof(FtString) },
     { "algo", FT_MK_OPTIONAL(&system_crypto_SignParam_member_algo_opt_type), offsetof(system_crypto_SignParam, _algo), sizeof(FtString) },
     { "privateKey", FT_STRING, offsetof(system_crypto_SignParam, _privateKey), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_SignParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_SignParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_SignParam, _complete), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX_REF(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_SignParam, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX_REF(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_SignParam, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX_REF(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_SignParam, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -211,13 +212,13 @@ static const ObjectMapType system_crypto_SignParam_struct_type {
 
 system_crypto_SignParam* system_cryptoMallocSignParam () {
     return (system_crypto_SignParam*)FeatureMalloc(
-        sizeof(system_crypto_SignParam), FT_MK_COMPLEX(&system_crypto_SignParam_struct_type));
+        sizeof(system_crypto_SignParam), FT_MK_COMPLEX_REF(&system_crypto_SignParam_struct_type));
 }
 
 
 /****** for JIDL function 'sign' ******/
 static const FeatureType system_crypto_sign_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_crypto_SignParam_struct_type),
+    FT_MK_COMPLEX(&system_crypto_SignParam_struct_type),
     FT_PARAM_END
 };
 
@@ -247,9 +248,9 @@ static ObjectMember system_crypto_RSAVerifyParam_struct_members[] = {
     { "algo", FT_MK_OPTIONAL(&system_crypto_RSAVerifyParam_member_algo_opt_type), offsetof(system_crypto_RSAVerifyParam, _algo), sizeof(FtString) },
     { "signature", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, _signature), sizeof(FtAny) },
     { "publicKey", FT_STRING, offsetof(system_crypto_RSAVerifyParam, _publicKey), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_bool_opt_callback_type), offsetof(system_crypto_RSAVerifyParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, _complete), sizeof(FtCallbackId) },
+    { "success", FT_MK_COMPLEX_REF(&system_crypto_success_cb_bool_opt_callback_type), offsetof(system_crypto_RSAVerifyParam, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX_REF(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX_REF(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -261,13 +262,13 @@ static const ObjectMapType system_crypto_RSAVerifyParam_struct_type {
 
 system_crypto_RSAVerifyParam* system_cryptoMallocRSAVerifyParam () {
     return (system_crypto_RSAVerifyParam*)FeatureMalloc(
-        sizeof(system_crypto_RSAVerifyParam), FT_MK_COMPLEX(&system_crypto_RSAVerifyParam_struct_type));
+        sizeof(system_crypto_RSAVerifyParam), FT_MK_COMPLEX_REF(&system_crypto_RSAVerifyParam_struct_type));
 }
 
 
 /****** for JIDL function 'verify' ******/
 static const FeatureType system_crypto_verify_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_crypto_RSAVerifyParam_struct_type),
+    FT_MK_COMPLEX(&system_crypto_RSAVerifyParam_struct_type),
     FT_PARAM_END
 };
 
@@ -319,7 +320,7 @@ static const ObjectMapType system_crypto_MixinCryptOption_struct_type {
 
 system_crypto_MixinCryptOption* system_cryptoMallocMixinCryptOption () {
     return (system_crypto_MixinCryptOption*)FeatureMalloc(
-        sizeof(system_crypto_MixinCryptOption), FT_MK_COMPLEX(&system_crypto_MixinCryptOption_struct_type));
+        sizeof(system_crypto_MixinCryptOption), FT_MK_COMPLEX_REF(&system_crypto_MixinCryptOption_struct_type));
 }
 
 
@@ -334,10 +335,10 @@ static ObjectMember system_crypto_CryptParam_struct_members[] = {
     { "data", FT_ANY_REF, offsetof(system_crypto_CryptParam, _data), sizeof(FtAny) },
     { "algo", FT_MK_OPTIONAL(&system_crypto_CryptParam_member_algo_opt_type), offsetof(system_crypto_CryptParam, _algo), sizeof(FtString) },
     { "key", FT_STRING, offsetof(system_crypto_CryptParam, _key), sizeof(FtString) },
-    { "options", FT_MK_COMPLEX_REF(&system_crypto_MixinCryptOption_struct_type), offsetof(system_crypto_CryptParam, _options), sizeof(system_crypto_MixinCryptOption *) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_CryptParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_CryptParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_CryptParam, _complete), sizeof(FtCallbackId) },
+    { "options", FT_MK_COMPLEX(&system_crypto_MixinCryptOption_struct_type), offsetof(system_crypto_CryptParam, _options), sizeof(system_crypto_MixinCryptOption *) },
+    { "success", FT_MK_COMPLEX_REF(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_CryptParam, _success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX_REF(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_CryptParam, _fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX_REF(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_CryptParam, _complete), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -349,13 +350,13 @@ static const ObjectMapType system_crypto_CryptParam_struct_type {
 
 system_crypto_CryptParam* system_cryptoMallocCryptParam () {
     return (system_crypto_CryptParam*)FeatureMalloc(
-        sizeof(system_crypto_CryptParam), FT_MK_COMPLEX(&system_crypto_CryptParam_struct_type));
+        sizeof(system_crypto_CryptParam), FT_MK_COMPLEX_REF(&system_crypto_CryptParam_struct_type));
 }
 
 
 /****** for JIDL function 'encrypt' ******/
 static const FeatureType system_crypto_encrypt_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_crypto_CryptParam_struct_type),
+    FT_MK_COMPLEX(&system_crypto_CryptParam_struct_type),
     FT_PARAM_END
 };
 
@@ -368,7 +369,7 @@ static const MemberMethod system_crypto_encrypt_member_method = {
 
 /****** for JIDL function 'decrypt' ******/
 static const FeatureType system_crypto_decrypt_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_crypto_CryptParam_struct_type),
+    FT_MK_COMPLEX(&system_crypto_CryptParam_struct_type),
     FT_PARAM_END
 };
 
@@ -410,42 +411,42 @@ static const Member system_crypto_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "hashDigest",
-        .method = system_crypto_hashDigest_member_method,
+        .method = &system_crypto_hashDigest_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "hmacDigest",
-        .method = system_crypto_hmacDigest_member_method,
+        .method = &system_crypto_hmacDigest_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "sign",
-        .method = system_crypto_sign_member_method,
+        .method = &system_crypto_sign_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "verify",
-        .method = system_crypto_verify_member_method,
+        .method = &system_crypto_verify_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "encrypt",
-        .method = system_crypto_encrypt_member_method,
+        .method = &system_crypto_encrypt_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "decrypt",
-        .method = system_crypto_decrypt_member_method,
+        .method = &system_crypto_decrypt_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "btoa",
-        .method = system_crypto_btoa_member_method,
+        .method = &system_crypto_btoa_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "atob",
-        .method = system_crypto_atob_member_method,
+        .method = &system_crypto_atob_member_method,
     },
 };
 
@@ -471,6 +472,6 @@ static const FeatureDescription system_crypto_desc = {
 
 QAPPFEATURE_INIT(system_crypto)
 {
-    return mgr->registerFeature(features, &system_crypto_desc);
+    return FeatureRegisterFeature(handle, &system_crypto_desc);
 }
 /* clang-format on */

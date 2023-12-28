@@ -1,13 +1,15 @@
 #ifndef FEATURE_LOG_H
 #define FEATURE_LOG_H
 
-#include <cstdio>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <syslog.h>
-
-namespace FEATURE {
 
 #define FEATURE_LOG_LEVEL_DEBUG 0
 #define FEATURE_LOG_LEVEL_INFO 1
@@ -40,7 +42,7 @@ static inline void featurelogPrintf(int level, const char* fmt, ...)
 }
 
 #define FEATURE_LOG(level, fmt, ...) \
-    FEATURE::featurelogPrintf(level, "[FEATURE] [%s:%d] " fmt "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+    featurelogPrintf(level, "[FEATURE] [%s:%d] " fmt "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 // void logPrintf(int level, const char *fmt, ...);
 
@@ -73,6 +75,8 @@ static inline void featurelogPrintf(int level, const char* fmt, ...)
 #error invalid log level!
 #endif
 
+#ifdef __cplusplus
 }
+#endif
 
 #endif

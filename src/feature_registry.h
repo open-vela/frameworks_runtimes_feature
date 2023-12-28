@@ -57,8 +57,7 @@ public:
      * @return true
      * @return false
      */
-    bool registerFeature(std::vector<std::string>& features, const FeatureDescription* description);
-
+    bool registerFeature(const FeatureDescription* description);
     FeatureRegistryPair* findFeature(const char* name);
     const char* getFeaturePackageName() const { return package_name_.data(); }
     /**

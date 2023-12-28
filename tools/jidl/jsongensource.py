@@ -396,7 +396,7 @@ class CPPRender(Render):
       if array_type.find(module_name) != -1:
         array_type = array_type.replace(module_name + "_", "")
       self.ArrayTypeGenerator.Generate(array_type, is_complex, ref_type)
-      array_malloc_func_str = f"FtArray* {module_name}_malloc_{array_type}_array()"
+      array_malloc_func_str = f"FtArray* {module_name}_malloc_{array_type}_array(void)"
       self._TryCacheArrayMallocFunc(array_malloc_func_str)
     return ft_info
 
@@ -520,9 +520,7 @@ class CPPRender(Render):
       else:
         ft_expr = f"{module_name}_{ft_expr}"
 
-    if info['is_complex_ref']:
-      ft_expr = f"FT_MK_COMPLEX_REF(&{ft_expr})"
-    elif info['is_complex']:
+    if info['is_complex_ref'] or info['is_complex']:
       ft_expr = f"FT_MK_COMPLEX(&{ft_expr})"
 
     return ft_expr
@@ -580,7 +578,7 @@ class CPPRender(Render):
     identifier = node["identifier"]
     ret_type_node = node["return_type"]
     ret_type = self.GenerateReturnType(ret_type_node)
-    prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
+    prefix_params = 'FeatureInstanceHandle feature, union AppendData append_data'
     if ret_type == 'FtPromiseId':
       ret_type = 'void'
       prefix_params += ', FtPromiseId pid'

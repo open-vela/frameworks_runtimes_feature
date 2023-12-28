@@ -37,7 +37,7 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
             ptr = FeatureMalloc(sizeof(uintptr_t), isInterface ? FT_RAWPOINTER : FT_POINTER);
             if (createPtrOnly)
                 return true;
-            return createHostValue(FT_REMOVE_REFERENCE(featureType), *(void**)ptr);
+            return createHostValue(FT_ADD_REFERENCE(featureType), *(void**)ptr);
         }
     }
     if (FT_IS_PRIMITIVE(featureType)) {
@@ -104,7 +104,7 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
             OptionalType* optionalType = (OptionalType*)complexType;
             if (!ptr) {
                 FEATURE_CHECK_EQ(FT_IS_REFERENCE(optionalType->type), true);
-                ptr = FeatureMalloc(sizeof(uintptr_t), FT_REMOVE_REFERENCE(optionalType->type));
+                ptr = FeatureMalloc(sizeof(uintptr_t), FT_ADD_REFERENCE(optionalType->type));
             }
             if (!createHostValue(optionalType->type, ptr)) {
                 FEATURE_LOG_ERROR("create member pointered memory failed !");

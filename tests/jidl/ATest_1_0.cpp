@@ -4,6 +4,7 @@
 #include "ATest_1_0.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -38,7 +39,7 @@
   /****** for JIDL function 'test2' ******/
   static const FeatureType ATest_test2_parameters[] = {
     FT_INT,
-    FT_MK_COMPLEX(&ATest_cb1_callback_type),
+    FT_MK_COMPLEX_REF(&ATest_cb1_callback_type),
     FT_PARAM_END
   };
 
@@ -65,7 +66,7 @@
   /****** for JIDL function 'test3' ******/
   static const FeatureType ATest_test3_parameters[] = {
     FT_STRING,
-    FT_MK_COMPLEX(&ATest_cb2_callback_type),
+    FT_MK_COMPLEX_REF(&ATest_cb2_callback_type),
     FT_PARAM_END
   };
 
@@ -90,7 +91,7 @@
   static const MemberMethod ATest_test4_member_method = {
     .func = { .callback = FFI_FN(ATest_wrap_test4) },
     .parameters = ATest_test4_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&ATest_promise_FT_INT_FT_INT_type),
+    .return_type = FT_MK_COMPLEX(&ATest_promise_FT_INT_FT_INT_type),
   };
 
 
@@ -122,11 +123,11 @@
 
   FtArray* ATest_malloc_int_array() {
     return (FtArray*)FeatureMalloc(
-      sizeof(FtArray), FT_MK_COMPLEX(&ATest_int_array));
+      sizeof(FtArray), FT_MK_COMPLEX_REF(&ATest_int_array));
   }
 
   static const FeatureType ATest_test5_parameters[] = {
-    FT_MK_COMPLEX_REF(&ATest_int_array),
+    FT_MK_COMPLEX(&ATest_int_array),
     FT_PARAM_END
   };
 
@@ -150,13 +151,13 @@
 
   FtArray* ATest_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-      sizeof(FtArray), FT_MK_COMPLEX(&ATest_string_array));
+      sizeof(FtArray), FT_MK_COMPLEX_REF(&ATest_string_array));
   }
 
   static const MemberMethod ATest_test6_member_method = {
     .func = { .callback = FFI_FN(ATest_wrap_test6) },
     .parameters = ATest_test6_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&ATest_string_array),
+    .return_type = FT_MK_COMPLEX(&ATest_string_array),
   };
 
 
@@ -176,14 +177,14 @@
 
   ATest_Person* mallocPerson () {
     return (ATest_Person*)FeatureMalloc(
-      sizeof(ATest_Person), FT_MK_COMPLEX(&ATest_Person_struct_type));
+      sizeof(ATest_Person), FT_MK_COMPLEX_REF(&ATest_Person_struct_type));
   }
 
 
   /****** for JIDL function 'test7' ******/
   static const FeatureType ATest_test7_parameters[] = {
     FT_INT,
-    FT_MK_COMPLEX_REF(&ATest_Person_struct_type),
+    FT_MK_COMPLEX(&ATest_Person_struct_type),
     FT_PARAM_END
   };
 
@@ -203,7 +204,7 @@
   static const MemberMethod ATest_test8_member_method = {
     .func = { .callback = FFI_FN(ATest_wrap_test8) },
     .parameters = ATest_test8_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&ATest_Person_struct_type),
+    .return_type = FT_MK_COMPLEX(&ATest_Person_struct_type),
   };
 
 
@@ -212,52 +213,52 @@
     {
       .type = MEMBER_METHOD,
       .name = "test1",
-      .method = ATest_test1_member_method,
+      .method = &ATest_test1_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test2",
-      .method = ATest_test2_member_method,
+      .method = &ATest_test2_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test3",
-      .method = ATest_test3_member_method,
+      .method = &ATest_test3_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test4",
-      .method = ATest_test4_member_method,
+      .method = &ATest_test4_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "print",
-      .method = ATest_print_member_method,
+      .method = &ATest_print_member_method,
     },
     {
       .type = MEMBER_ACCESSOR,
       .name = "idx",
-      .accessor = ATest_idx_member_accessor,
+      .accessor = &ATest_idx_member_accessor,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test5",
-      .method = ATest_test5_member_method,
+      .method = &ATest_test5_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test6",
-      .method = ATest_test6_member_method,
+      .method = &ATest_test6_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test7",
-      .method = ATest_test7_member_method,
+      .method = &ATest_test7_member_method,
     },
     {
       .type = MEMBER_METHOD,
       .name = "test8",
-      .method = ATest_test8_member_method,
+      .method = &ATest_test8_member_method,
     },
   };
 
@@ -283,5 +284,5 @@
 
 QAPPFEATURE_INIT(ATest)
 {
-    return mgr->registerFeature(features, &ATest_desc);
+    return FeatureRegisterFeature(handle, &ATest_desc);
 }

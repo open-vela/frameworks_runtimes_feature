@@ -24,6 +24,7 @@
 #include "interface_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -50,11 +51,11 @@ static const ArrayType interface_test_string_array = {
 
 FtArray* interface_test_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&interface_test_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX_REF(&interface_test_string_array));
 }
 
 static const FeatureType interface_test_Animal_interface_eatFood_parameters[] = {
-    FT_MK_COMPLEX_REF(&interface_test_string_array),
+    FT_MK_COMPLEX(&interface_test_string_array),
     FT_PARAM_END
 };
 
@@ -83,22 +84,22 @@ static const Member interface_test_Animal_interface_members[] = {
   {
       .type = MEMBER_ACCESSOR,
       .name = "name",
-      .accessor = interface_test_Animal_interface_name_member_accessor,
+      .accessor = &interface_test_Animal_interface_name_member_accessor,
   },
   {
       .type = MEMBER_ACCESSOR,
       .name = "legCount",
-      .accessor = interface_test_Animal_interface_legCount_member_accessor,
+      .accessor = &interface_test_Animal_interface_legCount_member_accessor,
   },
   {
       .type = MEMBER_METHOD,
       .name = "eatFood",
-      .method = interface_test_Animal_interface_eatFood_member_method,
+      .method = &interface_test_Animal_interface_eatFood_member_method,
   },
   {
       .type = MEMBER_METHOD,
       .name = "run",
-      .method = interface_test_Animal_interface_run_member_method,
+      .method = &interface_test_Animal_interface_run_member_method,
   },
 };
 
@@ -148,7 +149,7 @@ static const FeatureType interface_test_createDog_parameters[] = {
 static const MemberMethod interface_test_createDog_member_method = {
     .func = { .callback = FFI_FN(interface_test_wrap_createDog) },
     .parameters = interface_test_createDog_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_Animal_interface_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_Animal_interface_type),
 };
 
 
@@ -162,7 +163,7 @@ static const FeatureType interface_test_Bird_interface_fly_parameters[] = {
 static const MemberMethod interface_test_Bird_interface_fly_member_method = {
     .func = { .vtable_idx = 0 },
     .parameters = interface_test_Bird_interface_fly_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_string_array),
+    .return_type = FT_MK_COMPLEX(&interface_test_string_array),
 };
 
 // for member property 'breed'
@@ -178,12 +179,12 @@ static const Member interface_test_Bird_interface_members[] = {
   {
       .type = MEMBER_METHOD,
       .name = "fly",
-      .method = interface_test_Bird_interface_fly_member_method,
+      .method = &interface_test_Bird_interface_fly_member_method,
   },
   {
       .type = MEMBER_ACCESSOR,
       .name = "breed",
-      .accessor = interface_test_Bird_interface_breed_member_accessor,
+      .accessor = &interface_test_Bird_interface_breed_member_accessor,
   },
 };
 
@@ -230,7 +231,7 @@ static const FeatureType interface_test_createPigeon_parameters[] = {
 static const MemberMethod interface_test_createPigeon_member_method = {
     .func = { .callback = FFI_FN(interface_test_wrap_createPigeon) },
     .parameters = interface_test_createPigeon_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_Bird_interface_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_Bird_interface_type),
 };
 
 
@@ -263,7 +264,7 @@ static const MemberMethod interface_test_Chicken_Animal_interface_run_member_met
 static const MemberMethod interface_test_Chicken_Bird_interface_fly_member_method = {
     .func = { .vtable_idx = 5 },
     .parameters = interface_test_Bird_interface_fly_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_string_array),
+    .return_type = FT_MK_COMPLEX(&interface_test_string_array),
 };
 
 static const MemberAccessor interface_test_Chicken_Bird_interface_breed_member_accessor = {
@@ -286,13 +287,13 @@ static const FeatureType interface_test_Chicken_interface_walk_parameters[] = {
 
 static const PromiseType interface_test_promise_string_array_FT_INT_type = {
     .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
-    .resolveTypes = { FT_MK_COMPLEX_REF(&interface_test_string_array), FT_INT }
+    .resolveTypes = { FT_MK_COMPLEX(&interface_test_string_array), FT_INT }
 };
 
 static const MemberMethod interface_test_Chicken_interface_walk_member_method = {
     .func = { .vtable_idx = 10 },
     .parameters = interface_test_Chicken_interface_walk_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_promise_string_array_FT_INT_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_promise_string_array_FT_INT_type),
 };
 
 // Interface members
@@ -301,43 +302,43 @@ static const Member interface_test_Chicken_interface_members[] = {
   {
       .type = MEMBER_ACCESSOR,
       .name = "name",
-      .accessor = interface_test_Chicken_Animal_interface_name_member_accessor,
+      .accessor = &interface_test_Chicken_Animal_interface_name_member_accessor,
   },
   {
       .type = MEMBER_ACCESSOR,
       .name = "legCount",
-      .accessor = interface_test_Chicken_Animal_interface_legCount_member_accessor,
+      .accessor = &interface_test_Chicken_Animal_interface_legCount_member_accessor,
   },
   {
       .type = MEMBER_METHOD,
       .name = "eatFood",
-      .method = interface_test_Chicken_Animal_interface_eatFood_member_method,
+      .method = &interface_test_Chicken_Animal_interface_eatFood_member_method,
   },
   {
       .type = MEMBER_METHOD,
       .name = "run",
-      .method = interface_test_Chicken_Animal_interface_run_member_method,
+      .method = &interface_test_Chicken_Animal_interface_run_member_method,
   },
   {
       .type = MEMBER_METHOD,
       .name = "fly",
-      .method = interface_test_Chicken_Bird_interface_fly_member_method,
+      .method = &interface_test_Chicken_Bird_interface_fly_member_method,
   },
   {
       .type = MEMBER_ACCESSOR,
       .name = "breed",
-      .accessor = interface_test_Chicken_Bird_interface_breed_member_accessor,
+      .accessor = &interface_test_Chicken_Bird_interface_breed_member_accessor,
   },
   // Chicken interface members
   {
       .type = MEMBER_ACCESSOR,
       .name = "weight",
-      .accessor = interface_test_Chicken_interface_weight_member_accessor,
+      .accessor = &interface_test_Chicken_interface_weight_member_accessor,
   },
   {
       .type = MEMBER_METHOD,
       .name = "walk",
-      .method = interface_test_Chicken_interface_walk_member_method,
+      .method = &interface_test_Chicken_interface_walk_member_method,
   },
 };
 
@@ -392,7 +393,7 @@ static const FeatureType interface_test_createCock_parameters[] = {
 static const MemberMethod interface_test_createCock_member_method = {
     .func = { .callback = FFI_FN(interface_test_wrap_createCock) },
     .parameters = interface_test_createCock_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_Chicken_interface_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_Chicken_interface_type),
 };
 
 
@@ -404,13 +405,13 @@ static const FeatureType interface_test_createCat_parameters[] = {
 static const MemberMethod interface_test_createCat_member_method = {
     .func = { .callback = FFI_FN(interface_test_wrap_createCat) },
     .parameters = interface_test_createCat_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_Animal_interface_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_Animal_interface_type),
 };
 
 
 /****** for JIDL function 'setAnimal' ******/
 static const FeatureType interface_test_setAnimal_parameters[] = {
-    FT_MK_COMPLEX_REF(&interface_test_Animal_interface_type),
+    FT_MK_COMPLEX(&interface_test_Animal_interface_type),
     FT_PARAM_END
 };
 
@@ -430,7 +431,7 @@ static const FeatureType interface_test_flyFar_parameters[] = {
 static const MemberMethod interface_test_flyFar_member_method = {
     .func = { .callback = FFI_FN(interface_test_wrap_flyFar) },
     .parameters = interface_test_flyFar_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_promise_string_array_FT_INT_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_promise_string_array_FT_INT_type),
 };
 
 
@@ -446,7 +447,7 @@ static const FeatureType interface_test_flyAway_parameters[] = {
 static const MemberMethod interface_test_flyAway_member_method = {
     .func = { .callback = FFI_FN(interface_test_wrap_flyAway) },
     .parameters = interface_test_flyAway_parameters,
-    .return_type = FT_MK_COMPLEX_REF(&interface_test_promise_string_array_FT_INT_type),
+    .return_type = FT_MK_COMPLEX(&interface_test_promise_string_array_FT_INT_type),
 };
 
 
@@ -467,42 +468,42 @@ static const Member interface_test_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "createDog",
-        .method = interface_test_createDog_member_method,
+        .method = &interface_test_createDog_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "createPigeon",
-        .method = interface_test_createPigeon_member_method,
+        .method = &interface_test_createPigeon_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "createCock",
-        .method = interface_test_createCock_member_method,
+        .method = &interface_test_createCock_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "createCat",
-        .method = interface_test_createCat_member_method,
+        .method = &interface_test_createCat_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "setAnimal",
-        .method = interface_test_setAnimal_member_method,
+        .method = &interface_test_setAnimal_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "flyFar",
-        .method = interface_test_flyFar_member_method,
+        .method = &interface_test_flyFar_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "flyAway",
-        .method = interface_test_flyAway_member_method,
+        .method = &interface_test_flyAway_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "print",
-        .method = interface_test_print_member_method,
+        .method = &interface_test_print_member_method,
     },
 };
 
@@ -528,6 +529,6 @@ static const FeatureDescription interface_test_desc = {
 
 QAPPFEATURE_INIT(interface_test)
 {
-    return mgr->registerFeature(features, &interface_test_desc);
+    return FeatureRegisterFeature(handle, &interface_test_desc);
 }
 /* clang-format on */

@@ -19,6 +19,7 @@ ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
 FEATURE_REGISTRY = $(APPDIR)/frameworks/base/feature/registry
 FEATURE_LIST_PATH := $(addprefix $(FEATURE_REGISTRY)/,$(addsuffix .pdat,$(FEATURELIST)))
+FEATURE_LIST_PATH += $(addprefix $(FEATURE_REGISTRY)/,$(addsuffix .pdat,$(CFEATURELIST)))
 
 #打印FEATURE_LIST_PATH
 #$(info FEATURE_LIST_PATH is ${FEATURE_LIST_PATH})
@@ -32,11 +33,10 @@ context::
 
 ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h),)
 	@echo "ajs_features_init.h is empty, need create it"
-	@echo "#include \"feature_registry.h\"" > $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@echo "#include \"feature_exports.h\"" > $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 	@echo "" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "using namespace ferry;" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 	@echo "#undef QAPPFEATURE_INIT" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "#define QAPPFEATURE_INIT(module) bool jse_##module##_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string>&features)" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@echo "#define QAPPFEATURE_INIT(module) bool jse_##module##_initFeature(FeatureRegistryHandle handle)" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 	@echo "" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 endif
 
@@ -45,17 +45,31 @@ ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h),)
 	@echo "" > $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
 endif
 
+ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h),)
+	@echo "ajs_cfeatures_init.h is empty, need create it"
+	@echo "" >> $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h
+endif
+
 ifeq ($(FEATURELIST),)
 	@echo "FEATURELIST is empty"
 	@echo "" > $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
 else
 	@echo "FEATURELIST is not empty"
-	@$(foreach module,  $(sort ${FEATURELIST}), echo "jse_${module}_initFeature(this, features);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h;)
-	@$(foreach module,  $(sort ${FEATURELIST}), echo "bool jse_${module}_initFeature(ferry::FeatureRegistry *mgr, std::vector<std::string>&features);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h;)
+	@$(foreach module,  $(sort ${FEATURELIST}), echo "jse_${module}_initFeature(handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h;)
+	@$(foreach module,  $(sort ${FEATURELIST}), echo "bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h;)
+endif
+
+ifeq ($(CFEATURELIST),)
+	@echo "CFEATURELIST is empty"
+else
+	@echo "CFEATURELIST is not empty"
+	@$(foreach module,  $(sort ${CFEATURELIST}), echo "jse_${module}_initFeature(handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h;)
+	@$(foreach module,  $(sort ${CFEATURELIST}), echo "bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h;)
 endif
 
 distclean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
+	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 	$(call DELFILE, $(PDATLIST))
 

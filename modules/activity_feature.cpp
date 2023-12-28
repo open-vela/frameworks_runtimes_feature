@@ -24,6 +24,7 @@
 #include "activity_feature.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -120,7 +121,7 @@ static const ObjectMapType system_internal_activity_ServiceConnection_struct_typ
 
 system_internal_activity_ServiceConnection* system_internal_activityMallocServiceConnection () {
     return (system_internal_activity_ServiceConnection*)FeatureMalloc(
-        sizeof(system_internal_activity_ServiceConnection), FT_MK_COMPLEX(&system_internal_activity_ServiceConnection_struct_type));
+        sizeof(system_internal_activity_ServiceConnection), FT_MK_COMPLEX_REF(&system_internal_activity_ServiceConnection_struct_type));
 }
 
 
@@ -128,7 +129,7 @@ system_internal_activity_ServiceConnection* system_internal_activityMallocServic
 static const FeatureType system_internal_activity_bindService_parameters[] = {
     FT_STRING,
     FT_ANY_REF,
-    FT_MK_COMPLEX_REF(&system_internal_activity_ServiceConnection_struct_type),
+    FT_MK_COMPLEX(&system_internal_activity_ServiceConnection_struct_type),
     FT_PARAM_END
 };
 
@@ -170,37 +171,37 @@ static const Member system_internal_activity_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "startActivity",
-        .method = system_internal_activity_startActivity_member_method,
+        .method = &system_internal_activity_startActivity_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "stopActivity",
-        .method = system_internal_activity_stopActivity_member_method,
+        .method = &system_internal_activity_stopActivity_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "startService",
-        .method = system_internal_activity_startService_member_method,
+        .method = &system_internal_activity_startService_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "stopService",
-        .method = system_internal_activity_stopService_member_method,
+        .method = &system_internal_activity_stopService_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "bindService",
-        .method = system_internal_activity_bindService_member_method,
+        .method = &system_internal_activity_bindService_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "unbindService",
-        .method = system_internal_activity_unbindService_member_method,
+        .method = &system_internal_activity_unbindService_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "moveToBackground",
-        .method = system_internal_activity_moveToBackground_member_method,
+        .method = &system_internal_activity_moveToBackground_member_method,
     },
 };
 
@@ -226,6 +227,6 @@ static const FeatureDescription system_internal_activity_desc = {
 
 QAPPFEATURE_INIT(system_internal_activity)
 {
-    return mgr->registerFeature(features, &system_internal_activity_desc);
+    return FeatureRegisterFeature(handle, &system_internal_activity_desc);
 }
 /* clang-format on */

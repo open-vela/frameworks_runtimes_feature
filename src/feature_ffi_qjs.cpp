@@ -59,7 +59,7 @@ namespace FeatureFFIQjs {
         }
         if (FT_IS_REFERENCE(featureType)) {
             void*& value_ptr = *(void**)ptr;
-            if (!convertValueToHost(instance, FT_REMOVE_REFERENCE(featureType), value_ptr, ctx, value)) {
+            if (!convertValueToHost(instance, FT_ADD_REFERENCE(featureType), value_ptr, ctx, value)) {
                 FEATURE_LOG_ERROR("convert value to host failed !");
                 return false;
             }
@@ -293,8 +293,12 @@ namespace FeatureFFIQjs {
                             }
                         }
                     }
+                    if (FT_IS_CALLBACK(member->type)) {
+                        ret = convertValueToHost(instance, FT_ADD_REFERENCE(member->type), member_ptr, ctx, propValue);
+                    } else {
+                        ret = convertValueToHost(instance, member->type, member_ptr, ctx, propValue);
+                    }
 
-                    ret = convertValueToHost(instance, member->type, member_ptr, ctx, propValue);
                     feature_free_value(ctx, propValue);
                     if (!ret) {
                         FEATURE_LOG_ERROR("get property value for key: %s failed !",
@@ -462,7 +466,7 @@ namespace FeatureFFIQjs {
                 } break;
                 case COMPLEX_OPTIONAL: {
                     OptionalType* optinalType = (OptionalType*)complexType;
-                    bool ret = convertValueToGuest(instance, optinalType->type, ptr, ctx, value);
+                    bool ret = convertValueToGuest(instance, FT_ADD_REFERENCE(optinalType->type), ptr, ctx, value);
                     if (!ret) {
                         feature_free_value(ctx, value);
                         value = FEATURE_UNDEFINED;

@@ -24,6 +24,7 @@
 #include "storage.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -91,7 +92,7 @@ static const ObjectMapType system_storage_GetInfo_struct_type {
 
 system_storage_GetInfo* system_storageMallocGetInfo () {
     return (system_storage_GetInfo*)FeatureMalloc(
-        sizeof(system_storage_GetInfo), FT_MK_COMPLEX(&system_storage_GetInfo_struct_type));
+        sizeof(system_storage_GetInfo), FT_MK_COMPLEX_REF(&system_storage_GetInfo_struct_type));
 }
 
 
@@ -119,7 +120,7 @@ static const ObjectMapType system_storage_SetInfo_struct_type {
 
 system_storage_SetInfo* system_storageMallocSetInfo () {
     return (system_storage_SetInfo*)FeatureMalloc(
-        sizeof(system_storage_SetInfo), FT_MK_COMPLEX(&system_storage_SetInfo_struct_type));
+        sizeof(system_storage_SetInfo), FT_MK_COMPLEX_REF(&system_storage_SetInfo_struct_type));
 }
 
 
@@ -139,7 +140,7 @@ static const ObjectMapType system_storage_ClearInfo_struct_type {
 
 system_storage_ClearInfo* system_storageMallocClearInfo () {
     return (system_storage_ClearInfo*)FeatureMalloc(
-        sizeof(system_storage_ClearInfo), FT_MK_COMPLEX(&system_storage_ClearInfo_struct_type));
+        sizeof(system_storage_ClearInfo), FT_MK_COMPLEX_REF(&system_storage_ClearInfo_struct_type));
 }
 
 
@@ -160,7 +161,7 @@ static const ObjectMapType system_storage_DeleteInfo_struct_type {
 
 system_storage_DeleteInfo* system_storageMallocDeleteInfo () {
     return (system_storage_DeleteInfo*)FeatureMalloc(
-        sizeof(system_storage_DeleteInfo), FT_MK_COMPLEX(&system_storage_DeleteInfo_struct_type));
+        sizeof(system_storage_DeleteInfo), FT_MK_COMPLEX_REF(&system_storage_DeleteInfo_struct_type));
 }
 
 
@@ -181,13 +182,13 @@ static const ObjectMapType system_storage_KeyInfo_struct_type {
 
 system_storage_KeyInfo* system_storageMallocKeyInfo () {
     return (system_storage_KeyInfo*)FeatureMalloc(
-        sizeof(system_storage_KeyInfo), FT_MK_COMPLEX(&system_storage_KeyInfo_struct_type));
+        sizeof(system_storage_KeyInfo), FT_MK_COMPLEX_REF(&system_storage_KeyInfo_struct_type));
 }
 
 
 /****** for JIDL function 'get' ******/
 static const FeatureType system_storage_get_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_storage_GetInfo_struct_type),
+    FT_MK_COMPLEX(&system_storage_GetInfo_struct_type),
     FT_PARAM_END
 };
 
@@ -200,7 +201,7 @@ static const MemberMethod system_storage_get_member_method = {
 
 /****** for JIDL function 'set' ******/
 static const FeatureType system_storage_set_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_storage_SetInfo_struct_type),
+    FT_MK_COMPLEX(&system_storage_SetInfo_struct_type),
     FT_PARAM_END
 };
 
@@ -213,7 +214,7 @@ static const MemberMethod system_storage_set_member_method = {
 
 /****** for JIDL function 'clear' ******/
 static const FeatureType system_storage_clear_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_storage_ClearInfo_struct_type),
+    FT_MK_COMPLEX(&system_storage_ClearInfo_struct_type),
     FT_PARAM_END
 };
 
@@ -226,7 +227,7 @@ static const MemberMethod system_storage_clear_member_method = {
 
 /****** for JIDL function 'delete' ******/
 static const FeatureType system_storage_delete_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_storage_DeleteInfo_struct_type),
+    FT_MK_COMPLEX(&system_storage_DeleteInfo_struct_type),
     FT_PARAM_END
 };
 
@@ -239,7 +240,7 @@ static const MemberMethod system_storage_delete_member_method = {
 
 /****** for JIDL function 'key' ******/
 static const FeatureType system_storage_key_parameters[] = {
-    FT_MK_COMPLEX_REF(&system_storage_KeyInfo_struct_type),
+    FT_MK_COMPLEX(&system_storage_KeyInfo_struct_type),
     FT_PARAM_END
 };
 
@@ -263,32 +264,32 @@ static const Member system_storage_members[] = {
     {
         .type = MEMBER_METHOD,
         .name = "get",
-        .method = system_storage_get_member_method,
+        .method = &system_storage_get_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "set",
-        .method = system_storage_set_member_method,
+        .method = &system_storage_set_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "clear",
-        .method = system_storage_clear_member_method,
+        .method = &system_storage_clear_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "delete",
-        .method = system_storage_delete_member_method,
+        .method = &system_storage_delete_member_method,
     },
     {
         .type = MEMBER_METHOD,
         .name = "key",
-        .method = system_storage_key_member_method,
+        .method = &system_storage_key_member_method,
     },
     {
         .type = MEMBER_ACCESSOR,
         .name = "length",
-        .accessor = system_storage_length_member_accessor,
+        .accessor = &system_storage_length_member_accessor,
     },
 };
 
@@ -314,6 +315,6 @@ static const FeatureDescription system_storage_desc = {
 
 QAPPFEATURE_INIT(system_storage)
 {
-    return mgr->registerFeature(features, &system_storage_desc);
+    return FeatureRegisterFeature(handle, &system_storage_desc);
 }
 /* clang-format on */

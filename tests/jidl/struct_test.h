@@ -29,7 +29,7 @@
 
 #include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +49,7 @@ typedef struct _Chapter {
   FtBool is_end;
 } struct_test_Chapter;
 
-struct_test_Chapter* struct_testMallocChapter();
+struct_test_Chapter* struct_testMallocChapter(void);
 
 typedef struct _Book {
   FtAny any_param;
@@ -60,14 +60,14 @@ typedef struct _Book {
   FtCallbackId chap_changed;
 } struct_test_Book;
 
-struct_test_Book* struct_testMallocBook();
+struct_test_Book* struct_testMallocBook(void);
 
 
 // Function wrappers to be implemented
-void struct_test_wrap_foo(FeatureInstanceHandle feature, AppendData append_data, FtInt a, struct_test_Chapter * b);
-struct_test_Chapter * struct_test_wrap_bar(FeatureInstanceHandle feature, AppendData append_data, FtInt a);
-void struct_test_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, struct_test_Book * a);
-void struct_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
+void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData append_data, FtInt a, struct_test_Chapter * b);
+struct_test_Chapter * struct_test_wrap_bar(FeatureInstanceHandle feature, union AppendData append_data, FtInt a);
+void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData append_data, struct_test_Book * a);
+void struct_test_wrap_print(FeatureInstanceHandle feature, union AppendData append_data, FtVariParams vari_params);
 
 // Interface constructors
 
@@ -76,7 +76,7 @@ void struct_test_wrap_print(FeatureInstanceHandle feature, AppendData append_dat
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* struct_test_malloc_string_array();
+FtArray* struct_test_malloc_string_array(void);
 
 #endif // JSON_AST_GEN_MODULE_STRUCT_TEST_H_
 /* clang-format on */
