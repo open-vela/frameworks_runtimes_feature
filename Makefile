@@ -119,7 +119,7 @@ FEATURELIST += timers
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/app_path.cpp
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/locale_impl.cpp
-JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/locale.jidl
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/feature_locale.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/
 FEATURELIST += locale
 

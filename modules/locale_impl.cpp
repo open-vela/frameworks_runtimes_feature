@@ -15,7 +15,7 @@
  */
 
 #include "feature_log.h"
-#include "locale.h"
+#include "feature_locale.h"
 #include "uv_ext.h"
 
 static const char* file_tag = "[jidl_feature] locale_impl";
