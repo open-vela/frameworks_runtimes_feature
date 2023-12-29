@@ -282,7 +282,8 @@ BIN := $(APPDIR)/staging/libfeature.a
 endif
 
 EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_descriptors.h \
-                include/feature_exports.h include/feature_main_exports.h
+                include/feature_exports.h include/feature_main_exports.h src/README.md \
+                registry/README.md
 
 
 context:: 
