@@ -49,6 +49,7 @@ MessageChannel::~MessageChannel()
 {
     // client_channel_ and broadcast_channel_ is the same object.
     if (client_channel_ != nullptr && broadcast_channel_ != nullptr) {
+        client_channel_->clearUvTimer();
         delete client_channel_;
         client_channel_ = nullptr;
         broadcast_channel_ = nullptr;
@@ -166,6 +167,18 @@ void MessageChannel::clientOnMessage(int32_t id, const std::string& message)
     } else {
         RequestCb cb = request_map_[id];
         cb(message.c_str());
+        request_map_.erase(id);
+    }
+}
+
+void MessageChannel::clientOnTimeOut(int32_t id)
+{
+    FEATURE_LOG_WARN("client sendMessage timeout!");
+    if (ft_instance_ != nullptr) {
+        FeaturePromiseReject(ft_instance_, id, "reply timeout");
+    } else {
+        RequestCb cb = request_map_[id];
+        cb("reply timeout");
         request_map_.erase(id);
     }
 }
@@ -300,6 +313,15 @@ void MessageChannel::registerServer(const std::string& name)
     }
 }
 
+void MessageChannel::attachLoop(uv_loop_t* loop)
+{
+    if (!loop) {
+        FEATURE_LOG_ERROR("loop is null !");
+        return;
+    }
+    client_channel_->attachLoop(loop);
+}
+
 int MessageChannel::sendMessageForC(const std::string& target, const std::string& msg, RequestCb cb)
 {
     int32_t id = (int32_t)cb;
@@ -343,6 +365,10 @@ static void initMessageChannel(FeatureInstanceHandle ft_instance)
     MessageChannel* message_channel = new MessageChannel();
     FeatureSetObjectData(ft_instance, message_channel);
     message_channel->setFeatureInstanceHandle(ft_instance);
+    // attach loop
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(ft_instance);
+    uv_loop_t* loop = FeatureGetUVLoop(manager);
+    message_channel->attachLoop(loop);
 }
 
 static void freeMessageChannel(FeatureInstanceHandle ft_instance)

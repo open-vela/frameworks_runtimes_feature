@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <uv.h>
 
 typedef int32_t ReplyId;
 typedef int32_t SessionId;
@@ -33,7 +34,8 @@ public:
 class BroadcastChannelCallback {
 public:
     virtual void onReceive(const std::string& target, const std::string& action,
-                           const std::string& data) = 0;
+        const std::string& data)
+        = 0;
 };
 
 class ClientChannelCallback {
@@ -45,14 +47,19 @@ public:
 
     // message reply callback
     virtual void clientOnMessage(int32_t id, const std::string& message) = 0;
+    virtual void clientOnTimeOut(int32_t id) = 0;
 };
 
 class MessageServerChannel {
 public:
-    MessageServerChannel() : message_server_channel_cb_(nullptr) {}
-    virtual ~MessageServerChannel() {}
+    MessageServerChannel()
+        : message_server_channel_cb_(nullptr)
+    {
+    }
+    virtual ~MessageServerChannel() { }
     virtual void serverReply(int reply_id, const std::string& message) = 0;
-    void setMessageServerChannelCallback(MessageServerChannelCallback* cb) {
+    void setMessageServerChannelCallback(MessageServerChannelCallback* cb)
+    {
         message_server_channel_cb_ = cb;
     }
 
@@ -62,12 +69,16 @@ protected:
 
 class SessionServerChannel {
 public:
-    SessionServerChannel() : session_server_channel_cb_(nullptr) {}
-    virtual ~SessionServerChannel() {}
+    SessionServerChannel()
+        : session_server_channel_cb_(nullptr)
+    {
+    }
+    virtual ~SessionServerChannel() { }
     virtual void sessionSend(SessionId id, const std::string& message) = 0;
     virtual void sessionClose(SessionId id) = 0;
     virtual bool haveSessionId(SessionId id) = 0;
-    void setSessionServerChannelCallback(SessionServerChannelCallback* cb) {
+    void setSessionServerChannelCallback(SessionServerChannelCallback* cb)
+    {
         session_server_channel_cb_ = cb;
     }
 
@@ -77,12 +88,16 @@ protected:
 
 class BroadcastChannel {
 public:
-    BroadcastChannel() : broadcast_cb_(nullptr) {}
-    virtual ~BroadcastChannel() {}
+    BroadcastChannel()
+        : broadcast_cb_(nullptr)
+    {
+    }
+    virtual ~BroadcastChannel() { }
     virtual void sendBroadcast(const std::string& action, const std::string& data) = 0;
     virtual void registerReceiver(const std::string& action) = 0;
     virtual void unregisterReceiver(const std::string& action) = 0;
-    void setBroadcastCallback(BroadcastChannelCallback* cb) {
+    void setBroadcastCallback(BroadcastChannelCallback* cb)
+    {
         broadcast_cb_ = cb;
     }
 
@@ -92,8 +107,14 @@ protected:
 
 class ClientChannel {
 public:
-    ClientChannel() : client_channel_cb_(nullptr) {}
-    virtual ~ClientChannel() {}
+    ClientChannel()
+        : client_channel_cb_(nullptr)
+    {
+    }
+    virtual ~ClientChannel() { }
+
+    virtual void attachLoop(uv_loop_t* loop) = 0;
+    virtual void clearUvTimer() = 0;
 
     // session
     virtual int createSession(const std::string& target) = 0;
@@ -104,7 +125,8 @@ public:
     // message
     virtual int sendMessage(const std::string& target, const std::string& msg, int32_t pid) = 0;
 
-    void setClientChannelCallback(ClientChannelCallback* cb) {
+    void setClientChannelCallback(ClientChannelCallback* cb)
+    {
         client_channel_cb_ = cb;
     }
 
