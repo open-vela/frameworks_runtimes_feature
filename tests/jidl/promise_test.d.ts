@@ -2,6 +2,7 @@
 
 
 export class promise_test {
+  private instance: number;
   constructor(){
     this.init_native(this.clazz_name);
   }

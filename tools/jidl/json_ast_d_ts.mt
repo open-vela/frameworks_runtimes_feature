@@ -242,6 +242,7 @@ ${GenInterface(block)}\
 %endfor
 
 export class ${module_name} {
+  private instance: number;
   constructor(){
     this.init_native(this.clazz_name);
   }
