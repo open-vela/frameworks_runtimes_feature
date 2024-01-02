@@ -51,6 +51,7 @@ private:
 
     void* wamr_env_;
     std::vector<NativeSymbol*> native_symbols_;
+    std::vector<char*> native_strings_;
 };
 
 }
