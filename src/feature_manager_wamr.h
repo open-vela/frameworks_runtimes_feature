@@ -35,33 +35,22 @@ class FeatureManagerWamr;
 class FeatureRegistry;
 class FeatureUnit;
 
-typedef struct WamrAttachment {
-    FeatureManagerWamr* manager;
-    NativeSymbol* symbol;
-    const FeatureDescription* description;
-    int index;
-} WamrAttachment;
-
 class FeatureManagerWamr : public FeatureManager {
 public:
     FeatureManagerWamr(FeatureRegistry* registry);
     bool init();
     void release();
     Member* getFeatureMember(const FeatureDescription* description, int index);
-    FeatureInstance* getFeatureInstance(wasm_obj_t obj);
     bool require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name);
     void* wamrEnv() { return wamr_env_; }
 
 private:
     int registerFeature(const FeatureDescription* description);
-    bool makeAttachment(NativeSymbol* symbol, const FeatureDescription* description, int index);
+
+    bool registerSymbol(void* func, const char* name, const char* sig, void* attach);
 
     void* wamr_env_;
     std::vector<NativeSymbol*> native_symbols_;
-    std::map<wasm_obj_t, FeatureInstance*> feature_instance_map_;
-    std::map<NativeSymbol*, WamrAttachment> symbol_attachment_map_;
-    using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
-    std::map<std::string, FeatureRegistryPair> registered_interfaces_;
 };
 
 }

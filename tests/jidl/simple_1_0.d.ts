@@ -2,6 +2,7 @@
 
 
 export class Simple {
+  private instance: number;
   constructor(){
     this.init_native(this.clazz_name);
   }

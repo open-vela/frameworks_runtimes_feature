@@ -144,7 +144,7 @@ char getFeatureSignature(FeatureType ftype)
     return 0;
 }
 
-bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, AppendData& const_data, uint64_t& value)
+bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, const AppendData& const_data, uint64_t& value)
 {
     if (!FT_IS_PRIMITIVE(ftype)) {
         FEATURE_LOG_ERROR("complex is not supported for const!");
