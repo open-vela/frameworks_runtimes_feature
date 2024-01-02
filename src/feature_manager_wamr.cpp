@@ -105,14 +105,15 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
     if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
         str_len = wasm_string_get_length(str_ref);
     }
-    char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
-    if (buffer != nullptr) {
-        wasm_string_to_cstring(str_ref, buffer, str_len + 1);
+    char *class_name = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
+    if (class_name != nullptr) {
+        wasm_string_to_cstring(str_ref, class_name, str_len + 1);
     }
 
-    FEATURE_LOG_INFO("class name: %s", buffer);
+    FEATURE_LOG_INFO("class name: %s", class_name);
     auto manager = (FeatureManagerWamr*)wasm_runtime_get_function_attachment(exec_env);
-    manager->require(exec_env, (wasm_obj_t)thiz_ptr, buffer);
+    manager->require(exec_env, (wasm_obj_t)thiz_ptr, class_name);
+    free(class_name);
 
     // set object destructor func
     wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)thiz_ptr,(wasm_obj_finalizer_t)module_object_finalizer, nullptr);
@@ -573,6 +574,15 @@ void FeatureManagerWamr::release()
       for(size_t i = 0; i < native_symbols_.size(); i++){
         delete native_symbols_[i];
       }
+      native_symbols_.clear();
+    }
+
+    /* delete native strings */
+    if(!native_strings_.empty()){
+      for(size_t i = 0; i < native_strings_.size(); i++){
+        delete [] native_strings_[i];
+      }
+      native_strings_.clear();
     }
 
     if (getFeatureContext()) {
@@ -669,6 +679,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 
     /* register class initNative api */
     char* init_name = new char[128];
+    native_strings_.push_back(init_name);
     strcpy(init_name, description->name);
     strcat(init_name,"_init_native");
     if (!registerSymbol((void*)init_native, init_name, "(rr)", this)) {
@@ -687,6 +698,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 // register different type
                 auto& method = member.method;
                 char *method_name = new char[128];
+                native_strings_.push_back(method_name);
                 strcpy(method_name, description->name);
                 /* special treat for interface */
                 if (FT_IS_COMPLEX(method.return_type)) {
@@ -699,6 +711,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 
                 strcat(method_name, member.name);
                 char *signature = new char[64];
+                native_strings_.push_back(signature);
                 memset(signature, 0, 64);
                 strcpy(signature, "(r");
                 const FeatureType *ftype = (FeatureType *)method.parameters;
@@ -743,11 +756,13 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 const MemberAccessor& accessor = member.accessor;
                 if (accessor.getter.vtable_idx >= 0 || accessor.getter.callback) {
                     char *getter_name = new char[128];
+                    native_strings_.push_back(getter_name);
                     strcpy(getter_name, description->name);
                     strcat(getter_name, "_get_");
                     strcat(getter_name, member.name);
                     strcat(getter_name, "_0");
                     char *signature = new char[64];
+                    native_strings_.push_back(signature);
                     memset(signature, 0, 64);
                     strcpy(signature, "(r");
                     char type = FeatureFFIWamr::getFeatureSignature(accessor.type);
@@ -760,11 +775,13 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 }
                 if(accessor.setter.vtable_idx >= 0 || accessor.setter.callback) {
                     char *setter_name = new char[128];
+                    native_strings_.push_back(setter_name);
                     strcpy(setter_name, description->name);
                     strcat(setter_name, "_set_");
                     strcat(setter_name, member.name);
                     strcat(setter_name, "_0");
                     char *signature = new char[64];
+                    native_strings_.push_back(signature);
                     memset(signature, 0, 64);
                     strcpy(signature, "(r");
                     char sig = FeatureFFIWamr::getFeatureSignature(accessor.type);
@@ -781,10 +798,12 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 // handle member const
                 const MemberConst& member_const = member.value;
                 char *const_name = new char[128];
+                native_strings_.push_back(const_name);
                 strcpy(const_name, description->name);
                 strcat(const_name, "_const_");
                 strcat(const_name, member.name);
                 char *signature = new char[64];
+                native_strings_.push_back(signature);
                 memset(signature, 0, 64);
                 strcpy(signature, "(r");
                 char sig = FeatureFFIWamr::getFeatureSignature(member_const.type);

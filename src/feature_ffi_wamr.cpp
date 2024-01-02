@@ -43,9 +43,16 @@ static void* interface_from_target(uint64_t& target)
     return param;
 }
 
-static uint64_t target_from_interface(FeatureInstance* instance)
+static uint64_t target_from_interface(FeatureInstance* interf)
 {
-    return (uint64_t)instance;
+    FEATURE_CHECK_NE(interf, nullptr);
+    auto proto = interf->prototype();
+    FEATURE_CHECK_NE(proto, nullptr);
+    auto unique_interf= std::unique_ptr<FeatureInstance>(interf);
+    int iid = proto->addInstance(std::move(unique_interf));
+    interf->setInstanceId(iid);
+
+    return (uint64_t)interf;
 }
 
 static inline void fill_struct_data(ObjectMapType &obj_type, uint64_t ptr, ts_value_t obj_arr[], uint32_t count)
@@ -377,12 +384,10 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                 if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
                     str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
                 }
-                char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
-                if (buffer != nullptr) {
-                    wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
+                char* alloc_ptr = str_len > 0 ? (char*)FeatureMalloc(str_len + 1, FT_CHAR) : nullptr;
+                if (alloc_ptr) {
+                    wasm_string_to_cstring((wasm_stringref_obj_t)str, alloc_ptr, str_len + 1);
                 }
-                char* alloc_ptr = (char*)FeatureMalloc(strlen(buffer) + 1, FT_CHAR);
-                strcpy(alloc_ptr, buffer);
                 ptr = alloc_ptr;
                 // feature_free_cstring(ctx, str);
             }
