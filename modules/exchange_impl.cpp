@@ -160,8 +160,8 @@ static int exchange_args_get_and_check(ExchangeHandle* handle) {
 
     /* Get scope property and check, scope can be NULL or "global" */
     if (handle->scope == NULL) {
-        if (handle->package == NULL || strcmp(handle->package, "") == 0) {
-            handle->scope = strdup("application");
+        if (handle->package == NULL) {
+            goto error;
         } else {
             handle->scope = strdup(handle->package);
         }
