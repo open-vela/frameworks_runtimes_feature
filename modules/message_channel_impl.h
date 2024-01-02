@@ -54,6 +54,7 @@ public:
     void clientOnSessionCloseByself(SessionId id, int flag) override;
     void clientOnSessionCloseBypeer(SessionId id, int flag) override;
     void clientOnMessage(int32_t id, const std::string& message) override;
+    void clientOnTimeOut(int32_t id) override;
 
     // override BroadcastChannelCallback
     void onReceive(const std::string& target, const std::string& action,
@@ -80,6 +81,9 @@ public:
 
     // register server
     void registerServer(const std::string& name);
+
+    // attach loop
+    void attachLoop(uv_loop_t* loop);
 
     // for c api
     int sendMessageForC(const std::string& target, const std::string& msg,

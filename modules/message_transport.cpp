@@ -31,215 +31,326 @@ using android::String16;
 using os::app::ActivityManager;
 
 namespace message_transport {
-Status SessionMessageReply::onReply(const ::std::string &reply) {
-  client_channel_cb_->clientOnSessionMessage(id_, reply);
-  return Status::ok();
+Status SessionMessageReply::onReply(const ::std::string& reply)
+{
+    client_channel_cb_->clientOnSessionMessage(id_, reply);
+    return Status::ok();
 }
 
-Status SessionMessageReply::onSessionClose() {
-  client_channel_cb_->clientOnSessionCloseBypeer(id_,
-                                                 SESSION_REASON_CLOSE_PEER);
-  client_connection_->eraseSessionReply(id_);
-  client_connection_->eraseSessionClient(id_);
-  return Status::ok();
+Status SessionMessageReply::onSessionClose()
+{
+    client_channel_cb_->clientOnSessionCloseBypeer(id_,
+        SESSION_REASON_CLOSE_PEER);
+    client_connection_->eraseSessionReply(id_);
+    client_connection_->eraseSessionClient(id_);
+    return Status::ok();
 }
 
-Status MessageReply::onReply(const ::std::string &reply) {
-  client_channel_cb_->clientOnMessage(pid_, reply);
-  return Status::ok();
+Status MessageReply::onReply(const ::std::string& reply)
+{
+    auto task_board = client_connection_->getTaskBoard();
+    task_board.executeTask((int32_t)this, reply);
+    return Status::ok();
 }
 
-void NotifyBroadcastReceiver::onReceive(const Intent &intent) {
-  if (broadcast_cb_ != nullptr) {
-    broadcast_cb_->onReceive(intent.mTarget, intent.mAction, intent.mData);
-  }
+void MessageReply::onTimeout() const
+{
+    client_channel_cb_->clientOnTimeOut(pid_);
 }
 
-int ClientConnection::createSession(const std::string &target) {
-  sp<IMessageTransport> service;
-  if (android::getService<IMessageTransport>(android::String16(target.c_str()),
-                                             &service) != android::NO_ERROR) {
-    ALOGE("ServiceManager can't find the service:%s", target.c_str());
-    return -1;
-  }
-
-  ALOGI("imessagetransport service is %p", service.get());
-  int32_t id = (int32_t)service.get();
-  session_client_map_.insert(std::make_pair(id, service));
-  return id;
+void MessageReply::onReplyToClient(std::string message) const
+{
+    client_channel_cb_->clientOnMessage(pid_, message);
 }
 
-void ClientConnection::sessionSend(SessionId id, const std::string &msg) {
-  if (session_client_map_.find(id) != session_client_map_.end()) {
-    sp<IMessageTransport> service = session_client_map_[id];
-
-    // TODO:目前认为binder线程与js线程在同一个线程, 后续需要做兼容
-    // 判断服务是否alive；如果alive，再发送消息
-    if (!android::IInterface::asBinder(service)->isBinderAlive()) {
-      ALOGE("imessagetransport service is not alive:%" PRIi32 "", id);
-      return;
+void NotifyBroadcastReceiver::onReceive(const Intent& intent)
+{
+    if (broadcast_cb_ != nullptr) {
+        broadcast_cb_->onReceive(intent.mTarget, intent.mAction, intent.mData);
     }
-    sp<SessionMessageReply> reply;
-    if (session_reply_map_.find(id) == session_reply_map_.end()) {
-      reply = new SessionMessageReply(id);
-      reply->setClientChannelCallback(client_channel_cb_);
-      reply->setClientConnection(this);
-      session_reply_map_.insert(std::make_pair(id, reply));
-    } else {
-      reply = session_reply_map_[id];
+}
+
+void ClientConnection::attachLoop(uv_loop_t* loop)
+{
+    task_board_.attachLoop(loop);
+}
+
+void ClientConnection::clearUvTimer()
+{
+    task_board_.clearTimer();
+}
+
+int ClientConnection::createSession(const std::string& target)
+{
+    sp<IMessageTransport> service;
+    if (android::getService<IMessageTransport>(android::String16(target.c_str()),
+            &service)
+        != android::NO_ERROR) {
+        ALOGE("ServiceManager can't find the service:%s", target.c_str());
+        return -1;
     }
-    Status status = service->sendSessionMessage(msg, reply);
+
+    ALOGI("imessagetransport service is %p", service.get());
+    int32_t id = (int32_t)service.get();
+    session_client_map_.insert(std::make_pair(id, service));
+    return id;
+}
+
+void ClientConnection::sessionSend(SessionId id, const std::string& msg)
+{
+    if (session_client_map_.find(id) != session_client_map_.end()) {
+        sp<IMessageTransport> service = session_client_map_[id];
+
+        // TODO:目前认为binder线程与js线程在同一个线程, 后续需要做兼容
+        // 判断服务是否alive；如果alive，再发送消息
+        if (!android::IInterface::asBinder(service)->isBinderAlive()) {
+            ALOGE("imessagetransport service is not alive:%" PRIi32 "", id);
+            return;
+        }
+        sp<SessionMessageReply> reply;
+        if (session_reply_map_.find(id) == session_reply_map_.end()) {
+            reply = new SessionMessageReply(id);
+            reply->setClientChannelCallback(client_channel_cb_);
+            reply->setClientConnection(this);
+            session_reply_map_.insert(std::make_pair(id, reply));
+        } else {
+            reply = session_reply_map_[id];
+        }
+        Status status = service->sendSessionMessage(msg, reply);
+        if (!status.isOk()) {
+            ALOGE("sendSessionMessage error: %s. SessionId(%" PRIi32 ")",
+                status.toString8().c_str(), id);
+        }
+    }
+}
+
+void ClientConnection::sessionClose(SessionId id)
+{
+    if (session_client_map_.find(id) != session_client_map_.end()) {
+        session_client_map_.erase(id);
+        client_channel_cb_->clientOnSessionCloseByself(id, SESSION_REASON_CLOSE);
+    }
+}
+
+bool ClientConnection::haveSessionId(SessionId id)
+{
+    return session_client_map_.find(id) != session_client_map_.end();
+}
+
+int ClientConnection::sendMessage(const std::string& target,
+    const std::string& msg, int32_t pid_)
+{
+    sp<IMessageTransport> service;
+    if (android::getService<IMessageTransport>(android::String16(target.c_str()),
+            &service)
+        != android::NO_ERROR) {
+        ALOGE("ServiceManager can't find the service:%s", target.c_str());
+        return -1;
+    }
+    sp<MessageReply> reply = new MessageReply(pid_);
+    reply->setClientChannelCallback(client_channel_cb_);
+    reply->setClientConnection(this);
+    task_board_.commitTask(std::make_shared<MsgTask>(reply, (int32_t)service.get()));
+    Status status = service->sendMessage(msg, reply);
     if (!status.isOk()) {
-      ALOGE("sendSessionMessage error: %s. SessionId(%" PRIi32 ")",
-            status.toString8().c_str(), id);
+        ALOGE("sendMessage error: %s. target:%s", status.toString8().c_str(),
+            target.c_str());
+        return -1;
     }
-  }
+    return 0;
 }
 
-void ClientConnection::sessionClose(SessionId id) {
-  if (session_client_map_.find(id) != session_client_map_.end()) {
-    session_client_map_.erase(id);
-    client_channel_cb_->clientOnSessionCloseByself(id, SESSION_REASON_CLOSE);
-  }
-}
-
-bool ClientConnection::haveSessionId(SessionId id) {
-  if (session_client_map_.find(id) != session_client_map_.end()) {
-    return true;
-  }
-  return false;
-}
-
-int ClientConnection::sendMessage(const std::string &target,
-                                  const std::string &msg, int32_t pid_) {
-  sp<IMessageTransport> service;
-  if (android::getService<IMessageTransport>(android::String16(target.c_str()),
-                                             &service) != android::NO_ERROR) {
-    ALOGE("ServiceManager can't find the service:%s", target.c_str());
-    return -1;
-  }
-  sp<MessageReply> reply = new MessageReply(pid_);
-  reply->setClientChannelCallback(client_channel_cb_);
-  reply->setClientConnection(this);
-  Status status = service->sendMessage(msg, reply);
-  if (!status.isOk()) {
-    ALOGE("sendMessage error: %s. target:%s", status.toString8().c_str(),
-          target.c_str());
-    return -1;
-  }
-  message_reply_map_.insert(std::make_pair((int32_t)service.get(), reply));
-  return 0;
-}
-
-void ClientConnection::registerReceiver(const std::string &action) {
-  sp<NotifyBroadcastReceiver> receiver(new NotifyBroadcastReceiver());
-  receiver->setBroadcastChannelCallback(broadcast_cb_);
-  ActivityManager am;
-  am.registerReceiver(action, receiver);
-  broadcast_reply_.insert(std::make_pair(action, receiver));
-}
-
-void ClientConnection::unregisterReceiver(const std::string &action) {
-  if (broadcast_reply_.find(action) != broadcast_reply_.end()) {
+void ClientConnection::registerReceiver(const std::string& action)
+{
+    sp<NotifyBroadcastReceiver> receiver(new NotifyBroadcastReceiver());
+    receiver->setBroadcastChannelCallback(broadcast_cb_);
     ActivityManager am;
-    am.unregisterReceiver(broadcast_reply_[action]);
-  }
+    am.registerReceiver(action, receiver);
+    broadcast_reply_.insert(std::make_pair(action, receiver));
 }
 
-void ClientConnection::sendBroadcast(const std::string &action,
-                                     const std::string &data) {
-  ActivityManager am;
-  Intent intent;
-  intent.setAction(action);
-  intent.setData(data);
-  am.sendBroadcast(intent);
+void ClientConnection::unregisterReceiver(const std::string& action)
+{
+    if (broadcast_reply_.find(action) != broadcast_reply_.end()) {
+        ActivityManager am;
+        am.unregisterReceiver(broadcast_reply_[action]);
+    }
 }
 
-void ClientConnection::eraseSessionReply(SessionId id) {
-  if (session_reply_map_.find(id) != session_reply_map_.end()) {
-    session_reply_map_.erase(id);
-  }
+void ClientConnection::sendBroadcast(const std::string& action,
+    const std::string& data)
+{
+    ActivityManager am;
+    Intent intent;
+    intent.setAction(action);
+    intent.setData(data);
+    am.sendBroadcast(intent);
 }
 
-void ClientConnection::eraseSessionClient(SessionId id) {
-  if (session_client_map_.find(id) != session_client_map_.end()) {
-    session_client_map_.erase(id);
-  }
+void ClientConnection::eraseSessionReply(SessionId id)
+{
+    if (session_reply_map_.find(id) != session_reply_map_.end()) {
+        session_reply_map_.erase(id);
+    }
 }
 
-void ClientConnection::eraseMessageReply(ReplyId id) {
-  if (message_reply_map_.find(id) != message_reply_map_.end()) {
-    message_reply_map_.erase(id);
-  }
+void ClientConnection::eraseSessionClient(SessionId id)
+{
+    if (session_client_map_.find(id) != session_client_map_.end()) {
+        session_client_map_.erase(id);
+    }
 }
 
-void ServerHelper::registerServer(const std::string &name) {
-  if (!register_flag_) {
-    sp<IServiceManager> sm(defaultServiceManager());
-    transport_server_ = new MessageTransportServer();
-    // 注册服务
-    ALOGI("add %s to service manager", name.c_str());
-    sm->addService(String16(name.c_str()), transport_server_);
-    transport_server_->decStrong(transport_server_.get());
-    transport_server_->getWeakRefs()->decWeak(transport_server_.get());
-    register_flag_ = true;
-  }
+const TaskBoard& ClientConnection::getTaskBoard() const
+{
+    return task_board_;
 }
 
-sp<MessageTransportServer> ServerHelper::getMessageTransportServer() {
-  return transport_server_;
+void MsgTask::startTimer(uv_loop_t* loop, uint32_t msTimeout)
+{
+    timer_ = new UvTimer();
+    timer_->init(loop, [this](void*) {
+        if (!is_done_) {
+            is_done_ = true;
+            reply_->onTimeout();
+        }
+    });
+    timer_->start(msTimeout);
 }
 
-MessageTransportServer::MessageTransportServer() {
-  message_server_channel_cb_ = nullptr;
-  session_server_channel_cb_ = nullptr;
+void MsgTask::stopTimer()
+{
+    if (timer_) {
+        timer_->stop();
+        delete timer_;
+        timer_ = nullptr;
+    }
+}
+
+void MsgTask::doing(const std::string& message)
+{
+    is_done_ = true;
+    reply_->onReplyToClient(message);
+}
+
+TaskBoard::TaskBoard() { }
+
+void TaskBoard::attachLoop(uv_loop_t* loop)
+{
+    loop_ = loop;
+}
+
+void TaskBoard::clearTimer()
+{
+    for (auto iter = task_list_.begin(); iter != task_list_.end();) {
+        (*iter)->stopTimer();
+        iter = task_list_.erase(iter);
+    }
+}
+
+void TaskBoard::commitTask(const std::shared_ptr<MsgTask>& task)
+{
+    task->startTimer(loop_, REPLY_TIMEOUT_MS);
+    task_list_.emplace_back(task);
+}
+
+void TaskBoard::executeTask(int reply_id, const std::string& message)
+{
+    for (auto iter = task_list_.begin(); iter != task_list_.end();) {
+        if ((*iter)->isDone()) {
+            /** This situation is handled by timeout. need delete it*/
+            (*iter)->stopTimer();
+            auto tmp = iter;
+            ++iter;
+            task_list_.erase(tmp);
+            continue;
+        }
+        if ((*iter)->getReplyId() == reply_id) {
+            (*iter)->doing(message);
+            // execute finish,
+            (*iter)->stopTimer();
+            // remove it from list
+            iter = task_list_.erase(iter);
+            continue;
+        }
+        ++iter;
+    }
+}
+
+void ServerHelper::registerServer(const std::string& name)
+{
+    if (!register_flag_) {
+        sp<IServiceManager> sm(defaultServiceManager());
+        transport_server_ = new MessageTransportServer();
+        // 注册服务
+        ALOGI("add %s to service manager", name.c_str());
+        sm->addService(String16(name.c_str()), transport_server_);
+        transport_server_->decStrong(transport_server_.get());
+        transport_server_->getWeakRefs()->decWeak(transport_server_.get());
+        register_flag_ = true;
+    }
+}
+
+sp<MessageTransportServer> ServerHelper::getMessageTransportServer()
+{
+    return transport_server_;
 }
 
 Status MessageTransportServer::sendMessage(
-    const ::std::string &message,
-    const ::android::sp<::message_transport::IReply> &reply) {
-  int32_t id = (int32_t)reply.get();
-  reply_map_.insert(std::make_pair(id, reply));
-  message_server_channel_cb_->serverOnMessage(id, message);
-  return Status::ok();
+    const ::std::string& message,
+    const ::android::sp<::message_transport::IReply>& reply)
+{
+    int32_t id = (int32_t)reply.get();
+    reply_map_.insert(std::make_pair(id, reply));
+    message_server_channel_cb_->serverOnMessage(id, message);
+    return Status::ok();
 }
 
 Status MessageTransportServer::sendSessionMessage(
-    const ::std::string &message,
-    const ::android::sp<::message_transport::IReply> &reply) {
-  int32_t id = (int32_t)reply.get();
-  reply_map_.insert(std::make_pair(id, reply));
-  session_server_channel_cb_->sessionOnMessage(id, message);
-  return Status::ok();
+    const ::std::string& message,
+    const ::android::sp<::message_transport::IReply>& reply)
+{
+    int32_t id = (int32_t)reply.get();
+    reply_map_.insert(std::make_pair(id, reply));
+    session_server_channel_cb_->sessionOnMessage(id, message);
+    return Status::ok();
 }
 
 void MessageTransportServer::serverReply(int reply_id,
-                                         const std::string &message) {
-  if (reply_map_.find(reply_id) != reply_map_.end()) {
-    reply_map_[reply_id]->onReply(message);
-    reply_map_.erase(reply_id);
-  }
+    const std::string& message)
+{
+    if (reply_map_.find(reply_id) != reply_map_.end()) {
+        reply_map_[reply_id]->onReply(message);
+        reply_map_.erase(reply_id);
+    }
 }
 
 void MessageTransportServer::sessionSend(SessionId reply_id,
-                                         const std::string &message) {
-  if (reply_map_.find(reply_id) != reply_map_.end()) {
-    reply_map_[reply_id]->onReply(message);
-  }
+    const std::string& message)
+{
+    if (reply_map_.find(reply_id) != reply_map_.end()) {
+        Status status = reply_map_[reply_id]->onReply(message);
+        if (!status.isOk()) {
+            ALOGE("sessionSend error: %s. message:%s", status.toString8().c_str(),
+                message.c_str());
+        }
+    }
 }
 
-void MessageTransportServer::sessionClose(SessionId id) {
-  if (reply_map_.find(id) != reply_map_.end()) {
-    reply_map_[id]->onSessionClose();
-    reply_map_.erase(id);
-  }
+void MessageTransportServer::sessionClose(SessionId id)
+{
+    if (reply_map_.find(id) != reply_map_.end()) {
+        reply_map_[id]->onSessionClose();
+        reply_map_.erase(id);
+    }
 }
 
-bool MessageTransportServer::haveSessionId(SessionId id) {
-  if (reply_map_.find(id) != reply_map_.end()) {
-    return true;
-  }
-  return false;
+bool MessageTransportServer::haveSessionId(SessionId id)
+{
+    if (reply_map_.find(id) != reply_map_.end()) {
+        return true;
+    }
+    return false;
 }
 
 } // namespace message_transport
