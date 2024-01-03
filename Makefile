@@ -219,6 +219,13 @@ OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += sensor
 endif
 
+ifeq ($(CONFIG_BOARDCTL), y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/power_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/power.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+FEATURELIST += system_internal_power
+endif
+
 ifeq ($(CONFIG_SYSTEM_PACKAGE_SERVICE), y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/package_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/package.jidl
