@@ -211,13 +211,23 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", fixed_argc, argc);
     // beacuse we support rest parameters, so argc is greater or equal to fixed_argc.
     if (has_rest_param) {
+        if (argc < fixed_argc) {
+            FEATURE_LOG_ERROR("rest args error, fixed: %d, total: %d!", fixed_argc, argc);
+        }
         FEATURE_CHECK_GE(argc, fixed_argc);
         vari_params.vari_count = argc - fixed_argc;
     } else if (optional_argc) {
         // for optional parameters, argc + optional must grater or equal to fixed_argc
+        if (argc + optional_argc < fixed_argc) {
+            FEATURE_LOG_ERROR("optional args error, optional: %d, fixed: %d, total: %d!",
+                optional_argc, fixed_argc, argc);
+        }
         FEATURE_CHECK_GE(argc + optional_argc, fixed_argc);
     } else {
         // for method which do not have rest or optional parameters, argc equals to fixed_argc.
+        if (argc != fixed_argc) {
+            FEATURE_LOG_ERROR("fixed args error, fixed: %d, total: %d!", fixed_argc, argc);
+        }
         FEATURE_CHECK_EQ(argc, fixed_argc);
     }
     // if has rest parameter, we will pack all variadic parameters together as a param pack
