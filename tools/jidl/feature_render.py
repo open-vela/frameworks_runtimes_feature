@@ -120,7 +120,7 @@ class FeatureUtils(render.Utils):
     elif to_key == "double_to_str":
       out[key_name] = 'MicoFeatureUtils::num_to_str<double>(szbuf, buf_len, %s%s)' %(prefix, p_name)
     elif to_key == "bool_to_str":
-      out[key_name] = 'MicoFeatureUtils::num_to_str<double>(szbuf, buf_len, %s%s)' %(prefix, p_name)
+      out[key_name] = 'MicoFeatureUtils::bool_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     elif to_key == "any_to_str":
       out[key_name] = 'MicoFeatureUtils::any_to_str(szbuf, buf_len, %s%s, conn)' %(prefix, p_name)
     elif to_key == "int_arr_to_str":
