@@ -21,12 +21,7 @@
 #include "feature_log.h"
 #include "feature_prototype.h"
 #include "feature_utils.h"
-#include "wasm_export.h"
-
-/* import support dyntype head file */
-#include "libdyntype.h"
-#include "libdyntype_export.h"
-#include "gc_export.h"
+#include "feature_wamr_utils.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -58,20 +53,6 @@ static void fillArg(char* argp, uint32 args, FeatureType& ftype, uint64_t target
             } break;
         }
     }
-}
-
-extern "C"
-{
-    wasm_stringref_obj_t create_wasm_string(wasm_exec_env_t exec_env, const char *str);
-    wasm_stringref_obj_t create_wasm_string_with_len(wasm_exec_env_t exec_env, const char *str, uint32_t len);
-    int32_t get_array_struct_type(wasm_module_t wasm_module, int32_t array_type_idx, wasm_struct_type_t *p_struct_type);
-    int get_array_length(wasm_struct_obj_t obj);
-}
-
-static void dynamic_object_finalizer(wasm_anyref_obj_t obj, void *data)
-{
-    dyn_value_t value = (dyn_value_t)wasm_anyref_obj_get_value(obj);
-    dyntype_release((dyn_ctx_t)data, value);
 }
 
 static wasm_anyref_obj_t return_box_anyref(wasm_exec_env_t exec_env, const void *ptr)

@@ -57,6 +57,7 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/common/g
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/utils
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/platform/nuttx
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/runtime-library/libdyntype
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/runtime-library/utils
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_wamr.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_ffi_wamr.cpp

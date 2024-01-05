@@ -295,7 +295,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
             case COMPLEX_ARRAY: {
                 FtArray *array = (FtArray *)ptr;
                 uint32_t len = array->_size;
-                wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, array->_element, len);
+                wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, (void**)(array->_element), len);
                 set_wasm_var_by_type(void*, obj, value);
             }
             break;

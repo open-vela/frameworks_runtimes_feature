@@ -19,58 +19,38 @@
 #ifndef __FEATURE_WAMR_UTILS_H__
 #define __FEATURE_WAMR_UTILS_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "gc_export.h"
 #include "wasm_export.h"
-
-extern "C"
-{
-    wasm_stringref_obj_t create_wasm_string(wasm_exec_env_t exec_env, const char *str);
-    uint32_t wasm_string_get_length(wasm_stringref_obj_t str_obj);
-    uint32_t wasm_string_to_cstring(wasm_stringref_obj_t str_obj, char *buffer, uint32_t len);
-    wasm_struct_obj_t create_wasm_array_with_string(wasm_exec_env_t exec_env, void *ptr, uint32_t arrlen);
-    int32_t get_array_struct_type(wasm_module_t wasm_module, int32_t array_type_idx, wasm_struct_type_t *p_struct_type);
-    int get_array_length(wasm_struct_obj_t obj);
-    wasm_array_obj_t get_array_ref(wasm_struct_obj_t obj);
-}
-
-enum field_flag {
-    FIELD = 0,
-    METHOD = 1,
-    GETTER = 2,
-    SETTER = 3,
-};
-
-typedef enum ts_type {
-    TS_OBJECT = 0,
-    TS_NULL = 3,
-    TS_INT = 5,
-    TS_NUMBER = 6,
-    TS_BOOLEAN = 7,
-    TS_STRING = 9,
-    TS_ANY = 10,
-    TS_ARRAY = 16,
-    TS_FUNCTION = 24,
-} ts_type;
-
-typedef struct ts_value_t {
-    ts_type type;
-    /**
-     * Type of the ts value, if it's TS_BOOLEAN or TS_INT, value can be retrieved from of.i32,
-     * if it's TS_NUMBER, value can be retrived from f64, otherwise get value from of.ref.
-    */
-    union {
-        int32_t i32;
-        double f64;
-        void *ref;
-    } of;
-
-} ts_value_t;
-
-wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_arr[],
-                         uint32_t member_count);
+#include "libdyntype_export.h"
+#include "type_utils.h"
+#include "wamr_utils.h"
+#include "object_utils.h"
+#include "quickjs/quickjs.h"
 
 #define set_wasm_var_by_type(type, val, var) ((type &)(var) = (val))
 
 #define get_wasm_args_by_type(type, args) (*((type *)(&args)))
+
+/* wasm runtime lib */
+JSValue* dynamic_dup_value(JSContext *ctx, JSValue value);
+uint32_t get_libdyntype_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+uint32_t get_lib_console_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+uint32_t get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+uint32_t get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+uint32_t get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+
+dyn_value_t dyntype_callback_wasm_dispatcher(void* exec_env_v, dyn_ctx_t ctx, void* vfunc,
+                         dyn_value_t this_obj, int argc, dyn_value_t* args);
+
+wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_arr[],
+                         uint32_t member_count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __FEATURE_WAMR_UTILS_H__
