@@ -73,7 +73,7 @@ static inline void set_instance_to_target(wasm_obj_t target, FeatureInstance* in
 static void module_object_finalizer(wasm_obj_t obj, void *data)
 {
     auto instance = (FeatureInstanceWamr*)instance_from_target(obj);
-    printf("module object finalizer:%p, featureinstance:%p\n", obj, instance);
+    FEATURE_LOG_INFO("target obj: %p, instance: %p", obj, instance);
     instance->release();
 }
 
@@ -104,14 +104,16 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
 
 static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
-    uint64_t* wasm_ret_p = args;
-    uint64_t wasm_ret;
+    uint64_t *ret_ptr = args;
+    uint64_t ret_val = 0;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
+    *ret_ptr = 0;
     auto instance = instance_from_target((wasm_obj_t)thiz_ptr);
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     auto& accessor = member->accessor;
     auto description = instance->prototype()->description();
+
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
@@ -119,38 +121,34 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t *args)
     FEATURE_CHECK_NE(callback, nullptr);
 
     ffi_type *ffi_arg_types[2] = {&ffi_type_pointer, &ffi_type_sint64};
-    ffi_type *ffi_ret = nullptr;
     void *ffi_arg_values[2] = {&instance, (void*)(&accessor.data)};
-    void *ret_value = nullptr;
-    do {
-        if (!createTypeDeclaration(accessor.type, ffi_ret)) {
-            FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
-            break;
-        }
-        if (!createHostValue(accessor.type, ret_value, true)) {
-            FEATURE_LOG_ERROR("create return value failed !");
-            break;
-        }
+    AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
+    AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
+    if (!createTypeDeclaration(accessor.type, ffi_ret_type)) {
+        FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
+        return;
+    }
+    if (!createHostValue(accessor.type, ffi_ret_value, true)) {
+        FEATURE_LOG_ERROR("create return value failed!");
+        return;
+    }
 
-        // prepare and call method
-        ffi_cif cif;
-        ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret, ffi_arg_types);
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            break;
-        }
-        // invoke
-        ffi_call(&cif, callback, ret_value, ffi_arg_values);
-        // process return value
-        if (!FeatureFFIWamr::convertValueToGuest(instance, accessor.type, ret_value, exec_env, wasm_ret)) {
-            FEATURE_LOG_ERROR("can not convert return value to guest!");
-        }
-    } while (0);
+    // prepare and call method
+    ffi_cif cif;
+    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return;
+    }
 
-    // free resources
-    freeTypeDeclaration(ffi_ret);
-    FeatureFreeValue(ret_value);
-    *wasm_ret_p = wasm_ret;
+    // invoke
+    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+    // process return value
+    if (!FeatureFFIWamr::convertValueToGuest(instance, accessor.type, ffi_ret_value, exec_env, ret_val)) {
+        FEATURE_LOG_ERROR("can not convert return value to guest!");
+        return;
+    }
+    *ret_ptr = ret_val;
 }
 
 static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
@@ -166,65 +164,62 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t *args)
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type *ffi_arg_types[3] = {&ffi_type_pointer, &ffi_type_sint64, nullptr};
-    void *arg_value_input = nullptr;
     void *ffi_arg_values[3] = {&instance, (void*)(&accessor.data), nullptr};
+    AutoPtr<void*> arg_value(FeatureFreeValue);
+    AutoPtr<ffi_type*> arg_type(free_ffi_type);
 
     NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor.setter.vtable_idx) : accessor.setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
 
-    do {
-        // prepare third param type declaration, create by accessor type
-        if (!createTypeDeclaration(accessor.type, ffi_arg_types[2])) {
-            FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
-            break;
-        }
-        // fill third param using guest value and accesor type
-        if (!FeatureFFIWamr::convertValueToHost(instance, accessor.type, arg_value_input, exec_env, *args)) {
-            FEATURE_LOG_ERROR("convert to host value failed !");
-            break;
-        }
-        ffi_arg_values[2] = arg_value_input;
-        // prepare and call method
-        ffi_cif cif;
-        ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_arg_types);
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            break;
-        }
-        // invoke
-        ffi_call(&cif, callback, ffi_arg_values[2], ffi_arg_values);
-    } while (0);
-
-    // free resources
-    freeTypeDeclaration(ffi_arg_types[2]);
-    FeatureFreeValue(arg_value_input);
+    // prepare third param type declaration, create by accessor type
+    if (!createTypeDeclaration(accessor.type, arg_type)) {
+        FEATURE_LOG_ERROR("create type declaration for input failed!");
+        return;
+    }
+    ffi_arg_types[2] = arg_type;
+    // fill third param using guest value and accesor type
+    if (!FeatureFFIWamr::convertValueToHost(instance, accessor.type, arg_value, exec_env, *args)) {
+        FEATURE_LOG_ERROR("convert to host value failed!");
+        return;
+    }
+    ffi_arg_values[2] = arg_value;
+    // prepare and call method
+    ffi_cif cif;
+    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_arg_types);
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return;
+    }
+    // invoke
+    ffi_call(&cif, callback, ffi_arg_values[2], ffi_arg_values);
 }
 
 static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
-    uint64_t *wasm_ret_p = args;
-    uint64_t wasm_ret;
+    uint64_t *ret_ptr = args;
+    uint64_t ret_val = 0;
     native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
+    *ret_ptr = 0;
     FeatureInstance *instance = instance_from_target((wasm_obj_t)thiz_ptr);
     const Member* member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
     auto& member_const = member->value;
-    do {
-        if (!FeatureFFIWamr::convertConstToGuest(exec_env,
-                member_const.type, member_const.data, wasm_ret)) {
-            FEATURE_LOG_ERROR("can not convert const value to guest!");
-            break;
-        }
-    } while (0);
-    *wasm_ret_p = wasm_ret;
+
+    if (!FeatureFFIWamr::convertConstToGuest(exec_env,
+            member_const.type, member_const.data, ret_val)) {
+        FEATURE_LOG_ERROR("can not convert const value to guest!");
+        return;
+    }
+
+    *ret_ptr = ret_val;
 }
 
 static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
 {
-    bool got_error = false;
-    uint64_t* wasm_ret_p = args;
-    uint64_t wasm_ret;
+    uint64_t* ret_ptr = args;
+    uint64_t ret_val = 0;
     native_raw_get_arg(void*, thiz_ptr, args);
+    *ret_ptr = 0;
 
     // wasm array values for rest parameters
     wasm_value_t wasm_array_data = { 0 }, wasm_array_len = { 0 };
@@ -242,9 +237,9 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     FtPromiseId pid = -1;
 
     // count size
-    bool has_rest_param = false;
-    int optional_argc = 0;
-    size_t fixed_argc = getParamCount(const_cast<FeatureType*>(method_params), &has_rest_param, &optional_argc);
+    bool has_rest_params = false;
+    int opt_argc = 0;
+    size_t fixed_argc = getParamCount(const_cast<FeatureType*>(method_params), &has_rest_params, &opt_argc);
     size_t argc = fixed_argc;
 
     // variadic parameters type
@@ -254,9 +249,9 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     memset(&vari_params, 0, sizeof(vari_params));
 
     // optional and rest parameters must not set together.
-    FEATURE_CHECK_NE(has_rest_param && optional_argc, true);
+    FEATURE_CHECK_NE(has_rest_params && opt_argc, true);
     int32_t vari_argc = 0;
-    if (has_rest_param) {
+    if (has_rest_params) {
         wasm_struct_obj_t arr_struct_ref;
         uint64_t * vari_argv = args + fixed_argc;
         native_raw_get_arg(wasm_obj_t, obj_ref, vari_argv);
@@ -269,189 +264,152 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         argc += vari_argc;
         FEATURE_CHECK_GT(argc, fixed_argc);
         vari_params.vari_count = vari_argc;
-    } else if (optional_argc > 0) {
+    } else if (opt_argc > 0) {
         // for optional parameters, argc + optional must grater or equal to fixed_argc
-        FEATURE_CHECK_GE(argc + optional_argc, fixed_argc);
+        FEATURE_CHECK_GE(argc + opt_argc, fixed_argc);
     } else {
         // for method which do not have rest or optional parameters, argc equals to fixed_argc.
         FEATURE_CHECK_EQ(argc, fixed_argc);
     }
 
     // prepare and get args
-    int32_t packed_argc = has_rest_param ? fixed_argc + 1 : fixed_argc;
+    int32_t packed_argc = has_rest_params ? fixed_argc + 1 : fixed_argc;
     bool is_promise = FT_IS_PROMISE(method.return_type);
     int extra_argc = is_promise ? 3 : 2;
-    ffi_type** ffi_arg_types = new ffi_type*[extra_argc + packed_argc + optional_argc + 1]; // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
-    memset(ffi_arg_types, 0, sizeof(ffi_type*) * (extra_argc + packed_argc + optional_argc + 1));
-    void** ffi_arg_values = new void*[extra_argc + packed_argc + optional_argc]; // FeaturInstance, data, maybe return promise, maybe variadic count
-    memset(ffi_arg_values, 0, sizeof(void*) * (extra_argc + packed_argc + optional_argc));
-    ffi_type* ffi_ret_type = nullptr;
-    void* ffi_ret_value = nullptr;
+
+    // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
+    AutoArgs<void*, ffi_type*> ffi_arg_types(nullptr, free_arg_type, nullptr,
+            extra_argc + packed_argc + opt_argc + 1, extra_argc, fixed_argc + extra_argc);
+     // FeaturInstance, data, maybe return promise, maybe variadic count
+    AutoArgs<void*, void*> ffi_arg_values(nullptr, free_arg_value, nullptr,
+            extra_argc + packed_argc + opt_argc, extra_argc, fixed_argc + extra_argc);
+    AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
+    AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
+    AutoPtr<ft_value_t*> vari_args(free_ft_values);
 
     // prepare first two param
     ffi_arg_types[0] = &ffi_type_pointer; // FeatureContext
-    ffi_arg_values[0] = &instance;
     ffi_arg_types[1] = &ffi_type_sint64; // data
-    ffi_arg_values[1] = (void*)&method.data;
     if (is_promise) {
         ffi_arg_types[2] = &ffi_type_sint32;
     }
+    ffi_arg_values[0] = &instance;
+    ffi_arg_values[1] = (void*)&method.data;
 
-    do {
-        for (size_t i = 0; i < fixed_argc; i++) {
-            uint64_t curr_arg = args[i];
-            auto param = method_params[i];
-            if (FT_IS_PROMISE(param)) {
-                FEATURE_LOG_ERROR("do not support promise as input param !");
-                got_error = true;
-                break;
-            }
-            if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
-                FEATURE_LOG_ERROR("prepareType for type failed !");
-                got_error = true;
-                break;
-            }
-            if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_values[extra_argc + i], exec_env, curr_arg)) {
-                FEATURE_LOG_ERROR("convert argument %d failed !", i);
-                got_error = true;
-                break;
-            }
-        }
-        if (got_error)
-            break;
-
-        // process rest parameters
-        if (has_rest_param) {
-            // prepare vari_params type
-            vari_arg_type.size = 0;
-            vari_arg_type.type = FFI_TYPE_STRUCT;
-            vari_arg_type.elements = vari_arg_elem_types;
-            vari_arg_elem_types[0] = &ffi_type_sint32;
-            vari_arg_elem_types[1] = &ffi_type_pointer;
-            vari_arg_elem_types[2] = nullptr;
-            // prepare vari_params struct
-            vari_params.vari_args = new ft_value_t[vari_params.vari_count];
-            // pass param
-            ffi_arg_types[fixed_argc + extra_argc] = &vari_arg_type;
-            ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
-            for (int i = 0; i + fixed_argc < argc; i++) {
-                void *addr = wasm_array_obj_elem_addr(wasm_arr_ref, i);
-                wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
-                feature_value_t *js_any_ptr = (feature_value_t *)wasm_anyref_obj_get_value(anyref);
-                // just passthrough guest param pointers
-                auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
-                *js_val_ptr = *js_any_ptr;
-            }
-        } else if (optional_argc > 0) {
-            for (size_t i = argc; i < fixed_argc; i++) {
-                auto param = method_params[i];
-                FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
-                OptionalType* optional_type = (OptionalType*)FT_GET_COMPLEX(param);
-                FEATURE_CHECK_EQ(optional_type->header.type, COMPLEX_OPTIONAL);
-                if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
-                    FEATURE_LOG_ERROR("prepareType for type failed !");
-                    got_error = true;
-                    break;
-                }
-                ffi_arg_values[extra_argc + i] = &optional_type->fval;
-            }
-        }
-        if (got_error)
-            break;
-
-        // prepeare return type
-        if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
-            FEATURE_LOG_ERROR("prepareType for complex type failed !");
-            got_error = true;
-            break;
-        }
-        // create return value pointer inneed.
-        if (!is_promise && method.return_type != FT_VOID) {
-            if (!createHostValue(method.return_type, ffi_ret_value, true)) {
-                FEATURE_LOG_ERROR("create return value failed !");
-                got_error = true;
-                break;
-            }
-        }
-        // prepare ffi call
-        ffi_cif cif;
-        ffi_status ret = FFI_OK;
-        if (has_rest_param) {
-            // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
-            ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
-        } else {
-            // FEATURE_LOG_DEBUG("prepare for function...");
-            ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
-        }
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            got_error = true;
-            break;
-        }
-
-        // special handle for promise
-        feature_value_t promise;
-        auto w_instance = (FeatureInstanceWamr*)instance;
-        if (is_promise) {
-            ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
-            // create promise
-            PromiseType* promise_type = (PromiseType*)complex_type;
-            // create promise and add to instance
-            pid = w_instance->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
-            promise = feature_dup_value(js_ctx, w_instance->getPromise(pid));
-            // pass pid to native function
-            ffi_arg_values[2] = &pid;
-        }
-
-        // invoke method
-        NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
-        FEATURE_CHECK_NE(callback, nullptr);
-        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
-        // process return value, do not handle promise, it is handled before we invoke ffi_call.
-        if (!is_promise && method.return_type != FT_VOID) {
-            //process return value
-            if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, wasm_ret)) {
-                FEATURE_LOG_ERROR("can not convert return value to guest!");
-                got_error = true;
-            }
-        } else if (is_promise) {
-            feature_value_t* ppromise = dynamic_dup_value(js_ctx, promise);
-            //把promise返回给ts层
-            native_raw_return_type(void*, &wasm_ret);
-            wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ppromise);
-            native_raw_set_return(p_obj);
-        }
-    } while (0);
-
-    // free ffi call resources
     for (size_t i = 0; i < fixed_argc; i++) {
-        // free type
-        if (ffi_arg_types[i + extra_argc]) {
-            freeTypeDeclaration(ffi_arg_types[i + extra_argc]);
+        uint64_t curr_arg = args[i];
+        auto param = method_params[i];
+        if (FT_IS_PROMISE(param)) {
+            FEATURE_LOG_ERROR("do not support promise as input param!");
+            return;
         }
-        // free value
-        if (ffi_arg_values[i + extra_argc]) {
-            FeatureFreeValue(ffi_arg_values[i + extra_argc]);
+        if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
+            FEATURE_LOG_ERROR("prepareType for type failed!");
+            return;
+        }
+        if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_values[extra_argc + i], exec_env, curr_arg)) {
+            FEATURE_LOG_ERROR("convert argument %d failed!", i);
+            return;
         }
     }
 
-    freeTypeDeclaration(ffi_ret_type);
-    // ffi_ret_value will cause "segmentation fault " when reture string to ts
-    if (ffi_ret_value) {
-        FeatureFreeValue(ffi_ret_value);
-    }
-    delete[] ffi_arg_values;
-    delete[] ffi_arg_types;
-    if (vari_params.vari_args) {
-        delete[] vari_params.vari_args;
+    // process rest parameters
+    if (has_rest_params) {
+        // prepare vari_params type
+        vari_arg_type.size = 0;
+        vari_arg_type.type = FFI_TYPE_STRUCT;
+        vari_arg_type.elements = vari_arg_elem_types;
+        vari_arg_elem_types[0] = &ffi_type_sint32;
+        vari_arg_elem_types[1] = &ffi_type_pointer;
+        vari_arg_elem_types[2] = nullptr;
+        // prepare vari_params struct
+        vari_args = new ft_value_t[vari_params.vari_count];
+        vari_params.vari_args = vari_args;
+        // pass param
+        ffi_arg_types[fixed_argc + extra_argc] = &vari_arg_type;
+        ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
+        for (int i = 0; i + fixed_argc < argc; i++) {
+            void *addr = wasm_array_obj_elem_addr(wasm_arr_ref, i);
+            wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
+            feature_value_t *js_any_ptr = (feature_value_t *)wasm_anyref_obj_get_value(anyref);
+            // just passthrough guest param pointers
+            auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
+            *js_val_ptr = *js_any_ptr;
+        }
+    } else if (opt_argc > 0) {
+        for (size_t i = argc; i < fixed_argc; i++) {
+            auto param = method_params[i];
+            FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
+            OptionalType* optional_type = (OptionalType*)FT_GET_COMPLEX(param);
+            FEATURE_CHECK_EQ(optional_type->header.type, COMPLEX_OPTIONAL);
+            if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
+                FEATURE_LOG_ERROR("prepareType for type failed!");
+                return;
+            }
+            ffi_arg_values[extra_argc + i] = &optional_type->fval;
+        }
     }
 
-    *wasm_ret_p = wasm_ret;
+    // prepeare return type
+    if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
+        FEATURE_LOG_ERROR("prepareType for complex type failed!");
+        return;
+    }
+    // create return value pointer inneed.
+    if (!is_promise && method.return_type != FT_VOID) {
+        if (!createHostValue(method.return_type, ffi_ret_value, true)) {
+            FEATURE_LOG_ERROR("create return value failed!");
+            return;
+        }
+    }
+    // prepare ffi call
+    ffi_cif cif;
+    ffi_status ret = FFI_OK;
+    if (has_rest_params) {
+        // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
+        ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
+    } else {
+        // FEATURE_LOG_DEBUG("prepare for function...");
+        ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
+    }
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return;
+    }
 
-    // if error occurred, throw internal error
-    // if (got_error) {
-    //     FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native method failed !");
-    // }
+    // special handle for promise
+    feature_value_t promise;
+    auto w_instance = (FeatureInstanceWamr*)instance;
+    if (is_promise) {
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
+        // create promise
+        PromiseType* promise_type = (PromiseType*)complex_type;
+        // create promise and add to instance
+        pid = w_instance->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
+        promise = feature_dup_value(js_ctx, w_instance->getPromise(pid));
+        // pass pid to native function
+        ffi_arg_values[2] = &pid;
+    }
+
+    // invoke method
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
+    FEATURE_CHECK_NE(callback, nullptr);
+    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+    // process return value, do not handle promise, it is handled before we invoke ffi_call.
+    if (!is_promise && method.return_type != FT_VOID) {
+        //process return value
+        if (!FeatureFFIWamr::convertValueToGuest(instance, method.return_type, ffi_ret_value, exec_env, ret_val)) {
+            FEATURE_LOG_ERROR("can not convert return value to guest!");
+            return;
+        }
+    } else if (is_promise) {
+        feature_value_t* ppromise = dynamic_dup_value(js_ctx, promise);
+        //把promise返回给ts层
+        native_raw_return_type(void*, &ret_val);
+        wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ppromise);
+        native_raw_set_return(p_obj);
+    }
+    *ret_ptr = ret_val;
 }
 
 FeatureManagerWamr::FeatureManagerWamr(FeatureRegistry* registry)
