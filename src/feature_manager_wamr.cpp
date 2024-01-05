@@ -27,9 +27,6 @@
 #include "feature_log.h"
 #include "feature_registry.h"
 #include "feature_utils.h"
-#include "feature_wamr_utils.h"
-
-#include "libdyntype_export.h"
 
 #include <assert.h>
 #include <ffi.h>
@@ -51,20 +48,6 @@ typedef struct DynTypeContext {
 using namespace FEATURE;
 
 namespace ferry {
-
-extern "C" feature_value_t*
-dynamic_dup_value(feature_context_ref ctx, feature_value_t value);
-/* wasm runtime lib */
-extern "C" uint32_t
-get_libdyntype_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-extern "C" uint32_t
-get_lib_console_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-extern "C" uint32_t
-get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-extern "C" uint32_t
-get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-extern "C" uint32_t
-get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
 
 static inline FeatureManagerWamr* manager_from_instance(FeatureInstance *instance)
 {

@@ -2,17 +2,13 @@
 #include "builtin/console.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
+#include "feature_manager_wamr.h"
 #include "feature_registry.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/* about wasmr api */
-#include "feature_manager_wamr.h"
-#include "libdyntype_export.h"
-#include "wasm_export.h"
 
 using namespace ferry;
 using namespace FEATURE;
@@ -24,11 +20,6 @@ typedef struct feature_env_t {
     JSRuntime* rt;
     JSContext* ctx;
 } feature_env_t;
-
-extern "C" dyn_value_t
-dyntype_callback_wasm_dispatcher(void* exec_env_v, dyn_ctx_t ctx, void* vfunc,
-    dyn_value_t this_obj, int argc,
-    dyn_value_t* args);
 
 int events_poll(wasm_exec_env_t exec_env)
 {
@@ -98,7 +89,7 @@ int load_file(char* file_name, char** file_content)
     return len;
 }
 
-// 支持cli来读取包名以及js文件去执行，命令为：./feature_jidl_test ./test.js package_name
+// 支持cli来读取包名以及js文件去执行，命令为：./feature_jidl_test ./test.js pkg_name
 int main(int argc, char** argv)
 {
     if (argc < 2) {
@@ -106,27 +97,23 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    char* js_file = argv[1];
-    char* js_str = NULL;
-    char* package_name = NULL;
-
+    char* file_name = argv[1];
+    char* file_str = NULL;
+    char* pkg_name = NULL;
     if (argc == 3) {
-        package_name = argv[2];
+        pkg_name = argv[2];
     }
 
     // 打开manifest.json文件,读取内容到一个字符串中
     // 打开js文件
-    int js_filelen = load_file(js_file, &js_str);
-    if (js_str == NULL) {
-        printf("malloc js file failed!\n");
-        if (package_name != NULL) {
-            package_name = NULL;
-        }
+    int file_len = load_file(file_name, &file_str);
+    if (file_str == NULL) {
+        printf("load file failed!\n");
         return 0;
     }
 
-    uint32_t len = strlen(js_file);
-    if (js_file[len - 1] == 's') { // file is js file
+    uint32_t len = strlen(file_name);
+    if (file_name[len - 1] == 's') { // file is js file
         // initialize quickjs engine
         feature_env_t js_env;
 
@@ -134,7 +121,7 @@ int main(int argc, char** argv)
         js_env.ctx = JS_NewContext(js_env.rt);
         // JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
         auto registry = new ferry::FeatureRegistry();
-        registry->init(package_name);
+        registry->init(pkg_name);
         g_manager_qjs = new ferry::FeatureManagerQjs(registry);
 
         // register global require
@@ -145,7 +132,7 @@ int main(int argc, char** argv)
 
         // add console
         builtin::addConsoleModule(js_env.ctx, "console.js", builtin::CONSOLE_JS);
-        auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
+        auto result = feature_eval(js_env.ctx, file_str, strlen(file_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
 
         int err;
         feature_context_ref ctx1;
@@ -162,21 +149,11 @@ int main(int argc, char** argv)
         g_manager_qjs->uninit();
         JS_FreeContext(js_env.ctx);
         JS_FreeRuntime(js_env.rt);
-
-        // 释放manifast_str
-        if (package_name != NULL) {
-            package_name = NULL;
-        }
-        // 释放js_str
-        if (js_str != NULL) {
-            free(js_str);
-            js_str = NULL;
-        }
         // free g_manager_qjs
         delete g_manager_qjs;
     } else { /* file is wasm file */
-        wasm_module_t wasm_module = NULL;
-        wasm_module_inst_t wasm_module_inst = NULL;
+        wasm_module_t module = NULL;
+        wasm_module_inst_t module_inst = NULL;
         wasm_exec_env_t exec_env = NULL;
         uint stack_size = 64 * 1024, heap_size = 16 * 1024;
         char error_buf[128] = { 0 };
@@ -187,9 +164,9 @@ int main(int argc, char** argv)
         init_args.mem_alloc_option.allocator.realloc_func = (void*)realloc;
         init_args.mem_alloc_option.allocator.free_func = (void*)free;
         init_args.gc_heap_size = 16 * 1024;
-
+    
         if (!wasm_runtime_full_init(&init_args)) {
-            printf("Init runtime environment failed.\n");
+            FEATURE_LOG_ERROR("Init runtime environment failed.");
             return -1;
         }
 
@@ -199,39 +176,40 @@ int main(int argc, char** argv)
 
         /* init feature about wasm */
         auto registry = new ferry::FeatureRegistry();
-        registry->init(package_name);
+        registry->init(pkg_name);
         g_manager_wamr = new ferry::FeatureManagerWamr(registry);
         if (!g_manager_wamr->init()) {
             printf(" wamr init error!\n");
             return 0;
         }
 
-        if (!(wasm_module = wasm_runtime_load((uint8_t*)js_str, js_filelen,
-                  error_buf, sizeof(error_buf)))) {
+        module = wasm_runtime_load((uint8_t*)file_str, file_len, error_buf, sizeof(error_buf));
+        if (!module) {
             printf("%s\n", error_buf);
             return 0;
         }
-        if (!(wasm_module_inst = wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
-                  error_buf, sizeof(error_buf)))) {
+        module_inst = wasm_runtime_instantiate(module, stack_size, heap_size, error_buf, sizeof(error_buf));
+        if (!module_inst) {
             printf("%s\n", error_buf);
             return 0;
         }
 
-        exec_env = wasm_runtime_get_exec_env_singleton(wasm_module_inst);
+        exec_env = wasm_runtime_get_exec_env_singleton(module_inst);
         if (exec_env == NULL) {
-            printf("%s\n", wasm_runtime_get_exception(wasm_module_inst));
+            printf("%s\n", wasm_runtime_get_exception(module_inst));
         }
 
-        const char* exception;
-        wasm_application_execute_main(wasm_module_inst, 0, NULL);
-        if ((exception = wasm_runtime_get_exception(wasm_module_inst)))
+        wasm_application_execute_main(module_inst, 0, NULL);
+        const char* exception = wasm_runtime_get_exception(module_inst);
+        if (exception) {
             printf("%s\n", exception);
+        }
 
         /* run micro tasks */
         execute_micro_tasks(exec_env, dyn_ctx);
 
-        wasm_runtime_deinstantiate(wasm_module_inst);
-        wasm_runtime_unload(wasm_module);
+        wasm_runtime_deinstantiate(module_inst);
+        wasm_runtime_unload(module);
 
         g_manager_wamr->release();
 
@@ -240,18 +218,9 @@ int main(int argc, char** argv)
 
         /* destroy runtime environment */
         wasm_runtime_destroy();
-
-        // 释放manifast_str
-        if (package_name != NULL) {
-            package_name = NULL;
-        }
-        // 释放js_str
-        if (js_str != NULL) {
-            free(js_str);
-            js_str = NULL;
-        }
         delete g_manager_wamr;
     }
 
+    free(file_str);
     return 0;
 }

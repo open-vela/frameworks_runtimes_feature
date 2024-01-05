@@ -18,12 +18,10 @@
 
 #include "feature_manager.h"
 
-#include "gc_object.h"
-#include "wasm_export.h"
 #include "feature_context.h"
 #include "feature_description.h"
+#include "feature_wamr_utils.h"
 
-#include <map>
 #include <vector>
 
 struct Member;

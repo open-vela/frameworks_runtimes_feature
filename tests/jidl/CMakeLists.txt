@@ -16,7 +16,10 @@ set (WAMR_BUILD_STRINGREF 1)
 add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer  -DCONFIG_FEATURE_USE_WAMR -g")
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fpermissive -Wall")
 
-set(UNITE_PATH ${CMAKE_CURRENT_LIST_DIR}/../../../../../apps/interpreters)
+set(CURRENT_PATH ${CMAKE_CURRENT_LIST_DIR})
+set(RELATIVE_PATH "../../../../../apps/interpreters")
+get_filename_component(UNITE_PATH ${RELATIVE_PATH} ABSOLUTE BASE_DIR ${CURRENT_PATH})
+
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdata-sections -ffunction-sections -Wall")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
 
@@ -54,7 +57,7 @@ set(STRUCT_INDIRECT_SOURCE
 # utils
 set(UTILS_DIR ${UNITE_PATH}/wamr/wamr/runtime-library/utils)
 include_directories(${UTILS_DIR})
-set(UTILS_SOURCE
+set(TYPE_UTILS_SOURCE
     ${UTILS_DIR}/type_utils.c
 )
 
@@ -106,7 +109,7 @@ add_executable(${PROJECT_NAME}
     ${LIBDYNTYPE_SRC}
     ${STDLIB_SOURCE}
     ${STRUCT_INDIRECT_SOURCE}
-    ${UTILS_SOURCE}
+    ${TYPE_UTILS_SOURCE}
     ${OBJECT_UTILS_SOURCE}
     ${WAMR_UTILS_SOURCE}
 )
