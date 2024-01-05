@@ -44,26 +44,66 @@ int getValueSize(FeatureType featureType);
 
 int countMember(ObjectMember* member);
 
-template<typename TCtx, typename TArg, int N = 16>
-struct AutoArgs {
-    TCtx ctx_;
-    TArg args_[N];
-    TArg* argv_;
-    int count_;
+template<typename TPtr>
+class AutoPtr {
+public:
+    using FreeFunc = void (*) (TPtr);
+    AutoPtr(FreeFunc func)
+        : ptr_(nullptr)
+        , free_func_(func) {}
 
-    AutoArgs(TCtx ctx, int count) : ctx_(ctx) {
-        if (count > N)
-            argv_ = new TArg[count];
-        else
+    ~AutoPtr() {
+        if (ptr_ && free_func_)
+            free_func_(ptr_);
+    }
+
+    AutoPtr& operator = (TPtr ptr) {
+        ptr_ = ptr;
+        return *this;
+    }
+
+    operator TPtr& () {
+        return ptr_;
+    }
+
+private:
+    TPtr ptr_;
+    FreeFunc free_func_;
+};
+
+template<typename TCtx, typename TArg, int N = 16>
+class AutoArgs {
+public:
+    using FreeFunc = void (*) (TCtx, TArg&);
+    using UndefFunc = TArg (*) (TCtx);
+
+    AutoArgs(TCtx ctx, FreeFunc free_func, UndefFunc undef_func, int count, int head = 0, int tail = 0)
+        : ctx_(ctx)
+        , free_func_(free_func)
+        , undef_func_(undef_func)
+        , count_(count)
+        , head_(head)
+        , tail_(tail > 0 ? tail : count_) {
+        if (count_ > N) {
+            argv_ = new TArg[count_];
+            memset(argv_, 0, sizeof(TArg) * count_);
+        } else {
             argv_ = args_;
-        count_ = count;
-        for (int i = 0; i < count_; i++)
-            argv_[i] = _get_undefined_arg(ctx_);
+            memset(args_, 0, sizeof(args_));
+        }
+
+        if (undef_func_) {
+            for (int i = head_; i < tail_; i++)
+                argv_[i] = undef_func_(ctx_);
+        }
     }
 
     ~AutoArgs() {
-        for (int i = 0; i < count_; i++)
-            _free_arg(ctx_, argv_[i]);
+        if (free_func_) {
+            for (int i = head_; i < tail_; i++) {
+                free_func_(ctx_, argv_[i]);
+            }
+        }
 
         if (argv_ != args_)
             delete[] argv_;
@@ -76,6 +116,16 @@ struct AutoArgs {
     operator TArg* () {
         return argv_;
     }
+
+private:
+    TCtx ctx_;
+    FreeFunc free_func_;
+    UndefFunc undef_func_;
+    TArg args_[N];
+    TArg* argv_;
+    int count_;
+    int head_;
+    int tail_;
 };
 
 #endif // FEATURE_COMMON_H

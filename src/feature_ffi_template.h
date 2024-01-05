@@ -428,6 +428,26 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
     return true;
 }
 
+inline void free_arg_type(void* ctx, ffi_type*& type)
+{
+    freeTypeDeclaration(type);
+}
+
+inline void free_arg_value(void* ctx, void*& ptr)
+{
+    FeatureFreeValue(ptr);
+}
+
+inline void free_ffi_type(ffi_type* type)
+{
+    freeTypeDeclaration(type);
+}
+
+static inline void free_ft_values(ft_value_t* val)
+{
+    delete [] val;
+}
+
 template<typename TInstance, typename TCtx, typename TTarget>
 bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         Member* member, int argc, TTarget* argv, TTarget& ret_val)
@@ -439,13 +459,12 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     const auto& method = member->method;
     auto param_types = method.parameters;
 
-    bool got_error = false;
     FtPromiseId pid = -1;
-    bool has_rest_param = false;
-    int optional_argc = 0;
-    int fixed_argc = getParamCount(param_types, &has_rest_param, &optional_argc);
+    bool has_rest_params = false;
+    int opt_argc = 0;
+    int fixed_argc = getParamCount(param_types, &has_rest_params, &opt_argc);
     // optional and rest parameters must not set together.
-    FEATURE_CHECK_NE(has_rest_param && optional_argc, true);
+    FEATURE_CHECK_NE(has_rest_params && opt_argc, true);
 
     // variadic parameters type
     ffi_type vari_args_type;
@@ -454,29 +473,30 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     memset(&vari_params, 0, sizeof(vari_params));
 
     // beacuse we support rest parameters, so argc is greater or equal to fixed_argc.
-    if (has_rest_param) {
+    if (has_rest_params) {
         FEATURE_CHECK_GE(argc, fixed_argc);
         vari_params.vari_count = argc - fixed_argc;
-    } else if (optional_argc) {
+    } else if (opt_argc > 0) {
         // for optional parameters, argc + optional must grater or equal to fixed_argc
-        FEATURE_CHECK_GE(argc + optional_argc, fixed_argc);
+        FEATURE_CHECK_GE(argc + opt_argc, fixed_argc);
     } else {
         // for method which do not have rest or optional parameters, argc equals to fixed_argc.
         FEATURE_CHECK_EQ(argc, fixed_argc);
     }
 
     // prepare and get args
-    int32_t packed_argc = has_rest_param ? fixed_argc + 1 : fixed_argc;
+    int32_t packed_argc = has_rest_params ? fixed_argc + 1 : fixed_argc;
     bool is_promise = FT_IS_PROMISE(method.return_type);
     int extra_argc = is_promise ? 3 : 2;
     // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
-    ffi_type** ffi_arg_types = new ffi_type*[extra_argc + packed_argc + optional_argc + 1];
-    memset(ffi_arg_types, 0, sizeof(ffi_type*) * (extra_argc + packed_argc + optional_argc + 1));
-    // FeaturInstance, data, maybe return promise, maybe variadic count
-    void** ffi_arg_values = new void*[extra_argc + packed_argc + optional_argc];
-    memset(ffi_arg_values, 0, sizeof(void*) * (extra_argc + packed_argc + optional_argc));
-    ffi_type* ffi_ret_type = nullptr;
-    void* ffi_ret_value = nullptr;
+    AutoArgs<void*, ffi_type*> ffi_arg_types(nullptr, free_arg_type, nullptr,
+            extra_argc + packed_argc + opt_argc + 1, extra_argc, fixed_argc + extra_argc);
+     // FeaturInstance, data, maybe return promise, maybe variadic count
+    AutoArgs<void*, void*> ffi_arg_values(nullptr, free_arg_value, nullptr,
+            extra_argc + packed_argc + opt_argc, extra_argc, fixed_argc + extra_argc);
+    AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
+    AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
+    AutoPtr<ft_value_t*> vari_args(free_ft_values);
 
     // prepare first two param
     // FeatureContext and data
@@ -488,153 +508,113 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     ffi_arg_values[0] = &instance;
     ffi_arg_values[1] = (void*)&method.data;
 
-    do {
-        for (int i = 0; i < fixed_argc; i++) {
-            TTarget curr_arg = argv[i];
-            auto param_type = param_types[i];
-            if (FT_IS_PROMISE(param_type)) {
-                FEATURE_LOG_ERROR("do not support promise as input param !");
-                got_error = true;
-                break;
-            }
-            if (!createTypeDeclaration(param_type, ffi_arg_types[extra_argc + i])) {
-                FEATURE_LOG_ERROR("prepareType for type failed !");
-                got_error = true;
-                break;
-            }
-            if (!convertValueToNative(instance, param_type, ctx, curr_arg, ffi_arg_values[extra_argc + i])) {
-                FEATURE_LOG_ERROR("convert argument %d failed !", i);
-                got_error = true;
-                break;
-            }
-        }
-        if (got_error)
-            break;
-
-        // process rest parameters
-        if (has_rest_param) {
-            // prepare vari_params type
-            vari_args_type.size = 0;
-            vari_args_type.type = FFI_TYPE_STRUCT;
-            vari_args_type.elements = vari_args_elem_types;
-            vari_args_elem_types[0] = &ffi_type_sint32;
-            vari_args_elem_types[1] = &ffi_type_pointer;
-            vari_args_elem_types[2] = nullptr;
-            // prepare vari_params struct
-            vari_params.vari_args = new ft_value_t[vari_params.vari_count];
-            // pass param
-            ffi_arg_types[fixed_argc + extra_argc] = &vari_args_type;
-            ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
-            for (int i = 0; i + fixed_argc < argc; i++) {
-                // just passthrough guest param pointers
-                auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
-                *js_val_ptr = value_translator::getVariArg(ctx, argv[i + fixed_argc]);
-            }
-        } else if (optional_argc > 0) {
-            for (int i = argc; i < fixed_argc; i++) {
-                auto param_type = param_types[i];
-                FEATURE_CHECK_EQ(FT_IS_COMPLEX(param_type), true);
-                OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param_type);
-                FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
-                if (!createTypeDeclaration(param_type, ffi_arg_types[extra_argc + i])) {
-                    FEATURE_LOG_ERROR("prepareType for type failed !");
-                    got_error = true;
-                    break;
-                }
-                ffi_arg_values[extra_argc + i] = &optionalType->fval;
-            }
-        }
-
-        if (got_error)
-            break;
-
-
-        // prepeare return type
-        if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
-            FEATURE_LOG_ERROR("prepareType for complex type failed !");
-            got_error = true;
-            break;
-        }
-        // create return value pointer inneed.
-        if (!is_promise && method.return_type != FT_VOID) {
-            if (!createHostValue(method.return_type, ffi_ret_value, true)) {
-                FEATURE_LOG_ERROR("create return value failed !");
-                got_error = true;
-                break;
-            }
-        }
-        // prepare ffi call
-        ffi_cif cif;
-        ffi_status ret = FFI_OK;
-        if (has_rest_param) {
-            // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
-            ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
-        } else {
-            // FEATURE_LOG_DEBUG("prepare for function...");
-            ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
-        }
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            got_error = true;
-            break;
-        }
-
-        // special handle for promise
-        feature_value_t promise;
-        if (is_promise) {
-            ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
-            // create promise
-            PromiseType* promise_type = (PromiseType*)complex_type;
-            // create promise and add to instance
-            pid = instance->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
-            promise = feature_dup_value(js_ctx, instance->getPromise(pid));
-            // pass pid to native function
-            ffi_arg_values[2] = &pid;
-        }
-
-        // invoke method
-        NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
-        FEATURE_CHECK_NE(callback, nullptr);
-        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
-        // process return value, do not handle promise, it is handled before we invoke ffi_call.
-        if (!is_promise && method.return_type != FT_VOID) {
-            // process return value
-            if (!convertValueToTarget(instance, method.return_type, ctx, ffi_ret_value, ret_val)) {
-                FEATURE_LOG_ERROR("can not convert return value to guest!");
-                value_translator::freeValue(ctx, ret_val);
-                got_error = true;
-            }
-        } else if (is_promise) {
-            value_translator::toTargetPromise(js_ctx, promise, ret_val);
-        }
-    } while (0);
-
-    // free ffi call resources
     for (int i = 0; i < fixed_argc; i++) {
-        // free type
-        if (ffi_arg_types[i + extra_argc]) {
-            freeTypeDeclaration(ffi_arg_types[i + extra_argc]);
+        TTarget curr_arg = argv[i];
+        auto param_type = param_types[i];
+        if (FT_IS_PROMISE(param_type)) {
+            FEATURE_LOG_ERROR("do not support promise as input param!");
+            return false;
         }
-        // free value
-        if (ffi_arg_values[i + extra_argc]) {
-            FeatureFreeValue(ffi_arg_values[i + extra_argc]);
+        if (!createTypeDeclaration(param_type, ffi_arg_types[extra_argc + i])) {
+            FEATURE_LOG_ERROR("prepareType for type failed!");
+            return false;
         }
-    }
-    freeTypeDeclaration(ffi_ret_type);
-    if (ffi_ret_value) {
-        FeatureFreeValue(ffi_ret_value);
-    }
-    delete[] ffi_arg_values;
-    delete[] ffi_arg_types;
-    if (vari_params.vari_args) {
-        delete[] vari_params.vari_args;
+        if (!convertValueToNative(instance, param_type, ctx, curr_arg, ffi_arg_values[extra_argc + i])) {
+            FEATURE_LOG_ERROR("convert argument %d failed!", i);
+            return false;
+        }
     }
 
-    // if error occurred, throw internal error
-    if (got_error) {
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native method failed !");
+    // process rest parameters
+    if (has_rest_params) {
+        // prepare vari_params type
+        vari_args_type.size = 0;
+        vari_args_type.type = FFI_TYPE_STRUCT;
+        vari_args_type.elements = vari_args_elem_types;
+        vari_args_elem_types[0] = &ffi_type_sint32;
+        vari_args_elem_types[1] = &ffi_type_pointer;
+        vari_args_elem_types[2] = nullptr;
+        // prepare vari_params struct
+        vari_args = new ft_value_t[vari_params.vari_count];
+        vari_params.vari_args = vari_args;
+        // pass param
+        ffi_arg_types[fixed_argc + extra_argc] = &vari_args_type;
+        ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
+        for (int i = 0; i + fixed_argc < argc; i++) {
+            // just passthrough guest param pointers
+            auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
+            *js_val_ptr = value_translator::getVariArg(ctx, argv[i + fixed_argc]);
+        }
+    } else if (opt_argc > 0) {
+        for (int i = argc; i < fixed_argc; i++) {
+            auto param_type = param_types[i];
+            FEATURE_CHECK_EQ(FT_IS_COMPLEX(param_type), true);
+            OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param_type);
+            FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
+            if (!createTypeDeclaration(param_type, ffi_arg_types[extra_argc + i])) {
+                FEATURE_LOG_ERROR("prepareType for type failed!");
+                return false;
+            }
+            ffi_arg_values[extra_argc + i] = &optionalType->fval;
+        }
+    }
+
+    // prepeare return type
+    if (!createTypeDeclaration(method.return_type, ffi_ret_type)) {
+        FEATURE_LOG_ERROR("prepareType for complex type failed!");
         return false;
     }
+    // create return value pointer inneed.
+    if (!is_promise && method.return_type != FT_VOID) {
+        if (!createHostValue(method.return_type, ffi_ret_value, true)) {
+            FEATURE_LOG_ERROR("create return value failed!");
+            return false;
+        }
+    }
+    // prepare ffi call
+    ffi_cif cif;
+    ffi_status ret = FFI_OK;
+    if (has_rest_params) {
+        // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
+        ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
+    } else {
+        // FEATURE_LOG_DEBUG("prepare for function...");
+        ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
+    }
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return false;
+    }
+
+    // special handle for promise
+    feature_value_t promise;
+    if (is_promise) {
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(method.return_type);
+        // create promise
+        PromiseType* promise_type = (PromiseType*)complex_type;
+        // create promise and add to instance
+        pid = instance->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
+        promise = feature_dup_value(js_ctx, instance->getPromise(pid));
+        // pass pid to native function
+        ffi_arg_values[2] = &pid;
+    }
+
+    // invoke method
+    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method.func.vtable_idx) : method.func.callback;
+    FEATURE_CHECK_NE(callback, nullptr);
+    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+    // process return value, do not handle promise, it is handled before we invoke ffi_call.
+    if (!is_promise && method.return_type != FT_VOID) {
+        // process return value
+        if (!convertValueToTarget(instance, method.return_type, ctx, ffi_ret_value, ret_val)) {
+            FEATURE_LOG_ERROR("can not convert return value to guest!");
+            value_translator::freeValue(ctx, ret_val);
+            return false;
+        }
+    } else if (is_promise) {
+        value_translator::toTargetPromise(js_ctx, promise, ret_val);
+    }
+
     return true;
 }
 
@@ -645,7 +625,6 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     FEATURE_CHECK_NE(member, nullptr);
     FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR, true);
 
-    bool got_error = false;
     MemberAccessor* accessor = &member->accessor;
     void* data_ptr = &accessor->data;
     FeatureType feature_type = accessor->type;
@@ -659,45 +638,34 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type* ffi_arg_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
-    ffi_type* ffi_ret_type = nullptr;
     void* ffi_arg_values[2] = { &instance, data_ptr };
-    void* ffi_ret_value = nullptr;
-    do {
-        if (!createTypeDeclaration(feature_type, ffi_ret_type)) {
-            FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
-            got_error = true;
-            break;
-        }
-        if (!createHostValue(feature_type, ffi_ret_value, true)) {
-            FEATURE_LOG_ERROR("create return value failed !");
-            got_error = true;
-            break;
-        }
-
-        // prepare and call method
-        ffi_cif cif;
-        ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            got_error = true;
-            break;
-        }
-        // invoke
-        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
-        // process return value
-        if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
-            FEATURE_LOG_ERROR("can not convert return value to guest!");
-            value_translator::freeValue(ctx, ret_val);
-        }
-    } while (0);
-
-    freeTypeDeclaration(ffi_ret_type);
-    FeatureFreeValue(ffi_ret_value);
-
-    if (got_error) {
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native accessorGet failed !");
+    AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
+    AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
+    if (!createTypeDeclaration(feature_type, ffi_ret_type)) {
+        FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
         return false;
     }
+    if (!createHostValue(feature_type, ffi_ret_value, true)) {
+        FEATURE_LOG_ERROR("create return value failed!");
+        return false;
+    }
+
+    // prepare and call method
+    ffi_cif cif;
+    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return false;
+    }
+    // invoke
+    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+    // process return value
+    if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
+        FEATURE_LOG_ERROR("can not convert return value to guest!");
+        value_translator::freeValue(ctx, ret_val);
+        return false;
+    }
+
     return true;
 }
 
@@ -713,48 +681,38 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
     NativeFunc callback = is_dynamic ?
             instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
-    bool got_error = false;
 
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type* ffi_arg_types[3] = { &ffi_type_pointer, &ffi_type_sint64, nullptr };
-    void* arg_value_input = nullptr;
     void* ffi_arg_values[3] = { &instance, &accessor->data, nullptr };
-    do {
-        // prepare third param type declaration, create by accessor type
-        if (!createTypeDeclaration(accessor->type, ffi_arg_types[2])) {
-            FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
-            got_error = true;
-            break;
-        }
-        // fill third param using guest value and accesor type
-        if (!convertValueToNative(instance, accessor->type, ctx, val, arg_value_input)) {
-            FEATURE_LOG_ERROR("convert value to native failed !");
-            got_error = true;
-            break;
-        }
-        ffi_arg_values[2] = arg_value_input;
+    AutoPtr<void*> arg_value(FeatureFreeValue);
+    AutoPtr<ffi_type*> arg_type(free_ffi_type);
 
-        // prepare and call method
-        ffi_cif cif;
-        ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_arg_types);
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            got_error = true;
-            break;
-        }
-        // invoke
-        ffi_call(&cif, callback, ffi_arg_values[2], ffi_arg_values);
-    } while (0);
-    // free resources
-    freeTypeDeclaration(ffi_arg_types[2]);
-    FeatureFreeValue(arg_value_input);
-
-    if (got_error) {
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native accessorSet failed !");
+    // prepare third param type declaration, create by accessor type
+    if (!createTypeDeclaration(accessor->type, arg_type)) {
+        FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
         return false;
     }
+    ffi_arg_types[2] = arg_type;
+    // fill third param using guest value and accesor type
+    if (!convertValueToNative(instance, accessor->type, ctx, val, arg_value)) {
+        FEATURE_LOG_ERROR("convert value to native failed!");
+        return false;
+    }
+    ffi_arg_values[2] = arg_value;
+
+    // prepare and call method
+    ffi_cif cif;
+    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_arg_types);
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return false;
+    }
+
+    // invoke
+    ffi_call(&cif, callback, ffi_arg_values[2], ffi_arg_values);
     return true;
 }
 
@@ -765,7 +723,6 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
     FEATURE_CHECK_NE(member, nullptr);
     FEATURE_CHECK_EQ(member->type == MEMBER_CONST, true);
 
-    bool got_error = false;
     bool is_dynamic = instance->prototype()->description()->dynamic;
     MemberConst* member_const = &member->value;
     void* data_ptr = &member_const->data;
@@ -779,45 +736,36 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type* ffi_arg_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
-    ffi_type* ffi_ret_type = nullptr;
     void* ffi_arg_values[2] = { &instance, data_ptr };
-    void* ffi_ret_value = nullptr;
-    do {
-        if (!createTypeDeclaration(feature_type, ffi_ret_type)) {
-            FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
-            got_error = true;
-            break;
-        }
-        if (!createHostValue(feature_type, ffi_ret_value, true)) {
-            FEATURE_LOG_ERROR("create return value failed !");
-            got_error = true;
-            break;
-        }
+    AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
+    AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
 
-        // prepare and call method
-        ffi_cif cif;
-        ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
-        if (ret) {
-            FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-            got_error = true;
-            break;
-        }
-        // invoke
-        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
-        // process return value
-        if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
-            FEATURE_LOG_ERROR("can not convert return value to guest!");
-            value_translator::freeValue(ctx, ret_val);
-        }
-    } while (0);
-
-    freeTypeDeclaration(ffi_ret_type);
-    FeatureFreeValue(ffi_ret_value);
-
-    if (got_error) {
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native accessorGet failed !");
+    if (!createTypeDeclaration(feature_type, ffi_ret_type)) {
+        FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
         return false;
     }
+    if (!createHostValue(feature_type, ffi_ret_value, true)) {
+        FEATURE_LOG_ERROR("create return value failed!");
+        return false;
+    }
+
+    // prepare and call method
+    ffi_cif cif;
+    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
+    if (ret) {
+        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
+        return false;
+    }
+
+    // invoke
+    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+    // process return value
+    if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
+        FEATURE_LOG_ERROR("can not convert return value to guest!");
+        value_translator::freeValue(ctx, ret_val);
+        return false;
+    }
+
     return true;
 }
 }

@@ -32,12 +32,12 @@ using namespace FEATURE;
 
 #define CFUNCDATA_FN(f) ((feature_value_t(*)(feature_context_ref ctx, feature_value_t, int, feature_value_t*, int, feature_value_t*))f)
 
-static inline void _free_arg(JSContext* ctx, JSValue& arg)
+static inline void free_arg(JSContext* ctx, JSValue& arg)
 {
     JS_FreeValue(ctx, arg);
 }
 
-static inline JSValue _get_undefined_arg(JSContext* ctx)
+static inline JSValue undefined_arg(JSContext* ctx)
 {
     return JS_UNDEFINED;
 }
@@ -309,7 +309,7 @@ int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, featu
     }
 
     // create argv list and initialize to undefined
-    AutoArgs<JSContext*, JSValue> argv(js_ctx, fixed_argc + rest_argc);
+    AutoArgs<JSContext*, JSValue> argv(js_ctx, free_arg, undefined_arg, fixed_argc + rest_argc);
     // convert parameters to feature_value_t
     for (int i = 0; i < fixed_argc; i++) {
         FeatureType ftype = callbackType->parameters[i];
