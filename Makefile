@@ -185,6 +185,7 @@ FEATURELIST += jumpApp
 
 ifeq ($(CONFIG_MEDIA_FEATURE),y)
 FEATURELIST += system_volume
+CFEATURELIST += system_audio
 endif
 
 ifeq ($(CONFIG_LIBUV_EXTENSION),y)
