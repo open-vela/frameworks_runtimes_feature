@@ -604,13 +604,13 @@ bool FeatureManagerWamr::registerSymbol(void* func, const char* name, const char
 int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 {
    /* register interface api */
-    if (description->members->type == MEMBER_METHOD) {
+    if (!description->dynamic && description->member_count > 0) {
         for (int i = 0; i < description->member_count; i++) {
             const Member& member = description->members[i];
             if (member.type != MEMBER_METHOD)
                 continue;
-            FeatureType feature_type = member.method->return_type;
-            if (feature_type == FT_VOID || !FT_IS_COMPLEX(feature_type))
+            FeatureType feature_type =  member.method->return_type;
+            if (!FT_IS_COMPLEX(feature_type))
                 continue;
             ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(feature_type);
             if (complex_type->type != COMPLEX_INTERFACE)
