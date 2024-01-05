@@ -30,6 +30,7 @@
 
 #include <assert.h>
 #include <ffi.h>
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -93,7 +94,6 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t *args){
         wasm_string_to_cstring(str_ref, class_name, str_len + 1);
     }
 
-    FEATURE_LOG_INFO("class name: %s", class_name);
     auto manager = (FeatureManagerWamr*)wasm_runtime_get_function_attachment(exec_env);
     manager->require(exec_env, (wasm_obj_t)thiz_ptr, class_name);
     free(class_name);
@@ -471,7 +471,8 @@ bool FeatureManagerWamr::init()
                 strcmp(name.data(), "Simple") != 0 &&
                 strcmp(name.data(), "struct_test") != 0 &&
                 strcmp(name.data(), "promise_test") != 0 &&
-                strcmp(name.data(), "interface_test") != 0) {
+                strcmp(name.data(), "interface_test") != 0 &&
+                strcmp(name.data(), "system.messageChannel") != 0) {
             FEATURE_LOG_WARN("Feature '%s' is not for wamr!", name.data());
             continue;
         }
@@ -536,11 +537,15 @@ void FeatureManagerWamr::release()
 
 bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
 {
-    FEATURE_LOG_INFO("featureRequire for name: %s", name);
-    auto feature_pair = getFeatureRegistry()->findFeature(name);
-    // FeatureRegistry::FeatureRegistryPair* feature_pair = registry_->findFeature(name);
+    FEATURE_LOG_INFO("require feature for name: %s", name);
+    auto it = class_name_map_.find(name);
+    if (it == class_name_map_.end()) {
+        FEATURE_LOG_WARN("can't find native name for wasm class '%s'!", name);
+        return false;
+    }
+    auto feature_pair = getFeatureRegistry()->findFeature(it->second.c_str());
     if (!feature_pair || !feature_pair->first) {
-        FEATURE_LOG_WARN("can't find native feature '%s'!", name);
+        FEATURE_LOG_WARN("can't find native feature '%s'!", it->second.c_str());
         return false;
     }
     auto description = feature_pair->first;
@@ -590,7 +595,7 @@ bool FeatureManagerWamr::registerSymbol(void* func, const char* name, const char
     symbol->symbol = name;
     symbol->signature = sig;
     symbol->attachment = attach;
-    FEATURE_LOG_INFO("register native symbol, name: %s, signature:%s", name, sig);
+    FEATURE_LOG_DEBUG("register native symbol, name: %s, signature:%s", name, sig);
     if (!wasm_runtime_register_natives_raw("env", symbol, 1)) {
         FEATURE_LOG_ERROR("register native symbol: '%s' failed !", name);
         delete symbol;
@@ -615,7 +620,6 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(feature_type);
             if (complex_type->type != COMPLEX_INTERFACE)
                 continue;
-
             InterfaceType *interface_type = (InterfaceType *)complex_type;
             const FeatureDescription* desc = interface_type->desc;
             registerFeature(desc);
@@ -623,9 +627,12 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
     }
 
     /* register class initNative api */
+    std::string class_name(description->name);
+    std::replace(class_name.begin(), class_name.end(), '.', '_');
+    class_name_map_[class_name] = description->name;
     char* init_name = new char[128];
     native_strings_.push_back(init_name);
-    strcpy(init_name, description->name);
+    strcpy(init_name, class_name.c_str());
     strcat(init_name,"_init_native");
     if (!registerSymbol((void*)init_native, init_name, "(rr)", this)) {
         return false;
@@ -644,7 +651,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 auto method = member->method;
                 char *method_name = new char[128];
                 native_strings_.push_back(method_name);
-                strcpy(method_name, description->name);
+                strcpy(method_name, class_name.c_str());
                 /* special treat for interface */
                 if (FT_IS_COMPLEX(method->return_type)) {
                     ComplexTypeHeader *complexType = (ComplexTypeHeader *)FT_GET_COMPLEX(method->return_type);
@@ -702,7 +709,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 if (accessor->getter.vtable_idx >= 0 || accessor->getter.callback) {
                     char *getter_name = new char[128];
                     native_strings_.push_back(getter_name);
-                    strcpy(getter_name, description->name);
+                    strcpy(getter_name, class_name.c_str());
                     strcat(getter_name, "_get_");
                     strcat(getter_name, member->name);
                     strcat(getter_name, "_0");
@@ -721,7 +728,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 if(accessor->setter.vtable_idx >= 0 || accessor->setter.callback) {
                     char *setter_name = new char[128];
                     native_strings_.push_back(setter_name);
-                    strcpy(setter_name, description->name);
+                    strcpy(setter_name, class_name.c_str());
                     strcat(setter_name, "_set_");
                     strcat(setter_name, member->name);
                     strcat(setter_name, "_0");
@@ -744,7 +751,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 const MemberConst *member_const = member->value;
                 char *const_name = new char[128];
                 native_strings_.push_back(const_name);
-                strcpy(const_name, description->name);
+                strcpy(const_name, class_name.c_str());
                 strcat(const_name, "_const_");
                 strcat(const_name, member->name);
                 char *signature = new char[64];
