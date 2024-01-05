@@ -104,12 +104,21 @@ static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
     android::IPCThreadState::self()->handlePolledCommands();
 }
 
+static void setScriptArgs(JSContext* ctx, JSValue global_obj, int argc, char* argv[], int scriptArgs_beg) {
+    JSValue arr = JS_NewArray(ctx);
+    for (int i = 0, j = scriptArgs_beg; j < argc; i++, j++) {
+        JSValue js_string = JS_NewString(ctx, argv[j]);
+        JS_SetPropertyUint32(ctx, arr, i, js_string);
+    }
+    JS_SetPropertyStr(ctx, global_obj, "scriptArgs", arr);
+}
+
 // 支持cli来读取manitest.json以及js文件去执行，命令为:./feature_test_cli ./test.js ../manifest.json
 // 当test.js使用message channel, 命令为:./feature_test_cli -m ./test.js ../manifest.json
 extern "C" int main(int argc, char** argv)
 {
     if (argc < 2) {
-        printf("please input manifest.json file and js file, like ./feature_test_cli ./test.js ./manifest.json or ./feature_test_cli -m ./test.js ./manifest.json when use message channel!\n");
+        printf("help: feature_test_cli js_file.js [manifest] [--scriptArgs ....]\n");
         return 0;
     }
 
@@ -118,29 +127,32 @@ extern "C" int main(int argc, char** argv)
     char* manifast_str = NULL;
     char* manifest_file = NULL;
     bool use_uvloop_async = false;
-
-    if (argc == 3) {
-        js_file = argv[1];
-        manifest_file = argv[2];
-        load_file(manifest_file, &manifast_str);
-
-        if (manifast_str == NULL) {
-            printf("malloc manifest.json failed!\n");
-            return 0;
-        }
-    } else if (argc == 4 && strcmp(argv[1], "-m") == 0) {
-        use_uvloop_async = true;
-        js_file = argv[2];
-        manifest_file = argv[3];
-        load_file(manifest_file, &manifast_str);
-        if (manifast_str == NULL) {
-            printf("malloc manifest.json failed!\n");
-            return 0;
+    int scriptArgs_beg = argc;
+    int i = 1;
+    for (; i < argc; i++) {
+        if (strcmp(argv[i], "-m") == 0) {
+            use_uvloop_async = true;
+        } else if (strcmp(argv[i], "--scriptArgs") == 0) { // script after thie args will give js
+            scriptArgs_beg = i;
+            argv[i] = js_file;
+            break;
+        } else if (js_file) { // all args before --scriptArgs and after js_file will overwrite manifest_file
+            manifest_file = argv[i];
+        } else {
+            js_file = argv[i];
         }
     }
 
+    // manifest file is not required
+    load_file(manifest_file, &manifast_str);
+
     // 打开manifest.json文件,读取内容到一个字符串中
     // 打开js文件
+    if (!js_file) {
+        printf("feature_test_cli: js_file.js is required\n");
+        return 1;
+    }
+
     load_file(js_file, &js_str);
     if (js_str == NULL) {
         printf("malloc js file failed!\n");
@@ -163,6 +175,9 @@ extern "C" int main(int argc, char** argv)
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
+
+    setScriptArgs(js_env.ctx, global_obj, argc, argv, scriptArgs_beg);
+
     feature_value_t require = feature_cfunction(js_env.ctx, __require, "require", 0);
     feature_set_object_property(js_env.ctx, global_obj, "require", require);
     feature_free_value(js_env.ctx, global_obj);
