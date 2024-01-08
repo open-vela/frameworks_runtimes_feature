@@ -150,7 +150,7 @@ int ClientConnection::sendMessage(const std::string& target,
     sp<MessageReply> reply = new MessageReply(pid_);
     reply->setClientChannelCallback(client_channel_cb_);
     reply->setClientConnection(this);
-    task_board_.commitTask(std::make_shared<MsgTask>(reply, (int32_t)service.get()));
+    task_board_.commitTask(std::make_shared<MsgTask>(reply, (int32_t)reply.get()));
     Status status = service->sendMessage(msg, reply);
     if (!status.isOk()) {
         ALOGE("sendMessage error: %s. target:%s", status.toString8().c_str(),
