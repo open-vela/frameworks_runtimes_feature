@@ -55,24 +55,6 @@ static void fillArg(char* argp, uint32 args, FeatureType& ftype, uint64_t target
     }
 }
 
-static wasm_anyref_obj_t return_box_anyref(wasm_exec_env_t exec_env, const void *ptr)
-{
-    do {
-        wasm_anyref_obj_t any_obj =
-            (wasm_anyref_obj_t)wasm_anyref_obj_new(exec_env, ptr);
-        if (!any_obj) {
-            wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
-                                       "alloc memory failed");
-            return NULL;
-        }
-        wasm_obj_set_gc_finalizer(
-            exec_env, (wasm_obj_t)any_obj,
-            (wasm_obj_finalizer_t)dynamic_object_finalizer,
-            dyntype_get_context());
-        return any_obj;
-    } while (0);
-    return nullptr;
-}
 namespace ferry {
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
@@ -94,76 +76,6 @@ FeatureInstanceWamr::~FeatureInstanceWamr()
 bool FeatureInstanceWamr::removeCallback(FtCallbackId cid)
 {
     return eraseCallback(cid);
-}
-
-static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_array_type_t)
-{
-    uint32_t i, type_count;
-    bool is_mutable = true;
-    type_count = wasm_get_defined_type_count(module);
-    for (i = 0; i < type_count; i++) {
-        wasm_defined_type_t type = wasm_get_defined_type(module, i);
-        if (wasm_defined_type_is_array_type(type)) {
-            bool mutable_ref = false;
-            wasm_ref_type_t arr_elem_ref_type = wasm_array_type_get_elem_type(
-                (wasm_array_type_t)type, &mutable_ref);
-
-            if (arr_elem_ref_type.value_type == VALUE_TYPE_ANYREF && mutable_ref == is_mutable) {
-                if (p_array_type_t) {
-                    *p_array_type_t = (wasm_array_type_t)type;
-                }
-                return i;
-            }
-        }
-    }
-    if (p_array_type_t) {
-        *p_array_type_t = nullptr;
-    }
-
-    return -1;
-}
-
-static wasm_struct_obj_t create_any_array_obj(wasm_exec_env_t exec_env, uint32_t arr_elem_count)
-{
-    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
-    wasm_module_t module = wasm_runtime_get_module(module_inst);
-    wasm_local_obj_ref_t local_ref = {0};
-    wasm_array_type_t any_array_type = nullptr;
-    uint32_t res_arr_type_idx = get_any_array_type(module, &any_array_type);
-
-    wasm_struct_type_t res_arr_struct_type = nullptr;
-
-    /* get result array struct type */
-    get_array_struct_type(module, res_arr_type_idx, &res_arr_struct_type);
-
-    wasm_struct_obj_t new_any_array_struct =
-        wasm_struct_obj_new_with_type(exec_env, res_arr_struct_type);
-
-    if (!new_any_array_struct) {
-        wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
-                                   "alloc memory failed");
-        return nullptr;
-    }
-
-    /* Push object to local ref to avoid being freed at next allocation */
-    wasm_runtime_push_local_object_ref(exec_env, &local_ref);
-    local_ref.val = (wasm_obj_t)new_any_array_struct;
-
-    wasm_value_t val = {0};
-    val.gc_obj = nullptr;
-    wasm_array_obj_t new_arr = wasm_array_obj_new_with_type(exec_env, any_array_type, arr_elem_count,
-                                                            &val);
-    if (!new_arr) {
-        wasm_runtime_pop_local_object_ref(exec_env);
-        wasm_runtime_set_exception(module_inst, "alloc memory failed");
-        return nullptr;
-    }
-
-    val.gc_obj = (wasm_obj_t)new_arr;
-    wasm_struct_obj_set_field(new_any_array_struct, 0, &val);
-
-    wasm_runtime_pop_local_object_ref(exec_env);
-    return new_any_array_struct;
 }
 
 int FeatureInstanceWamr::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
@@ -252,23 +164,23 @@ bool FeatureInstanceWamr::variArgToTarget(void *arg, wasm_value_t& target)
             case FT_INT:
             case FT_INT32:
             case FT_UINT32: {
-                /* call return_box_anyref api to box element as any */
+                /* call create_anyref_obj api to box element as any */
                 int32_t iguest = (int32_t)guest;
                 if (iguest == 1 || iguest == 0)
-                    any = return_box_anyref(env, dyntype_new_boolean(dyn_ctx, iguest));
+                    any = create_anyref_obj(env, dyntype_new_boolean(dyn_ctx, iguest));
                 else
-                    any = return_box_anyref(env, dyntype_new_number(dyn_ctx, iguest));
+                    any = create_anyref_obj(env, dyntype_new_number(dyn_ctx, iguest));
                 target.gc_obj = (wasm_obj_t)any;
             } break;
             case FT_DOUBLE: {
-                /* call return_box_anyref api to box element as any */
-                any = return_box_anyref(env, dyntype_new_number(dyn_ctx, (double)guest));
+                /* call create_anyref_obj api to box element as any */
+                any = create_anyref_obj(env, dyntype_new_number(dyn_ctx, (double)guest));
                 target.gc_obj = (wasm_obj_t)any;
             } break;
             case FT_CHAR: {
                 wasm_stringref_obj_t obj = (wasm_stringref_obj_t)guest;
-                /* call return_box_anyref api to box element as any */
-                any = return_box_anyref(env,
+                /* call create_anyref_obj api to box element as any */
+                any = create_anyref_obj(env,
                         dyntype_new_string(dyn_ctx, (void *)wasm_stringref_obj_get_value(obj)));
                 target.gc_obj = (wasm_obj_t)any;
             } break;
@@ -318,9 +230,7 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
     }
 
     // create an array object with element type any rest_argc number of elements.
-    wasm_value_t array_size = { .i32 = (int32_t)rest_argc };
-    wasm_struct_obj_t array_struct = create_any_array_obj(env, rest_argc);
-    wasm_struct_obj_set_field(array_struct, 1, &array_size);
+    wasm_struct_obj_t array_struct = create_any_array_struct(env, rest_argc);
 
     /*  Take out the array data field of the array object,
     *  then wrap and assign any type to each element of the array.
@@ -338,13 +248,15 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
             return -1;
         }
         wasm_array_obj_set_elem(array_obj, i, &target);
-        /* at least, add the any array object to the return parameter argv */
-        b_memcpy_s(argp + filled, args -filled, &(array_struct), sizeof(wasm_struct_obj_t));
-        filled += sizeof(wasm_struct_obj_t);
     }
+
+    /* at last, add the any array object to the return parameter argv */
+    b_memcpy_s(argp + filled, args -filled, &(array_struct), sizeof(wasm_struct_obj_t));
+    filled += sizeof(wasm_struct_obj_t);
+
+    // convert filled form bytes to wamr slots
     filled = filled /(sizeof(uint32) /sizeof(char));
     wasm_runtime_call_func_ref(env, (wasm_func_obj_t)func_obj.gc_obj, filled, argv);
-
     return 0;
 }
 

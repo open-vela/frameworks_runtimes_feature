@@ -48,6 +48,8 @@ dyn_value_t dyntype_callback_wasm_dispatcher(void* exec_env_v, dyn_ctx_t ctx, vo
 
 wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_arr[],
                          uint32_t member_count);
+wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void *ptr);
+wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t elem_count);
 
 #ifdef __cplusplus
 }
