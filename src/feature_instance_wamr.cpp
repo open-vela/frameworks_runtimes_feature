@@ -80,7 +80,7 @@ bool FeatureInstanceWamr::removeCallback(FtCallbackId cid)
 
 int FeatureInstanceWamr::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
-    return instance_qjs_->settleWamrPromise(resolve, pid, ap);
+    return instance_qjs_->settlePromise(resolve, pid, ap);
 }
 
 
@@ -262,7 +262,7 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
 
 FtPromiseId FeatureInstanceWamr::addPromise(FeatureType resolve_type, FeatureType reject_type)
 {
-    return instance_qjs_->addWamrPromise(resolve_type, reject_type);
+    return instance_qjs_->addPromise(resolve_type, reject_type);
 }
 
 feature_value_t FeatureInstanceWamr::getPromise(FtPromiseId pid)

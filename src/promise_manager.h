@@ -30,7 +30,6 @@ typedef struct PromiseData {
     feature_value_t promise; // 保存promise对象
     feature_value_t resolve_funcs[2]; //functions
     FeatureType resolve_types[2];
-    bool is_wamr;
 } PromiseData;
 
 class PromiseManager {
@@ -40,11 +39,7 @@ public:
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 
-    FtPromiseId addWamrPromise(FeatureType resolve_type, FeatureType reject_type);
-
     bool removePromise(FtPromiseId pid);
-
-    bool freeWamrPromise(FtPromiseId pid);
 
     void releasePromises();
 
