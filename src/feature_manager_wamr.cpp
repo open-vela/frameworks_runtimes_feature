@@ -221,10 +221,6 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     native_raw_get_arg(void*, thiz_ptr, args);
     *ret_ptr = 0;
 
-    // wasm array values for rest parameters
-    wasm_value_t wasm_array_data = { 0 }, wasm_array_len = { 0 };
-    wasm_array_obj_t wasm_arr_ref = NULL;
-
     auto instance = instance_from_target((wasm_obj_t)thiz_ptr);
     auto manager = manager_from_instance(instance);
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
@@ -251,16 +247,19 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     // optional and rest parameters must not set together.
     FEATURE_CHECK_NE(has_rest_params && opt_argc, true);
     int32_t vari_argc = 0;
+    wasm_array_obj_t array_obj = NULL;
     if (has_rest_params) {
-        wasm_struct_obj_t arr_struct_ref;
+        wasm_value_t array_data = { 0 };
+        wasm_value_t array_len = { 0 };
+        wasm_struct_obj_t array_struct;
         uint64_t * vari_argv = args + fixed_argc;
         native_raw_get_arg(wasm_obj_t, obj_ref, vari_argv);
         assert(wasm_obj_is_struct_obj(obj_ref));
-        arr_struct_ref = (wasm_struct_obj_t)obj_ref;
-        wasm_struct_obj_get_field(arr_struct_ref, 0, false, &wasm_array_data);
-        wasm_struct_obj_get_field(arr_struct_ref, 1, false, &wasm_array_len);
-        wasm_arr_ref = (wasm_array_obj_t)(wasm_array_data.gc_obj);
-        vari_argc = wasm_array_len.i32;
+        array_struct = (wasm_struct_obj_t)obj_ref;
+        wasm_struct_obj_get_field(array_struct, 0, false, &array_data);
+        wasm_struct_obj_get_field(array_struct, 1, false, &array_len);
+        array_obj = (wasm_array_obj_t)(array_data.gc_obj);
+        vari_argc = array_len.i32;
         argc += vari_argc;
         FEATURE_CHECK_GT(argc, fixed_argc);
         vari_params.vari_count = vari_argc;
@@ -329,7 +328,7 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
         ffi_arg_types[fixed_argc + extra_argc] = &vari_arg_type;
         ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
         for (int i = 0; i + fixed_argc < argc; i++) {
-            void *addr = wasm_array_obj_elem_addr(wasm_arr_ref, i);
+            void *addr = wasm_array_obj_elem_addr(array_obj, i);
             wasm_anyref_obj_t anyref = *((wasm_anyref_obj_t *)addr);
             feature_value_t *js_any_ptr = (feature_value_t *)wasm_anyref_obj_get_value(anyref);
             // just passthrough guest param pointers

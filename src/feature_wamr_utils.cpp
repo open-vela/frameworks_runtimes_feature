@@ -130,3 +130,90 @@ wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_ar
     }
     return cls_struct_obj;
 }
+
+wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void *ptr)
+{
+    wasm_anyref_obj_t any_obj = wasm_anyref_obj_new(exec_env, ptr);
+    if (!any_obj) {
+        wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
+                                   "alloc memory failed");
+        return NULL;
+    }
+    wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)any_obj,
+        (wasm_obj_finalizer_t)dynamic_object_finalizer, dyntype_get_context());
+    return any_obj;
+}
+
+static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_array_type)
+{
+    uint32_t i, type_count;
+    type_count = wasm_get_defined_type_count(module);
+    for (i = 0; i < type_count; i++) {
+        wasm_defined_type_t type = wasm_get_defined_type(module, i);
+        if (!wasm_defined_type_is_array_type(type))
+            continue;
+
+        bool is_mutable = false;
+        wasm_array_type_t array_type = (wasm_array_type_t)type;
+        wasm_ref_type_t elem_type = wasm_array_type_get_elem_type(array_type, &is_mutable);
+        if (elem_type.value_type == VALUE_TYPE_ANYREF && is_mutable) {
+            if (p_array_type) {
+                *p_array_type = array_type;
+            }
+            return i;
+        }
+    }
+    if (p_array_type) {
+        *p_array_type = nullptr;
+    }
+
+    return -1;
+}
+
+wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t elem_count)
+{
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    wasm_module_t module = wasm_runtime_get_module(module_inst);
+    wasm_local_obj_ref_t local_ref = {0};
+    wasm_array_type_t any_array_type = nullptr;
+    uint32_t type_idx = get_any_array_type(module, &any_array_type);
+    if (type_idx < 0) {
+        wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
+                                   "can not find any array type");
+        return nullptr;
+    }
+
+    /* get result array struct type */
+    wasm_struct_type_t array_struct_type = nullptr;
+    get_array_struct_type(module, type_idx, &array_struct_type);
+
+    wasm_struct_obj_t array_struct = wasm_struct_obj_new_with_type(
+                    exec_env, array_struct_type);
+    if (!array_struct) {
+        wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
+                                   "alloc memory failed");
+        return nullptr;
+    }
+
+    /* Push object to local ref to avoid being freed at next allocation */
+    wasm_runtime_push_local_object_ref(exec_env, &local_ref);
+    local_ref.val = (wasm_obj_t)array_struct;
+
+    wasm_value_t val = {0};
+    val.gc_obj = nullptr;
+    wasm_array_obj_t array_obj = wasm_array_obj_new_with_type(
+                    exec_env, any_array_type, elem_count, &val);
+    if (!array_obj) {
+        wasm_runtime_pop_local_object_ref(exec_env);
+        wasm_runtime_set_exception(module_inst, "alloc memory failed");
+        return nullptr;
+    }
+
+    val.gc_obj = (wasm_obj_t)array_obj;
+    wasm_struct_obj_set_field(array_struct, 0, &val);
+    wasm_value_t array_size = { .i32 = (int32_t)elem_count };
+    wasm_struct_obj_set_field(array_struct, 1, &array_size);
+    wasm_runtime_pop_local_object_ref(exec_env);
+    return array_struct;
+}
+
