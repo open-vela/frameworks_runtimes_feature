@@ -230,21 +230,6 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap
     return ret;
 }
 
-FtPromiseId FeatureInstanceQjs::addWamrPromise(FeatureType resolve_type, FeatureType reject_type)
-{
-    return promise_manager_->addWamrPromise(resolve_type, reject_type);
-}
-
-int FeatureInstanceQjs::settleWamrPromise(bool resolve, FtPromiseId pid, va_list& ap)
-{
-    int ret = doSettlePromise(resolve, pid, ap);
-    if (!promise_manager_->freeWamrPromise(pid)) {
-        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
-        ret = -2;
-    }
-    return ret;
-}
-
 int FeatureInstanceQjs::doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
     // get feature instance

@@ -404,9 +404,12 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t *args)
     } else if (is_promise) {
         feature_value_t* ppromise = dynamic_dup_value(js_ctx, promise);
         //把promise返回给ts层
+        wasm_anyref_obj_t any_obj = wasm_anyref_obj_new(exec_env, ppromise);
+        wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)any_obj,
+                (wasm_obj_finalizer_t)dynamic_object_finalizer, dyntype_get_context());
+
         native_raw_return_type(void*, &ret_val);
-        wasm_anyref_obj_t p_obj = wasm_anyref_obj_new(exec_env, ppromise);
-        native_raw_set_return(p_obj);
+        native_raw_set_return(any_obj);
     }
     *ret_ptr = ret_val;
 }

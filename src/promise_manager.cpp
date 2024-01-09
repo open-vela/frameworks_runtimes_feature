@@ -40,7 +40,6 @@ FtPromiseId PromiseManager::addPromise(FeatureType resolve_type, FeatureType rej
     data->resolve_funcs[1] = FEATURE_VALUE_UNDEFINED;
     data->resolve_types[0] = resolve_type;
     data->resolve_types[1] = reject_type;
-    data->is_wamr = false;
 
     feature_value_t promise = feature_promise_capability(js_ctx_, data->resolve_funcs);
     if (feature_is_exception(promise)) {
@@ -53,16 +52,6 @@ FtPromiseId PromiseManager::addPromise(FeatureType resolve_type, FeatureType rej
     data->promise = promise;
     promises_[curr_pid_] = data;
     return curr_pid_++;
-}
-
-FtPromiseId PromiseManager::addWamrPromise(FeatureType resolve_type, FeatureType reject_type)
-{
-    FtPromiseId pid = addPromise(resolve_type, reject_type);
-    if (!promises_.count(pid))
-        return -1;
-    PromiseData* data = promises_[pid];
-    data->is_wamr = true;
-    return pid;
 }
 
 bool PromiseManager::removePromise(FtPromiseId pid)
@@ -82,46 +71,14 @@ bool PromiseManager::removePromise(FtPromiseId pid)
     return true;
 }
 
-// for FeatureInstanceWamr to do the extra free of the js promise to wordaround the wamr-quickjs promise leakage
-bool PromiseManager::freeWamrPromise(FtPromiseId pid)
-{
-    if (!promises_.count(pid)) {
-        FEATURE_LOG_ERROR("pid %d in instance: %p not exist !", pid, this);
-        return false;
-    }
-    PromiseData* data = promises_[pid];
-    if (!data->is_wamr)
-        return false;
-
-    FEATURE_CHECK_NE(data, nullptr);
-    // for wamr, we must free promise twice, here is the first free, the second free is in releasePromises
-    feature_free_value(js_ctx_, data->promise);
-    feature_free_value(js_ctx_, data->resolve_funcs[0]);
-    feature_free_value(js_ctx_, data->resolve_funcs[1]);
-    data->resolve_funcs[0] = FEATURE_VALUE_UNDEFINED;
-    data->resolve_funcs[1] = FEATURE_VALUE_UNDEFINED;
-    return true;
-}
-
 void PromiseManager::releasePromises()
 {
     for (const auto& pair : promises_) {
         FEATURE_LOG_DEBUG("promise: %d freed !", pair.first);
         PromiseData* data = pair.second;
         feature_free_value(js_ctx_, data->promise);
-        auto funcs0 = data->resolve_funcs[0];
-        auto funcs1 = data->resolve_funcs[1];
-        if (data->is_wamr) {
-           // for wamr unfreed promises 
-            if (!feature_is_undefined(funcs0) && !feature_is_undefined(funcs1)) {
-                feature_free_value(js_ctx_, data->promise);
-                feature_free_value(js_ctx_, funcs0);
-                feature_free_value(js_ctx_, funcs1);
-            }
-        } else {
-            feature_free_value(js_ctx_, funcs0);
-            feature_free_value(js_ctx_, funcs1);
-        }
+        feature_free_value(js_ctx_, data->resolve_funcs[0]);
+        feature_free_value(js_ctx_, data->resolve_funcs[1]);
         free(data);
     }
     promises_.clear();
