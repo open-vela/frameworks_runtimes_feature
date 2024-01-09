@@ -199,9 +199,7 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t *args)
 {
     uint64_t *ret_ptr = args;
     uint64_t ret_val = 0;
-    // native_raw_get_arg(void *, thiz_ptr, args); // pop this pointer
     *ret_ptr = 0;
-    // FeatureInstance *instance = instance_from_target((wasm_obj_t)thiz_ptr);
     const Member* member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
     MemberConst* member_const = const_cast<MemberConst*>(member->value);

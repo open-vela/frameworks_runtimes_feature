@@ -411,11 +411,15 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(pnative, nullptr);
                 auto pinstance = static_cast<FeatureInstance*>(pnative);
-                if (pinstance->isInterface() && !pinstance->isInitialized()) {
-                    FeaturePrototype* module_proto = pinstance->prototype();
-                    FeaturePrototype* intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
+                if (!pinstance->isInterface()) {
+                    FEATURE_LOG_ERROR("not a native interface!");
+                    return false;
+                }
+                if (!pinstance->isInitialized()) {
+                    auto module_proto = pinstance->prototype();
+                    auto intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
                     pinstance->setPrototype(intf_proto);
-                    pinstance->setInitialized();
+                    pinstance->initialize();
                 }
                 target = value_translator::targetFromInterface(pinstance);
             } break;

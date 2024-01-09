@@ -55,4 +55,17 @@ FeatureInstance::~FeatureInstance()
     }
 }
 
+void FeatureInstance::initialize()
+{
+    if (initialized_ == 1)
+        return;
+
+    auto proto = prototype();
+    FEATURE_CHECK_NE(proto, nullptr);
+    auto interf= std::unique_ptr<FeatureInstance>(this);
+    int iid = proto->addInstance(std::move(interf));
+    setInstanceId(iid);
+    initialized_ = 1;
+}
+
 } // namespace ferry

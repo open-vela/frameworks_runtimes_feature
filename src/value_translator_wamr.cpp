@@ -313,8 +313,8 @@ void* interfaceFromTarget(uint64_t& target)
     return param;
 }
 
-uint64_t targetFromInterface(void* instance)
+uint64_t targetFromInterface(void* interf)
 {
-    return (uint64_t)instance;
+    return (uint64_t)interf;
 }
 }

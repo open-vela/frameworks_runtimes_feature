@@ -57,7 +57,7 @@ public:
 
     void setNative(void* native) { native_ = native; }
 
-    void setInitialized() { initialized_ = 1; }
+    virtual void initialize();
 
     bool isInitialized() { return initialized_ == 1; }
 

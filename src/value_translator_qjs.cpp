@@ -221,7 +221,7 @@ void* interfaceFromTarget(JSValue& target)
 
 JSValue targetFromInterface(void* instance)
 {
-    return ((ferry::FeatureInstanceQjs*)instance)->createTargetInterface();
+    return ((ferry::FeatureInstanceQjs*)instance)->dupTarget();
 }
 
 }
