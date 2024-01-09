@@ -789,10 +789,6 @@ feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interf
     FEATURE_CHECK_NE(interf, nullptr);
     FeaturePrototypeQjs* proto = static_cast<FeaturePrototypeQjs*>(interf->prototype());
     FEATURE_CHECK_NE(proto, nullptr);
-    auto unique_interf= std::unique_ptr<FeatureInstance>(interf);
-    int iid = proto->addInstance(std::move(unique_interf));
-    interf->setInstanceId(iid);
-
     auto js_interface = createJsInstance(proto, interf);
     return js_interface;
 }

@@ -45,13 +45,6 @@ static void* interface_from_target(uint64_t& target)
 
 static uint64_t target_from_interface(FeatureInstance* interf)
 {
-    FEATURE_CHECK_NE(interf, nullptr);
-    auto proto = interf->prototype();
-    FEATURE_CHECK_NE(proto, nullptr);
-    auto unique_interf= std::unique_ptr<FeatureInstance>(interf);
-    int iid = proto->addInstance(std::move(unique_interf));
-    interf->setInstanceId(iid);
-
     return (uint64_t)interf;
 }
 
@@ -304,14 +297,17 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
                 auto pinstance = static_cast<FeatureInstance*>(ptr);
-                if (pinstance->isInterface() && !pinstance->isInitialized()) {
-                    FeaturePrototype* module_proto = pinstance->prototype();
-                    FeaturePrototype* intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
+                if (!pinstance->isInterface()) {
+                    FEATURE_LOG_ERROR("not a native interface!");
+                    return false;
+                }
+                if (!pinstance->isInitialized()) {
+                    auto module_proto = pinstance->prototype();
+                    auto intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
                     pinstance->setPrototype(intf_proto);
-                    pinstance->setInitialized();
+                    pinstance->initialize();
                 }
                 value = target_from_interface(pinstance);
-
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

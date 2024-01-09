@@ -47,6 +47,7 @@ namespace ferry {
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
     : FeatureInstance(proto)
     , vm_object_(FEATURE_VALUE_UNDEFINED)
+    , target_(FEATURE_VALUE_UNDEFINED)
 {
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
     *js_val_ptr = JS_UNDEFINED;
@@ -56,10 +57,28 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable)
     : FeatureInstance(module_proto, vtable)
     , vm_object_(FEATURE_VALUE_UNDEFINED)
+    , target_(FEATURE_VALUE_UNDEFINED)
 {
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
     *js_val_ptr = JS_UNDEFINED;
     promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->featureManager()->getFeatureContext()));
+}
+
+void FeatureInstanceQjs::initialize()
+{
+    if (isInitialized())
+        return;
+
+    FeatureInstance::initialize();
+    FeatureManagerQjs* manager = (FeatureManagerQjs*)(prototype()->featureManager());
+    FEATURE_CHECK_NE(manager, nullptr);
+    target_ = manager->createTargetInterface(this);
+}
+
+feature_value_t FeatureInstanceQjs::dupTarget()
+{
+    JSContext* js_ctx = getContext();
+    return feature_dup_value(js_ctx, target_);
 }
 
 void FeatureInstanceQjs::setVmObject(feature_value_t vm_object)
@@ -97,6 +116,11 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
         freeWeakRef();
     }
 
+    // free target instance
+    if (!JS_IsUndefined(target_)) {
+        feature_free_value(js_ctx, target_);
+    }
+
     // invoke callback
     if (proto->description()->native_callbacks && proto->description()->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
@@ -106,13 +130,6 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     // release all promises
     promise_manager_->releasePromises();
     delete promise_manager_;
-}
-
-feature_value_t FeatureInstanceQjs::createTargetInterface()
-{
-    FeatureManagerQjs* manager = (FeatureManagerQjs*)(prototype()->featureManager());
-    FEATURE_CHECK_NE(manager, nullptr);
-    return manager->createTargetInterface(this);
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)

@@ -59,8 +59,6 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    feature_value_t createTargetInterface();
-
     bool checkCallback(FtCallbackId cid);
 
     feature_value_t getPromise(FtPromiseId pid);
@@ -81,12 +79,16 @@ public:
 
     int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
+    virtual void initialize();
+
+    feature_value_t dupTarget();
 private:
     int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
-	
+
     bool argToTarget(va_list &ap, FeatureType ftype, JSValue& target);
 
     feature_value_t vm_object_;
+    feature_value_t target_;
     WeakRef weak_self_;
     PromiseManager* promise_manager_ = nullptr;
 };
