@@ -49,6 +49,10 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
 ifeq ($(CONFIG_FEATURE_USE_WAMR),y)
 CXXFLAGS += -DWASM_ENABLE_GC=1
 CXXFLAGS += -DWASM_ENABLE_STRINGREF=1
+CFLAGS += -DWASM_DISABLE_WAKEUP_BLOCKING_OP=0
+CXXFLAGS += -DWASM_DISABLE_WAKEUP_BLOCKING_OP=0
+CXXFLAGS += -D__STDC_VERSION__=0
+
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/include
