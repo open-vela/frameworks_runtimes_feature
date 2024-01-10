@@ -801,7 +801,8 @@ void FeatureManagerQjs::uninit()
 {
     auto ft_ctx = getFeatureContext();
     if (!ft_ctx) {
-        FEATURE_LOG_INFO("ft_ctx is missing");
+        FEATURE_LOG_WARN("ft_ctx is missing");
+        delete getFeatureRegistry();
         return;
     }
 
