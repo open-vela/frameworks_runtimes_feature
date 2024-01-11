@@ -29,7 +29,8 @@ $(FEATURE_LIST_PATH): $(DEPCONFIG) Makefile
 
 register:: $(FEATURE_LIST_PATH)
 
-context::
+# context::
+depend::
 
 ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h),)
 	@echo "ajs_features_init.h is empty, need create it"
