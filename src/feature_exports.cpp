@@ -75,7 +75,9 @@ void FeatureFreeValue(void* ptr)
     if (FT_IS_REFERENCE(featureType)) {
         // only free non raw pointer
         if (FT_RAWPOINTER != featureType) {
-            FeatureFreeValue(*(void**)ptr);
+            if (FT_POINTER != featureType) {
+                FeatureFreeValue(*(void**)ptr);
+            }
         }
         // free object header
         free(header);

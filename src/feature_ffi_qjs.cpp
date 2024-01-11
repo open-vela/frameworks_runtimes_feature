@@ -58,12 +58,14 @@ namespace FeatureFFIQjs {
             }
         }
         if (FT_IS_REFERENCE(featureType)) {
-            void*& value_ptr = *(void**)ptr;
-            if (!convertValueToHost(instance, FT_ADD_REFERENCE(featureType), value_ptr, ctx, value)) {
-                FEATURE_LOG_ERROR("convert value to host failed !");
-                return false;
+            if (!FT_IS_CALLBACK(featureType)) {
+                void*& value_ptr = *(void**)ptr;
+                if (!convertValueToHost(instance, FT_ADD_REFERENCE(featureType), value_ptr, ctx, value)) {
+                    FEATURE_LOG_ERROR("convert value to host failed !");
+                    return false;
+                }
+                return true;
             }
-            return true;
         }
         if (FT_IS_PRIMITIVE(featureType)) {
             switch (FT_GET_VALUE(featureType)) {
