@@ -274,6 +274,15 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/folme.cpp
 FEATURELIST += system_folme
 endif
 
+ifeq ($(CONFIG_BLUETOOTH_FEATURE), y)
+CFEATURELIST += system_bluetooth
+CFEATURELIST += system_bluetooth_bt
+
+ifeq ($(CONFIG_BLUETOOTH_A2DP_SINK), y)
+CFEATURELIST += system_bluetooth_bt_a2dpsink
+endif
+endif
+
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 
 CXXSRCS += $(strip $(foreach i, $(shell seq 1 $(words $(JIDL_PATH))),\
