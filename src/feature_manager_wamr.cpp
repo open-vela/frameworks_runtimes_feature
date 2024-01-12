@@ -762,7 +762,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 strcat(signature, ")");
                 if (sig != 0)
                     signature[strlen(signature)] = sig;
-                if (!registerSymbol((void*)const_get, const_name, signature, (void*)(&member))) {
+                if (!registerSymbol((void*)const_get, const_name, signature, (void*)(member))) {
                     return false;
                 }
                 break;
