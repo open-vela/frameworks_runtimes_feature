@@ -298,7 +298,7 @@ EXPORT_FILES := include/feature_types.h include/feature_context.h include/featur
                 registry/README.md
 
 
-context:: 
+depend:: 
 	@echo "-------------------generate files----------------------"
 	$(foreach i,$(shell seq 1 $(words $(JIDL_PATH))), \
 		$(eval jidl_path=$(word $(i),$(JIDL_PATH))) \
