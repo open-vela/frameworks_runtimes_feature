@@ -1,7 +1,8 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 <%
   module = render.module
-  module_name = render.GetModuleName()
+  raw_module_name = render.GetRawModuleName()
+  module_name = raw_module_name.replace('.', '_')
 %>\
 <%def name="GenInterfaceCtorFunction(func_node, ctor_info)">\
 <%
@@ -261,6 +262,6 @@ ${GenConst(block)}\
 %endfor
 
 // private:
-  readonly clazz_name = "${module_name}";
+  readonly clazz_name = "${raw_module_name}";
   declare init_native(name: string): void;
 }

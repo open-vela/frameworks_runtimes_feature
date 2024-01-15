@@ -538,14 +538,9 @@ void FeatureManagerWamr::release()
 bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
 {
     FEATURE_LOG_INFO("require feature for name: %s", name);
-    auto it = class_name_map_.find(name);
-    if (it == class_name_map_.end()) {
-        FEATURE_LOG_WARN("can't find native name for wasm class '%s'!", name);
-        return false;
-    }
-    auto feature_pair = getFeatureRegistry()->findFeature(it->second.c_str());
+    auto feature_pair = getFeatureRegistry()->findFeature(name);
     if (!feature_pair || !feature_pair->first) {
-        FEATURE_LOG_WARN("can't find native feature '%s'!", it->second.c_str());
+        FEATURE_LOG_WARN("can't find native feature '%s'!", name);
         return false;
     }
     auto description = feature_pair->first;
@@ -629,7 +624,6 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
     /* register class initNative api */
     std::string class_name(description->name);
     std::replace(class_name.begin(), class_name.end(), '.', '_');
-    class_name_map_[class_name] = description->name;
     char* init_name = new char[128];
     native_strings_.push_back(init_name);
     strcpy(init_name, class_name.c_str());
