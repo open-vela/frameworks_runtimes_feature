@@ -4,7 +4,7 @@
 export class Simple {
   private instance: number;
   constructor(){
-    this.init_native(this.clazz_name);
+    this.init_native(Simple.clazz_name);
   }
   declare printStr(c: string): void;
   declare print(...rest: any[]): void;
@@ -26,18 +26,9 @@ export class Simple {
   declare justTestNeverCall2(): void;
   declare bar2(values: number[]): number;
   declare bar3(): string[];
-  get x(): number {
-    return this.const_x();
-  }
-  declare const_x(): number;
-  get y(): string {
-    return this.const_y();
-  }
-  declare const_y(): string;
-  get z(): number {
-    return this.const_z();
-  }
-  declare const_z(): number;
+  static const x: number = 1;
+  static const y: string = "hello world";
+  static const z: number = 9.8;
   get name(): string {
     return this.get_name_0();
   }
@@ -56,6 +47,6 @@ export class Simple {
   declare get_args_0(): string[];
 
 // private:
-  readonly clazz_name = "Simple";
+  static readonly clazz_name = "Simple";
   declare init_native(name: string): void;
 }

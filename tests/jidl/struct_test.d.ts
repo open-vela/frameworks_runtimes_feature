@@ -19,7 +19,7 @@ export class Book {
 export class struct_test {
   private instance: number;
   constructor(){
-    this.init_native(this.clazz_name);
+    this.init_native(struct_test.clazz_name);
   }
   declare foo(a: number, b: Chapter): void;
   declare bar(a: number): Chapter;
@@ -27,6 +27,6 @@ export class struct_test {
   declare print(...rest: any[]): void;
 
 // private:
-  readonly clazz_name = "struct_test";
+  static readonly clazz_name = "struct_test";
   declare init_native(name: string): void;
 }
