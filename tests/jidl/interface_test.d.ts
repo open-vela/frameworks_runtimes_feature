@@ -3,7 +3,7 @@
 export class Animal {
   private instance: number;
   constructor() {
-    this.init_native(this.clazz_name);
+    this.init_native(Animal.clazz_name);
   }
 
   // parent member defines
@@ -11,69 +11,70 @@ export class Animal {
   get name(): string {
     return this.get_name_0();
   }
-
+  declare get_name_0(): string;
   set name(v: string) {
     this.set_name_0(v);
   }
+  declare set_name_0(v: string): void;
 
   get legCount(): number {
     return this.get_legCount_0();
   }
+  declare get_legCount_0(): number;
 
   declare eatFood(foods: string[]): number;
 
   declare run(distance: number, destination: string): string;
 
 
-  readonly clazz_name = "Animal";
-  declare get_name_0(): string;
-  declare set_name_0(v: string): void;
-  declare get_legCount_0(): number;
+  static readonly clazz_name = "Animal";
   declare init_native(i_name: string): void;
 }
 
 export class Bird {
   private instance: number;
   constructor() {
-    this.init_native(this.clazz_name);
+    this.init_native(Bird.clazz_name);
   }
 
   // parent member defines
   // self member defines
-
   declare fly(): string[];
 
   get breed(): string {
     return this.get_breed_0();
   }
-
+  declare get_breed_0(): string;
   set breed(v: string) {
     this.set_breed_0(v);
   }
-
-  readonly clazz_name = "Bird";
-  declare init_native(i_name: string): void;
-  declare get_breed_0(): string;
   declare set_breed_0(v: string): void;
+
+
+  static readonly clazz_name = "Bird";
+  declare init_native(i_name: string): void;
 }
 
 export class Chicken {
   private instance: number;
   constructor() {
-    this.init_native(this.clazz_name);
+    this.init_native(Chicken.clazz_name);
   }
 
   // parent member defines
   get name(): string {
     return this.get_name_0();
   }
+  declare get_name_0(): string;
   set name(v: string) {
     this.set_name_0(v);
   }
+  declare set_name_0(v: string): void;
 
   get legCount(): number {
     return this.get_legCount_0();
   }
+  declare get_legCount_0(): number;
 
   declare eatFood(foods: string[]): number;
 
@@ -84,39 +85,34 @@ export class Chicken {
   get breed(): string {
     return this.get_breed_0();
   }
-
+  declare get_breed_0(): string;
   set breed(v: string) {
     this.set_breed_0(v);
   }
-
+  declare set_breed_0(v: string): void;
 
   // self member defines
   get weight(): number {
     return this.get_weight_0();
   }
-
+  declare get_weight_0(): number;
   set weight(v: number) {
     this.set_weight_0(v);
   }
+  declare set_weight_0(v: number): void;
 
   declare walk(): any;
 
-  readonly clazz_name = "Chicken";
+
+  static readonly clazz_name = "Chicken";
   declare init_native(i_name: string): void;
-  declare get_name_0(): string;
-  declare set_name_0(v: string): void;
-  declare get_legCount_0(): number;
-  declare get_breed_0(): string;
-  declare set_breed_0(v: string): void;
-  declare get_weight_0(): number;
-  declare set_weight_0(v: number): void;
 }
 
 
 export class interface_test {
   private instance: number;
-  constructor() {
-    this.init_native(this.clazz_name);
+  constructor(){
+    this.init_native(interface_test.clazz_name);
   }
   /****** for JIDL Interface constructor function 'createDog' ******/
   createDog(type: number): Animal {
@@ -155,13 +151,12 @@ export class interface_test {
 
   declare setAnimal(animal: Animal): void;
   declare flyFar(distance: number): any;
-
-  flyAway(): any {
-    return this.flyFar(100);
+  flyAway (): any {
+    return this.flyFar (100);
   }
   declare print(...rest: any[]): void;
 
-  // private:
-  readonly clazz_name = "interface_test";
+// private:
+  static readonly clazz_name = "interface_test";
   declare init_native(name: string): void;
 }

@@ -37,9 +37,9 @@ export function main() {
     test.print('after set, test.name=', test.name);
     test.print('test.version=', test.version);
 
-    test.print('test.x=', test.x);
-    test.print('test.y=', test.y);
-    test.print('test.z=', test.z);
+    test.print('test.x=', Simple.x);
+    test.print('test.y=', Simple.y);
+    test.print('test.z=', Simple.z);
 
     let bar6_ret = test.bar6(7, 3.5, false);
 

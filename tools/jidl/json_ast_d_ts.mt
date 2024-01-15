@@ -149,7 +149,7 @@ ${GenStructMember(member)}\
 export class ${i_name} {
   private instance: number;
   constructor() {
-    this.init_native(this.clazz_name);
+    this.init_native(${i_name}.clazz_name);
   }
 
   // parent member defines
@@ -161,7 +161,7 @@ ${GenInterfaceParentMember(i_name, p_member)}\
 ${GenInterfaceClassMember(i_name, member)}\
 %endfor
 
-  readonly clazz_name = "${i_name}";
+  static readonly clazz_name = "${i_name}";
   declare init_native(i_name: string): void;
 }
 
@@ -202,10 +202,7 @@ ${GenInterfaceClass(i_node)}\
   const_type = const_node["value_type"]
   ts_type = render.GenerateTsType(const_type)
 %>\
-  get ${const_name}(): ${ts_type} {
-    return this.const_${const_name}();
-  }
-  declare const_${const_name}(): ${ts_type};
+  static const ${const_name}: ${ts_type} = ${const_val};
 </%def>\
 <%def name="GenUse(use_node)">\
 <%
@@ -245,7 +242,7 @@ ${GenInterface(block)}\
 export class ${module_name} {
   private instance: number;
   constructor(){
-    this.init_native(this.clazz_name);
+    this.init_native(${module_name}.clazz_name);
   }
 %for block in module['members']:
 %if block['type'] == 'function':
@@ -262,6 +259,6 @@ ${GenConst(block)}\
 %endfor
 
 // private:
-  readonly clazz_name = "${raw_module_name}";
+  static readonly clazz_name = "${raw_module_name}";
   declare init_native(name: string): void;
 }

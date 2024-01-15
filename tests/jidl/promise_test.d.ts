@@ -4,7 +4,7 @@
 export class promise_test {
   private instance: number;
   constructor(){
-    this.init_native(this.clazz_name);
+    this.init_native(promise_test.clazz_name);
   }
   declare foo(a: number, b: string): any;
   use_foo (a: number): any {
@@ -18,6 +18,6 @@ export class promise_test {
   declare print(...rest: any[]): void;
 
 // private:
-  readonly clazz_name = "promise_test";
+  static readonly clazz_name = "promise_test";
   declare init_native(name: string): void;
 }
