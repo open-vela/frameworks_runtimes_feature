@@ -51,7 +51,6 @@ private:
     void* wamr_env_;
     std::vector<NativeSymbol*> native_symbols_;
     std::vector<char*> native_strings_;
-    std::map<std::string, std::string> class_name_map_;
 };
 
 }
