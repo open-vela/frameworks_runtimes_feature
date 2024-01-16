@@ -53,7 +53,7 @@ namespace FeatureFFIQjs {
      * @return true
      * @return false
      */
-    bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr, context_ref ctx, feature_value_t& value);
+    bool convertValueToGuest(FeatureType featureType, void* ptr, context_ref ctx, feature_value_t& value);
 }
 
 }

@@ -16,12 +16,10 @@
 
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
-#include "feature_ffi_qjs.h"
 #include "feature_manager_qjs.h"
 #include "feature_log.h"
 #include "feature_prototype_qjs.h"
 #include "feature_utils.h"
-#include "promise_manager.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -32,36 +30,26 @@ using namespace FEATURE;
 
 #define CFUNCDATA_FN(f) ((feature_value_t(*)(feature_context_ref ctx, feature_value_t, int, feature_value_t*, int, feature_value_t*))f)
 
-static inline void free_arg(JSContext* ctx, JSValue& arg)
-{
-    JS_FreeValue(ctx, arg);
-}
-
-static inline JSValue undefined_arg(JSContext* ctx)
-{
-    return JS_UNDEFINED;
-}
-
 namespace ferry {
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
     : FeatureInstance(proto)
+    , PromiseManager((JSContext*)ft_context_get_data(proto->featureManager()->getFeatureContext()))
     , vm_object_(FEATURE_VALUE_UNDEFINED)
     , target_(FEATURE_VALUE_UNDEFINED)
 {
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
     *js_val_ptr = JS_UNDEFINED;
-    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->featureManager()->getFeatureContext()));
 }
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable)
     : FeatureInstance(module_proto, vtable)
+    , PromiseManager((JSContext*)ft_context_get_data(module_proto->featureManager()->getFeatureContext()))
     , vm_object_(FEATURE_VALUE_UNDEFINED)
     , target_(FEATURE_VALUE_UNDEFINED)
 {
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(weak_self_.ft_value);
     *js_val_ptr = JS_UNDEFINED;
-    promise_manager_ = new PromiseManager((JSContext*)ft_context_get_data(prototype()->featureManager()->getFeatureContext()));
 }
 
 void FeatureInstanceQjs::initialize()
@@ -128,8 +116,7 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     }
 
     // release all promises
-    promise_manager_->releasePromises();
-    delete promise_manager_;
+    releasePromises();
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
@@ -153,16 +140,6 @@ int FeatureInstanceQjs::getSameCallback(FtCallbackId cid)
     return getInitialCallbackId(cid);
 }
 
-feature_value_t FeatureInstanceQjs::getPromise(FtPromiseId pid)
-{
-    return promise_manager_->getPromise(pid);
-}
-
-FtPromiseId FeatureInstanceQjs::addPromise(FeatureType resolve_type, FeatureType reject_type)
-{
-    return promise_manager_->addPromise(resolve_type, reject_type);
-}
-
 void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
 {
     // mark callbacks
@@ -172,7 +149,7 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
     }
 
     // mark promies
-    promise_manager_->markValues(rt, mark_func);
+    markPromises(rt, mark_func);
 
     for (auto& pair : prototype()->children()) {
         FeaturePrototypeQjs* proto_qjs = static_cast<FeaturePrototypeQjs*>(pair.second.get());
@@ -223,30 +200,11 @@ void FeatureInstanceQjs::freeWeakRef()
 int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
     int ret = doSettlePromise(resolve, pid, ap);
-    if (!promise_manager_->removePromise(pid)) {
+    if (!removePromise(pid)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
         ret = -2;
     }
     return ret;
-}
-
-int FeatureInstanceQjs::doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap)
-{
-    // get feature instance
-    PromiseData* promise_data = promise_manager_->getPromiseData(pid);
-    if (!promise_data) {
-        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
-        return -1;
-    }
-    int idx = resolve ? 0 : 1;
-    if (feature_is_undefined(promise_data->resolve_funcs[idx])) {
-        FEATURE_LOG_ERROR("callback is undefined!");
-        return -1;
-    }
-
-    FeatureType param_types[2] = { promise_data->resolve_types[idx], FT_VOID };
-    CallbackType cb_type = { .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID };
-    return doInvokeCallback(&cb_type, promise_data->resolve_funcs[idx], ap, 1, 0);
 }
 
 int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
@@ -285,57 +243,9 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
     return callCallback(cb_data, ap, fixed_argc, count - fixed_argc);
 }
 
-bool FeatureInstanceQjs::argToTarget(va_list &ap, FeatureType ftype, JSValue& target)
-{
-    JSContext* ctx = getContext();
-    void *param = extractVariadicParam(ap, ftype);
-    if (!param) {
-        FEATURE_LOG_ERROR("extract callback param failed !");
-        return false;
-    }
-    if (!FeatureFFIQjs::convertValueToGuest(this, ftype, param, ctx, target)) {
-        FEATURE_LOG_ERROR("convert callback param failed !");
-        free(param);
-        return false;
-    }
-    free(param);
-    return true;
-}
-
 int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
-    JSContext* js_ctx = getContext();
-    if (feature_is_undefined(callback)) {
-        FEATURE_LOG_ERROR("callback is undefined !");
-        return -1;
-    }
-
-    // create argv list and initialize to undefined
-    AutoArgs<JSContext*, JSValue> argv(js_ctx, free_arg, undefined_arg, fixed_argc + rest_argc);
-    // convert parameters to feature_value_t
-    for (int i = 0; i < fixed_argc; i++) {
-        FeatureType ftype = callbackType->parameters[i];
-        if (!argToTarget(ap, ftype, argv[i])) {
-            FEATURE_LOG_ERROR("extract callback param failed !");
-            return 0;
-        }
-    }
-
-    // prepare for rest parameters
-    for (int i = fixed_argc; i < fixed_argc + rest_argc; i++) {
-        // it must be FtMalloced.
-        void* arg = va_arg(ap, void*);
-        void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
-        FTObjHeader* header = (FTObjHeader*)header_ptr;
-        if (!FeatureFFIQjs::convertValueToGuest(this, header->featureType, arg, js_ctx, argv[i])) {
-            FEATURE_LOG_ERROR("convert callback rest param failed !");
-            argv[i] = FEATURE_VALUE_UNDEFINED;
-        }
-    }
-
-    feature_value_t ret = feature_call(js_ctx, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
-    feature_free_value(js_ctx, ret);
-    return 0;
+    return invokeJsCallback(callbackType, callback, ap, fixed_argc, rest_argc);
 }
 
 }

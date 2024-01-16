@@ -280,7 +280,7 @@ namespace FeatureFFIQjs {
                             if (cmplx_type->type == COMPLEX_OPTIONAL) {
                                 FEATURE_LOG_DEBUG("propValue is undefined will get value with optinalType!");
                                 OptionalType* optinalType = (OptionalType*)cmplx_type;
-                                ret = convertValueToGuest(instance, optinalType->type, &optinalType->fval, ctx, propValue);
+                                ret = convertValueToGuest(optinalType->type, &optinalType->fval, ctx, propValue);
                                 if (!ret) {
                                     feature_free_value(ctx, propValue);
                                     propValue = FEATURE_UNDEFINED;
@@ -372,7 +372,7 @@ namespace FeatureFFIQjs {
         return true;
     }
 
-    bool convertValueToGuest(FeatureInstance* instance, FeatureType featureType, void* ptr,
+    bool convertValueToGuest(FeatureType featureType, void* ptr,
         context_ref ctx, feature_value_t& value)
     {
         if (!ptr) {
@@ -456,7 +456,7 @@ namespace FeatureFFIQjs {
                         // fill it
                         void* member_ptr = (void*)((char*)ptr + member->offset);
                         feature_value_t prop;
-                        bool ret = convertValueToGuest(instance, member->type, member_ptr, ctx, prop);
+                        bool ret = convertValueToGuest(member->type, member_ptr, ctx, prop);
                         if (!ret) {
                             feature_free_value(ctx, prop);
                             FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
@@ -468,7 +468,7 @@ namespace FeatureFFIQjs {
                 } break;
                 case COMPLEX_OPTIONAL: {
                     OptionalType* optinalType = (OptionalType*)complexType;
-                    bool ret = convertValueToGuest(instance, FT_ADD_REFERENCE(optinalType->type), ptr, ctx, value);
+                    bool ret = convertValueToGuest(FT_ADD_REFERENCE(optinalType->type), ptr, ctx, value);
                     if (!ret) {
                         feature_free_value(ctx, value);
                         value = FEATURE_UNDEFINED;
@@ -497,7 +497,7 @@ namespace FeatureFFIQjs {
                         void* element_ptr = ((char*)arrayData->_element + element_size * i);
                         // convert element value
                         feature_value_t element_obj = FEATURE_UNDEFINED;
-                        if (!convertValueToGuest(instance, element_type, element_ptr, ctx, element_obj)) {
+                        if (!convertValueToGuest(element_type, element_ptr, ctx, element_obj)) {
                             FEATURE_LOG_ERROR("convert array element to guest failed !");
                             feature_free_value(ctx, element_obj);
                             feature_free_value(ctx, value);
@@ -507,20 +507,8 @@ namespace FeatureFFIQjs {
                     }
                 } break;
                 case COMPLEX_PROMISE: {
-                    // convert to guest means return promise object back.
-                    // PromiseType* promiseType = (PromiseType*)complexType;
-                    // get promise data back.
-                    if (!instance) {
-                        FEATURE_LOG_ERROR("convert promise need instance provided !");
-                    }
-                    FEATURE_CHECK_NE(instance, nullptr);
-                    FtPromiseId pid = *(FtPromiseId*)ptr;
-                    feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
-                    if (feature_is_undefined(promise)) {
-                        FEATURE_LOG_ERROR("get promise with pid: %" PRId32 " failed !", pid);
-                        return false;
-                    }
-                    value = feature_dup_value(ctx, promise);
+                    FEATURE_LOG_ERROR("do not support convert promise to target !");
+                    return false;
                 } break;
                 case COMPLEX_INTERFACE: {
                     InterfaceType* interface_type = (InterfaceType*)complexType;

@@ -19,23 +19,17 @@
 #define __PROMISE_MANAGER_H__
 
 #include "feature.h"
-#include "feature_types.h"
+#include "feature_description.h"
 
 #include <map>
 #include <memory>
 
 namespace ferry {
 
-typedef struct PromiseData {
-    feature_value_t promise; // 保存promise对象
-    feature_value_t resolve_funcs[2]; //functions
-    FeatureType resolve_types[2];
-} PromiseData;
-
 class PromiseManager {
 public:
     PromiseManager(JSContext* js_ctx);
-    virtual ~PromiseManager();
+    ~PromiseManager();
 
     FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
 
@@ -43,13 +37,23 @@ public:
 
     void releasePromises();
 
-    PromiseData* getPromiseData(FtPromiseId pid);
-
     feature_value_t getPromise(FtPromiseId pid);
 
-    void markValues(feature_runtime_ref rt, feature_mark_func mark_func);
+    void markPromises(feature_runtime_ref rt, feature_mark_func mark_func);
+
+protected:
+    int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
+
+    int invokeJsCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc);
 
 private:
+    typedef struct PromiseData {
+        feature_value_t promise; // 保存promise对象
+        feature_value_t resolve_funcs[2]; //functions
+        FeatureType resolve_types[2];
+    } PromiseData;
+
+    PromiseData* getPromiseData(FtPromiseId pid);
 
     FtPromiseId curr_pid_ = 0;
     JSContext* js_ctx_ = nullptr;

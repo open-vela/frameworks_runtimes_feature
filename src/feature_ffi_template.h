@@ -185,7 +185,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                             if (cmp_type->type == COMPLEX_OPTIONAL) {
                                 FEATURE_LOG_DEBUG("field is undefined, we get value with optinalType!");
                                 OptionalType* opt_type = (OptionalType*)cmp_type;
-                                ret = convertValueToTarget(instance, opt_type->type, ctx, &opt_type->fval, field);  // to do by wjf
+                                ret = convertValueToTarget(opt_type->type, ctx, &opt_type->fval, field);  // to do by wjf
                                 if (!ret) {
                                     value_translator::freeValue(ctx, field);
                                     FEATURE_LOG_ERROR("propValue convert optional failed!");
@@ -274,8 +274,8 @@ void nativeToTarget(TCtx ctx, void* ptr, TTarget& target) {
   value_translator::toTarget(ctx, *((TNative*)ptr), &target);
 }
 
-template<typename TInstance, typename TCtx, typename TTarget>
-bool convertValueToTarget(TInstance* instance, FeatureType ftype,
+template<typename TCtx, typename TTarget>
+bool convertValueToTarget(FeatureType ftype,
     TCtx ctx, void* pnative, TTarget& target)
 {
     FEATURE_CHECK_NE(pnative, nullptr);
@@ -357,7 +357,7 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
                     // fill it
                     void* member_ptr = (void*)((char*)pnative + member->offset);
                     TTarget prop;
-                    bool ret = convertValueToTarget(instance, member->type, ctx, member_ptr, prop);
+                    bool ret = convertValueToTarget(member->type, ctx, member_ptr, prop);
                     if (!ret) {
                         value_translator::freeValue(ctx, prop);
                         FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
@@ -369,7 +369,7 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
             } break;
             case COMPLEX_OPTIONAL: {
                 OptionalType* opt_type = (OptionalType*)complex_type;
-                bool ret = convertValueToTarget(instance, opt_type->type, ctx, pnative, target);
+                bool ret = convertValueToTarget(opt_type->type, ctx, pnative, target);
                 if (!ret) {
                     value_translator::freeValue(ctx, target);
                     FEATURE_LOG_ERROR("convert optional to guest failed !");
@@ -393,7 +393,7 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
                     void* elem_ptr = ((char*)array_data->_element + elem_size * i);
                     // convert element target
                     TTarget elem_val;
-                    if (!convertValueToTarget(instance, elem_type, ctx, elem_ptr, elem_val)) {
+                    if (!convertValueToTarget(elem_type, ctx, elem_ptr, elem_val)) {
                         FEATURE_LOG_ERROR("convert array element to guest failed !");
                         value_translator::freeValue(ctx, elem_val);
                         value_translator::freeValue(ctx, target);
@@ -403,7 +403,7 @@ bool convertValueToTarget(TInstance* instance, FeatureType ftype,
                 }
             } break;
             case COMPLEX_PROMISE: {
-                FEATURE_LOG_ERROR("do not support convert promise to host !");
+                FEATURE_LOG_ERROR("do not support convert promise to target !");
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
@@ -610,7 +610,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     // process return value, do not handle promise, it is handled before we invoke ffi_call.
     if (!is_promise && method->return_type != FT_VOID) {
         // process return value
-        if (!convertValueToTarget(instance, method->return_type, ctx, ffi_ret_value, ret_val)) {
+        if (!convertValueToTarget(method->return_type, ctx, ffi_ret_value, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             value_translator::freeValue(ctx, ret_val);
             return false;
@@ -664,7 +664,7 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     // invoke
     ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
     // process return value
-    if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
+    if (!convertValueToTarget(feature_type, ctx, ffi_ret_value, ret_val)) {
         FEATURE_LOG_ERROR("can not convert return value to guest!");
         value_translator::freeValue(ctx, ret_val);
         return false;
@@ -764,7 +764,7 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
     // invoke
     ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
     // process return value
-    if (!convertValueToTarget(instance, feature_type, ctx, ffi_ret_value, ret_val)) {
+    if (!convertValueToTarget(feature_type, ctx, ffi_ret_value, ret_val)) {
         FEATURE_LOG_ERROR("can not convert return value to guest!");
         value_translator::freeValue(ctx, ret_val);
         return false;
