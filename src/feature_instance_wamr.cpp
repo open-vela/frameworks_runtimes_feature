@@ -17,7 +17,6 @@
 #include "feature_manager_wamr.h"
 
 #include "feature_ffi_wamr.h"
-#include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_prototype.h"
 #include "feature_utils.h"
@@ -59,18 +58,26 @@ namespace ferry {
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
     : FeatureInstance(proto)
-    , instance_qjs_(new FeatureInstanceQjs(prototype()))
+    , PromiseManager((JSContext*)ft_context_get_data(proto->featureManager()->getFeatureContext()))
 {
 }
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* module_proto, VTable* vtable)
     : FeatureInstance(module_proto, vtable)
-    , instance_qjs_(new FeatureInstanceQjs(prototype()))
+    , PromiseManager((JSContext*)ft_context_get_data(module_proto->featureManager()->getFeatureContext()))
 {
 }
 
 FeatureInstanceWamr::~FeatureInstanceWamr()
 {
+    auto proto = prototype();
+    wasm_exec_env_t env = getContext();
+    // invoke callback
+    if (proto->description()->native_callbacks && proto->description()->native_callbacks->onDetached) {
+        FEATURE_LOG_DEBUG("invoke onDettached callback...");
+        proto->description()->native_callbacks->onDetached(env, this);
+    }
+    release();
 }
 
 bool FeatureInstanceWamr::removeCallback(FtCallbackId cid)
@@ -80,9 +87,13 @@ bool FeatureInstanceWamr::removeCallback(FtCallbackId cid)
 
 int FeatureInstanceWamr::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
-    return instance_qjs_->settlePromise(resolve, pid, ap);
+    int ret = doSettlePromise(resolve, pid, ap);
+    if (!removePromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
+        ret = -2;
+    }
+    return ret;
 }
-
 
 int FeatureInstanceWamr::invokeCallback(FtCallbackId cid, va_list& ap)
 {
@@ -260,19 +271,11 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
     return 0;
 }
 
-FtPromiseId FeatureInstanceWamr::addPromise(FeatureType resolve_type, FeatureType reject_type)
-{
-    return instance_qjs_->addPromise(resolve_type, reject_type);
-}
-
-feature_value_t FeatureInstanceWamr::getPromise(FtPromiseId pid)
-{
-    return instance_qjs_->getPromise(pid);
-}
-
 void FeatureInstanceWamr::release()
 {
     clearCallbacks();
+    // release all promises
+    releasePromises();
 }
 
 int FeatureInstanceWamr::getSameCallback(FtCallbackId cid)

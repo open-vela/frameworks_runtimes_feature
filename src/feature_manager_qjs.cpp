@@ -368,7 +368,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 feature_free_value(ctx, ret_val);
                 ret_val = FEATURE_UNDEFINED;
                 got_error = true;
-            } else if (!FeatureFFIQjs::convertValueToGuest(instance, method->return_type, ffi_ret_value, ctx, ret_val)) {
+            } else if (!FeatureFFIQjs::convertValueToGuest(method->return_type, ffi_ret_value, ctx, ret_val)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(ctx, ret_val);
                 ret_val = FEATURE_EXCEPTION;
@@ -459,7 +459,7 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
         // invoke
         ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
         // process return value
-        if (!FeatureFFIQjs::convertValueToGuest(instance, feature_type, ffi_ret_value, ctx, ret_val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(feature_type, ffi_ret_value, ctx, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_EXCEPTION;
@@ -562,7 +562,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         // invoke
         ffi_call(&cif, member_const->func.callback, ffi_ret_value, ffi_arg_values);
         // process return value
-        if (!FeatureFFIQjs::convertValueToGuest(nullptr, member_const->type, ffi_ret_value, ctx, ret_val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(member_const->type, ffi_ret_value, ctx, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_VALUE_UNDEFINED;
@@ -574,7 +574,7 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
         }
     } else {
         // check type
-        if (!FeatureFFIQjs::convertValueToGuest(nullptr, member_const->type, (void*)&member_const->data, ctx, ret_val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(member_const->type, (void*)&member_const->data, ctx, ret_val)) {
             FEATURE_LOG_ERROR("can not convert const value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_VALUE_UNDEFINED;

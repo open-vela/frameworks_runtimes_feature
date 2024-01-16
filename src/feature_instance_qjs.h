@@ -23,6 +23,7 @@
 #include "feature_common.h"
 #include "callback_manager_qjs.h"
 #include "callback_manager.h"
+#include "promise_manager.h"
 
 #include <map>
 #include <memory>
@@ -37,10 +38,13 @@ typedef struct WeakRef {
     struct weakref_list_node link;
 } WeakRef;
 
-class FeatureInstanceQjs : public FeatureInstance, public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs> {
+class FeatureInstanceQjs : public FeatureInstance, public PromiseManager,
+        public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs> {
 public:
     FeatureInstanceQjs(FeaturePrototype* proto);
+
     FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable);
+
     virtual ~FeatureInstanceQjs();
 
     void setVmObject(feature_value_t vm_object);
@@ -61,10 +65,6 @@ public:
 
     bool checkCallback(FtCallbackId cid);
 
-    feature_value_t getPromise(FtPromiseId pid);
-
-    FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
-
     void markValues(feature_runtime_ref rt, feature_mark_func mark_func);
 
     bool initWeakRef(feature_value_t feature_object);
@@ -78,15 +78,11 @@ public:
     virtual void initialize();
 
     feature_value_t dupTarget();
+
 private:
-    int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
-
-    bool argToTarget(va_list &ap, FeatureType ftype, JSValue& target);
-
     feature_value_t vm_object_;
     feature_value_t target_;
     WeakRef weak_self_;
-    PromiseManager* promise_manager_ = nullptr;
 };
 
 }

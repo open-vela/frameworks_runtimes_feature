@@ -17,8 +17,17 @@
 #include "promise_manager.h"
 #include "feature_common.h"
 #include "feature_log.h"
+#include "feature_ffi_qjs.h"
 
-using namespace FEATURE;
+static inline void free_arg(JSContext* ctx, JSValue& arg)
+{
+    JS_FreeValue(ctx, arg);
+}
+
+static inline JSValue undefined_arg(JSContext* ctx)
+{
+    return JS_UNDEFINED;
+}
 
 namespace ferry {
 
@@ -84,7 +93,26 @@ void PromiseManager::releasePromises()
     promises_.clear();
 }
 
-PromiseData* PromiseManager::getPromiseData(FtPromiseId pid)
+int PromiseManager::doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap)
+{
+    // get feature instance
+    PromiseData* promise_data = getPromiseData(pid);
+    if (!promise_data) {
+        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
+        return -1;
+    }
+    int idx = resolve ? 0 : 1;
+    if (feature_is_undefined(promise_data->resolve_funcs[idx])) {
+        FEATURE_LOG_ERROR("callback is undefined!");
+        return -1;
+    }
+
+    FeatureType param_types[2] = { promise_data->resolve_types[idx], FT_VOID };
+    CallbackType cb_type = { .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID };
+    return invokeJsCallback(&cb_type, promise_data->resolve_funcs[idx], ap, 1, 0);
+}
+
+PromiseManager::PromiseData* PromiseManager::getPromiseData(FtPromiseId pid)
 {
     if (!promises_.count(pid)) {
         return nullptr;
@@ -101,7 +129,7 @@ feature_value_t PromiseManager::getPromise(FtPromiseId pid)
     return data->promise;
 }
 
-void PromiseManager::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
+void PromiseManager::markPromises(feature_runtime_ref rt, feature_mark_func mark_func)
 {
     // mark promies
     for (auto& pair : promises_) {
@@ -109,6 +137,57 @@ void PromiseManager::markValues(feature_runtime_ref rt, feature_mark_func mark_f
         feature_mark_value(rt, pair.second->resolve_funcs[0], mark_func);
         feature_mark_value(rt, pair.second->resolve_funcs[1], mark_func);
     }
+}
+
+static bool argToTarget(JSContext* js_ctx, va_list &ap, FeatureType ftype, JSValue& target)
+{
+    void *param = extractVariadicParam(ap, ftype);
+    if (!param) {
+        FEATURE_LOG_ERROR("extract callback param failed !");
+        return false;
+    }
+    if (!FeatureFFIQjs::convertValueToGuest(ftype, param, js_ctx, target)) {
+        FEATURE_LOG_ERROR("convert callback param failed !");
+        free(param);
+        return false;
+    }
+    free(param);
+    return true;
+}
+
+int PromiseManager::invokeJsCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
+{
+    if (feature_is_undefined(callback)) {
+        FEATURE_LOG_ERROR("callback is undefined !");
+        return -1;
+    }
+
+    // create argv list and initialize to undefined
+    AutoArgs<JSContext*, JSValue> argv(js_ctx_, free_arg, undefined_arg, fixed_argc + rest_argc);
+    // convert parameters to feature_value_t
+    for (int i = 0; i < fixed_argc; i++) {
+        FeatureType ftype = callbackType->parameters[i];
+        if (!argToTarget(js_ctx_, ap, ftype, argv[i])) {
+            FEATURE_LOG_ERROR("extract callback param failed !");
+            return 0;
+        }
+    }
+
+    // prepare for rest parameters
+    for (int i = fixed_argc; i < fixed_argc + rest_argc; i++) {
+        // it must be FtMalloced.
+        void* arg = va_arg(ap, void*);
+        void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
+        FTObjHeader* header = (FTObjHeader*)header_ptr;
+        if (!FeatureFFIQjs::convertValueToGuest(header->featureType, arg, js_ctx_, argv[i])) {
+            FEATURE_LOG_ERROR("convert callback rest param failed !");
+            argv[i] = FEATURE_VALUE_UNDEFINED;
+        }
+    }
+
+    feature_value_t ret = feature_call(js_ctx_, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
+    feature_free_value(js_ctx_, ret);
+    return 0;
 }
 
 }

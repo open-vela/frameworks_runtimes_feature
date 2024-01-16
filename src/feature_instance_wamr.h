@@ -20,10 +20,9 @@
 
 #include "feature.h"
 #include "feature_instance.h"
-#include "feature_common.h"
 #include "callback_manager_wamr.h"
 #include "callback_manager.h"
-#include "gc_object.h"
+#include "promise_manager.h"
 
 #include <map>
 #include <memory>
@@ -31,12 +30,14 @@
 namespace ferry {
 
 class FeaturePrototype;
-class FeatureInstanceQjs;
 
-class FeatureInstanceWamr : public FeatureInstance, public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
+class FeatureInstanceWamr : public FeatureInstance, public PromiseManager,
+        public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
 public:
     FeatureInstanceWamr(FeaturePrototype* proto);
+
     FeatureInstanceWamr(FeaturePrototype* module_proto, VTable* vtable);
+
     virtual ~FeatureInstanceWamr();
 
     virtual int getSameCallback(FtCallbackId cid);
@@ -49,10 +50,6 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
-    FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
-
-    feature_value_t getPromise(FtPromiseId pid);
-
     void release();
 
     wasm_exec_env_t getContext();
@@ -63,8 +60,6 @@ private:
     bool argToTarget(va_list &ap, FeatureType ftype, uint64_t& target);
 
     bool variArgToTarget(void *arg, wasm_value_t& target);
-
-    std::unique_ptr<FeatureInstanceQjs> instance_qjs_;
 };
 
 }
