@@ -330,12 +330,14 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
         }
     }
     if (FT_IS_REFERENCE(ftype)) {
-        void*& value_ptr = *(void**)ptr;
-        if (!convertValueToHost(instance, FT_ADD_REFERENCE(ftype), value_ptr, exec_env, value)) {
-            FEATURE_LOG_ERROR("convert value to host failed !");
-            return false;
+        if (!FT_IS_CALLBACK(ftype)) {
+            void*& value_ptr = *(void**)ptr;
+            if (!convertValueToHost(instance, FT_ADD_REFERENCE(ftype), value_ptr, exec_env, value)) {
+                FEATURE_LOG_ERROR("convert value to host failed !");
+                return false;
+            }
+            return true;
         }
-        return true;
     }
     if (FT_IS_PRIMITIVE(ftype)) {
         switch (FT_GET_VALUE(ftype)) {
@@ -422,7 +424,14 @@ bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr
                     member = &objMapType.members[i];
                     wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
                     void *member_ptr = (void *)((char *)ptr + member->offset);
-                    bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, *((uint64_t*)&val));
+                    bool ret;
+
+                    if (FT_IS_CALLBACK(member->type)) {
+                        ret = convertValueToHost(instance, FT_ADD_REFERENCE(member->type), member_ptr, exec_env, *((uint64_t*)&val));
+                    } else {
+                        ret = convertValueToHost(instance, member->type, member_ptr, exec_env, *((uint64_t*)&val));
+                    }
+
                     // feature_free_value(ctx, propValue);
                     if (!ret) {
                         printf("get property value for key: %s failed !",
