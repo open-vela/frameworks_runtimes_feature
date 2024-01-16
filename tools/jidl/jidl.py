@@ -157,8 +157,8 @@ class JIDL(Parser):
   t_ELLIPSIS = r'\.\.\.'
   t_COLON = ':'
   t_DOT = r'\.'
-  t_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
-  t_NUMBER = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+  t_INTEGER = r'(\+|-)?\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+  t_NUMBER = r'(\+|-)?((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
   t_LITERAL = r'\"([^\\\n]|(\\.))*?\"'
   t_ignore = " \t;"
 
