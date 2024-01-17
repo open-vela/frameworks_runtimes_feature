@@ -3,7 +3,6 @@
 #include "mockatest.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
-#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 

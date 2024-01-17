@@ -22,9 +22,7 @@
 #include <memory>
 #include <string.h>
 #include <string>
-extern "C" {
-#include "ajs_cfeatures_init.h"
-}
+
 namespace ferry {
 
 bool FeatureRegistry::init(const char* package_name)

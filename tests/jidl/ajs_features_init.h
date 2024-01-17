@@ -13,3 +13,11 @@ bool jse_ATest_initFeature(FeatureRegistryHandle handle);
 // bool jse_mockatest_initFeature(FeatureRegistryHandle handle);
 // bool jse_device_initFeature(FeatureRegistryHandle handle);
 // bool jse_feat_test_initFeature(FeatureRegistryHandle handle);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+bool jse_struct_test_initFeature(FeatureRegistryHandle handle);
+#ifdef __cplusplus
+}
+#endif

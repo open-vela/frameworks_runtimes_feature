@@ -208,6 +208,15 @@ static inline int FT_IS_REFERENCE(FeatureType featureType)
     return isRef;
 }
 
+/**
+ * @brief register feature to feature registry
+ *
+ * @param handle
+ * @param description
+ * @return bool
+ */
+bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescription* description);
+
 #ifdef __cplusplus
 }
 #endif
