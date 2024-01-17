@@ -706,7 +706,6 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
 #include "${header_name}"
 #include "ajs_features_init.h"
 #include "feature_description.h"
-#include "feature_main_exports.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 

@@ -104,7 +104,6 @@ add_executable(${PROJECT_NAME}
     builtin/builtin_console.cpp
     ajs_features_list.h
     ajs_features_init.h
-    ajs_cfeatures_init.h
     ${LIBDYNTYPE_SRC}
     ${STDLIB_SOURCE}
     ${STRUCT_INDIRECT_SOURCE}

@@ -54,11 +54,6 @@ ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h),)
 	@echo "" > $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
 endif
 
-ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h),)
-	@echo "ajs_cfeatures_init.h is empty, need create it"
-	@echo "" >> $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h
-endif
-
 ifeq ($(FEATURELIST),)
 	@echo "FEATURELIST is empty"
 	@echo "" > $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
@@ -73,12 +68,17 @@ ifeq ($(CFEATURELIST),)
 else
 	@echo "CFEATURELIST is not empty"
 	@$(foreach module,  $(sort ${CFEATURELIST}), echo "jse_${module}_initFeature(handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h;)
-	@$(foreach module,  $(sort ${CFEATURELIST}), echo "bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h;)
+	@echo "#ifdef __cplusplus" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@echo "extern \"C\" {" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@echo "#endif" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@$(foreach module,  $(sort ${CFEATURELIST}), echo "    bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h;)
+	@echo "#ifdef __cplusplus" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@echo "}" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	@echo "#endif" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 endif
 
 distclean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
-	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_cfeatures_init.h
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
 	$(call DELFILE, $(PDATLIST))
 
