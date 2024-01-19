@@ -22,11 +22,13 @@
 #include "feature_exports.h"
 #include "request.h"
 #include "uv_ext.h"
+#include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <malloc.h>
 #include <map>
+#include <string>
 #include <time.h>
 #include <type_traits>
 
@@ -73,7 +75,9 @@ typedef struct
 
 RequestContext* getRequestContext(FeatureInstanceHandle handle)
 {
-    return (RequestContext*)FeatureInstanceGetUserData(handle, "request_context");
+    void* user_data = FeatureInstanceGetUserData(handle, "request_context");
+    assert(user_data != nullptr);
+    return static_cast<RequestContext*>(user_data);
 }
 
 typedef struct {
@@ -91,6 +95,47 @@ typedef struct {
     off_t pre = -1;
 } RequestInfo;
 
+#define DOWNLOAD_RESULT_CACHE_SIZE 10
+typedef struct
+{
+    bool success;
+    int code;
+    const char* data;
+} DownloadResult;
+
+std::map<std::string, DownloadResult*>* getDownloadResults(FeatureInstanceHandle handle)
+{
+    void* user_data = FeatureInstanceGetUserData(handle, "download_results");
+    assert(user_data != nullptr);
+    return static_cast<std::map<std::string, DownloadResult*>*>(user_data);
+}
+
+void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
+{
+    REQUEST_INFO("add download result {%s, %s, code: %d, success: %d}", uuid, result->data, result->code, result->success);
+
+    std::map<std::string, DownloadResult*>* downloadResults = getDownloadResults(handle);
+    (*downloadResults)[uuid] = result;
+    if ((*downloadResults).size() >= DOWNLOAD_RESULT_CACHE_SIZE) {
+        REQUEST_INFO("downloadResults size is out of range, free downloadResults.begin()");
+        free((void*)(*downloadResults).begin()->second->data);
+        (*downloadResults).erase((*downloadResults).begin());
+    }
+}
+
+void clearDownloadResults(FeatureManagerHandle handle)
+{
+    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetUserData(handle, "download_results"));
+    if (downloadResults == nullptr)
+        return;
+    for (auto it = downloadResults->begin(); it != downloadResults->end(); ++it) {
+        free((void*)it->second->data);
+        free(it->second);
+    }
+
+    delete downloadResults;
+}
+
 void freeRequestInfo(RequestInfo* info);
 
 void __request_cancel(RequestInfo* info);
@@ -102,21 +147,34 @@ void system_request_onRegister(const char* feature_name)
 void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    RequestContext* th = static_cast<RequestContext*>(malloc(sizeof(*th)));
-    if (!th) {
-        REQUEST_ERROR("malloc fail");
-        return;
-    }
-    th->exit = false;
-    th->pkg_name = FeatureGetPackageName(handle);
-    if (!th->pkg_name || strlen(th->pkg_name) == 0) {
-        REQUEST_ERROR("package name is null!");
-        th->pkg_name = "request_test";
-    }
-    weakref_list_initialize(&th->linklist);
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
-    assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
-    FeatureSetUserData(manager, "request_context", th);
+    RequestContext* th = (RequestContext*)FeatureGetUserData(handle, "request_context");
+    if (th == nullptr) {
+        th = static_cast<RequestContext*>(malloc(sizeof(*th)));
+        if (!th) {
+            REQUEST_ERROR("malloc RequestContext fail");
+            return;
+        }
+        th->exit = false;
+        th->pkg_name = FeatureGetPackageName(handle);
+        if (!th->pkg_name || strlen(th->pkg_name) == 0) {
+            REQUEST_ERROR("package name is null!");
+            th->pkg_name = "request_test";
+        }
+        weakref_list_initialize(&th->linklist);
+        assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
+        FeatureSetUserData(manager, "request_context", th);
+    }
+
+    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetUserData(handle, "download_results"));
+    if (downloadResults == nullptr) {
+        downloadResults = new std::map<std::string, DownloadResult*>();
+        if (!downloadResults) {
+            REQUEST_ERROR("malloc downloadResults fail");
+            return;
+        }
+        FeatureSetUserData(manager, "download_results", downloadResults);
+    }
 }
 void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
@@ -144,7 +202,9 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    RequestContext* th = getRequestContext(handle);
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
+    clearDownloadResults(manager);
+    RequestContext* th = static_cast<RequestContext*>(FeatureGetUserData(manager, "request_context"));
     if (!th)
         return;
     // app 退出，cancel掉所有请求
@@ -184,52 +244,52 @@ void freeRequestInfo(RequestInfo* info)
 static RequestInfo* shareInfo = NULL;
 
 // generate token
-const char* uuid()
+char* uuid()
 {
     char buf[100] = "";
     time_t now = time(NULL);
     srand((unsigned int)now);
     sprintf(buf, "%ld-%d", (long int)now, rand());
-
-    char* token = static_cast<char*>(FeatureMalloc(strlen(buf) + 1, FT_CHAR));
-    strncpy(token, buf, strlen(buf));
-    return token;
+    return strdup(buf);
 }
 
 static void __request_cb(int state, uv_response_t* response)
 {
-    REQUEST_INFO("==========> __request_cb, state = %d", state);
+    REQUEST_INFO("in __request_cb, state = %d", state);
     if (shareInfo)
         shareInfo = NULL;
     RequestInfo* info = static_cast<RequestInfo*>(response->userp);
-    REQUEST_INFO("info = %p", info);
     if (!info)
         return;
     FeatureInstanceHandle feature = info->feature_handle;
     RequestContext* th = getRequestContext(feature);
+    DownloadResult* res = static_cast<DownloadResult*>(malloc(sizeof(DownloadResult)));
     if (state == UV_REQUEST_DONE) {
         if (info->request_type == UV_DOWNLOAD) {
             // 返回文件绝对地址
-            // REQUEST_INFO("==========> success = %d", info->success);
             system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
-            // REQUEST_INFO("==========> response->body = %s", response->body);
             char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
-            char* uri = static_cast<char*>(FeatureMalloc(strlen(body) + 1, FT_CHAR));
-            memcpy(uri, body, strlen(body));
-            param->uri = uri;
+            param->uri = body;
             INVOKE_SUCCESS_CB(info->success, param);
+            res->success = true;
+            res->data = strdup(body);
+            res->code = UV_REQUEST_DONE;
             free(body);
         }
     } else if (state == UV_REQUEST_ERROR) {
         // body内存的是绝对路径的file位置
-        // REQUEST_INFO("==========> body = %s", response->body);
-        // REQUEST_INFO("==========> fail = %d", info->fail);
-        INVOKE_FAIL_CB(info->fail, response->body, response->httpcode);
+        REQUEST_INFO("request error: %s", response->body);
+        INVOKE_FAIL_CB(info->fail, response->body, TASK_FAILED);
+        res->success = false;
+        res->data = strdup(response->body);
+        res->code = TASK_FAILED;
     } else if (state == REQUEST_CANCEL) {
         INVOKE_FAIL_CB(info->fail, "user cancel request", state);
+        res->success = false;
+        res->data = strdup(response->body);
+        res->code = CANCEL_ERROR_CODE;
     }
-
-    // REQUEST_INFO("==========> complete = %d", info->complete);
+    addResult(feature, info->uuid, res);
     INVOKE_COMPLET_CB(info->complete);
 
     weakref_list_delete(&info->node);
@@ -401,8 +461,8 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     assert(uv_request_commit(th->handle, info->request, __request_cb) == 0);
     suc_param = system_requestMallocdownload_succ_t();
 
-    suc_param->token = uuid();
-    info->uuid = strdup(suc_param->token);
+    info->uuid = uuid();
+    suc_param->token = info->uuid;
     // REQUEST_INFO("suc_param._token = %s, info = %p", suc_param->token, info);
     INVOKE_SUCCESS_CB(param->success, suc_param);
     INVOKE_COMPLET_CB(param->complete);
@@ -424,6 +484,8 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
     int code;
     const char* msg;
     RequestContext* th = getRequestContext(feature);
+    system_request_dl_cmpl_succ_t* succ_param;
+    std::map<std::string, DownloadResult*>* downloadResults = getDownloadResults(feature);
 
     if (param->token == NULL) {
         code = ARGSERROR;
@@ -444,15 +506,28 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
             res->fail = param->fail;
             res->complete = param->complete;
         } else {
-            code = TASK_NOT_EXISTS;
-            msg = "task not exist";
-            goto fail;
+            auto it = (*downloadResults).find(param->token);
+            if (it != (*downloadResults).end()) {
+                if (it->second->success) {
+                    REQUEST_INFO("get (*downloadResults).data = %s", it->second->data);
+                    succ_param = system_requestMallocdl_cmpl_succ_t();
+                    succ_param->uri = it->second->data;
+                    INVOKE_SUCCESS_CB(param->success, succ_param);
+                } else {
+                    INVOKE_FAIL_CB(param->fail, it->second->data, it->second->code);
+                }
+                INVOKE_COMPLET_CB(param->complete);
+            } else {
+                code = TASK_NOT_EXISTS;
+                msg = "task not exist";
+                goto fail;
+            }
         }
         return;
     }
 fail:
-    FeatureInvokeCallback(feature, param->fail, msg, code);
-    FeatureInvokeCallback(feature, param->complete);
+    INVOKE_FAIL_CB(param->fail, msg, code);
+    INVOKE_COMPLET_CB(param->complete);
 }
 
 void system_request_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
