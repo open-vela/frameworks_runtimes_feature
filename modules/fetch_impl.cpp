@@ -218,19 +218,16 @@ static void fetch_request_cb(int state, uv_response_t* response) {
   fetch_t* p = static_cast<fetch_t*>(response->userp);
   ASSERT_RET(p);
   GET_FEATURE_AND_CTX(p);
-  FETCH_DEBUG("state:%d \nbody:%s \nheaders:%s", state, response->body,
+  FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
               response->headers);
   if (state == UV_REQUEST_DONE) {
     system_fetch_SuccessRes res;
     res.code = response->httpcode;
-    res.data = (ft_value_t*)FeatureMalloc(
-        sizeof(ft_value_t) + strlen(response->body), FT_ANY);
-    res.headers = (ft_value_t*)FeatureMalloc(
-        sizeof(ft_value_t) + strlen(response->headers), FT_ANY);
+
     ft_value_t ft_data = ft_from_string(p->ft_ctx, response->body);
     ft_value_t ft_header = ft_from_string(p->ft_ctx, response->headers);
-    memcpy(res.data, &ft_data, strlen(response->body));
-    memcpy(res.headers, &ft_header, strlen(response->headers));
+    res.data = &ft_data;
+    res.headers = &ft_header;
 
     if (check_any(res.data)) {
       INVOKE_SUCCESS_CB(p->success_cb, &res);
@@ -238,10 +235,6 @@ static void fetch_request_cb(int state, uv_response_t* response) {
       INVOKE_FAIL_CB(p->fail_cb, "responseType dosen't match response data",
                      ErrorCode::IOERROR);
     }
-
-    FeatureFreeValue(res.data);
-    FeatureFreeValue(res.headers);
-
   } else {
     if (state == REQUEST_CANCEL) {
       FETCH_INFO(USER_ABORT_MSG);
