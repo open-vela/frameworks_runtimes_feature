@@ -71,7 +71,10 @@ typedef struct
     int exit;
 } RequestContext;
 
-RequestContext* th = NULL;
+RequestContext* getRequestContext(FeatureInstanceHandle handle)
+{
+    return (RequestContext*)FeatureInstanceGetUserData(handle, "request_context");
+}
 
 typedef struct {
     int success = -1;
@@ -99,7 +102,7 @@ void system_request_onRegister(const char* feature_name)
 void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    th = static_cast<RequestContext*>(malloc(sizeof(*th)));
+    RequestContext* th = static_cast<RequestContext*>(malloc(sizeof(*th)));
     if (!th) {
         REQUEST_ERROR("malloc fail");
         return;
@@ -113,6 +116,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
     weakref_list_initialize(&th->linklist);
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
+    FeatureSetUserData(manager, "request_context", th);
 }
 void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
@@ -123,6 +127,7 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     // 退出页面，取消挂载在该instancehandle上的request请求
+    RequestContext* th = getRequestContext(handle);
     RequestInfo *info, *temp;
     weakref_list_for_every_entry_safe(&th->linklist, info, temp, RequestInfo, node)
     {
@@ -139,6 +144,7 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    RequestContext* th = getRequestContext(handle);
     if (!th)
         return;
     // app 退出，cancel掉所有请求
@@ -200,6 +206,7 @@ static void __request_cb(int state, uv_response_t* response)
     if (!info)
         return;
     FeatureInstanceHandle feature = info->feature_handle;
+    RequestContext* th = getRequestContext(feature);
     if (state == UV_REQUEST_DONE) {
         if (info->request_type == UV_DOWNLOAD) {
             // 返回文件绝对地址
@@ -279,6 +286,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     char *header_value, *kv, *pos_1, *pos_2, *absolute_path;
     size_t i = 1, j = 0, code;
     system_request_download_succ_t* suc_param;
+    RequestContext* th = getRequestContext(feature);
 
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     RequestInfo* info = static_cast<RequestInfo*>(malloc(sizeof(RequestInfo)));
@@ -413,9 +421,10 @@ callFail:
 void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData append_data, system_request_dl_cmpl_t* param)
 {
     REQUEST_INFO("onDownloadComplete token = %s", param->token);
-    // REQUEST_INFO("suc = %d, fail = %d, compl = %d", param->success, param->fail, param->complete);
     int code;
     const char* msg;
+    RequestContext* th = getRequestContext(feature);
+
     if (param->token == NULL) {
         code = ARGSERROR;
         msg = "token is missing";
