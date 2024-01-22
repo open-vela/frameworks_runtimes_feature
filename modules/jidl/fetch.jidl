@@ -42,7 +42,7 @@ struct FetchPara{
   object header;
   string method = "";   //MethodType
   string responseType = "";   //ResponseType
-  int timeout = 0;
+  int timeout = 20000;
   callback success_cb success;
   callback fail_cb fail;
   callback complete_cb complete;

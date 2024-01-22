@@ -94,6 +94,7 @@ typedef struct fetch_s {
   FtCallbackId complete_cb;
   std::string filename;
   int type;
+  Fetch::ResponseType response_type;
   bool exit;
   struct weakref_list_node node;
   uv_request_t* request;
@@ -214,6 +215,26 @@ bool get_method(FtString method, std::string& out) {
   return true;
 }
 
+static FtAny get_response_data(fetch_t* fetch, char* body, ft_value_t* out) {
+  assert(fetch);
+  if (!body || !out) {
+    FETCH_ERROR("arg err! body:%p,out:%p",body,out);
+    return NULL;
+  }
+
+  switch (fetch->response_type) {
+    case Fetch::ResponseType::TXT:
+    case Fetch::ResponseType::ARRAYBUFFER:
+    case Fetch::ResponseType::FILE:
+      *out = ft_from_string(fetch->ft_ctx, body);
+      break;
+    default:
+      *out = ft_parse_json(fetch->ft_ctx, body, strlen(body), NULL);
+      break;
+  }
+  return out;
+}
+
 static void fetch_request_cb(int state, uv_response_t* response) {
   fetch_t* p = static_cast<fetch_t*>(response->userp);
   ASSERT_RET(p);
@@ -221,13 +242,12 @@ static void fetch_request_cb(int state, uv_response_t* response) {
   FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
               response->headers);
   if (state == UV_REQUEST_DONE) {
-    system_fetch_SuccessRes res;
-    res.code = response->httpcode;
-
-    ft_value_t ft_data = ft_from_string(p->ft_ctx, response->body);
     ft_value_t ft_header = ft_from_string(p->ft_ctx, response->headers);
-    res.data = &ft_data;
-    res.headers = &ft_header;
+    system_fetch_SuccessRes res = {
+        .code = (int)response->httpcode, .data = NULL, .headers = &ft_header};
+
+    ft_value_t ft_data;
+    res.data = get_response_data(p, response->body, &ft_data);
 
     if (check_any(res.data)) {
       INVOKE_SUCCESS_CB(p->success_cb, &res);
@@ -312,10 +332,10 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
   fetch->success_cb = obj->success;
   fetch->fail_cb = obj->fail;
   fetch->complete_cb = obj->complete;
-
-  fetch->type = strcmp(obj->responseType, Fetch::response_type[Fetch::FILE])
-                    ? UV_REQUEST
-                    : UV_DOWNLOAD;
+  fetch->response_type = get_response_tpye(obj->responseType);
+  fetch->type = (fetch->response_type == Fetch::ResponseType::FILE)
+                    ? UV_DOWNLOAD
+                    : UV_REQUEST;
   if (fetch->type == UV_DOWNLOAD) {
     std::string url(obj->url);
 
