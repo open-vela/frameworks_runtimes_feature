@@ -124,13 +124,13 @@ class FeatureUtils(render.Utils):
     elif to_key == "any_to_str":
       out[key_name] = 'MicoFeatureUtils::any_to_str(szbuf, buf_len, %s%s, conn)' %(prefix, p_name)
     elif to_key == "int_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::arr_to_str<int>(szbuf, buf_len, %s%s, ArrayType::INT)' %(prefix, p_name)
+      out[key_name] = 'MicoFeatureUtils::int_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     elif to_key == "double_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::arr_to_str<double>(szbuf, buf_len, %s%s, ArrayType::DOUBLE)' %(prefix, p_name)
+      out[key_name] = 'MicoFeatureUtils::double_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     elif to_key == "str_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::arr_to_str<char*>(szbuf, buf_len, %s%s, ArrayType::STRING)' %(prefix, p_name)
+      out[key_name] = 'MicoFeatureUtils::str_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     elif to_key == "bool_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::arr_to_str<bool>(szbuf, buf_len, %s%s, ArrayType::BOOL)' %(prefix, p_name)
+      out[key_name] = 'MicoFeatureUtils::bool_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     elif to_key == "str_to_json_str":
       out[key_name] = 'MicoFeatureUtils::str_to_json_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
     else:
