@@ -74,7 +74,7 @@ namespace FeatureFFIQjs {
                 return false;
             } break;
             case FT_INT: {
-                if (!feature_is_number(value)) {
+                if (JS_VALUE_GET_TAG(value) != JS_TAG_INT) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with int !");
                     return false;
                 }
@@ -84,7 +84,7 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_INT8: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with int8 !");
                     return false;
                 }
@@ -101,7 +101,7 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_DEBUG("ptr is %d !", *(int8_t*)ptr);
             } break;
             case FT_UINT8: {
-                if (!feature_is_number(value)) {
+                if (!(JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with uint8 !");
                     return false;
                 }
@@ -117,7 +117,7 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_DEBUG("ptr is %d !", *(uint8_t*)ptr);
             } break;
             case FT_INT16: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with int16 !");
                     return false;
                 }
@@ -133,7 +133,7 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_DEBUG("ptr is %d !", *(int16_t*)ptr);
             } break;
             case FT_UINT16: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with uint16 !");
                     return false;
                 }
@@ -150,7 +150,7 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_DEBUG("ptr is %d !", *(uint16_t*)ptr);
             } break;
             case FT_INT32: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with int32 !");
                     return false;
                 }
@@ -160,7 +160,7 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_UINT32: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with uint32 !");
                     return false;
                 }
@@ -170,7 +170,7 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_INT64: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with int64 !");
                     return false;
                 }
@@ -180,7 +180,7 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_UINT64: {
-                if (!feature_is_number(value)) {
+                if ((JS_VALUE_GET_TAG(value) != JS_TAG_INT)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need number with uint64 !");
                     return false;
                 }
@@ -190,7 +190,7 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_FLOAT: {
-                if (!feature_is_number(value)) {
+                if (JS_VALUE_GET_TAG(value) != JS_TAG_FLOAT64) {
                     FEATURE_LOG_ERROR("arg type mismatch, need float !");
                     return false;
                 }
@@ -206,7 +206,7 @@ namespace FeatureFFIQjs {
                 FEATURE_LOG_DEBUG("ptr is %f !", *(float*)ptr);
             } break;
             case FT_DOUBLE: {
-                if (!feature_is_number(value)) {
+                if (JS_VALUE_GET_TAG(value) != JS_TAG_FLOAT64) {
                     FEATURE_LOG_ERROR("arg type mismatch, need double !");
                     return false;
                 }
@@ -349,7 +349,7 @@ namespace FeatureFFIQjs {
                         if (!convertValueToHost(instance, element_type, element_ptr, ctx, elementValue)) {
                             FEATURE_LOG_ERROR("convert array element failed ");
                             feature_free_value(ctx, elementValue);
-                            break;
+                            return false;
                         }
                         feature_free_value(ctx, elementValue);
                     }
