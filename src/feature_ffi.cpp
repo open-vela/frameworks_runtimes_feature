@@ -403,7 +403,7 @@ void* extractVariadicParam(va_list& ap, FeatureType featureType)
             *(ObjectMapType*)result = va_arg(ap, ObjectMapType);
         } break;
         case COMPLEX_OPTIONAL: {
-            FEATURE_CHECK(false && "do not support exact optional type !");
+            FEATURE_CHECK(false, "do not support exact optional type !");
         } break;
         case COMPLEX_CALLBACK: {
             *(FtCallbackId*)result = va_arg(ap, FtCallbackId);

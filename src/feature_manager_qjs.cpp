@@ -190,7 +190,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     FEATURE_CHECK_NE(instance, nullptr);
     auto description = instance->prototype()->description();
     const Member& member = description->members[index];
-    FEATURE_CHECK_EQ(member.type, MEMBER_METHOD);
+    FEATURE_CHECK_EQ_LOG(member.type, MEMBER_METHOD, "feature:%s method:%s", description->name, member.name);
     const auto method = member.method;
     auto param_types = method->parameters;
     FtPromiseId pid = -1;
@@ -200,7 +200,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     int optional_argc = 0;
     int fixed_argc = getParamCount(param_types, &has_rest_param, &optional_argc);
     // optional and rest parameters must not set together.
-    FEATURE_CHECK_NE(has_rest_param && optional_argc, true);
+    FEATURE_CHECK_NE_LOG(has_rest_param && optional_argc, true, "feature:%s method:%s", description->name, member.name);
     // variadic parameters type
     ffi_type vari_args_type;
     ffi_type* vari_args_elem_types[3];
@@ -214,7 +214,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         if (argc < fixed_argc) {
             FEATURE_LOG_ERROR("rest args error, fixed: %d, total: %d!", fixed_argc, argc);
         }
-        FEATURE_CHECK_GE(argc, fixed_argc);
+        FEATURE_CHECK_GE_LOG(argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
         vari_params.vari_count = argc - fixed_argc;
     } else if (optional_argc) {
         // for optional parameters, argc + optional must grater or equal to fixed_argc
@@ -222,13 +222,13 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
             FEATURE_LOG_ERROR("optional args error, optional: %d, fixed: %d, total: %d!",
                 optional_argc, fixed_argc, argc);
         }
-        FEATURE_CHECK_GE(argc + optional_argc, fixed_argc);
+        FEATURE_CHECK_GE_LOG(argc + optional_argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
     } else {
         // for method which do not have rest or optional parameters, argc equals to fixed_argc.
         if (argc != fixed_argc) {
             FEATURE_LOG_ERROR("fixed args error, fixed: %d, total: %d!", fixed_argc, argc);
         }
-        FEATURE_CHECK_EQ(argc, fixed_argc);
+        FEATURE_CHECK_EQ_LOG(argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
     }
     // if has rest parameter, we will pack all variadic parameters together as a param pack
     // use packed_argc instead of argc for ffi call.
@@ -297,9 +297,9 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         } else if (optional_argc) {
             for (int i = argc; i < fixed_argc; i++) {
                 auto param_type = param_types[i];
-                FEATURE_CHECK_EQ(FT_IS_COMPLEX(param_type), true);
+                FEATURE_CHECK_EQ_LOG(FT_IS_COMPLEX(param_type), true, "feature:%s method:%s", description->name, member.name);
                 OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param_type);
-                FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
+                FEATURE_CHECK_EQ_LOG(optionalType->header.type, COMPLEX_OPTIONAL, "feature:%s method:%s", description->name, member.name);
                 if (!createTypeDeclaration(param_type, ffi_arg_types[extra_argc + i])) {
                     FEATURE_LOG_ERROR("prepareType for type failed !");
                     got_error = true;
@@ -357,7 +357,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         }
         // invoke method
         NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method->func.vtable_idx) : method->func.callback;
-        FEATURE_CHECK_NE(callback, nullptr);
+        FEATURE_CHECK_NE_LOG(callback, nullptr, "feature:%s method:%s", description->name, member.name);
         ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
         // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method->return_type != FT_VOID) {
@@ -400,6 +400,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
 
     // if error occurred, throw internal error
     if (got_error) {
+        FEATURE_CHECK(false, "invoke method failed, feature:%s method:%s", description->name, member.name);
         FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native method failed !");
     }
 
@@ -585,13 +586,13 @@ static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototy
 
 static int initialize_prototype(context_ref ctx, const FeatureDescription* description, FeaturePrototype* prototype, feature_value_t js_proto)
 {
-    FEATURE_CHECK(description != nullptr && prototype != nullptr);
+    FEATURE_CHECK(description != nullptr && prototype != nullptr, "");
     for (int i = 0; i < description->member_count; i++) {
         const Member& member = description->members[i];
         switch (member.type) {
         case MEMBER_NULL: {
             // not allowed
-            FEATURE_CHECK(false && "invalid member type!");
+            FEATURE_CHECK(false, "invalid member type!");
         } break;
         case MEMBER_METHOD: {
             // register different type

@@ -637,7 +637,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
         switch (member->type) {
             case MEMBER_NULL: {
                 // not allowed
-                FEATURE_CHECK(false && "invalid member type!");
+                FEATURE_CHECK(false, "invalid member type!");
                 break;
             }
             case MEMBER_METHOD: {
