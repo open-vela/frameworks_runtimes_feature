@@ -150,6 +150,7 @@ static void __uv_fs_req_cb(uv_fs_t* req)
     }
     FeatureInstanceHandle feature = fr->handle;
     if (req->result < 0) {
+        FILE_ERROR("copy error, %s", uv_strerror(req->result));
         INVOKE_FAIL_CB(fr->fail, uv_strerror(req->result), __error_code_map(req->result));
     } else {
         switch (req->fs_type) {
@@ -565,12 +566,12 @@ static void __load_after_work_cb(uv_work_t* req, int status)
         INVOKE_SUCCESS_CB(fr->success, data);
     } else if (fr->type == FILE_READARRBUF) {
         // 将读取的文件内容写入ArrayBuffer
-        ft_value_t* buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
-        *buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
+        ft_value_t buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
         system_file_read_arr_buf_succ_t* data = system_fileMallocread_arr_buf_succ_t();
-        data->buffer = buffer;
+        data->buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+        *(data->buffer) = buffer;
         INVOKE_SUCCESS_CB(fr->success, data);
-        FeatureFreeValue(buffer);
+        FeatureFreeValue(data);
     } else if (fr->type == FILE_WRITETEXT || fr->type == FILE_WRITEARRBUF) {
         INVOKE_SUCCESS_CB(fr->success);
     }
@@ -656,9 +657,19 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
             fr->flags = O_TRUNC;
         }
         fr->flags |= O_WRONLY | O_CREAT;
-        // FILE_INFO("buf type = %d", ft_get_type(FeatureGetContext(feature), *(param->buffer)));
-        uint8_t* buffer = ft_to_buffer(FeatureGetContext(feature), &(fr->len), *(param->buffer));
-        fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
+        ft_context_ref ft_ctx = FeatureGetContext(feature);
+        ft_type buffer_type = ft_get_type(ft_ctx, *(param->buffer));
+        uint8_t* buffer;
+        if (buffer_type == FT_TYPE_BUFFER || buffer_type == FT_TYPE_TYPED_BUFFER) {
+            buffer = ft_to_buffer(ft_ctx, &(fr->len), *(param->buffer));
+            FILE_INFO("got buffer, type: %d, size: %ld", buffer_type, fr->len);
+        } else if (buffer_type == FT_TYPE_STRING) {
+            const char* str = ft_to_string(ft_ctx, *(param->buffer));
+            fr->len = strlen(str);
+            FILE_INFO("got string: %s", str);
+            buffer = (uint8_t*)str;
+        }
+        fr->buf = (uint8_t*)FeatureMalloc(fr->len + 1, FT_UINT8);
         memcpy(fr->buf, buffer, fr->len);
     } else if constexpr (std::is_same_v<T, system_file_read_text_param_t>) {
         fr->offset = 0;
