@@ -75,7 +75,7 @@ typedef struct
 
 RequestContext* getRequestContext(FeatureInstanceHandle handle)
 {
-    void* user_data = FeatureInstanceGetUserData(handle, "request_context");
+    void* user_data = FeatureGetProtoData(FeatureGetProtoHandle(handle));
     assert(user_data != nullptr);
     return static_cast<RequestContext*>(user_data);
 }
@@ -148,7 +148,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
-    RequestContext* th = (RequestContext*)FeatureGetUserData(handle, "request_context");
+    RequestContext* th = (RequestContext*)FeatureGetProtoData(handle);
     if (th == nullptr) {
         th = static_cast<RequestContext*>(malloc(sizeof(*th)));
         if (!th) {
@@ -163,7 +163,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         }
         weakref_list_initialize(&th->linklist);
         assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
-        FeatureSetUserData(manager, "request_context", th);
+        FeatureSetProtoData(handle, th);
     }
 
     std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetUserData(handle, "download_results"));
@@ -204,7 +204,7 @@ void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle hand
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     clearDownloadResults(manager);
-    RequestContext* th = static_cast<RequestContext*>(FeatureGetUserData(manager, "request_context"));
+    RequestContext* th = static_cast<RequestContext*>(FeatureGetProtoData(handle));
     if (!th)
         return;
     // app 退出，cancel掉所有请求
