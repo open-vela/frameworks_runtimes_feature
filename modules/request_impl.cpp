@@ -296,24 +296,25 @@ static void __request_cb(int state, uv_response_t* response)
     freeRequestInfo(info);
 }
 
-void __progress_cb(uv_request_t* request, off_t total, off_t now)
+int __progress_cb(uv_request_t* request, off_t dltotal, off_t dlnow, off_t ultotal, off_t ulnow)
 {
-    // REQUEST_INFO("=== in __progress_cb, total = %ld, now = %ld", total, now);
+    // REQUEST_INFO("=== in __progress_cb, total = %ld, now = %ld", dltotal, dlnow);
     RequestInfo* info = (RequestInfo*)uv_request_get_userp(request);
     if (FeatureCheckCallbackId(info->feature_handle, info->notify_func)) {
         system_request_notify_data_t* data = system_requestMallocnotify_data_t();
-        if (now != 0 && total == 0) {
+        if (dlnow != 0 && dltotal == 0) {
             data->result = -1;
             data->percent = 0;
-        } else if (total != 0) {
+        } else if (dltotal != 0) {
             data->result = 0;
-            data->percent = 100 * now / total;
+            data->percent = 100 * dlnow / dltotal;
         }
-        if (now != info->pre) {
-            info->pre = now;
+        if (dlnow != info->pre) {
+            info->pre = dlnow;
             FeatureInvokeCallback(info->feature_handle, info->notify_func, data);
         }
     }
+    return 0;
 }
 
 void __request_cancel(RequestInfo* info)
