@@ -240,30 +240,32 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
         fillArg(argp, args, ftype, target, filled);
     }
 
-    // create an array object with element type any rest_argc number of elements.
-    wasm_struct_obj_t array_struct = create_any_array_struct(env, rest_argc);
+    /* create an array object with element type any rest_argc number of elements if the callback func have rest_argc. */
+    if (rest_argc > 0) {
+        wasm_struct_obj_t array_struct = create_any_array_struct(env, rest_argc);
+        /*  Take out the array data field of the array object,
+         *  then wrap and assign any type to each element of the array.
+         */
+        wasm_value_t array = {0};
+        wasm_struct_obj_get_field(array_struct, 0, false, &array);
+        wasm_array_obj_t array_obj = (wasm_array_obj_t)array.gc_obj;
 
-    /*  Take out the array data field of the array object,
-    *  then wrap and assign any type to each element of the array.
-    */
-    wasm_value_t array = { 0 };
-    wasm_struct_obj_get_field(array_struct, 0, false, &array);
-    wasm_array_obj_t array_obj = (wasm_array_obj_t)array.gc_obj;
-
-    /* Unify the variable parameters into "any" and add each element to the any array object */
-    for (int i = 0; i < rest_argc; i++) {
-        void *arg = va_arg(ap, void *);
-        wasm_value_t target = { 0 };
-        if (!variArgToTarget(arg, target)) {
-            FEATURE_LOG_ERROR("convert vari params failed !");
-            return -1;
+        /* Unify the variable parameters into "any" and add each element to the any array object */
+        for (int i = 0; i < rest_argc; i++)
+        {
+            void *arg = va_arg(ap, void *);
+            wasm_value_t target = {0};
+            if (!variArgToTarget(arg, target))
+            {
+                FEATURE_LOG_ERROR("convert vari params failed !");
+                return -1;
+            }
+            wasm_array_obj_set_elem(array_obj, i, &target);
         }
-        wasm_array_obj_set_elem(array_obj, i, &target);
+        /* at last, add the any array object to the return parameter argv */
+        b_memcpy_s(argp + filled, args - filled, &(array_struct), sizeof(wasm_struct_obj_t));
+        filled += sizeof(wasm_struct_obj_t);
     }
-
-    /* at last, add the any array object to the return parameter argv */
-    b_memcpy_s(argp + filled, args -filled, &(array_struct), sizeof(wasm_struct_obj_t));
-    filled += sizeof(wasm_struct_obj_t);
 
     // convert filled form bytes to wamr slots
     filled = filled /(sizeof(uint32) /sizeof(char));
