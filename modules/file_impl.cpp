@@ -68,7 +68,12 @@ typedef struct
     const char* pkg_name;
 } FileContext;
 
-FileContext* fc = NULL;
+FileContext* getFileContext(FeatureInstanceHandle handle)
+{
+    void* user_data = FeatureGetProtoData(FeatureGetProtoHandle(handle));
+    assert(user_data != nullptr);
+    return static_cast<FileContext*>(user_data);
+}
 
 void system_file_onRegister(const char* feature_name)
 {
@@ -77,15 +82,19 @@ void system_file_onRegister(const char* feature_name)
 void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    fc = static_cast<FileContext*>(malloc(sizeof(*fc)));
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
-    fc->loop = FeatureGetUVLoop(manager);
-    fc->pkg_name = FeatureGetPackageName(handle);
-    if (!fc->pkg_name || strlen(fc->pkg_name) == 0) {
-        FILE_ERROR("package name is null");
-        fc->pkg_name = "file_test";
+    FileContext* fc = (FileContext*)FeatureGetProtoData(handle);
+    if (fc == nullptr) {
+        fc = static_cast<FileContext*>(malloc(sizeof(FileContext)));
+        FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
+        fc->loop = FeatureGetUVLoop(manager);
+        fc->pkg_name = FeatureGetPackageName(handle);
+        if (!fc->pkg_name || strlen(fc->pkg_name) == 0) {
+            FILE_ERROR("package name is null");
+            fc->pkg_name = "file_test";
+        }
+        FILE_INFO("pkg name = %s", fc->pkg_name);
+        FeatureSetProtoData(handle, fc);
     }
-    FILE_INFO("pkg name = %s", fc->pkg_name);
 }
 void system_file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
@@ -98,6 +107,9 @@ void system_file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle han
 void system_file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FileContext* fc = (FileContext*)FeatureGetProtoData(handle);
+    if (!fc)
+        return;
     free(fc);
 }
 void system_file_onUnregister(const char* feature_name)
@@ -163,6 +175,7 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
     char *temp_str, *path, *new_path;
     const char* msg;
     int code, result;
+    FileContext* fc = getFileContext(feature);
     FsReq* fr = static_cast<FsReq*>(malloc(sizeof(*fr)));
     if (!fr) {
         msg = "malloc fail";
@@ -234,6 +247,7 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     char *temp_str, *path;
     const char* msg;
     int code, result;
+    FileContext* fc = getFileContext(feature);
     FsReq* fr = static_cast<FsReq*>(malloc(sizeof(*fr)));
     if (!fr) {
         msg = "malloc fail";
@@ -486,7 +500,7 @@ static void __load_file_work_cb(uv_work_t* wk)
             r = -errno;
             FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
         } else {
-            fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
+            fr->buf = (uint8_t*)FeatureMalloc(fr->len + 1, FT_UINT8);
             r = read(fd, fr->buf, fr->len);
             // char read_str[fr->len + 1];
             // for(int i = 0; i< fr->len; i++) {
@@ -571,6 +585,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
     const char* msg;
     int code, r;
     char *app_path, *temp_str;
+    FileContext* fc = getFileContext(feature);
     FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
     if (!fr) {
         FILE_ERROR("malloc fail");
@@ -693,6 +708,7 @@ static FileInfo* __get_info_c(char* path, FileReq* fr)
 {
     struct stat statbuf;
     char* app_path = NULL;
+    FileContext* fc = getFileContext(fr->handle);
     FileInfo* file_info = (FileInfo*)malloc(sizeof(FileInfo));
     if (file_info == NULL || fc->pkg_name == NULL) {
         FILE_ERROR("fc->pkg_name=%p\n", fc->pkg_name);
@@ -936,6 +952,7 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
     const char* msg;
     int code, r;
     char *app_path, *temp_str;
+    FileContext* fc = getFileContext(feature);
     FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
     if (!fr) {
         FILE_ERROR("malloc fail");
