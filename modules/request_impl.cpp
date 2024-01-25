@@ -105,7 +105,7 @@ typedef struct
 
 std::map<std::string, DownloadResult*>* getDownloadResults(FeatureInstanceHandle handle)
 {
-    void* user_data = FeatureInstanceGetUserData(handle, "download_results");
+    void* user_data = FeatureInstanceGetManagerUserData(handle, "download_results");
     assert(user_data != nullptr);
     return static_cast<std::map<std::string, DownloadResult*>*>(user_data);
 }
@@ -125,7 +125,7 @@ void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
 
 void clearDownloadResults(FeatureManagerHandle handle)
 {
-    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetUserData(handle, "download_results"));
+    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetManagerUserData(handle, "download_results"));
     if (downloadResults == nullptr)
         return;
     for (auto it = downloadResults->begin(); it != downloadResults->end(); ++it) {
@@ -166,14 +166,14 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         FeatureSetProtoData(handle, th);
     }
 
-    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetUserData(handle, "download_results"));
+    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetManagerUserData(handle, "download_results"));
     if (downloadResults == nullptr) {
         downloadResults = new std::map<std::string, DownloadResult*>();
         if (!downloadResults) {
             REQUEST_ERROR("malloc downloadResults fail");
             return;
         }
-        FeatureSetUserData(manager, "download_results", downloadResults);
+        FeatureSetManagerUserData(manager, "download_results", downloadResults);
     }
 }
 void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)

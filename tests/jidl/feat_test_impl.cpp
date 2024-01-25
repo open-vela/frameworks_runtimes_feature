@@ -69,7 +69,7 @@ class FeatureTest : public ::testing::Test {
     FeatureUnittest::setCurrentAsyncId(_async_id);
 
     FeatTestEnv* pack =
-        (FeatTestEnv*)FeatureInstanceGetUserData(_featureInstance, "run_loop");
+        (FeatTestEnv*)FeatureInstanceGetManagerUserData(_featureInstance, "run_loop");
 
     LoopFunc run_loop = pack->run_loop;
 
@@ -162,7 +162,7 @@ void feat_test_wrap_done(FeatureInstanceHandle feature, AppendData append_data,
 
   // printf("[feat_test] done stop a async test: id(%d)\n", async_id);
   FeatTestEnv* pack =
-      (FeatTestEnv*)FeatureInstanceGetUserData(feature, "run_loop");
+      (FeatTestEnv*)FeatureInstanceGetManagerUserData(feature, "run_loop");
   LoopFunc stop_loop = pack->stop_loop;
   stop_loop(pack);
 }
@@ -192,7 +192,7 @@ void feat_test_wrap_expect_true(FeatureInstanceHandle feature, AppendData data,
                                 FtBool result, FtString message_info) {
   // TODO 判断是否要执行
   FeatTestEnv* pack =
-      (FeatTestEnv*)FeatureInstanceGetUserData(feature, "run_loop");
+      (FeatTestEnv*)FeatureInstanceGetManagerUserData(feature, "run_loop");
   EXPECT_TRUE_FILE(result, pack->filename, -1) << message_info;
 }
 

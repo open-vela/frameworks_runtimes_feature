@@ -32,7 +32,7 @@ void system_prompt_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle
 void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetUserData(handle, "guiPromptManager"));
+    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(handle, "guiPromptManager"));
     promptInit init = gui_pm->init;
     if (init) {
         init(handle);
@@ -42,7 +42,7 @@ void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle h
 void system_prompt_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetUserData(handle, "guiPromptManager"));
+    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(handle, "guiPromptManager"));
     promptUninit uninit = gui_pm->uninit;
     if (uninit) {
         uninit(handle);
@@ -62,7 +62,7 @@ void system_prompt_onUnregister(const char* feature_name)
 void system_prompt_wrap_showToast(FeatureInstanceHandle feature, AppendData append_data, system_prompt_ToastInfo* info)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetUserData(feature, "guiPromptManager"));
+    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(feature, "guiPromptManager"));
     promptShowToast show_toast = gui_pm->show_toast;
     if (show_toast) {
         show_toast(feature, info->message, info->duration);
@@ -139,7 +139,7 @@ void showDialog_complete_cb(FeatureInstanceHandle feature, FtCallbackId complete
 void system_prompt_wrap_showDialog(FeatureInstanceHandle feature, AppendData append_data, system_prompt_DialogInfo* info)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetUserData(feature, "guiPromptManager"));
+    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(feature, "guiPromptManager"));
     promptShowDialog show_dialog = gui_pm->show_dialog;
     PromptDialogParams* params = prompt_dialog_malloc(feature);
     if (params == NULL) {

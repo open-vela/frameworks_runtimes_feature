@@ -235,7 +235,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
     env.run_loop = run_loop;
     env.stop_loop = stop_loop;
 
-    FeatureSetUserData(manager, "run_loop", &env);
+    FeatureSetManagerUserData(manager, "run_loop", &env);
     FeatureSetUVLoop(manager, main_loop);
 
     // register global require

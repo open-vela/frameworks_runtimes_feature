@@ -136,7 +136,7 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle);
  * @param name
  * @return void*
  */
-void* FeatureInstanceGetUserData(FeatureInstanceHandle handle,
+void* FeatureInstanceGetManagerUserData(FeatureInstanceHandle handle,
     const char* name);
 
 /**
@@ -237,7 +237,7 @@ uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle);
  * @param data
  * @return void
  */
-void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* data);
+void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data);
 
 /**
  * @brief get feature userdata from FeatureManagerHandle
@@ -246,7 +246,7 @@ void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* dat
  * @param name
  * @return void*
  */
-void* FeatureGetUserData(FeatureManagerHandle handle, const char* name);
+void* FeatureGetManagerUserData(FeatureManagerHandle handle, const char* name);
 
 /**
  * @brief get feature manager handle from feature instance

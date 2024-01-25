@@ -234,7 +234,7 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
     return proto->featureManager()->envName();
 }
 
-void* FeatureInstanceGetUserData(FeatureInstanceHandle handle,
+void* FeatureInstanceGetManagerUserData(FeatureInstanceHandle handle,
     const char* name)
 {
     if (!handle) {
@@ -389,7 +389,7 @@ uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
     return manager->getUVLoop();
 }
 
-void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* data)
+void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data)
 {
     if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
@@ -399,7 +399,7 @@ void FeatureSetUserData(FeatureManagerHandle handle, const char* name, void* dat
     manager->setUserData(name, data);
 }
 
-void* FeatureGetUserData(FeatureManagerHandle handle, const char* name)
+void* FeatureGetManagerUserData(FeatureManagerHandle handle, const char* name)
 {
     if (!handle) {
         FEATURE_LOG_ERROR("handle is null !");
