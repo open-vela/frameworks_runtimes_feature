@@ -645,8 +645,8 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
             fr->flags = O_TRUNC;
         }
         fr->flags |= O_WRONLY | O_CREAT;
-        fr->len = strlen(param->text) + 1;
-        fr->buf = (uint8_t*)FeatureMalloc(fr->len, FT_UINT8);
+        fr->len = strlen(param->text);
+        fr->buf = (uint8_t*)FeatureMalloc(fr->len + 1, FT_UINT8);
         memcpy(fr->buf, param->text, fr->len);
     } else if constexpr (std::is_same_v<T, system_file_write_arr_buf_param_t>) {
         fr->offset = param->position;
