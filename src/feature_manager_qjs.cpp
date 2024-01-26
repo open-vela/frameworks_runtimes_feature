@@ -213,6 +213,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     if (has_rest_param) {
         if (argc < fixed_argc) {
             FEATURE_LOG_ERROR("rest args error, fixed: %d, total: %d!", fixed_argc, argc);
+            got_error = true;
         }
         FEATURE_CHECK_GE_LOG(argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
         vari_params.vari_count = argc - fixed_argc;
@@ -221,14 +222,21 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
         if (argc + optional_argc < fixed_argc) {
             FEATURE_LOG_ERROR("optional args error, optional: %d, fixed: %d, total: %d!",
                 optional_argc, fixed_argc, argc);
+            got_error = true;
         }
         FEATURE_CHECK_GE_LOG(argc + optional_argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
     } else {
         // for method which do not have rest or optional parameters, argc equals to fixed_argc.
         if (argc != fixed_argc) {
             FEATURE_LOG_ERROR("fixed args error, fixed: %d, total: %d!", fixed_argc, argc);
+            got_error = true;
         }
         FEATURE_CHECK_EQ_LOG(argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
+    }
+
+    if (got_error) {
+        FEATURE_THROW_INTERNAL_ERROR(ctx, "feature:%s method:%s", description->name, member.name);
+        return FEATURE_EXCEPTION;
     }
     // if has rest parameter, we will pack all variadic parameters together as a param pack
     // use packed_argc instead of argc for ffi call.
@@ -401,7 +409,8 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     // if error occurred, throw internal error
     if (got_error) {
         FEATURE_CHECK(false, "invoke method failed, feature:%s method:%s", description->name, member.name);
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke native method failed !");
+        FEATURE_THROW_INTERNAL_ERROR(ctx, "invoke method failed, feature:%s method:%s", description->name, member.name);
+        return FEATURE_EXCEPTION;
     }
 
     return ret_val;
