@@ -40,9 +40,10 @@ char** split_str(const char* input, const char* delimiter, int* count) {
     }
 
     char** result = (char**)malloc((*count) * sizeof(char*));
-    char* token = strtok(in_cpy, delimiter);
-    int index = 0;
+    memset(result, 0, (*count) * sizeof(char*));
 
+    int index = 0;
+    char* token = strtok(in_cpy, delimiter);
     while (token != NULL) {
         result[index] = strdup(token);
         token = strtok(NULL, delimiter);

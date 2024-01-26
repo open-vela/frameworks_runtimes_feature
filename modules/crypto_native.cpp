@@ -101,9 +101,10 @@ char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str
             }
         }
         out_buff[out_len] = '\0';
-        *size = out_size;
-        ret_str = (char*)malloc((*size) * sizeof(char));
+        *size = out_len;
+        ret_str = (char*)malloc(out_len + 1);
         memcpy(ret_str, out_buff, out_len);
+        ret_str[out_len] = '\0';
         uv_aes_free(&aes_ctx);
         return ret_str;
     }while (false);
@@ -153,9 +154,10 @@ char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str
         }
         out_buff[out_len] = '\0';
 
-        *size = out_size;
-        ret_str = (char*)malloc((*size) * sizeof(char));
+        *size = out_len;
+        ret_str = (char*)malloc(out_len + 1);
         memcpy(ret_str, out_buff, out_len);
+        ret_str[out_len] = '\0';
         uv_aes_free(&aes_ctx);
         return ret_str;
     }while (false);
@@ -322,6 +324,7 @@ bool rsa_verify_file(const char* type_str, const char* key_str, const char* uri_
         text.base = app_relative_to_absolute_path(pkg_str, uri_str);
         CHECK_ERR_BREAK(text.base, "crypto.sign convert to absoluate path failed");
         text.len = strlen(text.base);
+        FEATURE_LOG_INFO("abs_path: %s\n", text.base);
 
         if (uv_base64_decode(md_64, &md) == 0) {
             ret = uv_verify(type.base, key, text, md, UV_EXT_TYPE_FILE) == 0;
@@ -436,7 +439,6 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
 char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_str, const char* pkg_str)
 {
     crypto_err = NULL;
-    FEATURE_LOG_INFO("%s\n", file_tag);
     uv_buf_t type = { 0 };
     uv_buf_t text = { 0 };
     uv_buf_t key = { 0 };
@@ -456,6 +458,7 @@ char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_s
         text.base = app_relative_to_absolute_path(pkg_str, uri_str);
         CHECK_ERR_BREAK(text.base, "crypto.sign convert to absoluate path failed");
         text.len = strlen(text.base);
+        FEATURE_LOG_INFO("abs_path: %s\n", text.base);
 
         if (uv_sign(type.base, key, text, &out, UV_EXT_TYPE_FILE)) {
             CHECK_ERR_BREAK(NULL, "crypto.sign invalid parameter key");
@@ -540,6 +543,7 @@ char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str
 
     do {
         char* abs_path = app_relative_to_absolute_path(pkg_str, uri_str);
+        FEATURE_LOG_INFO("abs_path: %s\n", abs_path);
         if (abs_path == NULL) {
             free(abs_path);
             FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "crypto.digest convert to absolute failed");

@@ -354,7 +354,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         } else {
             char* sig_buff = (char*)get_buff(ft_ctx, *(options->signature), &sig_size, &is_text);
             result = rsa_verify_file(algo, options->publicKey, options->uri, sig_buff, pkg_name);
-            if (!crypto_err) {
+            if (crypto_err) {
                 msg = crypto_err;
                 code = GENERAL;
             } else {
@@ -394,12 +394,6 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     bool is_text = true;
     size_t size = 0;
 
-    const char* transformation = "";
-    const char* iv = options->key;
-    int ivOffset = 0;
-    int ivLen = 16;
-    int mode = 5;  // encryptCfgs.AES.mode.CBC
-    int padding = 0;  // encryptCfgs.AES.padding.PKCS7Padding
     // excute native function
     if (!(check_any(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
@@ -418,18 +412,27 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     code = GENERAL;
                 }
             } else if (strcmp(algo, "AES") == 0) {
+                const char* transformation = "";
+                const char* iv = options->key;
+                int ivOffset = 0;
+                int ivLen = 16;
+                int mode = 5;  // encryptCfgs.AES.mode.CBC
+                int padding = 0;  // encryptCfgs.AES.padding.PKCS7Padding
+
                 // deal with default value of options
                 if (options->options) {
                     system_crypto_MixinCryptOption * opts = options->options;
-                    transformation = opts->transformation;
-                    iv = opts->iv ? opts->iv : iv;
+                    transformation = check_str(opts->transformation)
+                            ? opts->transformation : transformation;
+                    iv = check_str(opts->iv) ? opts->iv : iv;
                     ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
                     ivLen = opts->ivLen ? opts->ivLen : ivLen;
                 }
 
-                if (transformation) {
+                if (check_str(transformation)) {
                     int seg_count;
                     char** cfg_keys = split_str(transformation, "/", &seg_count);
+                    FEATURE_LOG_INFO("transformation: %s, seg_count: %d", transformation, seg_count);
                     ft_value_t cfgs_json =  ft_parse_json(ft_ctx, encryptCfgs, strlen(encryptCfgs), NULL);
                     ft_value_t ft_enc_type = ft_obj_get_property(ft_ctx, cfgs_json, cfg_keys[0]);
                     if (seg_count == 3 && ft_get_type(ft_ctx, ft_enc_type) != FT_TYPE_NONE) {
@@ -461,7 +464,6 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     code = ARGSERROR;
             }
         }
-        FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
     }
 
     // deal with result
@@ -519,7 +521,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
             } else if (strcmp(algo, "AES") == 0) {
                 if (options->options) {
                     system_crypto_MixinCryptOption * opts = options->options;
-                    iv = opts->iv ? opts->iv : iv;
+                    iv = check_str(opts->iv) ? opts->iv : iv;
                     ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
                     ivLen = opts->ivLen ? opts->ivLen : ivLen;
                 }
