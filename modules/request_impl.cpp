@@ -65,12 +65,21 @@ static const char* file_tag = "[jidl_feature] Request_impl";
 #define REQUEST_ERROR(fmt, ...) \
     FEATURE_LOG_ERROR("[feature_request] " fmt, ##__VA_ARGS__)
 
+#define DOWNLOAD_RESULT_CACHE_SIZE 10
+typedef struct
+{
+    bool success;
+    int code;
+    const char* data;
+} DownloadResult;
+
 typedef struct
 {
     uv_request_session_t* handle;
     struct weakref_list_node linklist;
     const char* pkg_name;
     int exit;
+    std::map<std::string, DownloadResult*>* download_results;
 } RequestContext;
 
 RequestContext* getRequestContext(FeatureInstanceHandle handle)
@@ -95,45 +104,17 @@ typedef struct {
     off_t pre = -1;
 } RequestInfo;
 
-#define DOWNLOAD_RESULT_CACHE_SIZE 10
-typedef struct
-{
-    bool success;
-    int code;
-    const char* data;
-} DownloadResult;
-
-std::map<std::string, DownloadResult*>* getDownloadResults(FeatureInstanceHandle handle)
-{
-    void* user_data = FeatureInstanceGetManagerUserData(handle, "download_results");
-    assert(user_data != nullptr);
-    return static_cast<std::map<std::string, DownloadResult*>*>(user_data);
-}
-
 void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
 {
     REQUEST_INFO("add download result {%s, %s, code: %d, success: %d}", uuid, result->data, result->code, result->success);
 
-    std::map<std::string, DownloadResult*>* downloadResults = getDownloadResults(handle);
+    std::map<std::string, DownloadResult*>* downloadResults = getRequestContext(handle)->download_results;
     (*downloadResults)[uuid] = result;
     if ((*downloadResults).size() >= DOWNLOAD_RESULT_CACHE_SIZE) {
         REQUEST_INFO("downloadResults size is out of range, free downloadResults.begin()");
         free((void*)(*downloadResults).begin()->second->data);
         (*downloadResults).erase((*downloadResults).begin());
     }
-}
-
-void clearDownloadResults(FeatureManagerHandle handle)
-{
-    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetManagerUserData(handle, "download_results"));
-    if (downloadResults == nullptr)
-        return;
-    for (auto it = downloadResults->begin(); it != downloadResults->end(); ++it) {
-        free((void*)it->second->data);
-        free(it->second);
-    }
-
-    delete downloadResults;
 }
 
 void freeRequestInfo(RequestInfo* info);
@@ -163,17 +144,11 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         }
         weakref_list_initialize(&th->linklist);
         assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
-        FeatureSetProtoData(handle, th);
-    }
-
-    std::map<std::string, DownloadResult*>* downloadResults = static_cast<std::map<std::string, DownloadResult*>*>(FeatureGetManagerUserData(handle, "download_results"));
-    if (downloadResults == nullptr) {
-        downloadResults = new std::map<std::string, DownloadResult*>();
-        if (!downloadResults) {
+        th->download_results = new std::map<std::string, DownloadResult*>();
+        if (!th->download_results) {
             REQUEST_ERROR("malloc downloadResults fail");
-            return;
         }
-        FeatureSetManagerUserData(manager, "download_results", downloadResults);
+        FeatureSetProtoData(handle, th);
     }
 }
 void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
@@ -202,8 +177,6 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
-    clearDownloadResults(manager);
     RequestContext* th = static_cast<RequestContext*>(FeatureGetProtoData(handle));
     if (!th)
         return;
@@ -218,6 +191,15 @@ void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle hand
     if (th->exit == false) {
         uv_request_close(th->handle);
         th->exit = true;
+    }
+    // free download_results
+    std::map<std::string, DownloadResult*>* downloadResults = th->download_results;
+    if (downloadResults != nullptr) {
+        for (auto it = downloadResults->begin(); it != downloadResults->end(); ++it) {
+            free((void*)it->second->data);
+            free(it->second);
+        }
+        delete downloadResults;
     }
 
     free(th);
@@ -486,7 +468,7 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
     const char* msg;
     RequestContext* th = getRequestContext(feature);
     system_request_dl_cmpl_succ_t* succ_param;
-    std::map<std::string, DownloadResult*>* downloadResults = getDownloadResults(feature);
+    std::map<std::string, DownloadResult*>* downloadResults = th->download_results;
 
     if (param->token == NULL) {
         code = ARGSERROR;
