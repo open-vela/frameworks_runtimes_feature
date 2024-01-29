@@ -168,7 +168,8 @@ bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
     auto proto = static_cast<FeaturePrototypeQjs*>(prototype());
     WeakRef* node = &weak_self_;
     weakref_list_initialize(&node->link);
-    weakref_list_add_tail(&node->link, &proto->weak_ref_list());
+    // 把node->link添加到proto->weak_ref_list()的尾部
+    weakref_list_add_tail(&proto->weak_ref_list(), &node->link);
 
     auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
     *js_val_ptr = feature_object;
@@ -188,11 +189,17 @@ void FeatureInstanceQjs::freeWeakRef()
     // 遍历proto->weak_ref_list链表，将其中的js_value设置为JSE_UNDEFINED
     WeakRef* node;
     WeakRef* node_temp;
-    if (proto->dec_ref_count() <= 0) {
-        weakref_list_for_every_entry_safe(&proto->weak_ref_list(), node, node_temp, WeakRef, link)
-        {
+
+    // 从&proto->weak_ref_list()里面找到并删除instance对应的node节点
+    weakref_list_for_every_entry_safe(&proto->weak_ref_list(), node, node_temp, WeakRef, link)
+    {
+        if (node == &weak_self_) {
+            FEATURE_LOG_ERROR("node is %p, &node->link is %p", node, &node->link);
             auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
             *js_val_ptr = FEATURE_VALUE_UNDEFINED;
+            weakref_list_delete(&node->link);
+            proto->dec_ref_count();
+            break;
         }
     }
 }
