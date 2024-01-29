@@ -16,6 +16,7 @@
 
 #include "storage.h"
 #include "uv_ext.h"
+#include "unqlite.h"
 
 static const char *file_tag = "[jidl_feature] storage_impl";
 #define DB_PATH_PREFIX "/data/quickapp"
@@ -200,6 +201,11 @@ static void storage_cb(int status, const char *key, uv_buf_t value,
   if (handle == NULL) {
     return;
   }
+  /*when the key does not exist,the unqlite return -6
+  but storage feature require default value,not fail*/
+  if(status == UNQLITE_NOTFOUND && handle->op == STORAGE_OP_GET) {
+    status = 0;
+  }
   if (status == 0) {
     const char *ret = "0";
     if (handle->op == STORAGE_OP_DELETE || handle->op == STORAGE_OP_SET) {
@@ -246,6 +252,8 @@ void system_storage_wrap_get(FeatureInstanceHandle feature, AppendData data,
   handle->success = info->success;
   handle->fail = info->fail;
   handle->complete = info->complete;
+  handle->buf.base = strdup(info->_default);
+  handle->buf.len = strlen(info->_default);
   int status = uv_db_get(th->db, strdup(info->key), NULL, storage_cb, handle);
   STORAGE_CHECK_IF(status, "uv_db_get fail");
 }

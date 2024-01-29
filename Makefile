@@ -181,6 +181,7 @@ endif
 
 ifeq ($(CONFIG_LIBUV_EXTENSION),y)
 ifeq ($(CONFIG_UNQLITE),y)
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/unqlite/unqlite
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/storage_impl.cpp
 FEATURELIST += system_storage
