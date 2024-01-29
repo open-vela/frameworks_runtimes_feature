@@ -318,6 +318,10 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case COMPLEX_CALLBACK: {
+                if (!feature_is_object(value)) {
+                    FEATURE_LOG_ERROR("arg type mismatch, need callback function !");
+                    return false;
+                }
                 // save into instance
                 CallbackType* callbackType = (CallbackType*)complexType;
                 auto callback_manager = static_cast<FeatureInstanceQjs*>(instance);
