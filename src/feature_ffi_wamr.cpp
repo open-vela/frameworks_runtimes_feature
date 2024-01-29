@@ -37,6 +37,13 @@ namespace ferry {
 
 namespace FeatureFFIWamr {
 
+#define PUSH_LOCAL_OBJ_REF(obj)                                                              \
+{                                                                                            \
+    wasm_local_obj_ref_t *ref = (wasm_local_obj_ref_t *)malloc(sizeof(wasm_local_obj_ref_t));\
+    wasm_runtime_push_local_object_ref(exec_env, ref);                                       \
+    ref->val = (wasm_obj_t)obj;                                                              \
+}
+
 static void* interface_from_target(uint64_t& target)
 {
     void* param = *((void **)(&target));
@@ -256,6 +263,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 const char *str = (char *)ptr;
                 printf("return str is %s\n", str);
                 wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
+                PUSH_LOCAL_OBJ_REF(obj);
                 set_wasm_var_by_type(void*, obj, value);
             } break;
             default: {
@@ -274,6 +282,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 fill_struct_data(obj_map_type, (uintptr_t)ptr, obj_arr, member_count);
                 /* call createWasmStruct api from feature_wamr_utils.h */
                 wasm_struct_obj_t obj = create_wasm_struct(exec_env, obj_arr, member_count);
+                PUSH_LOCAL_OBJ_REF(obj);
                 set_wasm_var_by_type(void*, obj, value);
             }
             break;
@@ -289,6 +298,7 @@ bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr
                 FtArray *array = (FtArray *)ptr;
                 uint32_t len = array->_size;
                 wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, (void**)(array->_element), len);
+                PUSH_LOCAL_OBJ_REF(obj);
                 set_wasm_var_by_type(void*, obj, value);
             }
             break;
