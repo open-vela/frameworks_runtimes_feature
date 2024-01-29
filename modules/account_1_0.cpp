@@ -186,6 +186,12 @@ static OptionalType service_internal_account_loginByScanInfo_member_checkSafeAdd
     .ival = false
 };
 
+static OptionalType service_internal_account_loginByScanInfo_member_velaPassTokenSkill_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_STRING,
+    .str = ""
+};
+
 static OptionalType service_internal_account_loginByScanInfo_member_cServiceId_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
@@ -205,7 +211,7 @@ static ObjectMember service_internal_account_loginByScanInfo_struct_members[] = 
     { "qrType", FT_MK_OPTIONAL(&service_internal_account_loginByScanInfo_member_qrType_opt_type), offsetof(service_internal_account_loginByScanInfo, _qrType), sizeof(FtString) },
     { "checkSafePhone", FT_MK_OPTIONAL(&service_internal_account_loginByScanInfo_member_checkSafePhone_opt_type), offsetof(service_internal_account_loginByScanInfo, _checkSafePhone), sizeof(FtBool) },
     { "checkSafeAddress", FT_MK_OPTIONAL(&service_internal_account_loginByScanInfo_member_checkSafeAddress_opt_type), offsetof(service_internal_account_loginByScanInfo, _checkSafeAddress), sizeof(FtBool) },
-    { "velaPassTokenSkill", FT_STRING, offsetof(service_internal_account_loginByScanInfo, _velaPassTokenSkill), sizeof(FtString) },
+    { "velaPassTokenSkill", FT_MK_OPTIONAL(&service_internal_account_loginByScanInfo_member_velaPassTokenSkill_opt_type), offsetof(service_internal_account_loginByScanInfo, _velaPassTokenSkill), sizeof(FtString) },
     { "cServiceId", FT_MK_OPTIONAL(&service_internal_account_loginByScanInfo_member_cServiceId_opt_type), offsetof(service_internal_account_loginByScanInfo, _cServiceId), sizeof(FtString) },
     { "cBackUri", FT_MK_OPTIONAL(&service_internal_account_loginByScanInfo_member_cBackUri_opt_type), offsetof(service_internal_account_loginByScanInfo, _cBackUri), sizeof(FtString) },
     { "loginCallback", FT_MK_COMPLEX(&service_internal_account_loginResCallBack_callback_type), offsetof(service_internal_account_loginByScanInfo, _loginCallback), sizeof(FtCallbackId) },
@@ -270,6 +276,12 @@ static OptionalType service_internal_account_loginByAuthInfo_member_checkSafeAdd
     .ival = false
 };
 
+static OptionalType service_internal_account_loginByAuthInfo_member_velaPassTokenSkill_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_STRING,
+    .str = ""
+};
+
 /****** for JIDL struct 'loginByAuthInfo' ******/
 static ObjectMember service_internal_account_loginByAuthInfo_struct_members[] = {
     { "serviceId", FT_STRING, offsetof(service_internal_account_loginByAuthInfo, _serviceId), sizeof(FtString) },
@@ -279,7 +291,7 @@ static ObjectMember service_internal_account_loginByAuthInfo_struct_members[] = 
     { "qrType", FT_MK_OPTIONAL(&service_internal_account_loginByAuthInfo_member_qrType_opt_type), offsetof(service_internal_account_loginByAuthInfo, _qrType), sizeof(FtString) },
     { "checkSafePhone", FT_MK_OPTIONAL(&service_internal_account_loginByAuthInfo_member_checkSafePhone_opt_type), offsetof(service_internal_account_loginByAuthInfo, _checkSafePhone), sizeof(FtBool) },
     { "checkSafeAddress", FT_MK_OPTIONAL(&service_internal_account_loginByAuthInfo_member_checkSafeAddress_opt_type), offsetof(service_internal_account_loginByAuthInfo, _checkSafeAddress), sizeof(FtBool) },
-    { "velaPassTokenSkill", FT_STRING, offsetof(service_internal_account_loginByAuthInfo, _velaPassTokenSkill), sizeof(FtString) },
+    { "velaPassTokenSkill", FT_MK_OPTIONAL(&service_internal_account_loginByAuthInfo_member_velaPassTokenSkill_opt_type), offsetof(service_internal_account_loginByAuthInfo, _velaPassTokenSkill), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&service_internal_account_loginByAuthSucc_callback_type), offsetof(service_internal_account_loginByAuthInfo, _success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&service_internal_account_loginFail_callback_type), offsetof(service_internal_account_loginByAuthInfo, _fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&service_internal_account_Comp_callback_type), offsetof(service_internal_account_loginByAuthInfo, _complete), sizeof(FtCallbackId) },
