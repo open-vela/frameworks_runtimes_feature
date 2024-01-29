@@ -229,10 +229,18 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
     bh_memcpy_s(argp + filled, args -filled, &thiz.gc_obj, sizeof(void *));
     filled += sizeof(void *);
 
+    uint32_t obj_cnt = 0;
     /* convert parameters to feature_value_t */
     for (int i = 0; i < fixed_argc; i++) {
         FeatureType ftype = cb_type->parameters[i];
         uint64_t target = 0;
+        /* if need create obj is string obj */
+        if (FT_IS_PRIMITIVE(ftype) && FT_GET_VALUE(ftype) == FT_CHAR) obj_cnt++;
+        /* if need create obj is struct obj or array obj */
+        if (FT_IS_COMPLEX(ftype)) {
+            ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(ftype);
+            if (complex_type->type == COMPLEX_STRUCT_MAP || complex_type->type == COMPLEX_ARRAY) obj_cnt++;
+        }
         if (!argToTarget(ap, ftype, target)) {
             FEATURE_LOG_ERROR("extract callback param failed !");
             return -1;
@@ -270,6 +278,9 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
     // convert filled form bytes to wamr slots
     filled = filled /(sizeof(uint32) /sizeof(char));
     wasm_runtime_call_func_ref(env, (wasm_func_obj_t)func_obj.gc_obj, filled, argv);
+
+    /* pop native create obj local ref ptr */
+    wasm_runtime_pop_local_object_refs(env, obj_cnt);
     return 0;
 }
 
