@@ -285,8 +285,6 @@ void ServerHelper::registerServer(const std::string& name)
         // 注册服务
         ALOGI("add %s to service manager", name.c_str());
         sm->addService(String16(name.c_str()), transport_server_);
-        transport_server_->decStrong(transport_server_.get());
-        transport_server_->getWeakRefs()->decWeak(transport_server_.get());
         register_flag_ = true;
     }
 }
