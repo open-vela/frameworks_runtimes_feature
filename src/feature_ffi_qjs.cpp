@@ -318,7 +318,9 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case COMPLEX_CALLBACK: {
-                if (!feature_is_object(value)) {
+                if (feature_is_undefined(value)) {
+                    break;
+                } else if (!feature_is_object(value)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need callback function !");
                     return false;
                 }
