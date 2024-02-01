@@ -29,6 +29,8 @@
 //////////////////// class MessageChannel
 MessageChannel::MessageChannel()
     : ft_instance_(nullptr)
+    , message_server_channel_(nullptr)
+    , session_server_channel_(nullptr)
     , message_server_recv_cb_(-1)
     , session_server_recv_cb_(-1)
 {
@@ -60,6 +62,13 @@ MessageChannel::~MessageChannel()
         server_help_ = nullptr;
     }
 
+    if (message_server_channel_ && session_server_channel_) {
+        message_server_channel_->clearMessageServerChannelCallback();
+        session_server_channel_->clearSessionServerChannelCallback();
+        message_server_channel_ = nullptr;
+        session_server_channel_ = nullptr;
+    }
+
     if (message_server_recv_cb_ != -1) {
         FeatureRemoveCallback(ft_instance_, message_server_recv_cb_);
     }
@@ -76,6 +85,12 @@ MessageChannel::~MessageChannel()
 
     if (!session_onclose_cb_map_.empty()) {
         for (auto& x : session_onclose_cb_map_) {
+            FeatureRemoveCallback(ft_instance_, x.second);
+        }
+    }
+
+    if (!action_cb_map_.empty()) {
+        for (auto& x : action_cb_map_) {
             FeatureRemoveCallback(ft_instance_, x.second);
         }
     }
@@ -303,9 +318,9 @@ void MessageChannel::registerServer(const std::string& name)
 {
     if (server_help_) {
         server_help_->registerServer(name);
+        message_server_channel_ = server_help_->getMessageTransportServer().get();
+        session_server_channel_ = server_help_->getMessageTransportServer().get();
     }
-    message_server_channel_ = server_help_->getMessageTransportServer().get();
-    session_server_channel_ = server_help_->getMessageTransportServer().get();
 
     if (message_server_channel_ && session_server_channel_) {
         message_server_channel_->setMessageServerChannelCallback(this);
