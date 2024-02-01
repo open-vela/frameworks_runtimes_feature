@@ -62,6 +62,10 @@ public:
     {
         message_server_channel_cb_ = cb;
     }
+    void clearMessageServerChannelCallback()
+    {
+        message_server_channel_cb_ = nullptr;
+    }
 
 protected:
     MessageServerChannelCallback* message_server_channel_cb_;
@@ -80,6 +84,10 @@ public:
     void setSessionServerChannelCallback(SessionServerChannelCallback* cb)
     {
         session_server_channel_cb_ = cb;
+    }
+    void clearSessionServerChannelCallback()
+    {
+        session_server_channel_cb_ = nullptr;
     }
 
 protected:

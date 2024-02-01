@@ -300,7 +300,11 @@ Status MessageTransportServer::sendMessage(
 {
     int32_t id = (int32_t)reply.get();
     reply_map_.insert(std::make_pair(id, reply));
-    message_server_channel_cb_->serverOnMessage(id, message);
+    if (message_server_channel_cb_) {
+        message_server_channel_cb_->serverOnMessage(id, message);
+    } else {
+        ALOGW("js server has been stoped, message channel is closed.");
+    }
     return Status::ok();
 }
 
@@ -310,7 +314,11 @@ Status MessageTransportServer::sendSessionMessage(
 {
     int32_t id = (int32_t)reply.get();
     reply_map_.insert(std::make_pair(id, reply));
-    session_server_channel_cb_->sessionOnMessage(id, message);
+    if (session_server_channel_cb_) {
+        session_server_channel_cb_->sessionOnMessage(id, message);
+    } else {
+        ALOGW("js server has been stoped, message channel is closed.");
+    }
     return Status::ok();
 }
 
