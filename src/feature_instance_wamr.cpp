@@ -280,7 +280,10 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType* cb_type, wasm_obj_
     wasm_runtime_call_func_ref(env, (wasm_func_obj_t)func_obj.gc_obj, filled, argv);
 
     /* pop native create obj local ref ptr */
-    wasm_runtime_pop_local_object_refs(env, obj_cnt);
+    for (uint32_t i = 0; i < obj_cnt; i++) {
+        wasm_local_obj_ref_t* local_ref = wasm_runtime_pop_local_object_ref(env);
+        free(local_ref);
+    }
     return 0;
 }
 
