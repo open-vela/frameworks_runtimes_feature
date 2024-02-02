@@ -659,7 +659,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         fr->flags |= O_WRONLY | O_CREAT;
         ft_context_ref ft_ctx = FeatureGetContext(feature);
         ft_type buffer_type = ft_get_type(ft_ctx, *(param->buffer));
-        uint8_t* buffer;
+        uint8_t* buffer = NULL;
         if (buffer_type == FT_TYPE_BUFFER || buffer_type == FT_TYPE_TYPED_BUFFER) {
             buffer = ft_to_buffer(ft_ctx, &(fr->len), *(param->buffer));
             FILE_INFO("got buffer, type: %d, size: %ld", buffer_type, fr->len);
