@@ -31,6 +31,14 @@ register:: $(FEATURE_LIST_PATH)
 
 # context::
 depend::
+	@echo "-------------------generate files----------------------"
+	$(foreach i,$(shell seq 1 $(words $(JIDL_PATH))), \
+		$(eval jidl_path=$(word $(i),$(JIDL_PATH))) \
+		$(eval out_path=$(word $(i),$(OUT_PATH))) \
+		$(eval file_name=$(strip $(basename $(notdir $(word $(i),$(JIDL_PATH))) .jidl))) \
+		echo "python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp"; \
+		python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp; \
+	)
 
 ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h),)
 	@echo "ajs_features_init.h is empty, need create it"

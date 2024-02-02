@@ -301,22 +301,12 @@ NOEXPORTSRCS = $(ASRCS)$(CSRCS)$(CXXSRCS)$(MAINSRC)
 
 ifneq ($(NOEXPORTSRCS),)
 BIN := $(APPDIR)/staging/libfeature.a
+include $(APPDIR)/frameworks/base/feature/Module.mk
 endif
 
 EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_descriptors.h \
                 include/feature_exports.h include/feature_main_exports.h src/README.md \
                 registry/README.md
-
-
-depend:: 
-	@echo "-------------------generate files----------------------"
-	$(foreach i,$(shell seq 1 $(words $(JIDL_PATH))), \
-		$(eval jidl_path=$(word $(i),$(JIDL_PATH))) \
-		$(eval out_path=$(word $(i),$(OUT_PATH))) \
-		$(eval file_name=$(strip $(basename $(notdir $(word $(i),$(JIDL_PATH))) .jidl))) \
-		echo "python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp"; \
-		python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp; \
-	)
 
 clean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
@@ -331,5 +321,4 @@ clean_context::
 	$(call DELFILE, $(PDATLIST))
 endif
 
-include $(APPDIR)/frameworks/base/feature/Module.mk
 include $(APPDIR)/Application.mk
