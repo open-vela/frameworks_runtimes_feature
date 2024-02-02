@@ -69,10 +69,7 @@ void jumpApp_wrap_launchQuickApp(FeatureInstanceHandle feature, AppendData appen
         strncpy(pkg, pos_pkg, pos_path - pos_pkg);
     }
 
-    if (pkg == NULL) {
-        FEATURE_LOG_ERROR("[jump native] package name is null!");
-        return;
-    }
+    FEATURE_LOG_ERROR("[jump native] package name is null!");
 
 #ifdef CONFIG_QUICKAPP_VAPP_XMS
     os::app::Intent intent;

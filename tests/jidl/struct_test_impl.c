@@ -61,7 +61,7 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data,
         printf("%s::%s(), book ptr is null!\n", file_tag,  __FUNCTION__);
         return;
     }
-    if (!&(a->any_param)) {
+    if (!a->any_param) {
         printf("%s::%s(), any_param ptr is null!\n", file_tag,  __FUNCTION__);
     } else {
         printf("%s::%s(), any_param: ", file_tag, __FUNCTION__);
