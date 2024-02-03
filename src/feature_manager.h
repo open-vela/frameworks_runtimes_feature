@@ -26,6 +26,7 @@
 namespace ferry {
 
 struct TaskData {
+    FeatureInstanceHandle instance;
     FeatureTaskCallback task_cb;
     void* data;
 };
@@ -60,9 +61,11 @@ public:
         return it != user_data_.end() ? it->second : nullptr;
     }
 
-    void addTask(FeatureTaskCallback task_cb, void* data);
+    void addTask(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data);
 
     void runAllTasks(int mode);
+
+    void removeTasks(FeatureInstanceHandle handle);
 
 private:
     FeatureRegistry* registry_;

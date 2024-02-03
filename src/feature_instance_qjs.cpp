@@ -117,6 +117,9 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
 
     // release all promises
     releasePromises();
+
+    // release all async callback
+    proto->featureManager()->removeTasks(this);
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)

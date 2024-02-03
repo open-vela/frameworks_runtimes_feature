@@ -71,16 +71,17 @@ void FeatureManager::unsetUVLoop()
     }
 }
 
-void FeatureManager::addTask(FeatureTaskCallback task_cb, void* data)
+void FeatureManager::addTask(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data)
 {
     TaskData task_data;
+    task_data.instance = handle;
     task_data.task_cb = task_cb;
     task_data.data = data;
     uv_mutex_lock(&mutex_);
     task_queue_.push(task_data);
+    uv_mutex_unlock(&mutex_);
     if (async_)
         uv_async_send(async_);
-    uv_mutex_unlock(&mutex_);
 }
 
 void FeatureManager::runAllTasks(int mode)
@@ -91,6 +92,20 @@ void FeatureManager::runAllTasks(int mode)
         TaskData task_data = task_queue_.front();
         task_data.task_cb(mode, task_data.data);
         task_queue_.pop();
+    }
+    uv_mutex_unlock(&mutex_);
+}
+
+void FeatureManager::removeTasks(FeatureInstanceHandle handle)
+{
+    uv_mutex_lock(&mutex_);
+    int task_queue_size = task_queue_.size();
+    for (int i = 0; i < task_queue_size; i++) {
+        TaskData task_data = task_queue_.front();
+        if (task_data.instance == handle) {
+            task_data.task_cb(FEATURE_TASK_MODE_FREE, task_data.data);
+            task_queue_.pop();
+        }
     }
     uv_mutex_unlock(&mutex_);
 }
