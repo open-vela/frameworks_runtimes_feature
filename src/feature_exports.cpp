@@ -337,7 +337,7 @@ void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
         FEATURE_LOG_ERROR("handle is null !");
         return;
     }
-    manager_from_instance(handle)->addTask(task_cb, data);
+    manager_from_instance(handle)->addTask(handle, task_cb, data);
 }
 
 FeatureManagerHandle FeatureCreateManager(const char* package_name)
