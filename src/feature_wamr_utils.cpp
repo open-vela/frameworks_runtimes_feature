@@ -21,23 +21,23 @@
 static wasm_value_type_t get_wasm_type_from_ts_val(wasm_exec_env_t exec_env, ts_value_t ts_val)
 {
     switch (ts_val.type) {
-        case TS_STRING: {
-            return VALUE_TYPE_STRINGREF;
-        }
-        case TS_NUMBER: {
-            return VALUE_TYPE_F64;
-        }
-        case TS_BOOLEAN: {
-            return VALUE_TYPE_I32;
-        }
-        default:
-            break;
+    case TS_STRING: {
+        return VALUE_TYPE_STRINGREF;
+    }
+    case TS_NUMBER: {
+        return VALUE_TYPE_F64;
+    }
+    case TS_BOOLEAN: {
+        return VALUE_TYPE_I32;
+    }
+    default:
+        break;
     }
     return 0;
 }
 
 static uint32_t get_wasm_struct_type(wasm_exec_env_t exec_env,
-                         wasm_value_type_t field_types[], uint32_t member_count, wasm_struct_type_t *p_struct_type)
+    wasm_value_type_t field_types[], uint32_t member_count, wasm_struct_type_t* p_struct_type)
 {
     bool mut;
     uint32_t type_count;
@@ -50,8 +50,7 @@ static uint32_t get_wasm_struct_type(wasm_exec_env_t exec_env,
     for (uint32_t i = 0; i < member_count; i++) {
         for (uint32_t j = 0; j < type_count; j++) {
             type = wasm_get_defined_type(module, j);
-            if (!wasm_defined_type_is_struct_type(type) ||
-                    wasm_struct_type_get_field_count((wasm_struct_type_t)type) != (member_count + 1))
+            if (!wasm_defined_type_is_struct_type(type) || wasm_struct_type_get_field_count((wasm_struct_type_t)type) != (member_count + 1))
                 continue;
 
             /* find the ref type of each field from cls struct, starting from index 1*/
@@ -86,7 +85,7 @@ static uint32_t get_wasm_struct_type(wasm_exec_env_t exec_env,
     +----------+      |---------------------------|
 */
 wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_arr[],
-                         uint32_t member_count)
+    uint32_t member_count)
 {
     if (member_count < 1)
         return NULL;
@@ -104,7 +103,7 @@ wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_ar
     }
     /* through ref type and member_count, find cls struct type */
     get_wasm_struct_type(exec_env, field_types, member_count,
-                             &cls_struct_type);
+        &cls_struct_type);
 
     /* create new cls struct obj through cls_struct_type */
     cls_struct_obj = wasm_struct_obj_new_with_type(exec_env, cls_struct_type);
@@ -112,31 +111,31 @@ wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_ar
     /* traverse the array element value and fill it in cls_struct_obj */
     for (uint32_t k = 0; k < member_count; k++) {
         switch (obj_arr[k].type) {
-            case TS_STRING: {
-                const char *str = (const char *)obj_arr[k].of.ref;
-                str_obj = create_wasm_string(exec_env, str);
-                ele.gc_obj = (wasm_obj_t)str_obj;
-            } break;
-            case TS_NUMBER: {
-                ele.f64 = obj_arr[k].of.f64;
-            } break;
-            case TS_BOOLEAN: {
-                ele.i32 = obj_arr[k].of.i32;
-            } break;
-            default:
-                break;
+        case TS_STRING: {
+            const char* str = (const char*)obj_arr[k].of.ref;
+            str_obj = create_wasm_string(exec_env, str);
+            ele.gc_obj = (wasm_obj_t)str_obj;
+        } break;
+        case TS_NUMBER: {
+            ele.f64 = obj_arr[k].of.f64;
+        } break;
+        case TS_BOOLEAN: {
+            ele.i32 = obj_arr[k].of.i32;
+        } break;
+        default:
+            break;
         }
         wasm_struct_obj_set_field(cls_struct_obj, k + 1, &ele);
     }
     return cls_struct_obj;
 }
 
-wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void *ptr)
+wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void* ptr)
 {
     wasm_anyref_obj_t any_obj = wasm_anyref_obj_new(exec_env, ptr);
     if (!any_obj) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
-                                   "alloc memory failed");
+            "alloc memory failed");
         return NULL;
     }
     wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)any_obj,
@@ -144,7 +143,7 @@ wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void *ptr)
     return any_obj;
 }
 
-static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t *p_array_type)
+static uint32_t get_any_array_type(wasm_module_t module, wasm_array_type_t* p_array_type)
 {
     uint32_t i, type_count;
     type_count = wasm_get_defined_type_count(module);
@@ -174,12 +173,12 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
 {
     wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     wasm_module_t module = wasm_runtime_get_module(module_inst);
-    wasm_local_obj_ref_t local_ref = {0};
+    wasm_local_obj_ref_t local_ref = { 0 };
     wasm_array_type_t any_array_type = nullptr;
     uint32_t type_idx = get_any_array_type(module, &any_array_type);
     if (type_idx < 0) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
-                                   "can not find any array type");
+            "can not find any array type");
         return nullptr;
     }
 
@@ -188,10 +187,10 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
     get_array_struct_type(module, type_idx, &array_struct_type);
 
     wasm_struct_obj_t array_struct = wasm_struct_obj_new_with_type(
-                    exec_env, array_struct_type);
+        exec_env, array_struct_type);
     if (!array_struct) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
-                                   "alloc memory failed");
+            "alloc memory failed");
         return nullptr;
     }
 
@@ -199,10 +198,10 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
     wasm_runtime_push_local_object_ref(exec_env, &local_ref);
     local_ref.val = (wasm_obj_t)array_struct;
 
-    wasm_value_t val = {0};
+    wasm_value_t val = { 0 };
     val.gc_obj = nullptr;
     wasm_array_obj_t array_obj = wasm_array_obj_new_with_type(
-                    exec_env, any_array_type, elem_count, &val);
+        exec_env, any_array_type, elem_count, &val);
     if (!array_obj) {
         wasm_runtime_pop_local_object_ref(exec_env);
         wasm_runtime_set_exception(module_inst, "alloc memory failed");
@@ -216,4 +215,3 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
     wasm_runtime_pop_local_object_ref(exec_env);
     return array_struct;
 }
-

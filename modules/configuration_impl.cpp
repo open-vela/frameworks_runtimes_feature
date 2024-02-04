@@ -14,54 +14,58 @@
  * limitations under the License.
  */
 #include "configuration.h"
-#include "uv_ext.h"
 #include "feature_log.h"
+#include "uv_ext.h"
 
-static const char *file_tag = "[jidl_feature] Configuration_impl";
+static const char* file_tag = "[jidl_feature] Configuration_impl";
 
-void system_configuration_onRegister(const char *feature_name) {
+void system_configuration_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_configuration_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_configuration_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_configuration_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_configuration_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_configuration_onUnregister(const char *feature_name) {
+void system_configuration_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-system_configuration_Configuration *system_configuration_wrap_getLocale(FeatureInstanceHandle feature, AppendData data) {
+system_configuration_Configuration* system_configuration_wrap_getLocale(FeatureInstanceHandle feature, AppendData data)
+{
     uv_locale_t uvlocale = {};
-    system_configuration_Configuration *config = system_configurationMallocConfiguration();
+    system_configuration_Configuration* config = system_configurationMallocConfiguration();
     int ret = uv_getlocale(&uvlocale);
 
-    if (ret <= 0)
-    {
+    if (ret <= 0) {
         FEATURE_LOG_ERROR("%s::%s getlocale failed\n", file_tag, __FUNCTION__);
         ret = uv_property_set(NULL, (const char*)UV_EXT_LOCALE_LANG_KEY, "zh_CN", NULL, NULL);
-        if (ret != 0)
-        {
+        if (ret != 0) {
             FEATURE_LOG_ERROR("%s::%s set locale failed\n", file_tag, __FUNCTION__);
         }
         ret = uv_getlocale(&uvlocale);
     }
-    char *language = (char *)FeatureMalloc(strlen(uvlocale.language) + 1, FT_CHAR);
+    char* language = (char*)FeatureMalloc(strlen(uvlocale.language) + 1, FT_CHAR);
     sprintf(language, "%s", uvlocale.language);
-    char *region =
-        (char *)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_CHAR);
+    char* region = (char*)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_CHAR);
     sprintf(region, "%s", uvlocale.country_region);
     config->language = language;
     config->countryOrRegion = region;

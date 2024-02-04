@@ -28,24 +28,24 @@ static const char* file_tag = "[jidl_feature] crypto_native";
 
 const char* crypto_err = NULL;
 
-#define CHECK_ERR_RET(ptr, msg) \
-    do { \
-        if (ptr == NULL) { \
+#define CHECK_ERR_RET(ptr, msg)                                               \
+    do {                                                                      \
+        if (ptr == NULL) {                                                    \
             FEATURE_LOG_ERROR("%s, check_err_ret, msg: %s\n", file_tag, msg); \
-            crypto_err = msg; \
-            return NULL;\
-        } \
+            crypto_err = msg;                                                 \
+            return NULL;                                                      \
+        }                                                                     \
     } while (0)
 
-#define CHECK_ERR_BREAK(ptr, msg) \
-    if (ptr == NULL) { \
+#define CHECK_ERR_BREAK(ptr, msg)                                           \
+    if (ptr == NULL) {                                                      \
         FEATURE_LOG_ERROR("%s, check_err_break, msg: %s\n", file_tag, msg); \
-        crypto_err = msg; \
-        break; \
+        crypto_err = msg;                                                   \
+        break;                                                              \
     }
 
 static bool setup_uv_aes(uv_aes_t* aes_ctx, int mode,
-        const unsigned char* key, const unsigned char* iv, int iv_offset, int iv_len)
+    const unsigned char* key, const unsigned char* iv, int iv_offset, int iv_len)
 {
     unsigned int key_bitlen = aes_ctx->aes_context.cipher_info->key_bitlen;
     if (uv_aes_set_key_base64(aes_ctx, mode, key, key_bitlen) != 0) {
@@ -53,7 +53,7 @@ static bool setup_uv_aes(uv_aes_t* aes_ctx, int mode,
         return false;
     }
 
-    unsigned int iv_size  = aes_ctx->aes_context.cipher_info->iv_size;
+    unsigned int iv_size = aes_ctx->aes_context.cipher_info->iv_size;
     if (iv_size != 0 && uv_aes_set_iv_base64(aes_ctx, iv, iv_offset, iv_len) != 0) {
         FEATURE_LOG_ERROR("%s, %s\n", file_tag, "crypto.aes set base64 iv failed");
         return false;
@@ -107,7 +107,7 @@ char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str
         ret_str[out_len] = '\0';
         uv_aes_free(&aes_ctx);
         return ret_str;
-    }while (false);
+    } while (false);
 
     uv_aes_free(&aes_ctx);
     return ret_str;
@@ -160,7 +160,7 @@ char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str
         ret_str[out_len] = '\0';
         uv_aes_free(&aes_ctx);
         return ret_str;
-    }while (false);
+    } while (false);
 
     uv_aes_free(&aes_ctx);
     return ret_str;
@@ -188,9 +188,9 @@ char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
             CHECK_ERR_BREAK(NULL, "crypto.rsa encrypt failed");
         }
         if (*is_text) {
-           if (uv_base64_encode(output, &ret) != 0) {
-               CHECK_ERR_BREAK(NULL, "crypto.rsa encode base64 failed");
-           }
+            if (uv_base64_encode(output, &ret) != 0) {
+                CHECK_ERR_BREAK(NULL, "crypto.rsa encode base64 failed");
+            }
             *buff_size = ret.len;
             ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
             memset(ret_str, 0, ret.len + 1);
@@ -200,13 +200,17 @@ char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
             ret_str = (char*)malloc(output.len * sizeof(char));
             memcpy(ret_str, output.base, output.len);
         }
-        if (output.base) free(output.base);
-        if (ret.base) free(ret.base);
+        if (output.base)
+            free(output.base);
+        if (ret.base)
+            free(ret.base);
         return ret_str;
     } while (false);
 
-    if (output.base) free(output.base);
-    if (ret.base) free(ret.base);
+    if (output.base)
+        free(output.base);
+    if (ret.base)
+        free(ret.base);
     return ret_str;
 }
 
@@ -247,17 +251,21 @@ char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
         memset(ret_str, 0, out_len);
         memcpy(ret_str, output.base, output.len);
 
-        if (input.base) free(input.base);
-        if (output.base) free(output.base);
+        if (input.base)
+            free(input.base);
+        if (output.base)
+            free(output.base);
         return ret_str;
     } while (false);
 
-    if (input.base) free(input.base);
-    if (output.base) free(output.base);
+    if (input.base)
+        free(input.base);
+    if (output.base)
+        free(output.base);
     return ret_str;
 }
 
-bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, uint8_t* sig_buf, size_t seg_size,  bool sig_text)
+bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, uint8_t* sig_buf, size_t seg_size, bool sig_text)
 {
     crypto_err = NULL;
     uv_buf_t type = { 0 };
@@ -426,13 +434,17 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
             memcpy(ret_str, out.base, out.len);
         }
 
-        if (out.base) free(out.base);
-        if (ret.base) free(ret.base);
+        if (out.base)
+            free(out.base);
+        if (ret.base)
+            free(ret.base);
         return ret_str;
-    }while (false);
+    } while (false);
 
-    if (out.base) free(out.base);
-    if (ret.base) free(ret.base);
+    if (out.base)
+        free(out.base);
+    if (ret.base)
+        free(ret.base);
     return NULL;
 }
 
@@ -471,15 +483,21 @@ char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_s
         memset(ret_str, 0, ret.len + 1);
         memcpy(ret_str, ret.base, ret.len);
 
-        if (text.base) free(text.base);
-        if (out.base) free(out.base);
-        if (ret.base) free(ret.base);
+        if (text.base)
+            free(text.base);
+        if (out.base)
+            free(out.base);
+        if (ret.base)
+            free(ret.base);
         return ret_str;
     } while (false);
 
-    if (text.base) free(text.base);
-    if (out.base) free(out.base);
-    if (ret.base) free(ret.base);
+    if (text.base)
+        free(text.base);
+    if (out.base)
+        free(out.base);
+    if (ret.base)
+        free(ret.base);
     return NULL;
 }
 
@@ -518,13 +536,17 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
 
         char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
         memcpy(ret_str, ret.base, ret.len);
-        if (out.base) free(out.base);
-        if (ret.base) free(ret.base);
+        if (out.base)
+            free(out.base);
+        if (ret.base)
+            free(ret.base);
         return ret_str;
     } while (false);
 
-    if (out.base) free(out.base);
-    if (ret.base) free(ret.base);
+    if (out.base)
+        free(out.base);
+    if (ret.base)
+        free(ret.base);
     return NULL;
 }
 
@@ -570,4 +592,3 @@ char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str
     free(ret.base);
     return NULL;
 }
-

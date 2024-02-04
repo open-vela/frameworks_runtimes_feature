@@ -15,18 +15,20 @@
  */
 
 #include "feature_context_qjs.h"
+// clang-format off
 #include "value_translator_qjs.h"
 #include "feature_value_translator.h"
+// clang-format on
 
 #include <malloc.h>
 #include <stdio.h>
 
 #define MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, func, val) \
-    do {                                                                 \
-        JSContext* js_ctx = GET_QJS_CTX(ft_ctx);                         \
-        qjs_val_t ret;                                                   \
-        ret.js_val = func(js_ctx, val);                                  \
-        return QJS_VAL_TO_FT(ret);                                       \
+    do {                                                        \
+        JSContext* js_ctx = GET_QJS_CTX(ft_ctx);                \
+        qjs_val_t ret;                                          \
+        ret.js_val = func(js_ctx, val);                         \
+        return QJS_VAL_TO_FT(ret);                              \
     } while (false)
 
 #define MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, func, argv, argc) \
@@ -116,7 +118,8 @@ static ft_value_t _ft_string(ft_context_ref ft_ctx, const char* val)
     MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, JS_NewString, val);
 }
 
-static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size)
+static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff,
+    uint32_t size)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
@@ -124,15 +127,23 @@ static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size
     return QJS_VAL_TO_FT(ret);
 }
 
-static ft_value_t _ft_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type) {
+static ft_value_t _ft_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff,
+    uint32_t size, uint32_t type)
+{
     static const char* type_names[] = {
-        "Int8Array", "Uint8Array", "Int16Array", "Uint16Array",
-        "Int32Array", "Uint32Array", "Float32Array", "Float64Array",
+        "Int8Array",
+        "Uint8Array",
+        "Int16Array",
+        "Uint16Array",
+        "Int32Array",
+        "Uint32Array",
+        "Float32Array",
+        "Float64Array",
     };
 
     qjs_val_t ret;
     ret.js_val = JS_UNDEFINED;
-    if (type >= (sizeof(type_names)/sizeof(type_names[0]))) {
+    if (type >= (sizeof(type_names) / sizeof(type_names[0]))) {
         return QJS_VAL_TO_FT(ret);
     }
 
@@ -141,47 +152,55 @@ static ft_value_t _ft_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32
     JSValueConst global = JS_GetGlobalObject(js_ctx);
     JSValueConst uint8array_ctr = JS_GetPropertyStr(js_ctx, global, type_names[type]);
     JSValue args[1] = { array_buffer };
-    ret.js_val =  JS_CallConstructor(js_ctx, uint8array_ctr, 1, args);
+    ret.js_val = JS_CallConstructor(js_ctx, uint8array_ctr, 1, args);
     JS_FreeValue(js_ctx, array_buffer);
     return QJS_VAL_TO_FT(ret);
 }
 
-static ft_value_t _ft_int_array(ft_context_ref ft_ctx, int32_t* val, uint32_t size)
+static ft_value_t _ft_int_array(ft_context_ref ft_ctx, int32_t* val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewInt32, val, size);
 }
 
-static ft_value_t _ft_uint_array(ft_context_ref ft_ctx, uint32_t* val, uint32_t size)
+static ft_value_t _ft_uint_array(ft_context_ref ft_ctx, uint32_t* val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewUint32, val, size);
 }
 
-static ft_value_t _ft_int64_array(ft_context_ref ft_ctx, int64_t* val, uint32_t size)
+static ft_value_t _ft_int64_array(ft_context_ref ft_ctx, int64_t* val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewInt64, val, size);
 }
 
-static ft_value_t _ft_uint64_array(ft_context_ref ft_ctx, uint64_t* val, uint32_t size)
+static ft_value_t _ft_uint64_array(ft_context_ref ft_ctx, uint64_t* val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewBigUint64, val, size);
 }
 
-static ft_value_t _ft_double_array(ft_context_ref ft_ctx, double* val, uint32_t size)
+static ft_value_t _ft_double_array(ft_context_ref ft_ctx, double* val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewFloat64, val, size);
 }
 
-static ft_value_t _ft_bool_array(ft_context_ref ft_ctx, bool* val, uint32_t size)
+static ft_value_t _ft_bool_array(ft_context_ref ft_ctx, bool* val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewBool, val, size);
 }
 
-static ft_value_t _ft_string_array(ft_context_ref ft_ctx, const char** val, uint32_t size)
+static ft_value_t _ft_string_array(ft_context_ref ft_ctx, const char** val,
+    uint32_t size)
 {
     MAKE_JS_ARRAY_WITH_NEW_FUNC_AND_ARGS(ft_ctx, JS_NewString, val, size);
 }
 
-static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename)
+static ft_value_t _ft_parse_json(ft_context_ref ft_ctx, const char* buf,
+    size_t buf_len, const char* filename)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
@@ -217,7 +236,8 @@ static const char* _ft_to_string(ft_context_ref ft_ctx, ft_value_t f_val)
     return ret_str;
 }
 
-static uint8_t* _ft_to_buffer(ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val)
+static uint8_t* _ft_to_buffer(ft_context_ref ft_ctx, size_t* p_size,
+    ft_value_t f_val)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     JSValue val = FT_VAL_GET_JS_VAL(f_val);
@@ -245,7 +265,8 @@ static bool _ft_to_int(ft_context_ref ft_ctx, ft_value_t f_val, int32_t* pres)
     return ret == 0;
 }
 
-static bool _ft_to_uint(ft_context_ref ft_ctx, ft_value_t f_val, uint32_t* pres)
+static bool _ft_to_uint(ft_context_ref ft_ctx, ft_value_t f_val,
+    uint32_t* pres)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
@@ -253,7 +274,8 @@ static bool _ft_to_uint(ft_context_ref ft_ctx, ft_value_t f_val, uint32_t* pres)
     return ret == 0;
 }
 
-static bool _ft_to_int64(ft_context_ref ft_ctx, ft_value_t f_val, int64_t* pres)
+static bool _ft_to_int64(ft_context_ref ft_ctx, ft_value_t f_val,
+    int64_t* pres)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
@@ -261,7 +283,8 @@ static bool _ft_to_int64(ft_context_ref ft_ctx, ft_value_t f_val, int64_t* pres)
     return ret == 0;
 }
 
-static bool _ft_to_uint64(ft_context_ref ft_ctx, ft_value_t f_val, uint64_t* pres)
+static bool _ft_to_uint64(ft_context_ref ft_ctx, ft_value_t f_val,
+    uint64_t* pres)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
@@ -269,7 +292,8 @@ static bool _ft_to_uint64(ft_context_ref ft_ctx, ft_value_t f_val, uint64_t* pre
     return ret == 0;
 }
 
-static bool _ft_to_double(ft_context_ref ft_ctx, ft_value_t f_val, double* pres)
+static bool _ft_to_double(ft_context_ref ft_ctx, ft_value_t f_val,
+    double* pres)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
@@ -310,7 +334,8 @@ static uint32_t _ft_array_size(ft_context_ref ft_ctx, const ft_value_t f_obj)
     return 0;
 }
 
-static ft_value_t _ft_array_at(ft_context_ref ft_ctx, const ft_value_t f_obj, uint32_t idx)
+static ft_value_t _ft_array_at(ft_context_ref ft_ctx, const ft_value_t f_obj,
+    uint32_t idx)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t q_obj = FT_VAL_TO_QJS(f_obj);
@@ -329,14 +354,16 @@ static ft_value_t _ft_array_at(ft_context_ref ft_ctx, const ft_value_t f_obj, ui
 }
 
 // object operations
-ft_value_t _ft_new_object (ft_context_ref ft_ctx) {
+ft_value_t _ft_new_object(ft_context_ref ft_ctx)
+{
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     qjs_val_t ret;
     ret.js_val = JS_NewObject(js_ctx);
     return QJS_VAL_TO_FT(ret);
 }
 
-static ft_value_t _ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t f_obj, const char* key)
+static ft_value_t _ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t f_obj,
+    const char* key)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     JSValue js_obj = FT_VAL_GET_JS_VAL(f_obj);
@@ -350,7 +377,8 @@ static ft_value_t _ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t f_obj, 
     return QJS_VAL_TO_FT(ret);
 }
 
-static bool _ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t f_obj, const char* prop, ft_value_t f_val)
+static bool _ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t f_obj,
+    const char* prop, ft_value_t f_val)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     JSValue js_obj = FT_VAL_GET_JS_VAL(f_obj);
@@ -376,12 +404,13 @@ static void _ft_free_string(ft_context_ref ft_ctx, const char* str)
     JS_FreeCString(js_ctx, str);
 }
 
-template<typename TCtx, typename TTarget>
+template <typename TCtx, typename TTarget>
 struct InitContext {
-    template<typename TNative>
-        using TransType = FtValTranslator<TNative, TCtx, TTarget>;
+    template <typename TNative>
+    using TransType = FtValTranslator<TNative, TCtx, TTarget>;
 
-    static inline void init(ft_context_ref rt_ctx) {
+    static inline void init(ft_context_ref rt_ctx)
+    {
         rt_ctx->ft_from_int = TransType<int32_t>::from;
         rt_ctx->ft_from_uint = TransType<uint32_t>::from;
         rt_ctx->ft_from_int64 = TransType<int64_t>::from;
@@ -403,7 +432,7 @@ struct InitContext {
 
         rt_ctx->ft_to_int = TransType<int32_t>::to;
         rt_ctx->ft_to_uint = TransType<uint32_t>::to;
-        rt_ctx->ft_to_int64 =TransType<int64_t>::to;
+        rt_ctx->ft_to_int64 = TransType<int64_t>::to;
         rt_ctx->ft_to_uint64 = TransType<uint64_t>::to;
         rt_ctx->ft_to_double = TransType<double>::to;
         rt_ctx->ft_to_bool = TransType<bool>::to;
@@ -473,6 +502,4 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     return true;
 }
 
-void UninitFeatureContextQjs(ft_context_ref context)
-{
-}
+void UninitFeatureContextQjs(ft_context_ref context) { }

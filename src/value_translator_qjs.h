@@ -18,8 +18,8 @@
 #define __VALUE_TRANSLATOR_QJS_H__
 
 #include "feature.h"
-#include "feature_log.h"
 #include "feature_context_qjs.h"
+#include "feature_log.h"
 
 #include <cstdarg>
 #include <stdalign.h>
@@ -27,7 +27,8 @@
 namespace value_translator {
 
 // to native values
-static inline bool toNative(JSContext* ctx, const JSValue& target, int32_t* pnative) {
+static inline bool toNative(JSContext* ctx, const JSValue& target, int32_t* pnative)
+{
     if (!JS_IsNumber(target)) {
         FEATURE_LOG_ERROR("arg type mismatch, need number type arg !");
         return false;
@@ -35,7 +36,8 @@ static inline bool toNative(JSContext* ctx, const JSValue& target, int32_t* pnat
     return JS_ToInt32(ctx, pnative, target) == 0;
 }
 
-static inline bool toNative(JSContext* ctx, const JSValue& target, uint32_t* pnative) {
+static inline bool toNative(JSContext* ctx, const JSValue& target, uint32_t* pnative)
+{
     if (!JS_IsNumber(target)) {
         FEATURE_LOG_ERROR("arg type mismatch, need number type arg !");
         return false;
@@ -43,7 +45,8 @@ static inline bool toNative(JSContext* ctx, const JSValue& target, uint32_t* pna
     return JS_ToUint32(ctx, pnative, target) == 0;
 }
 
-static inline bool toNative(JSContext* ctx, const JSValue& target, int64_t* pnative) {
+static inline bool toNative(JSContext* ctx, const JSValue& target, int64_t* pnative)
+{
     if (!JS_IsNumber(target)) {
         FEATURE_LOG_ERROR("arg type mismatch, need number type arg !");
         return false;
@@ -51,7 +54,8 @@ static inline bool toNative(JSContext* ctx, const JSValue& target, int64_t* pnat
     return JS_ToInt64(ctx, pnative, target) == 0;
 }
 
-static inline bool toNative(JSContext* ctx, const JSValue& target, uint64_t* pnative) {
+static inline bool toNative(JSContext* ctx, const JSValue& target, uint64_t* pnative)
+{
     if (!JS_IsNumber(target)) {
         FEATURE_LOG_ERROR("arg type mismatch, need number type arg !");
         return false;
@@ -59,7 +63,8 @@ static inline bool toNative(JSContext* ctx, const JSValue& target, uint64_t* pna
     return JS_ToIndex(ctx, pnative, target) == 0;
 }
 
-static inline bool toNative(JSContext* ctx, const JSValue& target, double* pnative) {
+static inline bool toNative(JSContext* ctx, const JSValue& target, double* pnative)
+{
     if (!JS_IsNumber(target)) {
         FEATURE_LOG_ERROR("arg type mismatch, need number type arg !");
         return false;
@@ -77,42 +82,50 @@ bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative);
 bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, size_t* psize);
 
 // to target values
-static inline bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget)
+{
     *ptarget = FT_VAL_GET_JS_VAL(native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, int32_t native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, int32_t native, JSValue* ptarget)
+{
     *ptarget = JS_NewInt32(ctx, native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, uint32_t native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, uint32_t native, JSValue* ptarget)
+{
     *ptarget = JS_NewUint32(ctx, native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, int64_t native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, int64_t native, JSValue* ptarget)
+{
     *ptarget = JS_NewInt64(ctx, native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, uint64_t native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, uint64_t native, JSValue* ptarget)
+{
     *ptarget = JS_NewBigUint64(ctx, native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, double native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, double native, JSValue* ptarget)
+{
     *ptarget = JS_NewFloat64(ctx, native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, bool native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, bool native, JSValue* ptarget)
+{
     *ptarget = JS_NewBool(ctx, native);
     return true;
 }
 
-static inline bool toTarget(JSContext* ctx, const char* native, JSValue* ptarget) {
+static inline bool toTarget(JSContext* ctx, const char* native, JSValue* ptarget)
+{
     *ptarget = JS_NewString(ctx, native);
     return true;
 }
@@ -120,7 +133,8 @@ static inline bool toTarget(JSContext* ctx, const char* native, JSValue* ptarget
 bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget);
 
 // for ArrayBuffer
-static inline bool toTargetBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, JSValue* ptarget) {
+static inline bool toTargetBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, JSValue* ptarget)
+{
     *ptarget = JS_NewArrayBufferCopy(ctx, buff, size);
     return true;
 }
@@ -144,7 +158,8 @@ bool toTargetArray(JSContext* ctx, bool* val, uint32_t size, JSValue* ptarget);
 bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* ptarget);
 
 // object
-static inline JSValue newObject (JSContext* ctx) {
+static inline JSValue newObject(JSContext* ctx)
+{
     return JS_NewObject(ctx);
 }
 
@@ -153,7 +168,8 @@ bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int id
 bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field);
 
 // function for handling arrays
-static inline JSValue newArray (JSContext* ctx) {
+static inline JSValue newArray(JSContext* ctx)
+{
     return JS_NewArray(ctx);
 }
 
@@ -163,28 +179,34 @@ JSValue arrayGet(JSContext* ctx, const JSValue& array, uint32_t idx);
 
 bool arraySet(JSContext* ctx, const JSValue& array, int32_t idx, JSValue val);
 
-static inline bool isNull(JSContext* ctx, const JSValue& target) {
+static inline bool isNull(JSContext* ctx, const JSValue& target)
+{
     return !!JS_IsNull(target);
 }
 
-static inline bool isUndefined(JSContext* ctx, const JSValue& target) {
+static inline bool isUndefined(JSContext* ctx, const JSValue& target)
+{
     return !!JS_IsUndefined(target);
 }
 
-static inline bool isString(JSContext* ctx, const JSValue& target) {
+static inline bool isString(JSContext* ctx, const JSValue& target)
+{
     return !!JS_IsString(target);
 }
 
-static inline bool isArray(JSContext* ctx, const JSValue& target) {
+static inline bool isArray(JSContext* ctx, const JSValue& target)
+{
     return !!JS_IsArray(ctx, target);
 }
 
-static inline void freeValue(JSContext* ctx, JSValue target) {
+static inline void freeValue(JSContext* ctx, JSValue target)
+{
     JS_FreeValue(ctx, target);
     target = JS_UNDEFINED;
 }
 
-static inline void freeCString(JSContext* ctx, char* str) {
+static inline void freeCString(JSContext* ctx, char* str)
+{
     JS_FreeCString(ctx, str);
 }
 

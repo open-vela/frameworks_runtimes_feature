@@ -22,17 +22,19 @@
 
 namespace ferry {
 
-static inline wasm_obj_t addRef(wasm_exec_env_t env, wasm_obj_t& value) {
+static inline wasm_obj_t addRef(wasm_exec_env_t env, wasm_obj_t& value)
+{
     return value;
 }
 
-static inline void releaseRef(wasm_exec_env_t env, wasm_obj_t& value) {
+static inline void releaseRef(wasm_exec_env_t env, wasm_obj_t& value)
+{
 }
 
-static inline bool isSameValue(wasm_exec_env_t env, wasm_obj_t& lvalue, wasm_obj_t& ralue) {
+static inline bool isSameValue(wasm_exec_env_t env, wasm_obj_t& lvalue, wasm_obj_t& ralue)
+{
     return false; // to be implement
 }
 
 }
 #endif // __CALLBACK_MANAGER_WAMR_H__
-

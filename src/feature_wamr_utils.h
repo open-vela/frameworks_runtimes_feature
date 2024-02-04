@@ -24,31 +24,31 @@ extern "C" {
 #endif
 
 #include "gc_export.h"
-#include "wasm_export.h"
 #include "libdyntype_export.h"
-#include "type_utils.h"
-#include "wamr_utils.h"
 #include "object_utils.h"
 #include "quickjs/quickjs.h"
+#include "type_utils.h"
+#include "wamr_utils.h"
+#include "wasm_export.h"
 
-#define set_wasm_var_by_type(type, val, var) ((type &)(var) = (val))
+#define set_wasm_var_by_type(type, val, var) ((type&)(var) = (val))
 
-#define get_wasm_args_by_type(type, args) (*((type *)(&args)))
+#define get_wasm_args_by_type(type, args) (*((type*)(&args)))
 
 /* wasm runtime lib */
-JSValue* dynamic_dup_value(JSContext *ctx, JSValue value);
-uint32_t get_libdyntype_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-uint32_t get_lib_console_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-uint32_t get_lib_array_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-uint32_t get_lib_timer_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
-uint32_t get_struct_indirect_symbols(char **p_module_name, NativeSymbol **p_native_symbols);
+JSValue* dynamic_dup_value(JSContext* ctx, JSValue value);
+uint32_t get_libdyntype_symbols(char** p_module_name, NativeSymbol** p_native_symbols);
+uint32_t get_lib_console_symbols(char** p_module_name, NativeSymbol** p_native_symbols);
+uint32_t get_lib_array_symbols(char** p_module_name, NativeSymbol** p_native_symbols);
+uint32_t get_lib_timer_symbols(char** p_module_name, NativeSymbol** p_native_symbols);
+uint32_t get_struct_indirect_symbols(char** p_module_name, NativeSymbol** p_native_symbols);
 
 dyn_value_t dyntype_callback_wasm_dispatcher(void* exec_env_v, dyn_ctx_t ctx, void* vfunc,
-                         dyn_value_t this_obj, int argc, dyn_value_t* args);
+    dyn_value_t this_obj, int argc, dyn_value_t* args);
 
 wasm_struct_obj_t create_wasm_struct(wasm_exec_env_t exec_env, ts_value_t obj_arr[],
-                         uint32_t member_count);
-wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void *ptr);
+    uint32_t member_count);
+wasm_anyref_obj_t create_anyref_obj(wasm_exec_env_t exec_env, const void* ptr);
 wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t elem_count);
 
 #ifdef __cplusplus

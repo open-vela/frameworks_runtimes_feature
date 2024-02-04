@@ -19,36 +19,43 @@
 
 static const char* file_tag = "[jidl_feature] Error_impl";
 
-void Error_onRegister(const char* feature_name) {
-  FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+void Error_onRegister(const char* feature_name)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void Error_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+void Error_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void Error_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+void Error_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void Error_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+void Error_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void Error_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
-  FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+void Error_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void Error_onUnregister(const char* feature_name) {
-  FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+void Error_onUnregister(const char* feature_name)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 FtString Error_wrap_strerror(FeatureInstanceHandle feature, AppendData data,
-                             FtInt errnum) {
-  const char* err = uv_strerror(errnum);
-  FEATURE_LOG_DEBUG("%s::%s error_code:%d strerror:%s", file_tag, __FUNCTION__,
-                    errnum, err);
-  char* errstr = (char*)FeatureMalloc(strlen(err) + 1, FT_CHAR);
-  strcpy(errstr, err);
-  return errstr;
+    FtInt errnum)
+{
+    const char* err = uv_strerror(errnum);
+    FEATURE_LOG_DEBUG("%s::%s error_code:%d strerror:%s", file_tag, __FUNCTION__,
+        errnum, err);
+    char* errstr = (char*)FeatureMalloc(strlen(err) + 1, FT_CHAR);
+    strcpy(errstr, err);
+    return errstr;
 }

@@ -22,10 +22,10 @@
 #include "feature_log.h"
 #include "feature_utils.h"
 
-#include "value_translator.h"
-#include "feature_instance.h"
 #include "feature_common.h"
 #include "feature_ffi.h"
+#include "feature_instance.h"
+#include "value_translator.h"
 
 #include <cstdarg>
 #include <ffi.h>
@@ -33,178 +33,181 @@
 
 namespace ferry {
 
-template<typename TNative, typename TCtx, typename TTarget>
-void nativeToTarget(TCtx ctx, void* ptr, TTarget& target) {
-  value_translator::toTarget(ctx, *((TNative*)ptr), &target);
+template <typename TNative, typename TCtx, typename TTarget>
+void nativeToTarget(TCtx ctx, void* ptr, TTarget& target)
+{
+    value_translator::toTarget(ctx, *((TNative*)ptr), &target);
 }
 
-template<typename TCtx, typename TTarget>
+template <typename TCtx, typename TTarget>
 bool convertValueToTarget(FeatureType ftype,
     TCtx ctx, void* pnative, TTarget& target)
 {
     FEATURE_CHECK_NE(pnative, nullptr);
     if (FT_IS_REFERENCE(ftype)) {
-            pnative = *(void**)pnative;
+        pnative = *(void**)pnative;
     }
     if (FT_IS_PRIMITIVE(ftype)) {
         switch (FT_GET_VALUE(ftype)) {
-            case FT_VOID: {
-                FEATURE_LOG_ERROR("void not supported !");
-                return false;
-            } break;
-            case FT_INT: {
-                nativeToTarget<int32_t>(ctx, pnative, target);
-            } break;
-            case FT_INT8: {
-                nativeToTarget<int8_t>(ctx, pnative, target);
-            } break;
-            case FT_UINT8: {
-                nativeToTarget<uint8_t>(ctx, pnative, target);
-            } break;
-            case FT_INT16: {
-                nativeToTarget<int16_t>(ctx, pnative, target);
-            } break;
-            case FT_UINT16: {
-                nativeToTarget<uint16_t>(ctx, pnative, target);
-            } break;
-            case FT_INT32: {
-                nativeToTarget<int32_t>(ctx, pnative, target);
-            } break;
-            case FT_UINT32: {
-                nativeToTarget<uint32_t>(ctx, pnative, target);
-            } break;
-            case FT_INT64: {
-                nativeToTarget<int64_t>(ctx, pnative, target);
-            } break;
-            case FT_UINT64: {
-                nativeToTarget<uint64_t>(ctx, pnative, target);
-            } break;
-            case FT_FLOAT: {
-                nativeToTarget<float>(ctx, pnative, target);
-            } break;
-            case FT_DOUBLE: {
-                nativeToTarget<double>(ctx, pnative, target);
-            } break;
-            case FT_BOOLEAN: {
-                nativeToTarget<bool>(ctx, pnative, target);
-            } break;
-            case FT_CHAR: {
-                if (!pnative) {
-                    const char* empty_str = "";
-                    nativeToTarget<const char*>(ctx, &empty_str, target);
-                } else {
-                    nativeToTarget<const char*>(ctx, &pnative, target);
-                }
-            } break;
-            case FT_ANY: {
-                if (!pnative) {
-                    ft_value_t null_val = value_translator::nullFtVal();
-                    nativeToTarget<ft_value_t>(ctx, &null_val, target);
-                } else {
-                    nativeToTarget<ft_value_t>(ctx, pnative, target);
-                }
-            } break;
-            default: {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return false;
+        case FT_VOID: {
+            FEATURE_LOG_ERROR("void not supported !");
+            return false;
+        } break;
+        case FT_INT: {
+            nativeToTarget<int32_t>(ctx, pnative, target);
+        } break;
+        case FT_INT8: {
+            nativeToTarget<int8_t>(ctx, pnative, target);
+        } break;
+        case FT_UINT8: {
+            nativeToTarget<uint8_t>(ctx, pnative, target);
+        } break;
+        case FT_INT16: {
+            nativeToTarget<int16_t>(ctx, pnative, target);
+        } break;
+        case FT_UINT16: {
+            nativeToTarget<uint16_t>(ctx, pnative, target);
+        } break;
+        case FT_INT32: {
+            nativeToTarget<int32_t>(ctx, pnative, target);
+        } break;
+        case FT_UINT32: {
+            nativeToTarget<uint32_t>(ctx, pnative, target);
+        } break;
+        case FT_INT64: {
+            nativeToTarget<int64_t>(ctx, pnative, target);
+        } break;
+        case FT_UINT64: {
+            nativeToTarget<uint64_t>(ctx, pnative, target);
+        } break;
+        case FT_FLOAT: {
+            nativeToTarget<float>(ctx, pnative, target);
+        } break;
+        case FT_DOUBLE: {
+            nativeToTarget<double>(ctx, pnative, target);
+        } break;
+        case FT_BOOLEAN: {
+            nativeToTarget<bool>(ctx, pnative, target);
+        } break;
+        case FT_CHAR: {
+            if (!pnative) {
+                const char* empty_str = "";
+                nativeToTarget<const char*>(ctx, &empty_str, target);
+            } else {
+                nativeToTarget<const char*>(ctx, &pnative, target);
             }
+        } break;
+        case FT_ANY: {
+            if (!pnative) {
+                ft_value_t null_val = value_translator::nullFtVal();
+                nativeToTarget<ft_value_t>(ctx, &null_val, target);
+            } else {
+                nativeToTarget<ft_value_t>(ctx, pnative, target);
+            }
+        } break;
+        default: {
+            FEATURE_LOG_WARN("unsupported type detected !");
+            return false;
+        }
         }
     } else if (FT_IS_COMPLEX(ftype)) {
         ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
         switch (complex_type->type) {
-            case COMPLEX_STRUCT_MAP: {
-                ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
-                auto member = obj_map_type.members;
-                auto member_count = countMember(member);
-                target = value_translator::newObject(ctx);
-                for (int i = 0; i < member_count; i++) {
-                    // fill it
-                    void* member_ptr = (void*)((char*)pnative + member->offset);
-                    TTarget prop;
-                    bool ret = convertValueToTarget(member->type, ctx, member_ptr, prop);
-                    if (!ret) {
-                        value_translator::freeValue(ctx, prop);
-                        FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
-                        return false;
-                    }
-                    value_translator::setObjectField(ctx, target, member->name, prop);
-                    member++;
-                }
-            } break;
-            case COMPLEX_OPTIONAL: {
-                OptionalType* opt_type = (OptionalType*)complex_type;
-                bool ret = convertValueToTarget(opt_type->type, ctx, pnative, target);
+        case COMPLEX_STRUCT_MAP: {
+            ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
+            auto member = obj_map_type.members;
+            auto member_count = countMember(member);
+            target = value_translator::newObject(ctx);
+            for (int i = 0; i < member_count; i++) {
+                // fill it
+                void* member_ptr = (void*)((char*)pnative + member->offset);
+                TTarget prop;
+                bool ret = convertValueToTarget(member->type, ctx, member_ptr, prop);
                 if (!ret) {
-                    value_translator::freeValue(ctx, target);
-                    FEATURE_LOG_ERROR("convert optional to guest failed !");
+                    value_translator::freeValue(ctx, prop);
+                    FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
                     return false;
                 }
-            } break;
-            case COMPLEX_CALLBACK: {
-                // unreachable
-                FEATURE_LOG_ERROR("convert callback to guest is unreachable");
-            } break;
-            case COMPLEX_ARRAY: {
-                // convert to guest
-                ArrayType* array_type = (ArrayType*)complex_type;
-                FtArray* array_data = (FtArray*)pnative;
-                auto elem_type = array_type->element_type;
-                FEATURE_CHECK_EQ(FT_IS_REFERENCE(elem_type), true);
-                size_t elem_size = sizeof(uintptr_t);
-                // exact and create js target
-                target = value_translator::newArray(ctx);
-                for (int32_t i = 0; i < array_data->_size; i++) {
-                    void* elem_ptr = ((char*)array_data->_element + elem_size * i);
-                    // convert element target
-                    TTarget elem_val;
-                    if (!convertValueToTarget(elem_type, ctx, elem_ptr, elem_val)) {
-                        FEATURE_LOG_ERROR("convert array element to guest failed !");
-                        value_translator::freeValue(ctx, elem_val);
-                        value_translator::freeValue(ctx, target);
-                        return false;
-                    }
-                    value_translator::arraySet(ctx, target, i, elem_val);
-                }
-            } break;
-            case COMPLEX_PROMISE: {
-                FEATURE_LOG_ERROR("do not support convert promise to target !");
-                return false;
-            } break;
-            case COMPLEX_INTERFACE: {
-                InterfaceType* interface_type = (InterfaceType*)complex_type;
-                FEATURE_CHECK_NE(interface_type->desc, nullptr);
-                FEATURE_CHECK_NE(pnative, nullptr);
-                auto pinstance = static_cast<FeatureInstance*>(pnative);
-                if (!pinstance->isInterface()) {
-                    FEATURE_LOG_ERROR("not a native interface!");
-                    return false;
-                }
-                if (!pinstance->isInitialized()) {
-                    auto module_proto = pinstance->prototype();
-                    auto intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
-                    pinstance->setPrototype(intf_proto);
-                    pinstance->initialize();
-                }
-                target = value_translator::targetFromInterface(pinstance);
-            } break;
-            default: {
-                FEATURE_LOG_ERROR("unsupported complex type !");
+                value_translator::setObjectField(ctx, target, member->name, prop);
+                member++;
+            }
+        } break;
+        case COMPLEX_OPTIONAL: {
+            OptionalType* opt_type = (OptionalType*)complex_type;
+            bool ret = convertValueToTarget(opt_type->type, ctx, pnative, target);
+            if (!ret) {
+                value_translator::freeValue(ctx, target);
+                FEATURE_LOG_ERROR("convert optional to guest failed !");
                 return false;
             }
+        } break;
+        case COMPLEX_CALLBACK: {
+            // unreachable
+            FEATURE_LOG_ERROR("convert callback to guest is unreachable");
+        } break;
+        case COMPLEX_ARRAY: {
+            // convert to guest
+            ArrayType* array_type = (ArrayType*)complex_type;
+            FtArray* array_data = (FtArray*)pnative;
+            auto elem_type = array_type->element_type;
+            FEATURE_CHECK_EQ(FT_IS_REFERENCE(elem_type), true);
+            size_t elem_size = sizeof(uintptr_t);
+            // exact and create js target
+            target = value_translator::newArray(ctx);
+            for (int32_t i = 0; i < array_data->_size; i++) {
+                void* elem_ptr = ((char*)array_data->_element + elem_size * i);
+                // convert element target
+                TTarget elem_val;
+                if (!convertValueToTarget(elem_type, ctx, elem_ptr, elem_val)) {
+                    FEATURE_LOG_ERROR("convert array element to guest failed !");
+                    value_translator::freeValue(ctx, elem_val);
+                    value_translator::freeValue(ctx, target);
+                    return false;
+                }
+                value_translator::arraySet(ctx, target, i, elem_val);
+            }
+        } break;
+        case COMPLEX_PROMISE: {
+            FEATURE_LOG_ERROR("do not support convert promise to target !");
+            return false;
+        } break;
+        case COMPLEX_INTERFACE: {
+            InterfaceType* interface_type = (InterfaceType*)complex_type;
+            FEATURE_CHECK_NE(interface_type->desc, nullptr);
+            FEATURE_CHECK_NE(pnative, nullptr);
+            auto pinstance = static_cast<FeatureInstance*>(pnative);
+            if (!pinstance->isInterface()) {
+                FEATURE_LOG_ERROR("not a native interface!");
+                return false;
+            }
+            if (!pinstance->isInitialized()) {
+                auto module_proto = pinstance->prototype();
+                auto intf_proto = module_proto->getInterfacePrototype(interface_type->desc);
+                pinstance->setPrototype(intf_proto);
+                pinstance->initialize();
+            }
+            target = value_translator::targetFromInterface(pinstance);
+        } break;
+        default: {
+            FEATURE_LOG_ERROR("unsupported complex type !");
+            return false;
+        }
         }
     }
     return true;
 }
 
 // templeate functions
-template<typename TNative, typename TCtx, typename TTarget>
-bool argToNativePtr(TCtx ctx, TTarget& target, void* native_ptr) {
+template <typename TNative, typename TCtx, typename TTarget>
+bool argToNativePtr(TCtx ctx, TTarget& target, void* native_ptr)
+{
     return value_translator::toNative(ctx, target, (TNative*)native_ptr);
 }
 
-template<typename TInstance, typename TCtx, typename TTarget>
+template <typename TInstance, typename TCtx, typename TTarget>
 bool convertValueToNative(TInstance* instance, FeatureType ftype,
-        TCtx ctx, TTarget& target, void*& pnative) {
+    TCtx ctx, TTarget& target, void*& pnative)
+{
     TRY_GET_REAL_TYPE(ftype);
     if (!pnative) {
         if (!createHostValue(ftype, pnative)) {
@@ -224,209 +227,223 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
 
     if (FT_IS_PRIMITIVE(ftype)) {
         switch (FT_GET_VALUE(ftype)) {
-            case FT_VOID: {
-                FEATURE_LOG_ERROR("void not supported !");
-                return false;
-            }
-            case FT_BOOLEAN:
-                if (!argToNativePtr<bool>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to bool failed !");
-                    return false;
-                } break;
-            case FT_INT:
-                if (!argToNativePtr<int32_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to int failed !");
-                    return false;
-                } break;
-            case FT_INT8:
-                if (!argToNativePtr<int8_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to int8_t failed !");
-                    return false;
-                } break;
-            case FT_UINT8:
-                if (!argToNativePtr<uint8_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to uint8_t failed !");
-                    return false;
-                } break;
-            case FT_INT16:
-                if (!argToNativePtr<int16_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to int16_t failed !");
-                    return false;
-                } break;
-            case FT_UINT16:
-                if (!argToNativePtr<uint16_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to uint16_t failed !");
-                    return false;
-                } break;
-            case FT_INT32:
-                if (!argToNativePtr<int32_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to int32_t failed !");
-                    return false;
-                } break;
-            case FT_UINT32:
-                if (!argToNativePtr<uint32_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to uint32_t failed !");
-                    return false;
-                } break;
-            case FT_INT64:
-                if (!argToNativePtr<int64_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to int64_t failed !");
-                    return false;
-                } break;
-            case FT_UINT64:
-                if (!argToNativePtr<uint64_t>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to uint64_t failed !");
-                    return false;
-                } break;
-            case FT_FLOAT:
-                if (!argToNativePtr<float>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to float failed !");
-                    return false;
-                } break;
-            case FT_DOUBLE:
-                if (!argToNativePtr<double>(ctx, target, pnative)) {
-                    FEATURE_LOG_ERROR("convert to double failed !");
-                    return false;
-                } break;
-            case FT_CHAR:
-                if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
-                    FEATURE_LOG_ERROR("string arg is null or undefined!");
-                    pnative = NULL;
-                } else if (!value_translator::isString(ctx, target)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need string !");
-                    return false;
-                } else {
-                    char* str = NULL;
-                    if (!argToNativePtr<char*>(ctx, target, (void*)(&str))) {
-                        FEATURE_LOG_ERROR("convert to const char* failed !");
-                        return false;
-                    }
-                    char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
-                    strcpy(alloc_ptr, str);
-                    value_translator::freeCString(ctx, str); // to do by wjf
-                    pnative = alloc_ptr;
-                } break;
-            case FT_ANY:
-                if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
-                    FEATURE_LOG_ERROR("object is null or undefined!");
-                    pnative = NULL;
-                } else {
-                    ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
-                    if (!argToNativePtr<ft_value_t>(ctx, target, f_val)) {
-                        FEATURE_LOG_ERROR("convert to ft_value_t failed !");
-                        FeatureFreeValue(f_val);
-                        pnative = NULL;
-                    }
-                    pnative = f_val;
-                } break;
-            default: {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return false;
-            }
+        case FT_VOID: {
+            FEATURE_LOG_ERROR("void not supported !");
+            return false;
         }
-     } else if (FT_IS_COMPLEX(ftype)) {
+        case FT_BOOLEAN:
+            if (!argToNativePtr<bool>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to bool failed !");
+                return false;
+            }
+            break;
+        case FT_INT:
+            if (!argToNativePtr<int32_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to int failed !");
+                return false;
+            }
+            break;
+        case FT_INT8:
+            if (!argToNativePtr<int8_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to int8_t failed !");
+                return false;
+            }
+            break;
+        case FT_UINT8:
+            if (!argToNativePtr<uint8_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to uint8_t failed !");
+                return false;
+            }
+            break;
+        case FT_INT16:
+            if (!argToNativePtr<int16_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to int16_t failed !");
+                return false;
+            }
+            break;
+        case FT_UINT16:
+            if (!argToNativePtr<uint16_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to uint16_t failed !");
+                return false;
+            }
+            break;
+        case FT_INT32:
+            if (!argToNativePtr<int32_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to int32_t failed !");
+                return false;
+            }
+            break;
+        case FT_UINT32:
+            if (!argToNativePtr<uint32_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to uint32_t failed !");
+                return false;
+            }
+            break;
+        case FT_INT64:
+            if (!argToNativePtr<int64_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to int64_t failed !");
+                return false;
+            }
+            break;
+        case FT_UINT64:
+            if (!argToNativePtr<uint64_t>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to uint64_t failed !");
+                return false;
+            }
+            break;
+        case FT_FLOAT:
+            if (!argToNativePtr<float>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to float failed !");
+                return false;
+            }
+            break;
+        case FT_DOUBLE:
+            if (!argToNativePtr<double>(ctx, target, pnative)) {
+                FEATURE_LOG_ERROR("convert to double failed !");
+                return false;
+            }
+            break;
+        case FT_CHAR:
+            if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
+                FEATURE_LOG_ERROR("string arg is null or undefined!");
+                pnative = NULL;
+            } else if (!value_translator::isString(ctx, target)) {
+                FEATURE_LOG_ERROR("arg type mismatch, need string !");
+                return false;
+            } else {
+                char* str = NULL;
+                if (!argToNativePtr<char*>(ctx, target, (void*)(&str))) {
+                    FEATURE_LOG_ERROR("convert to const char* failed !");
+                    return false;
+                }
+                char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
+                strcpy(alloc_ptr, str);
+                value_translator::freeCString(ctx, str); // to do by wjf
+                pnative = alloc_ptr;
+            }
+            break;
+        case FT_ANY:
+            if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
+                FEATURE_LOG_ERROR("object is null or undefined!");
+                pnative = NULL;
+            } else {
+                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+                if (!argToNativePtr<ft_value_t>(ctx, target, f_val)) {
+                    FEATURE_LOG_ERROR("convert to ft_value_t failed !");
+                    FeatureFreeValue(f_val);
+                    pnative = NULL;
+                }
+                pnative = f_val;
+            }
+            break;
+        default: {
+            FEATURE_LOG_WARN("unsupported type detected !");
+            return false;
+        }
+        }
+    } else if (FT_IS_COMPLEX(ftype)) {
         ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
         switch (complex_type->type) {
-            case COMPLEX_STRUCT_MAP: {
-                if (value_translator::isUndefined(ctx, target)) {
-                    FEATURE_LOG_WARN("js struct value missing!");
-                    pnative = NULL;
-                    break;
-                }
-                ObjectMapType &obj_map_type = *(ObjectMapType *)complex_type;
-                ObjectMember *members = (ObjectMember *)obj_map_type.members;
-                auto member_count = countMember(members);
-                for (int i = 0; i < member_count; i++) {
-                    // fill it
-                    bool ret;
-                    TTarget field;
-                    auto member = &members[i];
-                    if (!value_translator::getObjectField(ctx, target, member->name, i, &field)) {
-                        // check field is js_undefined or not
-                        if (FT_IS_COMPLEX(member->type)) {
-                            ComplexTypeHeader* cmp_type = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
-                            if (cmp_type->type == COMPLEX_OPTIONAL) {
-                                FEATURE_LOG_DEBUG("field is undefined, we get value with optinalType!");
-                                OptionalType* opt_type = (OptionalType*)cmp_type;
-                                ret = convertValueToTarget(opt_type->type, ctx, &opt_type->fval, field);  // to do by wjf
-                                if (!ret) {
-                                    value_translator::freeValue(ctx, field);
-                                    FEATURE_LOG_ERROR("propValue convert optional failed!");
-                                    return false;
-                                }
+        case COMPLEX_STRUCT_MAP: {
+            if (value_translator::isUndefined(ctx, target)) {
+                FEATURE_LOG_WARN("js struct value missing!");
+                pnative = NULL;
+                break;
+            }
+            ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
+            ObjectMember* members = (ObjectMember*)obj_map_type.members;
+            auto member_count = countMember(members);
+            for (int i = 0; i < member_count; i++) {
+                // fill it
+                bool ret;
+                TTarget field;
+                auto member = &members[i];
+                if (!value_translator::getObjectField(ctx, target, member->name, i, &field)) {
+                    // check field is js_undefined or not
+                    if (FT_IS_COMPLEX(member->type)) {
+                        ComplexTypeHeader* cmp_type = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
+                        if (cmp_type->type == COMPLEX_OPTIONAL) {
+                            FEATURE_LOG_DEBUG("field is undefined, we get value with optinalType!");
+                            OptionalType* opt_type = (OptionalType*)cmp_type;
+                            ret = convertValueToTarget(opt_type->type, ctx, &opt_type->fval, field); // to do by wjf
+                            if (!ret) {
+                                value_translator::freeValue(ctx, field);
+                                FEATURE_LOG_ERROR("propValue convert optional failed!");
+                                return false;
                             }
-                        } else {
-                            FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
-                            return false;
                         }
-                    }
-
-                    void *member_ptr = (void *)((char *)pnative + member->offset);
-                    ret = convertValueToNative(instance, member->type, ctx, field, member_ptr);
-                    value_translator::freeValue(ctx, field);
-                    if (!ret) {
-                        printf("get property value for key: %s failed !", member->name);
+                    } else {
+                        FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
                         return false;
                     }
                 }
-            } break;
-            case COMPLEX_OPTIONAL: {
-                OptionalType* opt_type = (OptionalType*)complex_type;
-                bool ret = convertValueToNative(instance, opt_type->type, ctx, target, pnative);
+
+                void* member_ptr = (void*)((char*)pnative + member->offset);
+                ret = convertValueToNative(instance, member->type, ctx, field, member_ptr);
+                value_translator::freeValue(ctx, field);
                 if (!ret) {
-                    FEATURE_LOG_ERROR("convert optional type failed !");
+                    printf("get property value for key: %s failed !", member->name);
                     return false;
                 }
-            } break;
-            case COMPLEX_CALLBACK: {
-                // save into instance
-                CallbackType *callback_type = (CallbackType *)complex_type;
-                auto cb_val = value_translator::toCallbackValue(target);
-                FtCallbackId id = instance->addCallback(cb_val, callback_type);
-                *(FtCallbackId *)pnative = id; // write callback id to pointer.
-            } break;
-            case COMPLEX_ARRAY: {
-                ArrayType& array_type = *(ArrayType*)complex_type;
-                auto elem_type = array_type.element_type;
-                if (!value_translator::isArray(ctx, target)) {
-                    FEATURE_LOG_ERROR("arg type mismatch, need array !");
-                    return false;
-                }
-                auto asize = value_translator::arraySize(ctx, target);
-                FtArray* array_data = (FtArray*)pnative;
-                array_data->_size = asize;
-                if (asize) {
-                    // we support reference and primitive types
-                    size_t elem_size = FT_IS_REFERENCE(elem_type) ? sizeof(uintptr_t) : getValueSize(elem_type);
-                    auto size = elem_size * asize;
-                    FEATURE_CHECK_NE(size, 0);
-                    array_data->_element = malloc(size);
-                    memset(array_data->_element, 0, size);
-                    for (size_t i = 0; i < asize; i++) {
-                        // fill it
-                        TTarget elem_val = value_translator::arrayGet(ctx, target, i);
-                        FEATURE_CHECK_NE(value_translator::isUndefined(ctx, elem_val), true);
-                        void* elem_ptr = ((char*)array_data->_element + elem_size * i);
-                        if (!convertValueToNative(instance, elem_type, ctx, elem_val, elem_ptr)) {
-                            FEATURE_LOG_ERROR("convert array element failed ");
-                            value_translator::freeValue(ctx, elem_val);
-                            break;
-                        }
-                        value_translator::freeValue(ctx, elem_val);
-                    }
-                }
-            } break;
-            case COMPLEX_PROMISE: {
-                FEATURE_LOG_ERROR("do not support convert promise to guest !");
-                return false;
-            } break;
-            case COMPLEX_INTERFACE: {  // to do by wjf
-                pnative = value_translator::interfaceFromTarget(target);
-            } break;
-            default: {
-                FEATURE_LOG_ERROR("unsupported complex type !");
+            }
+        } break;
+        case COMPLEX_OPTIONAL: {
+            OptionalType* opt_type = (OptionalType*)complex_type;
+            bool ret = convertValueToNative(instance, opt_type->type, ctx, target, pnative);
+            if (!ret) {
+                FEATURE_LOG_ERROR("convert optional type failed !");
                 return false;
             }
+        } break;
+        case COMPLEX_CALLBACK: {
+            // save into instance
+            CallbackType* callback_type = (CallbackType*)complex_type;
+            auto cb_val = value_translator::toCallbackValue(target);
+            FtCallbackId id = instance->addCallback(cb_val, callback_type);
+            *(FtCallbackId*)pnative = id; // write callback id to pointer.
+        } break;
+        case COMPLEX_ARRAY: {
+            ArrayType& array_type = *(ArrayType*)complex_type;
+            auto elem_type = array_type.element_type;
+            if (!value_translator::isArray(ctx, target)) {
+                FEATURE_LOG_ERROR("arg type mismatch, need array !");
+                return false;
+            }
+            auto asize = value_translator::arraySize(ctx, target);
+            FtArray* array_data = (FtArray*)pnative;
+            array_data->_size = asize;
+            if (asize) {
+                // we support reference and primitive types
+                size_t elem_size = FT_IS_REFERENCE(elem_type) ? sizeof(uintptr_t) : getValueSize(elem_type);
+                auto size = elem_size * asize;
+                FEATURE_CHECK_NE(size, 0);
+                array_data->_element = malloc(size);
+                memset(array_data->_element, 0, size);
+                for (size_t i = 0; i < asize; i++) {
+                    // fill it
+                    TTarget elem_val = value_translator::arrayGet(ctx, target, i);
+                    FEATURE_CHECK_NE(value_translator::isUndefined(ctx, elem_val), true);
+                    void* elem_ptr = ((char*)array_data->_element + elem_size * i);
+                    if (!convertValueToNative(instance, elem_type, ctx, elem_val, elem_ptr)) {
+                        FEATURE_LOG_ERROR("convert array element failed ");
+                        value_translator::freeValue(ctx, elem_val);
+                        break;
+                    }
+                    value_translator::freeValue(ctx, elem_val);
+                }
+            }
+        } break;
+        case COMPLEX_PROMISE: {
+            FEATURE_LOG_ERROR("do not support convert promise to guest !");
+            return false;
+        } break;
+        case COMPLEX_INTERFACE: { // to do by wjf
+            pnative = value_translator::interfaceFromTarget(target);
+        } break;
+        default: {
+            FEATURE_LOG_ERROR("unsupported complex type !");
+            return false;
+        }
         }
     }
     return true;
@@ -449,12 +466,12 @@ inline void free_ffi_type(ffi_type* type)
 
 static inline void free_ft_values(ft_value_t* val)
 {
-    delete [] val;
+    delete[] val;
 }
 
-template<typename TInstance, typename TCtx, typename TTarget>
+template <typename TInstance, typename TCtx, typename TTarget>
 bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
-        Member* member, int argc, TTarget* argv, TTarget& ret_val)
+    Member* member, int argc, TTarget* argv, TTarget& ret_val)
 {
     FEATURE_CHECK_NE(instance, nullptr);
     FEATURE_CHECK_NE(member, nullptr);
@@ -494,10 +511,10 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     int extra_argc = is_promise ? 3 : 2;
     // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
     AutoArgs<void*, ffi_type*> ffi_arg_types(nullptr, free_arg_type, nullptr,
-            extra_argc + packed_argc + opt_argc + 1, extra_argc, fixed_argc + extra_argc);
-     // FeaturInstance, data, maybe return promise, maybe variadic count
+        extra_argc + packed_argc + opt_argc + 1, extra_argc, fixed_argc + extra_argc);
+    // FeaturInstance, data, maybe return promise, maybe variadic count
     AutoArgs<void*, void*> ffi_arg_values(nullptr, free_arg_value, nullptr,
-            extra_argc + packed_argc + opt_argc, extra_argc, fixed_argc + extra_argc);
+        extra_argc + packed_argc + opt_argc, extra_argc, fixed_argc + extra_argc);
     AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
     AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
     AutoPtr<ft_value_t*> vari_args(free_ft_values);
@@ -622,7 +639,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     return true;
 }
 
-template<typename TInstance, typename TCtx, typename TTarget>
+template <typename TInstance, typename TCtx, typename TTarget>
 bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
 {
     FEATURE_CHECK_NE(instance, nullptr);
@@ -634,8 +651,7 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     FeatureType feature_type = accessor->type;
     FEATURE_CHECK_NE(feature_type, FT_VOID);
     bool is_dynamic = instance->prototype()->description()->dynamic;
-    NativeFunc callback = is_dynamic ?
-            instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
+    NativeFunc callback = is_dynamic ? instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
 
     // handle parameter
@@ -673,7 +689,7 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
     return true;
 }
 
-template<typename TInstance, typename TCtx, typename TTarget>
+template <typename TInstance, typename TCtx, typename TTarget>
 bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
 {
     FEATURE_CHECK_NE(instance, nullptr);
@@ -682,8 +698,7 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
     MemberAccessor* accessor = const_cast<MemberAccessor*>(member->accessor);
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
     bool is_dynamic = instance->prototype()->description()->dynamic;
-    NativeFunc callback = is_dynamic ?
-            instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
+    NativeFunc callback = is_dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
 
     // handle parameter
@@ -720,7 +735,7 @@ bool accessorSet(TInstance* instance, TCtx ctx, Member* member, TTarget& val)
     return true;
 }
 
-template<typename TInstance, typename TCtx, typename TTarget>
+template <typename TInstance, typename TCtx, typename TTarget>
 bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
 {
     FEATURE_CHECK_NE(instance, nullptr);
@@ -731,8 +746,7 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
     MemberConst* member_const = const_cast<MemberConst*>(member->value);
     void* data_ptr = &member_const->data;
     FeatureType feature_type = member_const->type;
-    NativeFunc callback = is_dynamic ?
-            instance->getVirtualFunction(member_const->func.vtable_idx) : member_const->func.callback;
+    NativeFunc callback = is_dynamic ? instance->getVirtualFunction(member_const->func.vtable_idx) : member_const->func.callback;
     FEATURE_CHECK_NE(feature_type, FT_VOID);
     FEATURE_CHECK_NE(callback, nullptr);
 

@@ -20,7 +20,6 @@
 #include "feature_context_wamr.h"
 #endif
 
-#include <stdio.h>
 #include <cstring>
 #include <malloc.h>
 #include <stdio.h>
@@ -41,7 +40,8 @@ void ReleaseFeatureContextQjs(ft_context_ref ft_ctx)
     free(ft_ctx);
 }
 
-ft_context_ref CreateFeatureContextWamr(void* data0, void* data1) {
+ft_context_ref CreateFeatureContextWamr(void* data0, void* data1)
+{
     FeatureContext* ft_ctx = NULL;
 #ifdef CONFIG_FEATURE_USE_WAMR
     ft_ctx = (FeatureContext*)malloc(sizeof(FeatureContext));
@@ -51,7 +51,8 @@ ft_context_ref CreateFeatureContextWamr(void* data0, void* data1) {
     return ft_ctx;
 }
 
-void ReleaseFeatureContextWamr(ft_context_ref ft_ctx) {
+void ReleaseFeatureContextWamr(ft_context_ref ft_ctx)
+{
 #ifdef CONFIG_FEATURE_USE_WAMR
     if (!ft_ctx)
         return;
@@ -117,7 +118,8 @@ ft_value_t ft_from_int_array(ft_context_ref ft_ctx, int32_t* val, uint32_t size)
     return ft_ctx->ft_from_int_array(ft_ctx, val, size);
 }
 
-ft_value_t ft_from_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type){
+ft_value_t ft_from_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type)
+{
     return ft_ctx->ft_from_typed_buffer(ft_ctx, buff, size, type);
 }
 
@@ -208,7 +210,8 @@ ft_value_t ft_array_at(ft_context_ref ft_ctx, const ft_value_t array, uint32_t i
 }
 
 // object operations
-ft_value_t ft_new_object (ft_context_ref ft_ctx) {
+ft_value_t ft_new_object(ft_context_ref ft_ctx)
+{
     return ft_ctx->ft_new_object(ft_ctx);
 }
 

@@ -18,8 +18,8 @@
 #ifndef __FEATURE_INSTANCE_H__
 #define __FEATURE_INSTANCE_H__
 
-#include "feature_types.h"
 #include "feature_prototype.h"
+#include "feature_types.h"
 
 #include <map>
 #include <memory>
@@ -71,9 +71,9 @@ public:
     }
 
 private:
-    int instance_id_:30;
-    uint32_t is_interface_:1;
-    uint32_t initialized_:1;
+    int instance_id_ : 30;
+    uint32_t is_interface_ : 1;
+    uint32_t initialized_ : 1;
     const VTable* vtable_;
     void* native_;
     FeaturePrototype* proto_;

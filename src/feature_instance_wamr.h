@@ -20,8 +20,10 @@
 
 #include "feature.h"
 #include "feature_instance.h"
+// clang-format off
 #include "callback_manager_wamr.h"
 #include "callback_manager.h"
+// clang-format on
 #include "promise_manager.h"
 
 #include <map>
@@ -31,8 +33,7 @@ namespace ferry {
 
 class FeaturePrototype;
 
-class FeatureInstanceWamr : public FeatureInstance, public PromiseManager,
-        public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
+class FeatureInstanceWamr : public FeatureInstance, public PromiseManager, public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
 public:
     FeatureInstanceWamr(FeaturePrototype* proto);
 
@@ -57,11 +58,10 @@ public:
     int doInvokeCallback(const CallbackType* callbackType, wasm_obj_t callback, va_list& ap, int method_param_count, int rest_param_count);
 
 private:
-    bool argToTarget(va_list &ap, FeatureType ftype, uint64_t& target);
+    bool argToTarget(va_list& ap, FeatureType ftype, uint64_t& target);
 
-    bool variArgToTarget(void *arg, wasm_value_t& target);
+    bool variArgToTarget(void* arg, wasm_value_t& target);
 };
 
 }
 #endif // __FEATURE_INSTANCE_WAMR_H__
-

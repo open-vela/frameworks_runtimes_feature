@@ -31,25 +31,25 @@ static void fillArg(char* argp, uint32 args, FeatureType& ftype, uint64_t target
 {
     if (FT_IS_PRIMITIVE(ftype)) {
         switch (FT_GET_VALUE(ftype)) {
-            case FT_VOID: {
-                FEATURE_LOG_ERROR("void feature type not supported !");
-            } break;
-            case FT_INT:
-            case FT_INT32:
-            case FT_UINT32:
-            case FT_DOUBLE: {
-                *(double *)(argp + filled) = (double)target;
-                filled += sizeof(double);
-            } break;
-            case FT_CHAR: {
-                wasm_stringref_obj_t obj = (wasm_stringref_obj_t)target;
-                b_memcpy_s(argp + filled, args - filled, &(obj),
-                        sizeof(wasm_stringref_obj_t));
-                filled += sizeof(wasm_stringref_obj_t);
-            } break;
-            default:{
-                FEATURE_LOG_ERROR("feature type not supported !");
-            } break;
+        case FT_VOID: {
+            FEATURE_LOG_ERROR("void feature type not supported !");
+        } break;
+        case FT_INT:
+        case FT_INT32:
+        case FT_UINT32:
+        case FT_DOUBLE: {
+            *(double*)(argp + filled) = (double)target;
+            filled += sizeof(double);
+        } break;
+        case FT_CHAR: {
+            wasm_stringref_obj_t obj = (wasm_stringref_obj_t)target;
+            b_memcpy_s(argp + filled, args - filled, &(obj),
+                sizeof(wasm_stringref_obj_t));
+            filled += sizeof(wasm_stringref_obj_t);
+        } break;
+        default: {
+            FEATURE_LOG_ERROR("feature type not supported !");
+        } break;
         }
     }
 }
@@ -137,10 +137,10 @@ wasm_exec_env_t FeatureInstanceWamr::getContext()
     return (wasm_exec_env_t)(manager->wamrEnv());
 }
 
-bool FeatureInstanceWamr::argToTarget(va_list &ap, FeatureType ftype, uint64_t& target)
+bool FeatureInstanceWamr::argToTarget(va_list& ap, FeatureType ftype, uint64_t& target)
 {
     wasm_exec_env_t env = getContext();
-    void *param = extractVariadicParam(ap, ftype);
+    void* param = extractVariadicParam(ap, ftype);
     if (!param) {
         FEATURE_LOG_ERROR("extract callback param failed !");
         return false;
@@ -154,11 +154,11 @@ bool FeatureInstanceWamr::argToTarget(va_list &ap, FeatureType ftype, uint64_t& 
     return true;
 }
 
-bool FeatureInstanceWamr::variArgToTarget(void *arg, wasm_value_t& target)
+bool FeatureInstanceWamr::variArgToTarget(void* arg, wasm_value_t& target)
 {
     wasm_exec_env_t env = getContext();
     dyn_ctx_t dyn_ctx = dyntype_get_context();
-    FTObjHeader *header = (FTObjHeader *)((char *)arg - FT_OBJ_HEADER_SIZE);
+    FTObjHeader* header = (FTObjHeader*)((char*)arg - FT_OBJ_HEADER_SIZE);
     uint64_t guest;
     if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, arg, env, guest)) {
         FEATURE_LOG_ERROR("convert callback param failed !");
@@ -168,43 +168,43 @@ bool FeatureInstanceWamr::variArgToTarget(void *arg, wasm_value_t& target)
     wasm_anyref_obj_t any = nullptr;
     if (FT_IS_PRIMITIVE(header->featureType)) {
         switch (FT_GET_VALUE(header->featureType)) {
-            case FT_VOID: {
-                FEATURE_LOG_ERROR("void feature type not supported !");
-                return false;
-            }
-            case FT_INT:
-            case FT_INT32:
-            case FT_UINT32: {
-                /* call create_anyref_obj api to box element as any */
-                int32_t iguest = (int32_t)guest;
-                if (iguest == 1 || iguest == 0)
-                    any = create_anyref_obj(env, dyntype_new_boolean(dyn_ctx, iguest));
-                else
-                    any = create_anyref_obj(env, dyntype_new_number(dyn_ctx, iguest));
-                target.gc_obj = (wasm_obj_t)any;
-            } break;
-            case FT_DOUBLE: {
-                /* call create_anyref_obj api to box element as any */
-                any = create_anyref_obj(env, dyntype_new_number(dyn_ctx, (double)guest));
-                target.gc_obj = (wasm_obj_t)any;
-            } break;
-            case FT_CHAR: {
-                wasm_stringref_obj_t obj = (wasm_stringref_obj_t)guest;
-                /* call create_anyref_obj api to box element as any */
-                any = create_anyref_obj(env,
-                        dyntype_new_string(dyn_ctx, (void *)wasm_stringref_obj_get_value(obj)));
-                target.gc_obj = (wasm_obj_t)any;
-            } break;
-            default:{
-                FEATURE_LOG_ERROR("feature type not supported !");
-                return false;
-            }
+        case FT_VOID: {
+            FEATURE_LOG_ERROR("void feature type not supported !");
+            return false;
+        }
+        case FT_INT:
+        case FT_INT32:
+        case FT_UINT32: {
+            /* call create_anyref_obj api to box element as any */
+            int32_t iguest = (int32_t)guest;
+            if (iguest == 1 || iguest == 0)
+                any = create_anyref_obj(env, dyntype_new_boolean(dyn_ctx, iguest));
+            else
+                any = create_anyref_obj(env, dyntype_new_number(dyn_ctx, iguest));
+            target.gc_obj = (wasm_obj_t)any;
+        } break;
+        case FT_DOUBLE: {
+            /* call create_anyref_obj api to box element as any */
+            any = create_anyref_obj(env, dyntype_new_number(dyn_ctx, (double)guest));
+            target.gc_obj = (wasm_obj_t)any;
+        } break;
+        case FT_CHAR: {
+            wasm_stringref_obj_t obj = (wasm_stringref_obj_t)guest;
+            /* call create_anyref_obj api to box element as any */
+            any = create_anyref_obj(env,
+                dyntype_new_string(dyn_ctx, (void*)wasm_stringref_obj_get_value(obj)));
+            target.gc_obj = (wasm_obj_t)any;
+        } break;
+        default: {
+            FEATURE_LOG_ERROR("feature type not supported !");
+            return false;
+        }
         }
     }
     return true;
 }
 
-int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_t callback, va_list &ap, int fixed_argc, int rest_argc)
+int FeatureInstanceWamr::doInvokeCallback(const CallbackType* cb_type, wasm_obj_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
     if (callback == nullptr) {
         FEATURE_LOG_ERROR("callback is undefined !");
@@ -223,11 +223,11 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
     char* argp = (char*)argv;
     uint32 filled = 0;
     /* arg0: context */
-    bh_memcpy_s(argp, args, &context.gc_obj, sizeof(void *));
-    filled = sizeof(void *);
+    bh_memcpy_s(argp, args, &context.gc_obj, sizeof(void*));
+    filled = sizeof(void*);
     /* arg1: thiz */
-    bh_memcpy_s(argp + filled, args -filled, &thiz.gc_obj, sizeof(void *));
-    filled += sizeof(void *);
+    bh_memcpy_s(argp + filled, args - filled, &thiz.gc_obj, sizeof(void*));
+    filled += sizeof(void*);
 
     uint32_t obj_cnt = 0;
     /* convert parameters to feature_value_t */
@@ -235,11 +235,13 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
         FeatureType ftype = cb_type->parameters[i];
         uint64_t target = 0;
         /* if need create obj is string obj */
-        if (FT_IS_PRIMITIVE(ftype) && FT_GET_VALUE(ftype) == FT_CHAR) obj_cnt++;
+        if (FT_IS_PRIMITIVE(ftype) && FT_GET_VALUE(ftype) == FT_CHAR)
+            obj_cnt++;
         /* if need create obj is struct obj or array obj */
         if (FT_IS_COMPLEX(ftype)) {
-            ComplexTypeHeader *complex_type = (ComplexTypeHeader *)FT_GET_COMPLEX(ftype);
-            if (complex_type->type == COMPLEX_STRUCT_MAP || complex_type->type == COMPLEX_ARRAY) obj_cnt++;
+            ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+            if (complex_type->type == COMPLEX_STRUCT_MAP || complex_type->type == COMPLEX_ARRAY)
+                obj_cnt++;
         }
         if (!argToTarget(ap, ftype, target)) {
             FEATURE_LOG_ERROR("extract callback param failed !");
@@ -254,17 +256,15 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
         /*  Take out the array data field of the array object,
          *  then wrap and assign any type to each element of the array.
          */
-        wasm_value_t array = {0};
+        wasm_value_t array = { 0 };
         wasm_struct_obj_get_field(array_struct, 0, false, &array);
         wasm_array_obj_t array_obj = (wasm_array_obj_t)array.gc_obj;
 
         /* Unify the variable parameters into "any" and add each element to the any array object */
-        for (int i = 0; i < rest_argc; i++)
-        {
-            void *arg = va_arg(ap, void *);
-            wasm_value_t target = {0};
-            if (!variArgToTarget(arg, target))
-            {
+        for (int i = 0; i < rest_argc; i++) {
+            void* arg = va_arg(ap, void*);
+            wasm_value_t target = { 0 };
+            if (!variArgToTarget(arg, target)) {
                 FEATURE_LOG_ERROR("convert vari params failed !");
                 return -1;
             }
@@ -276,7 +276,7 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType *cb_type, wasm_obj_
     }
 
     // convert filled form bytes to wamr slots
-    filled = filled /(sizeof(uint32) /sizeof(char));
+    filled = filled / (sizeof(uint32) / sizeof(char));
     wasm_runtime_call_func_ref(env, (wasm_func_obj_t)func_obj.gc_obj, filled, argv);
 
     /* pop native create obj local ref ptr */

@@ -21,8 +21,8 @@
 #include "feature_log.h"
 #include "feature_utils.h"
 
-#include "feature_instance.h"
 #include "feature_common.h"
+#include "feature_instance.h"
 
 #include <cstdarg>
 #include <ffi.h>

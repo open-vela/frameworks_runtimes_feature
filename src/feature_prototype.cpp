@@ -20,8 +20,8 @@
 
 #include <cstdarg>
 #include <cstdint>
-#include <string>
 #include <functional>
+#include <string>
 
 namespace ferry {
 
@@ -78,7 +78,8 @@ void FeaturePrototype::clearAllInstances()
     instances_.clear();
 }
 
-FeaturePrototype* FeaturePrototype::getInterfacePrototype(const FeatureDescription* description) {
+FeaturePrototype* FeaturePrototype::getInterfacePrototype(const FeatureDescription* description)
+{
     const char* name = description->name;
     std::unique_ptr<FeaturePrototype>& intf_proto = children_[name];
     if (!intf_proto) {

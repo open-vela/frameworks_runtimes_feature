@@ -49,7 +49,7 @@ protected:
 private:
     typedef struct PromiseData {
         feature_value_t promise; // 保存promise对象
-        feature_value_t resolve_funcs[2]; //functions
+        feature_value_t resolve_funcs[2]; // functions
         FeatureType resolve_types[2];
     } PromiseData;
 
@@ -57,7 +57,7 @@ private:
 
     FtPromiseId curr_pid_ = 0;
     JSContext* js_ctx_ = nullptr;
-    std::map<FtPromiseId, PromiseData*> promises_;   // all promises created by native feature
+    std::map<FtPromiseId, PromiseData*> promises_; // all promises created by native feature
 };
 
 }

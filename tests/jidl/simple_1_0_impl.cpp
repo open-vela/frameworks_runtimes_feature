@@ -9,35 +9,34 @@ static const char* g_default_str = "unknown";
 static const char* g_name = nullptr;
 static const char* g_version = nullptr;
 
-#define SET_PROP_CHAR_PTR(str) \
-    do { \
-        FeatureDupValue((void*)str); \
-        if (g_##str) { \
+#define SET_PROP_CHAR_PTR(str)                \
+    do {                                      \
+        FeatureDupValue((void*)str);          \
+        if (g_##str) {                        \
             FeatureFreeValue((void*)g_##str); \
-            g_##str = nullptr; \
-        } \
-        g_##str = str; \
+            g_##str = nullptr;                \
+        }                                     \
+        g_##str = str;                        \
     } while (false)
 
-#define GET_PROP_CHAR_PTR(str) \
-    do { \
-        if (g_##str) { \
-            FeatureDupValue((void*)g_##str); \
-            return g_##str; \
-        } \
+#define GET_PROP_CHAR_PTR(str)                                                         \
+    do {                                                                               \
+        if (g_##str) {                                                                 \
+            FeatureDupValue((void*)g_##str);                                           \
+            return g_##str;                                                            \
+        }                                                                              \
         char* prop_ret_str = (char*)FeatureMalloc(strlen(g_default_str) + 1, FT_CHAR); \
-        sprintf(prop_ret_str, "%s", g_default_str); \
-        return prop_ret_str; \
+        sprintf(prop_ret_str, "%s", g_default_str);                                    \
+        return prop_ret_str;                                                           \
     } while (false)
 
-#define FREE_PROP_CHAR_PTR(str) \
-    do { \
-        if (g_##str) { \
+#define FREE_PROP_CHAR_PTR(str)               \
+    do {                                      \
+        if (g_##str) {                        \
             FeatureFreeValue((void*)g_##str); \
-            g_##str = nullptr; \
-        } \
+            g_##str = nullptr;                \
+        }                                     \
     } while (false)
-
 
 template <typename T>
 class FTArrayHelper {
@@ -65,39 +64,39 @@ public:
 // FeatureCallbacks to be implemented
 void Simple_onRegister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_onUnregister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     FREE_PROP_CHAR_PTR(name);
     FREE_PROP_CHAR_PTR(version);
 }
 
 void Simple_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtString str)
 {
-    printf("%s::%s(), str: %s\n", file_tag,  __FUNCTION__, str);
+    printf("%s::%s(), str: %s\n", file_tag, __FUNCTION__, str);
 }
 
 void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)
@@ -155,19 +154,20 @@ void Simple_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPar
 }
 
 // Function wrappers to be implemented
-int Simple_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b) {
-    printf("%s::%s(), a: %d, c: %s, b: %f\n", file_tag,  __FUNCTION__, a, c, b);
+int Simple_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b)
+{
+    printf("%s::%s(), a: %d, c: %s, b: %f\n", file_tag, __FUNCTION__, a, c, b);
     return 0;
 }
 
 void Simple_wrap_bar(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariParams vari_params)
 {
-    printf("%s::%s(), ", file_tag,  __FUNCTION__);
+    printf("%s::%s(), ", file_tag, __FUNCTION__);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     for (int i = 0; i < vari_params.vari_count; i++) {
         ft_value_t param = vari_params.vari_args[i];
@@ -222,7 +222,7 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
 
 FtString Simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
 {
-    printf("%s::%s(), a: %d, b: %f, c: %d\n", file_tag,  __FUNCTION__, a, b, c);
+    printf("%s::%s(), a: %d, b: %f, c: %d\n", file_tag, __FUNCTION__, a, b, c);
     char* buf = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(buf, "returned string: %d, %f, %d", a, b, c);
     return buf;
@@ -231,7 +231,7 @@ FtString Simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt 
 void Simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FtCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
-    printf("%s::%s(), a: %d, b: %d, will invoke cb\n", file_tag,  __FUNCTION__, a, b);
+    printf("%s::%s(), a: %d, b: %d, will invoke cb\n", file_tag, __FUNCTION__, a, b);
     if (!FeatureInvokeCallback(feature, cb, a, "hello", (double)b)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
@@ -243,7 +243,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
 {
 
     // callback cb3()
-    printf("%s::%s(), will invoke cb3\n", file_tag,  __FUNCTION__);
+    printf("%s::%s(), will invoke cb3\n", file_tag, __FUNCTION__);
     if (!FeatureInvokeCallback(feature, cb3)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
@@ -251,7 +251,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
     FeatureRemoveCallback(feature, cb3);
 
     // callback cb4(...)
-    printf("%s::%s(), will invoke cb4\n", file_tag,  __FUNCTION__);
+    printf("%s::%s(), will invoke cb4\n", file_tag, __FUNCTION__);
     int32_t* var1 = (int32_t*)FeatureMalloc(sizeof(int32_t), FT_INT32);
     *var1 = 15;
     char* var2 = (char*)FeatureMalloc(sizeof("hello") + 1, FT_CHAR);
@@ -270,7 +270,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
     FeatureRemoveCallback(feature, cb4);
 
     // callback cb2(int a, string b, ...)
-    printf("%s::%s(), will invoke cb2\n", file_tag,  __FUNCTION__);
+    printf("%s::%s(), will invoke cb2\n", file_tag, __FUNCTION__);
     var1 = (int32_t*)FeatureMalloc(sizeof(int32_t), FT_INT32);
     *var1 = 50;
     double* var4 = (double*)FeatureMalloc(sizeof(double), FT_DOUBLE);
@@ -289,7 +289,7 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
 void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb, FtCallbackId cb2)
 {
     // callback cb1(int x, string y, double z)
-    printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
+    printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag, __FUNCTION__, x, y);
     if (!FeatureInvokeCallback(feature, cb, x, "greeting", y)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
@@ -297,7 +297,7 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
     FeatureRemoveCallback(feature, cb);
 
     // callback cb2(int a, string b, ...)
-    printf("%s::%s(), will invoke cb2\n", file_tag,  __FUNCTION__);
+    printf("%s::%s(), will invoke cb2\n", file_tag, __FUNCTION__);
     char* strValue = (char*)FeatureMalloc(sizeof("you") + 1, FT_CHAR);
     sprintf(strValue, "%s", "you");
     bool ret = FeatureInvokeCallbackCount(feature, cb2, 3, x, "love", strValue);
@@ -313,7 +313,7 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
 void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
-    printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag,  __FUNCTION__, x, y);
+    printf("%s::%s(), x: %d, y: %f, will invoke cb1\n", file_tag, __FUNCTION__, x, y);
     if (!FeatureInvokeCallback(feature, cb, x, "greeting", y)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
@@ -323,18 +323,18 @@ void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, F
 
 void Simple_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void Simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray& values)
 {
     FTArrayHelper<int> int_array(&values);
-    printf("%s::%s(), int_array size: %" PRIi32 "\n", file_tag,  __FUNCTION__, int_array.size());
+    printf("%s::%s(), int_array size: %" PRIi32 "\n", file_tag, __FUNCTION__, int_array.size());
     printf("int_array = [\n");
     for (int32_t i = 0; i < int_array.size(); i++) {
         printf("  index %" PRIi32 ": %d\n", i, int_array[i]);
@@ -345,7 +345,7 @@ FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray& 
 
 FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     FtArray* strArray = Simple_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
@@ -359,7 +359,7 @@ FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 
 FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     FtArray* structArray = Simple_malloc_struct_array();
     structArray->_size = 4;
     structArray->_element = malloc(sizeof(struct_test_Array*) * structArray->_size);
@@ -399,10 +399,9 @@ FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
     return structArray;
 }
 
-
 FtInt Simple_wrap_bar7(FeatureInstanceHandle feature, AppendData data, FtArray& values)
 {
-    //FTArrayHelper<struct_test_Array> struct_array(&values);
+    // FTArrayHelper<struct_test_Array> struct_array(&values);
     printf("struct_array = [\n");
     for (int32_t i = 0; i < values._size; i++) {
         printf("  index %" PRIi32 ":", i);
@@ -413,29 +412,28 @@ FtInt Simple_wrap_bar7(FeatureInstanceHandle feature, AppendData data, FtArray& 
     return -1;
 }
 
-
 // Property getters and setters to be implemented
 const char* Simple_get_name(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     GET_PROP_CHAR_PTR(name);
 }
 
 void Simple_set_name(FeatureInstanceHandle feature, AppendData data, FtString name)
 {
-    printf("%s::%s(), name: %s\n", file_tag,  __FUNCTION__, name);
+    printf("%s::%s(), name: %s\n", file_tag, __FUNCTION__, name);
     SET_PROP_CHAR_PTR(name);
 }
 
 const char* Simple_get_version(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     GET_PROP_CHAR_PTR(version);
 }
 
 FtArray* Simple_get_args(FeatureInstanceHandle feature, AppendData data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     FtArray* strArray = Simple_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);

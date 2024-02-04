@@ -24,7 +24,6 @@ namespace ferry {
 
 class FeaturePrototypeQjs : public FeaturePrototype {
 public:
-
     FeaturePrototypeQjs(const FeatureDescription* description);
 
     virtual ~FeaturePrototypeQjs();
@@ -49,4 +48,3 @@ private:
 
 }
 #endif // __FEATURE_PROTOTYPE_QJS_H__
-

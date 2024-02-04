@@ -15,9 +15,9 @@
  */
 
 #include "value_translator_wamr.h"
-#include "feature_log.h"
 #include "feature_context_qjs.h"
 #include "feature_ffi_wamr.h"
+#include "feature_log.h"
 #include "feature_wamr_utils.h"
 #include "libdyntype.h"
 #include "libdyntype_export.h"
@@ -28,7 +28,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, int32_t* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(int32_t*)pnative = (int32_t)get_wasm_args_by_type(double,val);
+    *(int32_t*)pnative = (int32_t)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -37,7 +37,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, uint32_t* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(int32_t*)pnative = (int32_t)get_wasm_args_by_type(double,val);
+    *(int32_t*)pnative = (int32_t)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -46,7 +46,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, int64_t* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(int64_t*)pnative = (int64_t)get_wasm_args_by_type(double,val);
+    *(int64_t*)pnative = (int64_t)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -55,7 +55,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, uint64_t* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(uint64_t*)pnative = (uint64_t)get_wasm_args_by_type(double,val);
+    *(uint64_t*)pnative = (uint64_t)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -64,7 +64,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, float* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(float*)pnative = (float)get_wasm_args_by_type(double,val);
+    *(float*)pnative = (float)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -73,7 +73,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, double* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(float64*)pnative = (float64)get_wasm_args_by_type(double,val);
+    *(float64*)pnative = (float64)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -82,7 +82,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, bool* pnative)
     if (pnative == NULL) {
         return false;
     }
-    *(int32_t*)pnative = (int32_t)get_wasm_args_by_type(double,val);
+    *(int32_t*)pnative = (int32_t)get_wasm_args_by_type(double, val);
     return true;
 }
 
@@ -96,7 +96,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative)
         return false;
 
     uint32_t str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
-    char *buffer = str_len > 0 ? (char *)malloc(str_len + 1) : nullptr;
+    char* buffer = str_len > 0 ? (char*)malloc(str_len + 1) : nullptr;
     if (buffer != nullptr) {
         wasm_string_to_cstring((wasm_stringref_obj_t)str, buffer, str_len + 1);
     }
@@ -191,25 +191,24 @@ bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget)
     return true;
 }
 
-bool isNull(wasm_exec_env_t exec_env,const uint64_t& value)
+bool isNull(wasm_exec_env_t exec_env, const uint64_t& value)
 {
-    wasm_anyref_obj_t any_obj =
-            (wasm_anyref_obj_t)wasm_anyref_obj_new(exec_env, (void*)value);
+    wasm_anyref_obj_t any_obj = (wasm_anyref_obj_t)wasm_anyref_obj_new(exec_env, (void*)value);
     if (!any_obj) {
         wasm_runtime_set_exception(wasm_runtime_get_module_inst(exec_env),
-                                   "alloc memory failed");
+            "alloc memory failed");
         return false;
     }
     dyn_value_t v = (dyn_value_t)wasm_anyref_obj_get_value(any_obj);
-    return dyntype_is_null(dyntype_get_context(),v);
+    return dyntype_is_null(dyntype_get_context(), v);
 }
 
-bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value)
+bool isUndefined(wasm_exec_env_t exec_env, const uint64_t& value)
 {
     return value == 0;
 }
 
-bool isString(wasm_exec_env_t exec_env,const uint64_t& value)
+bool isString(wasm_exec_env_t exec_env, const uint64_t& value)
 {
     void* str = get_wasm_args_by_type(void*, value);
     if (!wasm_obj_is_stringref_obj((wasm_obj_t)str))
@@ -237,7 +236,6 @@ bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* n
 
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target)
 {
-
 }
 
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target)
@@ -271,7 +269,7 @@ uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx)
     return *((uint64_t*)(&ret));
 }
 
-uint64_t newObject (wasm_exec_env_t exec_env)
+uint64_t newObject(wasm_exec_env_t exec_env)
 {
     return 0;
 }
@@ -281,7 +279,7 @@ bool setObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* n
     return false;
 }
 
-uint64_t newArray (wasm_exec_env_t exec_env)
+uint64_t newArray(wasm_exec_env_t exec_env)
 {
     return 0;
 }
@@ -304,12 +302,11 @@ uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg)
 
 void toTargetPromise(wasm_exec_env_t exec_env, const uint64_t& promise, uint64_t& ret_val)
 {
-
 }
 
 void* interfaceFromTarget(uint64_t& target)
 {
-    void* param = *((void **)(&target));
+    void* param = *((void**)(&target));
     return param;
 }
 

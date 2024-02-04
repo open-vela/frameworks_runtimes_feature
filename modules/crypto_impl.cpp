@@ -23,38 +23,37 @@
 #include "crypto_utils.h"
 
 #include <alloca.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 static const char* file_tag = "[system_crypto_impl]";
 
 static const char* pkg_name = NULL;
 
 typedef enum ErrorCode {
-  GENERAL = 200,
-  ARGSERROR = 202,
-  IOERROR = 300,
-  TIMEOUT = 204
+    GENERAL = 200,
+    ARGSERROR = 202,
+    IOERROR = 300,
+    TIMEOUT = 204
 } ErrorCode;
 
-
 typedef enum AlgoType {
-  RSA,
-  AES
+    RSA,
+    AES
 } AlgoType;
 
 typedef enum HashType {
-  MD5,
-  SHA1,
-  SHA256,
-  SHA512
+    MD5,
+    SHA1,
+    SHA256,
+    SHA512
 } HashType;
 
 typedef enum SignHashType {
-  RSA_MD5,
-  RSA_SHA1,
-  RSA_SHA256,
-  RSA_SHA512
+    RSA_MD5,
+    RSA_SHA1,
+    RSA_SHA256,
+    RSA_SHA512
 } SignHashType;
 
 static const char encryptCfgs[] = "{\
@@ -76,11 +75,17 @@ static const char encryptCfgs[] = "{\
 }";
 
 static const char* hash_types[] = {
-    "MD5", "SHA1", "SHA256", "SHA512",
+    "MD5",
+    "SHA1",
+    "SHA256",
+    "SHA512",
 };
 
 static const char* sign_hash_types[] = {
-    "RSA-MD5", "RSA-SHA1", "RSA-SHA256", "RSA-SHA512",
+    "RSA-MD5",
+    "RSA-SHA1",
+    "RSA-SHA256",
+    "RSA-SHA512",
 };
 
 static uint8_t* get_buff(ft_context_ref ft_ctx, ft_value_t data, size_t* size, bool* is_text)
@@ -88,11 +93,11 @@ static uint8_t* get_buff(ft_context_ref ft_ctx, ft_value_t data, size_t* size, b
     ft_type type = ft_get_type(ft_ctx, data);
     if (type == FT_TYPE_BUFFER || type == FT_TYPE_TYPED_BUFFER) {
         *is_text = false;
-        uint8_t* buff = ft_to_buffer (ft_ctx, size, data);
+        uint8_t* buff = ft_to_buffer(ft_ctx, size, data);
         FEATURE_LOG_ERROR("%s, got buffer, type: %d, size: %ld", file_tag, type, *size);
         return buff;
     } else if (type == FT_TYPE_STRING) {
-        const char* str = ft_to_string (ft_ctx, data);
+        const char* str = ft_to_string(ft_ctx, data);
         *is_text = true;
         *size = strlen(str);
         FEATURE_LOG_ERROR("%s, got string: %s", file_tag, str);
@@ -107,39 +112,45 @@ static ft_value_t from_buff(ft_context_ref ft_ctx, const char* data, size_t size
     if (is_text)
         return ft_from_string(ft_ctx, data);
 
-    return ft_from_typed_buffer (ft_ctx, (uint8_t*)data, size, 0);
+    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, 0);
 }
 
 // FeatureCallbacks
-void system_crypto_onRegister(const char* feature_name) {
+void system_crypto_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s", file_tag);
 }
 
-void system_crypto_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_crypto_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s", file_tag);
     pkg_name = FeatureGetPackageName(handle);
 }
 
 void system_crypto_onRequired(FeatureRuntimeContext ctx,
-                       FeatureInstanceHandle handle) {
+    FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s", file_tag);
 }
 
 void system_crypto_onDetached(FeatureRuntimeContext ctx,
-                       FeatureInstanceHandle handle) {
+    FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s", file_tag);
 }
 
-void system_crypto_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_crypto_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s", file_tag);
 }
 
-void system_crypto_onUnregister(const char* feature_name) {
+void system_crypto_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s", file_tag);
 }
 
 FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData append_data,
-        system_crypto_HashDigestParam * options)
+    system_crypto_HashDigestParam* options)
 {
     FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
@@ -181,7 +192,7 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
 }
 
 void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData append_data,
-        system_crypto_HmacDigestParam * options)
+    system_crypto_HmacDigestParam* options)
 {
     FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
@@ -205,7 +216,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     if (result && options->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
@@ -220,7 +231,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
 }
 
 void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_data,
-        system_crypto_SignParam * options)
+    system_crypto_SignParam* options)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -280,7 +291,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (result && options->success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
-        ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
@@ -291,11 +302,12 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     }
 
     free_str_array(algo_segs, seg_count);
-    if (result) free(result);
+    if (result)
+        free(result);
 }
 
 void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_data,
-        system_crypto_RSAVerifyParam * options)
+    system_crypto_RSAVerifyParam* options)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -327,7 +339,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     } else if (!(check_any(options->data) || check_str(options->uri))) {
         msg = "arguments data or uri is needed";
         code = ARGSERROR;
-    } else if(check_any(options->data) && !check_str(options->uri)) {
+    } else if (check_any(options->data) && !check_str(options->uri)) {
         // deal with data type of data param
         uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff || size == 0) {
@@ -336,7 +348,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         } else if (!check_any(options->signature)) {
             msg = "signature: invalid data type!";
             code = ARGSERROR;
-        }  else {
+        } else {
             uint8_t* sig_buff = get_buff(ft_ctx, *(options->signature), &sig_size, &is_text);
             result = rsa_verify(algo, options->publicKey, buff, size, sig_buff, sig_size, is_text);
             if (crypto_err) {
@@ -346,7 +358,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
                 has_result = true;
             }
         }
-    } else if(!check_any(options->data) && check_str(options->uri)) {
+    } else if (!check_any(options->data) && check_str(options->uri)) {
         // deal with data type of signature
         if (!check_any(options->signature)) {
             msg = "signature: invalid data type!";
@@ -382,7 +394,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
 }
 
 void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append_data,
-        system_crypto_CryptParam * options)
+    system_crypto_CryptParam* options)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -390,7 +402,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    const char* algo = check_str(options->algo) ? options->algo: "RSA";
+    const char* algo = check_str(options->algo) ? options->algo : "RSA";
     bool is_text = true;
     size_t size = 0;
 
@@ -416,14 +428,15 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                 const char* iv = options->key;
                 int ivOffset = 0;
                 int ivLen = 16;
-                int mode = 5;  // encryptCfgs.AES.mode.CBC
-                int padding = 0;  // encryptCfgs.AES.padding.PKCS7Padding
+                int mode = 5; // encryptCfgs.AES.mode.CBC
+                int padding = 0; // encryptCfgs.AES.padding.PKCS7Padding
 
                 // deal with default value of options
                 if (options->options) {
-                    system_crypto_MixinCryptOption * opts = options->options;
+                    system_crypto_MixinCryptOption* opts = options->options;
                     transformation = check_str(opts->transformation)
-                            ? opts->transformation : transformation;
+                        ? opts->transformation
+                        : transformation;
                     iv = check_str(opts->iv) ? opts->iv : iv;
                     ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
                     ivLen = opts->ivLen ? opts->ivLen : ivLen;
@@ -433,7 +446,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     int seg_count;
                     char** cfg_keys = split_str(transformation, "/", &seg_count);
                     FEATURE_LOG_INFO("transformation: %s, seg_count: %d", transformation, seg_count);
-                    ft_value_t cfgs_json =  ft_parse_json(ft_ctx, encryptCfgs, strlen(encryptCfgs), NULL);
+                    ft_value_t cfgs_json = ft_parse_json(ft_ctx, encryptCfgs, strlen(encryptCfgs), NULL);
                     ft_value_t ft_enc_type = ft_obj_get_property(ft_ctx, cfgs_json, cfg_keys[0]);
                     if (seg_count == 3 && ft_get_type(ft_ctx, ft_enc_type) != FT_TYPE_NONE) {
                         ft_value_t ft_mode = ft_obj_get_property(ft_ctx, ft_enc_type, "mode");
@@ -460,8 +473,8 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     code = GENERAL;
                 }
             } else {
-                    msg = "invalid algo param";
-                    code = ARGSERROR;
+                msg = "invalid algo param";
+                code = ARGSERROR;
             }
         }
     }
@@ -470,7 +483,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     if (result && options->success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
-        ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
@@ -480,11 +493,12 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
         INVOKE_COMPLET_CB(options->complete);
     }
 
-    if (result) free(result);
+    if (result)
+        free(result);
 }
 
 void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append_data,
-        system_crypto_CryptParam * options)
+    system_crypto_CryptParam* options)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -492,21 +506,21 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    const char* algo = check_str(options->algo) ? options->algo: "RSA";
+    const char* algo = check_str(options->algo) ? options->algo : "RSA";
     bool is_text = true;
     size_t size = 0;
 
     const char* iv = options->key;
     int ivOffset = 0;
     int ivLen = 16;
-    int mode = 5;  // encryptCfgs.AES.mode.CBC
-    int padding = 0;  // encryptCfgs.AES.padding.PKCS7Padding
+    int mode = 5; // encryptCfgs.AES.mode.CBC
+    int padding = 0; // encryptCfgs.AES.padding.PKCS7Padding
     // excute native function
     if (!(check_any(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
         code = ARGSERROR;
     } else {
-       // judge data type
+        // judge data type
         uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff || size == 0) {
             msg = "invalid data type!";
@@ -520,7 +534,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
                 }
             } else if (strcmp(algo, "AES") == 0) {
                 if (options->options) {
-                    system_crypto_MixinCryptOption * opts = options->options;
+                    system_crypto_MixinCryptOption* opts = options->options;
                     iv = check_str(opts->iv) ? opts->iv : iv;
                     ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
                     ivLen = opts->ivLen ? opts->ivLen : ivLen;
@@ -539,7 +553,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     if (result && options->success) {
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
-        ft_obj_set_property (ft_ctx, ret_obj, "data", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
@@ -549,7 +563,8 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
         INVOKE_COMPLET_CB(options->complete);
     }
 
-    if (result) free(result);
+    if (result)
+        free(result);
 }
 
 FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData append_data, FtString text)

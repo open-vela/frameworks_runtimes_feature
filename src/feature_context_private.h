@@ -26,7 +26,6 @@ ft_context_ref CreateFeatureContextWamr(void* data1, void* data2);
 
 void ReleaseFeatureContextWamr(ft_context_ref ft_ctx);
 
-
 typedef struct FeatureContext {
     void* data;
 

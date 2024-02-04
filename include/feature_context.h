@@ -20,9 +20,9 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
 
 typedef enum ft_type {
     FT_TYPE_NULL = -2,
@@ -64,7 +64,7 @@ ft_value_t ft_from_double(ft_context_ref ft_ctx, double val);
 ft_value_t ft_from_bool(ft_context_ref ft_ctx, bool val);
 ft_value_t ft_from_string(ft_context_ref ft_ctx, const char* val);
 ft_value_t ft_from_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
-ft_value_t ft_from_typed_buffer (ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type);
+ft_value_t ft_from_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type);
 
 ft_value_t ft_from_int_array(ft_context_ref ft_ctx, int32_t* val, uint32_t size);
 ft_value_t ft_from_uint_array(ft_context_ref ft_ctx, uint32_t* val, uint32_t size);
@@ -91,7 +91,7 @@ uint32_t ft_array_size(ft_context_ref ft_ctx, const ft_value_t array);
 ft_value_t ft_array_at(ft_context_ref ft_ctx, const ft_value_t array, uint32_t idx);
 
 // object operations
-ft_value_t ft_new_object (ft_context_ref ft_ctx);
+ft_value_t ft_new_object(ft_context_ref ft_ctx);
 ft_value_t ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t ft_val, const char* prop);
 bool ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t obj, const char* prop, ft_value_t val);
 void ft_free_value(ft_context_ref ft_ctx, ft_value_t ft_val);

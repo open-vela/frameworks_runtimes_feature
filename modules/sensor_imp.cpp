@@ -22,7 +22,7 @@
 #include "sensor.h"
 #include "uv_ext.h"
 
-static const char *file_tag = "[jidl_feature] sensor_impl";
+static const char* file_tag = "[jidl_feature] sensor_impl";
 
 typedef enum sensor_magic_e {
     SENSOR_MAGIC_ACCEL = 0,
@@ -50,17 +50,18 @@ struct sensor_event_t {
 };
 
 struct SensorContext {
-    sensor_event_t *events[SENSOR_MAGIC_NUM];
+    sensor_event_t* events[SENSOR_MAGIC_NUM];
 };
 
-static void sensor_accel_topic_cb(uv_topic_t *topic, int status, void *data, size_t datalen) {
+static void sensor_accel_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
     if (!topic || !data) {
         FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
         return;
     }
-    sensor_event_t *event = container_of(topic, sensor_event_t, topic);
-    sensor_accel *t_r = static_cast<sensor_accel *>(data);
-    sensor_AccelerometerRet *accelRet = sensorMallocAccelerometerRet();
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    sensor_accel* t_r = static_cast<sensor_accel*>(data);
+    sensor_AccelerometerRet* accelRet = sensorMallocAccelerometerRet();
     accelRet->x = t_r->x;
     accelRet->y = t_r->y;
     accelRet->z = t_r->z;
@@ -68,51 +69,52 @@ static void sensor_accel_topic_cb(uv_topic_t *topic, int status, void *data, siz
     FeatureFreeValue(accelRet);
 }
 
-static void sensor_prox_topic_cb(uv_topic_t *topic, int status, void *data, size_t datalen) {
+static void sensor_prox_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
     if (!topic || !data) {
         FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
         return;
     }
-    sensor_event_t *event = container_of(topic, sensor_event_t, topic);
-    sensor_prox *t_r = static_cast<sensor_prox *>(data);
-    sensor_ProximityRet *proxRet = sensorMallocProximityRet();
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    sensor_prox* t_r = static_cast<sensor_prox*>(data);
+    sensor_ProximityRet* proxRet = sensorMallocProximityRet();
     proxRet->distance = t_r->proximity;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, proxRet);
     FeatureFreeValue(proxRet);
 }
 
-static void sensor_light_topic_cb(uv_topic_t *topic, int status, void *data, size_t datalen) {
+static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
     if (!topic || !data) {
         FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
         return;
     }
-    sensor_event_t *event = container_of(topic, sensor_event_t, topic);
-    sensor_light *t_r = static_cast<sensor_light *>(data);
-    sensor_LightRet *lightRet = sensorMallocLightRet();
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    sensor_light* t_r = static_cast<sensor_light*>(data);
+    sensor_LightRet* lightRet = sensorMallocLightRet();
     lightRet->intensity = t_r->light;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, lightRet);
     FeatureFreeValue(lightRet);
 }
 
-static void sensor_compa_topic_cb(uv_topic_t *topic, int status, void *data, size_t datalen) {}
+static void sensor_compa_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
 
-static void sensor_step_topic_cb(uv_topic_t *topic, int status, void *data, size_t datalen) {}
+static void sensor_step_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
 
-const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] =
-        {[SENSOR_MAGIC_ACCEL] =
-                 {
-                         .meta = ORB_ID(sensor_accel),
-                         .topic_cb = sensor_accel_topic_cb,
-                 },
-         [SENSOR_MAGIC_COMPA] = {.meta = NULL, .topic_cb = sensor_compa_topic_cb},
-         [SENSOR_MAGIC_PROX] = {.meta = ORB_ID(sensor_prox), .topic_cb = sensor_prox_topic_cb},
-         [SENSOR_MAGIC_LIGHT] = {.meta = ORB_ID(sensor_light), .topic_cb = sensor_light_topic_cb},
-         [SENSOR_MAGIC_STEP] = {.meta = NULL, .topic_cb = sensor_step_topic_cb}};
+const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = { [SENSOR_MAGIC_ACCEL] = {
+                                                                     .meta = ORB_ID(sensor_accel),
+                                                                     .topic_cb = sensor_accel_topic_cb,
+                                                                 },
+    [SENSOR_MAGIC_COMPA] = { .meta = NULL, .topic_cb = sensor_compa_topic_cb },
+    [SENSOR_MAGIC_PROX] = { .meta = ORB_ID(sensor_prox), .topic_cb = sensor_prox_topic_cb },
+    [SENSOR_MAGIC_LIGHT] = { .meta = ORB_ID(sensor_light), .topic_cb = sensor_light_topic_cb },
+    [SENSOR_MAGIC_STEP] = { .meta = NULL, .topic_cb = sensor_step_topic_cb } };
 
-static void unsubscribe(FeatureInstanceHandle handle, int magic, bool is_active) {
+static void unsubscribe(FeatureInstanceHandle handle, int magic, bool is_active)
+{
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(handle);
-    SensorContext *th = static_cast<SensorContext *>(FeatureGetProtoData(proto_handle));
-    sensor_event_t *event = th->events[magic];
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
+    sensor_event_t* event = th->events[magic];
     if (event == NULL) {
         return;
     }
@@ -125,55 +127,60 @@ static void unsubscribe(FeatureInstanceHandle handle, int magic, bool is_active)
     int ret = uv_topic_unsubscribe(&event->topic);
     if (ret < 0) {
         FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe failed,ret=%d\n", file_tag, __FUNCTION__,
-                          ret);
+            ret);
     }
     free(event);
     th->events[magic] = NULL;
 }
 
-void sensor_onRegister(const char *feature_name) {
+void sensor_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void sensor_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void sensor_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    SensorContext *th = static_cast<SensorContext *>(malloc(sizeof(SensorContext)));
+    SensorContext* th = static_cast<SensorContext*>(malloc(sizeof(SensorContext)));
     for (int i = 0; i < SENSOR_MAGIC_NUM; i++) {
         th->events[i] = NULL;
     }
     FeatureSetProtoData(handle, th);
 }
 
-void sensor_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void sensor_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void sensor_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void sensor_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     for (int i = 0; i < SENSOR_MAGIC_NUM; i++) {
         unsubscribe(handle, i, false);
     }
 }
 
-void sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    SensorContext *th = static_cast<SensorContext *>(FeatureGetProtoData(handle));
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(handle));
     if (!th) {
         FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
         return;
     }
     for (int i = 0; i < SENSOR_MAGIC_NUM; i++) {
-        sensor_event_t *event = th->events[i];
+        sensor_event_t* event = th->events[i];
         if (event) {
             int ret = uv_topic_unsubscribe(&event->topic);
             if (ret < 0) {
                 FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe failed,ret=%d\n", file_tag,
-                                  __FUNCTION__, ret);
+                    __FUNCTION__, ret);
             }
             ret = uv_topic_close(&event->topic);
             if (ret < 0) {
                 FEATURE_LOG_ERROR("%s::%s() uv_topic_close failed,ret=%d\n", file_tag, __FUNCTION__,
-                                  ret);
+                    ret);
             }
             free(event);
             th->events[i] = NULL;
@@ -182,14 +189,16 @@ void sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
     free(th);
 }
 
-void sensor_onUnregister(const char *feature_name) {
+void sensor_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendData data,
-                                        sensor_Accelerometer *param) {
+    sensor_Accelerometer* param)
+{
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
-    SensorContext *th = static_cast<SensorContext *>(FeatureGetProtoData(proto_handle));
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     if (th == NULL) {
         FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
         return;
@@ -204,17 +213,17 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
         interval = 200000;
     } else {
         FEATURE_LOG_ERROR("%s::%s() param interval is invalid:%s\n", file_tag, __FUNCTION__,
-                          param->interval);
+            param->interval);
         return;
     }
 
-    sensor_event_t *event = th->events[SENSOR_MAGIC_ACCEL];
+    sensor_event_t* event = th->events[SENSOR_MAGIC_ACCEL];
     if (event) {
         uv_topic_unsubscribe(&event->topic);
         free(event);
         th->events[SENSOR_MAGIC_ACCEL] = NULL;
     }
-    event = static_cast<sensor_event_t *>(malloc(sizeof(sensor_event_t)));
+    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->reserved;
@@ -224,8 +233,8 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     th->events[SENSOR_MAGIC_ACCEL] = event;
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_ACCEL]->topic,
-                                 sensor_orb_table[SENSOR_MAGIC_ACCEL].meta,
-                                 sensor_orb_table[SENSOR_MAGIC_ACCEL].topic_cb);
+        sensor_orb_table[SENSOR_MAGIC_ACCEL].meta,
+        sensor_orb_table[SENSOR_MAGIC_ACCEL].topic_cb);
     if (ret < 0) {
         th->events[SENSOR_MAGIC_ACCEL] = NULL;
         free(event);
@@ -235,34 +244,37 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
 }
 
-void sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, AppendData data) {
+void sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, AppendData data)
+{
     unsubscribe(feature, SENSOR_MAGIC_ACCEL, true);
 }
 
 void sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendData data,
-                                  sensor_Compass *param) {}
+    sensor_Compass* param) { }
 
-void sensor_wrap_unsubscribeCompass(FeatureInstanceHandle feature, AppendData data) {
+void sensor_wrap_unsubscribeCompass(FeatureInstanceHandle feature, AppendData data)
+{
     unsubscribe(feature, SENSOR_MAGIC_COMPA, true);
 }
 
 void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData data,
-                                    sensor_Proximity *param) {
+    sensor_Proximity* param)
+{
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
-    SensorContext *th = static_cast<SensorContext *>(FeatureGetProtoData(proto_handle));
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     if (th == NULL) {
         FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
         return;
     }
 
-    sensor_event_t *event = th->events[SENSOR_MAGIC_PROX];
+    sensor_event_t* event = th->events[SENSOR_MAGIC_PROX];
     if (event) {
         uv_topic_unsubscribe(&event->topic);
         free(event);
         th->events[SENSOR_MAGIC_PROX] = NULL;
     }
 
-    event = static_cast<sensor_event_t *>(malloc(sizeof(sensor_event_t)));
+    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->reserved;
@@ -272,38 +284,40 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
     th->events[SENSOR_MAGIC_PROX] = event;
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_PROX]->topic,
-                                 sensor_orb_table[SENSOR_MAGIC_PROX].meta,
-                                 sensor_orb_table[SENSOR_MAGIC_PROX].topic_cb);
+        sensor_orb_table[SENSOR_MAGIC_PROX].meta,
+        sensor_orb_table[SENSOR_MAGIC_PROX].topic_cb);
     if (ret < 0) {
         th->events[SENSOR_MAGIC_PROX] = NULL;
         free(event);
         FeatureInvokeCallback(feature, param->fail,
-                              "The current device does not support the distance sensor", 203);
+            "The current device does not support the distance sensor", 203);
         FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
     }
 }
 
-void sensor_wrap_unsubscribeProximity(FeatureInstanceHandle feature, AppendData data) {
+void sensor_wrap_unsubscribeProximity(FeatureInstanceHandle feature, AppendData data)
+{
     unsubscribe(feature, SENSOR_MAGIC_PROX, true);
 }
 
 void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
-                                sensor_Light *param) {
+    sensor_Light* param)
+{
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
-    SensorContext *th = static_cast<SensorContext *>(FeatureGetProtoData(proto_handle));
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     if (th == NULL) {
         FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
         return;
     }
 
-    sensor_event_t *event = th->events[SENSOR_MAGIC_LIGHT];
+    sensor_event_t* event = th->events[SENSOR_MAGIC_LIGHT];
     if (event) {
         uv_topic_unsubscribe(&event->topic);
         free(event);
         th->events[SENSOR_MAGIC_LIGHT] = NULL;
     }
 
-    event = static_cast<sensor_event_t *>(malloc(sizeof(sensor_event_t)));
+    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->reserved;
@@ -312,9 +326,9 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
 
     th->events[SENSOR_MAGIC_LIGHT] = event;
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager),&th->events[SENSOR_MAGIC_LIGHT]->topic,
-                                 sensor_orb_table[SENSOR_MAGIC_LIGHT].meta,
-                                 sensor_orb_table[SENSOR_MAGIC_LIGHT].topic_cb);
+    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_LIGHT]->topic,
+        sensor_orb_table[SENSOR_MAGIC_LIGHT].meta,
+        sensor_orb_table[SENSOR_MAGIC_LIGHT].topic_cb);
     if (ret < 0) {
         th->events[SENSOR_MAGIC_LIGHT] = NULL;
         free(event);
@@ -322,16 +336,19 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
     }
 }
 
-void sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data) {
+void sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data)
+{
     unsubscribe(feature, SENSOR_MAGIC_LIGHT, true);
 }
 
 void sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
-                                      sensor_StepCount *param) {
+    sensor_StepCount* param)
+{
     FeatureInvokeCallback(feature, param->fail, "Current device does not support pedometer sensor",
-                          1000);
+        1000);
 }
 
-void sensor_wrap_unsubscribeStepCounter(FeatureInstanceHandle feature, AppendData data) {
+void sensor_wrap_unsubscribeStepCounter(FeatureInstanceHandle feature, AppendData data)
+{
     unsubscribe(feature, SENSOR_MAGIC_STEP, true);
 }

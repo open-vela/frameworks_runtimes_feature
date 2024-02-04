@@ -19,79 +19,91 @@
 
 namespace value_translator {
 
-template<typename TNumberNative, typename TCtx, typename TTarget, typename TNumberLike>
-bool toNumberLike(TCtx ctx, const TTarget& target, TNumberLike* pnative) {
-  TNumberNative ival;
-  if (toNative(ctx, target, &ival)) {
-    *pnative = (TNumberLike)ival;
-    return true;
-  }
-  return false;
+template <typename TNumberNative, typename TCtx, typename TTarget, typename TNumberLike>
+bool toNumberLike(TCtx ctx, const TTarget& target, TNumberLike* pnative)
+{
+    TNumberNative ival;
+    if (toNative(ctx, target, &ival)) {
+        *pnative = (TNumberLike)ival;
+        return true;
+    }
+    return false;
 }
 
 // toNative for int8_t, uint8_t, int16_t, uint16_t and float
-template<typename TCtx, typename TTarget>
-bool toNative(TCtx ctx, const TTarget& target, int8_t* pnative) {
-  return toNumberLike<int32_t>(ctx, target, pnative);
+template <typename TCtx, typename TTarget>
+bool toNative(TCtx ctx, const TTarget& target, int8_t* pnative)
+{
+    return toNumberLike<int32_t>(ctx, target, pnative);
 }
 
-template<typename TCtx, typename TTarget>
-bool toNative(TCtx ctx, const TTarget& target, int16_t* pnative) {
-  return toNumberLike<int32_t>(ctx, target, pnative);
+template <typename TCtx, typename TTarget>
+bool toNative(TCtx ctx, const TTarget& target, int16_t* pnative)
+{
+    return toNumberLike<int32_t>(ctx, target, pnative);
 }
 
-template<typename TCtx, typename TTarget>
-bool toNative(TCtx ctx, const TTarget& target, uint8_t* pnative) {
-  return toNumberLike<uint32_t>(ctx, target, pnative);
+template <typename TCtx, typename TTarget>
+bool toNative(TCtx ctx, const TTarget& target, uint8_t* pnative)
+{
+    return toNumberLike<uint32_t>(ctx, target, pnative);
 }
 
-template<typename TCtx, typename TTarget>
-bool toNative(TCtx ctx, const TTarget& target, uint16_t* pnative) {
-  return toNumberLike<uint32_t>(ctx, target, pnative);
+template <typename TCtx, typename TTarget>
+bool toNative(TCtx ctx, const TTarget& target, uint16_t* pnative)
+{
+    return toNumberLike<uint32_t>(ctx, target, pnative);
 }
 
-template<typename TCtx, typename TTarget>
-bool toNative(TCtx ctx, const TTarget& target, float* pnative) {
-  return toNumberLike<double>(ctx, target, pnative);
+template <typename TCtx, typename TTarget>
+bool toNative(TCtx ctx, const TTarget& target, float* pnative)
+{
+    return toNumberLike<double>(ctx, target, pnative);
 }
 
 // for argToNative
-template<typename TCtx, typename TArg, typename TNative>
+template <typename TCtx, typename TArg, typename TNative>
 bool argToNative(TCtx ctx, const TArg& arg, TNative* pnative)
 {
-  return toNative(ctx, arg, pnative);
+    return toNative(ctx, arg, pnative);
 }
 
 // toTargetIntLike
-template<typename TNumberNative, typename TCtx, typename TNumberLike, typename TTarget>
-bool toTargetNumberLike(TCtx ctx, const TNumberLike& native, TTarget* ptarget) {
-  return toTarget(ctx, (TNumberNative)native, ptarget);
+template <typename TNumberNative, typename TCtx, typename TNumberLike, typename TTarget>
+bool toTargetNumberLike(TCtx ctx, const TNumberLike& native, TTarget* ptarget)
+{
+    return toTarget(ctx, (TNumberNative)native, ptarget);
 }
 
 // toTarget for int8_t, uint8_t, int16_t, uint16_t and float
-template<typename TCtx, typename TTarget>
-bool toTarget(TCtx ctx, const int8_t& native, TTarget* ptarget) {
-  return toTargetNumberLike<int32_t>(ctx, native, ptarget);
+template <typename TCtx, typename TTarget>
+bool toTarget(TCtx ctx, const int8_t& native, TTarget* ptarget)
+{
+    return toTargetNumberLike<int32_t>(ctx, native, ptarget);
 }
 
-template<typename TCtx, typename TTarget>
-bool toTarget(TCtx ctx, const int16_t& native, TTarget* ptarget) {
-  return toTargetNumberLike<int32_t>(ctx, native, ptarget);
+template <typename TCtx, typename TTarget>
+bool toTarget(TCtx ctx, const int16_t& native, TTarget* ptarget)
+{
+    return toTargetNumberLike<int32_t>(ctx, native, ptarget);
 }
 
-template<typename TCtx, typename TTarget>
-bool toTarget(TCtx ctx, const uint8_t& native, TTarget* ptarget) {
-  return toTargetNumberLike<uint32_t>(ctx, native, ptarget);
+template <typename TCtx, typename TTarget>
+bool toTarget(TCtx ctx, const uint8_t& native, TTarget* ptarget)
+{
+    return toTargetNumberLike<uint32_t>(ctx, native, ptarget);
 }
 
-template<typename TCtx, typename TTarget>
-bool toTarget(TCtx ctx, const uint16_t& native, TTarget* ptarget) {
-  return toTargetNumberLike<uint32_t>(ctx, native, ptarget);
+template <typename TCtx, typename TTarget>
+bool toTarget(TCtx ctx, const uint16_t& native, TTarget* ptarget)
+{
+    return toTargetNumberLike<uint32_t>(ctx, native, ptarget);
 }
 
-template<typename TCtx, typename TTarget>
-bool toTarget(TCtx ctx, const float& native, TTarget* ptarget) {
-  return toTargetNumberLike<double>(ctx, native, ptarget);
+template <typename TCtx, typename TTarget>
+bool toTarget(TCtx ctx, const float& native, TTarget* ptarget)
+{
+    return toTargetNumberLike<double>(ctx, native, ptarget);
 }
 }
 #endif // __VALUE_TRANSLATOR_H__

@@ -30,38 +30,38 @@ public:
 // FeatureCallbacks to be implemented
 void promise_test_onRegister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_onUnregister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 // Function wrappers to be implemented
 void promise_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a, FtString b)
 {
-    printf("%s::%s(), a: %d, b: %s\n", file_tag,  __FUNCTION__, a, b);
+    printf("%s::%s(), a: %d, b: %s\n", file_tag, __FUNCTION__, a, b);
     int rs = a;
     int rj = 10;
     if (rs != 0) {
@@ -73,7 +73,7 @@ void promise_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtPro
 
 void promise_test_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid, FtInt a)
 {
-    printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
+    printf("%s::%s(), a: %d\n", file_tag, __FUNCTION__, a);
     int rs = a;
     const char* rj = "hello";
     if (rs != 0) {
@@ -85,7 +85,7 @@ void promise_test_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPr
 
 void promise_test_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     int rs = 0;
     const char* rj = "world";
     if (rs != 0) {
@@ -97,17 +97,17 @@ void promise_test_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPr
 
 void promise_test_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_wrap_bar1(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void promise_test_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams vari_params)

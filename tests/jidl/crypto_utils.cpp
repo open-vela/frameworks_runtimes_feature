@@ -31,7 +31,8 @@ bool has_type(const char** type_array, int size, const char* type)
     return false;
 }
 
-char** split_str(const char* input, const char* delimiter, int* count) {
+char** split_str(const char* input, const char* delimiter, int* count)
+{
     char* in_cpy = strdup(input);
 
     *count = 1;
@@ -55,7 +56,8 @@ char** split_str(const char* input, const char* delimiter, int* count) {
     return result;
 }
 
-void free_str_array(char** str_array, int count) {
+void free_str_array(char** str_array, int count)
+{
     for (int i = 0; i < count; ++i) {
         free(str_array[i]);
     }

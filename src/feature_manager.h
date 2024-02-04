@@ -48,7 +48,7 @@ public:
 
     const char* packageName() const { return pkg_name_; };
 
-    void setEnvName(const char* env_name)  { env_name_ = env_name; }
+    void setEnvName(const char* env_name) { env_name_ = env_name; }
 
     const char* envName() const { return env_name_; }
 

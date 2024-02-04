@@ -104,7 +104,8 @@ static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
     android::IPCThreadState::self()->handlePolledCommands();
 }
 
-static void setScriptArgs(JSContext* ctx, JSValue global_obj, int argc, char* argv[], int scriptArgs_beg) {
+static void setScriptArgs(JSContext* ctx, JSValue global_obj, int argc, char* argv[], int scriptArgs_beg)
+{
     JSValue arr = JS_NewArray(ctx);
     for (int i = 0, j = scriptArgs_beg; j < argc; i++, j++) {
         JSValue js_string = JS_NewString(ctx, argv[j]);

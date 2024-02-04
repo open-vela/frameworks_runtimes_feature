@@ -16,8 +16,8 @@
 
 #include "promise_manager.h"
 #include "feature_common.h"
-#include "feature_log.h"
 #include "feature_ffi_qjs.h"
+#include "feature_log.h"
 
 static inline void free_arg(JSContext* ctx, JSValue& arg)
 {
@@ -32,7 +32,7 @@ static inline JSValue undefined_arg(JSContext* ctx)
 namespace ferry {
 
 PromiseManager::PromiseManager(JSContext* js_ctx)
- : js_ctx_(js_ctx)
+    : js_ctx_(js_ctx)
 {
 }
 
@@ -139,9 +139,9 @@ void PromiseManager::markPromises(feature_runtime_ref rt, feature_mark_func mark
     }
 }
 
-static bool argToTarget(JSContext* js_ctx, va_list &ap, FeatureType ftype, JSValue& target)
+static bool argToTarget(JSContext* js_ctx, va_list& ap, FeatureType ftype, JSValue& target)
 {
-    void *param = extractVariadicParam(ap, ftype);
+    void* param = extractVariadicParam(ap, ftype);
     if (!param) {
         FEATURE_LOG_ERROR("extract callback param failed !");
         return false;

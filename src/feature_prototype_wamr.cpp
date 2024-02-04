@@ -15,14 +15,14 @@
  */
 
 #include "feature_prototype_wamr.h"
-#include "feature_instance_wamr.h"
 #include "feature_description.h"
+#include "feature_instance_wamr.h"
 #include "feature_log.h"
 
 #include <cstdarg>
 #include <cstdint>
-#include <string>
 #include <functional>
+#include <string>
 
 namespace ferry {
 
@@ -40,7 +40,8 @@ FeatureInstance* FeaturePrototypeWamr::createInterface(VTable* vtable)
     return new FeatureInstanceWamr(this, vtable);
 }
 
-FeaturePrototype* FeaturePrototypeWamr::createInterfacePrototype(const FeatureDescription* description) {
+FeaturePrototype* FeaturePrototypeWamr::createInterfacePrototype(const FeatureDescription* description)
+{
     FeaturePrototypeWamr* proto = new FeaturePrototypeWamr(description);
     proto->setFeatureManager(featureManager());
     return proto;

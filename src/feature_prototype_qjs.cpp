@@ -16,14 +16,14 @@
 
 #include "feature_prototype_qjs.h"
 #include "feature_context_qjs.h"
-#include "feature_instance_qjs.h"
 #include "feature_description.h"
+#include "feature_instance_qjs.h"
 #include "feature_log.h"
 
 #include <cstdarg>
 #include <cstdint>
-#include <string>
 #include <functional>
+#include <string>
 
 namespace ferry {
 
@@ -44,11 +44,11 @@ FeatureInstance* FeaturePrototypeQjs::createInterface(VTable* vtable)
     return new FeatureInstanceQjs(this, vtable);
 }
 
-FeaturePrototype* FeaturePrototypeQjs::createInterfacePrototype(const FeatureDescription* description) {
+FeaturePrototype* FeaturePrototypeQjs::createInterfacePrototype(const FeatureDescription* description)
+{
     FeaturePrototypeQjs* proto = new FeaturePrototypeQjs(description);
     proto->setFeatureManager(featureManager());
-   return proto;
+    return proto;
 }
 
 }
-

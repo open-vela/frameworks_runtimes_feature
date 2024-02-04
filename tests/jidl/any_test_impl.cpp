@@ -8,38 +8,38 @@ static const char* file_tag = "[jidl_feature] any_test_impl";
 // FeatureCallbacks to be implemented
 void any_test_onRegister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void any_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void any_test_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void any_test_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void any_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void any_test_onUnregister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 // Function wrappers to be implemented
 void any_test_wrap_setAny(FeatureInstanceHandle feature, AppendData append_data, FtInt a, FtAny any)
 {
-    printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
+    printf("%s::%s(), a: %d\n", file_tag, __FUNCTION__, a);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -53,14 +53,14 @@ void any_test_wrap_setAny(FeatureInstanceHandle feature, AppendData append_data,
 
 FtAny any_test_wrap_getAny(FeatureInstanceHandle feature, AppendData append_data)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
-	ft_value_t* any_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+    ft_value_t* any_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
     FEATURE_LOG_ERROR("any ptr: %p", any_ptr);
-	*any_ptr = ft_from_string (ft_ctx, "this is a string any value");
-	return any_ptr;
+    *any_ptr = ft_from_string(ft_ctx, "this is a string any value");
+    return any_ptr;
 }
 
 void any_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)

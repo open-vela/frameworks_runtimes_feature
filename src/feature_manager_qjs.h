@@ -59,7 +59,6 @@ public:
     static feature_classid_t jsClassId() { return js_class_id_; }
 
 private:
-
     bool ensureJsPrototype(FeaturePrototypeQjs* prototype);
 
     static bool ensureJsClass(feature_context_ref ctx);

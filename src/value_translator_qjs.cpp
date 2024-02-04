@@ -15,26 +15,27 @@
  */
 
 #include "value_translator_qjs.h"
-#include "feature_manager_qjs.h"
 #include "feature_instance_qjs.h"
+#include "feature_manager_qjs.h"
 
-#define MAKE_JS_ARRAY(ctx, func, argv, argc, ptarget) \
-    do { \
-        JSValue array = JS_NewArray(ctx); \
-        for (uint32_t i = 0; i < argc; ++i) { \
-            JSValue elem = func(ctx, argv[i]); \
+#define MAKE_JS_ARRAY(ctx, func, argv, argc, ptarget)         \
+    do {                                                      \
+        JSValue array = JS_NewArray(ctx);                     \
+        for (uint32_t i = 0; i < argc; ++i) {                 \
+            JSValue elem = func(ctx, argv[i]);                \
             if (!JS_SetPropertyUint32(ctx, array, i, elem)) { \
-                *ptarget = JS_UNDEFINED; \
-                break; \
-            } \
-        } \
-        *ptarget = array; \
+                *ptarget = JS_UNDEFINED;                      \
+                break;                                        \
+            }                                                 \
+        }                                                     \
+        *ptarget = array;                                     \
     } while (false)
 
 namespace value_translator {
 
 // to native values
-bool toNative(JSContext* ctx, const JSValue& target, bool* pnative) {
+bool toNative(JSContext* ctx, const JSValue& target, bool* pnative)
+{
     int ret = JS_ToBool(ctx, target);
     if (ret >= 0) {
         *pnative = !!ret;
@@ -43,7 +44,8 @@ bool toNative(JSContext* ctx, const JSValue& target, bool* pnative) {
     return false;
 }
 
-bool toNative(JSContext* ctx, const JSValue& target, char** pnative) {
+bool toNative(JSContext* ctx, const JSValue& target, char** pnative)
+{
     if (JS_IsString(target)) {
         *((const char**)pnative) = JS_ToCString(ctx, target);
         return true;
@@ -62,7 +64,8 @@ bool toNative(JSContext* ctx, const JSValue& target, char** pnative) {
     return true;
 }
 
-bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative) {
+bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative)
+{
     qjs_val_t* q_val = (qjs_val_t*)pnative;
     if (JS_IsNull(target) || JS_IsUndefined(target)) {
         FEATURE_LOG_ERROR("object is null or undefined!");
@@ -75,7 +78,8 @@ bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative) {
 }
 
 // ArrayBuffer or TypedArrayBuffer
-bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, size_t* psize) {
+bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, size_t* psize)
+{
     size_t offset;
     size_t length;
     size_t byte_per_elem;
@@ -93,13 +97,20 @@ bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, si
 }
 
 // for TypedArrayBuffer
-bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, uint32_t type, JSValue* ptarget) {
+bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, uint32_t type, JSValue* ptarget)
+{
     static const char* type_names[] = {
-        "Int8Array", "Uint8Array", "Int16Array", "Uint16Array",
-        "Int32Array", "Uint32Array", "Float32Array", "Float64Array",
+        "Int8Array",
+        "Uint8Array",
+        "Int16Array",
+        "Uint16Array",
+        "Int32Array",
+        "Uint32Array",
+        "Float32Array",
+        "Float64Array",
     };
 
-    if (type >= (sizeof(type_names)/sizeof(type_names[0]))) {
+    if (type >= (sizeof(type_names) / sizeof(type_names[0]))) {
         *ptarget = JS_UNDEFINED;
         return false;
     }
@@ -115,44 +126,51 @@ bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, uint32_t 
 }
 
 // for arrays
-bool toTargetArray(JSContext* ctx, int32_t* val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, int32_t* val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewInt32, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetArray(JSContext* ctx, uint32_t* val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, uint32_t* val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewUint32, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetArray(JSContext* ctx, int64_t* val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, int64_t* val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewInt64, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetArray(JSContext* ctx, uint64_t* val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, uint64_t* val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewBigUint64, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetArray(JSContext* ctx, double* val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, double* val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewFloat64, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetArray(JSContext* ctx, bool* val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, bool* val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewBool, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* ptarget) {
+bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* ptarget)
+{
     MAKE_JS_ARRAY(ctx, JS_NewString, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
 }
 
-
 // funcitons for handling objcects
-bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield) {
+bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield)
+{
     *pfield = JS_GetPropertyStr(ctx, obj, name);
     if (JS_IsUndefined(*pfield))
         return false;
@@ -160,7 +178,8 @@ bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int id
     return true;
 }
 
-bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field) {
+bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field)
+{
     if (!JS_IsObject(obj))
         return false;
 
@@ -169,7 +188,8 @@ bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValu
 }
 
 // funcitons for handling arrays
-uint32_t arraySize(JSContext* ctx, const JSValue& array) {
+uint32_t arraySize(JSContext* ctx, const JSValue& array)
+{
     uint32_t ret = 0;
     if (!JS_IsArray(ctx, array))
         return ret;
