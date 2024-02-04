@@ -1,15 +1,14 @@
 #include "ATest_1_0.h"
 
-const char *file_tag1 = "[jidl_feature] ATest_impl";
+const char* file_tag1 = "[jidl_feature] ATest_impl";
 int IDX = 0;
 template <typename T>
-class FTArrayHelper
-{
+class FTArrayHelper {
 private:
-    FtArray *_data;
+    FtArray* _data;
 
 public:
-    FTArrayHelper(FtArray *data)
+    FTArrayHelper(FtArray* data)
     {
         _data = data;
     }
@@ -19,9 +18,9 @@ public:
         free(_data);
     }
 
-    T &operator[](int32_t index)
+    T& operator[](int32_t index)
     {
-        return ((T *)_data->_element)[index];
+        return ((T*)_data->_element)[index];
     }
 
     int32_t size() const { return _data->_size; }
@@ -149,7 +148,7 @@ void ATest_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariPara
     printf("\n");
 }
 
-void ATest_wrap_test5(FeatureInstanceHandle feature, AppendData data, FtArray &values)
+void ATest_wrap_test5(FeatureInstanceHandle feature, AppendData data, FtArray& values)
 {
     FTArrayHelper<int> int_array(&values);
     printf("%s::%s(), int_array size: %d\n", file_tag1, __FUNCTION__, int_array.size());
@@ -161,21 +160,21 @@ void ATest_wrap_test5(FeatureInstanceHandle feature, AppendData data, FtArray &v
     return;
 }
 
-FtArray *ATest_wrap_test6(FeatureInstanceHandle feature, AppendData data, FtInt a)
+FtArray* ATest_wrap_test6(FeatureInstanceHandle feature, AppendData data, FtInt a)
 {
     printf("ATest_wrap_test6 pass number is %d\n", a);
-    FtArray *strArray = ATest_malloc_string_array();
+    FtArray* strArray = ATest_malloc_string_array();
     strArray->_size = 2;
-    strArray->_element = malloc(sizeof(char *) * 2);
+    strArray->_element = malloc(sizeof(char*) * 2);
     for (int i = 0; i < 2; i++) {
         char* str = (char*)FeatureMalloc(100, FT_CHAR);
         sprintf(str, "hello%d", i);
-        ((char **)strArray->_element)[i] = str;
+        ((char**)strArray->_element)[i] = str;
     }
     return strArray;
 }
 
-void ATest_wrap_test7(FeatureInstanceHandle feature, AppendData data, FtInt a, ATest_Person *b)
+void ATest_wrap_test7(FeatureInstanceHandle feature, AppendData data, FtInt a, ATest_Person* b)
 {
     printf("ATest_wrap_test7 %d\n", a);
     if (!b) {
@@ -199,9 +198,9 @@ void ATest_wrap_test7(FeatureInstanceHandle feature, AppendData data, FtInt a, A
     }
 }
 
-ATest_Person *ATest_wrap_test8(FeatureInstanceHandle feature, AppendData data, FtInt a)
+ATest_Person* ATest_wrap_test8(FeatureInstanceHandle feature, AppendData data, FtInt a)
 {
-    printf("%s::%s(), a: %d\n", file_tag1,  __FUNCTION__, a);
+    printf("%s::%s(), a: %d\n", file_tag1, __FUNCTION__, a);
     ATest_Person* per = mallocPerson();
     char* name = (char*)FeatureMalloc(128, FT_CHAR);
     sprintf(name, "%s", "level");
@@ -214,13 +213,13 @@ ATest_Person *ATest_wrap_test8(FeatureInstanceHandle feature, AppendData data, F
 }
 
 // Property getters and setters to be implemented
-FtInt ATest_get_idx(void *feature, AppendData data)
+FtInt ATest_get_idx(void* feature, AppendData data)
 {
     printf("%s::%s()\n", file_tag1, __FUNCTION__);
     return IDX;
 }
 
-void ATest_set_idx(void *feature, AppendData data, FtInt idx)
+void ATest_set_idx(void* feature, AppendData data, FtInt idx)
 {
     printf("%s::%s(),idx is %d\n", file_tag1, __FUNCTION__, idx);
     IDX = idx;

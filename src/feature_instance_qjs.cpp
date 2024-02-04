@@ -16,8 +16,8 @@
 
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
-#include "feature_manager_qjs.h"
 #include "feature_log.h"
+#include "feature_manager_qjs.h"
 #include "feature_prototype_qjs.h"
 #include "feature_utils.h"
 

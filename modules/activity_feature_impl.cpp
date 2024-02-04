@@ -29,14 +29,20 @@ static const char* file_tag = "[jidl_feature] activity_feature_impl";
 class FtServiceConnection : public os::app::ServiceConnection {
 public:
     FtServiceConnection(FeatureInstanceHandle handler, FtCallbackId onConnectedCb,
-                        FtCallbackId onDisconnectedCb)
-          : mHandler(handler), mOnConnectedCb(onConnectedCb), mOnDisConnectedCb(onDisconnectedCb) {}
+        FtCallbackId onDisconnectedCb)
+        : mHandler(handler)
+        , mOnConnectedCb(onConnectedCb)
+        , mOnDisConnectedCb(onDisconnectedCb)
+    {
+    }
 
-    void onConnected(const sp<android::IBinder>& server) {
+    void onConnected(const sp<android::IBinder>& server)
+    {
         FeatureInvokeCallback(mHandler, mOnConnectedCb);
     }
 
-    void onDisconnected(const sp<android::IBinder>& server) {
+    void onDisconnected(const sp<android::IBinder>& server)
+    {
         FeatureInvokeCallback(mHandler, mOnDisConnectedCb);
     }
 
@@ -48,9 +54,13 @@ private:
 
 class ServiceConnectManager {
 public:
-    ServiceConnectManager() : mBindId(0) {}
+    ServiceConnectManager()
+        : mBindId(0)
+    {
+    }
 
-    int addServiceConnect(const sp<FtServiceConnection>& conn) {
+    int addServiceConnect(const sp<FtServiceConnection>& conn)
+    {
         if (conn) {
             mServiceConns.emplace(++mBindId, conn);
             return mBindId;
@@ -58,7 +68,8 @@ public:
         return -1;
     }
 
-    sp<FtServiceConnection> removeServiceConnect(const int bindId) {
+    sp<FtServiceConnection> removeServiceConnect(const int bindId)
+    {
         auto iter = mServiceConns.find(bindId);
         if (iter != mServiceConns.end()) {
             auto serviceConn = iter->second;
@@ -74,21 +85,25 @@ private:
 };
 
 // FeatureCallbacks to be implemented
-void system_internal_activity_onRegister(const char* feature_name) {
+void system_internal_activity_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_internal_activity_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_internal_activity_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_internal_activity_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_internal_activity_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     auto serviceManager = new ServiceConnectManager();
     FeatureSetObjectData(handle, serviceManager);
 }
 
-void system_internal_activity_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_internal_activity_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     ServiceConnectManager* serviceManager = (ServiceConnectManager*)FeatureGetObjectData(handle);
     if (serviceManager) {
@@ -96,22 +111,24 @@ void system_internal_activity_onDetached(FeatureRuntimeContext ctx, FeatureInsta
     }
 }
 
-void system_internal_activity_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_internal_activity_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_internal_activity_onUnregister(const char* feature_name) {
+void system_internal_activity_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 // Function wrappers to be implemented
 FtInt system_internal_activity_wrap_startActivity(FeatureInstanceHandle feature,
-                                                  AppendData append_data, FtString target,
-                                                  FtAny params) {
+    AppendData append_data, FtString target,
+    FtAny params)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
     int ret = -1;
-    Context* nativeContext =
-            static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         Intent intent(target);
         ft_context_ref ftCtx = FeatureGetContext(feature);
@@ -125,12 +142,12 @@ FtInt system_internal_activity_wrap_startActivity(FeatureInstanceHandle feature,
 }
 
 FtInt system_internal_activity_wrap_stopActivity(FeatureInstanceHandle feature,
-                                                 AppendData append_data, FtString target) {
+    AppendData append_data, FtString target)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
 
     int ret = -1;
-    Context* nativeContext =
-            static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         Intent intent(target);
         ret = nativeContext->stopActivity(intent);
@@ -141,12 +158,12 @@ FtInt system_internal_activity_wrap_stopActivity(FeatureInstanceHandle feature,
 }
 
 FtInt system_internal_activity_wrap_startService(FeatureInstanceHandle feature,
-                                                 AppendData append_data, FtString target,
-                                                 FtAny params) {
+    AppendData append_data, FtString target,
+    FtAny params)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
     int ret = -1;
-    Context* nativeContext =
-            static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         Intent intent(target);
         ft_context_ref ftCtx = FeatureGetContext(feature);
@@ -159,11 +176,11 @@ FtInt system_internal_activity_wrap_startService(FeatureInstanceHandle feature,
     return ret;
 }
 FtInt system_internal_activity_wrap_stopService(FeatureInstanceHandle feature,
-                                                AppendData append_data, FtString target) {
+    AppendData append_data, FtString target)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
     int ret = -1;
-    Context* nativeContext =
-            static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         Intent intent(target);
         ret = nativeContext->stopService(intent);
@@ -174,17 +191,16 @@ FtInt system_internal_activity_wrap_stopService(FeatureInstanceHandle feature,
 }
 
 FtInt system_internal_activity_wrap_bindService(FeatureInstanceHandle feature,
-                                                AppendData append_data, FtString target,
-                                                FtAny params,
-                                                system_internal_activity_ServiceConnection* conn) {
+    AppendData append_data, FtString target,
+    FtAny params,
+    system_internal_activity_ServiceConnection* conn)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
     int bindId = -1;
-    Context* nativeContext =
-            static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         auto manager = (ServiceConnectManager*)FeatureGetObjectData(feature);
-        sp<FtServiceConnection> ftConn =
-                new FtServiceConnection(feature, conn->connectCallBack, conn->disconnectCallBack);
+        sp<FtServiceConnection> ftConn = new FtServiceConnection(feature, conn->connectCallBack, conn->disconnectCallBack);
         bindId = manager->addServiceConnect(ftConn);
         if (bindId > 0) {
             Intent intent(target);
@@ -200,10 +216,10 @@ FtInt system_internal_activity_wrap_bindService(FeatureInstanceHandle feature,
 }
 
 void system_internal_activity_wrap_unbindService(FeatureInstanceHandle feature,
-                                                 AppendData append_data, FtInt bindId) {
+    AppendData append_data, FtInt bindId)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
-    Context* nativeContext =
-            static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         auto manager = (ServiceConnectManager*)FeatureGetObjectData(feature);
         auto ftconn = manager->removeServiceConnect(bindId);
@@ -216,10 +232,10 @@ void system_internal_activity_wrap_unbindService(FeatureInstanceHandle feature,
 }
 
 FtBool system_internal_activity_wrap_moveToBackground(FeatureInstanceHandle feature,
-                                                      AppendData append_data, FtBool nonRoot) {
+    AppendData append_data, FtBool nonRoot)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
-    os::app::Activity* nativeContext =
-            static_cast<os::app::Activity*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
+    os::app::Activity* nativeContext = static_cast<os::app::Activity*>(FeatureInstanceGetManagerUserData(feature, "nativeContext"));
     if (nativeContext) {
         return nativeContext->moveToBackground(nonRoot);
     } else {

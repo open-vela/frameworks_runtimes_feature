@@ -23,49 +23,55 @@
 #include "crypto_utils.h"
 
 #include <alloca.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 static const char* file_tag = "[system_cipher_impl]";
 
 static const char* pkg_name = NULL;
 
 typedef enum ErrorCode {
-  GENERAL = 200,
-  ARGSERROR = 202,
-  IOERROR = 300,
-  TIMEOUT = 204
+    GENERAL = 200,
+    ARGSERROR = 202,
+    IOERROR = 300,
+    TIMEOUT = 204
 } ErrorCode;
 
 // FeatureCallbacks
-void system_cipher_onRegister(const char* feature_name) {
+void system_cipher_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cipher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_cipher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s\n", file_tag);
     pkg_name = FeatureGetPackageName(handle);
 }
 
 void system_cipher_onRequired(FeatureRuntimeContext ctx,
-                       FeatureInstanceHandle handle) {
+    FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
 void system_cipher_onDetached(FeatureRuntimeContext ctx,
-                       FeatureInstanceHandle handle) {
+    FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cipher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_cipher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cipher_onUnregister(const char* feature_name) {
+void system_cipher_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s\n", file_tag);
 }
 
-void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam * opts)
+void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam* opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -101,7 +107,7 @@ void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
     if (result && opts->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
@@ -111,10 +117,11 @@ void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
         INVOKE_COMPLET_CB(opts->complete);
     }
 
-    if (result) free(result);
+    if (result)
+        free(result);
 }
 
-void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam * opts)
+void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam* opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -139,7 +146,7 @@ void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (result && opts->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
@@ -149,10 +156,11 @@ void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         INVOKE_COMPLET_CB(opts->complete);
     }
 
-    if (result) free(result);
+    if (result)
+        free(result);
 }
 
-void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAVerifyParam * opts)
+void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAVerifyParam* opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -181,7 +189,7 @@ void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     if (has_result && opts->success) {
         ft_value_t ret_data = ft_from_bool(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "valid", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "valid", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
@@ -190,10 +198,9 @@ void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
-
 }
 
-void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cipher_DigestParam * opts)
+void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cipher_DigestParam* opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -217,7 +224,7 @@ void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
     if (result && opts->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
@@ -231,7 +238,7 @@ void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
         FeatureFreeValue(result);
 }
 
-void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cipher_Md5Param * opts)
+void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_data, system_cipher_Md5Param* opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -255,7 +262,7 @@ void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
     if (result && opts->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
@@ -269,7 +276,7 @@ void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
         FeatureFreeValue(result);
 }
 
-void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cipher_AESParam * opts)
+void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_data, system_cipher_AESParam* opts)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -313,7 +320,7 @@ void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
     if (result && opts->success) {
         ft_value_t ret_data = ft_from_string(ft_ctx, result);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_obj_set_property (ft_ctx, ret_obj, "text", ret_data);
+        ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
@@ -323,5 +330,6 @@ void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
         INVOKE_COMPLET_CB(opts->complete);
     }
 
-    if (result) free(result);
+    if (result)
+        free(result);
 }

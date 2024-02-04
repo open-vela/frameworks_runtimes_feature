@@ -22,19 +22,21 @@
 
 namespace ferry {
 
-static inline JSValue addRef(JSContext* ctx, JSValue& value) {
+static inline JSValue addRef(JSContext* ctx, JSValue& value)
+{
     return JS_DupValue(ctx, value);
 }
 
-static inline void releaseRef(JSContext* ctx, JSValue& value) {
+static inline void releaseRef(JSContext* ctx, JSValue& value)
+{
     JS_FreeValue(ctx, value);
 }
 
-static inline bool isSameValue(JSContext* ctx, JSValue& lvalue, JSValue& ralue) {
+static inline bool isSameValue(JSContext* ctx, JSValue& lvalue, JSValue& ralue)
+{
     JS_BOOL ret = JS_IsSameValue(ctx, lvalue, ralue);
     return ret == 1;
 }
 
 }
 #endif // __CALLBACK_MANAGER_QJS_H__
-

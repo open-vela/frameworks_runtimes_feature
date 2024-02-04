@@ -22,8 +22,8 @@ extern "C" {
 #endif
 
 #include "feature_types.h"
-#include <stdint.h>
 #include <inttypes.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #define FT_COMPLEX_BIT ((uintptr_t)1)
@@ -114,9 +114,9 @@ typedef struct Member {
     enum MemberType type;
     const char* name; // member的名称
     union {
-        const MemberMethod *method;
-        const MemberAccessor *accessor;
-        const MemberConst *value;
+        const MemberMethod* method;
+        const MemberAccessor* accessor;
+        const MemberConst* value;
     };
 } Member;
 
@@ -193,12 +193,12 @@ typedef struct FeatureDescription {
     const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
 
-#define TRY_GET_REAL_TYPE(featureType) \
-    if (FT_IS_COMPLEX(featureType)) { \
+#define TRY_GET_REAL_TYPE(featureType)                                                    \
+    if (FT_IS_COMPLEX(featureType)) {                                                     \
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == COMPLEX_OPTIONAL) { \
-            featureType = ((OptionalType*)complexType)->type; \
-        } \
+        if (complexType->type == COMPLEX_OPTIONAL) {                                      \
+            featureType = ((OptionalType*)complexType)->type;                             \
+        }                                                                                 \
     }
 // check if is reference
 static inline int FT_IS_REFERENCE(FeatureType featureType)

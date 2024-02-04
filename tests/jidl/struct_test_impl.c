@@ -7,47 +7,49 @@ static const char* file_tag = "[jidl_feature] struct_1_0_impl";
 // FeatureCallbacks to be implemented
 void struct_test_onRegister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void struct_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void struct_test_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void struct_test_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void struct_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void struct_test_onUnregister(const char* feature_name)
 {
-    printf("%s::%s()\n", file_tag,  __FUNCTION__);
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 // Function wrappers to be implemented
-void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData data, FtInt a, struct_test_Chapter* b) {
+void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData data, FtInt a, struct_test_Chapter* b)
+{
     if (!b) {
-        printf("%s::%s(), chapter ptr is null!\n", file_tag,  __FUNCTION__);
+        printf("%s::%s(), chapter ptr is null!\n", file_tag, __FUNCTION__);
         return;
     }
 
     printf("%s::%s(), page_count: %d, title: %s\n",
-        file_tag,  __FUNCTION__, b->page_count, b->title);
+        file_tag, __FUNCTION__, b->page_count, b->title);
 }
 
-struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union AppendData data, FtInt a) {
-    printf("%s::%s(), a: %d\n", file_tag,  __FUNCTION__, a);
+struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union AppendData data, FtInt a)
+{
+    printf("%s::%s(), a: %d\n", file_tag, __FUNCTION__, a);
     struct_test_Chapter* chap = struct_testMallocChapter();
     chap->page_count = a;
     char* title = (char*)FeatureMalloc(128, FT_CHAR);
@@ -56,13 +58,14 @@ struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union A
     return chap;
 }
 
-void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data, struct_test_Book* a) {
+void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data, struct_test_Book* a)
+{
     if (!a) {
-        printf("%s::%s(), book ptr is null!\n", file_tag,  __FUNCTION__);
+        printf("%s::%s(), book ptr is null!\n", file_tag, __FUNCTION__);
         return;
     }
     if (!a->any_param) {
-        printf("%s::%s(), any_param ptr is null!\n", file_tag,  __FUNCTION__);
+        printf("%s::%s(), any_param ptr is null!\n", file_tag, __FUNCTION__);
     } else {
         printf("%s::%s(), any_param: ", file_tag, __FUNCTION__);
         ft_context_ref ft_ctx = FeatureGetContext(feature);
@@ -73,13 +76,13 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data,
     }
 
     printf("%s::%s(), page_count: %d, title: %s\n",
-        file_tag,  __FUNCTION__, a->page_count, a->title);
+        file_tag, __FUNCTION__, a->page_count, a->title);
 
     if (!a->first_chap) {
-        printf("%s::%s(), first_chap ptr is null!\n", file_tag,  __FUNCTION__);
+        printf("%s::%s(), first_chap ptr is null!\n", file_tag, __FUNCTION__);
     } else {
-      printf("%s::%s(), first_chapter: [page_count: %d, title: %s]\n",
-          file_tag,  __FUNCTION__, a->first_chap->page_count, a->first_chap->title);
+        printf("%s::%s(), first_chapter: [page_count: %d, title: %s]\n",
+            file_tag, __FUNCTION__, a->first_chap->page_count, a->first_chap->title);
     }
 
     if (!FeatureInvokeCallback(feature, a->chap_changed, 0, a->title)) {

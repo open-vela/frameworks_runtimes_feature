@@ -23,7 +23,6 @@ namespace ferry {
 
 class FeaturePrototypeWamr : public FeaturePrototype {
 public:
-
     FeaturePrototypeWamr(const FeatureDescription* description);
 
     virtual ~FeaturePrototypeWamr();
@@ -35,4 +34,3 @@ public:
 
 }
 #endif // __FEATURE_PROTOTYPE_WAMR_H__
-

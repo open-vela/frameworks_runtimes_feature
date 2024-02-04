@@ -19,10 +19,12 @@
 #define __FEATURE_INSTANCE_QJS_H__
 
 #include "feature.h"
-#include "feature_instance.h"
 #include "feature_common.h"
+#include "feature_instance.h"
+// clang-format off
 #include "callback_manager_qjs.h"
 #include "callback_manager.h"
+// clang-format on
 #include "promise_manager.h"
 
 #include <map>
@@ -38,8 +40,7 @@ typedef struct WeakRef {
     struct weakref_list_node link;
 } WeakRef;
 
-class FeatureInstanceQjs : public FeatureInstance, public PromiseManager,
-        public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs> {
+class FeatureInstanceQjs : public FeatureInstance, public PromiseManager, public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs> {
 public:
     FeatureInstanceQjs(FeaturePrototype* proto);
 

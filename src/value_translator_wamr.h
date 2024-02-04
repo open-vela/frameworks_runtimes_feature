@@ -31,7 +31,6 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, bool* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, ft_value_t* pnative);
 
-
 bool toTarget(wasm_exec_env_t exec_env, int32_t native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, uint32_t native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, int64_t native, uint64_t* ptarget);
@@ -42,18 +41,18 @@ bool toTarget(wasm_exec_env_t exec_env, bool native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, char* native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget);
 
-bool isNull(wasm_exec_env_t exec_env,const uint64_t& value);
-bool isUndefined(wasm_exec_env_t exec_env,const uint64_t& value);
-bool isString(wasm_exec_env_t exec_env,const uint64_t& value);
+bool isNull(wasm_exec_env_t exec_env, const uint64_t& value);
+bool isUndefined(wasm_exec_env_t exec_env, const uint64_t& value);
+bool isString(wasm_exec_env_t exec_env, const uint64_t& value);
 void freeCString(wasm_exec_env_t exec_env, char* str);
 bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, int idx, uint64_t* pfield);
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target);
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target);
 uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array);
 uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx);
-uint64_t newObject (wasm_exec_env_t exec_env);
+uint64_t newObject(wasm_exec_env_t exec_env);
 bool setObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t field);
-uint64_t newArray (wasm_exec_env_t exec_env);
+uint64_t newArray(wasm_exec_env_t exec_env);
 bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint64_t val);
 ft_value_t nullFtVal();
 uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg);
@@ -63,7 +62,7 @@ uint64_t targetFromInterface(void* instance);
 
 static inline wasm_obj_t toCallbackValue(uint64_t& target)
 {
-    wasm_obj_t cb_value = *((wasm_obj_t *)(&target));
+    wasm_obj_t cb_value = *((wasm_obj_t*)(&target));
     return cb_value;
 }
 

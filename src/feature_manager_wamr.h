@@ -22,8 +22,8 @@
 #include "feature_description.h"
 #include "feature_wamr_utils.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 struct Member;
 
@@ -55,4 +55,3 @@ private:
 
 }
 #endif // __FEATURE_MANAGER_WAMR_H__
-

@@ -37,4 +37,3 @@ bool InitFeatureContextWamr(ft_context_ref ft_ctx, void* data0, void* data1);
 void UninitFeatureContextWamr(ft_context_ref ft_ctx);
 
 #endif // __FEATURE_CONTEXT_WAMR_H__
-

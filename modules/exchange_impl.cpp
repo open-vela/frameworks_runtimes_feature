@@ -38,41 +38,48 @@ typedef struct {
     FtCallbackId success;
     FtCallbackId fail;
     FtCallbackId complete;
-    char* key;                             /* The key for easily memeory freed */
-    char* value;                           /* The value for easily memory freed */
-    char* scope;                           /* The scope for easily memory freed */
-    char* package;                         /* The package for easily memory freed */
-    char* sign;                            /* The sign of the data provider, SHA-256 */
+    char* key; /* The key for easily memeory freed */
+    char* value; /* The value for easily memory freed */
+    char* scope; /* The scope for easily memory freed */
+    char* package; /* The package for easily memory freed */
+    char* sign; /* The sign of the data provider, SHA-256 */
     char getvalue[PROPERTY_VALUE_MAX + 1]; /* The getvalue buffer to store the value, used to return
                                             * the get value when OP = EXCHANGE_OP_GET
                                             */
 } ExchangeHandle;
 
-void system_exchange_onRegister(const char* feature_name) {
+void system_exchange_onRegister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_exchange_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_exchange_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_exchange_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_exchange_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_exchange_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+void system_exchange_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_exchange_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle) {
+void system_exchange_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void system_exchange_onUnregister(const char* feature_name) {
+void system_exchange_onUnregister(const char* feature_name)
+{
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-ExchangeHandle* exchange_malloc(FeatureInstanceHandle feature) {
+ExchangeHandle* exchange_malloc(FeatureInstanceHandle feature)
+{
     ExchangeHandle* handle = (ExchangeHandle*)malloc(sizeof(ExchangeHandle));
     handle->feature = feature;
     handle->key = NULL;
@@ -88,7 +95,8 @@ ExchangeHandle* exchange_malloc(FeatureInstanceHandle feature) {
     return handle;
 }
 
-void exchange_free(ExchangeHandle* handle) {
+void exchange_free(ExchangeHandle* handle)
+{
     if (handle == NULL) {
         return;
     }
@@ -111,7 +119,8 @@ void exchange_free(ExchangeHandle* handle) {
     handle = NULL;
 }
 
-static void exchange_cb(int status, const char* key, char* value, void* arg) {
+static void exchange_cb(int status, const char* key, char* value, void* arg)
+{
     if (arg == nullptr) {
         return;
     }
@@ -134,7 +143,8 @@ static void exchange_cb(int status, const char* key, char* value, void* arg) {
     exchange_free(handle);
 }
 
-static int exchange_args_get_and_check(ExchangeHandle* handle) {
+static int exchange_args_get_and_check(ExchangeHandle* handle)
+{
     int key_len = 0;
     char* tmpcat = NULL;
 
@@ -166,15 +176,15 @@ static int exchange_args_get_and_check(ExchangeHandle* handle) {
             handle->scope = strdup(handle->package);
         }
     } else if (strcmp(handle->scope, "application") == 0) {
-        if ((handle->package == NULL) || (handle->sign==NULL)) {
+        if ((handle->package == NULL) || (handle->sign == NULL)) {
             FEATURE_LOG_ERROR(
-                    "exchange must provide the package and sign when scope is application");
+                "exchange must provide the package and sign when scope is application");
             goto error;
         }
         free(handle->scope);
         handle->scope = strdup(handle->package);
     } else if (strcmp(handle->scope, "vendor") == 0 || strcmp(handle->scope, "global") == 0) {
-        if (handle->package!=NULL || handle->sign!=NULL) {
+        if (handle->package != NULL || handle->sign != NULL) {
             FEATURE_LOG_ERROR("exchange vendor or global scope not support package and sign");
             goto error;
         }
@@ -210,17 +220,18 @@ static int exchange_args_get_and_check(ExchangeHandle* handle) {
     FeatureFreeValue(tmpcat);
 
     FEATURE_LOG_INFO("op=%d,key=%s, value=%s, scope=%s, package=%s,sign=%s", handle->op,
-                     handle->key, handle->value, handle->scope, handle->package, handle->sign);
+        handle->key, handle->value, handle->scope, handle->package, handle->sign);
     return 0;
 error:
     FEATURE_LOG_ERROR("magic=%d,key=%s,value=%s,scope=%s,package=%s,sign=%s", handle->op,
-                      handle->key, handle->value, handle->scope, handle->package, handle->sign);
+        handle->key, handle->value, handle->scope, handle->package, handle->sign);
     return ERROR_CODE;
 }
 
 static void finish_callback(int status, FeatureInstanceHandle feature, FtCallbackId success_id,
-                            FtCallbackId fail_id, FtCallbackId complete_id, const char* msg,
-                            ExchangeHandle* handle) {
+    FtCallbackId fail_id, FtCallbackId complete_id, const char* msg,
+    ExchangeHandle* handle)
+{
     if (status == 0) {
         FeatureInvokeCallback(feature, success_id, msg);
     } else {
@@ -233,21 +244,23 @@ static void finish_callback(int status, FeatureInstanceHandle feature, FtCallbac
     exchange_free(handle);
 }
 
-static char* copyStr(const char* src) {
-    if(src == NULL) {
+static char* copyStr(const char* src)
+{
+    if (src == NULL) {
         return NULL;
     }
     return strdup(src);
 }
 
-void system_exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, system_exchange_SetInfo* info) {
+void system_exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, system_exchange_SetInfo* info)
+{
     FEATURE_LOG_DEBUG("%s::%s()", file_tag, __FUNCTION__);
-    FEATURE_LOG_DEBUG("key=%s,value=%s,scpoe=%s", info->key, info->value,info->scope);
+    FEATURE_LOG_DEBUG("key=%s,value=%s,scpoe=%s", info->key, info->value, info->scope);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[SET] exchange handle malloc failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "exchange malloc fail", handle);
+            "exchange malloc fail", handle);
     }
     handle->key = copyStr(info->key);
     handle->op = EXCHANGE_OP_SET;
@@ -261,27 +274,28 @@ void system_exchange_wrap_set(FeatureInstanceHandle feature, AppendData data, sy
     if (ret != 0) {
         FEATURE_LOG_ERROR("[SET] exchange input argurments invalid");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "param is invalid", handle);
+            "param is invalid", handle);
     }
 
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     int status = uv_property_set(FeatureGetUVLoop(manager), handle->key, handle->value, exchange_cb,
-                                 (void*)handle);
+        (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[SET] uv_property_set failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "uv_property_set fail", handle);
+            "uv_property_set fail", handle);
     }
 }
 
-void system_exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, system_exchange_GetInfo* info) {
+void system_exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, system_exchange_GetInfo* info)
+{
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     FEATURE_LOG_DEBUG("key=%s,scope=%s", info->key, info->scope);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[GET] exchange handle malloc failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "exchange malloc fail", handle);
+            "exchange malloc fail", handle);
     }
 
     handle->key = copyStr(info->key);
@@ -295,28 +309,29 @@ void system_exchange_wrap_get(FeatureInstanceHandle feature, AppendData data, sy
     if (ret != 0) {
         FEATURE_LOG_ERROR("[GET] exchange input argurments invalid");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "param is invalid", handle);
+            "param is invalid", handle);
     }
 
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     int status = uv_property_get(FeatureGetUVLoop(manager), handle->key, (char*)handle->getvalue, NULL,
-                                 exchange_cb, (void*)handle);
+        exchange_cb, (void*)handle);
     if (status != 0) {
         FEATURE_LOG_ERROR("[GET] uv_property_get failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "uv_property_get failed", handle);
+            "uv_property_get failed", handle);
     }
 }
 
 void system_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
-                          system_exchange_RemoveInfo* info) {
+    system_exchange_RemoveInfo* info)
+{
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     FEATURE_LOG_DEBUG("key=%s,scope=%s", info->key, info->scope);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[REMOVE] exchange handle malloc failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "exchange malloc fail", handle);
+            "exchange malloc fail", handle);
     }
     handle->key = copyStr(info->key);
     handle->op = EXCHANGE_OP_REMOVE;
@@ -329,7 +344,7 @@ void system_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
     if (ret != 0) {
         FEATURE_LOG_ERROR("[REMOVE] exchange input argurments invalid");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "param is invalid", handle);
+            "param is invalid", handle);
     }
 
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
@@ -337,17 +352,18 @@ void system_exchange_wrap_remove(FeatureInstanceHandle feature, AppendData data,
     if (status != 0) {
         FEATURE_LOG_ERROR("[REMOVE] uv_property_delete failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "uv_property_delete failed", handle);
+            "uv_property_delete failed", handle);
     }
 }
 
-void system_exchange_wrap_clear(FeatureInstanceHandle feature, AppendData data, system_exchange_ClearInfo* info) {
+void system_exchange_wrap_clear(FeatureInstanceHandle feature, AppendData data, system_exchange_ClearInfo* info)
+{
     FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ExchangeHandle* handle = exchange_malloc(feature);
     if (handle == NULL) {
         FEATURE_LOG_ERROR("[CLEAR] exchange handle malloc failed");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "exchange malloc fail", handle);
+            "exchange malloc fail", handle);
     }
     handle->op = EXCHANGE_OP_CLEAR;
     handle->scope = copyStr(info->scope);
@@ -358,10 +374,9 @@ void system_exchange_wrap_clear(FeatureInstanceHandle feature, AppendData data, 
     if (ret != 0) {
         FEATURE_LOG_ERROR("[CLEAR] exchange input argurments invalid");
         return finish_callback(ERROR_CODE, feature, info->success, info->fail, info->complete,
-                               "param is invalid", handle);
+            "param is invalid", handle);
     }
 
     /* Exchange clear operation only clear current application space data, not support yet */
     finish_callback(0, feature, info->success, info->fail, info->complete, "success", handle);
 }
-

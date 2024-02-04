@@ -165,7 +165,7 @@ int main(int argc, char** argv)
         init_args.mem_alloc_option.allocator.realloc_func = (void*)realloc;
         init_args.mem_alloc_option.allocator.free_func = (void*)free;
         init_args.gc_heap_size = 16 * 1024;
-    
+
         if (!wasm_runtime_full_init(&init_args)) {
             FEATURE_LOG_ERROR("Init runtime environment failed.");
             return -1;
