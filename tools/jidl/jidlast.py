@@ -1257,7 +1257,8 @@ class DumpOut:
     self.prefix = ''
 
   def Write(self, s):
-    print('%s%s' % (self.prefix, s))
+    # print('%s%s' % (self.prefix, s))
+    pass
 
   def Shift(self):
     self.prefix = self.prefix + '\t'
