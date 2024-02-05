@@ -76,7 +76,7 @@ static OptionalType system_storage_GetInfo_member_default_opt_type = {
 /****** for JIDL struct 'GetInfo' ******/
 static ObjectMember system_storage_GetInfo_struct_members[] = {
     { "key", FT_STRING, offsetof(system_storage_GetInfo, key), sizeof(FtString) },
-    { "_default", FT_MK_OPTIONAL(&system_storage_GetInfo_member_default_opt_type), offsetof(system_storage_GetInfo, _default), sizeof(FtString) },
+    { "default", FT_MK_OPTIONAL(&system_storage_GetInfo_member_default_opt_type), offsetof(system_storage_GetInfo, _default), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_GetInfo, success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_GetInfo, fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_GetInfo, complete), sizeof(FtCallbackId) },

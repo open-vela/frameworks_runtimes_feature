@@ -182,6 +182,10 @@ static void storage_free(StorageHandle* handle)
     if (handle == NULL) {
         return;
     }
+    if (handle->buf.base != NULL) {
+        free(handle->buf.base);
+        handle->buf.base = NULL;
+    }
     free(handle);
 }
 
@@ -210,18 +214,20 @@ static void storage_cb(int status, const char* key, uv_buf_t value,
     if (handle == NULL) {
         return;
     }
+    const char* ret = "0";
     /*when the key does not exist,the unqlite return -6
     but storage feature require default value,not fail*/
     if (status == UNQLITE_NOTFOUND && handle->op == STORAGE_OP_GET) {
         status = 0;
+        ret = handle->buf.base;
+        finish_callback(status, handle->feature, handle->success, handle->fail,
+            handle->complete, ret, handle);
+        free(const_cast<char*>(key));
+        return;
     }
     if (status == 0) {
-        const char* ret = "0";
         if (handle->op == STORAGE_OP_DELETE || handle->op == STORAGE_OP_SET) {
             uv_db_commit(handle->th->db);
-            if (value.base != NULL) {
-                free(value.base);
-            }
         } else if (handle->op == STORAGE_OP_GET) {
             ret = value.base;
         } else if (handle->op == STORAGE_OP_KEY) {
@@ -250,7 +256,7 @@ void system_storage_wrap_get(FeatureInstanceHandle feature, AppendData data,
             info->complete, "FeatureGetObjectData fail", handle);
     }
 
-    if (strcmp(info->key, "") == 0) {
+    if ((info->key == NULL) || strcmp(info->key, "") == 0) {
         FEATURE_LOG_ERROR("[STORAGE_GET]  key is empty");
         return finish_callback(0, feature, info->success, info->fail,
             info->complete, info->_default, handle);
@@ -261,8 +267,10 @@ void system_storage_wrap_get(FeatureInstanceHandle feature, AppendData data,
     handle->success = info->success;
     handle->fail = info->fail;
     handle->complete = info->complete;
-    handle->buf.base = strdup(info->_default);
-    handle->buf.len = strlen(info->_default);
+    if (info->_default != NULL) {
+        handle->buf.base = strdup(info->_default);
+        handle->buf.len = strlen(info->_default);
+    }
     int status = uv_db_get(th->db, strdup(info->key), NULL, storage_cb, handle);
     STORAGE_CHECK_IF(status, "uv_db_get fail");
 }
@@ -280,7 +288,7 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
             info->complete, "FeatureGetObjectData fail", handle);
     }
 
-    if (strcmp(info->key, "") == 0) {
+    if ((info->key == NULL) || strcmp(info->key, "") == 0) {
         FEATURE_LOG_ERROR("[STORAGE_SET]  key is empty");
         return finish_callback(-1, feature, info->success, info->fail,
             info->complete, "fail", handle);
@@ -291,12 +299,14 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
     handle->success = info->success;
     handle->fail = info->fail;
     handle->complete = info->complete;
-    handle->buf.base = strdup(info->value);
-    handle->buf.len = strlen(info->value);
+    if (info->value != NULL) {
+        handle->buf.base = strdup(info->value);
+        handle->buf.len = strlen(info->value);
+    }
 
     int status = 0;
     // if value is empty,delete key
-    if (strcmp(info->value, "") == 0) {
+    if ((info->value == NULL) || strcmp(info->value, "") == 0) {
         handle->op = STORAGE_OP_DELETE;
         status = uv_db_delete(th->db, strdup(info->key), storage_cb, handle);
     } else {
@@ -340,7 +350,7 @@ void system_storage_wrap_delete(FeatureInstanceHandle feature, AppendData data,
         return finish_callback(-1, feature, info->success, info->fail,
             info->complete, "FeatureGetObjectData fail", handle);
     }
-    if (strcmp(info->key, "") == 0) {
+    if ((info->key == NULL) || strcmp(info->key, "") == 0) {
         FEATURE_LOG_ERROR("[STORAGE_DELETE]  key is empty");
         return finish_callback(-1, feature, info->success, info->fail,
             info->complete, "fail", handle);
