@@ -1057,7 +1057,7 @@ if __name__ == '__main__':
   file_path_name = os.path.splitext(input_file)[0]
   json_file = file_path_name + ".json"
   if file_ext == '.jidl':
-    print("generating json ast file: '%s' ..." % (json_file))
+    # print("generating json ast file: '%s' ..." % (json_file))
     jidl_file = open(input_file)
     jidl = JIDL()
     jidl.parse(jidl_file.read())
@@ -1076,7 +1076,7 @@ if __name__ == '__main__':
     WriteFile(json_out, json_file)
 
   if configs['lang'] == 'c++':
-    print("generating c/c++ glue files from: '%s' ..." % (json_file))
+    # print("generating c/c++ glue files from: '%s' ..." % (json_file))
     render = CPPRender(json_file, configs['header'], configs['source'], configs)
   elif configs['lang'] == 'ts':
     render = TSRender(json_file, configs['dts'], configs)
