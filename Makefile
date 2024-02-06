@@ -313,8 +313,8 @@ include $(APPDIR)/frameworks/base/feature/Module.mk
 endif
 
 EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_descriptors.h \
-                include/feature_exports.h include/feature_main_exports.h src/README.md \
-                registry/README.md
+                include/feature_exports.h include/feature_main_exports.h include/feature_log.h \
+                src/README.md registry/README.md
 
 clean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
