@@ -98,6 +98,9 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
     auto proto = prototype();
     JSContext* js_ctx = getContext();
 
+    // release all async callback
+    proto->featureManager()->removeTasks(this);
+
     // free weakRef
     if (!JS_IsUndefined(js_val)) {
         feature_set_opaque(js_val, nullptr);
@@ -117,9 +120,6 @@ FeatureInstanceQjs::~FeatureInstanceQjs()
 
     // release all promises
     releasePromises();
-
-    // release all async callback
-    proto->featureManager()->removeTasks(this);
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
