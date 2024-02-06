@@ -312,9 +312,9 @@ BIN := $(APPDIR)/staging/libfeature.a
 include $(APPDIR)/frameworks/base/feature/Module.mk
 endif
 
-EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_descriptors.h \
+EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_description.h \
                 include/feature_exports.h include/feature_main_exports.h include/feature_log.h \
-                src/README.md registry/README.md
+                src/ajs_features_init.h src/README.md registry/README.md
 
 clean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
