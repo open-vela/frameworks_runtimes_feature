@@ -15,6 +15,7 @@
  *
  */
 
+#include <libgen.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,7 @@
 
 #include "fetch.h"
 #include "net_utils.h"
+#include "uv_ext.h"
 
 namespace Fetch {
 
@@ -230,37 +232,55 @@ void request_cancel(fetch_t* fetch)
 
 void system_fetch_onUnregister(const char* feature_name) { FETCH_DEBUG(""); }
 
-bool get_method(FtString method, std::string& out)
+bool get_method(FtString method, Fetch::MethodType* out)
 {
     FETCH_DEBUG("len:%d method:%s", strlen(method), method);
-
-    if (!check_str(method)) {
-        out.assign(Fetch::method_type[Fetch::MethodType::GET]);
-        return true;
-    } else if (!type_contain(Fetch::method_type, arrayof(Fetch::method_type),
-                   method)) {
+    if (!out) {
         return false;
     }
-    out.assign(method);
-    return true;
+    if (!check_str(method)) {
+        *out = Fetch::MethodType::GET;
+        return true;
+    }
+
+    *out = (Fetch::MethodType)type_contain(
+        Fetch::method_type, arrayof(Fetch::method_type), method, true);
+    if (out) {
+        return true;
+    }
+    return false;
 }
 
-static FtAny get_response_data(fetch_t* fetch, char* body, ft_value_t* out)
+static FtAny get_response_data(fetch_t* fetch, uv_response_t* response,
+    ft_value_t* out)
 {
     assert(fetch);
-    if (!body || !out) {
-        FETCH_ERROR("arg err! body:%p,out:%p", body, out);
+    if (!out) {
+        FETCH_ERROR("arg err!");
         return NULL;
     }
 
+    if (!response->body) {
+        *out = ft_from_string(fetch->ft_ctx, "");
+        return out;
+    }
+
     switch (fetch->response_type) {
-    case Fetch::ResponseType::TXT:
-    case Fetch::ResponseType::ARRAYBUFFER:
-    case Fetch::ResponseType::FILE:
-        *out = ft_from_string(fetch->ft_ctx, body);
+    case Fetch::ResponseType::JSON:
+        *out = ft_parse_json(fetch->ft_ctx, response->body,
+            strlen(response->body), NULL);
         break;
     default:
-        *out = ft_parse_json(fetch->ft_ctx, body, strlen(body), NULL);
+        if (fetch->type == UV_DOWNLOAD) {
+            char* path = app_absolute_to_relative_path(
+                FeatureGetPackageName(FeatureGetProtoHandle(fetch->feature)),
+                response->body);
+            assert(path);
+            response->size = strlen(path) + 1;
+            free(response->body);
+            response->body = path;
+        }
+        *out = ft_from_string(fetch->ft_ctx, response->body);
         break;
     }
     return out;
@@ -274,13 +294,13 @@ static void fetch_request_cb(int state, uv_response_t* response)
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
     if (state == UV_REQUEST_DONE) {
-        ft_value_t ft_header = ft_from_string(p->ft_ctx, response->headers);
+        ft_value_t ft_header = ft_form_headers(p->ft_ctx, response->headers);
         system_fetch_SuccessRes res = {
             .code = (int)response->httpcode, .data = NULL, .headers = &ft_header
         };
 
         ft_value_t ft_data;
-        res.data = get_response_data(p, response->body, &ft_data);
+        res.data = get_response_data(p, response, &ft_data);
 
         if (check_any(res.data)) {
             INVOKE_SUCCESS_CB(p->success_cb, &res);
@@ -306,7 +326,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
 }
 
 static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
-    std::string& method,
+    Fetch::MethodType method,
     std::map<std::string, std::string>& headers)
 {
     request_context_t* p = get_request_context(fetch->feature);
@@ -320,16 +340,17 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     free((void*)decode);
 
     // set url
-    uv_request_set_url(fetch->request, obj->url);
+    uv_request_set_url(fetch->request, fetch->url);
 
     // set method
-    if (method.size()) {
-        uv_request_set_method(fetch->request, method.c_str());
+    if (method) {
+        uv_request_set_method(fetch->request, Fetch::method_type[method]);
     }
 
     uv_request_set_data(
         fetch->request,
-        (fetch->content->data.empty() ? (void*)fetch->content->buf_type_data : fetch->content->data.c_str()),
+        (fetch->content->data.empty() ? (void*)fetch->content->buf_type_data
+                                      : fetch->content->data.c_str()),
         fetch->content->size);
 
     // set header
@@ -377,22 +398,30 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
         ? UV_DOWNLOAD
         : UV_REQUEST;
     if (fetch->type == UV_DOWNLOAD) {
-        std::string url(obj->url);
+        char* path = NULL;
+        char* filename = basename((char*)obj->url);
 
-        fetch->filename = url.substr(url.find_last_of("/") + 1);
-
-        if (fetch->filename.empty()) {
+        if (strlen(filename) == strlen(obj->url)) {
             time_t cur_time = time(NULL);
             char time_buf[100];
             strftime(time_buf, sizeof(time_buf), "%Y%m%d %H%M%S",
                 std::localtime(&cur_time));
-            char* path = app_absolute_path_generator(FeatureGetPackageName(feature),
-                "files", (const char*)&time_buf);
-            if (path) {
-                fetch->filename.assign(path);
-                free((void*)path);
-            }
+            filename = time_buf;
         }
+
+        path = app_relative_to_absolute_path(pkg, filename);
+
+        if (path == NULL) {
+            path = app_absolute_path_generator(pkg, "files", filename);
+        }
+
+        if (path == NULL) {
+            FETCH_ERROR("No memory!");
+            return NULL;
+        }
+
+        fetch->filename.assign(path);
+        free((void*)path);
     }
 
     fetch->request = NULL;
@@ -466,7 +495,8 @@ bool get_pdata_and_content_type(ft_context_ref ft_ctx, FtAny data,
         }
         out->content_type = Fetch::ContentType::URLENCODED;
 
-        if (!ft_map_for_every_entry(ft_ctx, data, (void*)&out->data, get_post_data_cb)) {
+        if (!ft_map_for_every_entry(ft_ctx, data, (void*)&out->data,
+                get_post_data_cb)) {
             return false;
         }
         out->size = out->data.size();
@@ -500,7 +530,7 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     const char* msg = "";
     int code = 0;
     fetch_t* fetch = NULL;
-    std::string method;
+    Fetch::MethodType method;
     std::map<std::string, std::string> headers;
     request_context_t* p = get_request_context(feature);
     content_t* content = new content_t();
@@ -517,11 +547,12 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     SET_ARGERROR(check_url(obj->url), "invalid url");
 
     // Check for non-essential parameters
-    SET_ARGERROR(get_method(obj->method, method), "invalid method");
+    SET_ARGERROR(get_method(obj->method, &method), "invalid method");
 
-    if (check_any(obj->header)) {
-        SET_ARGERROR(check_header(ft_ctx, obj->header, headers),
-            "invalid headers");
+    if (check_any(obj->data) && (method != Fetch::MethodType::GET && method != Fetch::MethodType::HEAD)) {
+        SET_ARGERROR(get_pdata_and_content_type(
+                         ft_ctx, obj->data, get_cy_from_header(headers), content),
+            "invalid data");
     }
 
     if (check_any(obj->data)) {
