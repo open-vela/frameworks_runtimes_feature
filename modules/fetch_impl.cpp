@@ -109,6 +109,7 @@ typedef struct fetch_s {
     struct weakref_list_node node;
     uv_request_t* request;
     content_t* content;
+    const char* url;
 } fetch_t;
 
 Fetch::ResponseType get_response_tpye(const char* type)
@@ -150,6 +151,10 @@ void fetch_free(fetch_t* p)
         if (p->content) {
             delete p->content;
             p->content = NULL;
+        }
+        if (p->url) {
+            free((void*)p->url);
+            p->url = NULL;
         }
         delete p;
     }
@@ -308,6 +313,12 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     // create reques
     ASSERT_RET_NULL(0 == uv_request_create(&fetch->request));
     FETCH_DEBUG("request:%p", fetch->request);
+
+    // encode url
+    const char* decode = url_decode(obj->url);
+    fetch->url = url_encode(decode);
+    free((void*)decode);
+
     // set url
     uv_request_set_url(fetch->request, obj->url);
 
@@ -387,6 +398,7 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
     fetch->request = NULL;
     fetch->exit = false;
     fetch->content = ct;
+    fetch->url = NULL;
 
     return fetch;
 }
@@ -457,7 +469,6 @@ bool get_pdata_and_content_type(ft_context_ref ft_ctx, FtAny data,
         if (!ft_map_for_every_entry(ft_ctx, data, (void*)&out->data, get_post_data_cb)) {
             return false;
         }
-
         out->size = out->data.size();
         FETCH_DEBUG("contenttype data:%s", out->data.c_str());
         return true;
