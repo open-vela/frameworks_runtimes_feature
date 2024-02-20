@@ -18,6 +18,7 @@
 #ifndef _NET_UTILS_H_
 #define _NET_UTILS_H_
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <map>
 
@@ -119,7 +120,7 @@ typedef enum ErrorCode {
 
 #define check_str(ptr) ((ptr) && strlen(ptr) > 0)
 #define check_any(ptr) ((ptr) && (ft_get_type(ft_ctx, *ptr) >= 0))
-bool type_contain(const char** type_array, int size, const char* type);
+uint8_t type_contain(const char** type_array, int size, const char* type, bool ignore_case);
 
 typedef struct {
     uv_request_session_t* handle;
@@ -137,6 +138,7 @@ bool check_header(ft_context_ref ft_ctx, FtAny js_headers,
     std::map<std::string, std::string>& headers);
 const char* url_encode(const char* str);
 const char* url_decode(const char* str);
+ft_value_t ft_form_headers(ft_context_ref ft_ctx, char* headers);
 
 // }
 

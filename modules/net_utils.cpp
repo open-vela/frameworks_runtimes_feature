@@ -17,6 +17,8 @@
 
 #include <nuttx/compiler.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
 
 #include <cassert>
 #include <iostream>
@@ -102,17 +104,31 @@ static bool parse_header_cb(const cJSON* const item, void* userp)
 bool check_header(ft_context_ref ft_ctx, FtAny js_headers,
     std::map<std::string, std::string>& headers)
 {
+    if (ft_get_type(ft_ctx, *js_headers) == FT_TYPE_STRING) {
+        const char* headers_str_ = ft_to_string(ft_ctx, *(js_headers));
+        if (strlen(headers_str_)) {
+            return false;
+        }
+        return true;
+    }
+
     return ft_map_for_every_entry(ft_ctx, js_headers, (void*)&headers,
         parse_header_cb);
 }
 
-bool type_contain(const char** type_array, int size, const char* type)
+uint8_t type_contain(const char** type_array, int size, const char* type,
+    bool ignore_case)
 {
     for (int i = 1; i < size; ++i) {
-        if (strcmp(type, type_array[i]) == 0)
-            return true;
+        if (ignore_case && strcasecmp(type, type_array[i]) == 0) {
+            return i;
+        } else {
+            if (strcmp(type, type_array[i]) == 0) {
+                return i;
+            }
+        }
     }
-    return false;
+    return 0;
 }
 
 char from_hex(char ch)
@@ -174,4 +190,37 @@ const char* url_decode(const char* str)
     }
     *pbuf = '\0';
     return buf;
+}
+
+ft_value_t ft_form_headers(ft_context_ref ft_ctx, char* headers)
+{
+    ft_value_t ret_obj = ft_new_object(ft_ctx);
+    char* line = strtok(headers, "\n");
+
+    while (line != NULL) {
+        char* colon = strchr(line, ':');
+        if (colon != NULL) {
+            char* key = line;
+            char* value = colon + 1;
+
+            // remove value ' '
+            if (strlen(key) > (size_t)(colon - line + 1)) {
+                key[colon - line + 1] = '\0';
+                value++;
+            }
+
+            // remove ':'
+            key[colon - line] = '\0';
+
+            // remove '\r'
+            if (value[strlen(value) - 1] == '\r') {
+                value[strlen(value) - 1] = '\0';
+            }
+            ft_value_t ft_value = ft_from_string(ft_ctx, value);
+            ft_obj_set_property(ft_ctx, ret_obj, key, ft_value);
+        }
+
+        line = strtok(NULL, "\n");
+    }
+    return ret_obj;
 }
