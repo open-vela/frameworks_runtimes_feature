@@ -18,6 +18,7 @@
 #include <nuttx/compiler.h>
 #include <stdbool.h>
 
+#include <cassert>
 #include <iostream>
 #include <map>
 #include <ostream>
@@ -112,4 +113,65 @@ bool type_contain(const char** type_array, int size, const char* type)
             return true;
     }
     return false;
+}
+
+char from_hex(char ch)
+{
+    return isdigit(ch) ? ch - '0' : toupper(ch) - 'A' + 10;
+}
+
+bool is_reserved_char(char c)
+{
+    static char reserved_char[] = { ';', ',', '/', '?', ':', '@', '&',
+        '=', '+', '$', '-', '_', '.', '!',
+        '~', '*', '\'', '(', ')', '#' };
+    for (size_t i = 0; i < sizeof(reserved_char); i++) {
+        if (c == reserved_char[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+const char* url_encode(const char* str)
+{
+    const char* pstr = str;
+    char* buf = (char*)malloc(strlen(str) * 3 + 1);
+    assert(buf);
+    char* pbuf = buf;
+    static char hex[] = "0123456789ABCDEF";
+
+    while (*pstr) {
+        if (isalnum(*pstr) || is_reserved_char(*pstr)) {
+            *pbuf++ = *pstr;
+        } else {
+            *pbuf++ = '%';
+            *pbuf++ = hex[(*pstr >> 4) & 0x0F];
+            *pbuf++ = hex[*pstr & 0x0F];
+        }
+        pstr++;
+    }
+    *pbuf = '\0';
+    return buf;
+}
+
+const char* url_decode(const char* str)
+{
+    const char* pstr = str;
+    char* buf = (char*)malloc(strlen(str) + 1);
+    assert(buf);
+    char* pbuf = buf;
+    while (*pstr) {
+        if (*pstr == '%') {
+            if (pstr[1] && pstr[2]) {
+                *pbuf++ = from_hex(pstr[1]) << 4 | from_hex(pstr[2]);
+                pstr += 2;
+            }
+        } else {
+            *pbuf++ = *pstr;
+        }
+        pstr++;
+    }
+    *pbuf = '\0';
+    return buf;
 }

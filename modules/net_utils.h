@@ -135,6 +135,8 @@ bool ft_map_for_every_entry(ft_context_ref ft_ctx, FtAny data, void* userp,
         void* userp));
 bool check_header(ft_context_ref ft_ctx, FtAny js_headers,
     std::map<std::string, std::string>& headers);
+const char* url_encode(const char* str);
+const char* url_decode(const char* str);
 
 // }
 
