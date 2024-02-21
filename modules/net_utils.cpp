@@ -63,9 +63,10 @@ bool ft_map_for_every_entry(ft_context_ref ft_ctx, FtAny data, void* userp,
     for (int j = 0; j < cJSON_GetArraySize(root); j++) {
         cJSON* item = cJSON_GetArrayItem(root, j);
         if (!cJSON_IsNull(item)) {
-            FEATURE_LOG_ERROR("%s type:%d,key:%s,val:%s", file_tag, item->type,
-                item->string, item->valuestring);
+            FEATURE_LOG_DEBUG("%s type:%d,key:%s", file_tag, item->type,
+                item->string);
             if (!user_cb(item, userp)) {
+                FEATURE_LOG_ERROR("%s user exit", file_tag);
                 abort = true;
                 break;
             }
@@ -85,8 +86,14 @@ static bool parse_header_cb(const cJSON* const item, void* userp)
         return false;
     // If is no user data, just check
     if (out_headers) {
-        out_headers->insert(
-            std::pair<std::string, std::string>(item->string, item->valuestring));
+        if (strcasecmp(item->string, CONTENT_TYPE) == 0 && strstr(item->valuestring, "charset=") == NULL) {
+            out_headers->insert(
+                std::pair<std::string, std::string>(CONTENT_TYPE, item->valuestring));
+            out_headers->rbegin()->second.append("; charset=utf-8");
+        } else {
+            out_headers->insert(
+                std::pair<std::string, std::string>(item->string, item->valuestring));
+        }
     }
     return true;
 }

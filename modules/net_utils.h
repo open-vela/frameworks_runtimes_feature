@@ -88,6 +88,8 @@ typedef enum ErrorCode {
 #define USER_ABORT_MSG "user cancel request"
 #define USER_ABORT_MSG_SIZE (strlen(USER_ABORT_MSG) + 1)
 #define CANCEL_ERROR_CODE 1002
+#define HTTP_OK 200
+#define CONTENT_TYPE "Content-Type"
 
 #define arrayof(array) sizeof(array) / sizeof(array[0])
 

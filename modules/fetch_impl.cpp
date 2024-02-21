@@ -87,13 +87,6 @@ static const char* response_type[] = {
     "arraybuffer",
 };
 
-static const char* content_type[] = {
-    NULL,
-    "text/plain",
-    "application/x-www-form-urlencoded",
-    "application/octet-stream",
-};
-
 } // namespace Fetch
 
 typedef struct content_t {
@@ -115,6 +108,7 @@ typedef struct fetch_s {
     bool exit;
     struct weakref_list_node node;
     uv_request_t* request;
+    content_t* content;
 } fetch_t;
 
 Fetch::ResponseType get_response_tpye(const char* type)
@@ -153,6 +147,10 @@ void fetch_free(fetch_t* p)
     if (p) {
         FETCH_DEBUG("del node %p", p);
         weakref_list_delete(&p->node);
+        if (p->content) {
+            delete p->content;
+            p->content = NULL;
+        }
         delete p;
     }
 }
@@ -304,8 +302,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
 
 static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     std::string& method,
-    std::map<std::string, std::string>& headers,
-    content_t* ct)
+    std::map<std::string, std::string>& headers)
 {
     request_context_t* p = get_request_context(fetch->feature);
     // create reques
@@ -321,14 +318,14 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
 
     uv_request_set_data(
         fetch->request,
-        (ct->data.empty() ? (void*)ct->buf_type_data : ct->data.c_str()),
-        ct->size);
+        (fetch->content->data.empty() ? (void*)fetch->content->buf_type_data : fetch->content->data.c_str()),
+        fetch->content->size);
 
     // set header
     for (auto [key, val] : headers) {
-        FETCH_DEBUG("header: %s", std::string(key + ":" + val).c_str());
+        FETCH_DEBUG("header: %s", std::string(key + ": " + val).c_str());
         uv_request_append_header(fetch->request,
-            std::string(key + ":" + val).c_str());
+            std::string(key + ": " + val).c_str());
     }
 
     // set timeout
@@ -354,7 +351,7 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
 
 static fetch_t* fetch_create(FeatureInstanceHandle feature,
     ft_context_ref ft_ctx, system_fetch_FetchPara* obj,
-    const char* pkg)
+    const char* pkg, content_t* ct)
 {
     fetch_t* fetch = new fetch_t;
     assert(fetch);
@@ -389,6 +386,7 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
 
     fetch->request = NULL;
     fetch->exit = false;
+    fetch->content = ct;
 
     return fetch;
 }
@@ -398,14 +396,27 @@ bool get_post_data_cb(const cJSON* const item, void* userp)
     std::string* out_str = static_cast<std::string*>(userp);
 
     ASSERT_RET_NULL(out_str);
-    if (item->type == cJSON_String) {
-        if (!out_str->empty()) {
-            out_str->append("&");
-        }
-        out_str->append(item->string);
-        out_str->append("=");
-        out_str->append(item->valuestring);
+
+    if (!out_str->empty()) {
+        out_str->append("&");
     }
+    out_str->append(item->string);
+    out_str->append("=");
+
+    char valuestr[24] = { '\0' };
+    switch (item->type) {
+    case cJSON_Number:
+        sprintf(valuestr, "%lld", item->valueint);
+        out_str->append(std::string(valuestr));
+        break;
+    case cJSON_String:
+        out_str->append(item->valuestring);
+        break;
+    default:
+        FETCH_ERROR("Unsupported %d type!", item->type);
+        return false;
+    }
+
     return true;
 }
 
@@ -443,7 +454,10 @@ bool get_pdata_and_content_type(ft_context_ref ft_ctx, FtAny data,
         }
         out->content_type = Fetch::ContentType::URLENCODED;
 
-        ft_map_for_every_entry(ft_ctx, data, (void*)&out->data, get_post_data_cb);
+        if (!ft_map_for_every_entry(ft_ctx, data, (void*)&out->data, get_post_data_cb)) {
+            return false;
+        }
+
         out->size = out->data.size();
         FETCH_DEBUG("contenttype data:%s", out->data.c_str());
         return true;
@@ -476,9 +490,10 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     int code = 0;
     fetch_t* fetch = NULL;
     std::string method;
-    content_t content = { .buf_type_data = NULL, .size = 0 };
     std::map<std::string, std::string> headers;
     request_context_t* p = get_request_context(feature);
+    content_t* content = new content_t();
+    SET_JS_ERROR(content, ErrorCode::GENERAL, "create content_t err");
 
     FETCH_DEBUG(
         "url:%s\ndata:%p\nheader:%p\nmethod:%p\nresponseType:%p\nsuccess:%"
@@ -500,22 +515,16 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
 
     if (check_any(obj->data)) {
         SET_ARGERROR(get_pdata_and_content_type(
-                         ft_ctx, obj->data, get_cy_from_header(headers), &content),
+                         ft_ctx, obj->data, get_cy_from_header(headers), content),
             "invalid data");
     }
 
-    // avoid setting twice
-    if (content.content_type && headers.count("content-type")) {
-        headers["content-type"].append(Fetch::content_type[content.content_type]);
-        headers["content-type"].append(+"; charset=utf-8");
-    }
-
     // create fetch context
-    fetch = fetch_create(feature, ft_ctx, obj, p->pkg);
+    fetch = fetch_create(feature, ft_ctx, obj, p->pkg, content);
     SET_JS_ERROR(fetch, ErrorCode::GENERAL, "create native fetch err");
 
     // create curl request
-    SET_JS_ERROR(request_create(fetch, obj, method, headers, &content),
+    SET_JS_ERROR(request_create(fetch, obj, method, headers),
         ErrorCode::GENERAL, "create request err");
 
     FETCH_DEBUG("method:%s, request type:%d", method.c_str(), fetch->type);
