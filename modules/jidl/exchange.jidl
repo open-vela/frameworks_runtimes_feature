@@ -22,7 +22,7 @@ callback complete_cb(string msg)
 
 struct GetInfo {
     string key
-    string scope
+    string scope = "global"
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
@@ -31,7 +31,7 @@ struct GetInfo {
 struct SetInfo {
     string key
     string value
-    string scope
+    string scope = "global"
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
@@ -39,14 +39,14 @@ struct SetInfo {
 
 struct RemoveInfo {
     string key
-    string scope
+    string scope = "global"
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
 }
 
 struct ClearInfo {
-    string scope
+    string scope = "global"
     callback success_cb success
     callback fail_cb fail
     callback complete_cb complete
