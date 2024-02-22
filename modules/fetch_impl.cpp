@@ -549,13 +549,12 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     // Check for non-essential parameters
     SET_ARGERROR(get_method(obj->method, &method), "invalid method");
 
-    if (check_any(obj->data) && (method != Fetch::MethodType::GET && method != Fetch::MethodType::HEAD)) {
-        SET_ARGERROR(get_pdata_and_content_type(
-                         ft_ctx, obj->data, get_cy_from_header(headers), content),
-            "invalid data");
+    if (check_any(obj->header)) {
+        SET_ARGERROR(check_header(ft_ctx, obj->header, headers),
+            "invalid headers");
     }
 
-    if (check_any(obj->data)) {
+    if (check_any(obj->data) && (method != Fetch::MethodType::GET && method != Fetch::MethodType::HEAD)) {
         SET_ARGERROR(get_pdata_and_content_type(
                          ft_ctx, obj->data, get_cy_from_header(headers), content),
             "invalid data");
@@ -568,8 +567,6 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     // create curl request
     SET_JS_ERROR(request_create(fetch, obj, method, headers),
         ErrorCode::GENERAL, "create request err");
-
-    FETCH_DEBUG("method:%s, request type:%d", method.c_str(), fetch->type);
 
     // add in list
     weakref_list_initialize(&fetch->node);
