@@ -173,7 +173,7 @@ static void __uv_fs_req_cb(uv_fs_t* req)
 
 void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* param, bool move = true)
 {
-    char *temp_str, *path, *new_path;
+    char *path, *new_path;
     const char* msg;
     int code, result;
     FileContext* fc = getFileContext(feature);
@@ -198,26 +198,14 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
-        return;
     }
 
-    temp_str = strdup(param->srcUri);
-    path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    if (!path) {
-        path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
-    }
-    free(temp_str);
-    temp_str = strdup(param->dstUri);
-    new_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    if (!new_path) {
-        new_path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
-    }
-    free(temp_str);
+    path = app_relative_to_absolute_path(fc->pkg_name, param->srcUri);
+    new_path = app_relative_to_absolute_path(fc->pkg_name, param->dstUri);
+
     if (path == NULL || new_path == NULL) {
-        FILE_ERROR("src path:%s, dest path:%s\n", path, new_path);
-        free(path);
-        free(new_path);
-        msg = "invalid parameter";
+        FILE_ERROR("invalid file path: %s, %s", param->srcUri, param->dstUri);
+        msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
@@ -245,7 +233,7 @@ void system_file_wrap_copy(FeatureInstanceHandle feature, AppendData append_data
 }
 void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_param_t* param, bool access = true)
 {
-    char *temp_str, *path;
+    char* path;
     const char* msg;
     int code, result;
     FileContext* fc = getFileContext(feature);
@@ -272,16 +260,10 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
         goto fail;
     }
 
-    temp_str = strdup(param->uri);
-    path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+    path = app_relative_to_absolute_path(fc->pkg_name, param->uri);
     if (!path) {
-        path = app_absolute_path_generator(fc->pkg_name, "files", temp_str);
-    }
-    free(temp_str);
-    if (path == NULL) {
-        FILE_ERROR("uri path: %s\n", path);
-        free(path);
-        msg = "invalid parameter";
+        FILE_ERROR("invalid file path: %s", param->uri);
+        msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
@@ -585,7 +567,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
 {
     const char* msg;
     int code, r;
-    char *app_path, *temp_str;
+    char* app_path;
     FileContext* fc = getFileContext(feature);
     FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
     if (!fr) {
@@ -608,8 +590,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         code = ARGSERROR;
         goto fail;
     }
-    temp_str = strdup(param->uri);
-    if (*temp_str == '/' && (type == FILE_READTEXT || type == FILE_READARRBUF)) {
+    if (*(param->uri) == '/' && (type == FILE_READTEXT || type == FILE_READARRBUF)) {
         app_path = (char*)malloc(CONFIG_PATH_MAX);
         memset(app_path, 0, CONFIG_PATH_MAX);
 #ifdef CONFIG_QUICKAPP
@@ -619,12 +600,11 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         sprintf(app_path, "data/app/%s%s", fc->pkg_name, param->uri);
 #endif
     } else {
-        app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
+        app_path = app_relative_to_absolute_path(fc->pkg_name, param->uri);
     }
 
-    free(temp_str);
     if (!app_path) {
-        FILE_ERROR("invalid parameter :path");
+        FILE_ERROR("invalid file path: %s", param->uri);
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
@@ -962,7 +942,7 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
 {
     const char* msg;
     int code, r;
-    char *app_path, *temp_str;
+    char* app_path;
     FileContext* fc = getFileContext(feature);
     FileReq* fr = static_cast<FileReq*>(malloc(sizeof(*fr)));
     if (!fr) {
@@ -985,11 +965,9 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
         code = ARGSERROR;
         goto fail;
     }
-    temp_str = strdup(param->uri);
-    app_path = app_relative_to_absolute_path(fc->pkg_name, temp_str);
-    free(temp_str);
+    app_path = app_relative_to_absolute_path(fc->pkg_name, param->uri);
     if (!app_path) {
-        FILE_ERROR("invalid parameter :path");
+        FILE_ERROR("invalid file path: %s", param->uri);
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
