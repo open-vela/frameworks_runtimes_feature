@@ -380,7 +380,7 @@ static void __create_dir(char* path, FileReq* fr)
         return;
     }
 
-    else if (fr->flags == 1) { // 递归模式
+    else if (fr->flags == 1) { // recursive == true
         strncpy(data, path, sizeof(data) - 1);
         ret = strrchr(data, '/');
         if (ret == 0) {
@@ -413,18 +413,24 @@ static void __remove_dir(char* dirname, FileReq* fr)
         return;
     }
 
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-            snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
-            if (entry->d_type == DT_DIR && fr->flags == 1) {
-                __remove_dir(path, fr);
-            } else {
-                unlink(path);
+    if (fr->flags == 1) { // recursive == true
+        while ((entry = readdir(dir)) != NULL) {
+            if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+                snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
+                if (entry->d_type == DT_DIR && fr->flags == 1) {
+                    __remove_dir(path, fr);
+                } else {
+                    unlink(path);
+                }
             }
         }
     }
+
     closedir(dir);
-    rmdir(dirname);
+    if (rmdir(dirname) != 0) {
+        FILE_ERROR("rmdir failed, dirname: %s", dirname);
+        fr->r = -errno;
+    }
 }
 
 /**
@@ -772,10 +778,8 @@ static void __read_dir_c(char* dirname, FileReq* fr, weakref_list_node* dir_list
         if (file_info == NULL) {
             continue;
         }
-        if (fr->type == FILE_GET) {
-            if (entry->d_type == DT_DIR) {
-                __read_dir_c(path, fr, &file_info->dir_list);
-            }
+        if (fr->type == FILE_GET && entry->d_type == DT_DIR && fr->flags == 1) {
+            __read_dir_c(path, fr, &file_info->dir_list);
         }
         weakref_list_add_tail(dir_list, &file_info->file_node);
 
@@ -810,7 +814,6 @@ static void __load_dir_work_cb(uv_work_t* wk)
         break;
     case FILE_GET:
     case FILE_LIST:
-        fr->flags = -1;
         fr->offset = 0;
         fr->root_file = __get_info_c(fr->filename, fr);
         if (fr->root_file && fr->root_file->type == 1) {
