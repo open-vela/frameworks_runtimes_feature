@@ -48,7 +48,7 @@ void copy(copy_param_t param)
 struct file_info_t {
     string uri
     int length
-    string lastModifiedTime
+    long lastModifiedTime
 }
 
 struct list_succ_param {
@@ -70,7 +70,7 @@ void list(list_param_t param)
 struct extended_file_info_t {
     string uri
     int length
-    string lastModifiedTime
+    long lastModifiedTime
     string type
     extended_file_info_t[] subFiles;
 }

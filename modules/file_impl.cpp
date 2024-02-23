@@ -305,7 +305,7 @@ typedef struct
     int8_t type; // 0:file 1:dir
     char* uri;
     uint64_t length;
-    uint64_t last_modified_time;
+    long last_modified_time;
     int dir_num;
     int file_num;
     struct weakref_list_node file_node;
@@ -831,11 +831,7 @@ system_file_file_info_t* get_file_info(FileInfo* info)
     strncpy(uri, info->uri, strlen(info->uri));
     file_info->uri = uri;
     file_info->length = info->length;
-    unsigned long long int num = static_cast<unsigned long long>(info->last_modified_time) * 1000;
-    std::string time = std::to_string(num);
-    char* lastModifiedTime = static_cast<char*>(FeatureMalloc(time.length() + 1, FT_CHAR));
-    memcpy(lastModifiedTime, time.c_str(), time.length());
-    file_info->lastModifiedTime = lastModifiedTime;
+    file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;
     return file_info;
 }
 
@@ -851,11 +847,7 @@ system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* 
     strncpy(uri, info->uri, strlen(info->uri));
     file_info->uri = uri;
     file_info->length = info->length;
-    unsigned long long int num = static_cast<unsigned long long>(info->last_modified_time) * 1000;
-    std::string time = std::to_string(num);
-    char* lastModifiedTime = static_cast<char*>(FeatureMalloc(time.length() + 1, FT_CHAR));
-    memcpy(lastModifiedTime, time.c_str(), time.length());
-    file_info->lastModifiedTime = lastModifiedTime;
+    file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;
     file_info->subFiles = __get_dir_list(fr, &info->dir_list);
 
     return file_info;
