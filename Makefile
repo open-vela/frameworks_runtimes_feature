@@ -284,6 +284,17 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/folme.cpp
 FEATURELIST += system_folme
 endif
 
+ifeq ($(CONFIG_LIB_ZLIB),y)
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/zlib/zlib/contrib/minizip
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/zlib/zlib
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/zlib/zlib/contrib/minizip
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/zlib/zlib
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/zip.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/zip_impl.cpp
+FEATURELIST += system_zip
+endif
+
 ifeq ($(CONFIG_BLUETOOTH_FEATURE), y)
 CFEATURELIST += system_bluetooth
 CFEATURELIST += system_bluetooth_bt
