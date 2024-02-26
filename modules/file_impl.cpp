@@ -647,11 +647,11 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         if (buffer_type == FT_TYPE_BUFFER || buffer_type == FT_TYPE_TYPED_BUFFER) {
             buffer = ft_to_buffer(ft_ctx, &(fr->len), *(param->buffer));
             FILE_INFO("got buffer, type: %d, size: %ld", buffer_type, fr->len);
-        } else if (buffer_type == FT_TYPE_STRING) {
-            const char* str = ft_to_string(ft_ctx, *(param->buffer));
-            fr->len = strlen(str);
-            FILE_INFO("got string: %s", str);
-            buffer = (uint8_t*)str;
+        } else {
+            FILE_ERROR("invalid array buffer type");
+            msg = "invalid array buffer type";
+            code = ARGSERROR;
+            goto fail;
         }
         fr->buf = (uint8_t*)FeatureMalloc(fr->len + 1, FT_UINT8);
         memcpy(fr->buf, buffer, fr->len);
