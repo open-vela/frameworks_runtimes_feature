@@ -160,7 +160,7 @@ callback readArrBuf_compl_cb()
 struct read_arr_buf_t {
     string uri
     int position = 0
-    int length = -1
+    int length = -2147483648
     readArrBuf_succ_cb success
     readArrBuf_fail_cb fail
     readArrBuf_compl_cb complete

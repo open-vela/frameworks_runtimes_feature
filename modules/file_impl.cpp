@@ -446,7 +446,7 @@ static void __load_file_work_cb(uv_work_t* wk)
     int r = 0, oflags = fr->flags;
 
     // 获取文件读取长度
-    if ((int)fr->len == -1) {
+    if ((int)fr->len == INT32_MIN) {
         struct stat statbuf;
         r = stat(fr->filename, &statbuf);
         fr->len = statbuf.st_size;
@@ -456,8 +456,6 @@ static void __load_file_work_cb(uv_work_t* wk)
             return;
         }
     }
-
-    fr->offset = ((int)fr->offset == -1) ? 0 : fr->offset;
 
     FILE_INFO("file open file: %s, %d, %d", fr->filename, fr->flags, fr->offset);
     if (oflags != O_RDONLY && !check_disk_limit()) {
@@ -686,6 +684,11 @@ void system_file_wrap_writeText(FeatureInstanceHandle feature, AppendData append
 
 void system_file_wrap_writeArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, system_file_write_arr_buf_param_t* param)
 {
+    if (param->position < 0 && !param->append) {
+        INVOKE_FAIL_CB(param->fail, uv_strerror(-EINVAL), __error_code_map(-EINVAL));
+        INVOKE_COMPLET_CB(param->complete);
+        return;
+    }
     __file_load(feature, param, FILE_WRITEARRBUF);
 }
 
@@ -695,7 +698,12 @@ void system_file_wrap_readText(FeatureInstanceHandle feature, AppendData append_
 }
 void system_file_wrap_readArrayBuffer(FeatureInstanceHandle feature, AppendData append_data, system_file_read_arr_buf_t* param)
 {
-    __file_load(feature, param, FILE_READARRBUF);
+    if (param->position >= 0 && (param->length >= 0 || param->length == INT32_MIN)) {
+        __file_load(feature, param, FILE_READARRBUF);
+    } else {
+        INVOKE_FAIL_CB(param->fail, uv_strerror(-EINVAL), __error_code_map(-EINVAL));
+        INVOKE_COMPLET_CB(param->complete);
+    }
 }
 
 /**
