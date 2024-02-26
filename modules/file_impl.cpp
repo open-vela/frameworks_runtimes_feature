@@ -814,7 +814,6 @@ static void __load_dir_work_cb(uv_work_t* wk)
         break;
     case FILE_GET:
     case FILE_LIST:
-        fr->offset = 0;
         fr->root_file = __get_info_c(fr->filename, fr);
         if (fr->root_file && fr->root_file->type == 1) {
             __read_dir_c(fr->filename, fr, &fr->root_file->dir_list);
@@ -848,7 +847,11 @@ system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* 
     file_info->uri = uri;
     file_info->length = info->length;
     file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;
-    file_info->subFiles = __get_dir_list(fr, &info->dir_list);
+    if (fr->flags) { // recursive == true
+        file_info->subFiles = __get_dir_list(fr, &info->dir_list);
+    } else {
+        file_info->subFiles = system_file_malloc_extended_file_info_t_struct_type_array();
+    }
 
     return file_info;
 }
