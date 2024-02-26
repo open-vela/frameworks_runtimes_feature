@@ -150,7 +150,7 @@ static int exchange_args_get_and_check(ExchangeHandle* handle)
 
     /* Get key property and check */
     if (handle->op != EXCHANGE_OP_CLEAR) {
-        if (strcmp(handle->key, "") == 0) {
+        if (!handle->key || strcmp(handle->key, "") == 0) {
             FEATURE_LOG_ERROR("key is null");
             goto error;
         }
