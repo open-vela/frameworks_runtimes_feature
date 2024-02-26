@@ -194,7 +194,7 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
     fr->complete = param->complete;
     fr->handle = feature;
 
-    if (param->srcUri == NULL || param->dstUri == NULL) {
+    if (param->srcUri == NULL || param->dstUri == NULL || (!move && is_path_in_tmp(param->srcUri)) || is_path_in_tmp(param->dstUri)) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
@@ -254,7 +254,7 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     fr->complete = param->complete;
     fr->handle = feature;
 
-    if (!param->uri) {
+    if (!param->uri || is_path_in_tmp(param->uri)) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
@@ -591,7 +591,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
 
-    if (!param->uri) {
+    if (!param->uri || ((type == FILE_WRITETEXT || type == FILE_WRITEARRBUF) && is_path_in_tmp(param->uri))) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
@@ -955,7 +955,7 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
         goto fail;
     }
 
-    if (!param->uri) {
+    if (!param->uri || ((type == FILE_MKDIR || type == FILE_RMDIR) && is_path_in_tmp(param->uri))) {
         msg = "invalid path";
         code = ARGSERROR;
         goto fail;

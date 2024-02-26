@@ -235,3 +235,16 @@ bool check_disk_limit(void)
 #endif
     return true;
 }
+
+bool is_path_in_tmp(const char* path)
+{
+    if (!path || strstr(path, APP_PATH_PREFIX) == NULL) {
+        return false;
+    }
+
+    const char* type = path + strlen(APP_PATH_PREFIX);
+    if (strncmp(type_list[3], type, strlen(type_list[3])) == 0) {
+        return true;
+    }
+    return false;
+}
