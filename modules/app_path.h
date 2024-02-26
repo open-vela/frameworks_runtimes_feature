@@ -33,5 +33,6 @@ char* app_relative_path_generator(const char* pkg, const char* type, const char*
 char* app_absolute_to_relative_path(const char* pkg, const char* absolute_path);
 char* app_absolute_path_generator(const char* pkg, const char* type, const char* filename);
 bool check_disk_limit();
+bool is_path_in_tmp(const char* path);
 
 #endif
