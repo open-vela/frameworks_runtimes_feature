@@ -21,7 +21,7 @@ static const CallbackType mockatest_test_body_callback_type {
 static const FeatureType mockatest_test_parameters[] = {
     FT_STRING,
     FT_STRING,
-    FT_MK_COMPLEX_REF(&mockatest_test_body_callback_type),
+    FT_MK_COMPLEX(&mockatest_test_body_callback_type),
     FT_PARAM_END
 };
 

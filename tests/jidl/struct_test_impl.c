@@ -43,8 +43,8 @@ void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData data, 
         return;
     }
 
-    printf("%s::%s(), page_count: %d, title: %s\n",
-        file_tag, __FUNCTION__, b->page_count, b->title);
+    printf("%s::%s(), page_count: %d, title: %s, is_end: %d\n",
+        file_tag, __FUNCTION__, b->page_count, b->title, b->is_end);
 }
 
 struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union AppendData data, FtInt a)
@@ -52,7 +52,7 @@ struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union A
     printf("%s::%s(), a: %d\n", file_tag, __FUNCTION__, a);
     struct_test_Chapter* chap = struct_testMallocChapter();
     chap->page_count = a;
-    char* title = (char*)FeatureMalloc(128, FT_CHAR);
+    char* title = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(title, "title is: %s", "hello world");
     chap->title = title;
     return chap;
@@ -77,6 +77,12 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data,
 
     printf("%s::%s(), page_count: %d, title: %s\n",
         file_tag, __FUNCTION__, a->page_count, a->title);
+
+    for (int i = 0; i < a->chap_titles->_size; i++) {
+        char* elem = ((char**)a->chap_titles->_element)[i];
+        printf("%s::%s(), elem[%d]: %s\n",
+            file_tag, __FUNCTION__, i, elem);
+    }
 
     if (!a->first_chap) {
         printf("%s::%s(), first_chap ptr is null!\n", file_tag, __FUNCTION__);

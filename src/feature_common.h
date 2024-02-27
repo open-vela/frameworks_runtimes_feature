@@ -30,15 +30,16 @@
         }                                                                                 \
     }
 
-#define IS_INTERFACE_TYPE(featureType, ret)                                               \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        ret = complexType->type == COMPLEX_INTERFACE;                                     \
-    } else {                                                                              \
-        ret = false;                                                                      \
+#define ALLOCA_PARAM_PTR(featureType, value)                             \
+    {                                                                    \
+        int type_len = getAlignedCount(featureType) * sizeof(uintptr_t); \
+        value = alloca(type_len);                                        \
+        memset(value, 0, type_len);                                      \
     }
 
-int getParamCount(const FeatureType* param, bool* hasRest = NULL, int* optional_size = NULL);
+int getAlignedCount(const FeatureType param);
+
+int getParamCount(const FeatureType* param, bool* hasRest = NULL, int* optional_size = NULL, int32_t* int32_count = NULL);
 
 int getValueSize(FeatureType featureType);
 

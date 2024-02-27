@@ -105,7 +105,7 @@ static const ArrayType promise_test_int_array = {
 
 FtArray* promise_test_malloc_int_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&promise_test_int_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&promise_test_int_array));
 }
 
 static const ArrayType promise_test_string_array = {
@@ -115,7 +115,7 @@ static const ArrayType promise_test_string_array = {
 
 FtArray* promise_test_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&promise_test_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&promise_test_string_array));
 }
 
 static const PromiseType promise_test_promise_int_array_string_array_type = {

@@ -71,7 +71,7 @@ FtAny arraybuffer_test_wrap_getArraybuffer(FeatureInstanceHandle feature, Append
         out_buff[i] = i;
     }
 
-    ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+    ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     FEATURE_LOG_ERROR("arraybuffer ptr: %p\n", ret_ptr);
     *ret_ptr = ft_from_buffer(ft_ctx, out_buff, buff_size);
     return ret_ptr;
@@ -90,7 +90,7 @@ FtAny arraybuffer_test_wrap_getTypedArraybuffer(FeatureInstanceHandle feature, A
         out_buff[i] = i;
     }
 
-    ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+    ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     FEATURE_LOG_ERROR("any arraybuffer ptr: %p", ret_ptr);
     *ret_ptr = ft_from_typed_buffer(ft_ctx, out_buff, buff_size, type);
     return ret_ptr;

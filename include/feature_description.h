@@ -26,25 +26,25 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 
-#define FT_COMPLEX_BIT ((uintptr_t)1)
+#define FT_PRIMITIVE_BIT ((uintptr_t)3)
 
-#define FT_IS_PRIMITIVE(type) (((((uintptr_t)type)) & FT_COMPLEX_BIT) == 1)
-#define FT_IS_COMPLEX(type) (((((uintptr_t)type)) & FT_COMPLEX_BIT) == 0)
+#define FT_IS_PRIMITIVE(type) (((uintptr_t)type) & FT_PRIMITIVE_BIT)
+#define FT_IS_COMPLEX(type) ((((uintptr_t)type) & FT_PRIMITIVE_BIT) == 0)
+#define FT_GET_FLAG(featureType) ((FT_IS_COMPLEX(featureType) ? (((ComplexTypeHeader*)FT_GET_COMPLEX(featureType))->type & TYPE_FLAGS_UNMANAGED_POINTER) : (featureType & TYPE_FLAGS_UNMANAGED_POINTER)))
+#define FT_IS_REFERENCE(featureType) (FT_GET_FLAG(featureType) & TYPE_FLAGS_POINTER)
+#define FT_NEED_FREE(featureType) (FT_GET_FLAG(featureType) == TYPE_FLAGS_POINTER)
+#define FT_IS_RAW_REFERENCE(featureType) (FT_GET_FLAG(featureType) & TYPE_FLAGS_RAWPOINTER)
 
-#define FT_ADD_REFERENCE(type) ((uintptr_t)(type) | FT_REFERENCE_BIT)
-
-#define FT_GET_VALUE FT_ADD_REFERENCE
-#define FT_MK_COMPLEX_REF(ptr) (uintptr_t)(FT_ADD_REFERENCE((uintptr_t)ptr))
 #define FT_MK_COMPLEX(ptr) ((uintptr_t)ptr)
+#define FT_MK_COMPLEX_REF(ptr) FT_MK_COMPLEX(ptr)
+#define FT_MK_OPTIONAL(ptr) ((uintptr_t)ptr)
 
-#define FT_MK_OPTIONAL(ptr) (uintptr_t)(ptr)
-
-#define FT_PARAM_REST_END ((uintptr_t)(1))
+// FT_PARAM_REST_END set highest bit
+#define FT_PARAM_REST_END ((uintptr_t)(((uintptr_t)1 << ((sizeof(uintptr_t) * 8 - 1)))))
 #define FT_PARAM_END (0)
-#define FT_GET_COMPLEX(ptr) (((uintptr_t)ptr & ~(FT_COMPLEX_BIT | FT_REFERENCE_BIT)))
+#define FT_GET_COMPLEX(ptr) ((uintptr_t)ptr)
 
 #define FT_IS_PROMISE(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
-#define FT_IS_CALLBACK(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_CALLBACK)
 
 typedef struct FTObjHeader {
     int32_t ref_count;
@@ -52,15 +52,6 @@ typedef struct FTObjHeader {
 } FTObjHeader;
 
 #define FT_OBJ_HEADER_SIZE sizeof(FTObjHeader)
-#define FT_IS_MANAGEMENT_OBJ(ptr) ((uintptr_t)ptr & 0x1)
-
-inline void* FT_GET_OBJ(void* ptr)
-{
-    if (FT_IS_MANAGEMENT_OBJ(ptr)) {
-        return (char*)ptr + FT_OBJ_HEADER_SIZE;
-    }
-    return NULL;
-}
 
 enum MemberType {
     MEMBER_NULL, // 代表结束，定义为0
@@ -69,14 +60,25 @@ enum MemberType {
     MEMBER_CONST
 };
 
-enum ComplexType {
-    COMPLEX_STRUCT_MAP = 1, // object map
-    COMPLEX_OPTIONAL, // optional value
-    COMPLEX_CALLBACK, // callback object
-    COMPLEX_ARRAY, // array
-    COMPLEX_PROMISE, // promise
-    COMPLEX_INTERFACE, // interface
+enum ComplexTypeBase {
+    COMPLEX_STRUCT_MAP_BASE = 1,
+    COMPLEX_OPTIONAL_BASE,
+    COMPLEX_CALLBACK_BASE,
+    COMPLEX_ARRAY_BASE,
+    COMPLEX_PROMISE_BASE,
+    COMPLEX_INTERFACE_BASE,
 };
+
+#define DEF_COMPLEX_TYPE(base, flags) ((base##_BASE) << 2 | flags)
+enum ComplexType {
+    COMPLEX_STRUCT_MAP = DEF_COMPLEX_TYPE(COMPLEX_STRUCT_MAP, TYPE_FLAGS_POINTER), // object map
+    COMPLEX_OPTIONAL = DEF_COMPLEX_TYPE(COMPLEX_OPTIONAL, TYPE_FLAGS_VALUE), // optional value
+    COMPLEX_CALLBACK = DEF_COMPLEX_TYPE(COMPLEX_CALLBACK, TYPE_FLAGS_VALUE), // callback object
+    COMPLEX_ARRAY = DEF_COMPLEX_TYPE(COMPLEX_ARRAY, TYPE_FLAGS_POINTER), // array
+    COMPLEX_PROMISE = DEF_COMPLEX_TYPE(COMPLEX_PROMISE, TYPE_FLAGS_UNMANAGED_POINTER), // promise
+    COMPLEX_INTERFACE = DEF_COMPLEX_TYPE(COMPLEX_INTERFACE, TYPE_FLAGS_UNMANAGED_POINTER), // interface
+};
+#undef DEF_COMPLEX_TYPE
 
 union FuncData {
     NativeFunc callback; // 最终实现函数
@@ -192,21 +194,6 @@ typedef struct FeatureDescription {
     int member_count; // 成员数量
     const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
-
-#define TRY_GET_REAL_TYPE(featureType)                                                    \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == COMPLEX_OPTIONAL) {                                      \
-            featureType = ((OptionalType*)complexType)->type;                             \
-        }                                                                                 \
-    }
-// check if is reference
-static inline int FT_IS_REFERENCE(FeatureType featureType)
-{
-    TRY_GET_REAL_TYPE(featureType);
-    int isRef = (((uintptr_t)featureType) & FT_REFERENCE_BIT) == 0;
-    return isRef;
-}
 
 /**
  * @brief register feature to feature registry

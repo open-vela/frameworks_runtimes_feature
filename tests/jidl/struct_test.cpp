@@ -61,7 +61,7 @@ static const ObjectMapType struct_test_Chapter_struct_type {
 
 struct_test_Chapter* struct_testMallocChapter () {
     return (struct_test_Chapter*)FeatureMalloc(
-        sizeof(struct_test_Chapter), FT_MK_COMPLEX_REF(&struct_test_Chapter_struct_type));
+        sizeof(struct_test_Chapter), FT_MK_COMPLEX(&struct_test_Chapter_struct_type));
 }
 
 
@@ -86,7 +86,7 @@ static const ArrayType struct_test_string_array = {
 
 FtArray* struct_test_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&struct_test_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&struct_test_string_array));
 }
 
 /****** for JIDL struct 'Book' ******/
@@ -96,7 +96,7 @@ static ObjectMember struct_test_Book_struct_members[] = {
     { "title", FT_STRING, offsetof(struct_test_Book, title), sizeof(FtString) },
     { "chap_titles", FT_MK_COMPLEX(&struct_test_string_array), offsetof(struct_test_Book, chap_titles), sizeof(FtArray*) },
     { "first_chap", FT_MK_COMPLEX(&struct_test_Chapter_struct_type), offsetof(struct_test_Book, first_chap), sizeof(struct_test_Chapter *) },
-    { "chap_changed", FT_MK_COMPLEX_REF(&struct_test_ChapChanged_callback_type), offsetof(struct_test_Book, chap_changed), sizeof(FtCallbackId) },
+    { "chap_changed", FT_MK_COMPLEX(&struct_test_ChapChanged_callback_type), offsetof(struct_test_Book, chap_changed), sizeof(FtCallbackId) },
     { nullptr },
 };
 
@@ -108,7 +108,7 @@ static const ObjectMapType struct_test_Book_struct_type {
 
 struct_test_Book* struct_testMallocBook () {
     return (struct_test_Book*)FeatureMalloc(
-        sizeof(struct_test_Book), FT_MK_COMPLEX_REF(&struct_test_Book_struct_type));
+        sizeof(struct_test_Book), FT_MK_COMPLEX(&struct_test_Book_struct_type));
 }
 
 

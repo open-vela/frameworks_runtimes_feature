@@ -41,7 +41,7 @@ static const ObjectMapType service_internal_account_accountUserId_struct_type {
 
 service_internal_account_accountUserId* service_internal_accountMallocaccountUserId () {
     return (service_internal_account_accountUserId*)FeatureMalloc(
-        sizeof(service_internal_account_accountUserId), FT_MK_COMPLEX_REF(&service_internal_account_accountUserId_struct_type));
+        sizeof(service_internal_account_accountUserId), FT_MK_COMPLEX(&service_internal_account_accountUserId_struct_type));
 }
 
 
@@ -97,7 +97,7 @@ static const ObjectMapType service_internal_account_loginByScanSuccInfo_struct_t
 
 service_internal_account_loginByScanSuccInfo* service_internal_accountMallocloginByScanSuccInfo () {
     return (service_internal_account_loginByScanSuccInfo*)FeatureMalloc(
-        sizeof(service_internal_account_loginByScanSuccInfo), FT_MK_COMPLEX_REF(&service_internal_account_loginByScanSuccInfo_struct_type));
+        sizeof(service_internal_account_loginByScanSuccInfo), FT_MK_COMPLEX(&service_internal_account_loginByScanSuccInfo_struct_type));
 }
 
 
@@ -228,7 +228,7 @@ static const ObjectMapType service_internal_account_loginByScanInfo_struct_type 
 
 service_internal_account_loginByScanInfo* service_internal_accountMallocloginByScanInfo () {
     return (service_internal_account_loginByScanInfo*)FeatureMalloc(
-        sizeof(service_internal_account_loginByScanInfo), FT_MK_COMPLEX_REF(&service_internal_account_loginByScanInfo_struct_type));
+        sizeof(service_internal_account_loginByScanInfo), FT_MK_COMPLEX(&service_internal_account_loginByScanInfo_struct_type));
 }
 
 
@@ -305,7 +305,7 @@ static const ObjectMapType service_internal_account_loginByAuthInfo_struct_type 
 
 service_internal_account_loginByAuthInfo* service_internal_accountMallocloginByAuthInfo () {
     return (service_internal_account_loginByAuthInfo*)FeatureMalloc(
-        sizeof(service_internal_account_loginByAuthInfo), FT_MK_COMPLEX_REF(&service_internal_account_loginByAuthInfo_struct_type));
+        sizeof(service_internal_account_loginByAuthInfo), FT_MK_COMPLEX(&service_internal_account_loginByAuthInfo_struct_type));
 }
 
 
@@ -341,7 +341,7 @@ static const ObjectMapType service_internal_account_serviceTokenSuccessInfo_stru
 
 service_internal_account_serviceTokenSuccessInfo* service_internal_accountMallocserviceTokenSuccessInfo () {
     return (service_internal_account_serviceTokenSuccessInfo*)FeatureMalloc(
-        sizeof(service_internal_account_serviceTokenSuccessInfo), FT_MK_COMPLEX_REF(&service_internal_account_serviceTokenSuccessInfo_struct_type));
+        sizeof(service_internal_account_serviceTokenSuccessInfo), FT_MK_COMPLEX(&service_internal_account_serviceTokenSuccessInfo_struct_type));
 }
 
 
@@ -389,7 +389,7 @@ static const ObjectMapType service_internal_account_serviceTokenInfo_struct_type
 
 service_internal_account_serviceTokenInfo* service_internal_accountMallocserviceTokenInfo () {
     return (service_internal_account_serviceTokenInfo*)FeatureMalloc(
-        sizeof(service_internal_account_serviceTokenInfo), FT_MK_COMPLEX_REF(&service_internal_account_serviceTokenInfo_struct_type));
+        sizeof(service_internal_account_serviceTokenInfo), FT_MK_COMPLEX(&service_internal_account_serviceTokenInfo_struct_type));
 }
 
 
@@ -456,7 +456,7 @@ static const ObjectMapType service_internal_account_userBaseInfoSuccess_struct_t
 
 service_internal_account_userBaseInfoSuccess* service_internal_accountMallocuserBaseInfoSuccess () {
     return (service_internal_account_userBaseInfoSuccess*)FeatureMalloc(
-        sizeof(service_internal_account_userBaseInfoSuccess), FT_MK_COMPLEX_REF(&service_internal_account_userBaseInfoSuccess_struct_type));
+        sizeof(service_internal_account_userBaseInfoSuccess), FT_MK_COMPLEX(&service_internal_account_userBaseInfoSuccess_struct_type));
 }
 
 
@@ -494,7 +494,7 @@ static const ArrayType service_internal_account_string_array = {
 
 FtArray* service_internal_account_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&service_internal_account_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&service_internal_account_string_array));
 }
 
 /****** for JIDL struct 'userBaseInfo' ******/

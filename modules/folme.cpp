@@ -66,7 +66,7 @@ static const ObjectMapType system_folme_config_t_struct_type {
 
 system_folme_config_t* system_folmeMallocconfig_t () {
     return (system_folme_config_t*)FeatureMalloc(
-        sizeof(system_folme_config_t), FT_MK_COMPLEX_REF(&system_folme_config_t_struct_type));
+        sizeof(system_folme_config_t), FT_MK_COMPLEX(&system_folme_config_t_struct_type));
 }
 
 
@@ -88,7 +88,7 @@ static const ObjectMapType system_folme_to_config_t_struct_type {
 
 system_folme_to_config_t* system_folmeMallocto_config_t () {
     return (system_folme_to_config_t*)FeatureMalloc(
-        sizeof(system_folme_to_config_t), FT_MK_COMPLEX_REF(&system_folme_to_config_t_struct_type));
+        sizeof(system_folme_to_config_t), FT_MK_COMPLEX(&system_folme_to_config_t_struct_type));
 }
 
 
@@ -108,7 +108,7 @@ static const ObjectMapType system_folme_setto_config_t_struct_type {
 
 system_folme_setto_config_t* system_folmeMallocsetto_config_t () {
     return (system_folme_setto_config_t*)FeatureMalloc(
-        sizeof(system_folme_setto_config_t), FT_MK_COMPLEX_REF(&system_folme_setto_config_t_struct_type));
+        sizeof(system_folme_setto_config_t), FT_MK_COMPLEX(&system_folme_setto_config_t_struct_type));
 }
 
 
@@ -131,7 +131,7 @@ static const ObjectMapType system_folme_fromto_config_t_struct_type {
 
 system_folme_fromto_config_t* system_folmeMallocfromto_config_t () {
     return (system_folme_fromto_config_t*)FeatureMalloc(
-        sizeof(system_folme_fromto_config_t), FT_MK_COMPLEX_REF(&system_folme_fromto_config_t_struct_type));
+        sizeof(system_folme_fromto_config_t), FT_MK_COMPLEX(&system_folme_fromto_config_t_struct_type));
 }
 
 
@@ -150,7 +150,7 @@ static const ObjectMapType system_folme_cancel_config_t_struct_type {
 
 system_folme_cancel_config_t* system_folmeMalloccancel_config_t () {
     return (system_folme_cancel_config_t*)FeatureMalloc(
-        sizeof(system_folme_cancel_config_t), FT_MK_COMPLEX_REF(&system_folme_cancel_config_t_struct_type));
+        sizeof(system_folme_cancel_config_t), FT_MK_COMPLEX(&system_folme_cancel_config_t_struct_type));
 }
 
 
@@ -169,7 +169,7 @@ static const ObjectMapType system_folme_getstate_config_t_struct_type {
 
 system_folme_getstate_config_t* system_folmeMallocgetstate_config_t () {
     return (system_folme_getstate_config_t*)FeatureMalloc(
-        sizeof(system_folme_getstate_config_t), FT_MK_COMPLEX_REF(&system_folme_getstate_config_t_struct_type));
+        sizeof(system_folme_getstate_config_t), FT_MK_COMPLEX(&system_folme_getstate_config_t_struct_type));
 }
 
 
@@ -189,7 +189,7 @@ static const ObjectMapType system_folme_animstate_t_struct_type {
 
 system_folme_animstate_t* system_folmeMallocanimstate_t () {
     return (system_folme_animstate_t*)FeatureMalloc(
-        sizeof(system_folme_animstate_t), FT_MK_COMPLEX_REF(&system_folme_animstate_t_struct_type));
+        sizeof(system_folme_animstate_t), FT_MK_COMPLEX(&system_folme_animstate_t_struct_type));
 }
 
 

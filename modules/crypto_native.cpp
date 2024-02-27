@@ -383,7 +383,7 @@ char* base64(const char* type_str, const char* text_str)
             CHECK_ERR_RET(NULL, "crypto.base64 calculate failed");
         }
 
-        char* ret_str = (char*)FeatureMalloc(out.len + 1, FT_CHAR);
+        char* ret_str = (char*)FeatureMalloc(out.len + 1, FT_STRING);
         memcpy(ret_str, out.base, out.len);
         if (out.base)
             free(out.base);
@@ -534,7 +534,7 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
         }
         uv_hexify(out, &ret);
 
-        char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
+        char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_STRING);
         memcpy(ret_str, ret.base, ret.len);
         if (out.base)
             free(out.base);
@@ -579,7 +579,7 @@ char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str
         }
 
         uv_hexify(out, &ret);
-        char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_CHAR);
+        char* ret_str = (char*)FeatureMalloc(ret.len + 1, FT_STRING);
         memcpy(ret_str, ret.base, ret.len);
 
         free(abs_path);

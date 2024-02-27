@@ -593,7 +593,7 @@ static void __load_after_work_cb(uv_work_t* req, int status)
         // 将读取的文件内容写入ArrayBuffer
         ft_value_t buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
         system_file_read_arr_buf_succ_t* data = system_fileMallocread_arr_buf_succ_t();
-        data->buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+        data->buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
         *(data->buffer) = buffer;
         __invoke_fr_cb(fr, 0, NULL, data);
     } else if (fr->type == FILE_WRITETEXT || fr->type == FILE_WRITEARRBUF) {
@@ -855,7 +855,7 @@ static FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list);
 system_file_file_info_t* get_file_info(FileInfo* info)
 {
     system_file_file_info_t* file_info = system_fileMallocfile_info_t();
-    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_CHAR));
+    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_STRING));
     strncpy(uri, info->uri, strlen(info->uri));
     file_info->uri = uri;
     file_info->length = info->length;
@@ -868,10 +868,10 @@ system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* 
     if (!fr || !info)
         return NULL;
     system_file_extended_file_info_t* file_info = system_fileMallocextended_file_info_t();
-    char* type = static_cast<char*>(FeatureMalloc(strlen(info->type == 0 ? "file" : "dir") + 1, FT_CHAR));
+    char* type = static_cast<char*>(FeatureMalloc(strlen(info->type == 0 ? "file" : "dir") + 1, FT_STRING));
     sprintf(type, info->type == 0 ? "file" : "dir");
     file_info->type = type;
-    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_CHAR));
+    char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_STRING));
     strncpy(uri, info->uri, strlen(info->uri));
     file_info->uri = uri;
     file_info->length = info->length;

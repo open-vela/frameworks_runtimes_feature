@@ -68,7 +68,7 @@ namespace FeatureFFIWamr {
             FeatureType ftype = member.type;
             TRY_GET_REAL_TYPE(ftype);
             if (FT_IS_PRIMITIVE(ftype)) {
-                switch (FT_GET_VALUE(ftype)) {
+                switch (ftype) {
                 case FT_BOOLEAN: {
                     obj_field.of.i32 = *(int32_t*)member_ptr;
                     obj_field.type = TS_BOOLEAN;
@@ -89,7 +89,7 @@ namespace FeatureFFIWamr {
                     obj_field.type = TS_NUMBER;
                     obj_arr[i] = obj_field;
                 } break;
-                case FT_CHAR: {
+                case FT_STRING: {
                     char** title_ptr = (char**)member_ptr;
                     obj_field.of.ref = *title_ptr;
                     obj_field.type = TS_STRING;
@@ -105,7 +105,7 @@ namespace FeatureFFIWamr {
     char getFeatureSignature(FeatureType ftype)
     {
         if (FT_IS_PRIMITIVE(ftype)) {
-            switch (FT_GET_VALUE(ftype)) {
+            switch (ftype) {
             case FT_VOID:
                 return 0;
             case FT_BOOLEAN:
@@ -122,7 +122,7 @@ namespace FeatureFFIWamr {
             case FT_FLOAT:
             case FT_DOUBLE:
                 return 'F';
-            case FT_CHAR:
+            case FT_STRING:
                 // wasm string signature is 'r'
                 return 'r';
             default: {
@@ -157,7 +157,7 @@ namespace FeatureFFIWamr {
             return false;
         }
 
-        switch (FT_GET_VALUE(ftype)) {
+        switch (ftype) {
         case FT_VOID: {
             FEATURE_LOG_ERROR("void not supported !");
             return false;
@@ -193,7 +193,7 @@ namespace FeatureFFIWamr {
         case FT_BOOLEAN: {
             set_wasm_var_by_type(uint32_t, const_data.u32, value);
         } break;
-        case FT_CHAR: {
+        case FT_STRING: {
             const char* str = (char*)const_data.str;
             printf("return str is %s\n", str);
             wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
@@ -213,11 +213,8 @@ namespace FeatureFFIWamr {
         wasm_exec_env_t exec_env, uint64_t& value)
     {
         FEATURE_CHECK_NE(ptr, nullptr);
-        if (FT_IS_REFERENCE(ftype)) {
-            ptr = *(void**)ptr;
-        }
         if (FT_IS_PRIMITIVE(ftype)) {
-            switch (FT_GET_VALUE(ftype)) {
+            switch (ftype) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -258,8 +255,8 @@ namespace FeatureFFIWamr {
             case FT_BOOLEAN: {
                 set_wasm_var_by_type(uint64_t, *((bool*)ptr), value);
             } break;
-            case FT_CHAR: {
-                const char* str = (char*)ptr;
+            case FT_STRING: {
+                const char* str = *(char**)ptr;
                 printf("return str is %s\n", str);
                 wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
                 PUSH_LOCAL_OBJ_REF(obj);
@@ -274,11 +271,12 @@ namespace FeatureFFIWamr {
             ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
             switch (complex_type->type) {
             case COMPLEX_STRUCT_MAP: {
+                void* tmp_ptr = *(void**)ptr;
                 ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
                 auto member_count = countMember(obj_map_type.members);
                 ts_value_t obj_arr[member_count];
                 /* call fill_struct_data api to fill data in obj array as above */
-                fill_struct_data(obj_map_type, (uintptr_t)ptr, obj_arr, member_count);
+                fill_struct_data(obj_map_type, (uintptr_t)tmp_ptr, obj_arr, member_count);
                 /* call createWasmStruct api from feature_wamr_utils.h */
                 wasm_struct_obj_t obj = create_wasm_struct(exec_env, obj_arr, member_count);
                 PUSH_LOCAL_OBJ_REF(obj);
@@ -293,7 +291,7 @@ namespace FeatureFFIWamr {
                 }
             } break;
             case COMPLEX_ARRAY: {
-                FtArray* array = (FtArray*)ptr;
+                FtArray* array = *(FtArray**)ptr;
                 uint32_t len = array->_size;
                 wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, (void**)(array->_element), len);
                 PUSH_LOCAL_OBJ_REF(obj);
@@ -303,7 +301,7 @@ namespace FeatureFFIWamr {
                 InterfaceType* interface_type = (InterfaceType*)complex_type;
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
-                auto pinstance = static_cast<FeatureInstance*>(ptr);
+                auto pinstance = *static_cast<FeatureInstance**>(ptr);
                 if (!pinstance->isInterface()) {
                     FEATURE_LOG_ERROR("not a native interface!");
                     return false;
@@ -328,26 +326,10 @@ namespace FeatureFFIWamr {
     bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr,
         wasm_exec_env_t exec_env, uint64_t value)
     {
-        // special step: get real type of complex type
-        TRY_GET_REAL_TYPE(ftype);
-        if (!ptr) {
-            if (!createHostValue(ftype, ptr)) {
-                FEATURE_LOG_ERROR("create host value failed !");
-                return false;
-            }
-        }
-        if (FT_IS_REFERENCE(ftype)) {
-            if (!FT_IS_CALLBACK(ftype)) {
-                void*& value_ptr = *(void**)ptr;
-                if (!convertValueToHost(instance, FT_ADD_REFERENCE(ftype), value_ptr, exec_env, value)) {
-                    FEATURE_LOG_ERROR("convert value to host failed !");
-                    return false;
-                }
-                return true;
-            }
-        }
+        FEATURE_CHECK_NE(ptr, nullptr);
+
         if (FT_IS_PRIMITIVE(ftype)) {
-            switch (FT_GET_VALUE(ftype)) {
+            switch (ftype) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -376,28 +358,27 @@ namespace FeatureFFIWamr {
             case FT_DOUBLE: {
                 *(float64*)ptr = (float64)get_wasm_args_by_type(double, value);
             } break;
-            case FT_CHAR: {
+            case FT_STRING: {
                 void* str = get_wasm_args_by_type(void*, value);
                 /* get cstring from wasm string (stringref path) */
                 uint32_t str_len = 0;
                 if (wasm_obj_is_stringref_obj((wasm_obj_t)str)) {
                     str_len = wasm_string_get_length((wasm_stringref_obj_t)str);
                 }
-                char* alloc_ptr = str_len > 0 ? (char*)FeatureMalloc(str_len + 1, FT_CHAR) : nullptr;
+                char* alloc_ptr = str_len > 0 ? (char*)FeatureMalloc(str_len + 1, FT_STRING) : nullptr;
                 if (alloc_ptr) {
                     wasm_string_to_cstring((wasm_stringref_obj_t)str, alloc_ptr, str_len + 1);
                 }
-                ptr = alloc_ptr;
-                // feature_free_cstring(ctx, str);
+                *(void**)ptr = alloc_ptr;
             } break;
-            case FT_ANY: {
+            case FT_ANY_REF: {
                 // copy value
                 void* param = get_wasm_args_by_type(void*, value);
                 JSValue* js_value = (JSValue*)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
-                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
                 qjs_val_t* q_val = (qjs_val_t*)f_val;
                 q_val->js_val = *js_value;
-                ptr = f_val;
+                *(ft_value_t**)ptr = f_val;
             } break;
             default: {
                 FEATURE_LOG_WARN("unsupported type detected !");
@@ -417,19 +398,18 @@ namespace FeatureFFIWamr {
                     member++;
                 }
 
+                if (!*(void**)ptr) {
+                    *(void**)ptr = FeatureMalloc(complex_type->size, ftype);
+                }
+                void* inner_ptr = *(void**)ptr;
                 wasm_struct_obj_t wasm_obj = get_wasm_args_by_type(wasm_struct_obj_t, value);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
                     member = &objMapType.members[i];
                     wasm_struct_obj_get_field(wasm_obj, i + 1, false, &val);
-                    void* member_ptr = (void*)((char*)ptr + member->offset);
-                    bool ret;
+                    void* member_ptr = (void*)((char*)inner_ptr + member->offset);
 
-                    if (FT_IS_CALLBACK(member->type)) {
-                        ret = convertValueToHost(instance, FT_ADD_REFERENCE(member->type), member_ptr, exec_env, *((uint64_t*)&val));
-                    } else {
-                        ret = convertValueToHost(instance, member->type, member_ptr, exec_env, *((uint64_t*)&val));
-                    }
+                    bool ret = convertValueToHost(instance, member->type, member_ptr, exec_env, *((uint64_t*)&val));
 
                     // feature_free_value(ctx, propValue);
                     if (!ret) {
@@ -463,11 +443,16 @@ namespace FeatureFFIWamr {
                 wasm_struct_obj_t array_val = get_wasm_args_by_type(wasm_struct_obj_t, value);
                 wasm_array_obj_t arr_ref = get_array_ref(array_val);
                 len = get_array_length(array_val);
-                FtArray* arrayData = (FtArray*)ptr;
+                // FtArray must be a pointer
+                if (!*(void**)ptr) {
+                    // malloc FtArray struct
+                    *(void**)ptr = FeatureMalloc(sizeof(FtArray), ftype);
+                }
+                FtArray* arrayData = *(FtArray**)ptr;
                 arrayData->_size = len;
                 if (len) {
                     // we support reference and primitive types
-                    size_t element_size = FT_IS_REFERENCE(element_type) ? sizeof(uintptr_t) : getValueSize(element_type);
+                    size_t element_size = getValueSize(element_type);
                     auto size = element_size * len;
                     FEATURE_CHECK_NE(size, 0);
                     arrayData->_element = malloc(size);
@@ -486,7 +471,7 @@ namespace FeatureFFIWamr {
                 }
             } break;
             case COMPLEX_INTERFACE: {
-                ptr = interface_from_target(value);
+                *(void**)ptr = interface_from_target(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");

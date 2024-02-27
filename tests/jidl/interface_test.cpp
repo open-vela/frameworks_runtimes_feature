@@ -50,7 +50,7 @@ static const ArrayType interface_test_string_array = {
 
 FtArray* interface_test_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&interface_test_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&interface_test_string_array));
 }
 
 static const FeatureType interface_test_Animal_interface_eatFood_parameters[] = {

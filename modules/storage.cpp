@@ -91,7 +91,7 @@ static const ObjectMapType system_storage_GetInfo_struct_type {
 
 system_storage_GetInfo* system_storageMallocGetInfo () {
     return (system_storage_GetInfo*)FeatureMalloc(
-        sizeof(system_storage_GetInfo), FT_MK_COMPLEX_REF(&system_storage_GetInfo_struct_type));
+        sizeof(system_storage_GetInfo), FT_MK_COMPLEX(&system_storage_GetInfo_struct_type));
 }
 
 
@@ -119,7 +119,7 @@ static const ObjectMapType system_storage_SetInfo_struct_type {
 
 system_storage_SetInfo* system_storageMallocSetInfo () {
     return (system_storage_SetInfo*)FeatureMalloc(
-        sizeof(system_storage_SetInfo), FT_MK_COMPLEX_REF(&system_storage_SetInfo_struct_type));
+        sizeof(system_storage_SetInfo), FT_MK_COMPLEX(&system_storage_SetInfo_struct_type));
 }
 
 
@@ -139,7 +139,7 @@ static const ObjectMapType system_storage_ClearInfo_struct_type {
 
 system_storage_ClearInfo* system_storageMallocClearInfo () {
     return (system_storage_ClearInfo*)FeatureMalloc(
-        sizeof(system_storage_ClearInfo), FT_MK_COMPLEX_REF(&system_storage_ClearInfo_struct_type));
+        sizeof(system_storage_ClearInfo), FT_MK_COMPLEX(&system_storage_ClearInfo_struct_type));
 }
 
 
@@ -160,7 +160,7 @@ static const ObjectMapType system_storage_DeleteInfo_struct_type {
 
 system_storage_DeleteInfo* system_storageMallocDeleteInfo () {
     return (system_storage_DeleteInfo*)FeatureMalloc(
-        sizeof(system_storage_DeleteInfo), FT_MK_COMPLEX_REF(&system_storage_DeleteInfo_struct_type));
+        sizeof(system_storage_DeleteInfo), FT_MK_COMPLEX(&system_storage_DeleteInfo_struct_type));
 }
 
 
@@ -181,7 +181,7 @@ static const ObjectMapType system_storage_KeyInfo_struct_type {
 
 system_storage_KeyInfo* system_storageMallocKeyInfo () {
     return (system_storage_KeyInfo*)FeatureMalloc(
-        sizeof(system_storage_KeyInfo), FT_MK_COMPLEX_REF(&system_storage_KeyInfo_struct_type));
+        sizeof(system_storage_KeyInfo), FT_MK_COMPLEX(&system_storage_KeyInfo_struct_type));
 }
 
 

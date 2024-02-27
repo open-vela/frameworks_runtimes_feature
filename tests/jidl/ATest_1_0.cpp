@@ -35,7 +35,7 @@ static const CallbackType ATest_cb1_callback_type {
 /****** for JIDL function 'test2' ******/
 static const FeatureType ATest_test2_parameters[] = {
     FT_INT,
-    FT_MK_COMPLEX_REF(&ATest_cb1_callback_type),
+    FT_MK_COMPLEX(&ATest_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -60,7 +60,7 @@ static const CallbackType ATest_cb2_callback_type {
 /****** for JIDL function 'test3' ******/
 static const FeatureType ATest_test3_parameters[] = {
     FT_STRING,
-    FT_MK_COMPLEX_REF(&ATest_cb2_callback_type),
+    FT_MK_COMPLEX(&ATest_cb2_callback_type),
     FT_PARAM_END
 };
 
@@ -114,7 +114,7 @@ static const ArrayType ATest_int_array = {
 FtArray* ATest_malloc_int_array()
 {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&ATest_int_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&ATest_int_array));
 }
 
 static const FeatureType ATest_test5_parameters[] = {
@@ -142,7 +142,7 @@ static const ArrayType ATest_string_array = {
 FtArray* ATest_malloc_string_array()
 {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&ATest_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&ATest_string_array));
 }
 
 static const MemberMethod ATest_test6_member_method = {
@@ -168,7 +168,7 @@ static const ObjectMapType ATest_Person_struct_type {
 ATest_Person* mallocPerson()
 {
     return (ATest_Person*)FeatureMalloc(
-        sizeof(ATest_Person), FT_MK_COMPLEX_REF(&ATest_Person_struct_type));
+        sizeof(ATest_Person), FT_MK_COMPLEX(&ATest_Person_struct_type));
 }
 
 /****** for JIDL function 'test7' ******/

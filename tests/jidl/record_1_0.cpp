@@ -79,9 +79,9 @@ static const FeatureType Record_start_parameters[] = {
     FT_MK_OPTIONAL(&Record_start_param_numberOfChannels_opt_type),
     FT_MK_OPTIONAL(&Record_start_param_encodeBitRate_opt_type),
     FT_MK_OPTIONAL(&Record_start_param_format_opt_type),
-    FT_MK_COMPLEX_REF(&Record_success_cb_callback_type),
-    FT_MK_COMPLEX_REF(&Record_fail_cb_callback_type),
-    FT_MK_COMPLEX_REF(&Record_complete_cb_callback_type),
+    FT_MK_COMPLEX(&Record_success_cb_callback_type),
+    FT_MK_COMPLEX(&Record_fail_cb_callback_type),
+    FT_MK_COMPLEX(&Record_complete_cb_callback_type),
     FT_PARAM_END
 };
 

@@ -192,8 +192,9 @@ int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
         return -1;
     }
     bool has_rest_param = false;
+    int32_t int32_count = 0;
     CallbackType* callbackType = cb_data->type;
-    int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param);
+    int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param, nullptr, &int32_count);
     if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
         return -1;
@@ -211,7 +212,8 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
     }
     bool has_rest_param = false;
     CallbackType* callbackType = cb_data->type;
-    int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param);
+    int32_t int32_count = 0;
+    int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param, nullptr, &int32_count);
     if (!has_rest_param || count < fixed_argc) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
         return -1;

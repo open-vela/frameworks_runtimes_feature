@@ -57,7 +57,7 @@ FtAny any_test_wrap_getAny(FeatureInstanceHandle feature, AppendData append_data
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
-    ft_value_t* any_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+    ft_value_t* any_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     FEATURE_LOG_ERROR("any ptr: %p", any_ptr);
     *any_ptr = ft_from_string(ft_ctx, "this is a string any value");
     return any_ptr;
