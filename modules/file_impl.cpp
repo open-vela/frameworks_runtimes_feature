@@ -62,6 +62,8 @@ static const char* file_tag = "[jidl_feature] file_impl";
 #define FILE_ERROR(fmt, ...) \
     FEATURE_LOG_ERROR("[feature_file] " fmt, ##__VA_ARGS__)
 
+#define arrayof(array) sizeof(array) / sizeof(array[0])
+
 typedef struct
 {
     uv_loop_t* loop;
@@ -79,6 +81,9 @@ void system_file_onRegister(const char* feature_name)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
+
+static void __directory_init(const char* pkg);
+
 void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
@@ -94,6 +99,7 @@ void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
         }
         FILE_INFO("pkg name = %s", fc->pkg_name);
         FeatureSetProtoData(handle, fc);
+        __directory_init(fc->pkg_name);
     }
 }
 void system_file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
@@ -395,6 +401,20 @@ static void __create_dir(char* path, FileReq* fr)
         fr->r = -errno;
     }
     return;
+}
+
+static void __directory_init(const char* pkg)
+{
+    FileReq fr;
+    const char* type_list[] = { "cache", "files", "mass", "tmp" };
+    for (unsigned long i = 0; i < arrayof(type_list); i++) {
+        char* path = app_absolute_path_generator(pkg, type_list[i], "");
+        fr.filename = path;
+        fr.type = FILE_MKDIR;
+        fr.flags = 1;
+        __create_dir(path, &fr);
+        free(path);
+    }
 }
 
 /**
