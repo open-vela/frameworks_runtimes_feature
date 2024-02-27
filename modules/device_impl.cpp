@@ -25,8 +25,8 @@
 #define USERSPACE_PATH "/data"
 static const char* file_tag = "[jidl_feature] Device_impl";
 
-#define STRCPY(dst, src)                                        \
-    char* dst = (char*)FeatureMalloc(strlen(src) + 1, FT_CHAR); \
+#define STRCPY(dst, src)                                          \
+    char* dst = (char*)FeatureMalloc(strlen(src) + 1, FT_STRING); \
     strcpy(dst, src);
 
 void system_device_onRegister(const char* feature_name)

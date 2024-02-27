@@ -187,7 +187,7 @@ static const CallbackType Simple_cb4_callback_type {
 static const FeatureType Simple_goo_parameters[] = {
     FT_INT,
     FT_INT,
-    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX(&Simple_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -200,9 +200,9 @@ static const MemberMethod Simple_goo_member_method = {
 
 /****** for JIDL function 'goo2' ******/
 static const FeatureType Simple_goo2_parameters[] = {
-    FT_MK_COMPLEX_REF(&Simple_cb2_callback_type),
-    FT_MK_COMPLEX_REF(&Simple_cb3_callback_type),
-    FT_MK_COMPLEX_REF(&Simple_cb4_callback_type),
+    FT_MK_COMPLEX(&Simple_cb2_callback_type),
+    FT_MK_COMPLEX(&Simple_cb3_callback_type),
+    FT_MK_COMPLEX(&Simple_cb4_callback_type),
     FT_PARAM_END
 };
 
@@ -219,7 +219,7 @@ static void Simple_wrap_goo3 (FeatureInstanceHandle feature, AppendData append_d
 }
 
 static const FeatureType Simple_goo3_parameters[] = {
-    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX(&Simple_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -234,8 +234,8 @@ static const MemberMethod Simple_goo3_member_method = {
 static const FeatureType Simple_foo2_parameters[] = {
     FT_INT,
     FT_DOUBLE,
-    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
-    FT_MK_COMPLEX_REF(&Simple_cb2_callback_type),
+    FT_MK_COMPLEX(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX(&Simple_cb2_callback_type),
     FT_PARAM_END
 };
 
@@ -250,7 +250,7 @@ static const MemberMethod Simple_foo2_member_method = {
 static const FeatureType Simple_foo3_parameters[] = {
     FT_INT,
     FT_DOUBLE,
-    FT_MK_COMPLEX_REF(&Simple_cb1_callback_type),
+    FT_MK_COMPLEX(&Simple_cb1_callback_type),
     FT_PARAM_END
 };
 
@@ -293,7 +293,7 @@ static const ArrayType Simple_int_array = {
 
 FtArray* Simple_malloc_int_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&Simple_int_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&Simple_int_array));
 }
 
 static const FeatureType Simple_bar2_parameters[] = {
@@ -320,7 +320,7 @@ static const ArrayType Simple_string_array = {
 
 FtArray* Simple_malloc_string_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&Simple_string_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&Simple_string_array));
 }
 
 static const MemberMethod Simple_bar3_member_method = {
@@ -360,7 +360,7 @@ static const ObjectMapType struct_test_Array_struct_type {
 
 struct_test_Array* struct_testMallocArray () {
     return (struct_test_Array*)FeatureMalloc(
-        sizeof(struct_test_Array), FT_MK_COMPLEX_REF(&struct_test_Array_struct_type));
+        sizeof(struct_test_Array), FT_MK_COMPLEX(&struct_test_Array_struct_type));
 }
 
 /****** for JIDL function 'bar4' ******/
@@ -375,7 +375,7 @@ static const ArrayType Simple_struct_array = {
 
 FtArray* Simple_malloc_struct_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX_REF(&Simple_struct_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&Simple_struct_array));
 }
 
 static const MemberMethod Simple_bar4_member_method = {

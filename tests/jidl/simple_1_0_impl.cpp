@@ -19,15 +19,15 @@ static const char* g_version = nullptr;
         g_##str = str;                        \
     } while (false)
 
-#define GET_PROP_CHAR_PTR(str)                                                         \
-    do {                                                                               \
-        if (g_##str) {                                                                 \
-            FeatureDupValue((void*)g_##str);                                           \
-            return g_##str;                                                            \
-        }                                                                              \
-        char* prop_ret_str = (char*)FeatureMalloc(strlen(g_default_str) + 1, FT_CHAR); \
-        sprintf(prop_ret_str, "%s", g_default_str);                                    \
-        return prop_ret_str;                                                           \
+#define GET_PROP_CHAR_PTR(str)                                                           \
+    do {                                                                                 \
+        if (g_##str) {                                                                   \
+            FeatureDupValue((void*)g_##str);                                             \
+            return g_##str;                                                              \
+        }                                                                                \
+        char* prop_ret_str = (char*)FeatureMalloc(strlen(g_default_str) + 1, FT_STRING); \
+        sprintf(prop_ret_str, "%s", g_default_str);                                      \
+        return prop_ret_str;                                                             \
     } while (false)
 
 #define FREE_PROP_CHAR_PTR(str)               \
@@ -223,7 +223,7 @@ void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
 FtString Simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
 {
     printf("%s::%s(), a: %d, b: %f, c: %d\n", file_tag, __FUNCTION__, a, b, c);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "returned string: %d, %f, %d", a, b, c);
     return buf;
 }
@@ -254,9 +254,9 @@ void Simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
     printf("%s::%s(), will invoke cb4\n", file_tag, __FUNCTION__);
     int32_t* var1 = (int32_t*)FeatureMalloc(sizeof(int32_t), FT_INT32);
     *var1 = 15;
-    char* var2 = (char*)FeatureMalloc(sizeof("hello") + 1, FT_CHAR);
+    char* var2 = (char*)FeatureMalloc(sizeof("hello") + 1, FT_STRING);
     sprintf(var2, "%s", "hello");
-    char* var3 = (char*)FeatureMalloc(sizeof("world") + 1, FT_CHAR);
+    char* var3 = (char*)FeatureMalloc(sizeof("world") + 1, FT_STRING);
     sprintf(var3, "%s", "world");
     bool ret = FeatureInvokeCallbackCount(feature, cb4, 3, var1, var2, var3);
     FeatureFreeValue(var1);
@@ -298,7 +298,7 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
 
     // callback cb2(int a, string b, ...)
     printf("%s::%s(), will invoke cb2\n", file_tag, __FUNCTION__);
-    char* strValue = (char*)FeatureMalloc(sizeof("you") + 1, FT_CHAR);
+    char* strValue = (char*)FeatureMalloc(sizeof("you") + 1, FT_STRING);
     sprintf(strValue, "%s", "you");
     bool ret = FeatureInvokeCallbackCount(feature, cb2, 3, x, "love", strValue);
 
@@ -350,7 +350,7 @@ FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_STRING));
         sprintf(str, "hello%d", i);
         ((char**)strArray->_element)[i] = str;
     }
@@ -366,7 +366,7 @@ FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
 
     struct_test_Array* struct_0 = struct_testMallocArray();
     struct_0->_page_count = 1000;
-    char* str_0 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    char* str_0 = static_cast<char*>(FeatureMalloc(100, FT_STRING));
     sprintf(str_0, "hello%d", 0);
     struct_0->_title = str_0;
     struct_0->_is_end = true;
@@ -374,7 +374,7 @@ FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
 
     struct_test_Array* struct_1 = struct_testMallocArray();
     struct_1->_page_count = 1;
-    char* str_1 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    char* str_1 = static_cast<char*>(FeatureMalloc(100, FT_STRING));
     sprintf(str_1, "hello%d", 1);
     struct_1->_title = str_1;
     struct_1->_is_end = true;
@@ -382,7 +382,7 @@ FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
 
     struct_test_Array* struct_2 = struct_testMallocArray();
     struct_2->_page_count = 2;
-    char* str_2 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    char* str_2 = static_cast<char*>(FeatureMalloc(100, FT_STRING));
     sprintf(str_2, "hello%d", 2);
     struct_2->_title = str_2;
     struct_2->_is_end = false;
@@ -390,7 +390,7 @@ FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData data)
 
     struct_test_Array* struct_3 = struct_testMallocArray();
     struct_3->_page_count = 3;
-    char* str_3 = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+    char* str_3 = static_cast<char*>(FeatureMalloc(100, FT_STRING));
     sprintf(str_3, "hello%d", 3);
     struct_3->_title = str_3;
     struct_3->_is_end = true;
@@ -438,7 +438,7 @@ FtArray* Simple_get_args(FeatureInstanceHandle feature, AppendData data)
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_STRING));
         sprintf(str, "hello%d", i);
         ((char**)strArray->_element)[i] = str;
     }

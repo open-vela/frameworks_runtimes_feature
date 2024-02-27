@@ -55,7 +55,7 @@ FtString Error_wrap_strerror(FeatureInstanceHandle feature, AppendData data,
     const char* err = uv_strerror(errnum);
     FEATURE_LOG_DEBUG("%s::%s error_code:%d strerror:%s", file_tag, __FUNCTION__,
         errnum, err);
-    char* errstr = (char*)FeatureMalloc(strlen(err) + 1, FT_CHAR);
+    char* errstr = (char*)FeatureMalloc(strlen(err) + 1, FT_STRING);
     strcpy(errstr, err);
     return errstr;
 }

@@ -15,15 +15,51 @@
  */
 
 #include "feature_common.h"
+#include "feature_description.h"
+#include <cstdint>
 
-int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size)
+int getAlignedCount(const FeatureType param)
+{
+    if (sizeof(int) / sizeof(intptr_t) == 2) {
+        // in 64bit system
+        return 1;
+    }
+    // 32bit system
+    int size = 1;
+    if (FT_IS_PRIMITIVE(param)) {
+        // FT_INT means FT_INT32 currently.
+        switch (param) {
+        case FT_DOUBLE:
+        case FT_INT64:
+        case FT_UINT64:
+            size = 2;
+            break;
+        }
+    } else if (FT_IS_COMPLEX(param)) {
+        switch (param) {
+        case COMPLEX_OPTIONAL: {
+            ComplexTypeHeader* header = (ComplexTypeHeader*)FT_GET_COMPLEX(param);
+            size = getAlignedCount((FeatureType)header->type);
+        } break;
+        }
+    }
+    return size;
+}
+
+int getParamCount(const FeatureType* param, bool* hasRest, int* optional_size, int32_t* param_int_count)
 {
     int count = 0;
+    if (param_int_count) {
+        *param_int_count = 0;
+    }
     if (optional_size) {
         *optional_size = 0;
     }
-    while (param && (((*param)) != 1) && ((*param) != 0)) {
+    while (param && *param && *param != FT_PARAM_REST_END) {
         count++;
+        if (param_int_count) {
+            *param_int_count += getAlignedCount((FeatureType)*param);
+        }
         if (optional_size && FT_IS_COMPLEX(*param)) {
             ComplexTypeHeader* complexHeader = (ComplexTypeHeader*)FT_GET_COMPLEX(*param);
             if (complexHeader->type == COMPLEX_OPTIONAL) {
@@ -50,12 +86,8 @@ int countMember(ObjectMember* member)
 
 int getValueSize(FeatureType featureType)
 {
-    if (FT_IS_REFERENCE(featureType)) {
-        // alloc pointer pointed memory space
-        return sizeof(uintptr_t);
-    }
     if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_ADD_REFERENCE(featureType)) {
+        switch (featureType) {
         case FT_VOID: {
             return 0;
         } break;
@@ -95,11 +127,10 @@ int getValueSize(FeatureType featureType)
         case FT_BOOLEAN: {
             return sizeof(bool);
         } break;
-        case FT_CHAR: {
-            // return 0 for string buffer size.
-            return 0;
+        case FT_STRING: {
+            return sizeof(char*);
         } break;
-        case FT_ANY: {
+        case FT_ANY_REF: {
             return sizeof(ft_value_t);
         } break;
         default: {

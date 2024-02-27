@@ -61,9 +61,9 @@ locale_Locale* locale_wrap_get(FeatureInstanceHandle feature, AppendData data)
     if (ret <= 0) {
         FEATURE_LOG_ERROR("%s::%s getlocale failed\n", file_tag, __FUNCTION__);
     }
-    char* language = (char*)FeatureMalloc(strlen(uvlocale.language) + 1, FT_CHAR);
+    char* language = (char*)FeatureMalloc(strlen(uvlocale.language) + 1, FT_STRING);
     sprintf(language, "%s", uvlocale.language);
-    char* region = (char*)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_CHAR);
+    char* region = (char*)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_STRING);
     sprintf(region, "%s", uvlocale.country_region);
     locale->language = language;
     locale->countryOrRegion = region;

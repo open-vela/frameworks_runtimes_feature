@@ -48,7 +48,7 @@ bool convertValueToTarget(FeatureType ftype,
         pnative = *(void**)pnative;
     }
     if (FT_IS_PRIMITIVE(ftype)) {
-        switch (FT_GET_VALUE(ftype)) {
+        switch (ftype) {
         case FT_VOID: {
             FEATURE_LOG_ERROR("void not supported !");
             return false;
@@ -89,7 +89,7 @@ bool convertValueToTarget(FeatureType ftype,
         case FT_BOOLEAN: {
             nativeToTarget<bool>(ctx, pnative, target);
         } break;
-        case FT_CHAR: {
+        case FT_STRING: {
             if (!pnative) {
                 const char* empty_str = "";
                 nativeToTarget<const char*>(ctx, &empty_str, target);
@@ -97,7 +97,7 @@ bool convertValueToTarget(FeatureType ftype,
                 nativeToTarget<const char*>(ctx, &pnative, target);
             }
         } break;
-        case FT_ANY: {
+        case FT_ANY_REF: {
             if (!pnative) {
                 ft_value_t null_val = value_translator::nullFtVal();
                 nativeToTarget<ft_value_t>(ctx, &null_val, target);
@@ -209,24 +209,9 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
     TCtx ctx, TTarget& target, void*& pnative)
 {
     TRY_GET_REAL_TYPE(ftype);
-    if (!pnative) {
-        if (!createHostValue(ftype, pnative)) {
-            FEATURE_LOG_ERROR("create native value failed !");
-            return false;
-        }
-    }
-
-    if (FT_IS_REFERENCE(ftype)) {
-        void*& value_ptr = *(void**)pnative;
-        if (!convertValueToNative(instance, FT_ADD_REFERENCE(ftype), ctx, target, value_ptr)) {
-            FEATURE_LOG_ERROR("convert target to native failed !");
-            return false;
-        }
-        return true;
-    }
 
     if (FT_IS_PRIMITIVE(ftype)) {
-        switch (FT_GET_VALUE(ftype)) {
+        switch (ftype) {
         case FT_VOID: {
             FEATURE_LOG_ERROR("void not supported !");
             return false;
@@ -303,7 +288,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                 return false;
             }
             break;
-        case FT_CHAR:
+        case FT_STRING:
             if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
                 FEATURE_LOG_ERROR("string arg is null or undefined!");
                 pnative = NULL;
@@ -316,18 +301,18 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     FEATURE_LOG_ERROR("convert to const char* failed !");
                     return false;
                 }
-                char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
+                char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_STRING);
                 strcpy(alloc_ptr, str);
                 value_translator::freeCString(ctx, str); // to do by wjf
                 pnative = alloc_ptr;
             }
             break;
-        case FT_ANY:
+        case FT_ANY_REF:
             if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
                 FEATURE_LOG_ERROR("object is null or undefined!");
                 pnative = NULL;
             } else {
-                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+                ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
                 if (!argToNativePtr<ft_value_t>(ctx, target, f_val)) {
                     FEATURE_LOG_ERROR("convert to ft_value_t failed !");
                     FeatureFreeValue(f_val);
@@ -483,7 +468,8 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     FtPromiseId pid = -1;
     bool has_rest_params = false;
     int opt_argc = 0;
-    int fixed_argc = getParamCount(param_types, &has_rest_params, &opt_argc);
+    int int32_count = 0;
+    int fixed_argc = getParamCount(param_types, &has_rest_params, &opt_argc, &int32_count);
     // optional and rest parameters must not set together.
     FEATURE_CHECK_NE(has_rest_params && opt_argc, true);
 
@@ -587,7 +573,7 @@ bool methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     }
     // create return value pointer inneed.
     if (!is_promise && method->return_type != FT_VOID) {
-        if (!createHostValue(method->return_type, ffi_ret_value, true)) {
+        if (!createHostValue(method->return_type, ffi_ret_value)) {
             FEATURE_LOG_ERROR("create return value failed!");
             return false;
         }
@@ -665,7 +651,7 @@ bool accessorGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val
         FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
         return false;
     }
-    if (!createHostValue(feature_type, ffi_ret_value, true)) {
+    if (!createHostValue(feature_type, ffi_ret_value)) {
         FEATURE_LOG_ERROR("create return value failed!");
         return false;
     }
@@ -762,7 +748,7 @@ bool constGet(TInstance* instance, TCtx ctx, Member* member, TTarget& ret_val)
         FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
         return false;
     }
-    if (!createHostValue(feature_type, ffi_ret_value, true)) {
+    if (!createHostValue(feature_type, ffi_ret_value)) {
         FEATURE_LOG_ERROR("create return value failed!");
         return false;
     }

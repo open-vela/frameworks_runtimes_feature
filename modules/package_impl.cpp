@@ -62,7 +62,7 @@ void system_internal_package_onUnregister(const char* feature_name)
 static char* StringToFtString(std::string str)
 {
     int len = str.length();
-    char* ftStr = (char*)FeatureMalloc(len + 1, FT_CHAR);
+    char* ftStr = (char*)FeatureMalloc(len + 1, FT_STRING);
     strcpy(ftStr, str.c_str());
     return ftStr;
 }

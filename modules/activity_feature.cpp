@@ -120,7 +120,7 @@ static const ObjectMapType system_internal_activity_ServiceConnection_struct_typ
 
 system_internal_activity_ServiceConnection* system_internal_activityMallocServiceConnection () {
     return (system_internal_activity_ServiceConnection*)FeatureMalloc(
-        sizeof(system_internal_activity_ServiceConnection), FT_MK_COMPLEX_REF(&system_internal_activity_ServiceConnection_struct_type));
+        sizeof(system_internal_activity_ServiceConnection), FT_MK_COMPLEX(&system_internal_activity_ServiceConnection_struct_type));
 }
 
 

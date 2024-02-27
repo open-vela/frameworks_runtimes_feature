@@ -179,7 +179,7 @@ int PromiseManager::invokeJsCallback(const CallbackType* callbackType, feature_v
         void* arg = va_arg(ap, void*);
         void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
         FTObjHeader* header = (FTObjHeader*)header_ptr;
-        if (!FeatureFFIQjs::convertValueToGuest(header->featureType, arg, js_ctx_, argv[i])) {
+        if (!FeatureFFIQjs::convertValueToGuest(header->featureType, FT_IS_REFERENCE(header->featureType) ? &arg : arg, js_ctx_, argv[i])) {
             FEATURE_LOG_ERROR("convert callback rest param failed !");
             argv[i] = FEATURE_VALUE_UNDEFINED;
         }

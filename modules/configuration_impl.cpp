@@ -63,9 +63,9 @@ system_configuration_Configuration* system_configuration_wrap_getLocale(FeatureI
         }
         ret = uv_getlocale(&uvlocale);
     }
-    char* language = (char*)FeatureMalloc(strlen(uvlocale.language) + 1, FT_CHAR);
+    char* language = (char*)FeatureMalloc(strlen(uvlocale.language) + 1, FT_STRING);
     sprintf(language, "%s", uvlocale.language);
-    char* region = (char*)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_CHAR);
+    char* region = (char*)FeatureMalloc(strlen(uvlocale.country_region) + 1, FT_STRING);
     sprintf(region, "%s", uvlocale.country_region);
     config->language = language;
     config->countryOrRegion = region;

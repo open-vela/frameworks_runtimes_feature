@@ -52,11 +52,10 @@ void freeTypeDeclaration(ffi_type*& type);
  *
  * @param featureType
  * @param ptr
- * @param createPtrOnly
  * @return true
  * @return false
  */
-bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly = false);
+bool createHostValue(FeatureType featureType, void*& ptr);
 
 /**
  * @brief exact variadic parameter using va_list

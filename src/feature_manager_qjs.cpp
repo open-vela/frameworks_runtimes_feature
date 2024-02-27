@@ -29,7 +29,9 @@
 #include "feature_registry.h"
 #include "feature_utils.h"
 
+#include <alloca.h>
 #include <assert.h>
+#include <cstdint>
 #include <ffi.h>
 #include <iostream>
 #include <memory>
@@ -79,8 +81,7 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
     auto iid = instance->instanceId();
     // delete instance by removing it from FeaturePrototype.
     bool ret = proto->removeInstance(iid);
-    FEATURE_LOG_DEBUG("deleting instance %p with iid %d ret %d", instance, iid,
-        ret);
+    FEATURE_LOG_DEBUG("deleting instance %p with iid %d ret %d", instance, iid, ret);
     if (!ret) {
         FEATURE_LOG_ERROR("delete iid %d failed !", iid);
     }
@@ -94,8 +95,7 @@ static inline FeaturePrototypeQjs* getPrototype(FeatureInstance* instance)
     return static_cast<FeaturePrototypeQjs*>(instance->prototype());
 }
 
-static void __feature_mark(feature_runtime_ref rt, feature_value_t val,
-    feature_mark_func mark_func)
+static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_mark_func mark_func)
 {
     FeatureInstance* instance = getInstance(val);
     if (!instance || !instance->prototype()) {
@@ -188,10 +188,8 @@ static feature_value_t new_const_get(feature_context_ref ctx, feature_value_t th
  * @brief invoke method, support：
  * 1. parameter and return value auto convert
  * 2. support optional parameter/default value
- * 3. support variadic parameters which passed as feature_value_t to
- * native(consider better solution, need runtime type reflection mechanics)
- * 4. support complex class types, complex type only support reference, support
- * return by value.
+ * 3. support variadic parameters which passed as feature_value_t to native(consider better solution, need runtime type reflection mechanics)
+ * 4. support complex class types, complex type only support reference, support return by value.
  *
  * @param ctx
  * @param this_val
@@ -200,9 +198,8 @@ static feature_value_t new_const_get(feature_context_ref ctx, feature_value_t th
  * @param magic
  * @return feature_value_t
  */
-static feature_value_t method_call(feature_context_ref ctx,
-    feature_value_t this_val, int argc,
-    feature_value_t* argv, int magic)
+static feature_value_t method_call(feature_context_ref ctx, feature_value_t this_val,
+    int argc, feature_value_t* argv, int magic)
 {
     bool got_error = false;
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
@@ -211,8 +208,7 @@ static feature_value_t method_call(feature_context_ref ctx,
     FEATURE_CHECK_NE(instance, nullptr);
     auto description = instance->prototype()->description();
     const Member& member = description->members[index];
-    FEATURE_CHECK_EQ_LOG(member.type, MEMBER_METHOD, "feature:%s method:%s",
-        description->name, member.name);
+    FEATURE_CHECK_EQ_LOG(member.type, MEMBER_METHOD, "feature:%s method:%s", description->name, member.name);
     const auto method = member.method;
     auto param_types = method->parameters;
     FtPromiseId pid = -1;
@@ -220,10 +216,10 @@ static feature_value_t method_call(feature_context_ref ctx,
     //  count size
     bool has_rest_param = false;
     int optional_argc = 0;
-    int fixed_argc = getParamCount(param_types, &has_rest_param, &optional_argc);
+    int32_t param_value_count = 0;
+    int fixed_argc = getParamCount(param_types, &has_rest_param, &optional_argc, &param_value_count);
     // optional and rest parameters must not set together.
-    FEATURE_CHECK_NE_LOG(has_rest_param && optional_argc, true,
-        "feature:%s method:%s", description->name, member.name);
+    FEATURE_CHECK_NE_LOG(has_rest_param && optional_argc, true, "feature:%s method:%s", description->name, member.name);
     // variadic parameters type
     ffi_type vari_args_type;
     ffi_type* vari_args_elem_types[3];
@@ -231,33 +227,25 @@ static feature_value_t method_call(feature_context_ref ctx,
     FtVariParams vari_params;
     memset(&vari_params, 0, sizeof(vari_params));
     // check argument count match.
-    // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d",
-    // fixed_argc, argc); beacuse we support rest parameters, so argc is greater
-    // or equal to fixed_argc.
+    // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", fixed_argc, argc);
+    // beacuse we support rest parameters, so argc is greater or equal to fixed_argc.
     if (has_rest_param) {
         if (argc < fixed_argc) {
-            FEATURE_LOG_ERROR("rest args error, fixed: %d, total: %d!", fixed_argc,
-                argc);
+            FEATURE_LOG_ERROR("rest args error, fixed: %d, total: %d!", fixed_argc, argc);
             got_error = true;
         }
-        FEATURE_CHECK_GE_LOG(argc, fixed_argc, "feature:%s method:%s",
-            description->name, member.name);
+        FEATURE_CHECK_GE_LOG(argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
         vari_params.vari_count = argc - fixed_argc;
     } else if (optional_argc) {
-        // for optional parameters, argc + optional must grater or equal to
-        // fixed_argc
+        // for optional parameters, argc + optional must grater or equal to fixed_argc
         if (argc + optional_argc < fixed_argc) {
-            FEATURE_LOG_ERROR(
-                "optional args error, optional: %d, fixed: %d, total: %d!",
+            FEATURE_LOG_ERROR("optional args error, optional: %d, fixed: %d, total: %d!",
                 optional_argc, fixed_argc, argc);
             got_error = true;
         }
-        FEATURE_CHECK_GE_LOG(argc + optional_argc, fixed_argc,
-            "feature:%s method:%s", description->name,
-            member.name);
+        FEATURE_CHECK_GE_LOG(argc + optional_argc, fixed_argc, "feature:%s method:%s", description->name, member.name);
     } else {
-        // for method which do not have rest or optional parameters, argc equals to
-        // fixed_argc.
+        // for method which do not have rest or optional parameters, argc equals to fixed_argc.
         if (argc != fixed_argc) {
             FEATURE_LOG_WARN("fixed args worng, fixed: %d, total: %d!", fixed_argc,
                 argc);
@@ -282,20 +270,21 @@ static feature_value_t method_call(feature_context_ref ctx,
         error_info.argv = (void*)(argv);
         return reportArgsError(instance, ctx, error_info);
     }
-    // if has rest parameter, we will pack all variadic parameters together as a
-    // param pack use packed_argc instead of argc for ffi call.
+    // if has rest parameter, we will pack all variadic parameters together as a param pack
+    // use packed_argc instead of argc for ffi call.
     int32_t packed_argc = has_rest_param ? argc - vari_params.vari_count + 1 : argc;
     // if return value is a promise
     bool is_promise = FT_IS_PROMISE(method->return_type);
     int extra_argc = is_promise ? 3 : 2;
-    // FeaturInstance, data, maybe return promise, empty placeholder
-    ffi_type** ffi_arg_types = new ffi_type*[packed_argc + optional_argc + extra_argc + 1];
-    memset(ffi_arg_types, 0,
-        sizeof(ffi_type*) * (packed_argc + optional_argc + extra_argc + 1));
-    // FeaturInstance, data, maybe return promise
-    void** ffi_arg_values = new void*[packed_argc + optional_argc + extra_argc];
-    memset(ffi_arg_values, 0,
-        sizeof(void*) * (packed_argc + optional_argc + extra_argc));
+    ffi_type** ffi_arg_types = (ffi_type**)alloca(sizeof(ffi_type*) * (packed_argc + optional_argc + extra_argc + 1)); // FeaturInstance, data, maybe return promise, empty placeholder
+    memset(ffi_arg_types, 0, sizeof(ffi_type*) * (packed_argc + optional_argc + extra_argc + 1));
+    // malloc ffi arg buf
+    void** ffi_arg_buf = (void**)alloca(sizeof(void*) * (packed_argc + optional_argc + extra_argc)); // FeaturInstance, data, maybe return promise
+    memset(ffi_arg_buf, 0, sizeof(void*) * (packed_argc + optional_argc + extra_argc));
+    // malloc ffi arg values, only contains packed param, optional args use &
+    int ffi_arg_values_len = sizeof(uintptr_t) * param_value_count;
+    uintptr_t* ffi_arg_values = (uintptr_t*)alloca(ffi_arg_values_len);
+    memset(ffi_arg_values, 0, ffi_arg_values_len);
     ffi_type* ffi_ret_type = nullptr;
     void* ffi_ret_value = nullptr;
 
@@ -305,13 +294,17 @@ static feature_value_t method_call(feature_context_ref ctx,
     if (is_promise) {
         ffi_arg_types[2] = &ffi_type_sint32;
     }
-    ffi_arg_values[0] = &instance;
-    ffi_arg_values[1] = (void*)&method->data;
+    ffi_arg_buf[0] = &instance;
+    ffi_arg_buf[1] = (void*)&method->data;
 
     do {
         for (int i = 0; i < fixed_argc && i < argc; i++) {
             feature_value_t currArg = argv[i];
             auto param_type = param_types[i];
+            // fill ffi_arg_values into ffi_arg_buf
+            ffi_arg_buf[extra_argc + i] = ffi_arg_values;
+            // go next
+            ffi_arg_values += getAlignedCount(param_type);
             if (FT_IS_PROMISE(param_type)) {
                 FEATURE_LOG_ERROR("do not support promise as input param !");
                 got_error = true;
@@ -322,9 +315,8 @@ static feature_value_t method_call(feature_context_ref ctx,
                 got_error = true;
                 break;
             }
-            if (!FeatureFFIQjs::convertValueToHost(instance, param_type,
-                    ffi_arg_values[extra_argc + i],
-                    ctx, currArg)) {
+
+            if (!FeatureFFIQjs::convertValueToHost(instance, param_type, ffi_arg_buf[extra_argc + i], ctx, currArg)) {
                 FEATURE_LOG_ERROR("convert argument %d failed !", i);
                 got_error = true;
                 break;
@@ -349,7 +341,7 @@ static feature_value_t method_call(feature_context_ref ctx,
             }
             // pass param
             ffi_arg_types[fixed_argc + extra_argc] = &vari_args_type;
-            ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
+            ffi_arg_buf[fixed_argc + extra_argc] = &vari_params;
             for (int i = 0; i + fixed_argc < argc; i++) {
                 // just passthrough guest param pointers
                 auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
@@ -358,20 +350,16 @@ static feature_value_t method_call(feature_context_ref ctx,
         } else if (optional_argc) {
             for (int i = argc; i < fixed_argc; i++) {
                 auto param_type = param_types[i];
-                FEATURE_CHECK_EQ_LOG(FT_IS_COMPLEX(param_type), true,
-                    "feature:%s method:%s", description->name,
-                    member.name);
+                FEATURE_CHECK_EQ_LOG(FT_IS_COMPLEX(param_type), true, "feature:%s method:%s", description->name, member.name);
                 OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param_type);
-                FEATURE_CHECK_EQ_LOG(optionalType->header.type, COMPLEX_OPTIONAL,
-                    "feature:%s method:%s", description->name,
-                    member.name);
+                FEATURE_CHECK_EQ_LOG(optionalType->header.type, COMPLEX_OPTIONAL, "feature:%s method:%s", description->name, member.name);
                 if (!createTypeDeclaration(param_type, ffi_arg_types[extra_argc + i])) {
                     FEATURE_LOG_ERROR("prepareType for type failed !");
                     got_error = true;
                     break;
                 }
-                ffi_arg_values[extra_argc + i] = &optionalType->fval;
-                FeatureDupValue(ffi_arg_values[extra_argc + i]);
+                ffi_arg_buf[extra_argc + i] = &optionalType->fval;
+                FeatureDupValue(ffi_arg_buf[extra_argc + i]);
             }
         }
 
@@ -386,24 +374,17 @@ static feature_value_t method_call(feature_context_ref ctx,
         }
         // create return value pointer inneed.
         if (!is_promise && method->return_type != FT_VOID) {
-            if (!createHostValue(method->return_type, ffi_ret_value, true)) {
-                FEATURE_LOG_ERROR("create return value failed !");
-                got_error = true;
-                break;
-            }
+            ALLOCA_PARAM_PTR(method->return_type, ffi_ret_value);
         }
         // prepare ffi call
         ffi_cif cif;
         ffi_status ret = FFI_OK;
         if (has_rest_param) {
             // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
-            ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc,
-                packed_argc + extra_argc, ffi_ret_type,
-                ffi_arg_types);
+            ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
         } else {
             // FEATURE_LOG_DEBUG("prepare for function...");
-            ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc,
-                ffi_ret_type, ffi_arg_types);
+            ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
         }
         if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
@@ -416,33 +397,27 @@ static feature_value_t method_call(feature_context_ref ctx,
             // create promise
             PromiseType* promise_type = (PromiseType*)complex_type;
             // create promise and add to instance
-            pid = ((FeatureInstanceQjs*)instance)
-                      ->addPromise(promise_type->resolveTypes[0],
-                          promise_type->resolveTypes[1]);
+            pid = ((FeatureInstanceQjs*)instance)->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
             feature_value_t promise = ((FeatureInstanceQjs*)instance)->getPromise(pid);
             // pass pid to native function
-            ffi_arg_values[2] = &pid;
+            ffi_arg_buf[2] = &pid;
             // dup and return promise object.
             ret_val = feature_dup_value(ctx, promise);
         }
         // invoke method
-        NativeFunc callback = description->dynamic
-            ? instance->getVirtualFunction(method->func.vtable_idx)
-            : method->func.callback;
-        FEATURE_CHECK_NE_LOG(callback, nullptr, "feature:%s method:%s",
-            description->name, member.name);
-        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
-        // process return value, do not handle promise, it is handled before we
-        // invoke ffi_call.
+        NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method->func.vtable_idx) : method->func.callback;
+        FEATURE_CHECK_NE_LOG(callback, nullptr, "feature:%s method:%s", description->name, member.name);
+        ffi_call(&cif, callback, ffi_ret_value, ffi_arg_buf);
+        // process return value, do not handle promise, it is handled before we invoke ffi_call.
         if (!is_promise && method->return_type != FT_VOID) {
             // process return value
-            if ((FT_IS_COMPLEX(method->return_type)) && (((ComplexTypeHeader*)(FT_GET_COMPLEX(method->return_type)))->type == COMPLEX_STRUCT_MAP) && (*(void**)ffi_ret_value == nullptr)) {
+            if ((FT_IS_COMPLEX(method->return_type)) && (((ComplexTypeHeader*)(FT_GET_COMPLEX(method->return_type)))->type == COMPLEX_STRUCT_MAP)
+                && (*(void**)ffi_ret_value == nullptr)) {
                 FEATURE_LOG_ERROR("struct ffi_ret_value is null !");
                 feature_free_value(ctx, ret_val);
                 ret_val = FEATURE_UNDEFINED;
                 got_error = true;
-            } else if (!FeatureFFIQjs::convertValueToGuest(
-                           method->return_type, ffi_ret_value, ctx, ret_val)) {
+            } else if (!FeatureFFIQjs::convertValueToGuest(method->return_type, ffi_ret_value, ctx, ret_val)) {
                 FEATURE_LOG_ERROR("can not convert return value to guest!");
                 feature_free_value(ctx, ret_val);
                 ret_val = FEATURE_EXCEPTION;
@@ -458,20 +433,14 @@ static feature_value_t method_call(feature_context_ref ctx,
             freeTypeDeclaration(ffi_arg_types[i + extra_argc]);
         }
         // free value
-        if (ffi_arg_values[i + extra_argc]) {
-            FeatureFreeValue(ffi_arg_values[i + extra_argc]);
+        if (ffi_arg_buf[i + extra_argc] && FT_NEED_FREE(param_types[i])) {
+            FeatureFreeValue(*(void**)ffi_arg_buf[i + extra_argc]);
         }
     }
     freeTypeDeclaration(ffi_ret_type);
-    if (ffi_ret_value) {
-        FeatureFreeValue(ffi_ret_value);
+    if (ffi_ret_value && FT_NEED_FREE(method->return_type)) {
+        FeatureFreeValue(*(void**)ffi_ret_value);
     }
-    delete[] ffi_arg_values;
-    delete[] ffi_arg_types;
-    if (vari_params.vari_args) {
-        delete[] vari_params.vari_args;
-    }
-
     // if error occurred, throw internal error
     if (got_error) {
         std::ostringstream oss;
@@ -489,8 +458,7 @@ static feature_value_t method_call(feature_context_ref ctx,
     return ret_val;
 }
 
-static feature_value_t accessor_get(feature_context_ref ctx,
-    feature_value_t this_val, int magic)
+static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t this_val, int magic)
 {
     void* data_ptr = nullptr;
     NativeFunc callback = nullptr;
@@ -500,24 +468,18 @@ static feature_value_t accessor_get(feature_context_ref ctx,
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(
-        &instance->prototype()->description()->members[index]);
-    FEATURE_CHECK_EQ(
-        member->type == MEMBER_ACCESSOR || member->type == MEMBER_CONST, true);
+    Member* member = const_cast<Member*>(&instance->prototype()->description()->members[index]);
+    FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR || member->type == MEMBER_CONST, true);
     bool is_dynamic = instance->prototype()->description()->dynamic;
     if (member->type == MEMBER_ACCESSOR) {
         MemberAccessor* accessor = const_cast<MemberAccessor*>(member->accessor);
         data_ptr = &accessor->data;
-        callback = is_dynamic
-            ? instance->getVirtualFunction(accessor->getter.vtable_idx)
-            : accessor->getter.callback;
+        callback = is_dynamic ? instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
         feature_type = accessor->type;
     } else if (member->type == MEMBER_CONST) {
         MemberConst* memberConst = const_cast<MemberConst*>(member->value);
         data_ptr = &memberConst->data;
-        callback = is_dynamic
-            ? instance->getVirtualFunction(memberConst->func.vtable_idx)
-            : memberConst->func.callback;
+        callback = is_dynamic ? instance->getVirtualFunction(memberConst->func.vtable_idx) : memberConst->func.callback;
         feature_type = memberConst->type;
     }
     FEATURE_CHECK_NE(feature_type, FT_VOID);
@@ -529,16 +491,12 @@ static feature_value_t accessor_get(feature_context_ref ctx,
     ffi_type* ffi_ret_type = nullptr;
     void* ffi_arg_values[2] = { &instance, data_ptr };
     void* ffi_ret_value = nullptr;
+    ALLOCA_PARAM_PTR(feature_type, ffi_ret_value);
     do {
         if (!createTypeDeclaration(feature_type, ffi_ret_type)) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
             break;
         }
-        if (!createHostValue(feature_type, ffi_ret_value, true)) {
-            FEATURE_LOG_ERROR("create return value failed !");
-            break;
-        }
-
         // prepare and call method
         ffi_cif cif;
         ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
@@ -549,8 +507,7 @@ static feature_value_t accessor_get(feature_context_ref ctx,
         // invoke
         ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
         // process return value
-        if (!FeatureFFIQjs::convertValueToGuest(feature_type, ffi_ret_value, ctx,
-                ret_val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(feature_type, ffi_ret_value, ctx, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_EXCEPTION;
@@ -558,21 +515,20 @@ static feature_value_t accessor_get(feature_context_ref ctx,
     } while (0);
     // free resources
     freeTypeDeclaration(ffi_ret_type);
-    FeatureFreeValue(ffi_ret_value);
+    if (FT_NEED_FREE(feature_type)) {
+        FeatureFreeValue(*(void**)ffi_ret_value);
+    }
 
     if (member->type == MEMBER_CONST) {
         // for const value, redefine the property with result value
-        JS_DefinePropertyValueStr(static_cast<feature_context_ref>(ctx), this_val,
-            member->name, feature_dup_value(ctx, ret_val),
-            FEATURE_PROP_CONFIGURABLE);
+        JS_DefinePropertyValueStr(static_cast<feature_context_ref>(ctx), this_val, member->name,
+            feature_dup_value(ctx, ret_val), FEATURE_PROP_CONFIGURABLE);
     }
 
     return ret_val;
 }
 
-static feature_value_t accessor_set(feature_context_ref ctx,
-    feature_value_t this_val,
-    feature_value_t val, int magic)
+static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t this_val, feature_value_t val, int magic)
 {
     // get info from this_val
     int index = magic;
@@ -584,14 +540,14 @@ static feature_value_t accessor_set(feature_context_ref ctx,
     MemberAccessor* accessor = const_cast<MemberAccessor*>(member.accessor);
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
     bool is_dynamic = instance->prototype()->description()->dynamic;
-    NativeFunc callback = is_dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx)
-                                     : accessor->setter.callback;
+    NativeFunc callback = is_dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
     FEATURE_CHECK_NE(callback, nullptr);
     // handle parameter
     // 1. FeatureInstance pointer
     // 2. data
     ffi_type* ffi_arg_types[3] = { &ffi_type_pointer, &ffi_type_sint64, nullptr };
     void* arg_value_input = nullptr;
+    ALLOCA_PARAM_PTR(accessor->type, arg_value_input);
     void* ffi_arg_values[3] = { &instance, &accessor->data, nullptr };
     bool got_error = false;
     do {
@@ -601,9 +557,9 @@ static feature_value_t accessor_set(feature_context_ref ctx,
             got_error = true;
             break;
         }
+
         // fill third param using guest value and accesor type
-        if (!FeatureFFIQjs::convertValueToHost(instance, accessor->type,
-                arg_value_input, ctx, val)) {
+        if (!FeatureFFIQjs::convertValueToHost(instance, accessor->type, arg_value_input, ctx, val)) {
             FEATURE_LOG_ERROR("convert to host value failed !");
             got_error = true;
             break;
@@ -622,7 +578,9 @@ static feature_value_t accessor_set(feature_context_ref ctx,
     } while (0);
     // free resources
     freeTypeDeclaration(ffi_arg_types[2]);
-    FeatureFreeValue(arg_value_input);
+    if (FT_NEED_FREE(accessor->type)) {
+        FeatureFreeValue(*(void**)arg_value_input);
+    }
 
     if (got_error) {
         std::ostringstream oss;
@@ -639,31 +597,23 @@ static feature_value_t accessor_set(feature_context_ref ctx,
     return FEATURE_VALUE_UNDEFINED;
 }
 
-static feature_value_t
-const_variable_initialize(context_ref ctx, FeaturePrototype* prototype,
-    const MemberConst* member_const)
+static feature_value_t const_variable_initialize(context_ref ctx, FeaturePrototype* prototype, const MemberConst* member_const)
 {
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
     FEATURE_CHECK_NE(member_const->type, FT_VOID);
     // we do not handle interface intializer here, handle it as getter function.
-    FEATURE_CHECK_EQ(prototype->description()->dynamic && member_const->func.vtable_idx != -1,
-        false);
+    FEATURE_CHECK_EQ(prototype->description()->dynamic && member_const->func.vtable_idx != -1, false);
     // invoke callback to get constant value
     if (member_const->func.callback) {
         // create type using featureType description
         ffi_type* ffi_ret_type = nullptr;
         void* ffi_ret_value = nullptr;
+        ALLOCA_PARAM_PTR(member_const->type, ffi_ret_value);
         ffi_type* ffi_arg_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
         void* ffi_arg_values[2] = { &prototype, (void*)&member_const->data };
         if (!createTypeDeclaration(member_const->type, ffi_ret_type)) {
             FEATURE_LOG_ERROR("create type failed !");
             freeTypeDeclaration(ffi_ret_type);
-            return ret_val;
-        }
-        if (!createHostValue(member_const->type, ffi_ret_value, true)) {
-            FEATURE_LOG_ERROR("create return value failed !");
-            freeTypeDeclaration(ffi_ret_type);
-            FeatureFreeValue(ffi_ret_value);
             return ret_val;
         }
         // prepare and call
@@ -672,27 +622,23 @@ const_variable_initialize(context_ref ctx, FeaturePrototype* prototype,
         if (ret) {
             FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
             freeTypeDeclaration(ffi_ret_type);
-            FeatureFreeValue(ffi_ret_value);
             return ret_val;
         }
         // invoke
         ffi_call(&cif, member_const->func.callback, ffi_ret_value, ffi_arg_values);
         // process return value
-        if (!FeatureFFIQjs::convertValueToGuest(member_const->type, ffi_ret_value,
-                ctx, ret_val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(member_const->type, ffi_ret_value, ctx, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_VALUE_UNDEFINED;
         }
         freeTypeDeclaration(ffi_ret_type);
-        FeatureFreeValue(ffi_ret_value);
-        if (FT_IS_REFERENCE((FeatureType)ffi_ret_value)) {
-            free(ffi_ret_value);
+        if (FT_NEED_FREE(member_const->type)) {
+            FeatureFreeValue(*(void**)ffi_ret_value);
         }
     } else {
         // check type
-        if (!FeatureFFIQjs::convertValueToGuest(
-                member_const->type, (void*)&member_const->data, ctx, ret_val)) {
+        if (!FeatureFFIQjs::convertValueToGuest(member_const->type, (void*)&member_const->data, ctx, ret_val)) {
             FEATURE_LOG_ERROR("can not convert const value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_VALUE_UNDEFINED;
@@ -701,10 +647,7 @@ const_variable_initialize(context_ref ctx, FeaturePrototype* prototype,
     return ret_val;
 }
 
-static int initialize_prototype(context_ref ctx,
-    const FeatureDescription* description,
-    FeaturePrototype* prototype,
-    feature_value_t js_proto)
+static int initialize_prototype(context_ref ctx, const FeatureDescription* description, FeaturePrototype* prototype, feature_value_t js_proto)
 {
     FEATURE_CHECK(description != nullptr && prototype != nullptr, "");
     for (int i = 0; i < description->member_count; i++) {
@@ -717,60 +660,46 @@ static int initialize_prototype(context_ref ctx,
         case MEMBER_METHOD: {
             // register different type
             const MemberMethod* method = member.method;
-            feature_value_t methodCallObj = JS_NewCFunctionMagic(
-                static_cast<feature_context_ref>(ctx), method_call, member.name,
-                getParamCount(method->parameters), JS_CFUNC_generic_magic, i);
-            feature_define_object_property(ctx, js_proto, member.name, methodCallObj,
-                FEATURE_PROP_ENUMERABLE);
+            feature_value_t methodCallObj = JS_NewCFunctionMagic(static_cast<feature_context_ref>(ctx), method_call, member.name, getParamCount(method->parameters), JS_CFUNC_generic_magic, i);
+            feature_define_object_property(ctx, js_proto, member.name, methodCallObj, FEATURE_PROP_ENUMERABLE);
         } break;
         case MEMBER_ACCESSOR: {
             // create getter and setter
             const MemberAccessor* accessor = member.accessor;
             feature_atom_t prop_name = feature_atom(static_cast<feature_context_ref>(ctx), member.name);
-            feature_value_t funcs[2] = { FEATURE_VALUE_UNDEFINED,
-                FEATURE_VALUE_UNDEFINED };
+            feature_value_t funcs[2] = { FEATURE_VALUE_UNDEFINED, FEATURE_VALUE_UNDEFINED };
 
             char buf[128];
             JSCFunctionType type;
             if (accessor->getter.callback) {
                 type.getter_magic = accessor_get;
                 sprintf(buf, "get %s", member.name);
-                funcs[0] = JS_NewCFunction2(static_cast<feature_context_ref>(ctx),
-                    type.generic, buf, 0, JS_CFUNC_getter_magic, i);
+                funcs[0] = JS_NewCFunction2(static_cast<feature_context_ref>(ctx), type.generic, buf, 0, JS_CFUNC_getter_magic, i);
             }
             if (accessor->setter.callback) {
                 type.setter_magic = accessor_set;
                 sprintf(buf, "set %s", member.name);
-                funcs[1] = JS_NewCFunction2(static_cast<feature_context_ref>(ctx),
-                    type.generic, buf, 1, JS_CFUNC_setter_magic, i);
+                funcs[1] = JS_NewCFunction2(static_cast<feature_context_ref>(ctx), type.generic, buf, 1, JS_CFUNC_setter_magic, i);
             }
-            JS_DefinePropertyGetSet(static_cast<feature_context_ref>(ctx), js_proto,
-                prop_name, funcs[0], funcs[1],
-                FEATURE_PROP_CONFIGURABLE);
+            JS_DefinePropertyGetSet(static_cast<feature_context_ref>(ctx), js_proto, prop_name, funcs[0], funcs[1], FEATURE_PROP_CONFIGURABLE);
             feature_free_atom(static_cast<feature_context_ref>(ctx), prop_name);
         } break;
         case MEMBER_CONST: {
             // handle member const
             const MemberConst* constMember = member.value;
-            // if not interface or constant defined value, use
-            // const_variable_initialize
+            // if not interface or constant defined value, use const_variable_initialize
             if (!description->dynamic || constMember->func.vtable_idx == -1) {
                 feature_value_t constantVal = const_variable_initialize(ctx, prototype, constMember);
-                feature_define_object_property(ctx, js_proto, member.name, constantVal,
-                    FEATURE_PROP_ENUMERABLE);
+                feature_define_object_property(ctx, js_proto, member.name, constantVal, FEATURE_PROP_ENUMERABLE);
             } else {
                 // add a getter function for interface initializer sitution
                 char buf[128];
                 JSCFunctionType type;
                 type.getter_magic = accessor_get;
                 sprintf(buf, "get %s", member.name);
-                feature_value_t const_member_getter = JS_NewCFunction2(static_cast<feature_context_ref>(ctx),
-                    type.generic, buf, 0, JS_CFUNC_getter_magic, i);
+                feature_value_t const_member_getter = JS_NewCFunction2(static_cast<feature_context_ref>(ctx), type.generic, buf, 0, JS_CFUNC_getter_magic, i);
                 feature_atom_t prop_name = feature_atom(static_cast<feature_context_ref>(ctx), member.name);
-                JS_DefinePropertyGetSet(static_cast<feature_context_ref>(ctx), js_proto,
-                    prop_name, const_member_getter,
-                    FEATURE_VALUE_UNDEFINED,
-                    FEATURE_PROP_CONFIGURABLE);
+                JS_DefinePropertyGetSet(static_cast<feature_context_ref>(ctx), js_proto, prop_name, const_member_getter, FEATURE_VALUE_UNDEFINED, FEATURE_PROP_CONFIGURABLE);
                 feature_free_atom(static_cast<feature_context_ref>(ctx), prop_name);
             }
 
@@ -793,9 +722,8 @@ uv_mutex_t FeatureManagerQjs::js_class_mutex_ = PTHREAD_MUTEX_INITIALIZER;
 bool FeatureManagerQjs::ensureJsClass(feature_context_ref ctx)
 {
     auto rt = JS_GetRuntime(ctx);
-    // here we do twice judgement for js_class_id. the one outside the mutex scope
-    // is for fast judgement, the other inside the mutex scope is to prevent
-    // thread racing coditions.
+    // here we do twice judgement for js_class_id. the one outside the mutex scope is for fast
+    // judgement, the other inside the mutex scope is to prevent thread racing coditions.
     if (js_class_id_ != 0 && JS_IsRegisteredClass(rt, js_class_id_)) {
         FEATURE_LOG_DEBUG("class_id already registered.");
         return true;
@@ -827,7 +755,9 @@ FeatureManagerQjs::FeatureManagerQjs(FeatureRegistry* registry)
 {
 }
 
-FeatureManagerQjs::~FeatureManagerQjs() { }
+FeatureManagerQjs::~FeatureManagerQjs()
+{
+}
 
 bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototypeQjs* prototype)
 {
@@ -853,9 +783,7 @@ bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototypeQjs* prototype)
     return true;
 }
 
-feature_value_t
-FeatureManagerQjs::createJsInstance(FeaturePrototypeQjs* prototype,
-    FeatureInstance* instance)
+feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototypeQjs* prototype, FeatureInstance* instance)
 {
     ft_context_ref ft_ctx = getFeatureContext();
     auto ctx = (feature_context_ref)ft_context_get_data(ft_ctx);
@@ -879,16 +807,12 @@ FeatureManagerQjs::createJsInstance(FeaturePrototypeQjs* prototype,
     return js_instance;
 }
 
-feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx,
-    feature_value_t vm_object,
-    const char* name)
+feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value_t vm_object, const char* name)
 {
     FEATURE_LOG_DEBUG("featureRequire for '%s'", name);
     auto feature_pair = getFeatureRegistry()->findFeature(name);
     if (!feature_pair || !feature_pair->first->description) {
-        FEATURE_LOG_DEBUG(
-            "can't find native feature '%s', fallback to original JS module load!",
-            name);
+        FEATURE_LOG_DEBUG("can't find native feature '%s', fallback to original JS module load!", name);
         return FEATURE_VALUE_UNDEFINED;
     }
     const FeatureDescription* description = feature_pair->first;
@@ -925,8 +849,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx,
     return js_instance;
 }
 
-feature_value_t
-FeatureManagerQjs::createTargetInterface(FeatureInstance* interf)
+feature_value_t FeatureManagerQjs::createTargetInterface(FeatureInstance* interf)
 {
     FEATURE_CHECK_NE(interf, nullptr);
     FeaturePrototypeQjs* proto = static_cast<FeaturePrototypeQjs*>(interf->prototype());
@@ -970,8 +893,7 @@ void FeatureManagerQjs::uninit()
             free_prototype(child_proto);
         }
 
-        // clear all feature instance at first, it will free all feature instance
-        // and call onDetach for them
+        // clear all feature instance at first, it will free all feature instance and call onDetach for them
         proto->clearAllInstances();
         // call feature's onDestroy
         if (description->native_callbacks && description->native_callbacks->onDestroy) {
@@ -992,8 +914,7 @@ void FeatureManagerQjs::uninit()
     }
 }
 
-feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx,
-    const char* name)
+feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx, const char* name)
 {
     FEATURE_LOG_DEBUG("findFeature for '%s'", name);
     auto feature_pair = getFeatureRegistry()->findFeature(name);
@@ -1026,9 +947,7 @@ feature_value_t FeatureManagerQjs::findFeature(feature_context_ref ctx,
     return feature_dup_value(ctx, js_proto);
 }
 
-feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx,
-    feature_value_t proto,
-    feature_value_t vm_object)
+feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, feature_value_t proto, feature_value_t vm_object)
 {
     JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
@@ -1062,4 +981,4 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx,
     return FEATURE_VALUE_UNDEFINED;
 }
 
-} // namespace ferry
+}

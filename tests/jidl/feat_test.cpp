@@ -27,7 +27,7 @@ static OptionalType feat_test_testsuite_param_is_async_opt_type = {
 static const FeatureType feat_test_testsuite_parameters[] = {
     FT_STRING,
     FT_STRING,
-    FT_MK_COMPLEX_REF(&feat_test_test_body_callback_type),
+    FT_MK_COMPLEX(&feat_test_test_body_callback_type),
     FT_MK_OPTIONAL(&feat_test_testsuite_param_is_async_opt_type),
     FT_PARAM_END
 };

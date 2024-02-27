@@ -49,26 +49,9 @@ namespace FeatureFFIQjs {
     bool convertValueToHost(FeatureInstance* instance, FeatureType featureType, void*& ptr,
         context_ref ctx, feature_value_t value)
     {
-        // special step: get real type of complex type
-        TRY_GET_REAL_TYPE(featureType);
-        if (!ptr) {
-            if (!createHostValue(featureType, ptr)) {
-                FEATURE_LOG_ERROR("create host value failed !");
-                return false;
-            }
-        }
-        if (FT_IS_REFERENCE(featureType)) {
-            if (!FT_IS_CALLBACK(featureType)) {
-                void*& value_ptr = *(void**)ptr;
-                if (!convertValueToHost(instance, FT_ADD_REFERENCE(featureType), value_ptr, ctx, value)) {
-                    FEATURE_LOG_ERROR("convert value to host failed !");
-                    return false;
-                }
-                return true;
-            }
-        }
+        FEATURE_CHECK_NE(ptr, nullptr);
         if (FT_IS_PRIMITIVE(featureType)) {
-            switch (FT_GET_VALUE(featureType)) {
+            switch (featureType) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -224,7 +207,7 @@ namespace FeatureFFIQjs {
                     FEATURE_LOG_ERROR("arg to boolean failed !");
                 }
             } break;
-            case FT_CHAR: {
+            case FT_STRING: {
                 if (feature_is_null(value) || feature_is_undefined(value)) {
                     FEATURE_LOG_ERROR("string arg is null or undefined!");
                     ptr = NULL;
@@ -233,22 +216,22 @@ namespace FeatureFFIQjs {
                     return false;
                 } else {
                     const char* str = feature_to_cstring(ctx, value);
-                    char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_CHAR);
+                    char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_STRING);
                     strcpy(alloc_ptr, str);
-                    ptr = alloc_ptr;
+                    *(void**)ptr = alloc_ptr;
                     feature_free_cstring(ctx, str);
                 }
             } break;
-            case FT_ANY: {
+            case FT_ANY_REF: {
                 if (feature_is_null(value) || feature_is_undefined(value)) {
                     FEATURE_LOG_ERROR("object is null or undefined!");
                     ptr = NULL;
                 } else {
                     // copy value
-                    ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY);
+                    ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
                     qjs_val_t* q_val = (qjs_val_t*)f_val;
                     q_val->js_val = value;
-                    ptr = f_val;
+                    *(ft_value_t**)ptr = f_val;
                 }
             } break;
             default: {
@@ -262,16 +245,19 @@ namespace FeatureFFIQjs {
             case COMPLEX_STRUCT_MAP: {
                 if (feature_is_undefined(value)) {
                     FEATURE_LOG_WARN("js struct value missing!");
-                    ptr = NULL;
                     break;
                 }
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member_count = countMember(objMapType.members);
+                if (!*(void**)ptr) {
+                    *(void**)ptr = FeatureMalloc(complexType->size, featureType);
+                }
+                void* inner_ptr = *(void**)ptr;
                 for (int i = 0; i < member_count; i++) {
                     // fill it
                     auto member = &objMapType.members[i];
                     bool ret;
-                    void* member_ptr = (void*)((char*)ptr + member->offset);
+                    void* member_ptr = (void*)((char*)inner_ptr + member->offset);
                     feature_value_t propValue = feature_get_object_property(ctx, value, member->name);
                     // check propValue is js_undefined or not
                     if (feature_is_undefined(propValue)) {
@@ -289,18 +275,13 @@ namespace FeatureFFIQjs {
                                 }
                             }
                         } else {
-                            if (FT_GET_VALUE(member->type) != FT_ANY && FT_GET_VALUE(member->type) != FT_CHAR) {
+                            if ((member->type != FT_ANY_REF) && (member->type != FT_STRING)) {
                                 FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
                                 return false;
                             }
                         }
                     }
-                    if (FT_IS_CALLBACK(member->type)) {
-                        ret = convertValueToHost(instance, FT_ADD_REFERENCE(member->type), member_ptr, ctx, propValue);
-                    } else {
-                        ret = convertValueToHost(instance, member->type, member_ptr, ctx, propValue);
-                    }
-
+                    ret = convertValueToHost(instance, member->type, member_ptr, ctx, propValue);
                     feature_free_value(ctx, propValue);
                     if (!ret) {
                         FEATURE_LOG_ERROR("get property value for key: %s failed !",
@@ -338,11 +319,17 @@ namespace FeatureFFIQjs {
                     return false;
                 }
                 auto len = feature_get_array_length(ctx, value);
-                FtArray* arrayData = (FtArray*)ptr;
+                // FtArray must be a pointer
+                if (!*(void**)ptr) {
+                    // malloc FtArray struct
+                    *(void**)ptr = FeatureMalloc(sizeof(FtArray), featureType);
+                }
+                FtArray* arrayData = *(FtArray**)ptr;
                 arrayData->_size = len;
+                arrayData->_element = nullptr;
                 if (len) {
                     // we support reference and primitive types
-                    size_t element_size = FT_IS_REFERENCE(element_type) ? sizeof(uintptr_t) : getValueSize(element_type);
+                    size_t element_size = getValueSize(element_type);
                     auto size = element_size * len;
                     FEATURE_CHECK_NE(size, 0);
                     arrayData->_element = malloc(size);
@@ -367,7 +354,7 @@ namespace FeatureFFIQjs {
                 return false;
             } break;
             case COMPLEX_INTERFACE: {
-                ptr = interface_from_target(value);
+                *(void**)ptr = interface_from_target(value);
             } break;
             default: {
                 FEATURE_LOG_ERROR("unsupported complex type !");
@@ -385,12 +372,8 @@ namespace FeatureFFIQjs {
             FEATURE_LOG_ERROR("ptr is null and return false!");
             return false;
         }
-        bool isRef = FT_IS_REFERENCE(featureType);
-        if (isRef) {
-            ptr = *(void**)ptr;
-        }
         if (FT_IS_PRIMITIVE(featureType)) {
-            switch (FT_GET_VALUE(featureType)) {
+            switch (featureType) {
             case FT_VOID: {
                 FEATURE_LOG_ERROR("void not supported !");
                 return false;
@@ -431,17 +414,19 @@ namespace FeatureFFIQjs {
             case FT_BOOLEAN: {
                 value = feature_boolean(ctx, *((bool*)ptr));
             } break;
-            case FT_CHAR: {
-                if (!ptr)
+            case FT_STRING: {
+                if (!ptr) {
                     value = feature_string(ctx, "");
-                else
-                    value = feature_string(ctx, (const char*)ptr);
+                } else {
+                    char* str = *(char**)ptr;
+                    value = feature_string(ctx, str);
+                }
             } break;
-            case FT_ANY: {
+            case FT_ANY_REF: {
                 if (!ptr)
                     value = JS_NULL;
                 else {
-                    ft_value_t* f_val = (ft_value_t*)(ptr);
+                    ft_value_t* f_val = *(ft_value_t**)(ptr);
                     value = FT_VAL_GET_JS_VAL(*f_val);
                 }
             } break;
@@ -454,13 +439,14 @@ namespace FeatureFFIQjs {
             ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
             switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
+                void* tmp_ptr = *(void**)ptr;
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member = objMapType.members;
                 auto member_count = countMember(member);
                 value = feature_object(ctx);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
-                    void* member_ptr = (void*)((char*)ptr + member->offset);
+                    void* member_ptr = (void*)((char*)tmp_ptr + member->offset);
                     feature_value_t prop;
                     bool ret = convertValueToGuest(member->type, member_ptr, ctx, prop);
                     if (!ret) {
@@ -474,7 +460,7 @@ namespace FeatureFFIQjs {
             } break;
             case COMPLEX_OPTIONAL: {
                 OptionalType* optinalType = (OptionalType*)complexType;
-                bool ret = convertValueToGuest(FT_ADD_REFERENCE(optinalType->type), ptr, ctx, value);
+                bool ret = convertValueToGuest(optinalType->type, ptr, ctx, value);
                 if (!ret) {
                     feature_free_value(ctx, value);
                     value = FEATURE_UNDEFINED;
@@ -493,9 +479,8 @@ namespace FeatureFFIQjs {
                     return false;
                 }
                 ArrayType* arrayType = (ArrayType*)complexType;
-                FtArray* arrayData = (FtArray*)ptr;
+                FtArray* arrayData = *(FtArray**)ptr;
                 auto element_type = arrayType->element_type;
-                FEATURE_CHECK_EQ(FT_IS_REFERENCE(element_type), true);
                 size_t element_size = sizeof(uintptr_t);
                 // exact and create js value
                 value = feature_array(ctx);
@@ -520,7 +505,7 @@ namespace FeatureFFIQjs {
                 InterfaceType* interface_type = (InterfaceType*)complexType;
                 FEATURE_CHECK_NE(interface_type->desc, nullptr);
                 FEATURE_CHECK_NE(ptr, nullptr);
-                auto pinstance = static_cast<FeatureInstance*>(ptr);
+                auto pinstance = *static_cast<FeatureInstance**>(ptr);
                 if (!pinstance->isInterface()) {
                     FEATURE_LOG_ERROR("not a native interface!");
                     return false;

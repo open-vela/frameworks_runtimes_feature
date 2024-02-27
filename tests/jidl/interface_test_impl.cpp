@@ -39,7 +39,7 @@ static void _Interface_cat_finalize(FeatureInterfaceHandle handle)
 static FtString _Interface_cat_get_name(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "cat name is: %s", "mimi");
     return buf;
 }
@@ -70,7 +70,7 @@ static FtInt _Interface_cat_eatFood(FeatureInterfaceHandle handle, AppendData da
 static FtString _Interface_cat_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s(), interface: %p, cat run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, handle, distance, destination);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "cat run swiftly!");
     return buf;
 }
@@ -84,7 +84,7 @@ void interface_test_Animal_interface_dog_finalize(FeatureInterfaceHandle handle)
 FtString interface_test_Animal_interface_dog_get_name(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "dog name is: %s", "tommy");
     return buf;
 }
@@ -115,7 +115,7 @@ FtInt interface_test_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle,
 FtString interface_test_Animal_interface_dog_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s(), interface: %p, dog run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, handle, distance, destination);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "dog run swiftly!");
     return buf;
 }
@@ -133,7 +133,7 @@ FtArray* interface_test_Bird_interface_pigeon_fly(FeatureInterfaceHandle handle,
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_STRING));
         sprintf(str, "pigeon flip wings %d", i + 4);
         ((char**)strArray->_element)[i] = str;
     }
@@ -143,7 +143,7 @@ FtArray* interface_test_Bird_interface_pigeon_fly(FeatureInterfaceHandle handle,
 FtString interface_test_Bird_interface_pigeon_get_breed(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "pigeon breed is: %s", "Victoria Crown");
     return buf;
 }
@@ -162,7 +162,7 @@ void interface_test_Chicken_interface_cock_finalize(FeatureInterfaceHandle handl
 FtString interface_test_Chicken_interface_cock_get_name(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "cock name is: %s", "gugu");
     return buf;
 }
@@ -193,7 +193,7 @@ FtInt interface_test_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handl
 FtString interface_test_Chicken_interface_cock_run(FeatureInterfaceHandle handle, AppendData data, FtInt distance, FtString destination)
 {
     printf("%s::%s(), interface: %p, cock run, distance: %d, destination: %s\n", file_tag, __FUNCTION__, handle, distance, destination);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "cock run with wings flip!");
     return buf;
 }
@@ -205,7 +205,7 @@ FtArray* interface_test_Chicken_interface_cock_fly(FeatureInterfaceHandle handle
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_STRING));
         sprintf(str, "cock flip wings %d", i + 4);
         ((char**)strArray->_element)[i] = str;
     }
@@ -215,7 +215,7 @@ FtArray* interface_test_Chicken_interface_cock_fly(FeatureInterfaceHandle handle
 FtString interface_test_Chicken_interface_cock_get_breed(FeatureInterfaceHandle handle, AppendData data)
 {
     printf("%s::%s(), interface: %p\n", file_tag, __FUNCTION__, handle);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "cock breed is: %s", "Plymouth Rock");
     return buf;
 }
@@ -243,7 +243,7 @@ void interface_test_Chicken_interface_cock_walk(FeatureInterfaceHandle handle, A
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_STRING));
         sprintf(str, "cock walk %d", i);
         ((char**)strArray->_element)[i] = str;
     }
@@ -345,7 +345,7 @@ void interface_test_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, 
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
-        char* str = static_cast<char*>(FeatureMalloc(100, FT_CHAR));
+        char* str = static_cast<char*>(FeatureMalloc(100, FT_STRING));
         sprintf(str, "flip wings %d", i);
         ((char**)strArray->_element)[i] = str;
     }

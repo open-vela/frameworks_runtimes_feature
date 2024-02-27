@@ -60,7 +60,7 @@ void ATest_onUnregister(const char* feature_name)
 FtString ATest_wrap_test1(FeatureInstanceHandle feature, AppendData data, FtString a, FtInt b)
 {
     printf("ATest_wrap_test1: %s, %d\n", a, b);
-    char* buf = (char*)FeatureMalloc(128, FT_CHAR);
+    char* buf = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(buf, "hello, world: %s, %d", a, b);
     return buf;
 }
@@ -167,7 +167,7 @@ FtArray* ATest_wrap_test6(FeatureInstanceHandle feature, AppendData data, FtInt 
     strArray->_size = 2;
     strArray->_element = malloc(sizeof(char*) * 2);
     for (int i = 0; i < 2; i++) {
-        char* str = (char*)FeatureMalloc(100, FT_CHAR);
+        char* str = (char*)FeatureMalloc(100, FT_STRING);
         sprintf(str, "hello%d", i);
         ((char**)strArray->_element)[i] = str;
     }
@@ -202,10 +202,10 @@ ATest_Person* ATest_wrap_test8(FeatureInstanceHandle feature, AppendData data, F
 {
     printf("%s::%s(), a: %d\n", file_tag1, __FUNCTION__, a);
     ATest_Person* per = mallocPerson();
-    char* name = (char*)FeatureMalloc(128, FT_CHAR);
+    char* name = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(name, "%s", "level");
     per->_name = name;
-    char* gender = (char*)FeatureMalloc(128, FT_CHAR);
+    char* gender = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(gender, "%s", "male");
     per->_gender = gender;
     per->_age = a;

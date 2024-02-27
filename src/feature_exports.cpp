@@ -85,19 +85,6 @@ void FeatureFreeValue(void* ptr)
         return;
     }
     FeatureType featureType = header->featureType;
-
-    // free pointer refers memory
-    if (FT_IS_REFERENCE(featureType)) {
-        // only free non raw pointer
-        if (FT_RAWPOINTER != featureType) {
-            if (FT_POINTER != featureType) {
-                FeatureFreeValue(*(void**)ptr);
-            }
-        }
-        // free object header
-        free(header);
-        return;
-    }
     if (FT_IS_COMPLEX(featureType)) {
         ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexType1->type) {
@@ -108,19 +95,17 @@ void FeatureFreeValue(void* ptr)
                 ObjectMember* member = &objMapType.members[i];
                 auto member_type = member->type;
                 TRY_GET_REAL_TYPE(member_type);
-                if (FT_IS_REFERENCE(member_type)) {
+                if (FT_NEED_FREE(member_type)) {
                     void* member_ptr = (void*)((char*)ptr + member->offset);
-                    if (FT_IS_CALLBACK(member_type)) {
-                        continue;
-                    } else {
-                        FeatureFreeValue(*(void**)member_ptr);
-                    }
+                    FeatureFreeValue(*(void**)member_ptr);
                 }
             }
-            free(header);
         } break;
         case COMPLEX_OPTIONAL: {
-            FeatureFreeValue(ptr);
+            // shouldn't contains optional
+            // optional is only exit in feature description, we use it's real type for malloc.
+            FEATURE_LOG_ERROR("unreachable for COMPLEX_OPTIONAL in FeatureFreeValue !");
+            FEATURE_CHECK_NE(false, false);
         } break;
         case COMPLEX_CALLBACK: {
 
@@ -131,7 +116,7 @@ void FeatureFreeValue(void* ptr)
             auto element_type = arrayType.element_type;
             FtArray* arrayData = (FtArray*)ptr;
             // free elements one by one if it's reference.
-            if (FT_IS_REFERENCE(element_type)) {
+            if (FT_NEED_FREE(element_type)) {
                 size_t element_size = sizeof(uintptr_t);
                 for (int32_t i = 0; i < arrayData->_size; i++) {
                     void* element_ptr = (char*)arrayData->_element + element_size * i;
@@ -141,8 +126,9 @@ void FeatureFreeValue(void* ptr)
                     }
                 }
             }
-            free(arrayData->_element);
-            free(header);
+            if (arrayData->_element) {
+                free(arrayData->_element);
+            }
         } break;
         case COMPLEX_PROMISE: {
 
@@ -151,9 +137,10 @@ void FeatureFreeValue(void* ptr)
             FEATURE_LOG_ERROR("unsupported type !");
         } break;
         }
-    } else {
-        free(header);
     }
+    // finally, free header
+    // NOTE: it's user's responsibility to avoid free unmanaged pointer
+    free(header);
 }
 
 static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle)

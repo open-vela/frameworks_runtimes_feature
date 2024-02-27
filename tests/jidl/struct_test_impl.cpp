@@ -75,7 +75,7 @@ struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, AppendD
     printf("%s::%s(), a: %d\n", file_tag, __FUNCTION__, a);
     struct_test_Chapter* chap = struct_testMallocChapter();
     chap->page_count = a;
-    char* title = (char*)FeatureMalloc(128, FT_CHAR);
+    char* title = (char*)FeatureMalloc(128, FT_STRING);
     sprintf(title, "title is: %s", "hello world");
     chap->title = title;
     return chap;

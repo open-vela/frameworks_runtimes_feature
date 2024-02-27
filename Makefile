@@ -18,6 +18,11 @@ include $(APPDIR)/Make.defs
 
 CXXEXT     := .cpp
 CXXFLAGS   += -std=c++17
+
+# workaround for gcc-13 warning
+CFLAGS     += --param=min-pagesize=0
+CXXFLAGS   += --param=min-pagesize=0
+
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
 ifneq ($(CONFIG_FEATURE_LOG_LEVEL),)

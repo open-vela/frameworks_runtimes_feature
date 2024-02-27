@@ -217,7 +217,7 @@ static int exchange_args_get_and_check(ExchangeHandle* handle)
         FEATURE_LOG_ERROR("exchange key length (add prefix) too long");
         goto error;
     }
-    tmpcat = (char*)FeatureMalloc(key_len, FT_CHAR);
+    tmpcat = (char*)FeatureMalloc(key_len, FT_STRING);
     if (tmpcat == NULL) {
         FEATURE_LOG_ERROR("exchange malloc key failed");
         goto error;

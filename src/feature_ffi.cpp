@@ -24,24 +24,18 @@
 
 namespace ferry {
 
-bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
+bool createHostValue(FeatureType featureType, void*& ptr)
 {
-    // special step: check if it is optional
-    TRY_GET_REAL_TYPE(featureType);
-    // handle type
-    if (FT_IS_REFERENCE(featureType)) {
-        if (!ptr) {
-            // create raw pointer for interface
-            bool isInterface = false;
-            IS_INTERFACE_TYPE(featureType, isInterface);
-            ptr = FeatureMalloc(sizeof(uintptr_t), isInterface ? FT_RAWPOINTER : FT_POINTER);
-            if (createPtrOnly)
-                return true;
-            return createHostValue(FT_ADD_REFERENCE(featureType), *(void**)ptr);
-        }
+    // check if ptr have been malloc
+    if (ptr) {
+        FEATURE_LOG_WARN("ptr: %p already exist !", ptr);
+        return true;
     }
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+    auto flags = FT_GET_FLAG(featureType);
+    if (flags & TYPE_FLAGS_POINTER) {
+        // ptr = FeatureMalloc(sizeof(uintptr_t), (flags == TYPE_FLAGS_UNMANAGED_POINTER) ? FT_RAWPOINTER : FT_POINTER);
+    } else if (FT_IS_PRIMITIVE(featureType)) {
+        switch (featureType) {
         case FT_VOID: {
             ptr = nullptr;
             return true;
@@ -82,10 +76,10 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
         case FT_BOOLEAN: {
             ptr = FeatureMalloc(sizeof(bool), featureType);
         } break;
-        case FT_CHAR: {
-            // skip string space allocation, delay to value copy
+        case FT_STRING: {
+            ptr = FeatureMalloc(sizeof(uintptr_t), FT_STRING);
         } break;
-        case FT_ANY: {
+        case FT_ANY_REF: {
             // skip anyref space allocation, delay to value copy
         } break;
         default: {
@@ -97,17 +91,14 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
         // allocate complex type
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexType->type) {
+            // map and array is reference
         case COMPLEX_STRUCT_MAP: {
-            ptr = FeatureMalloc(complexType->size, featureType);
+            // ptr = FeatureMalloc(sizeof(uintptr_t), FT_POINTER);
         } break;
         case COMPLEX_OPTIONAL: {
             OptionalType* optionalType = (OptionalType*)complexType;
-            if (!ptr) {
-                FEATURE_CHECK_EQ(FT_IS_REFERENCE(optionalType->type), true);
-                ptr = FeatureMalloc(sizeof(uintptr_t), FT_ADD_REFERENCE(optionalType->type));
-            }
             if (!createHostValue(optionalType->type, ptr)) {
-                FEATURE_LOG_ERROR("create member pointered memory failed !");
+                FEATURE_LOG_ERROR("create optional type: %d failed !", optionalType->type);
                 return false;
             }
         } break;
@@ -116,8 +107,8 @@ bool createHostValue(FeatureType featureType, void*& ptr, bool createPtrOnly)
             ptr = FeatureMalloc(sizeof(FtCallbackId), FT_INT32);
         } break;
         case COMPLEX_ARRAY: {
-            // array element not created at this point.
-            ptr = FeatureMalloc(complexType->size, featureType);
+            // malloc array pointer
+            // ptr = FeatureMalloc(sizeof(uintptr_t), FT_POINTER);
         } break;
         case COMPLEX_PROMISE: {
             ptr = FeatureMalloc(sizeof(FtPromiseId), FT_INT32);
@@ -143,7 +134,7 @@ bool createTypeDeclaration(FeatureType featureType, ffi_type*& type)
     }
 
     if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+        switch (featureType) {
         case FT_VOID: {
             type = &ffi_type_void;
         } break;
@@ -183,10 +174,10 @@ bool createTypeDeclaration(FeatureType featureType, ffi_type*& type)
         case FT_BOOLEAN: {
             type = &ffi_type_sint8;
         } break;
-        case FT_CHAR: {
+        case FT_STRING: {
             type = &ffi_type_pointer;
         } break;
-        case FT_ANY: {
+        case FT_ANY_REF: {
             type = &ffi_type_pointer;
         } break;
         default: {
@@ -199,28 +190,7 @@ bool createTypeDeclaration(FeatureType featureType, ffi_type*& type)
         ComplexTypeHeader* complexHeader = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         switch (complexHeader->type) {
         case COMPLEX_STRUCT_MAP: {
-            type = new ffi_type();
-            ObjectMapType& objMapType = *(ObjectMapType*)complexHeader;
-            // fill struct
-            type->type = FFI_TYPE_STRUCT;
-            type->alignment = 0;
-            type->size = 0;
-            ObjectMember* member = objMapType.members;
-            auto member_count = countMember(member);
-            ffi_type** ffi_members = new ffi_type*[member_count + 1];
-            int i = 0;
-            for (; i < member_count; i++) {
-                // process primitives
-                bool ret = createTypeDeclaration(objMapType.members[i].type, ffi_members[i]);
-                if (!ret) {
-                    FEATURE_LOG_ERROR(
-                        "prepareStructType for primitive type failed !!!!!!");
-                    return false;
-                }
-            }
-            ffi_members[i] = nullptr;
-            // fill members
-            type->elements = ffi_members;
+            FEATURE_LOG_DEBUG("COMPLEX_STRUCT_MAP will never be reached !");
         } break;
         case COMPLEX_OPTIONAL: {
             OptionalType* optionalType = (OptionalType*)complexHeader;
@@ -233,15 +203,8 @@ bool createTypeDeclaration(FeatureType featureType, ffi_type*& type)
             type = &ffi_type_sint32;
         } break;
         case COMPLEX_ARRAY: {
-            // FTArray
-            type = new ffi_type();
-            type->type = FFI_TYPE_STRUCT;
-            type->alignment = 0;
-            type->size = 0;
-            type->elements = new ffi_type*[3];
-            type->elements[0] = &ffi_type_sint32;
-            type->elements[1] = &ffi_type_pointer;
-            type->elements[2] = nullptr;
+            // FTArray, will be processed at FT_IS_REFERENCE branch
+            FEATURE_LOG_DEBUG("COMPLEX_ARRAY will never be reached !");
         } break;
         case COMPLEX_PROMISE: {
             type = &ffi_type_sint32;
@@ -280,8 +243,9 @@ void* extractVariadicParam(va_list& ap, FeatureType featureType)
         result = malloc(sizeof(void*));
         *(intptr_t*)result = va_arg(ap, intptr_t);
         return result;
-    } else if (FT_IS_PRIMITIVE(featureType)) {
-        switch (FT_GET_VALUE(featureType)) {
+    }
+    if (FT_IS_PRIMITIVE(featureType)) {
+        switch (featureType) {
         case FT_VOID: {
             FEATURE_LOG_ERROR("void not supported !");
             return result;
@@ -382,11 +346,11 @@ void* extractVariadicParam(va_list& ap, FeatureType featureType)
             result_int = nullptr;
             FEATURE_LOG_DEBUG("result is %d !", *(bool*)result);
         } break;
-        case FT_CHAR: {
+        case FT_STRING: {
             result = malloc(sizeof(uintptr_t));
             *(const char**)result = va_arg(ap, const char*);
         } break;
-        case FT_ANY: {
+        case FT_ANY_REF: {
             result = malloc(sizeof(uintptr_t));
             *(ft_value_t**)result = va_arg(ap, ft_value_t*);
         } break;
