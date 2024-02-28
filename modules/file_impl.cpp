@@ -520,12 +520,15 @@ static void __load_file_work_cb(uv_work_t* wk)
             r = -ENOSPC;
             FILE_ERROR("file write failed: No space left on device");
         } else if (fr->buf != NULL && fr->len != 0) {
-            fr->r = lseek(fd, fr->offset, SEEK_SET);
-            if (fr->r < 0) {
-                r = -errno;
-                FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
-            } else {
-                r = write(fd, (char*)fr->buf, fr->len);
+            if ((fr->flags & O_APPEND) == 0) { // non-append mode
+                fr->r = lseek(fd, fr->offset, SEEK_SET);
+                if (fr->r < 0) {
+                    r = -errno;
+                    FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
+                }
+            }
+            if (r >= 0) {
+                r = write(fd, fr->buf, fr->len);
                 if (r < 0) {
                     r = -errno;
                     FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
@@ -649,7 +652,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
             fr->flags = O_APPEND;
             fr->offset = 0;
         } else {
-            fr->flags = O_TRUNC;
+            fr->flags = 0;
         }
         fr->flags |= O_WRONLY | O_CREAT;
         ft_context_ref ft_ctx = FeatureGetContext(feature);
