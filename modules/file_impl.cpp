@@ -556,8 +556,11 @@ static void __load_after_work_cb(uv_work_t* req, int status)
     } else if (fr->type == FILE_READTEXT) {
         // 将读取的文件内容写入 String
         system_file_read_txt_succ_t* data = system_fileMallocread_txt_succ_t();
-        data->text = (const char*)fr->buf;
+        char* buf = (char*)FeatureMalloc(fr->len, FT_CHAR);
+        memcpy(buf, fr->buf, fr->len);
+        data->text = (const char*)buf;
         INVOKE_SUCCESS_CB(fr->success, data);
+        FeatureFreeValue(data);
     } else if (fr->type == FILE_READARRBUF) {
         // 将读取的文件内容写入ArrayBuffer
         ft_value_t buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
@@ -934,12 +937,14 @@ static void __load_dir_after_work_cb(uv_work_t* req, int status)
     } else if (fr->type == FILE_GET) {
         system_file_extended_file_info_t* file_info = get_extended_file_info(fr, fr->root_file);
         INVOKE_SUCCESS_CB(fr->success, file_info);
+        FeatureFreeValue(file_info);
     } else if (fr->type == FILE_LIST) {
         system_file_list_succ_param* data = system_fileMalloclist_succ_param();
         if (fr->root_file) {
             data->fileList = __get_dir_list(fr, &fr->root_file->dir_list);
         }
         INVOKE_SUCCESS_CB(fr->success, data);
+        FeatureFreeValue(data);
     } else {
         INVOKE_SUCCESS_CB(fr->success);
     }
