@@ -158,7 +158,7 @@ static int exchange_args_get_and_check(ExchangeHandle* handle)
 
     /* Get value property and check */
     if (handle->op == EXCHANGE_OP_SET) {
-        if (handle->value == NULL) {
+        if (handle->value == NULL || strcmp(handle->value, "") == 0) {
             FEATURE_LOG_ERROR("set operation,value property is null");
             goto error;
         }
