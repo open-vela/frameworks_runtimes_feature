@@ -509,12 +509,6 @@ static void __load_file_work_cb(uv_work_t* wk)
         } else {
             fr->buf = (uint8_t*)FeatureMalloc(fr->len + 1, FT_UINT8);
             r = read(fd, fr->buf, fr->len);
-            // char read_str[fr->len + 1];
-            // for(int i = 0; i< fr->len; i++) {
-            //     read_str[i] = fr->buf[i];
-            // }
-            // read_str[fr->len] = '\0';
-            // FILE_INFO("read_str = %s", read_str);
             fr->len = r;
             if (r < 0) {
                 r = -errno;
@@ -532,12 +526,6 @@ static void __load_file_work_cb(uv_work_t* wk)
                 FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
             } else {
                 r = write(fd, (char*)fr->buf, fr->len);
-                // char write_str[fr->len + 1];
-                // for(int i = 0; i< fr->len; i++) {
-                //     write_str[i] = fr->buf[i];
-                // }
-                // write_str[fr->len] = '\0';
-                // FILE_INFO("write_str = %s", write_str);
                 if (r < 0) {
                     r = -errno;
                     FILE_ERROR("file open failed: file: %s, %s", fr->filename, strerror(errno));
@@ -677,7 +665,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         memcpy(fr->buf, buffer, fr->len);
     } else if constexpr (std::is_same_v<T, system_file_read_text_param_t>) {
         fr->offset = 0;
-        fr->len = -1;
+        fr->len = INT32_MIN;
         fr->flags = O_RDONLY;
     } else if constexpr (std::is_same_v<T, system_file_read_arr_buf_t>) {
         fr->offset = param->position;
