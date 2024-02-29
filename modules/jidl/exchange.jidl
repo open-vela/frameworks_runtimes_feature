@@ -20,10 +20,15 @@ callback success_cb(string value)
 callback fail_cb(string errorMsg, int code)
 callback complete_cb(string msg)
 
+struct GetRet {
+    string value
+}
+callback success_get_cb(GetRet info)
+
 struct GetInfo {
     string key
     string scope = "global"
-    callback success_cb success
+    callback success_get_cb success
     callback fail_cb fail
     callback complete_cb complete
 }
