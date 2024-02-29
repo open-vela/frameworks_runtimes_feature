@@ -339,14 +339,14 @@ void MessageChannel::attachLoop(uv_loop_t* loop)
 
 int MessageChannel::sendMessageForC(const std::string& target, const std::string& msg, RequestCb cb)
 {
-    int32_t id = (int32_t)cb;
+    int32_t id = (intptr_t)cb;
     request_map_.insert(std::make_pair(id, cb));
     return sendMessage(target, msg, id);
 }
 
 void MessageChannel::setReceiveRequestCallbackForC(ServiceMsgCb cb)
 {
-    int32_t id = (int32_t)cb;
+    int32_t id = (intptr_t)cb;
     service_msg_map_ = std::make_pair(id, cb);
     setReceiveRequestCallback(id);
 }
@@ -363,7 +363,7 @@ void MessageChannel::sendBroadcastForC(const std::string& action, const std::str
 
 void MessageChannel::registerReceiverForC(const std::string& action, SubscribeCb cb)
 {
-    int32_t id = (int32_t)cb;
+    int32_t id = (intptr_t)cb;
     subscribe_map_.insert(std::make_pair(id, cb));
     registerReceiver(action, id);
 }
