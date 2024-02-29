@@ -49,7 +49,7 @@ Status SessionMessageReply::onSessionClose()
 Status MessageReply::onReply(const ::std::string& reply)
 {
     auto task_board = client_connection_->getTaskBoard();
-    task_board.executeTask((int32_t)this, reply);
+    task_board.executeTask((intptr_t)this, reply);
     return Status::ok();
 }
 
@@ -91,7 +91,7 @@ int ClientConnection::createSession(const std::string& target)
     }
 
     ALOGI("imessagetransport service is %p", service.get());
-    int32_t id = (int32_t)service.get();
+    int32_t id = (intptr_t)service.get();
     session_client_map_.insert(std::make_pair(id, service));
     return id;
 }
@@ -150,7 +150,7 @@ int ClientConnection::sendMessage(const std::string& target,
     sp<MessageReply> reply = new MessageReply(pid_);
     reply->setClientChannelCallback(client_channel_cb_);
     reply->setClientConnection(this);
-    task_board_.commitTask(std::make_shared<MsgTask>(reply, (int32_t)reply.get()));
+    task_board_.commitTask(std::make_shared<MsgTask>(reply, (intptr_t)reply.get()));
     Status status = service->sendMessage(msg, reply);
     if (!status.isOk()) {
         ALOGE("sendMessage error: %s. target:%s", status.toString8().c_str(),
@@ -298,7 +298,7 @@ Status MessageTransportServer::sendMessage(
     const ::std::string& message,
     const ::android::sp<::message_transport::IReply>& reply)
 {
-    int32_t id = (int32_t)reply.get();
+    int32_t id = (intptr_t)reply.get();
     reply_map_.insert(std::make_pair(id, reply));
     if (message_server_channel_cb_) {
         message_server_channel_cb_->serverOnMessage(id, message);
@@ -312,7 +312,7 @@ Status MessageTransportServer::sendSessionMessage(
     const ::std::string& message,
     const ::android::sp<::message_transport::IReply>& reply)
 {
-    int32_t id = (int32_t)reply.get();
+    int32_t id = (intptr_t)reply.get();
     reply_map_.insert(std::make_pair(id, reply));
     if (session_server_channel_cb_) {
         session_server_channel_cb_->sessionOnMessage(id, message);
