@@ -27,7 +27,7 @@ static void do_callback(FeatureInstanceHandle feature, int value, int code,
         param.mode = value;
         FeatureInvokeCallback(feature, succ, &param);
     } else {
-        FeatureInvokeCallback(feature, fail, code);
+        FeatureInvokeCallback(feature, fail, "execute error", code);
     }
     FeatureInvokeCallback(feature, comp);
 
@@ -40,8 +40,7 @@ void system_brightness_wrap_getValue(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_GetValueParam* param)
 {
-
-    int ret = brightness_get_target(brightness_get_system_session());
+    int ret = brightness_get_current_level();
     do_callback(feature, ret, ret, param->success, param->fail, param->complete);
 }
 
@@ -49,7 +48,10 @@ void system_brightness_wrap_setValue(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_SetValueParam* param)
 {
-    int ret = brightness_set_target(brightness_get_system_session(), param->value, 0);
+    int ret = -1;
+    if (param->value >= 0 && param->value <= 255) {
+        ret = brightness_set_target(brightness_get_system_session(), param->value, 0);
+    }
     do_callback(feature, ret, ret, param->success, param->fail, param->complete);
 }
 
@@ -66,7 +68,10 @@ void system_brightness_wrap_setMode(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_SetModeParam* param)
 {
-    int ret = brightness_set_mode(brightness_get_system_session(), param->mode == 0 ? BRIGHTNESS_MODE_MANUAL : BRIGHTNESS_MODE_AUTO);
+    int ret = -1;
+    if (param->mode == 0 || param->mode == 1) {
+        ret = brightness_set_mode(brightness_get_system_session(), param->mode == 0 ? BRIGHTNESS_MODE_MANUAL : BRIGHTNESS_MODE_AUTO);
+    }
     do_callback(feature, ret, ret, param->success, param->fail, param->complete);
 }
 
