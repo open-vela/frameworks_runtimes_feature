@@ -47,7 +47,7 @@ struct dl_cmpl_succ_t {
     string uri
 }
 callback dl_cmpl_succ_cb(dl_cmpl_succ_t data)
-callback dl_cmpl_fail_cb(string data, long code)
+callback dl_cmpl_fail_cb(string data, int code)
 callback dl_cmpl_cmpl()
 
 struct dl_cmpl_t {
