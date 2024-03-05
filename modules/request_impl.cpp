@@ -471,7 +471,8 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
     std::map<std::string, DownloadResult*>* downloadResults = th->download_results;
 
     if (param->token == NULL) {
-        code = ARGSERROR;
+        REQUEST_ERROR("empty token");
+        code = TASK_NOT_EXISTS;
         msg = "token is missing";
         goto fail;
     } else {
