@@ -18,6 +18,7 @@ config FEATURE_FRAMEWORK
 	default n
   depends on NETUTILS_CJSON
   depends on LIB_FFI
+  depends on INTERPRETERS_QUICKJS
 
 if FEATURE_FRAMEWORK
 
