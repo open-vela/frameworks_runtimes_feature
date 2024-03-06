@@ -28,6 +28,11 @@
 #include <cstring>
 #include <malloc.h>
 #include <map>
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <regex>
 #include <string>
 #include <time.h>
 #include <type_traits>
@@ -323,15 +328,25 @@ void initInfo(RequestInfo* info)
     info->request = NULL;
 }
 
+bool __is_valid_uri(const char* uri)
+{
+    std::string uri_str(uri);
+    // Needs to start with `http://` or `https://`
+    std::regex uri_regex("^https?://[\\S]*$");
+    return std::regex_match(uri_str, uri_regex);
+}
+
 void system_request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, system_request_download_t* param)
 {
-    const char *header, *filename, *msg;
-    char *header_value, *kv, *pos_1, *pos_2, *absolute_path;
-    size_t i = 1, j = 0, code;
+    const char* msg;
+    char *filename, *pos_1, *pos_2, *token;
+    char kv[1024];
+    int code;
+    rapidjson::Document doc;
+    rapidjson::ParseResult result;
     system_request_download_succ_t* suc_param;
     RequestContext* th = getRequestContext(feature);
 
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
     RequestInfo* info = static_cast<RequestInfo*>(malloc(sizeof(RequestInfo)));
     if (!info) {
         REQUEST_ERROR("malloc fail");
@@ -347,116 +362,103 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
 
     // 参数检查
-    if (param->url == NULL || strlen(param->url) == 0) {
+    // REQUEST_INFO("get url = %s", param->url);
+    if (param->url == NULL || strlen(param->url) == 0 || !__is_valid_uri(param->url)) {
         code = ARGSERROR;
         msg = "invalid url";
         goto callFail;
     }
 
-    // REQUEST_INFO("get url = %s", param->url);
-    // REQUEST_INFO("onDownLoadNotify = %d, suc = %d, fail = %d, compl = %d", param->onDownLoadNotify, param->success, param->fail, param->complete);
-
     info->request_type = UV_DOWNLOAD;
     info->feature_handle = feature;
+    // REQUEST_INFO("header = %s", param->header);
+    // header format "{"test":"abc","test2":"ddd"}"
 
-    assert(uv_request_create(&info->request) == 0);
-    assert(uv_request_set_url(info->request, param->url) == 0);
-    assert(uv_request_set_method(info->request, "GET") == 0);
-
-    weakref_list_initialize(&info->node);
-    weakref_list_add_tail(&th->linklist, &info->node);
-
-    if (check_any(param->header)) {
-        header = ft_to_string(ft_ctx, *(param->header));
-        REQUEST_INFO("header = %s", header);
-        if (header == NULL || header[0] != '{' || header[strlen(header) - 1] != '}') {
+    if (param->header != NULL) {
+        result = doc.Parse(param->header);
+        if (result.IsError()) {
+            REQUEST_ERROR("header json parse error");
             code = ARGSERROR;
             msg = "invalid header";
             goto callFail;
         }
-        // header format {"test":"abc","test2":"ddd"}
-
-        header_value = (char*)malloc(strlen(header) - 2);
-        if (!header_value) {
-            REQUEST_ERROR("malloc fail");
-            code = GENERAL;
-            msg = "malloc fail";
-            ft_free_string(ft_ctx, header);
-            goto callFail;
-        }
-        while (i < strlen(header) - 1) {
-            if (header[i] != '"')
-                header_value[j++] = header[i];
-            i++;
-        }
-        header_value[j] = '\0';
-        // REQUEST_INFO("header_value = %s", header_value);
-        kv = strtok(header_value, ",");
-        while (kv != NULL) {
-            // REQUEST_INFO("append header = %s", kv);
-            assert(uv_request_append_header(info->request, kv) == 0);
-            kv = strtok(NULL, ",");
-        }
-        ft_free_string(ft_ctx, header);
-        free(header_value);
     }
 
-    if (!check_any(param->filename)) {
+    if (param->filename != NULL && strlen(param->filename) > 0) {
+        filename = strdup(param->filename);
+    } else {
         pos_1 = strrchr(param->url, '?');
         pos_2 = strrchr(param->url, '/');
-        if (pos_1 == NULL) {
-            info->filename = strdup(pos_2 + 1);
+        if (pos_1 != NULL && pos_1 - pos_2 - 1 > 0) {
+            filename = strndup(pos_2 + 1, pos_1 - pos_2 - 1);
         } else {
-            info->filename = strndup(pos_2 + 1, pos_1 - pos_2 - 1);
+            filename = strdup(pos_2 + 1);
         }
-    } else {
-        filename = ft_to_string(ft_ctx, *(param->filename));
-        if (filename == NULL || strlen(filename) == 0) {
-            code = ARGSERROR;
-            msg = "invalid filename";
-            goto callFail;
-        }
-        info->filename = strdup(filename);
-        ft_free_string(ft_ctx, filename);
     }
+    // REQUEST_INFO("filename = %s", filename);
+
+    info->filename = app_relative_to_absolute_path(th->pkg_name, filename);
+    if (!info->filename) {
+        info->filename = app_absolute_path_generator(th->pkg_name, "files", filename);
+        assert(info->filename);
+    }
+    free(filename);
     // REQUEST_INFO("info->filename = %s", info->filename);
 
-    absolute_path = app_relative_to_absolute_path(th->pkg_name, info->filename);
-    if (!absolute_path) {
-        absolute_path = app_absolute_path_generator(th->pkg_name, "files", info->filename);
-        assert(absolute_path);
-    }
-    // REQUEST_INFO("absolute_path = %s", absolute_path);
-    assert(uv_request_set_atrribute(info->request, info->request_type, (void*)absolute_path) == 0);
-
-    if (FeatureCheckCallbackId(feature, param->onDownLoadNotify)) {
-        info->notify_func = param->onDownLoadNotify;
-        assert(uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb) == 0);
-    }
-
     if (!check_disk_limit()) {
-        FEATURE_LOG_ERROR("insufficient memory to download file");
+        REQUEST_ERROR("insufficient memory to download file");
         code = GENERAL;
         msg = "no space to download file";
         goto callFail;
     }
+
+    assert(uv_request_create(&info->request) == 0);
+    assert(uv_request_set_url(info->request, param->url) == 0);
+    assert(uv_request_set_method(info->request, "GET") == 0);
+    assert(uv_request_set_atrribute(info->request, info->request_type, (void*)info->filename) == 0);
+    if (FeatureCheckCallbackId(feature, param->onDownLoadNotify)) {
+        info->notify_func = param->onDownLoadNotify;
+        assert(uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb) == 0);
+    }
+    if (!doc.IsNull()) {
+        for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
+            memset(kv, 0, sizeof(kv));
+            sprintf(kv, "%s: ", itr->name.GetString());
+            if (itr->value.IsString()) {
+                sprintf(kv, "%s", itr->value.GetString());
+            } else if (itr->value.IsInt()) {
+                sprintf(kv, "%d", itr->value.GetInt());
+            } else if (itr->value.IsDouble()) {
+                sprintf(kv, "%f", itr->value.GetDouble());
+            } else if (itr->value.IsBool()) {
+                sprintf(kv, "%d", itr->value.GetBool());
+            } else {
+                REQUEST_ERROR("unkown type");
+            }
+            // REQUEST_INFO("kv = '%s'", kv);
+            assert(uv_request_append_header(info->request, kv) == 0);
+        }
+    }
     assert(uv_request_set_userp(info->request, info) == 0);
     assert(uv_request_commit(th->handle, info->request, __request_cb) == 0);
-    suc_param = system_requestMallocdownload_succ_t();
+    weakref_list_initialize(&info->node);
+    weakref_list_add_tail(&th->linklist, &info->node);
 
+    suc_param = system_requestMallocdownload_succ_t();
     info->uuid = uuid();
-    suc_param->token = info->uuid;
+    token = (char*)FeatureMalloc(strlen(info->uuid) + 1, FT_CHAR);
+    sprintf(token, "%s", info->uuid);
+    suc_param->token = token;
     // REQUEST_INFO("suc_param._token = %s, info = %p", suc_param->token, info);
     INVOKE_SUCCESS_CB(param->success, suc_param);
     INVOKE_COMPLET_CB(param->complete);
+    FeatureFreeValue(suc_param);
     return;
 callFail:
     REQUEST_INFO("code = %d, msg = %s", code, msg);
     INVOKE_FAIL_CB(param->fail, msg, code);
     INVOKE_COMPLET_CB(param->complete);
     if (info) {
-        if (info->request)
-            uv_request_delete(info->request);
         freeRequestInfo(info);
     }
 }
