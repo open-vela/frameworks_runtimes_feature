@@ -148,7 +148,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
             th->pkg_name = "request_test";
         }
         weakref_list_initialize(&th->linklist);
-        assert(uv_request_init(FeatureGetUVLoop(manager), &th->handle) == 0);
+        uv_request_init(FeatureGetUVLoop(manager), &th->handle);
         th->download_results = new std::map<std::string, DownloadResult*>();
         if (!th->download_results) {
             REQUEST_ERROR("malloc downloadResults fail");
@@ -258,6 +258,7 @@ static void __request_cb(int state, uv_response_t* response)
             char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
             param->uri = body;
             INVOKE_SUCCESS_CB(info->success, param);
+            FeatureRemoveCallback(feature, info->fail);
             res->success = true;
             res->data = strdup(body);
             res->code = UV_REQUEST_DONE;
@@ -267,11 +268,13 @@ static void __request_cb(int state, uv_response_t* response)
         // body内存的是绝对路径的file位置
         REQUEST_INFO("request error: %s", response->body);
         INVOKE_FAIL_CB(info->fail, response->body, TASK_FAILED);
+        FeatureRemoveCallback(feature, info->success);
         res->success = false;
         res->data = strdup(response->body);
         res->code = TASK_FAILED;
     } else if (state == REQUEST_CANCEL) {
         INVOKE_FAIL_CB(info->fail, "user cancel request", state);
+        FeatureRemoveCallback(feature, info->success);
         res->success = false;
         res->data = strdup(response->body);
         res->code = CANCEL_ERROR_CODE;
@@ -400,7 +403,9 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     info->filename = app_relative_to_absolute_path(th->pkg_name, filename);
     if (!info->filename) {
         info->filename = app_absolute_path_generator(th->pkg_name, "files", filename);
-        assert(info->filename);
+        if (info->filename) {
+            REQUEST_ERROR("info->filename is null");
+        }
     }
     free(filename);
     // REQUEST_INFO("info->filename = %s", info->filename);
@@ -412,13 +417,13 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
         goto callFail;
     }
 
-    assert(uv_request_create(&info->request) == 0);
-    assert(uv_request_set_url(info->request, param->url) == 0);
-    assert(uv_request_set_method(info->request, "GET") == 0);
-    assert(uv_request_set_atrribute(info->request, info->request_type, (void*)info->filename) == 0);
+    uv_request_create(&info->request);
+    uv_request_set_url(info->request, param->url);
+    uv_request_set_method(info->request, "GET");
+    uv_request_set_atrribute(info->request, info->request_type, (void*)info->filename);
     if (FeatureCheckCallbackId(feature, param->onDownLoadNotify)) {
         info->notify_func = param->onDownLoadNotify;
-        assert(uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb) == 0);
+        uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb);
     }
     if (!doc.IsNull()) {
         for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
@@ -436,11 +441,11 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
                 REQUEST_ERROR("unkown type");
             }
             // REQUEST_INFO("kv = '%s'", kv);
-            assert(uv_request_append_header(info->request, kv) == 0);
+            uv_request_append_header(info->request, kv);
         }
     }
-    assert(uv_request_set_userp(info->request, info) == 0);
-    assert(uv_request_commit(th->handle, info->request, __request_cb) == 0);
+    uv_request_set_userp(info->request, info);
+    uv_request_commit(th->handle, info->request, __request_cb);
     weakref_list_initialize(&info->node);
     weakref_list_add_tail(&th->linklist, &info->node);
 
@@ -452,12 +457,14 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     // REQUEST_INFO("suc_param._token = %s, info = %p", suc_param->token, info);
     INVOKE_SUCCESS_CB(param->success, suc_param);
     INVOKE_COMPLET_CB(param->complete);
+    FeatureRemoveCallback(feature, param->fail);
     FeatureFreeValue(suc_param);
     return;
 callFail:
     REQUEST_INFO("code = %d, msg = %s", code, msg);
     INVOKE_FAIL_CB(param->fail, msg, code);
     INVOKE_COMPLET_CB(param->complete);
+    FeatureRemoveCallback(feature, param->success);
     if (info) {
         freeRequestInfo(info);
     }
@@ -499,8 +506,10 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
                     succ_param = system_requestMallocdl_cmpl_succ_t();
                     succ_param->uri = it->second->data;
                     INVOKE_SUCCESS_CB(param->success, succ_param);
+                    FeatureRemoveCallback(feature, param->fail);
                 } else {
                     INVOKE_FAIL_CB(param->fail, it->second->data, it->second->code);
+                    FeatureRemoveCallback(feature, param->success);
                 }
                 INVOKE_COMPLET_CB(param->complete);
             } else {
@@ -513,6 +522,7 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
     }
 fail:
     INVOKE_FAIL_CB(param->fail, msg, code);
+    FeatureRemoveCallback(feature, param->fail);
     INVOKE_COMPLET_CB(param->complete);
 }
 
