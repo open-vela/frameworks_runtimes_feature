@@ -32,8 +32,8 @@ callback download_cmpl_cb()
 
 struct download_t {
     string url
-    object header
-    object filename
+    string header
+    string filename
     boolean share = true
     download_notify_cb onDownLoadNotify
     download_succ_cb success
