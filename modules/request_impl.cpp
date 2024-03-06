@@ -78,27 +78,12 @@ typedef struct
     const char* data;
 } DownloadResult;
 
-typedef struct
-{
-    uv_request_session_t* handle;
-    struct weakref_list_node linklist;
-    const char* pkg_name;
-    int exit;
-    std::map<std::string, DownloadResult*>* download_results;
-} RequestContext;
-
-RequestContext* getRequestContext(FeatureInstanceHandle handle)
-{
-    void* user_data = FeatureGetProtoData(FeatureGetProtoHandle(handle));
-    assert(user_data != nullptr);
-    return static_cast<RequestContext*>(user_data);
-}
-
 typedef struct {
     int success = -1;
     int fail = -1;
     int complete = -1;
     bool isGlobal = true;
+    bool share;
     uv_request_t* request = NULL;
     int request_type;
     char* filename = NULL;
@@ -108,6 +93,23 @@ typedef struct {
     struct weakref_list_node node;
     off_t pre = -1;
 } RequestInfo;
+
+typedef struct
+{
+    uv_request_session_t* handle;
+    struct weakref_list_node linklist;
+    const char* pkg_name;
+    int exit;
+    std::map<std::string, DownloadResult*>* download_results;
+    RequestInfo* shareInfo = NULL;
+} RequestContext;
+
+RequestContext* getRequestContext(FeatureInstanceHandle handle)
+{
+    void* user_data = FeatureGetProtoData(FeatureGetProtoHandle(handle));
+    assert(user_data != nullptr);
+    return static_cast<RequestContext*>(user_data);
+}
 
 void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
 {
@@ -153,6 +155,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         if (!th->download_results) {
             REQUEST_ERROR("malloc downloadResults fail");
         }
+        th->shareInfo = NULL;
         FeatureSetProtoData(handle, th);
     }
 }
@@ -228,8 +231,6 @@ void freeRequestInfo(RequestInfo* info)
     }
 }
 
-static RequestInfo* shareInfo = NULL;
-
 // generate token
 char* uuid()
 {
@@ -243,13 +244,15 @@ char* uuid()
 static void __request_cb(int state, uv_response_t* response)
 {
     REQUEST_INFO("in __request_cb, state = %d", state);
-    if (shareInfo)
-        shareInfo = NULL;
     RequestInfo* info = static_cast<RequestInfo*>(response->userp);
     if (!info)
         return;
     FeatureInstanceHandle feature = info->feature_handle;
     RequestContext* th = getRequestContext(feature);
+    if (info->share == false) {
+        th->shareInfo = NULL;
+    }
+
     DownloadResult* res = static_cast<DownloadResult*>(malloc(sizeof(DownloadResult)));
     if (state == UV_REQUEST_DONE) {
         if (info->request_type == UV_DOWNLOAD) {
@@ -325,6 +328,7 @@ void initInfo(RequestInfo* info)
     info->fail = -1;
     info->complete = -1;
     info->isGlobal = true;
+    info->share = true;
     info->filename = NULL;
     info->uuid = NULL;
     info->pre = -1;
@@ -359,9 +363,12 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
     initInfo(info);
 
-    if (!param->share && shareInfo) {
-        __request_cancel(shareInfo);
-        shareInfo = info;
+    if (param->share == false) {
+        info->share = false;
+        if (th->shareInfo != NULL) {
+            __request_cancel(th->shareInfo);
+        }
+        th->shareInfo = info;
     }
 
     // 参数检查
