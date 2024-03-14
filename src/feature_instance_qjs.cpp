@@ -92,34 +92,7 @@ JSContext* FeatureInstanceQjs::getContext()
 
 FeatureInstanceQjs::~FeatureInstanceQjs()
 {
-    // remove opaque binding
-    auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
-
-    auto proto = prototype();
-    JSContext* js_ctx = getContext();
-
-    // release all async callback
-    proto->featureManager()->removeTasks(this);
-
-    // free weakRef
-    if (!JS_IsUndefined(js_val)) {
-        feature_set_opaque(js_val, nullptr);
-        freeWeakRef();
-    }
-
-    // free target instance
-    if (!JS_IsUndefined(target_)) {
-        feature_free_value(js_ctx, target_);
-    }
-
-    // invoke callback
-    if (proto->description()->native_callbacks && proto->description()->native_callbacks->onDetached) {
-        FEATURE_LOG_DEBUG("invoke onDettached callback...");
-        proto->description()->native_callbacks->onDetached(js_ctx, this);
-    }
-
-    // release all promises
-    releasePromises();
+    onDetached();
 }
 
 bool FeatureInstanceQjs::checkCallback(FtCallbackId cid)
@@ -256,6 +229,43 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
 int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
     return invokeJsCallback(callbackType, callback, ap, fixed_argc, rest_argc);
+}
+
+void FeatureInstanceQjs::onDetached()
+{
+    if (isDetached()) {
+        return;
+    }
+
+    FeatureInstance::onDetached();
+    // remove opaque binding
+    auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
+
+    auto proto = prototype();
+    JSContext* js_ctx = getContext();
+
+    // release all async callback
+    proto->featureManager()->removeTasks(this);
+
+    // free weakRef
+    if (!JS_IsUndefined(js_val)) {
+        feature_set_opaque(js_val, nullptr);
+        freeWeakRef();
+    }
+
+    // free target instance
+    if (!JS_IsUndefined(target_)) {
+        feature_free_value(js_ctx, target_);
+    }
+
+    // invoke callback
+    if (proto->description()->native_callbacks && proto->description()->native_callbacks->onDetached) {
+        FEATURE_LOG_DEBUG("invoke onDettached callback...");
+        proto->description()->native_callbacks->onDetached(js_ctx, this);
+    }
+
+    // release all promises
+    releasePromises();
 }
 
 }

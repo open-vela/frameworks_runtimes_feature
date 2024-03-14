@@ -40,9 +40,9 @@ FeaturePrototype::~FeaturePrototype()
     children_.clear();
 }
 
-int FeaturePrototype::addInstance(std::unique_ptr<FeatureInstance>&& inst)
+int FeaturePrototype::addInstance(FeatureObjectUniquePtr<FeatureInstance>&& inst)
 {
-    auto pos = std::find_if(instances_.begin(), instances_.end(), [](const std::unique_ptr<FeatureInstance>& target) {
+    auto pos = std::find_if(instances_.begin(), instances_.end(), [](const FeatureObjectUniquePtr<FeatureInstance>& target) {
         return target == nullptr;
     });
     // it's full, append at end
@@ -59,6 +59,8 @@ bool FeaturePrototype::removeInstance(size_t pos)
 {
     if (pos >= instances_.size())
         return false;
+    FEATURE_LOG_INFO("remove FeatureInstance name:%s", description_->name);
+    instances_[pos]->onDetached();
     instances_[pos] = nullptr;
     return true;
 }

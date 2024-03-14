@@ -80,6 +80,8 @@ public:
 
     feature_value_t dupTarget();
 
+    virtual void onDetached();
+
 private:
     feature_value_t vm_object_;
     feature_value_t target_;

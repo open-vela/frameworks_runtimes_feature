@@ -31,6 +31,19 @@
 
 using namespace ferry;
 
+#define FEATURE_INSTANCE_CHECK(__instance_handle__, __ret__)                                \
+    do {                                                                                    \
+        if (!__instance_handle__) {                                                         \
+            FEATURE_LOG_ERROR(#__instance_handle__ "is null !");                            \
+            return __ret__;                                                                 \
+        }                                                                                   \
+        FeatureInstance* __instance__ = static_cast<FeatureInstance*>(__instance_handle__); \
+        if (__instance__->isDetached()) {                                                   \
+            FEATURE_LOG_ERROR(#__instance_handle__ "is detached !");                        \
+            return __ret__;                                                                 \
+        }                                                                                   \
+    } while (0);
+
 void* FeatureMalloc(size_t size, FeatureType featureType)
 {
     void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
@@ -148,10 +161,7 @@ static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle
 
 FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return nullptr;
-    }
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
     return (FeatureProtoHandle) static_cast<FeatureInstance*>(handle)
         ->prototype();
 }
@@ -178,38 +188,26 @@ void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
 
 void* FeatureGetObjectData(FeatureInstanceHandle handle)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return nullptr;
-    }
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
     return static_cast<FeatureInstance*>(handle)->native();
 }
 
 void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return;
-    }
+    FEATURE_INSTANCE_CHECK(handle, ;)
     auto instance = static_cast<FeatureInstance*>(handle);
     instance->setNative(data);
 }
 
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return nullptr;
-    }
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
     return manager_from_instance(handle)->getFeatureContext();
 }
 
 JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return JS_UNDEFINED;
-    }
+    FEATURE_INSTANCE_CHECK(handle, JS_UNDEFINED)
     FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
     return (JSValue)instance->getVmObject();
 }
@@ -237,20 +235,14 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 void* FeatureInstanceGetManagerUserData(FeatureInstanceHandle handle,
     const char* name)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return nullptr;
-    }
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
     return manager_from_instance(handle)->getUserData(name);
 }
 
 bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid,
     ...)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return false;
-    }
+    FEATURE_INSTANCE_CHECK(handle, false)
     auto instance = static_cast<FeatureInstance*>(handle);
 
     va_list ap;
@@ -263,10 +255,7 @@ bool FeatureInvokeCallback(FeatureInstanceHandle handle, FtCallbackId cid,
 bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
     int count, ...)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return false;
-    }
+    FEATURE_INSTANCE_CHECK(handle, false)
     auto instance = static_cast<FeatureInstance*>(handle);
 
     va_list ap;
@@ -278,26 +267,21 @@ bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
 
 bool FeatureRemoveCallback(FeatureInstanceHandle handle, FtCallbackId cid)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return false;
-    }
+    FEATURE_INSTANCE_CHECK(handle, false)
     auto instance = static_cast<FeatureInstance*>(handle);
     return instance->removeCallback(cid);
 }
 
 int FeatureGetSameCallback(FeatureInstanceHandle handle, FtCallbackId cid)
 {
+    FEATURE_INSTANCE_CHECK(handle, 0)
     auto instance = static_cast<FeatureInstance*>(handle);
     return instance->getSameCallback(cid);
 }
 
 bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return false;
-    }
+    FEATURE_INSTANCE_CHECK(handle, false)
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, pid);
@@ -308,8 +292,7 @@ bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 
 bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 {
-    if (!handle)
-        return false;
+    FEATURE_INSTANCE_CHECK(handle, false)
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, pid);
@@ -321,10 +304,7 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
     VTable* vtable)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return nullptr;
-    }
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     FeaturePrototype* module_proto = instance->prototype()->modulePrototype();
     return module_proto->createInterface(vtable);
@@ -333,10 +313,7 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
 void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return;
-    }
+    FEATURE_INSTANCE_CHECK(handle, ;)
     manager_from_instance(handle)->addTask(handle, task_cb, data);
 }
 
@@ -451,10 +428,7 @@ JSValue FeatureCreateFeature(FeatureManagerHandle handle, feature_context_ref ct
 
 FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return nullptr;
-    }
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
     return manager_from_instance(handle);
 }
 
@@ -470,10 +444,7 @@ FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
 
 bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid)
 {
-    if (!handle) {
-        FEATURE_LOG_ERROR("handle is null !");
-        return false;
-    }
+    FEATURE_INSTANCE_CHECK(handle, false)
     FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
     return instance->checkCallback(cid);
 }
@@ -490,4 +461,30 @@ bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescripti
         return false;
     }
     return registry->registerFeature(description);
+}
+
+FeatureInstanceHandle FeatureDupInstanceHandle(FeatureInstanceHandle handle)
+{
+    if (handle) {
+        FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+        instance->addRef();
+    }
+    return handle;
+}
+
+void FeatureFreeInstanceHandle(FeatureInstanceHandle handle)
+{
+    if (handle) {
+        FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+        instance->release();
+    }
+}
+
+bool FeatureInstanceIsDetached(FeatureInstanceHandle handle)
+{
+    if (handle) {
+        FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+        return instance->isDetached();
+    }
+    return false;
 }
