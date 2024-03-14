@@ -47,6 +47,7 @@ CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/promise_manager.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_object_ref.cpp
 
 ifeq ($(CONFIG_FEATURE_USE_WAMR),y)
 CXXFLAGS += -DWASM_ENABLE_GC=1

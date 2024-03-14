@@ -273,6 +273,30 @@ FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
  */
 bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid);
 
+/**
+ * @brief add ref for FeatureInstanceHandle
+ *
+ * @param handle
+ * @return FeatureInstanceHandle
+ */
+FeatureInstanceHandle FeatureDupInstanceHandle(FeatureInstanceHandle handle);
+
+/**
+ * @brief dec ref for FeatureInstanceHandle
+ *
+ * @param handle
+ * @return void
+ */
+void FeatureFreeInstanceHandle(FeatureInstanceHandle handle);
+
+/**
+ * @brief check feature instance is detached
+ *
+ * @param handle
+ * @return bool
+ */
+bool FeatureInstanceIsDetached(FeatureInstanceHandle handle);
+
 #ifdef __cplusplus
 }
 #endif

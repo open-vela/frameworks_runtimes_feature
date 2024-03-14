@@ -599,7 +599,7 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz,
     }
 
     // create feature instance for the required object
-    auto instance = std::make_unique<FeatureInstanceWamr>(proto);
+    FeatureObjectUniquePtr<FeatureInstanceWamr> instance(new FeatureInstanceWamr(proto));
     auto instance_ptr = instance.get();
     set_instance_to_target(thiz, instance_ptr);
 

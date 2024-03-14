@@ -31,6 +31,7 @@ FeatureInstance::FeatureInstance(FeaturePrototype* proto)
     : instance_id_(-1)
     , is_interface_(0)
     , initialized_(0)
+    , detached_(0)
     , vtable_(nullptr)
     , native_(nullptr)
     , proto_(proto)
@@ -41,6 +42,7 @@ FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* v
     : instance_id_(-1)
     , is_interface_(vtable ? 1 : 0)
     , initialized_(0)
+    , detached_(0)
     , vtable_(vtable)
     , native_(nullptr)
     , proto_(module_proto)
@@ -62,7 +64,7 @@ void FeatureInstance::initialize()
 
     auto proto = prototype();
     FEATURE_CHECK_NE(proto, nullptr);
-    auto interf = std::unique_ptr<FeatureInstance>(this);
+    FeatureObjectUniquePtr<FeatureInstance> interf(this);
     int iid = proto->addInstance(std::move(interf));
     setInstanceId(iid);
     initialized_ = 1;

@@ -19,6 +19,7 @@
 
 #include "feature_description.h"
 #include "feature_manager.h"
+#include "feature_object_ref.h"
 
 #include <map>
 #include <memory>
@@ -34,7 +35,7 @@ public:
     FeaturePrototype(const FeatureDescription* description);
     virtual ~FeaturePrototype();
 
-    int addInstance(std::unique_ptr<FeatureInstance>&& inst);
+    int addInstance(FeatureObjectUniquePtr<FeatureInstance>&& inst);
 
     bool removeInstance(size_t pos);
 
@@ -52,7 +53,7 @@ public:
 
     std::map<const char*, std::unique_ptr<FeaturePrototype>>& children() { return children_; }
 
-    std::vector<std::unique_ptr<FeatureInstance>>& instances() { return instances_; }
+    std::vector<FeatureObjectUniquePtr<FeatureInstance>>& instances() { return instances_; }
 
     const FeatureDescription* description() { return description_; }
 
@@ -73,7 +74,7 @@ private:
     FeatureManager* feature_manager_ = nullptr;
     FeaturePrototype* module_proto_ = nullptr;
     std::map<const char*, std::unique_ptr<FeaturePrototype>> children_; // all interface instance prototype
-    std::vector<std::unique_ptr<FeatureInstance>> instances_;
+    std::vector<FeatureObjectUniquePtr<FeatureInstance>> instances_;
 };
 
 }

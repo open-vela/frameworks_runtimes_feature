@@ -859,7 +859,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx,
     }
 
     // create feature instance for the required object
-    auto instance = std::make_unique<FeatureInstanceQjs>(prototype);
+    FeatureObjectUniquePtr<FeatureInstanceQjs> instance(new FeatureInstanceQjs(prototype));
     auto instance_ptr = instance.get();
     // save vm_object into instance
     instance->setVmObject(vm_object);
@@ -990,7 +990,7 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx,
             continue;
 
         // create feature instance for the required object
-        auto instance = std::make_unique<FeatureInstanceQjs>(prototype);
+        FeatureObjectUniquePtr<FeatureInstanceQjs> instance(new FeatureInstanceQjs(prototype));
         // save vm_object into instance
         instance->setVmObject(vm_object);
         auto instance_ptr = instance.get();
