@@ -134,7 +134,7 @@ static void change_file_date(const char* filename, uLong dosdate, tm_unz tmu_dat
 static int create_dir(const char* path)
 {
     FEATURE_LOG_DEBUG("%s:, path = %s", __FUNCTION__, path);
-    char data[CONFIG_PATH_MAX];
+    char data[CONFIG_PATH_MAX] = { 0 };
     char* ret;
 
     if ((strcmp(path, ".") == 0) || (strcmp(path, "/") == 0))
@@ -143,7 +143,10 @@ static int create_dir(const char* path)
     if (access(path, F_OK) == 0) {
         return 0;
     } else {
-        strncpy(data, path, sizeof(data) - 1);
+        int n = (strlen(path) < sizeof(data) - 1) ? strlen(path) : (sizeof(data) - 1);
+        strncpy(data, path, n);
+        if (strlen(data) > 0 && data[strlen(data) - 1] == '/')
+            data[strlen(data) - 1] = '\0';
         ret = strrchr(data, '/');
         if (ret == 0) {
             return 0;
@@ -273,7 +276,7 @@ static int do_extract(char* srcPath, char* dstPath)
     }
     if (uf == NULL) {
         FEATURE_LOG_ERROR("Cannot open %s or %s.zip\n", srcPath, srcPath);
-        return 1;
+        return -1;
     }
     /* cd to dst path */
     if (chdir(dstPath)) {
@@ -310,44 +313,25 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         return;
     FEATURE_LOG_INFO("[ZiP_DECOMPRESS] srcUri=%s,dstUri=%s \n", info->srcUri, info->dstUri);
 
-    char *temp_str, *src_path, *dst_path;
+    char *src_path, *dst_path, *tmp = NULL;
     const char* msg;
-    int code;
-    int ret = -1;
-    char* tmp = NULL;
+    int code, ret = -1;
+
     ZipContext* zc = getZipContext(feature);
 
-    if (!info->srcUri) {
+    if (info->dstUri == NULL || info->srcUri == NULL || is_path_in_tmp(info->srcUri) || is_path_in_tmp(info->dstUri)) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
-    /* src path convert to absolute path */
-    temp_str = strdup(info->srcUri);
-    src_path = app_relative_to_absolute_path(zc->pkg_name, temp_str);
-    if (!src_path) {
-        src_path = app_absolute_path_generator(zc->pkg_name, "files", temp_str);
-    }
-    free(temp_str);
 
-    if (!info->dstUri) {
-        msg = "invalid file path";
-        code = ARGSERROR;
-        goto fail;
-    }
-    /* dst path convert to absolute path */
-    temp_str = strdup(info->dstUri);
-    dst_path = app_relative_to_absolute_path(zc->pkg_name, temp_str);
-    if (!dst_path) {
-        dst_path = app_absolute_path_generator(zc->pkg_name, "files", temp_str);
-    }
-    free(temp_str);
+    /* src/dst path convert to absolute path */
+    src_path = app_relative_to_absolute_path(zc->pkg_name, info->srcUri);
+    dst_path = app_relative_to_absolute_path(zc->pkg_name, info->dstUri);
 
     if (src_path == NULL || dst_path == NULL) {
-        FEATURE_LOG_ERROR("src path:%s, dest path:%s\n", src_path, dst_path);
-        free(src_path);
-        free(dst_path);
-        msg = "invalid parameter";
+        FEATURE_LOG_ERROR("invalid file path: %s, %s", info->srcUri, info->dstUri);
+        msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
@@ -371,7 +355,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         } else {
             free(dst_path);
             msg = "create dst path failed!";
-            code = TASK_FAILED;
+            code = IOERROR;
             goto fail;
         }
         FEATURE_LOG_DEBUG("tmp is %s \n", tmp);
