@@ -30,6 +30,8 @@ JIDL_PATH :=
 OUT_PATH :=
 TEST_PATH :=
 
+TS2WASM_RUNTIMELIB_ROOT := $(APPDIR)/frameworks/typescript/ts2wasm/runtime-library
+
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_common.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context.cpp
@@ -60,8 +62,8 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/interpre
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/common/gc
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/utils
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/platform/nuttx
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/runtime-library/libdyntype
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/runtime-library/utils
+CXXFLAGS += ${INCDIR_PREFIX}${TS2WASM_RUNTIMELIB_ROOT}/libdyntype
+CXXFLAGS += ${INCDIR_PREFIX}${TS2WASM_RUNTIMELIB_ROOT}/utils
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_context_wamr.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/src/feature_ffi_wamr.cpp
