@@ -313,7 +313,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         return;
     FEATURE_LOG_INFO("[ZiP_DECOMPRESS] srcUri=%s,dstUri=%s \n", info->srcUri, info->dstUri);
 
-    char *src_path, *dst_path, *tmp = NULL;
+    char *src_path = NULL, *dst_path = NULL, *tmp = NULL;
     const char* msg;
     int code, ret = -1;
 
@@ -325,8 +325,21 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         goto fail;
     }
 
-    /* src/dst path convert to absolute path */
-    src_path = app_relative_to_absolute_path(zc->pkg_name, info->srcUri);
+    if (*(info->srcUri) == '/') {
+        src_path = (char*)malloc(CONFIG_PATH_MAX);
+        memset(src_path, 0, CONFIG_PATH_MAX);
+#ifdef CONFIG_QUICKAPP
+        sprintf(src_path, "%s/app/%s%s", CONFIG_HAP_APP_PATH, zc->pkg_name, info->srcUri);
+#else
+        // CONFIG_QUICK_APP not open, as default value.
+        sprintf(src_path, "data/app/%s%s", zc->pkg_name, info->srcUri);
+#endif
+    } else {
+        /* src path convert to absolute path */
+        src_path = app_relative_to_absolute_path(zc->pkg_name, info->srcUri);
+    }
+
+    /* dst path convert to absolute path */
     dst_path = app_relative_to_absolute_path(zc->pkg_name, info->dstUri);
 
     if (src_path == NULL || dst_path == NULL) {
@@ -369,8 +382,12 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         INVOKE_SUCCESS_CB(info->success);
         INVOKE_COMPLET_CB(info->complete);
     }
+    if (src_path)
+        free(src_path);
     return;
 fail:
     INVOKE_FAIL_CB(info->fail, msg, code);
     INVOKE_COMPLET_CB(info->complete);
+    if (src_path)
+        free(src_path);
 }
