@@ -20,6 +20,7 @@
 #include "unzip.h"
 #include "zip.h"
 #include <utime.h>
+#include <uv.h>
 
 #define FOPEN_FUNC(filename, mode) fopen64(filename, mode)
 #define WRITEBUFFERSIZE (8192)
@@ -53,6 +54,7 @@ static const char* file_tag = "[jidl_feature] zip_impl";
     } while (0)
 
 typedef struct {
+    uv_loop_t* loop;
     const char* pkg_name;
 } ZipContext;
 
@@ -74,6 +76,8 @@ void system_zip_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     ZipContext* zc = (ZipContext*)FeatureGetProtoData(handle);
     if (zc == nullptr) {
         zc = static_cast<ZipContext*>(malloc(sizeof(ZipContext)));
+        FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
+        zc->loop = FeatureGetUVLoop(manager);
         zc->pkg_name = FeatureGetPackageName(handle);
         if (!zc->pkg_name || strlen(zc->pkg_name) == 0) {
             FEATURE_LOG_ERROR("package name is null\n");
@@ -106,6 +110,17 @@ void system_zip_onUnregister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
+
+typedef struct
+{
+    uv_work_t req;
+    char* src_path; // src pach
+    char* dst_path; // dst pach
+    int success;
+    int fail;
+    int complete;
+    FeatureInstanceHandle handle;
+} zipReq;
 
 /* change_file_date : change the date/time of a file
     filename : the filename of the file where date/time must be modified
@@ -256,38 +271,85 @@ static int do_extract_currentfile(unzFile uf, const char* password)
     return err;
 }
 
-static int do_extract(char* srcPath, char* dstPath)
+static int __error_code_map(int error)
 {
-    FEATURE_LOG_DEBUG("%s need cd path is %s!\n", __FUNCTION__, dstPath);
+    int code = IOERROR;
+    switch (error) {
+    case -2:
+        code = PATH_NOT_EXISTS;
+        break;
+    case -22:
+        code = ARGSERROR;
+        break;
+    }
+    return code;
+}
+
+static void freeZipReq(zipReq* zr)
+{
+    if (zr) {
+        if (zr->src_path)
+            free(zr->src_path);
+        if (zr->dst_path)
+            free(zr->dst_path);
+        free(zr);
+    }
+}
+
+static void __extract_zip_after_work_cb(uv_work_t* req, int status)
+{
+    zipReq* zr = static_cast<zipReq*>(req->data);
+    if (!zr)
+        return;
+    FeatureInstanceHandle feature = zr->handle;
+
+    /* status is 0 means success and complete. */
+    if (status != 0) {
+        FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
+        INVOKE_FAIL_CB(zr->fail, uv_strerror(status), __error_code_map(status));
+    } else {
+        INVOKE_SUCCESS_CB(zr->success);
+    }
+    INVOKE_COMPLET_CB(zr->complete);
+    /* free resources */
+    freeZipReq(zr);
+}
+
+static void _do_extract_zip_work_cb(uv_work_t* wk)
+{
+    zipReq* zr = static_cast<zipReq*>(wk->data);
+    if (!zr)
+        return;
+    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
     char filename_try[MAXFILENAME + 16] = "";
     /* if Unzip encrypted zip file */
     const char* password = NULL;
     unzFile uf = NULL;
     unz_global_info64 gi;
 
-    strncpy(filename_try, srcPath, MAXFILENAME - 1);
+    strncpy(filename_try, zr->src_path, MAXFILENAME - 1);
     /* strncpy not append the trailing NULL, of the string is too long. */
     filename_try[MAXFILENAME] = '\0';
 
-    uf = unzOpen64(srcPath);
+    uf = unzOpen64(zr->src_path);
     if (uf == NULL) {
         strcat(filename_try, ".zip");
         uf = unzOpen64(filename_try);
     }
     if (uf == NULL) {
-        FEATURE_LOG_ERROR("Cannot open %s or %s.zip\n", srcPath, srcPath);
-        return -1;
+        FEATURE_LOG_ERROR("Cannot open %s or %s.zip\n", zr->src_path, zr->src_path);
+        return;
     }
     /* cd to dst path */
-    if (chdir(dstPath)) {
-        FEATURE_LOG_ERROR("Error changing into %s, aborting\n", dstPath);
+    if (chdir(zr->dst_path)) {
+        FEATURE_LOG_ERROR("Error changing into %s, aborting\n", zr->dst_path);
         exit(-1);
     }
     /* unzGetGlobalInfo64 : get the overall information of all files in the compressed file, including total number of files, size before and after compression, etc. */
     int err = unzGetGlobalInfo64(uf, &gi);
     if (err != UNZ_OK) {
         FEATURE_LOG_ERROR("error %d with zipfile in unzGetGlobalInfo \n", err);
-        return err;
+        return;
     }
     /* gi.number_entry : the total number of files in the compressed file */
     for (uLong i = 0; i < gi.number_entry; i++) {
@@ -304,26 +366,50 @@ static int do_extract(char* srcPath, char* dstPath)
         }
     }
 
-    return err;
+    return;
 }
 
 void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData append_data, system_zip_DecompressInfo* info)
 {
     if (info == NULL)
         return;
-    FEATURE_LOG_INFO("[ZiP_DECOMPRESS] srcUri=%s,dstUri=%s \n", info->srcUri, info->dstUri);
+    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, info->srcUri, info->dstUri);
 
     char *src_path = NULL, *dst_path = NULL, *tmp = NULL;
     const char* msg;
-    int code, ret = -1;
+    int code, r;
 
     ZipContext* zc = getZipContext(feature);
+    zipReq* zr = static_cast<zipReq*>(malloc(sizeof(*zr)));
+
+    if (!zr) {
+        FEATURE_LOG_ERROR("malloc fail");
+        msg = "malloc fail";
+        code = GENERAL;
+        goto fail;
+    }
+
+    zr->src_path = NULL;
+    zr->dst_path = NULL;
+
+    if (!zc->loop) {
+        FEATURE_LOG_ERROR("uvloop is null");
+        msg = "uvloop is null";
+        code = GENERAL;
+        goto fail;
+    }
 
     if (info->dstUri == NULL || info->srcUri == NULL || is_path_in_tmp(info->srcUri) || is_path_in_tmp(info->dstUri)) {
         msg = "invalid file path";
         code = ARGSERROR;
         goto fail;
     }
+
+    zr->req.data = zr;
+    zr->handle = feature;
+    zr->success = info->success;
+    zr->fail = info->fail;
+    zr->complete = info->complete;
 
     if (*(info->srcUri) == '/') {
         src_path = (char*)malloc(CONFIG_PATH_MAX);
@@ -338,10 +424,8 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         /* src path convert to absolute path */
         src_path = app_relative_to_absolute_path(zc->pkg_name, info->srcUri);
     }
-
     /* dst path convert to absolute path */
     dst_path = app_relative_to_absolute_path(zc->pkg_name, info->dstUri);
-
     if (src_path == NULL || dst_path == NULL) {
         FEATURE_LOG_ERROR("invalid file path: %s, %s", info->srcUri, info->dstUri);
         msg = "invalid file path";
@@ -349,7 +433,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         goto fail;
     }
 
-    FEATURE_LOG_INFO("src_path = %s, dst_path = %s", src_path, dst_path);
+    FEATURE_LOG_INFO("%s: src_path = %s, dst_path = %s", __FUNCTION__, src_path, dst_path);
     /* if zip file source dir not exsit */
     if (access(src_path, F_OK) == -1) {
         FEATURE_LOG_ERROR("zip source file Path does not exist or is inaccessible! \n");
@@ -359,35 +443,31 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         goto fail;
     }
 
+    zr->src_path = src_path;
+
     /* if decompress zip file output dir not exsit, need create it */
     if (access(dst_path, F_OK) == -1) {
         tmp = strdup(dst_path);
         FEATURE_LOG_INFO("decompress output dir does not exist, need to create it \n");
-        if (create_dir(dst_path) == 1) {
-            FEATURE_LOG_DEBUG("decompress output dir created successfully.\n");
-        } else {
-            free(dst_path);
+        if (create_dir(dst_path) == -1) {
             msg = "create dst path failed!";
             code = IOERROR;
             goto fail;
         }
         FEATURE_LOG_DEBUG("tmp is %s \n", tmp);
-        ret = do_extract(src_path, tmp);
-        free(tmp);
+        zr->dst_path = tmp;
     } else {
-        ret = do_extract(src_path, dst_path);
+        zr->dst_path = dst_path;
     }
 
-    if (ret == 0) {
-        INVOKE_SUCCESS_CB(info->success);
-        INVOKE_COMPLET_CB(info->complete);
+    r = uv_queue_work(zc->loop, &zr->req, _do_extract_zip_work_cb,
+        __extract_zip_after_work_cb);
+    if (r != 0) {
+        FEATURE_LOG_ERROR("execute uv_queue_work fail");
     }
-    if (src_path)
-        free(src_path);
     return;
 fail:
     INVOKE_FAIL_CB(info->fail, msg, code);
     INVOKE_COMPLET_CB(info->complete);
-    if (src_path)
-        free(src_path);
+    freeZipReq(zr);
 }
