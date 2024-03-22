@@ -98,21 +98,6 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
 
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_test.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/promise_test_impl.cpp
-FEATURELIST += promise_test
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/record_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/record_1_0_impl.cpp
-FEATURELIST += Record
-
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/simple_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/simple_1_0_impl.cpp
-FEATURELIST += Simple
-
-CSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test.c
-CSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/struct_test_impl.c
-CFEATURELIST += struct_test
 
 ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
