@@ -167,7 +167,7 @@ void system_storage_set_length(void* feature, AppendData data, FtInt length) { }
 static StorageHandle* storage_malloc(FeatureInstanceHandle feature)
 {
     StorageHandle* handle = (StorageHandle*)malloc(sizeof(StorageHandle));
-    handle->feature = feature;
+    handle->feature = FeatureDupInstanceHandle(feature);
     handle->th = NULL;
     handle->buf = { 0 };
     handle->op = STORAGE_OP_NONE;
@@ -182,6 +182,9 @@ static void storage_free(StorageHandle* handle)
     if (handle == NULL) {
         return;
     }
+    if (handle->feature) {
+        FeatureFreeInstanceHandle(handle->feature);
+    }
     if (handle->buf.base != NULL) {
         free(handle->buf.base);
         handle->buf.base = NULL;
@@ -194,16 +197,18 @@ static void finish_callback(int status, FeatureInstanceHandle feature,
     FtCallbackId complete_id, const char* msg,
     StorageHandle* handle)
 {
-    if (status == 0) {
-        FeatureInvokeCallback(feature, success_id, msg != NULL ? msg : "success");
-    } else {
-        FeatureInvokeCallback(feature, fail_id, msg, status);
+    if (!FeatureInstanceIsDetached(feature)) {
+        if (status == 0) {
+            FeatureInvokeCallback(feature, success_id, msg != NULL ? msg : "success");
+        } else {
+            FeatureInvokeCallback(feature, fail_id, msg, status);
+        }
+        FeatureInvokeCallback(feature, complete_id,
+            (status >= 0) ? "success" : "fail");
+        FeatureRemoveCallback(feature, success_id);
+        FeatureRemoveCallback(feature, fail_id);
+        FeatureRemoveCallback(feature, complete_id);
     }
-    FeatureInvokeCallback(feature, complete_id,
-        (status >= 0) ? "success" : "fail");
-    FeatureRemoveCallback(feature, success_id);
-    FeatureRemoveCallback(feature, fail_id);
-    FeatureRemoveCallback(feature, complete_id);
     storage_free(handle);
 }
 
