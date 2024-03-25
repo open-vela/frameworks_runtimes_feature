@@ -15,6 +15,7 @@
  */
 #include "feature_manager.h"
 #include "feature_context.h"
+#include "feature_exports.h"
 #include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_prototype.h"
@@ -74,7 +75,7 @@ void FeatureManager::unsetUVLoop()
 void FeatureManager::addTask(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data)
 {
     TaskData task_data;
-    task_data.instance = handle;
+    task_data.instance = FeatureDupInstanceHandle(handle);
     task_data.task_cb = task_cb;
     task_data.data = data;
     uv_mutex_lock(&mutex_);
@@ -91,6 +92,7 @@ void FeatureManager::runAllTasks(int mode)
     for (int i = 0; i < task_queue_size; i++) {
         TaskData task_data = task_queue_.front();
         task_data.task_cb(mode, task_data.data);
+        FeatureFreeInstanceHandle(task_data.instance);
         task_queue_.pop();
     }
     uv_mutex_unlock(&mutex_);
@@ -104,6 +106,7 @@ void FeatureManager::removeTasks(FeatureInstanceHandle handle)
         TaskData task_data = task_queue_.front();
         if (task_data.instance == handle) {
             task_data.task_cb(FEATURE_TASK_MODE_FREE, task_data.data);
+            FeatureFreeInstanceHandle(task_data.instance);
             task_queue_.pop();
         }
     }
