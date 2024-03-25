@@ -211,7 +211,9 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
     VTable* vtable);
 
 /**
- * @brief post a task with callback to feature instance
+ * @brief post a task with callback to feature instance.
+ * In task_cb, use FeatureInstanceIsDetached function to check if the handle is detached.
+ * After the handle is detached, please do not use it.
  *
  * @param handle
  * @param task_cb
