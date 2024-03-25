@@ -161,9 +161,13 @@ static void __uv_fs_req_cb(uv_fs_t* req)
     } else {
         switch (req->fs_type) {
         case UV_FS_COPYFILE:
-        case UV_FS_RENAME:
-            INVOKE_SUCCESS_CB(fr->success, req->path);
+        case UV_FS_RENAME: {
+            FileContext* fc = getFileContext(feature);
+            const char* new_path = app_absolute_to_relative_path(fc->pkg_name, req->new_path);
+            INVOKE_SUCCESS_CB(fr->success, new_path);
+            free((void*)new_path);
             break;
+        }
         case UV_FS_UNLINK:
         case UV_FS_ACCESS:
             INVOKE_SUCCESS_CB(fr->success);
