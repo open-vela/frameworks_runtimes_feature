@@ -287,13 +287,16 @@ static int __error_code_map(int error)
 
 static void freeZipReq(zipReq* zr)
 {
-    if (zr) {
-        if (zr->src_path)
-            free(zr->src_path);
-        if (zr->dst_path)
-            free(zr->dst_path);
-        free(zr);
+    if (zr == NULL) {
+        return;
     }
+    if (zr->handle)
+        FeatureFreeInstanceHandle(zr->handle);
+    if (zr->src_path)
+        free(zr->src_path);
+    if (zr->dst_path)
+        free(zr->dst_path);
+    free(zr);
 }
 
 static void __extract_zip_after_work_cb(uv_work_t* req, int status)
@@ -302,15 +305,19 @@ static void __extract_zip_after_work_cb(uv_work_t* req, int status)
     if (!zr)
         return;
     FeatureInstanceHandle feature = zr->handle;
-
-    /* status is 0 means success and complete. */
-    if (status != 0) {
-        FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
-        INVOKE_FAIL_CB(zr->fail, uv_strerror(status), __error_code_map(status));
-    } else {
-        INVOKE_SUCCESS_CB(zr->success);
+    if (!FeatureInstanceIsDetached(feature)) {
+        /* status is 0 means success and complete. */
+        if (status != 0) {
+            FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
+            INVOKE_FAIL_CB(zr->fail, uv_strerror(status), __error_code_map(status));
+        } else {
+            INVOKE_SUCCESS_CB(zr->success);
+        }
+        INVOKE_COMPLET_CB(zr->complete);
+        FeatureRemoveCallback(feature, zr->success);
+        FeatureRemoveCallback(feature, zr->fail);
+        FeatureRemoveCallback(feature, zr->complete);
     }
-    INVOKE_COMPLET_CB(zr->complete);
     /* free resources */
     freeZipReq(zr);
 }
@@ -406,7 +413,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
     }
 
     zr->req.data = zr;
-    zr->handle = feature;
+    zr->handle = FeatureDupInstanceHandle(feature);
     zr->success = info->success;
     zr->fail = info->fail;
     zr->complete = info->complete;
