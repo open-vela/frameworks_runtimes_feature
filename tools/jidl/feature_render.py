@@ -73,15 +73,21 @@ class FeatureUtils(render.Utils):
 
   def getMsgKey(self, p):
     p_name = p['name']
-    to_key = ''
     if 'meta' in p:
       meta = p['meta']
       if 'msg_key' in meta:
         p_name = meta['msg_key']
-      if 'to_msg' in meta:
-        to_key = meta['to_msg']
-    return (p_name, to_key)
-    
+    return p_name
+
+  def getParamStructFromMethod(self, method):
+    out = {}
+    params = method['params']
+    for p in params:
+      p_type = 'value_type' in p and p['value_type'] or p['type']
+      p_name = p['name']
+      s = self.getUserType('struct', p_type['referred_name'])
+      out[p_name] = s['members']
+    return out
 
   def genParamsList(self, method):
     if not 'params' in method:
@@ -110,29 +116,23 @@ class FeatureUtils(render.Utils):
 
   def genToMsg(self, out, param, prefix):
     p_name = param['name']
-    key_name, to_key = self.getMsgKey(param)
+    p_type = param['type']
+    if ('type' in p_type and 'element' in p_type):
+      p_type = p_type['element'] + "_" + p_type['type']
+    key_name = self.getMsgKey(param)
 
-    # char* only be used in protobuf message, all message will be change to json message, no changes for now.
-    if to_key == "char*":
-      out[key_name] = '(%s)(%s%s)' %(to_key, prefix, p_name)
-    elif to_key == "int_to_str":
-      out[key_name] = 'MicoFeatureUtils::num_to_str<int>(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "double_to_str":
-      out[key_name] = 'MicoFeatureUtils::num_to_str<double>(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "bool_to_str":
-      out[key_name] = 'MicoFeatureUtils::bool_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "any_to_str":
-      out[key_name] = 'MicoFeatureUtils::any_to_str(szbuf, buf_len, %s%s, conn)' %(prefix, p_name)
-    elif to_key == "int_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::int_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "double_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::double_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "str_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::str_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "bool_arr_to_str":
-      out[key_name] = 'MicoFeatureUtils::bool_arr_to_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
-    elif to_key == "str_to_json_str":
-      out[key_name] = 'MicoFeatureUtils::str_to_json_str(szbuf, buf_len, %s%s)' %(prefix, p_name)
+    if p_type == 'int' or p_type == 'uint' or p_type == 'long' or p_type == 'ulong' or \
+      p_type == 'uint8' or p_type == 'uint16' or p_type == 'uint32' or p_type == 'uint64' or \
+      p_type == 'int8' or p_type == 'int16' or p_type == 'int32' or p_type == 'int64' or \
+      p_type == 'float' or p_type == 'double':
+      out[key_name] = 'MicoFeatureUtils::num_to_json_str<%s>(%s%s)' %(p_type, prefix, p_name)
+    elif p_type == 'int_array' or p_type == 'uint_array' or p_type == 'long_array' or \
+      p_type == 'ulong_array' or p_type == 'double_array' or p_type == 'float_array' or \
+      p_type == 'string_array' or p_type == 'boolean_array' or \
+      p_type == 'boolean' or p_type == 'string':
+      out[key_name] = 'MicoFeatureUtils::%s_to_json_str(%s%s)' %(p_type, prefix, p_name)
+    elif p_type == 'object':
+      out[key_name] = 'MicoFeatureUtils::%s_to_json_str(%s%s, conn, arg_%s_c_str)' %(p_type, prefix, p_name, key_name)
     else:
       out[key_name] = '%s%s' %(prefix, p_name)
 
