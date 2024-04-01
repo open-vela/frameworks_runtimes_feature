@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module sensor @1.0
+module system.sensor @1.0
 
 callback fail_cb(string data, int code)
 
