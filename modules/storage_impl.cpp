@@ -116,7 +116,6 @@ void system_storage_onCreate(FeatureRuntimeContext ctx,
     if (ret != 0) {
         FEATURE_LOG_ERROR("%s::%s() uv_db_init error:%d\n", file_tag, __FUNCTION__,
             ret);
-        return;
     }
     FeatureSetProtoData(handle, th);
 }
