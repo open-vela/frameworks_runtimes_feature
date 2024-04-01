@@ -81,7 +81,7 @@ void system_exchange_onUnregister(const char* feature_name)
 ExchangeHandle* exchange_malloc(FeatureInstanceHandle feature)
 {
     ExchangeHandle* handle = (ExchangeHandle*)malloc(sizeof(ExchangeHandle));
-    handle->feature = feature;
+    handle->feature = FeatureDupInstanceHandle(feature);
     handle->key = NULL;
     handle->op = EXCHANGE_OP_NONE;
     handle->value = NULL;
@@ -99,6 +99,9 @@ void exchange_free(ExchangeHandle* handle)
 {
     if (handle == NULL) {
         return;
+    }
+    if (handle->feature) {
+        FeatureFreeInstanceHandle(handle->feature);
     }
     if (handle->key) {
         free(handle->key);
