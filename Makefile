@@ -213,10 +213,10 @@ endif
 
 
 ifeq ($(CONFIG_UORB), y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_imp.cpp
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/sensor_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/sensor.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
-FEATURELIST += sensor
+FEATURELIST += system_sensor
 endif
 
 ifeq ($(CONFIG_BOARDCTL), y)

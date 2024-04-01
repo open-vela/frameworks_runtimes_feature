@@ -61,7 +61,7 @@ static void sensor_accel_topic_cb(uv_topic_t* topic, int status, void* data, siz
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
     sensor_accel* t_r = static_cast<sensor_accel*>(data);
-    sensor_AccelerometerRet* accelRet = sensorMallocAccelerometerRet();
+    system_sensor_AccelerometerRet* accelRet = system_sensorMallocAccelerometerRet();
     accelRet->x = t_r->x;
     accelRet->y = t_r->y;
     accelRet->z = t_r->z;
@@ -77,7 +77,7 @@ static void sensor_prox_topic_cb(uv_topic_t* topic, int status, void* data, size
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
     sensor_prox* t_r = static_cast<sensor_prox*>(data);
-    sensor_ProximityRet* proxRet = sensorMallocProximityRet();
+    system_sensor_ProximityRet* proxRet = system_sensorMallocProximityRet();
     proxRet->distance = t_r->proximity;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, proxRet);
     FeatureFreeValue(proxRet);
@@ -91,7 +91,7 @@ static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, siz
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
     sensor_light* t_r = static_cast<sensor_light*>(data);
-    sensor_LightRet* lightRet = sensorMallocLightRet();
+    system_sensor_LightRet* lightRet = system_sensorMallocLightRet();
     lightRet->intensity = t_r->light;
     FeatureInvokeCallback(event->meta.instance, event->meta.id, lightRet);
     FeatureFreeValue(lightRet);
@@ -133,12 +133,12 @@ static void unsubscribe(FeatureInstanceHandle handle, int magic, bool is_active)
     th->events[magic] = NULL;
 }
 
-void sensor_onRegister(const char* feature_name)
+void system_sensor_onRegister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void sensor_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void system_sensor_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     SensorContext* th = static_cast<SensorContext*>(malloc(sizeof(SensorContext)));
@@ -148,12 +148,12 @@ void sensor_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     FeatureSetProtoData(handle, th);
 }
 
-void sensor_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void system_sensor_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void sensor_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void system_sensor_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     for (int i = 0; i < SENSOR_MAGIC_NUM; i++) {
@@ -161,7 +161,7 @@ void sensor_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
     }
 }
 
-void sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void system_sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(handle));
@@ -189,13 +189,13 @@ void sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     free(th);
 }
 
-void sensor_onUnregister(const char* feature_name)
+void system_sensor_onUnregister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendData data,
-    sensor_Accelerometer* param)
+void system_sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Accelerometer* param)
 {
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
@@ -219,7 +219,11 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
 
     sensor_event_t* event = th->events[SENSOR_MAGIC_ACCEL];
     if (event) {
-        uv_topic_unsubscribe(&event->topic);
+        int ret = uv_topic_unsubscribe(&event->topic);
+        if (ret < 0) {
+            FEATURE_LOG_ERROR("%s::%s() unsubscribe Accelerometer failed,ret=%d\n", file_tag, __FUNCTION__,
+                ret);
+        }
         free(event);
         th->events[SENSOR_MAGIC_ACCEL] = NULL;
     }
@@ -244,21 +248,21 @@ void sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, AppendDat
     uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
 }
 
-void sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, AppendData data)
+void system_sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_ACCEL, true);
 }
 
-void sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendData data,
-    sensor_Compass* param) { }
+void system_sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Compass* param) { }
 
-void sensor_wrap_unsubscribeCompass(FeatureInstanceHandle feature, AppendData data)
+void system_sensor_wrap_unsubscribeCompass(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_COMPA, true);
 }
 
-void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData data,
-    sensor_Proximity* param)
+void system_sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Proximity* param)
 {
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
@@ -269,7 +273,11 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
 
     sensor_event_t* event = th->events[SENSOR_MAGIC_PROX];
     if (event) {
-        uv_topic_unsubscribe(&event->topic);
+        int ret = uv_topic_unsubscribe(&event->topic);
+        if (ret < 0) {
+            FEATURE_LOG_ERROR("%s::%s() unsubscribe Proximity failed,ret=%d\n", file_tag, __FUNCTION__,
+                ret);
+        }
         free(event);
         th->events[SENSOR_MAGIC_PROX] = NULL;
     }
@@ -295,13 +303,13 @@ void sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData da
     }
 }
 
-void sensor_wrap_unsubscribeProximity(FeatureInstanceHandle feature, AppendData data)
+void system_sensor_wrap_unsubscribeProximity(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_PROX, true);
 }
 
-void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
-    sensor_Light* param)
+void system_sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Light* param)
 {
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
@@ -312,7 +320,11 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
 
     sensor_event_t* event = th->events[SENSOR_MAGIC_LIGHT];
     if (event) {
-        uv_topic_unsubscribe(&event->topic);
+        int ret = uv_topic_unsubscribe(&event->topic);
+        if (ret < 0) {
+            FEATURE_LOG_ERROR("%s::%s() unsubscribe Light failed,ret=%d\n", file_tag, __FUNCTION__,
+                ret);
+        }
         free(event);
         th->events[SENSOR_MAGIC_LIGHT] = NULL;
     }
@@ -336,19 +348,19 @@ void sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
     }
 }
 
-void sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data)
+void system_sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_LIGHT, true);
 }
 
-void sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
-    sensor_StepCount* param)
+void system_sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_StepCount* param)
 {
     FeatureInvokeCallback(feature, param->fail, "Current device does not support pedometer sensor",
         1000);
 }
 
-void sensor_wrap_unsubscribeStepCounter(FeatureInstanceHandle feature, AppendData data)
+void system_sensor_wrap_unsubscribeStepCounter(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_STEP, true);
 }
