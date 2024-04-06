@@ -32,7 +32,7 @@ FeatureManager::FeatureManager(FeatureRegistry* registry)
     : registry_(registry)
     , ft_ctx_(nullptr)
 {
-    uv_mutex_init(&mutex_);
+    uv_mutex_init_recursive(&mutex_);
 }
 
 FeatureManager::~FeatureManager()
