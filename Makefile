@@ -293,6 +293,8 @@ endif
 endif
 
 ifneq ($(CONFIG_SYSTEM_BRIGHTNESS_SERVICE), )
+CXXFLAGS    += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/brightness/include/
+CFLAGS      += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/brightness/include/
 CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/brightness_impl.cpp
 JIDL_PATH   += $(APPDIR)/frameworks/base/feature/modules/jidl/brightness.jidl
 OUT_PATH    += $(APPDIR)/frameworks/base/feature/modules/src/
