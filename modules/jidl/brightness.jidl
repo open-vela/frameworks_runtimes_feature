@@ -82,5 +82,3 @@ struct SetKeepScreenOnParam {
 
 void setKeepScreenOn(SetKeepScreenOnParam param);
 
-callback on_data(object data);
-property on_data onbrightnesschanged writeonly;
