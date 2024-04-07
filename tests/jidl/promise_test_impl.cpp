@@ -86,13 +86,8 @@ void promise_test_wrap_foo1(FeatureInstanceHandle feature, AppendData data, FtPr
 void promise_test_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
 {
     printf("%s::%s()\n", file_tag, __FUNCTION__);
-    int rs = 0;
     const char* rj = "world";
-    if (rs != 0) {
-        FeaturePromiseResolve(feature, pid, rs);
-    } else {
-        FeaturePromiseReject(feature, pid, rj);
-    }
+    FeaturePromiseReject(feature, pid, rj);
 }
 
 void promise_test_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtPromiseId pid)
