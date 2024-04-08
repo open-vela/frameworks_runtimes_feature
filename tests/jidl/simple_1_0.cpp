@@ -402,33 +402,27 @@ static const MemberMethod Simple_bar7_member_method = {
 
 /****** for JIDL const 'x' ******/
 const FtInt Simple_g_const_x = 1;
-const FtInt Simple_init_const_x(FeatureInstanceHandle feature, AppendData append_data) { return Simple_g_const_x; };
 
 static const MemberConst Simple_x_member_const = {
     .type = FT_INT,
-    //.func = { .callback = FFI_FN(Simple_init_const_x) },
     .func = { .callback = nullptr },
     .data = { .i32 = Simple_g_const_x }
 };
 
 /****** for JIDL const 'y' ******/
 FtString Simple_g_const_y = "hello world";
-FtString Simple_init_const_y(FeatureInstanceHandle feature, AppendData append_data) { return Simple_g_const_y; };
 
 static const MemberConst Simple_y_member_const = {
     .type = FT_STRING,
-    //.func = { .callback = FFI_FN(Simple_init_const_y) },
     .func = { .callback = nullptr },
     .data = { .str = Simple_g_const_y }
 };
 
 /****** for JIDL const 'z' ******/
 const FtDouble Simple_g_const_z = 9.8;
-const FtDouble Simple_init_const_z(FeatureInstanceHandle feature, AppendData append_data) { return Simple_g_const_z; };
 
 static const MemberConst Simple_z_member_const = {
     .type = FT_DOUBLE,
-    //.func = { .callback = FFI_FN(Simple_init_const_z) },
     .func = { .callback = nullptr },
     .data = { .f64 = Simple_g_const_z }
 };

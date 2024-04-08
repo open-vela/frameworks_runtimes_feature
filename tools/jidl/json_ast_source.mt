@@ -596,7 +596,7 @@ ${GenMemberMethod(identifier, ret_type)}
     prefix_params += ', FtPromiseId pid'
 %>\
 /****** for JIDL use '${identifier}' ******/
-static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params}) = {
+static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params}) {
     ${func_call};
 }
 
@@ -665,19 +665,14 @@ static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
   const_def = f"{cpp_type} {module_name}_g_const_{const_name}"
   if is_array:
     const_def += f"[] = {const_value}"
-    const_func_def = f"{cpp_type}[] "
   else:
     const_def += f" = {const_value}"
-    const_func_def = f"{cpp_type} "
-  const_func_def += f"{module_name}_init_const_{const_name}(FeatureInstanceHandle feature, union AppendData append_data) {{ return {module_name}_g_const_{const_name}; }}"
 %>\
 /****** for JIDL const '${const_name}' ******/
 ${const_def};
-${const_func_def};
 
 static const MemberConst ${module_name}_${const_name}_member_const = {
     .type = ${const_info['type']},
-    //.func = { .callback = FFI_FN(${module_name}_init_const_${const_name}) },
     .func = { .callback = nullptr },
     .data = { .${val_name} = ${module_name}_g_const_${const_name} }
 };
