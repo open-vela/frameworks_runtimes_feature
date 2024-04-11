@@ -32,7 +32,7 @@ FeatureManager::FeatureManager(FeatureRegistry* registry)
     : registry_(registry)
     , ft_ctx_(nullptr)
 {
-    uv_mutex_init_recursive(&mutex_);
+    uv_mutex_init(&mutex_);
 }
 
 FeatureManager::~FeatureManager()
@@ -94,21 +94,6 @@ void FeatureManager::runAllTasks(int mode)
         task_data.task_cb(mode, task_data.data);
         FeatureFreeInstanceHandle(task_data.instance);
         task_queue_.pop();
-    }
-    uv_mutex_unlock(&mutex_);
-}
-
-void FeatureManager::removeTasks(FeatureInstanceHandle handle)
-{
-    uv_mutex_lock(&mutex_);
-    int task_queue_size = task_queue_.size();
-    for (int i = 0; i < task_queue_size; i++) {
-        TaskData task_data = task_queue_.front();
-        if (task_data.instance == handle) {
-            task_data.task_cb(FEATURE_TASK_MODE_FREE, task_data.data);
-            FeatureFreeInstanceHandle(task_data.instance);
-            task_queue_.pop();
-        }
     }
     uv_mutex_unlock(&mutex_);
 }
