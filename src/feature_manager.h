@@ -65,8 +65,6 @@ public:
 
     void runAllTasks(int mode);
 
-    void removeTasks(FeatureInstanceHandle handle);
-
 private:
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
