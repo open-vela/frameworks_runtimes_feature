@@ -245,12 +245,15 @@ static feature_value_t method_call(feature_context_ref ctx,
         // for method which do not have rest or optional parameters, argc equals to
         // fixed_argc.
         if (argc != fixed_argc) {
-            FEATURE_LOG_ERROR("fixed args error, fixed: %d, total: %d!", fixed_argc,
+            FEATURE_LOG_WARN("fixed args worng, fixed: %d, total: %d!", fixed_argc,
                 argc);
-            got_error = true;
+            if (argc < fixed_argc) {
+                got_error = true;
+                FEATURE_CHECK_EQ_LOG(argc, fixed_argc, "feature:%s method:%s",
+                    description->name, member.name);
+            }
+            // ignore the case when argc is larger than fixed_argc.
         }
-        FEATURE_CHECK_EQ_LOG(argc, fixed_argc, "feature:%s method:%s",
-            description->name, member.name);
     }
 
     if (got_error) {
@@ -264,10 +267,12 @@ static feature_value_t method_call(feature_context_ref ctx,
     // if return value is a promise
     bool is_promise = FT_IS_PROMISE(method->return_type);
     int extra_argc = is_promise ? 3 : 2;
-    ffi_type** ffi_arg_types = new ffi_type*[packed_argc + optional_argc + extra_argc + 1]; // FeaturInstance, data, maybe return promise, empty placeholder
+    // FeaturInstance, data, maybe return promise, empty placeholder
+    ffi_type** ffi_arg_types = new ffi_type*[packed_argc + optional_argc + extra_argc + 1];
     memset(ffi_arg_types, 0,
         sizeof(ffi_type*) * (packed_argc + optional_argc + extra_argc + 1));
-    void** ffi_arg_values = new void*[packed_argc + optional_argc + extra_argc]; // FeaturInstance, data, maybe return promise
+    // FeaturInstance, data, maybe return promise
+    void** ffi_arg_values = new void*[packed_argc + optional_argc + extra_argc];
     memset(ffi_arg_values, 0,
         sizeof(void*) * (packed_argc + optional_argc + extra_argc));
     ffi_type* ffi_ret_type = nullptr;
@@ -317,7 +322,10 @@ static feature_value_t method_call(feature_context_ref ctx,
             vari_args_elem_types[1] = &ffi_type_pointer;
             vari_args_elem_types[2] = nullptr;
             // prepare vari_params struct
-            vari_params.vari_args = new ft_value_t[vari_params.vari_count];
+            vari_params.vari_args = nullptr;
+            if (vari_params.vari_count > 0) {
+                vari_params.vari_args = new ft_value_t[vari_params.vari_count];
+            }
             // pass param
             ffi_arg_types[fixed_argc + extra_argc] = &vari_args_type;
             ffi_arg_values[fixed_argc + extra_argc] = &vari_params;
