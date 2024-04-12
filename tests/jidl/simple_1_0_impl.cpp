@@ -167,7 +167,7 @@ void Simple_wrap_bar(FeatureInstanceHandle feature, AppendData data)
 
 void Simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariParams vari_params)
 {
-    printf("%s::%s(), ", file_tag, __FUNCTION__);
+    printf("%s::%s(), a: %d ", file_tag, __FUNCTION__, a);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     for (int i = 0; i < vari_params.vari_count; i++) {
         ft_value_t param = vari_params.vari_args[i];
