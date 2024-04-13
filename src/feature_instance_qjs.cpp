@@ -263,6 +263,9 @@ void FeatureInstanceQjs::onDetached()
 
     // release all promises
     releasePromises();
+
+    // release all callback
+    clearCallbacks();
 }
 
 }
