@@ -169,7 +169,7 @@ private:
 class ClientConnection : public ClientChannel, public BroadcastChannel {
 public:
     ClientConnection() { }
-    virtual ~ClientConnection() { }
+    virtual ~ClientConnection();
 
     void attachLoop(uv_loop_t* loop) override;
     void clearUvTimer() override;

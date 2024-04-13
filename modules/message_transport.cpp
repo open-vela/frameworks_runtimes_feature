@@ -33,40 +33,64 @@ using os::app::ActivityManager;
 namespace message_transport {
 Status SessionMessageReply::onReply(const ::std::string& reply)
 {
-    client_channel_cb_->clientOnSessionMessage(id_, reply);
+    if (client_channel_cb_) {
+        client_channel_cb_->clientOnSessionMessage(id_, reply);
+    }
     return Status::ok();
 }
 
 Status SessionMessageReply::onSessionClose()
 {
-    client_channel_cb_->clientOnSessionCloseBypeer(id_,
-        SESSION_REASON_CLOSE_PEER);
-    client_connection_->eraseSessionReply(id_);
-    client_connection_->eraseSessionClient(id_);
+    if (client_channel_cb_) {
+        client_channel_cb_->clientOnSessionCloseBypeer(id_,
+            SESSION_REASON_CLOSE_PEER);
+    }
+    if (client_connection_) {
+        client_connection_->eraseSessionReply(id_);
+        client_connection_->eraseSessionClient(id_);
+    }
     return Status::ok();
 }
 
 Status MessageReply::onReply(const ::std::string& reply)
 {
-    auto task_board = client_connection_->getTaskBoard();
-    task_board.executeTask((intptr_t)this, reply);
+    if (client_connection_) {
+        auto task_board = client_connection_->getTaskBoard();
+        task_board.executeTask((intptr_t)this, reply);
+    }
     return Status::ok();
 }
 
 void MessageReply::onTimeout() const
 {
-    client_channel_cb_->clientOnTimeOut(pid_);
+    if (client_channel_cb_) {
+        client_channel_cb_->clientOnTimeOut(pid_);
+    }
 }
 
 void MessageReply::onReplyToClient(std::string message) const
 {
-    client_channel_cb_->clientOnMessage(pid_, message);
+    if (client_channel_cb_) {
+        client_channel_cb_->clientOnMessage(pid_, message);
+    }
 }
 
 void NotifyBroadcastReceiver::onReceive(const Intent& intent)
 {
     if (broadcast_cb_ != nullptr) {
         broadcast_cb_->onReceive(intent.mTarget, intent.mAction, intent.mData);
+    }
+}
+
+ClientConnection::~ClientConnection()
+{
+    // clear pointer reference when messageChannel detached
+    for (auto& pair : session_reply_map_) {
+        pair.second->setClientChannelCallback(nullptr);
+        pair.second->setClientConnection(nullptr);
+    }
+    for (auto& pair : broadcast_reply_) {
+        pair.second->setBroadcastChannelCallback(nullptr);
     }
 }
 
