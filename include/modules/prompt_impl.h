@@ -8,6 +8,7 @@ struct PromptManager;
 typedef void (*promptInit)(void* feature);
 typedef void (*promptUninit)(void* feature);
 typedef void (*promptShowToast)(void* feature, const char* msg, int32_t duration);
+typedef void (*promptCleanOnDetached)(void* feature);
 
 typedef void (*successCb)(void* feature, int32_t success, int index);
 typedef void (*cancelCb)(void* feature, int32_t cancel);
@@ -29,12 +30,13 @@ typedef struct PromptDialogParams {
 
 typedef void (*promptShowDialog)(PromptDialogParams* params);
 
-struct GuiPromptManager {
-    void guiPromptInit();
+struct PromptInterfaceHandler {
+    void promptInterfaceInit();
     promptInit init;
     promptUninit uninit;
     promptShowToast show_toast;
     promptShowDialog show_dialog;
+    promptCleanOnDetached cleanup;
     PromptManager* pm;
 };
 
