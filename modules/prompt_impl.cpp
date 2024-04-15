@@ -29,11 +29,13 @@ void system_prompt_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
+// due to onCreate is called before PromptInterfaceHandler is created,
+// so promptInit is executed during onRequired, the implementation of quickapp ensures PromptManager is only one globally.
 void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(handle, "guiPromptManager"));
-    promptInit init = gui_pm->init;
+    PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(handle, "PromptInterfaceHandler"));
+    promptInit init = pm_hander->init;
     if (init) {
         init(handle);
     }
@@ -42,16 +44,22 @@ void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle h
 void system_prompt_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(handle, "guiPromptManager"));
-    promptUninit uninit = gui_pm->uninit;
-    if (uninit) {
-        uninit(handle);
+    PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(handle, "PromptInterfaceHandler"));
+    promptCleanOnDetached cleanup = pm_hander->cleanup;
+    if (cleanup) {
+        cleanup(handle);
     }
 }
 
 void system_prompt_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FeatureManagerHandle feature_manager = FeatureGetManagerHandleFromProto(handle);
+    PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureGetManagerUserData(feature_manager, "PromptInterfaceHandler"));
+    promptUninit uninit = pm_hander->uninit;
+    if (uninit) {
+        uninit(handle);
+    }
 }
 
 void system_prompt_onUnregister(const char* feature_name)
@@ -62,8 +70,8 @@ void system_prompt_onUnregister(const char* feature_name)
 void system_prompt_wrap_showToast(FeatureInstanceHandle feature, AppendData append_data, system_prompt_ToastInfo* info)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(feature, "guiPromptManager"));
-    promptShowToast show_toast = gui_pm->show_toast;
+    PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(feature, "PromptInterfaceHandler"));
+    promptShowToast show_toast = pm_hander->show_toast;
     if (show_toast) {
         show_toast(feature, info->message, info->duration);
     }
@@ -139,8 +147,8 @@ void showDialog_complete_cb(FeatureInstanceHandle feature, FtCallbackId complete
 void system_prompt_wrap_showDialog(FeatureInstanceHandle feature, AppendData append_data, system_prompt_DialogInfo* info)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    GuiPromptManager* gui_pm = static_cast<GuiPromptManager*>(FeatureInstanceGetManagerUserData(feature, "guiPromptManager"));
-    promptShowDialog show_dialog = gui_pm->show_dialog;
+    PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(feature, "PromptInterfaceHandler"));
+    promptShowDialog show_dialog = pm_hander->show_dialog;
     PromptDialogParams* params = prompt_dialog_malloc(feature);
     if (params == NULL) {
         FEATURE_LOG_ERROR("prompt dialog malloc failed");
