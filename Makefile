@@ -109,7 +109,7 @@ FEATURELIST += service_internal_account
 endif
 
 ifeq ($(CONFIG_MIJIA_CAMERA_CLIENT),y)
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/mijia_camera_client/src
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/mijia_camera_client/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/mijia_camera_client/feature
 CXXSRCS += $(APPDIR)/frameworks/mijia_camera_client/feature/micamera.cpp
 CXXSRCS += $(APPDIR)/frameworks/mijia_camera_client/feature/micamera_impl.cpp
