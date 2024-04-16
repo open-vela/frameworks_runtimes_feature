@@ -32,6 +32,7 @@ enum OP {
     STORAGE_OP_CLEAR,
     STORAGE_OP_DELETE,
     STORAGE_OP_KEY,
+    STORAGE_OP_SET_TO_DELETE,
     STORAGE_OP_NONE
 };
 
@@ -229,6 +230,15 @@ static void storage_cb(int status, const char* key, uv_buf_t value,
         free(const_cast<char*>(key));
         return;
     }
+    /*If the new value is an empty string of length 0, the data item indexed by key is deleted.
+     but delete operator maybe return fail,storage feature require return success*/
+    if (status == UNQLITE_NOTFOUND && handle->op == STORAGE_OP_SET_TO_DELETE) {
+        status = 0;
+        finish_callback(status, handle->feature, handle->success, handle->fail,
+            handle->complete, ret, handle);
+        free(const_cast<char*>(key));
+        return;
+    }
     if (status == 0) {
         if (handle->op == STORAGE_OP_DELETE || handle->op == STORAGE_OP_SET) {
             uv_db_commit(handle->th->db);
@@ -311,7 +321,7 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
     int status = 0;
     // if value is empty,delete key
     if ((info->value == NULL) || strcmp(info->value, "") == 0) {
-        handle->op = STORAGE_OP_DELETE;
+        handle->op = STORAGE_OP_SET_TO_DELETE;
         status = uv_db_delete(th->db, strdup(info->key), storage_cb, handle);
     } else {
         status = uv_db_set(th->db, strdup(info->key), &handle->buf, storage_cb, handle);
