@@ -158,7 +158,7 @@ void FeatureFreeValue(void* ptr)
 
 static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle)
 {
-    return static_cast<FeatureInstance*>(handle)->prototype()->featureManager();
+    return static_cast<FeatureInstance*>(handle)->featureManager();
 }
 
 FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
@@ -314,6 +314,14 @@ FeatureManagerHandle FeatureCreateManager(const char* package_name)
     FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
 
     return manager;
+}
+
+void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* data)
+{
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    if (manager) {
+        manager->setArgsErrorCb(cb, data);
+    }
 }
 
 void FeatureFreeManager(FeatureManagerHandle handle)

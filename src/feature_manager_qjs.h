@@ -25,6 +25,13 @@ class FeatureRegistry;
 class FeatureInstance;
 class FeaturePrototypeQjs;
 
+typedef enum ErrorCode {
+    GENERAL = 200,
+    ARGSERROR = 202,
+    IOERROR = 300,
+    TIMEOUT = 204
+} ErrorCode;
+
 /**
  * @brief Feature Manager, Manage all feature instance.
  *
