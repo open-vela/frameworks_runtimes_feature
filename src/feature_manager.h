@@ -20,6 +20,7 @@
 
 #include "feature_description.h"
 #include "feature_list.h"
+#include "feature_main_exports.h"
 #include "feature_registry.h"
 
 #include <queue>
@@ -72,6 +73,14 @@ public:
 
     feature_list_node* getFeatureNodeList() { return &feature_node_list_; }
 
+    void setArgsErrorCb(ArgsErrorCb cb, void* data)
+    {
+        args_error_cb_ = cb;
+        args_error_data_ = data;
+    }
+    ArgsErrorCb argsErrorCb() { return args_error_cb_; }
+    void* argsErrorData() { return args_error_data_; }
+
 private:
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
@@ -83,6 +92,8 @@ private:
     uv_loop_t* loop_ = nullptr;
     std::map<std::string, void*> user_data_;
     std::queue<TaskData> task_queue_;
+    ArgsErrorCb args_error_cb_ = nullptr;
+    void* args_error_data_ = nullptr;
 };
 
 }

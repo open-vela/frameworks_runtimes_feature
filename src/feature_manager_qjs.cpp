@@ -31,8 +31,10 @@
 
 #include <assert.h>
 #include <ffi.h>
+#include <iostream>
 #include <memory>
 #include <rapidjson/error/en.h>
+#include <sstream>
 #include <string.h>
 #include <string>
 #include <vector>
@@ -49,6 +51,18 @@ static inline FeatureInstance* getInstance(feature_value_t val)
 
     void* ptr = feature_get_opaque(val, class_id);
     return static_cast<FeatureInstance*>(ptr);
+}
+
+static feature_value_t reportArgsError(FeatureInstance* instance, feature_context_ref ctx, ArgsErrorInfo& error_info)
+{
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto manager = instance->featureManager();
+    if (manager && manager->argsErrorCb()) {
+        if (manager->argsErrorCb()(manager->argsErrorData(), &error_info))
+            return FEATURE_VALUE_UNDEFINED;
+    }
+    FEATURE_THROW_INTERNAL_ERROR(ctx, "args error: %s", error_info.error_msg);
+    return FEATURE_EXCEPTION;
 }
 
 static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
@@ -257,9 +271,16 @@ static feature_value_t method_call(feature_context_ref ctx,
     }
 
     if (got_error) {
-        FEATURE_THROW_INTERNAL_ERROR(ctx, "feature:%s method:%s", description->name,
-            member.name);
-        return FEATURE_EXCEPTION;
+        std::ostringstream oss;
+        oss << "args count wrong"
+            << ", feature: " << description->name << ", method:" << member.name;
+        std::string msg = oss.str();
+        ArgsErrorInfo error_info;
+        error_info.error_code = ARGSERROR;
+        error_info.error_msg = msg.data();
+        error_info.argc = argc;
+        error_info.argv = (void*)(argv);
+        return reportArgsError(instance, ctx, error_info);
     }
     // if has rest parameter, we will pack all variadic parameters together as a
     // param pack use packed_argc instead of argc for ffi call.
@@ -453,12 +474,16 @@ static feature_value_t method_call(feature_context_ref ctx,
 
     // if error occurred, throw internal error
     if (got_error) {
-        FEATURE_CHECK(false, "invoke method failed, feature:%s method:%s",
-            description->name, member.name);
-        FEATURE_THROW_INTERNAL_ERROR(ctx,
-            "invoke method failed, feature:%s method:%s",
-            description->name, member.name);
-        return FEATURE_EXCEPTION;
+        std::ostringstream oss;
+        oss << "args type wrong"
+            << ", feature: " << description->name << ", method:" << member.name;
+        std::string msg = oss.str();
+        ArgsErrorInfo error_info;
+        error_info.error_code = ARGSERROR;
+        error_info.error_msg = msg.data();
+        error_info.argc = argc;
+        error_info.argv = (void*)(argv);
+        return reportArgsError(instance, ctx, error_info);
     }
 
     return ret_val;
@@ -553,10 +578,10 @@ static feature_value_t accessor_set(feature_context_ref ctx,
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
-    Member* member = const_cast<Member*>(
-        &instance->prototype()->description()->members[index]);
-    FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
-    MemberAccessor* accessor = const_cast<MemberAccessor*>(member->accessor);
+    auto description = instance->prototype()->description();
+    const Member& member = description->members[index];
+    FEATURE_CHECK_EQ(member.type, MEMBER_ACCESSOR);
+    MemberAccessor* accessor = const_cast<MemberAccessor*>(member.accessor);
     FEATURE_CHECK_NE(accessor->type, FT_VOID);
     bool is_dynamic = instance->prototype()->description()->dynamic;
     NativeFunc callback = is_dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx)
@@ -568,16 +593,19 @@ static feature_value_t accessor_set(feature_context_ref ctx,
     ffi_type* ffi_arg_types[3] = { &ffi_type_pointer, &ffi_type_sint64, nullptr };
     void* arg_value_input = nullptr;
     void* ffi_arg_values[3] = { &instance, &accessor->data, nullptr };
+    bool got_error = false;
     do {
         // prepare third param type declaration, create by accessor type
         if (!createTypeDeclaration(accessor->type, ffi_arg_types[2])) {
             FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed !");
+            got_error = true;
             break;
         }
         // fill third param using guest value and accesor type
         if (!FeatureFFIQjs::convertValueToHost(instance, accessor->type,
                 arg_value_input, ctx, val)) {
             FEATURE_LOG_ERROR("convert to host value failed !");
+            got_error = true;
             break;
         }
         ffi_arg_values[2] = arg_value_input;
@@ -595,6 +623,19 @@ static feature_value_t accessor_set(feature_context_ref ctx,
     // free resources
     freeTypeDeclaration(ffi_arg_types[2]);
     FeatureFreeValue(arg_value_input);
+
+    if (got_error) {
+        std::ostringstream oss;
+        oss << "args type wrong"
+            << ", feature: " << description->name << ", property:" << member.name;
+        std::string msg = oss.str();
+        ArgsErrorInfo error_info;
+        error_info.error_code = ARGSERROR;
+        error_info.error_msg = msg.data();
+        error_info.argc = 1;
+        error_info.argv = (void*)(&val);
+        return reportArgsError(instance, ctx, error_info);
+    }
     return FEATURE_VALUE_UNDEFINED;
 }
 

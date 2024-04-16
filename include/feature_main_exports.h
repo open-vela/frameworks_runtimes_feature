@@ -26,12 +26,29 @@ extern "C" {
 #include "uv.h"
 #include <stdbool.h>
 
+typedef struct {
+    int argc;
+    void* argv;
+    int error_code;
+    const char* error_msg;
+} ArgsErrorInfo;
+
+typedef bool (*ArgsErrorCb)(void* data, ArgsErrorInfo* args_info);
+
 /**
  * @brief create a FeatureManagerHandle, read package-name from manifest
  * @param manifest
  * @return FeatureManagerHandle
  */
 FeatureManagerHandle FeatureCreateManager(const char* package_name);
+
+/**
+ * @brief set a ArgsError callback to a FeatureManagerHandle
+ * @param handle
+ * @param client
+ * @return void
+ */
+void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* data);
 
 /**
  * @brief free a FeatureManagerHandle

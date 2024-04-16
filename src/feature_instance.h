@@ -81,6 +81,11 @@ public:
 
     const FeatureDescription* description() { return description_; }
 
+    FeatureManager* featureManager()
+    {
+        return prototype()->featureManager();
+    }
+
 private:
     int instance_id_ : 29;
     uint32_t is_interface_ : 1;
