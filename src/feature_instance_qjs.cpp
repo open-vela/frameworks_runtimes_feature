@@ -126,12 +126,6 @@ void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func ma
 
     // mark promies
     markPromises(rt, mark_func);
-
-    for (auto& pair : prototype()->children()) {
-        FeaturePrototypeQjs* proto_qjs = static_cast<FeaturePrototypeQjs*>(pair.second.get());
-        auto js_proto = FT_VAL_GET_JS_VAL(proto_qjs->ft_proto());
-        feature_mark_value(rt, js_proto, mark_func);
-    }
 }
 
 bool FeatureInstanceQjs::initWeakRef(feature_value_t feature_object)
