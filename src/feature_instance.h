@@ -18,6 +18,7 @@
 #ifndef __FEATURE_INSTANCE_H__
 #define __FEATURE_INSTANCE_H__
 
+#include "feature_list.h"
 #include "feature_object_ref.h"
 #include "feature_prototype.h"
 #include "feature_types.h"
@@ -28,11 +29,11 @@
 
 namespace ferry {
 
-class FeatureInstance : public FeatureObjectRef {
+class FeatureInstance : public FeatureObjectRef, public feature_list_node {
 public:
-    FeatureInstance(FeaturePrototype* proto);
+    FeatureInstance(FeaturePrototype* proto, const FeatureDescription* description);
 
-    FeatureInstance(FeaturePrototype* module_proto, const VTable* vtable);
+    FeatureInstance(FeaturePrototype* module_proto, const VTable* vtable, const FeatureDescription* description);
 
     virtual ~FeatureInstance();
 
@@ -78,6 +79,8 @@ public:
         detached_ = 1;
     }
 
+    const FeatureDescription* description() { return description_; }
+
 private:
     int instance_id_ : 29;
     uint32_t is_interface_ : 1;
@@ -86,6 +89,7 @@ private:
     const VTable* vtable_;
     void* native_;
     FeaturePrototype* proto_;
+    const FeatureDescription* description_;
 };
 
 }

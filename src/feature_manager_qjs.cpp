@@ -895,6 +895,8 @@ void FeatureManagerQjs::uninit()
         return;
     }
 
+    detachFeatureInstances();
+
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
     auto free_prototype = [js_ctx](FeaturePrototypeQjs* prototype) {
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto());

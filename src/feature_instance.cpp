@@ -27,7 +27,7 @@ namespace ferry {
 typedef void (*finalizer_func)(FeatureInstance*);
 
 /////////////////////////////////////////////////
-FeatureInstance::FeatureInstance(FeaturePrototype* proto)
+FeatureInstance::FeatureInstance(FeaturePrototype* proto, const FeatureDescription* description)
     : instance_id_(-1)
     , is_interface_(0)
     , initialized_(0)
@@ -35,10 +35,15 @@ FeatureInstance::FeatureInstance(FeaturePrototype* proto)
     , vtable_(nullptr)
     , native_(nullptr)
     , proto_(proto)
+    , description_(description)
 {
+    feature_list_initialize(this);
+    if (proto_ && proto_->featureManager()) {
+        feature_list_add_tail(proto_->featureManager()->getFeatureNodeList(), this);
+    }
 }
 
-FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* vtable)
+FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* vtable, const FeatureDescription* description)
     : instance_id_(-1)
     , is_interface_(vtable ? 1 : 0)
     , initialized_(0)
@@ -46,7 +51,12 @@ FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* v
     , vtable_(vtable)
     , native_(nullptr)
     , proto_(module_proto)
+    , description_(description)
 {
+    feature_list_initialize(this);
+    if (proto_ && proto_->featureManager()) {
+        feature_list_add_tail(proto_->featureManager()->getFeatureNodeList(), this);
+    }
 }
 
 FeatureInstance::~FeatureInstance()
@@ -55,6 +65,7 @@ FeatureInstance::~FeatureInstance()
         finalizer_func finalizer = (finalizer_func)(vtable_->finalizer);
         finalizer(this);
     }
+    feature_list_delete(this);
 }
 
 void FeatureInstance::initialize()

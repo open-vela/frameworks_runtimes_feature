@@ -33,12 +33,14 @@ FeatureManager::FeatureManager(FeatureRegistry* registry)
     , ft_ctx_(nullptr)
 {
     uv_mutex_init(&mutex_);
+    feature_list_initialize(&feature_node_list_);
 }
 
 FeatureManager::~FeatureManager()
 {
     ft_ctx_ = nullptr;
     runAllTasks(FEATURE_TASK_MODE_FREE);
+    checkFeatureInstances();
 }
 
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
@@ -96,6 +98,31 @@ void FeatureManager::runAllTasks(int mode)
         task_queue_.pop();
     }
     uv_mutex_unlock(&mutex_);
+}
+
+void FeatureManager::detachFeatureInstances()
+{
+    feature_list_node *node, *temp;
+    feature_list_for_every_safe(&feature_node_list_, node, temp)
+    {
+        if (node) {
+            FeatureInstance* instance = (FeatureInstance*)(node);
+            FEATURE_LOG_INFO("feature lazy free, base:%p name:%s", node, instance->description()->name);
+            instance->onDetached();
+        }
+    }
+}
+
+void FeatureManager::checkFeatureInstances()
+{
+    feature_list_node *node, *temp;
+    feature_list_for_every_safe(&feature_node_list_, node, temp)
+    {
+        if (node) {
+            FeatureInstance* instance = (FeatureInstance*)(node);
+            FEATURE_LOG_WARN("feature manager has been released, feature(base:%p, name:%s) may have memory leaks", node, instance->description()->name);
+        }
+    }
 }
 
 }

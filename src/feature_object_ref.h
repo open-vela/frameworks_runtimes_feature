@@ -37,16 +37,10 @@ public:
 
     void release()
     {
-        FEATURE_LOG_INFO("FeatureObjectRef count:%d", ref_count_.load());
+        FEATURE_LOG_INFO("FeatureObjectRef count:%d, feature:%p", ref_count_.load() - 1, this);
         if (--ref_count_ == 0) {
-            remove();
             delete this;
         }
-    }
-
-    virtual void remove()
-    {
-        return;
     }
 
 private:
