@@ -33,7 +33,7 @@ using namespace FEATURE;
 namespace ferry {
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
-    : FeatureInstance(proto)
+    : FeatureInstance(proto, proto->description())
     , PromiseManager((JSContext*)ft_context_get_data(proto->featureManager()->getFeatureContext()))
     , vm_object_(FEATURE_VALUE_UNDEFINED)
     , target_(FEATURE_VALUE_UNDEFINED)
@@ -43,7 +43,7 @@ FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
 }
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* module_proto, VTable* vtable)
-    : FeatureInstance(module_proto, vtable)
+    : FeatureInstance(module_proto, vtable, module_proto->description())
     , PromiseManager((JSContext*)ft_context_get_data(module_proto->featureManager()->getFeatureContext()))
     , vm_object_(FEATURE_VALUE_UNDEFINED)
     , target_(FEATURE_VALUE_UNDEFINED)

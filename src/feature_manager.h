@@ -19,6 +19,7 @@
 #define __FEATURE_MANAGE_H__
 
 #include "feature_description.h"
+#include "feature_list.h"
 #include "feature_registry.h"
 
 #include <queue>
@@ -65,15 +66,22 @@ public:
 
     void runAllTasks(int mode);
 
+    void detachFeatureInstances();
+
+    void checkFeatureInstances();
+
+    feature_list_node* getFeatureNodeList() { return &feature_node_list_; }
+
 private:
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
     const char* pkg_name_ = nullptr;
     const char* env_name_ = nullptr;
-    std::map<std::string, void*> user_data_;
+    feature_list_node feature_node_list_;
     uv_mutex_t mutex_;
     uv_async_t* async_ = nullptr;
     uv_loop_t* loop_ = nullptr;
+    std::map<std::string, void*> user_data_;
     std::queue<TaskData> task_queue_;
 };
 

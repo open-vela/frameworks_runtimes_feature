@@ -57,13 +57,13 @@ static void fillArg(char* argp, uint32 args, FeatureType& ftype, uint64_t target
 namespace ferry {
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
-    : FeatureInstance(proto)
+    : FeatureInstance(proto, proto->description())
     , PromiseManager((JSContext*)ft_context_get_data(proto->featureManager()->getFeatureContext()))
 {
 }
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* module_proto, VTable* vtable)
-    : FeatureInstance(module_proto, vtable)
+    : FeatureInstance(module_proto, vtable, module_proto->description())
     , PromiseManager((JSContext*)ft_context_get_data(module_proto->featureManager()->getFeatureContext()))
 {
 }
