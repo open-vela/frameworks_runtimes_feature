@@ -52,17 +52,30 @@ void system_brightness_onRequired(FeatureRuntimeContext ctx,
     service = android::interface_cast<os::brightness::IBrightnessService>(binder);
     FEATURE_LOG_INFO("brightness service is %p", service.get());
 }
-void system_brightness_onDetached(FeatureRuntimeContext ctx,
-    FeatureInstanceHandle handle) { }
-void system_brightness_onDestroy(FeatureRuntimeContext ctx,
-    FeatureProtoHandle handle)
+
+void detach()
 {
-    if (service) {
+    if (service && callback) {
         service->unmonitorBrightness(callback);
+        callback->cid = 0;
+        callback->feature = nullptr;
         callback = nullptr;
         service = nullptr;
     }
 }
+
+void system_brightness_onDetached(FeatureRuntimeContext ctx,
+    FeatureInstanceHandle handle)
+{
+    detach();
+}
+
+void system_brightness_onDestroy(FeatureRuntimeContext ctx,
+    FeatureProtoHandle handle)
+{
+    detach();
+}
+
 void system_brightness_onUnregister(const char* feature_name) { }
 
 static void do_callback(FeatureInstanceHandle feature, int value, int code,
