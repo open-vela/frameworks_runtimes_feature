@@ -2,6 +2,7 @@
 #include <binder/IServiceManager.h>
 #include <binder/ProcessState.h>
 
+#include <unordered_set>
 #include <utils/Log.h>
 #include <utils/String8.h>
 
@@ -22,16 +23,19 @@ public:
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_value_t ret_level = ft_from_int(ft_ctx, level);
         ft_obj_set_property(ft_ctx, ret_obj, "value", ret_level);
-
-        FeatureInvokeCallback(feature, cid, &ret_obj);
+        for (auto i : cid) {
+            FeatureInvokeCallback(feature, i, &ret_obj);
+        }
         return android::binder::Status::ok();
     }
     FeatureInstanceHandle feature {};
-    FtCallbackId cid {};
+    std::unordered_set<FtCallbackId> cid;
 };
 
-android::sp<os::brightness::IBrightnessService> service;
-android::sp<MonitorBrightnessCallback> callback;
+struct BrightnessData {
+    android::sp<os::brightness::IBrightnessService> service;
+    android::sp<MonitorBrightnessCallback> callback;
+};
 
 void system_brightness_onRegister(const char* feature_name) { }
 void system_brightness_onCreate(FeatureRuntimeContext ctx,
@@ -39,6 +43,11 @@ void system_brightness_onCreate(FeatureRuntimeContext ctx,
 void system_brightness_onRequired(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
+    if (FeatureGetObjectData(handle) != nullptr) {
+        return;
+    }
+    BrightnessData* data = new BrightnessData;
+    FeatureSetObjectData(handle, data);
     android::sp<android::IServiceManager> sm(android::defaultServiceManager());
     FEATURE_LOG_INFO("defaultServiceManager(): %p", sm.get());
 
@@ -49,31 +58,39 @@ void system_brightness_onRequired(FeatureRuntimeContext ctx,
         return;
     }
     FEATURE_LOG_INFO("brightness service binder is %p", binder.get());
-    service = android::interface_cast<os::brightness::IBrightnessService>(binder);
+    android::sp<os::brightness::IBrightnessService> service = android::interface_cast<os::brightness::IBrightnessService>(binder);
+    data->service = service;
     FEATURE_LOG_INFO("brightness service is %p", service.get());
 }
 
-void detach()
+void detach(FeatureInstanceHandle handle)
 {
-    if (service && callback) {
-        service->unmonitorBrightness(callback);
-        callback->cid = 0;
-        callback->feature = nullptr;
-        callback = nullptr;
-        service = nullptr;
+    BrightnessData* data = (BrightnessData*)FeatureGetObjectData(handle);
+    FEATURE_LOG_INFO("%s data=%p", __func__, data);
+    if (data && data->service) {
+        if (data->callback) {
+            FEATURE_LOG_INFO("unmonitorBrightness %p", data->callback.get());
+            data->service->unmonitorBrightness(data->callback);
+            data->callback->feature = nullptr;
+            data->callback->cid.clear();
+        }
+        data->callback = nullptr;
+        data->service = nullptr;
+        delete data;
     }
+    FeatureSetObjectData(handle, nullptr);
 }
 
 void system_brightness_onDetached(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    detach();
+    detach(handle);
 }
 
 void system_brightness_onDestroy(FeatureRuntimeContext ctx,
     FeatureProtoHandle handle)
 {
-    detach();
+    detach(handle);
 }
 
 void system_brightness_onUnregister(const char* feature_name) { }
@@ -97,14 +114,22 @@ static void do_callback(FeatureInstanceHandle feature, int value, int code,
     FeatureRemoveCallback(feature, comp);
 }
 
+#define CHECK_SERVICE_VALID()                                              \
+    BrightnessData* data = (BrightnessData*)FeatureGetObjectData(feature); \
+    if (!data) {                                                           \
+        FEATURE_LOG_ERROR("FATAL: DATA == NULL");                          \
+    }                                                                      \
+    auto& service = data->service;                                         \
+    if (!service) {                                                        \
+        FEATURE_LOG_ERROR("FATAL: service == NULL");                       \
+        return;                                                            \
+    }
+
 void system_brightness_wrap_getValue(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_GetValueParam* param)
 {
-    if (!service) {
-        FEATURE_LOG_ERROR("FATAL: service == NULL");
-        return;
-    }
+    CHECK_SERVICE_VALID()
     int32_t level;
     auto status = service->getTargetBrightness(&level);
     FEATURE_LOG_INFO("brightness target level is %d", level);
@@ -116,10 +141,7 @@ void system_brightness_wrap_setValue(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_SetValueParam* param)
 {
-    if (!service) {
-        FEATURE_LOG_ERROR("FATAL: service == NULL");
-        return;
-    }
+    CHECK_SERVICE_VALID()
     int ret = -1;
     if (param->value >= 0 && param->value <= 255) {
         auto status = service->setTargetBrightness(param->value, 0);
@@ -133,10 +155,7 @@ void system_brightness_wrap_getMode(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_GetModeParam* param)
 {
-    if (!service) {
-        FEATURE_LOG_ERROR("FATAL: service == NULL");
-        return;
-    }
+    CHECK_SERVICE_VALID()
     os::brightness::Mode mode;
     auto status = service->getBrightnessMode(&mode);
     FEATURE_LOG_INFO("brightness target mode is %d", (int)mode);
@@ -148,10 +167,7 @@ void system_brightness_wrap_setMode(FeatureInstanceHandle feature,
     union AppendData append_data,
     system_brightness_SetModeParam* param)
 {
-    if (!service) {
-        FEATURE_LOG_ERROR("FATAL: service == NULL");
-        return;
-    }
+    CHECK_SERVICE_VALID()
     int ret = -1;
     if (param->mode == 0 || param->mode == 1) {
         auto status = service->setBrightnessMode(param->mode == 1 ? os::brightness::Mode::AUTO : os::brightness::Mode::MANUAL);
@@ -170,12 +186,11 @@ void system_brightness_wrap_setKeepScreenOn(
 
 void system_brightness_set_onbrightnesschanged(FeatureInstanceHandle feature, union AppendData append_data, FtCallbackId cb)
 {
-    if (!service) {
-        FEATURE_LOG_ERROR("FATAL: service == NULL");
-        return;
+    CHECK_SERVICE_VALID()
+    if (!data->callback) {
+        data->callback = android::sp<MonitorBrightnessCallback>::make();
+        service->monitorBrightness(data->callback);
     }
-    callback = android::sp<MonitorBrightnessCallback>::make();
-    callback->feature = feature;
-    callback->cid = cb;
-    service->monitorBrightness(callback);
+    data->callback->feature = feature;
+    data->callback->cid.insert(cb);
 }
