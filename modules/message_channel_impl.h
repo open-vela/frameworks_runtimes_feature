@@ -20,12 +20,13 @@
 
 #include "channel.h"
 #include "feature_exports.h"
-#include "message_channel_api.h"
 #include "message_transport.h"
+#include "modules/message_channel_api.h"
 
-typedef void (*RequestCb)(const char* data);
-typedef void (*ServiceMsgCb)(void* handle, int32_t id, const char* data);
-typedef void (*SubscribeCb)(const char* name, const char* data);
+typedef void (*RequestCb)(const char* data, void* user_data);
+typedef void (*ServiceMsgCb)(void* handle, int32_t id, const char* data, void* user_data);
+typedef void (*SubscribeCb)(const char* name, const char* data, void* user_data);
+typedef void* UserDataHandle;
 
 using message_transport::ClientConnection;
 using message_transport::MessageTransportServer;
@@ -87,11 +88,11 @@ public:
 
     // for c api
     int sendMessageForC(const std::string& target, const std::string& msg,
-        RequestCb cb);
-    void setReceiveRequestCallbackForC(ServiceMsgCb cb);
+        RequestCb cb, UserDataHandle user_data);
+    void setReceiveRequestCallbackForC(ServiceMsgCb cb, UserDataHandle user_data);
     void replyForC(ReplyId reply_id, const std::string& msg);
     void sendBroadcastForC(const std::string& action, const std::string& body);
-    void registerReceiverForC(const std::string& action, SubscribeCb cb);
+    void registerReceiverForC(const std::string& action, SubscribeCb cb, UserDataHandle user_data);
     void unregisterReceiverForC(const std::string& action);
 
 private:
@@ -109,7 +110,7 @@ private:
     std::map<SessionId, FtCallbackId> session_ondata_cb_map_;
     std::map<SessionId, FtCallbackId> session_onclose_cb_map_;
 
-    std::map<int32_t, RequestCb> request_map_;
-    std::pair<int32_t, ServiceMsgCb> service_msg_map_;
-    std::map<int32_t, SubscribeCb> subscribe_map_;
+    std::map<int32_t, std::pair<RequestCb, UserDataHandle>> request_map_;
+    std::pair<int32_t, std::pair<ServiceMsgCb, UserDataHandle>> service_msg_map_;
+    std::map<int32_t, std::pair<SubscribeCb, UserDataHandle>> subscribe_map_;
 };

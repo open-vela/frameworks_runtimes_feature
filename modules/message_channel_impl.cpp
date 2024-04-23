@@ -111,8 +111,9 @@ void MessageChannel::serverOnMessage(ReplyId reply_id, const std::string& messag
                 FEATURE_LOG_ERROR("server onmessage invoke failed !");
             }
         } else {
-            ServiceMsgCb cb = service_msg_map_.second;
-            cb((void*)this, reply_id, message.c_str());
+            auto pair = service_msg_map_.second;
+            ServiceMsgCb cb = pair.first;
+            cb((void*)this, reply_id, message.c_str(), pair.second);
         }
     }
 }
@@ -180,8 +181,9 @@ void MessageChannel::clientOnMessage(int32_t id, const std::string& message)
     if (ft_instance_ != nullptr) {
         FeaturePromiseResolve(ft_instance_, id, message.c_str());
     } else {
-        RequestCb cb = request_map_[id];
-        cb(message.c_str());
+        auto pair = request_map_[id];
+        RequestCb cb = pair.first;
+        cb(message.c_str(), pair.second);
         request_map_.erase(id);
     }
 }
@@ -192,8 +194,9 @@ void MessageChannel::clientOnTimeOut(int32_t id)
     if (ft_instance_ != nullptr) {
         FeaturePromiseReject(ft_instance_, id, "reply timeout");
     } else {
-        RequestCb cb = request_map_[id];
-        cb("reply timeout");
+        auto pair = request_map_[id];
+        RequestCb cb = pair.first;
+        cb("reply timeout", pair.second);
         request_map_.erase(id);
     }
 }
@@ -219,8 +222,9 @@ void MessageChannel::onReceive(const std::string& target,
             return;
         }
     } else {
-        SubscribeCb cb = subscribe_map_[iter->second];
-        cb((iter->first).c_str(), data.c_str());
+        auto pair = subscribe_map_[iter->second];
+        SubscribeCb cb = pair.first;
+        cb((iter->first).c_str(), data.c_str(), pair.second);
     }
 }
 
@@ -337,17 +341,17 @@ void MessageChannel::attachLoop(uv_loop_t* loop)
     client_channel_->attachLoop(loop);
 }
 
-int MessageChannel::sendMessageForC(const std::string& target, const std::string& msg, RequestCb cb)
+int MessageChannel::sendMessageForC(const std::string& target, const std::string& msg, RequestCb cb, UserDataHandle user_data)
 {
     int32_t id = (intptr_t)cb;
-    request_map_.insert(std::make_pair(id, cb));
+    request_map_.insert(std::make_pair(id, std::make_pair(cb, user_data)));
     return sendMessage(target, msg, id);
 }
 
-void MessageChannel::setReceiveRequestCallbackForC(ServiceMsgCb cb)
+void MessageChannel::setReceiveRequestCallbackForC(ServiceMsgCb cb, UserDataHandle user_data)
 {
     int32_t id = (intptr_t)cb;
-    service_msg_map_ = std::make_pair(id, cb);
+    service_msg_map_ = std::make_pair(id, std::make_pair(cb, user_data));
     setReceiveRequestCallback(id);
 }
 
@@ -361,10 +365,10 @@ void MessageChannel::sendBroadcastForC(const std::string& action, const std::str
     sendBroadcast(action, body);
 }
 
-void MessageChannel::registerReceiverForC(const std::string& action, SubscribeCb cb)
+void MessageChannel::registerReceiverForC(const std::string& action, SubscribeCb cb, UserDataHandle user_data)
 {
     int32_t id = (intptr_t)cb;
-    subscribe_map_.insert(std::make_pair(id, cb));
+    subscribe_map_.insert(std::make_pair(id, std::make_pair(cb, user_data)));
     registerReceiver(action, id);
 }
 
@@ -586,10 +590,10 @@ void message_channel_uninit(MessageChannelHandle handle)
     delete channel;
 }
 
-void message_channel_send_async_request(MessageChannelHandle handle, const char* name, const char* data, RequestCb cb)
+void message_channel_send_async_request(MessageChannelHandle handle, const char* name, const char* data, RequestCb cb, void* user_data)
 {
     MessageChannel* channel = static_cast<MessageChannel*>(handle);
-    channel->sendMessageForC(name, data, cb);
+    channel->sendMessageForC(name, data, cb, user_data);
 }
 
 void message_channel_send_async_response(MessageChannelHandle handle, ReplyId id, const char* data)
@@ -598,10 +602,10 @@ void message_channel_send_async_response(MessageChannelHandle handle, ReplyId id
     channel->replyForC(id, data);
 }
 
-void message_channel_add_async_service(MessageChannelHandle handle, const char* name, ServiceMsgCb cb)
+void message_channel_add_async_service(MessageChannelHandle handle, const char* name, ServiceMsgCb cb, void* user_data)
 {
     MessageChannel* channel = static_cast<MessageChannel*>(handle);
-    channel->setReceiveRequestCallbackForC(cb);
+    channel->setReceiveRequestCallbackForC(cb, user_data);
     channel->registerServer(name);
 }
 
@@ -610,10 +614,10 @@ void message_channel_publish(MessageChannelHandle handle, const char* topic_name
     MessageChannel* channel = static_cast<MessageChannel*>(handle);
     channel->sendBroadcastForC(topic_name, data);
 }
-void message_channel_subscribe(MessageChannelHandle handle, const char* topic_name, SubscribeCb cb)
+void message_channel_subscribe(MessageChannelHandle handle, const char* topic_name, SubscribeCb cb, void* user_data)
 {
     MessageChannel* channel = static_cast<MessageChannel*>(handle);
-    channel->registerReceiverForC(topic_name, cb);
+    channel->registerReceiverForC(topic_name, cb, user_data);
 }
 
 void message_channel_unsubscribe(MessageChannelHandle handle, const char* topic_name)
