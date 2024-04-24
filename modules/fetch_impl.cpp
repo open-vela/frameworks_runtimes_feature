@@ -207,7 +207,6 @@ void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle
         FETCH_DEBUG("task:%p,request:%p", req, req->request);
         if (req->request) {
             request_cancel(req);
-            uv_request_delete(req->request);
         }
         fetch_free(req);
     }
@@ -308,18 +307,17 @@ static void fetch_request_cb(int state, uv_response_t* response)
             INVOKE_FAIL_CB(p->fail_cb, "responseType dosen't match response data",
                 ErrorCode::IOERROR);
         }
+    } else if (state == REQUEST_CANCEL) {
+        FETCH_INFO(USER_ABORT_MSG);
+        uv_request_delete(p->request);
     } else {
-        if (state == REQUEST_CANCEL) {
-            FETCH_INFO(USER_ABORT_MSG);
-            uv_request_delete(p->request);
-        } else {
-            FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
-                response->body);
-        }
-
+        FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
+            response->body);
         INVOKE_FAIL_CB(p->fail_cb, response->body, response->httpcode);
     }
-    INVOKE_COMPLET_CB(p->complete_cb);
+    if (state != REQUEST_CANCEL) {
+        INVOKE_COMPLET_CB(p->complete_cb);
+    }
     p->exit = true;
     // request done,uv_request  has been released
     p->request = NULL;
