@@ -131,7 +131,7 @@ void system_brightness_wrap_getValue(FeatureInstanceHandle feature,
 {
     CHECK_SERVICE_VALID()
     int32_t level;
-    auto status = service->getTargetBrightness(&level);
+    auto status = service->getCurrentBrightness(&level);
     FEATURE_LOG_INFO("brightness target level is %d", level);
 
     do_callback(feature, level, status.isOk() ? 0 : -1, param->success, param->fail, param->complete);
