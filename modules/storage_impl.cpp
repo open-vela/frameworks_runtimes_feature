@@ -308,6 +308,12 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
             info->complete, "fail", handle);
     }
 
+    if (info->value == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_SET]  value is null");
+        return finish_callback(-1, feature, info->success, info->fail,
+            info->complete, "fail", handle);
+    }
+
     handle->th = th;
     handle->op = STORAGE_OP_SET;
     handle->success = info->success;
@@ -320,7 +326,7 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
 
     int status = 0;
     // if value is empty,delete key
-    if ((info->value == NULL) || strcmp(info->value, "") == 0) {
+    if (strcmp(info->value, "") == 0) {
         handle->op = STORAGE_OP_SET_TO_DELETE;
         status = uv_db_delete(th->db, strdup(info->key), storage_cb, handle);
     } else {
