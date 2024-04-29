@@ -222,7 +222,6 @@ class CPPRender(Render):
     'UlongArray' : 'FT_ARRAY',
     'FloatArray' : 'FT_ARRAY',
     'DoubleArray' : 'FT_ARRAY',
-    'StructArray' : 'FT_STRUCT_ARRAY',
   }
 
   array_feature_type_map = {
@@ -272,7 +271,6 @@ class CPPRender(Render):
     self.callback_id_set = set()
     self.promise_type_set = set()
     self.struct_name_set = set()
-    self.selfref_struct_name_set = set()
     self.interface_name_set = set()
     self.vtable_map = {}
     self.interface_members_map = {}
@@ -379,27 +377,6 @@ class CPPRender(Render):
       return True
     return False
 
-  def SetArrayTypeGenerator(self, ArrayTypeGenerator):
-    self.ArrayTypeGenerator = ArrayTypeGenerator
-
-  def _GenComplexRefFeatureInfo(self, type, suffix):
-    ft_info = {}
-    ft_info['type'] = f"{type}_{suffix}"
-    ft_info['is_complex'] = True
-    ft_info['is_complex_ref'] = True
-    return ft_info
-
-  def _GenArrayFeatureInfo(self, array_type, is_complex, ref_type):
-    module_name = self.GetModuleName()
-    ft_info = self._GenComplexRefFeatureInfo(array_type, 'array')
-    if self._TryCacheFeatureType(ft_info['type']):
-      if array_type.find(module_name) != -1:
-        array_type = array_type.replace(module_name + "_", "")
-      self.ArrayTypeGenerator.Generate(array_type, is_complex, ref_type)
-      array_malloc_func_str = f"FtArray* {module_name}_malloc_{array_type}_array(void)"
-      self._TryCacheArrayMallocFunc(array_malloc_func_str)
-    return ft_info
-
   def GetArrayMallocFuncDefines(self):
     return self.array_malloc_func_set
 
@@ -409,120 +386,102 @@ class CPPRender(Render):
       feature_type = self._MapType(ast_type, self.array_feature_type_map)
     return feature_type
 
-  def GenerateFeatureStructArray(self, ast_type):
-    if not isinstance(ast_type, dict) or ('element' not in ast_type):
-      raise Exception('not a valid array type: {}'.format(ast_type))
-    element_type_info = ast_type['element']
-    if not isinstance(element_type_info, dict) or ('referred_type' not in element_type_info):
-      raise Exception('not a valid array type: {}'.format(ast_type))
-    referred_type = element_type_info['referred_type']
-    if referred_type != 'struct':
-      raise Exception('not a valid array type: {}'.format(ast_type))
-    referred_name = element_type_info['referred_name']
+  def SetArrayTypeGenerator(self, ArrayTypeGenerator):
+    self.ArrayTypeGenerator = ArrayTypeGenerator
+
+  def _MakeComplexFeatureInfo(self, type, suffix):
+    ft_info = {'type': f"{type}_{suffix}", 'is_complex': True}
+    return ft_info
+
+  def _GenArrayTypeDefine(self, elem_type, is_complex):
     module_name = self.GetModuleName()
-    struct_array_name = f"{module_name}_{referred_name}"
-    struct_array_info = self._GenComplexRefFeatureInfo(struct_array_name, 'struct_type')
-    return struct_array_info
+    array_type = f"{elem_type}_array"
+    if self._TryCacheFeatureType(array_type):
+      self.ArrayTypeGenerator.Generate(elem_type, is_complex)
+      array_malloc_func_str = f"FtArray* {module_name}_malloc_{elem_type}_array(void)"
+      self._TryCacheArrayMallocFunc(array_malloc_func_str)
 
-  def CacheSelfRefStructName(self, name):
-    if not name in self.selfref_struct_name_set:
-      self.selfref_struct_name_set.add(name)
+  def _GenBaseFeatureInfo(self, ast_type):
+    if not isinstance(ast_type, str):
+      raise Exception('invalid base ast type: {}'.format(ast_type))
+    feature_type = self._MapType(ast_type, self.base_feature_type_map)
+    if feature_type == 'FT_ARRAY':
+      # void bar(array arr); // same as object[]
+      ft_info = self._MakeComplexFeatureInfo("object", 'array')
+      self._GenArrayTypeDefine("object", True)
+    else:
+      ft_info = {'is_complex': False, 'type': feature_type}
+    return ft_info
 
-  def CheckStructSelfRef(self, members, struct_name):
-    struct_self_reference = 'not_self_ref'
-    for member in members:
-      if 'type' in member and 'element' in member['type'] and 'referred_name' in member['type']['element']:
-        if member['type']['element']['referred_name'] == struct_name:
-          struct_self_reference = 'array_struct_self_ref'
-          self.CacheSelfRefStructName(struct_name)
-          break
-      if 'type' in member and 'referred_name' in member['type']:
-        if member['type']['referred_name'] == struct_name:
-          struct_self_reference = 'struct_self_ref'
-          self.CacheSelfRefStructName(struct_name)
-          break
-    return struct_self_reference
+  def _GenArrayFeatureInfo(self, ast_type):
+    if not 'element' in ast_type:
+      raise Exception('invalid array ast type: {}'.format(ast_type))
+    elem_ast_type = ast_type['element']
+    elem_ft_info = self.GenerateFeatureInfo(elem_ast_type)
+    if elem_ft_info['is_complex']:
+      elem_ft_type = elem_ft_info['type']
+      ft_info = self._MakeComplexFeatureInfo(elem_ft_type, 'array')
+      self._GenArrayTypeDefine(elem_ft_type, True)
+    else:
+      ft_info = self._MakeComplexFeatureInfo(elem_ast_type, 'array')
+      self._GenArrayTypeDefine(elem_ast_type, False)
+    return ft_info
 
-  def CheckRefNameISStructSelfRef(self, ref_name):
-    return ref_name in self.selfref_struct_name_set
+  def _GenReferredFeatureInfo(self, ast_type):
+    if 'referred_type' not in ast_type:
+      raise Exception('invalid referred ast type: {}'.format(ast_type))
+    ft_info = {'is_complex': True}
+    referred_type = ast_type['referred_type']
+    referred_name = ast_type['referred_name']
+    if referred_type == 'callback':
+      if not referred_name in self.callback_id_set:
+        raise Exception('undefined callback: {}'.format(referred_name))
+      ft_info['type'] = f"{referred_name}_callback_type"
+    elif referred_type == 'struct':
+      if not referred_name in self.struct_name_set:
+        raise Exception('undefined struct: {}'.format(referred_name))
+      ft_info = self._MakeComplexFeatureInfo(referred_name, 'struct_type')
+    elif referred_type == 'interface':
+      if not referred_name in self.interface_name_set:
+        raise Exception('undefined interface: {}'.format(referred_name))
+      ft_info = self._MakeComplexFeatureInfo(referred_name, 'interface_type')
+    elif referred_type == 'id':
+      if not (referred_name in self.struct_name_set \
+          or referred_name in self.callback_id_set \
+          or referred_name in self.interface_name_set):
+        raise Exception('undefined id: {}'.format(referred_name))
+      if referred_name in self.callback_id_set:
+        ft_info['type'] = f"{referred_name}_callback_type"
+      elif referred_name in self.struct_name_set:
+        ft_info = self._MakeComplexFeatureInfo(referred_name, 'struct_type')
+      elif referred_name in self.interface_name_set:
+        ft_info = self._MakeComplexFeatureInfo(referred_name, 'interface_type')
+    elif referred_type == 'enum':
+      ft_info['type'] = 'FT_INT';
+    return ft_info
 
   def GenerateFeatureInfo(self, ast_type):
-    ft_info = {}
-    ft_info['is_complex'] = False
-    ft_info['is_complex_ref'] = False
     if isinstance(ast_type, str):
-      feature_type = self._MapType(ast_type, self.base_feature_type_map)
-      if feature_type == 'FT_ARRAY':
-        # void bar(array arr); // same as object[]
-        ft_info = self._GenArrayFeatureInfo("object", True, 'not_ref')
-      elif feature_type == 'FT_STRUCT_ARRAY':
-        ft_info = self._GenArrayFeatureInfo("struct", True, 'is_complex_ref')
-      else:
-        ft_info['type'] = feature_type
-      return ft_info
-
+      return self._GenBaseFeatureInfo(ast_type)
     if not isinstance(ast_type, dict):
-      raise Exception('not a valid complex type: {}'.format(ast_type))
-
+      raise Exception('invalid complex type: {}'.format(ast_type))
     if 'element' in ast_type:
-      elem_ast_type = ast_type['element']
-      if 'referred_type' in elem_ast_type:
-        elem_ft_info = self.GenerateFeatureStructArray(ast_type)
-      else:
-        elem_ft_info = self.GenerateFeatureInfo(elem_ast_type)
-      if elem_ft_info['is_complex']:
-        elem_ft_type = elem_ft_info['type']
-        if 'self_reference' in ast_type:
-          ft_info = self._GenArrayFeatureInfo(elem_ft_type, True, 'array_struct_self_ref')
-        else:
-          ft_info = self._GenArrayFeatureInfo(elem_ft_type, True, 'is_complex_ref')
-      else:
-        ft_info = self._GenArrayFeatureInfo(elem_ast_type, False, 'not_ref')
+      return self._GenArrayFeatureInfo(ast_type)
     elif 'referred_type' in ast_type:
-      if ast_type['referred_type'] == 'callback':
-        callback_name = ast_type['referred_name']
-        if not callback_name in self.callback_id_set:
-          raise Exception('undefined callback: {}'.format(callback_name))
-        ft_info['type'] = f"{callback_name}_callback_type"
-        ft_info['is_complex'] = True
-      elif ast_type['referred_type'] == 'struct':
-        struct_name = ast_type['referred_name']
-        if not struct_name in self.struct_name_set:
-          raise Exception('undefined struct: {}'.format(struct_name))
-        if 'self_reference' in ast_type:
-          struct_self_reference = f"{struct_name}_struct_type::{struct_name}"
-          ft_info = self._GenComplexRefFeatureInfo(struct_self_reference, 'struct_type')
-        else:
-          ft_info = self._GenComplexRefFeatureInfo(struct_name, 'struct_type')
-      elif ast_type['referred_type'] == 'interface':
-        interface_name = ast_type['referred_name']
-        if not interface_name in self.interface_name_set:
-          raise Exception('undefined interface: {}'.format(interface_name))
-        ft_info = self._GenComplexRefFeatureInfo(interface_name, 'interface_type')
-      elif ast_type['referred_type'] == 'enum':
-        ft_info['type'] = 'FT_INT';
+      return self._GenReferredFeatureInfo(ast_type)
     elif ast_type['type'] == 'struct':
-      ft_info = self._GenComplexRefFeatureInfo(ast_type['name'], 'struct_type')
+      return self._MakeComplexFeatureInfo(ast_type['name'], 'struct_type')
     elif ast_type['type'] == 'promise':
       raise Exception('promise is not supported now, type: {}'.format(ast_type))
     else:
       raise Exception('not a valid complex type: {}'.format(ast_type))
-    return ft_info
 
   def GenerateFtExpression(self, info):
     ft_expr = info['type']
-    if info['is_complex_ref'] or info['is_complex']:
+    if info['is_complex']:
       module_name = self.GetModuleName()
-      if ft_expr.find(module_name) != -1:
-        ft_expr = ft_expr.replace(module_name + "_", "")
-      if 'is_self_ref' in info:
-        ft_expr = f"{ft_expr}::{module_name}_{ft_expr}"
-      else:
-        ft_expr = f"{module_name}_{ft_expr}"
-
-    if info['is_complex_ref'] or info['is_complex']:
+      ft_expr = f"{module_name}_{ft_expr}"
       ft_expr = f"FT_MK_COMPLEX(&{ft_expr})"
-
     return ft_expr
 
   def GeneratePromiseType(self, ret_type):
