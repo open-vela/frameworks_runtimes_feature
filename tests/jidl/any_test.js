@@ -17,5 +17,10 @@ test.setAny(4, numbers);
 let any_ret = test.getAny();
 test.print("any_ret: ", any_ret);
 
+test.print('\n')
+test.print('null param test begin ====================');
+test.setAny(3, null);
+test.print('null param test end =====================\n');
+
 
 

@@ -51,13 +51,13 @@ test.goo2(
   function() {show_args('cb4', arguments);}
 );
 
-test.foo(1, 'hello');
 test.foo(5, 'hello', 2.5);
-test.foo(6, 'world', 3.5, 10);
 bar2_ret = test.bar2([1,3,5,7,9,11,13])
 test.print('test.bar2 return:', bar2_ret, '\n');
 test.bar5(6, 100, 'world');
-test.bar5(6);
 show_array(test.bar3, 'test.bar3:');
-test.printStr('hello');
-test.printStr('hello', 'world', 1);
+
+test.print('null param test begin ====================');
+test.printStr(null)
+test.foo(10, null, 2.5);
+test.print('null param test end =====================\n');
