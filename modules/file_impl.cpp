@@ -433,9 +433,14 @@ static void __create_dir(char* path, FileReq* fr)
 static void __directory_init(const char* pkg)
 {
     FileReq fr;
-    const char* type_list[] = { "cache", "files", "mass", "tmp" };
+    const char* type_list[] = { "cache", "files", "mass", "tmp", "system" };
     for (unsigned long i = 0; i < arrayof(type_list); i++) {
-        char* path = app_absolute_path_generator(pkg, type_list[i], "");
+        char* path;
+        if (i == 4) {
+            path = app_absolute_path_generator("", type_list[i], "common");
+        } else {
+            path = app_absolute_path_generator(pkg, type_list[i], "");
+        }
         fr.filename = path;
         fr.type = FILE_MKDIR;
         fr.flags = 1;
