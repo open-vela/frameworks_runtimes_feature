@@ -16,7 +16,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 /* clang-format off */
@@ -46,21 +45,14 @@ static OptionalType ${module_name}_${name}_opt_type = {
       cpp_type += '*'
     member_item['cpp_type'] = cpp_type
 
-    if 'type' in member_type and 'element' in member_type:
-      element_info = member_type['element']
-      if 'type' in element_info and 'referred_name' in element_info:
-        element_ref_name = element_info['referred_name']
-        if element_ref_name == struct_name:
-          member_type['self_reference'] = True
-
     m_info = render.GenerateFeatureInfo(member_type)
     ft_expr = render.GenerateFtExpression(m_info)
     if 'default' in member:
-      if m_info['is_complex'] or m_info['is_complex']:
+      if m_info['is_complex']:
         raise Exception('wrong default struct member type: {}'.format(m_info['type']))
       m_name = struct_name + '_member_' + member['name']
       m_default = member['default']
-      GenOptionalType(m_name, ft_expr, m_default)
+      GenOptionalType(m_name, m_info['type'], m_default)
       member_item['feature_type'] = f"FT_MK_OPTIONAL(&{module_name}_{m_name}_opt_type)"
     else:
       member_item['feature_type'] = ft_expr
@@ -71,18 +63,17 @@ static OptionalType ${module_name}_${name}_opt_type = {
 <%
   struct_name = struct_node['name']
   render.CacheStructName(struct_name)
+%>\
+/****** for JIDL struct '${struct_name}' ******/
+extern const ObjectMapType ${module_name}_${struct_name}_struct_type;
+
+<%
   for member in struct_node['members']:
     if render.IsStruct(member['type']):
       GenStruct(member['type'])
   member_items = []
   GenStructMemberItems(struct_node['members'], struct_name, member_items)
 %>\
-/****** for JIDL struct '${struct_name}' ******/
-%if render.CheckStructSelfRef(struct_node['members'], struct_name) == 'struct_self_ref':
-struct ${struct_name}_struct_type {
-    static const ObjectMapType ${module_name}_${struct_name}_struct_type;
-};
-%endif
 static ObjectMember ${module_name}_${struct_name}_struct_members[] = {
 %for member_item in member_items:
 <%
@@ -96,18 +87,7 @@ static ObjectMember ${module_name}_${struct_name}_struct_members[] = {
 };
 
 // complex defination
-%if render.CheckStructSelfRef(struct_node['members'], struct_name) != 'not_self_ref':
-const ObjectMapType ${struct_name}_struct_type::${module_name}_${struct_name}_struct_type = {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(${module_name}_${struct_name}) },
-    .members = ${module_name}_${struct_name}_struct_members
-};
-
-${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
-    return (${module_name}_${struct_name}*)FeatureMalloc(
-        sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&(${struct_name}_struct_type::${module_name}_${struct_name}_struct_type)));
-}
-%else:
-static const ObjectMapType ${module_name}_${struct_name}_struct_type = {
+const ObjectMapType ${module_name}_${struct_name}_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(${module_name}_${struct_name}) },
     .members = ${module_name}_${struct_name}_struct_members
 };
@@ -116,7 +96,6 @@ ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
     return (${module_name}_${struct_name}*)FeatureMalloc(
         sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type));
 }
-%endif
 
 </%def>\
 <%def name="GenInterfaceMemberMethod(func_node, parent_name, index)">\
@@ -386,30 +365,21 @@ const InterfaceType ${module_name}_${parent_prefix}type = {
 /****** JIDL interface '${iname}' glue code end ******/
 </%def>\
 
-<%def name="GenerateArrayType(array_type, is_complex, ref_type)">\
-%if ref_type == 'array_struct_self_ref':
-struct ${array_type} {
-    static const ObjectMapType ${module_name}_${array_type};
-};
-
-%endif
-static const ArrayType ${module_name}_${array_type}_array = {
+<%def name="GenerateArrayType(elem_type, is_complex)">\
+static const ArrayType ${module_name}_${elem_type}_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-%if ref_type == 'is_complex_ref':
-    .element_type = FT_MK_COMPLEX(&${module_name}_${array_type})
-%elif ref_type == 'array_struct_self_ref':
-    .element_type = FT_MK_COMPLEX(&(${array_type}::${module_name}_${array_type}))
-%elif is_complex:
-    .element_type = FT_MK_COMPLEX(&${array_type})
+%if is_complex:
+<% ft_expr = f"FT_MK_COMPLEX(&{module_name}_{elem_type})" %>\
+    .element_type = ${ft_expr}
 %else:
-<% ft_type = render.ToBaseFeatureType(array_type) %>\
+<% ft_type = render.ToBaseFeatureType(elem_type) %>\
     .element_type = ${ft_type}
 %endif
 };
 
-FtArray* ${module_name}_malloc_${array_type}_array() {
+FtArray* ${module_name}_malloc_${elem_type}_array() {
     return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&${module_name}_${array_type}_array));
+        sizeof(FtArray), FT_MK_COMPLEX(&${module_name}_${elem_type}_array));
 }
 
 </%def>\
@@ -418,8 +388,8 @@ FtArray* ${module_name}_malloc_${array_type}_array() {
     def __init__(self, gen_func):
       self.gen_func = gen_func
 
-    def Generate(self, array_type, is_complex, ref_type):
-      self.gen_func(array_type, is_complex, ref_type)
+    def Generate(self, elem_type, is_complex):
+      self.gen_func(elem_type, is_complex)
 %>\
 <%
   render.SetArrayTypeGenerator(ArrayTypeGenerator(GenerateArrayType))
@@ -432,18 +402,10 @@ FtArray* ${module_name}_malloc_${array_type}_array() {
   param_infos = []
   if 'params' in node:
     for param in node['params']:
-      if 'element' in param and 'referred_type' in param["element"]:
-        p_info = render.GenerateFeatureInfo(param)
-      else:
-        p_info = render.GenerateFeatureInfo(param['type'])
-      if 'type' in param['type']:
-        if 'referred_name' in param['type']:
-          if render.CheckRefNameISStructSelfRef(param['type']['referred_name']):
-            p_info['is_self_ref'] = True
+      p_info = render.GenerateFeatureInfo(param['type'])
       ft_expr = render.GenerateFtExpression(p_info)
-
       if 'name' in param and 'default' in param:
-        if p_info['is_complex_ref'] or p_info['is_complex']:
+        if p_info['is_complex']:
           raise Exception('wrong default param type: {}'.format(p_info['type']))
         p_name = identifier + '_param_' + param["name"]
         p_default = param["default"]
@@ -653,7 +615,7 @@ static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
   const_value = const_node['value']
   const_type = const_node['value_type']
   const_info = render.GenerateFeatureInfo(const_type)
-  if const_info['is_complex'] or const_info['is_complex_ref']:
+  if const_info['is_complex']:
     raise Exception('wrong const type: {}'.format(const_info['type']))
   val_name = render.GetAppendDataName(const_info['type'])
   cpp_type = render.GenerateCppType(const_type)

@@ -209,7 +209,7 @@ class IDArrayType(Type):
   def ToJson(self, out):
     out['type'] = 'array'
     out['element'] = {'type': 'reference',
-            'referred_type' : 'struct',
+            'referred_type' : 'id',
             'referred_name': str(self.name)
     }
 
@@ -1074,7 +1074,7 @@ def GetPrimaryType(tp_name):
 def InitPrimaryTypes():
   types = ["int", "float", "double", "string", "boolean",
       "long", "uint", "ulong", "jsvalue", "jscontext",
-      "array", "object", "void", "struct"]
+      "array", "object", "void"]
   for t in types:
     primary_types[t] = PrimaryType(t)
 
@@ -1083,7 +1083,7 @@ InitPrimaryTypes()
 typed_array_elements ={}
 def InitTypedArrayElement():
   types = ['uint8', 'int8', 'uint16', 'int16', 'uint32', 'int32', 'uint', 'int',
-          'uint64', 'int64', 'ulong', 'long', 'float', 'double', 'void', 'struct']
+          'uint64', 'int64', 'ulong', 'long', 'float', 'double', 'void']
   for t in types:
     typed_array_elements[t] = PrimaryType(t)
 
