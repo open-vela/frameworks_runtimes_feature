@@ -45,10 +45,12 @@ void any_test_wrap_setAny(FeatureInstanceHandle feature, AppendData append_data,
 
     size_t buff_size;
     FEATURE_LOG_ERROR("any ptr: %p", any);
-    const char* str_json = ft_to_string(ft_ctx, *any);
-    printf("any json string: %s", str_json);
-    ft_free_string(ft_ctx, str_json);
-    printf("\n");
+    if (any) {
+        const char* str_json = ft_to_string(ft_ctx, *any);
+        printf("any json string: %s", str_json);
+        ft_free_string(ft_ctx, str_json);
+        printf("\n");
+    }
 }
 
 FtAny any_test_wrap_getAny(FeatureInstanceHandle feature, AppendData append_data)

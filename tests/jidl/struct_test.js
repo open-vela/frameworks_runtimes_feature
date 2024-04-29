@@ -54,4 +54,25 @@ let book = {
     }
 }
 test.bar2(book)
-test.print('\n\n')
+
+test.print('\n')
+test.print('null param test begin ====================');
+test.foo(2048, {
+        page_count : 100,
+        title: null,
+        is_end: false
+    })
+
+let book2 = {
+    any_param: null,
+    page_count : 600,
+    title: null,
+    chap_titles:  ['section 7', 'section 8', 'section 9'],
+    first_chap: null,
+    chap_changed: function (index, title) {
+        test.print('chap_changed, index: ', index, ', title: ', title)
+    }
+}
+test.bar2(book2)
+test.print('null param test end =====================\n');
+
