@@ -210,7 +210,7 @@ namespace FeatureFFIQjs {
             case FT_STRING: {
                 if (feature_is_null(value) || feature_is_undefined(value)) {
                     FEATURE_LOG_ERROR("string arg is null or undefined!");
-                    ptr = NULL;
+                    *(const char**)ptr = NULL;
                 } else if (!feature_is_string(value)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need string !");
                     return false;
@@ -218,14 +218,14 @@ namespace FeatureFFIQjs {
                     const char* str = feature_to_cstring(ctx, value);
                     char* alloc_ptr = (char*)FeatureMalloc(strlen(str) + 1, FT_STRING);
                     strcpy(alloc_ptr, str);
-                    *(void**)ptr = alloc_ptr;
+                    *(const char**)ptr = alloc_ptr;
                     feature_free_cstring(ctx, str);
                 }
             } break;
             case FT_ANY_REF: {
                 if (feature_is_null(value) || feature_is_undefined(value)) {
                     FEATURE_LOG_ERROR("object is null or undefined!");
-                    ptr = NULL;
+                    *(ft_value_t**)ptr = NULL;
                 } else {
                     // copy value
                     ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
@@ -244,7 +244,11 @@ namespace FeatureFFIQjs {
             switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
                 if (feature_is_undefined(value)) {
-                    FEATURE_LOG_WARN("js struct value missing!");
+                    FEATURE_LOG_WARN("js struct is undefined!");
+                    break;
+                }
+                if (feature_is_null(value)) {
+                    FEATURE_LOG_WARN("js struct is null!");
                     break;
                 }
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
@@ -300,6 +304,10 @@ namespace FeatureFFIQjs {
             } break;
             case COMPLEX_CALLBACK: {
                 if (feature_is_undefined(value)) {
+                    FEATURE_LOG_WARN("js callback is undefined!");
+                    break;
+                } else if (feature_is_null(value)) {
+                    FEATURE_LOG_WARN("js callback is null!");
                     break;
                 } else if (!feature_is_object(value)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need callback function !");
@@ -415,7 +423,7 @@ namespace FeatureFFIQjs {
                 value = feature_boolean(ctx, *((bool*)ptr));
             } break;
             case FT_STRING: {
-                if (!ptr) {
+                if (!*(char**)ptr) {
                     value = feature_string(ctx, "");
                 } else {
                     char* str = *(char**)ptr;
@@ -423,9 +431,9 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case FT_ANY_REF: {
-                if (!ptr)
+                if (!*(ft_value_t**)ptr) {
                     value = JS_NULL;
-                else {
+                } else {
                     ft_value_t* f_val = *(ft_value_t**)(ptr);
                     value = FT_VAL_GET_JS_VAL(*f_val);
                 }
@@ -439,14 +447,19 @@ namespace FeatureFFIQjs {
             ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
             switch (complexType->type) {
             case COMPLEX_STRUCT_MAP: {
-                void* tmp_ptr = *(void**)ptr;
+                void* struct_ptr = *(void**)ptr;
+                if (!struct_ptr) {
+                    FEATURE_LOG_WARN("null struct ptr!");
+                    value = FEATURE_UNDEFINED;
+                    break;
+                }
                 ObjectMapType& objMapType = *(ObjectMapType*)complexType;
                 auto member = objMapType.members;
                 auto member_count = countMember(member);
                 value = feature_object(ctx);
                 for (int i = 0; i < member_count; i++) {
                     // fill it
-                    void* member_ptr = (void*)((char*)tmp_ptr + member->offset);
+                    void* member_ptr = (void*)((char*)struct_ptr + member->offset);
                     feature_value_t prop;
                     bool ret = convertValueToGuest(member->type, member_ptr, ctx, prop);
                     if (!ret) {
@@ -469,17 +482,23 @@ namespace FeatureFFIQjs {
                 }
             } break;
             case COMPLEX_CALLBACK: {
+                int32_t callback = *(int32_t*)ptr;
+                if (callback == 0) {
+                    FEATURE_LOG_WARN("zero callback id!");
+                    value = FEATURE_UNDEFINED;
+                    break;
+                }
                 // unreachable
                 FEATURE_LOG_ERROR("convert callback to guest is unreachable");
             } break;
             case COMPLEX_ARRAY: {
                 // convert to guest
-                if (!ptr) {
-                    FEATURE_LOG_ERROR("convert array need ptr provided !");
+                FtArray* arrayData = *(FtArray**)ptr;
+                if (!arrayData) {
+                    FEATURE_LOG_ERROR("null array ptr !");
                     return false;
                 }
                 ArrayType* arrayType = (ArrayType*)complexType;
-                FtArray* arrayData = *(FtArray**)ptr;
                 auto element_type = arrayType->element_type;
                 size_t element_size = sizeof(uintptr_t);
                 // exact and create js value
