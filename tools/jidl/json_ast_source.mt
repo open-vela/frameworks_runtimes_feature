@@ -25,11 +25,15 @@
   raw_mod_name = render.GetRawModuleName()
   header_name = render.GetHeaderFileName()
 %>\
-<%def name="GenOptionalType(name, feature_type, value)">\
-<% val_name = render.GetOptValName(feature_type) %>\
+<%def name="GenOptionalType(name, feature_type, ft_expr, value)">\
+<%
+  if value == 'null':
+    value = 'NULL'
+  val_name = render.GetOptValName(feature_type)
+%>\
 static OptionalType ${module_name}_${name}_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = ${feature_type},
+    .type = ${ft_expr},
     .${val_name} = ${value}
 };
 
@@ -47,15 +51,14 @@ static OptionalType ${module_name}_${name}_opt_type = {
 
     m_info = render.GenerateFeatureInfo(member_type)
     ft_expr = render.GenerateFtExpression(m_info)
-    if 'default' in member:
-      if m_info['is_complex']:
+    if 'default' in member and 'name' in member:
+      m_default = member['default']
+      if m_info['is_complex'] and m_default != 'null':
         raise Exception('wrong default struct member type: {}'.format(m_info['type']))
       m_name = struct_name + '_member_' + member['name']
-      m_default = member['default']
-      GenOptionalType(m_name, m_info['type'], m_default)
-      member_item['feature_type'] = f"FT_MK_OPTIONAL(&{module_name}_{m_name}_opt_type)"
-    else:
-      member_item['feature_type'] = ft_expr
+      GenOptionalType(m_name, m_info['type'], ft_expr, m_default)
+      ft_expr = f"FT_MK_OPTIONAL(&{module_name}_{m_name}_opt_type)"
+    member_item['ft_expr'] = ft_expr
     member_items.append(member_item)
 %>\
 </%def>\
@@ -78,7 +81,7 @@ static ObjectMember ${module_name}_${struct_name}_struct_members[] = {
 %for member_item in member_items:
 <%
   member_name = member_item['name']
-  member_ft = member_item['feature_type']
+  member_ft = member_item['ft_expr']
   cpp_type = member_item['cpp_type']
 %>\
     { "${member_name}", ${member_ft}, offsetof(${module_name}_${struct_name}, ${member_name}), sizeof(${cpp_type}) },
@@ -399,26 +402,23 @@ FtArray* ${module_name}_malloc_${elem_type}_array() {
   if not parent_prefix: parent_prefix = ''
   identifier = node['identifier']
   has_ellipse_param = render.HasEllipseParam(node)
-  param_infos = []
+  ft_expr_list = []
   if 'params' in node:
     for param in node['params']:
       p_info = render.GenerateFeatureInfo(param['type'])
       ft_expr = render.GenerateFtExpression(p_info)
       if 'name' in param and 'default' in param:
-        if p_info['is_complex']:
+        p_default = param["default"]
+        if p_info['is_complex'] and p_default != 'null':
           raise Exception('wrong default param type: {}'.format(p_info['type']))
         p_name = identifier + '_param_' + param["name"]
-        p_default = param["default"]
-        GenOptionalType(p_name, ft_expr, p_default)
-        p_info['type'] = f"FT_MK_OPTIONAL(&{module_name}_{p_name}_opt_type)"
-      else:
-        p_info['type'] = ft_expr
-
-      param_infos.append(p_info)
+        GenOptionalType(p_name, p_info['type'], ft_expr, p_default)
+        ft_expr = f"FT_MK_OPTIONAL(&{module_name}_{p_name}_opt_type)"
+      ft_expr_list.append(ft_expr)
 %>\
 static const FeatureType ${module_name}_${parent_prefix}${identifier}_parameters[] = {
-%for param_info in param_infos:
-    ${param_info['type']},
+%for ft_expr in ft_expr_list:
+    ${ft_expr},
 %endfor
 %if not has_ellipse_param:
     FT_PARAM_END

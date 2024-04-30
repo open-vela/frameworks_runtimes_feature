@@ -132,6 +132,10 @@ class LiteralValue(Node):
   def __str__(self):
     return str(self.value)
 
+  def isNull(self):
+    return self.type.Is(PRIMARY_TYPE) and \
+      self.type.name == 'null'
+
 class LiteralArrayValue(Node):
   def __init__(self, value):
     Node.__init__(self, ARRAY_LITERAL)
@@ -145,6 +149,13 @@ class Type(Node):
 
   def __str__(self):
     return self.name
+
+  def IsNullable(self):
+    return self.Is(INTERFACE_DEFINE) or \
+           self.Is(CLASS_DEFINE) or \
+           self.Is(STRUCT_DEFINE) or \
+           self.Is(CALLBACK_DEFINE) or \
+           (self.Is(PRIMARY_TYPE) and self.name == "object")
 
   def SetMetaAttributes(self, meta_attrs):
     self.meta_attributes = meta_attrs
@@ -297,9 +308,21 @@ class ParamDefine(Node):
       s = s + '=' + str(self.default)
     return s
 
+  def _checkDefault(self):
+    if not hasattr(self, 'default'):
+      return True
+    if type(self.default) != LiteralValue:
+      return False
+    if (self.type.IsNullable() and (not self.default.isNull())) or \
+        ((not self.type.IsNullable()) and self.default.isNull()):
+      return False
+    return True
+
   def Resolve(self, context):
     self.type = ResolveParamType(context, self.type, InterfaceDefine, self)
     #print("param resolve: ", self.type, str(self.type), str(self))
+    if not self._checkDefault():
+      context.AddError("[%d:%d]Resolve Type '%s' failed in '%s'" % (self.lineno, self.lexpos, self.type.name, str(self)))
     context.AddId(self.name, self.type)
 
   def Check(self, context):
@@ -899,8 +922,20 @@ class StructMemberBase(Type):
       s = s + '=' + str(self.default)
     return s
 
+  def _checkDefault(self):
+    if not hasattr(self, 'default'):
+      return True
+    if type(self.default) != LiteralValue:
+      return False
+    if (self.type.IsNullable() and (not self.default.isNull())) or \
+        ((not self.type.IsNullable()) and self.default.isNull()):
+      return False
+    return True
+
   def Resolve(self, context):
     self.type = ResolveStructMemberType(context, self.type, None, self)
+    if not self._checkDefault():
+      context.AddError("[%d:%d]Resolve Type '%s' failed in '%s'" % (self.lineno, self.lexpos, self.type.name, str(self)))
     #print("param resolve: ", self.type, str(self.type), str(self))
     #context.AddId(self.name, self.type)
 
@@ -923,8 +958,13 @@ class StructMemberStruct(Type):
     Type.__init__(self, struct_name, STRUCT_MEMBER_STRUCT)
     self.type = struct_type
 
+  def SetDefaultNull(self, null_val):
+    self.default_null = null_val
+
   def __str__(self):
     s = 'member struct: ' + str(self.type) + ' ' + str(self.name)
+    if hasattr(self, 'default_null'):
+      s = s + '=' + str(self.default_null)
     return s
 
   def Resolve(self, context):
@@ -944,6 +984,8 @@ class StructMemberStruct(Type):
     member_type['type'] = GetTypeJson(self.type)
     if self.name:
       member_type['name'] = self.name
+    if hasattr(self, 'default_null'):
+      member_type['default'] = str(self.default_null)
     out.append(member_type)
 
 class StructMemberCallback(Type):
@@ -952,8 +994,13 @@ class StructMemberCallback(Type):
     #print("=== callback_type:", callback_type, type(callback_type))
     self.type = callback_type
 
+  def SetDefaultNull(self, null_val):
+    self.default_null = null_val
+
   def __str__(self):
     s = 'member callback: ' + str(self.type) + ' ' + str(self.name)
+    if hasattr(self, 'default_null'):
+      s = s + '=' + str(self.default_null)
     return s
 
   def Resolve(self, context):
@@ -973,6 +1020,8 @@ class StructMemberCallback(Type):
     member_type['type'] = GetTypeJson(self.type)
     if self.name:
       member_type['name'] = self.name
+    if hasattr(self, 'default_null'):
+      member_type['default'] = str(self.default_null)
     return member_type
 
   def ToJson(self, out):
@@ -1073,7 +1122,7 @@ def GetPrimaryType(tp_name):
 
 def InitPrimaryTypes():
   types = ["int", "float", "double", "string", "boolean",
-      "long", "uint", "ulong", "jsvalue", "jscontext",
+      "long", "uint", "ulong", "null",
       "array", "object", "void"]
   for t in types:
     primary_types[t] = PrimaryType(t)

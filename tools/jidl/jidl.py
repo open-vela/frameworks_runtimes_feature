@@ -130,7 +130,8 @@ class JIDL(Parser):
     'MAIN',
     'WORKER',
     'TRUE',
-    'FALSE'
+    'FALSE',
+    'NULL'
   )
 
   tokens = reserved + (
@@ -343,14 +344,22 @@ class JIDL(Parser):
   def p_struct_member_struct(self, p):
     """
     struct_member_struct : STRUCT type_name_id ID
+                      | STRUCT type_name_id ID EQUALS null_literal
     """
+    count = len(p)
     CreateASTNode(p, ast.StructMemberStruct, p[2], p[3])
+    if count == 6:
+      p[0].SetDefaultNull(p[5])
 
   def p_struct_member_callback(self, p):
     """
     struct_member_callback : CALLBACK type_name_id member_name
+                      | CALLBACK type_name_id member_name EQUALS null_literal
     """
+    count = len(p)
     CreateASTNode(p, ast.StructMemberCallback, p[2], p[3])
+    if count == 6:
+      p[0].SetDefaultNull(p[5])
 
   def p_class_define(self, p):
     """
@@ -978,6 +987,7 @@ class JIDL(Parser):
             | int_literal
             | string_literal
             | boolean_literal
+            | null_literal
     """
     p[0] = p[1]
 
@@ -999,6 +1009,10 @@ class JIDL(Parser):
                     | FALSE
     """
     CreateASTNode(p, ast.LiteralValue, p[1], 'boolean')
+
+  def p_null_literal(self, p):
+    "null_literal : NULL"
+    CreateASTNode(p, ast.LiteralValue, p[1], 'null')
 
   def p_error(self, p):
     if p:
