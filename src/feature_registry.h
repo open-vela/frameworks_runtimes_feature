@@ -40,6 +40,7 @@ class FeatureRegistry {
 public:
     using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
     FeatureRegistry() = default;
+    virtual ~FeatureRegistry();
     /**
      * @brief initialie FeatureRegistry
      *
@@ -58,6 +59,7 @@ public:
      * @return false
      */
     bool registerFeature(const FeatureDescription* description);
+    void unregisterAllFeatures();
     FeatureRegistryPair* findFeature(const char* name);
     const char* getFeaturePackageName() const { return package_name_.data(); }
     /**

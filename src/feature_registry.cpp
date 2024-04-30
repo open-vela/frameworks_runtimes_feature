@@ -25,6 +25,12 @@
 
 namespace ferry {
 
+FeatureRegistry::~FeatureRegistry()
+{
+    unregisterAllFeatures();
+    registeredFeatures_.clear();
+}
+
 bool FeatureRegistry::init(const char* package_name)
 {
     if (package_name) {
@@ -59,6 +65,16 @@ bool FeatureRegistry::registerFeature(const FeatureDescription* description)
         return true;
     }
     return false;
+}
+
+void FeatureRegistry::unregisterAllFeatures()
+{
+    for (const auto& item : registeredFeatures_) {
+        const auto& description = item.second.first;
+        if (description && description->native_callbacks && description->native_callbacks->onUnregister) {
+            description->native_callbacks->onUnregister(description->name);
+        }
+    }
 }
 
 FeatureRegistry::FeatureRegistryPair*
