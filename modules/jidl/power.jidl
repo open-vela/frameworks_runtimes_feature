@@ -21,12 +21,12 @@ callback fail_cb(string data, int code)
 callback complete_cb(string data)
 
 struct RetStatus {
-    callback success_cb success
-    callback fail_cb fail
-    callback complete_cb complete
+    callback success_cb success = null
+    callback fail_cb fail = null
+    callback complete_cb complete = null
 }
 
-void shutDown(RetStatus status)
-void reboot(RetStatus status)
+void shutDown(RetStatus status = null)
+void reboot(RetStatus status = null)
 
 

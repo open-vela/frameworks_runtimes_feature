@@ -57,6 +57,10 @@ void system_internal_power_onUnregister(const char* feature_name)
 void system_internal_power_wrap_shutDown(FeatureInstanceHandle feature, AppendData append_data, system_internal_power_RetStatus* status)
 {
     int ret = boardctl(BOARDIOC_POWEROFF, 0);
+    if (!status) {
+        FEATURE_LOG_ERROR("no status arg!\n");
+        return;
+    }
     if (!ret) {
         if (FeatureCheckCallbackId(feature, status->success)) {
             FeatureInvokeCallback(feature, status->success, "0");
@@ -84,6 +88,10 @@ void system_internal_power_wrap_shutDown(FeatureInstanceHandle feature, AppendDa
 void system_internal_power_wrap_reboot(FeatureInstanceHandle feature, AppendData append_data, system_internal_power_RetStatus* status)
 {
     int ret = boardctl(BOARDIOC_RESET, 0);
+    if (!status) {
+        FEATURE_LOG_ERROR("no status arg!\n");
+        return;
+    }
     if (!ret) {
         if (FeatureCheckCallbackId(feature, status->success)) {
             FeatureInvokeCallback(feature, status->success, "0");
