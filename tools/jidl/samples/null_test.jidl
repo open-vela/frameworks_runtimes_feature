@@ -1,0 +1,24 @@
+module null_test@1.0
+
+// Declare a simple struct
+struct Chapter {
+  int page_count = 10
+  string title = "monkey born from a stone"
+}
+
+// Declare a callback
+callback ChapChanged(int index, string title)
+
+// Declare a complex struct
+struct Book {
+  object book_info = null
+  int page_count = 500
+  string title = "monkey king"
+  struct Chapter first_chap = null
+  callback ChapChanged chap_changed = null
+}
+
+void setChapter(int index, Chapter chap = null)
+void setChapChangedCb(ChapChanged chap_changed = null)
+void setBook(Book book = null)
+void print(...)
