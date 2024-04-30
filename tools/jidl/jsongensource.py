@@ -354,10 +354,10 @@ class CPPRender(Render):
     return self._MapType(ast_type['element'], self.cpp_type_map)
 
   def GetOptValName(self, feature_type):
-    val_type = self._MapType(feature_type, self.opt_val_name_map)
-    if val_type:
-      return val_type
-    return 'ptr'
+    if feature_type not in self.opt_val_name_map:
+      # print('got a complex opt value, type: {}'.format(feature_type))
+      return 'ptr'
+    return self._MapType(feature_type, self.opt_val_name_map)
 
   def GetAppendDataName(self, feature_type):
     append_data_type = self._MapType(feature_type, self.append_data_name_map)
