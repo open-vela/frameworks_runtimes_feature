@@ -103,14 +103,9 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
         return;
     }
 
-    auto proto = getPrototype(instance);
     FeatureInstanceQjs* instance_qjs = (FeatureInstanceQjs*)instance;
     // mark all instance values
     instance_qjs->markValues(rt, mark_func);
-
-    // should mark feature prototype object.
-    auto js_proto = FT_VAL_GET_JS_VAL(proto->ft_proto());
-    feature_mark_value(rt, js_proto, mark_func);
 }
 
 #if 0
