@@ -861,7 +861,7 @@ system_file_file_info_t* get_file_info(FileInfo* info)
 {
     system_file_file_info_t* file_info = system_fileMallocfile_info_t();
     char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_STRING));
-    strncpy(uri, info->uri, strlen(info->uri));
+    sprintf(uri, "%s", info->uri);
     file_info->uri = uri;
     file_info->length = info->length;
     file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;
@@ -877,7 +877,7 @@ system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* 
     sprintf(type, info->type == 0 ? "file" : "dir");
     file_info->type = type;
     char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_STRING));
-    strncpy(uri, info->uri, strlen(info->uri));
+    sprintf(uri, "%s", info->uri);
     file_info->uri = uri;
     file_info->length = info->length;
     file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;
