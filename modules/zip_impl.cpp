@@ -158,8 +158,7 @@ static int create_dir(const char* path)
     if (access(path, F_OK) == 0) {
         return 0;
     } else {
-        int n = (strlen(path) < sizeof(data) - 1) ? strlen(path) : (sizeof(data) - 1);
-        strncpy(data, path, n);
+        sprintf(data, "%s", path);
         if (strlen(data) > 0 && data[strlen(data) - 1] == '/')
             data[strlen(data) - 1] = '\0';
         ret = strrchr(data, '/');
