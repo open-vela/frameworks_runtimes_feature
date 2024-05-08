@@ -86,6 +86,7 @@ typedef struct _serviceTokenSuccessInfo {
 service_internal_account_serviceTokenSuccessInfo* service_internal_accountMallocserviceTokenSuccessInfo();
 typedef struct _serviceTokenInfo {
   FtString _serviceId;
+  FtInt _ignoreScan;
   FtCallbackId _success;
   FtCallbackId _fail;
   FtCallbackId _complete;
