@@ -358,6 +358,12 @@ static const CallbackType service_internal_account_serviceTokenSucc_callback_typ
 };
 
 
+static OptionalType service_internal_account_serviceTokenInfo_member_ignoreScan_opt_type = {
+    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
+    .type = FT_INT,
+    .ival = 0
+};
+
 /****** for JIDL callback 'serviceTokenFail' ******/
 static const FeatureType service_internal_account_serviceTokenFail_parameters[] = {
     FT_STRING,
@@ -375,6 +381,7 @@ static const CallbackType service_internal_account_serviceTokenFail_callback_typ
 /****** for JIDL struct 'serviceTokenInfo' ******/
 static ObjectMember service_internal_account_serviceTokenInfo_struct_members[] = {
     { "serviceId", FT_STRING, offsetof(service_internal_account_serviceTokenInfo, _serviceId), sizeof(FtString) },
+    { "ignoreScan", FT_MK_OPTIONAL(&service_internal_account_serviceTokenInfo_member_ignoreScan_opt_type), offsetof(service_internal_account_serviceTokenInfo, _ignoreScan), sizeof(FtInt) },
     { "success", FT_MK_COMPLEX(&service_internal_account_serviceTokenSucc_callback_type), offsetof(service_internal_account_serviceTokenInfo, _success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&service_internal_account_serviceTokenFail_callback_type), offsetof(service_internal_account_serviceTokenInfo, _fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&service_internal_account_Comp_callback_type), offsetof(service_internal_account_serviceTokenInfo, _complete), sizeof(FtCallbackId) },
