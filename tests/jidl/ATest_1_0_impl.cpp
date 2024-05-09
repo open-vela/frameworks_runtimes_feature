@@ -15,7 +15,6 @@ public:
 
     ~FTArrayHelper()
     {
-        free(_data);
     }
 
     T& operator[](int32_t index)
