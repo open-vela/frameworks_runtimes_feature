@@ -65,7 +65,10 @@ FeatureInstance::~FeatureInstance()
         finalizer_func finalizer = (finalizer_func)(vtable_->finalizer);
         finalizer(this);
     }
-    feature_list_delete(this);
+
+    if (feature_list_in_list(this)) {
+        feature_list_delete(this);
+    }
 }
 
 void FeatureInstance::initialize()

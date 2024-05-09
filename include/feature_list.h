@@ -14,6 +14,11 @@ typedef struct feature_list_node {
     struct feature_list_node* next;
 } feature_list_node;
 
+#define feature_list_in_list(item) ((item)->prev != NULL)
+#define feature_list_is_empty(list) ((list)->next == list)
+#define feature_list_is_clear(list) ((list)->next == NULL)
+#define feature_list_is_singular(list) ((list)->next == (list)->prev)
+
 #define feature_list_initialize(list)              \
     do {                                           \
         struct feature_list_node* __list = (list); \

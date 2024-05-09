@@ -41,6 +41,7 @@ FeatureManager::~FeatureManager()
     ft_ctx_ = nullptr;
     runAllTasks(FEATURE_TASK_MODE_FREE);
     checkFeatureInstances();
+    feature_list_delete(&feature_node_list_);
 }
 
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
