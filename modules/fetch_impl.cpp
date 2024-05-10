@@ -292,7 +292,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
     GET_FEATURE_AND_CTX(p);
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
-    if (state == UV_REQUEST_DONE) {
+    if (state == UV_REQUEST_DONE && response->httpcode < HTTP_BAD_REQUES) {
         ft_value_t ft_header = ft_form_headers(p->ft_ctx, response->headers);
         system_fetch_SuccessRes res = {
             .code = (int)response->httpcode, .data = NULL, .headers = &ft_header
