@@ -304,6 +304,10 @@ OUT_PATH    += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_brightness
 endif
 
+ifeq ($(CONFIG_MIPLAY),y)
+FEATURELIST += service_miplay
+endif
+
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 
 CXXSRCS += $(strip $(foreach i, $(shell seq 1 $(words $(JIDL_PATH))),\
