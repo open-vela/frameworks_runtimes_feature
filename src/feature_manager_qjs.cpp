@@ -224,6 +224,8 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     // check argument count match.
     // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", fixed_argc, argc);
     // beacuse we support rest parameters, so argc is greater or equal to fixed_argc.
+    FEATURE_LOG_INFO("feature: %s, method: %s, has_rest_param: %d, argc: %d, fixed_argc: %d, opt_argc: %d",
+        description->name, member.name, has_rest_param, argc, fixed_argc, optional_argc);
     if (has_rest_param) {
         if (argc < fixed_argc) {
             FEATURE_LOG_ERROR("rest args error, fixed: %d, total: %d!", fixed_argc, argc);
