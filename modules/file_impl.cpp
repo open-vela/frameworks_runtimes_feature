@@ -590,7 +590,7 @@ static void __load_after_work_cb(uv_work_t* req, int status)
     } else if (fr->type == FILE_READTEXT) {
         // 将读取的文件内容写入 String
         system_file_read_txt_succ_t* data = system_fileMallocread_txt_succ_t();
-        char* buf = (char*)FeatureMalloc(fr->len, FT_CHAR);
+        char* buf = (char*)FeatureMalloc(fr->len + 1, FT_CHAR);
         memcpy(buf, fr->buf, fr->len);
         data->text = (const char*)buf;
         __invoke_fr_cb(fr, 0, NULL, data);
