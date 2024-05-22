@@ -138,7 +138,6 @@ static void exchange_cb(int status, const char* key, char* value, void* arg)
                 system_exchange_GetRet* ret = system_exchangeMallocGetRet();
                 ret->value = value;
                 FeatureInvokeCallback(handle->feature, handle->success, ret);
-                FeatureFreeValue(ret);
             } else {
                 FeatureInvokeCallback(handle->feature, handle->success, value);
             }
