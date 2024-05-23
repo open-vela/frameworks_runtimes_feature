@@ -38,6 +38,8 @@
 #include <type_traits>
 
 #define REQUEST_CANCEL 2
+#define DEFAULT_FILE_NAME "download_file"
+#define DEFAULT_FILE_TYPE "txt"
 #define check_any(ptr) ((ptr) && (ft_get_type(ft_ctx, *ptr) >= 0))
 #define INVOKE_SUCCESS_CB(cb, ...)                                 \
     do {                                                           \
@@ -343,10 +345,57 @@ bool __is_valid_uri(const char* uri)
     return std::regex_match(uri_str, uri_regex);
 }
 
+void __remove_trailing_slash(char* url)
+{
+    int tail = strlen(url);
+    while (tail > 0 && url[tail - 1] == '/') {
+        tail--;
+    }
+    url[tail] = '\0';
+}
+
+char* __get_filename_from_url(const char* url)
+{
+    const char* question_mark = strrchr(url, '?');
+
+    // remove url parameter
+    char* url_main;
+    if (question_mark == NULL) {
+        url_main = strdup(url);
+    } else {
+        url_main = strndup(url, question_mark - url - 1);
+    }
+    // remove slash mark in backwards
+    __remove_trailing_slash(url_main);
+    REQUEST_INFO("url_main = %s", url_main);
+
+    // get last slash mark in url_main
+    const char* slash_mark = strrchr(url_main, '/');
+
+    if (slash_mark != NULL) {
+        char* filename = strdup(slash_mark + 1);
+        REQUEST_INFO("tmp filename = %s", filename);
+        const char* dot_mask = strrchr(filename, '.');
+        if (dot_mask != NULL && dot_mask == strchr(filename, '.')) {
+            // only one dot in filename, its a valid filename
+            free(url_main);
+            return filename;
+        }
+        free(filename);
+    }
+    free(url_main);
+
+    REQUEST_INFO("genarate default filename");
+    // cannot get filename from url, create one
+    char tmp[64] = "";
+    sprintf(tmp, "%s-%d.%s", DEFAULT_FILE_NAME, rand(), DEFAULT_FILE_TYPE);
+    return strdup(tmp);
+}
+
 void system_request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, system_request_download_t* param)
 {
     const char* msg;
-    char *filename, *pos_1, *pos_2, *token;
+    char *filename, *token;
     char kv[1024];
     int code;
     rapidjson::Document doc;
@@ -397,25 +446,19 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     if (param->filename != NULL && strlen(param->filename) > 0) {
         filename = strdup(param->filename);
     } else {
-        pos_1 = strrchr(param->url, '?');
-        pos_2 = strrchr(param->url, '/');
-        if (pos_1 != NULL && pos_1 - pos_2 - 1 > 0) {
-            filename = strndup(pos_2 + 1, pos_1 - pos_2 - 1);
-        } else {
-            filename = strdup(pos_2 + 1);
-        }
+        filename = __get_filename_from_url(param->url);
     }
     // REQUEST_INFO("filename = %s", filename);
 
     info->filename = app_relative_to_absolute_path(th->pkg_name, filename);
     if (!info->filename) {
         info->filename = app_absolute_path_generator(th->pkg_name, "files", filename);
-        if (info->filename) {
+        if (!info->filename) {
             REQUEST_ERROR("info->filename is null");
         }
     }
     free(filename);
-    // REQUEST_INFO("info->filename = %s", info->filename);
+    REQUEST_INFO("info->filename = %s", info->filename);
 
     if (!check_disk_limit()) {
         REQUEST_ERROR("insufficient memory to download file");
