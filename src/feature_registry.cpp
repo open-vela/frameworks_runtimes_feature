@@ -15,7 +15,7 @@
  */
 
 #include "feature_registry.h"
-#include "ajs_features_init.h"
+#include "ajs_features_registry.h"
 #include "feature_common.h"
 
 #include <assert.h>
@@ -42,10 +42,8 @@ bool FeatureRegistry::init(const char* package_name)
     } else {
         FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
     }
-    FeatureRegistryHandle handle = this;
-// register features
-#include "ajs_features_list.h"
-    return true;
+
+    return registerAjsFeatures((FeatureRegistryHandle)this);
 }
 
 bool FeatureRegistry::registerFeature(const FeatureDescription* description)
@@ -57,7 +55,7 @@ bool FeatureRegistry::registerFeature(const FeatureDescription* description)
         registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description,
             nullptr);
         // invoke onRegister callback
-        FEATURE_LOG_DEBUG("description->name is %s...", description->name);
+        FEATURE_LOG_DEBUG("registered feature: %s", description->name);
         if (description->native_callbacks && description->native_callbacks->onRegister) {
             FEATURE_LOG_DEBUG("invoke onRegister callback...");
             description->native_callbacks->onRegister(description->name);
@@ -80,9 +78,10 @@ void FeatureRegistry::unregisterAllFeatures()
 FeatureRegistry::FeatureRegistryPair*
 FeatureRegistry::findFeature(const char* name)
 {
-    FEATURE_LOG_DEBUG("featureRequire for name: %s", name);
+    FEATURE_LOG_DEBUG("find Feature: %s", name);
     auto pos = registeredFeatures_.find(name);
     if (pos == registeredFeatures_.end()) {
+        FEATURE_LOG_ERROR("can not find feature: %s", name);
         return nullptr;
     }
     return &pos->second;

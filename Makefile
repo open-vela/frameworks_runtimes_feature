@@ -308,6 +308,12 @@ ifeq ($(CONFIG_MIPLAY),y)
 FEATURELIST += service_miplay
 endif
 
+ifeq ($(CONFIG_SERVICE_AGENT_CLIENT),y)
+FEATURE_IGNORE_JIDL = 'utils'
+FEATURELIST += $(shell find $(APPDIR)/vendor/xiaomi/vela/service_agent/feature/jidl/ \
+    -name '*.jidl' | grep -Ev $(FEATURE_IGNORE_JIDL) | xargs awk -F '^module|@' '{gsub(/\./, "_", $$2); print $$2}' | grep -v '^$$')
+endif
+
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 
 CXXSRCS += $(strip $(foreach i, $(shell seq 1 $(words $(JIDL_PATH))),\
@@ -316,6 +322,7 @@ CXXSRCS += $(strip $(foreach i, $(shell seq 1 $(words $(JIDL_PATH))),\
 	$(eval file_name=$(strip $(basename $(notdir $(word $(i), $(JIDL_PATH))) .jidl)))\
 	$(out_path)/$(file_name).cpp\
 ))
+CXXSRCS += $(APPDIR)/frameworks/base/feature/src/ajs_features_registry.cpp
 
 ASRCS := $(wildcard $(ASRCS))
 CSRCS := $(wildcard $(CSRCS))
@@ -330,15 +337,15 @@ endif
 
 EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_description.h \
                 include/feature_exports.h include/feature_main_exports.h include/feature_log.h \
-                src/ajs_features_init.h src/README.md registry/README.md
+                include/ajs_features_init.h src/README.md registry/README.md
 
 clean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
-	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_registry.cpp
 
 distclean::
 	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
-	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_registry.cpp
 	$(call DELFILE, $(PDATLIST))
 
 clean_context::
