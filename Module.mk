@@ -20,6 +20,8 @@ ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 FEATURE_REGISTRY = $(APPDIR)/frameworks/base/feature/registry
 FEATURE_LIST_PATH := $(addprefix $(FEATURE_REGISTRY)/,$(addsuffix .pdat,$(FEATURELIST)))
 FEATURE_LIST_PATH += $(addprefix $(FEATURE_REGISTRY)/,$(addsuffix .pdat,$(CFEATURELIST)))
+AJS_FEATURES_REGISTRY = $(APPDIR)/frameworks/base/feature/src/ajs_features_registry.cpp
+AJS_FEATURES_LIST = $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
 
 #打印FEATURE_LIST_PATH
 #$(info FEATURE_LIST_PATH is ${FEATURE_LIST_PATH})
@@ -39,46 +41,49 @@ depend::
 		python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp; \
 	)
 
-ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h),)
-	# @echo "ajs_features_init.h is empty, need create it"
-	@echo "#include \"feature_exports.h\"" > $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "#undef QAPPFEATURE_INIT" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "#define QAPPFEATURE_INIT(module) bool jse_##module##_initFeature(FeatureRegistryHandle handle)" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+ifeq ($(wildcard $(AJS_FEATURES_REGISTRY)),)
+	# @echo "generate ajs_features_registry.cpp with FEATURELIST: $(FEATURELIST)"
+	@echo "#include \"ajs_features_registry.h\"" >> $(AJS_FEATURES_REGISTRY)
+	@echo "#include \"ajs_features_list.h\"" >> $(AJS_FEATURES_REGISTRY)
+	@echo "" >> $(AJS_FEATURES_REGISTRY)
+	@echo "bool registerAjsFeatures(FeatureRegistryHandle handle) {" >> $(AJS_FEATURES_REGISTRY)
+	$(if $(FEATURELIST),, @echo "FEATURELIST is empty";)
+	$(if $(FEATURELIST), \
+		$(foreach module, $(sort ${FEATURELIST}), echo "    jse_${module}_initFeature(handle);" >> $(AJS_FEATURES_REGISTRY);), \
+	)
+	@echo "    return true;" >> $(AJS_FEATURES_REGISTRY)
+	@echo "}" >> $(AJS_FEATURES_REGISTRY)
 endif
 
-ifeq ($(wildcard $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h),)
-	# @echo "ajs_features_list.h is empty, need create it"
-	@echo "" > $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
-endif
-
-ifeq ($(FEATURELIST),)
-	# @echo "FEATURELIST is empty"
-	@echo "" > $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
-else
-	# @echo "FEATURELIST is not empty"
-	@$(foreach module,  $(sort ${FEATURELIST}), echo "jse_${module}_initFeature(handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h;)
-	@$(foreach module,  $(sort ${FEATURELIST}), echo "bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h;)
-endif
-
-ifeq ($(CFEATURELIST),)
-	# @echo "CFEATURELIST is empty"
-else
-	# @echo "CFEATURELIST is not empty"
-	@$(foreach module,  $(sort ${CFEATURELIST}), echo "jse_${module}_initFeature(handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h;)
-	@echo "#ifdef __cplusplus" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "extern \"C\" {" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "#endif" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@$(foreach module,  $(sort ${CFEATURELIST}), echo "    bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h;)
-	@echo "#ifdef __cplusplus" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "}" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
-	@echo "#endif" >> $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+ifeq ($(wildcard $(AJS_FEATURES_LIST)),)
+	# @echo "generate ajs_features_list.h with FEATURELIST: $(FEATURELIST)"
+	@echo "#ifndef AJS_FEATURES_LIST_H_" >> $(AJS_FEATURES_LIST)
+	@echo "#define AJS_FEATURES_LIST_H_" >> $(AJS_FEATURES_LIST)
+	@echo "" >> $(AJS_FEATURES_LIST)
+	@echo "#include \"feature_exports.h\"" >> $(AJS_FEATURES_LIST)
+	@echo "" >> $(AJS_FEATURES_LIST)
+	$(if $(FEATURELIST),, @echo "FEATURELIST is empty";)
+	$(if $(FEATURELIST), \
+		$(foreach module, $(sort ${FEATURELIST}), echo "bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(AJS_FEATURES_LIST);), \
+	)
+	@echo "" >> $(AJS_FEATURES_LIST)
+	@echo "#ifdef __cplusplus" >> $(AJS_FEATURES_LIST)
+	@echo "extern \"C\" {" >> $(AJS_FEATURES_LIST)
+	@echo "#endif" >> $(AJS_FEATURES_LIST)
+	$(if $(CFEATURELIST),, @echo "CFEATURELIST is empty";)
+	$(if $(CFEATURELIST), \
+		$(foreach module, $(sort ${CFEATURELIST}), echo "bool jse_${module}_initFeature(FeatureRegistryHandle handle);" >> $(AJS_FEATURES_LIST);), \
+	)
+	@echo "#ifdef __cplusplus" >> $(AJS_FEATURES_LIST)
+	@echo "}" >> $(AJS_FEATURES_LIST)
+	@echo "#endif" >> $(AJS_FEATURES_LIST)
+	@echo "" >> $(AJS_FEATURES_LIST)
+	@echo "#endif" >> $(AJS_FEATURES_LIST)
 endif
 
 distclean::
-	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
-	rm -rf $(APPDIR)/frameworks/base/feature/src/ajs_features_init.h
+	rm -rf $(AJS_FEATURES_LIST)
+	rm -rf $(AJS_FEATURES_REGISTRY)
 	$(call DELFILE, $(PDATLIST))
 
 endif
