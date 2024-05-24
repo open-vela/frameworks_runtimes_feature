@@ -44,6 +44,11 @@ void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle h
 void system_prompt_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(handle, "PromptInterfaceHandler"));
+    promptCleanOnDetached cleanup = pm_hander->cleanup;
+    if (cleanup) {
+        cleanup(handle);
+    }
 }
 
 void system_prompt_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
