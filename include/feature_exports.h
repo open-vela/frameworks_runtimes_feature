@@ -218,9 +218,9 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
  * @param handle
  * @param task_cb
  * @param data
- * @return void
+ * @return bool
  */
-void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
+bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data);
 
 /**

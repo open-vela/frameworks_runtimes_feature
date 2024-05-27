@@ -287,11 +287,12 @@ FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
     return module_proto->createInterface(vtable);
 }
 
-void FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
+bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data)
 {
-    FEATURE_INSTANCE_CHECK(handle, ;)
+    FEATURE_INSTANCE_CHECK(handle, false)
     manager_from_instance(handle)->addTask(handle, task_cb, data);
+    return true;
 }
 
 FeatureManagerHandle FeatureCreateManager(const char* package_name)
