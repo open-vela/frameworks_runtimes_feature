@@ -195,7 +195,6 @@ namespace FeatureFFIWamr {
         } break;
         case FT_STRING: {
             const char* str = (char*)const_data.str;
-            printf("return str is %s\n", str);
             wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
             set_wasm_var_by_type(void*, obj, value);
             break;
