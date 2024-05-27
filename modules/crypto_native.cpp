@@ -28,6 +28,11 @@ static const char* file_tag = "[jidl_feature] crypto_native";
 
 const char* crypto_err = NULL;
 
+/* clang-format off */
+#define ROUND_UP(x, y) ((((x) + (y) - 1) / (y)) * (y))
+#define BASE64_ENCODED_LENGTH(len) (((len) + 2) / 3 * 4 + 1)
+/* clang-format on */
+
 #define CHECK_ERR_RET(ptr, msg)                                               \
     do {                                                                      \
         if (ptr == NULL) {                                                    \
@@ -87,7 +92,7 @@ char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str
         }
 
         size_t out_len = 0;
-        size_t out_size = text.len * 2 + 16;
+        size_t out_size = BASE64_ENCODED_LENGTH(ROUND_UP(text.len, 16));
         unsigned char* out_buff = (unsigned char*)alloca(out_size);
         memset(out_buff, 0, out_size);
 
