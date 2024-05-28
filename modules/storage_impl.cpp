@@ -240,9 +240,7 @@ static void storage_cb(int status, const char* key, uv_buf_t value,
         return;
     }
     if (status == 0) {
-        if (handle->op == STORAGE_OP_DELETE || handle->op == STORAGE_OP_SET) {
-            uv_db_commit(handle->th->db);
-        } else if (handle->op == STORAGE_OP_GET) {
+        if (handle->op == STORAGE_OP_GET) {
             ret = value.base;
         } else if (handle->op == STORAGE_OP_KEY) {
             ret = key;
