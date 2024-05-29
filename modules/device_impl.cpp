@@ -82,7 +82,6 @@ system_device_Device* system_device_wrap_getInfo(FeatureInstanceHandle feature, 
 {
     uv_devinfo_t devinfo;
     char* screenShape = NULL;
-    int platformVersionCode = 0;
     char serial[32 + 1] = { 0 };
     char totalstorage[32 + 1] = { 0 };
     char availablestorage[32 + 1] = { 0 };
@@ -131,7 +130,8 @@ system_device_Device* system_device_wrap_getInfo(FeatureInstanceHandle feature, 
     STRCPY(region, devinfo.region);
 #ifdef CONFIG_QUICKAPP
     STRCPY(platformVersionName, AIOTJS::version());
-    platformVersionCode = AIOTJS::versionCode();
+    device->platformVersionCode = AIOTJS::versionCode();
+    device->APILevel = AIOTJS::APILevel();
 #else
     STRCPY(platformVersionName, "unknown");
 #endif
@@ -160,7 +160,6 @@ system_device_Device* system_device_wrap_getInfo(FeatureInstanceHandle feature, 
     device->osVersionName = osversionname;
     device->osVersionCode = devinfo.osversioncode;
     device->platformVersionName = platformVersionName;
-    device->platformVersionCode = platformVersionCode;
     device->language = language;
     device->region = region;
     device->screenWidth = devinfo.screenwidth;
