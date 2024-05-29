@@ -256,7 +256,6 @@ namespace FeatureFFIWamr {
             } break;
             case FT_STRING: {
                 const char* str = *(char**)ptr;
-                printf("return str is %s\n", str);
                 wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
                 PUSH_LOCAL_OBJ_REF(obj);
                 set_wasm_var_by_type(void*, obj, value);

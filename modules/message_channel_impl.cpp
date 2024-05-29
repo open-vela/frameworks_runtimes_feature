@@ -205,7 +205,7 @@ void MessageChannel::onReceive(const std::string& target,
     const std::string& action,
     const std::string& data)
 {
-    FEATURE_LOG_INFO("%s() target:%s, action:%s, data:%s ", __FUNCTION__,
+    FEATURE_LOG_DEBUG("%s() target:%s, action:%s, data:%s ", __FUNCTION__,
         target.c_str(), action.c_str(), data.c_str());
 
     auto iter = action_cb_map_.find(action);
