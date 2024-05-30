@@ -51,6 +51,10 @@ ifeq ($(wildcard $(AJS_FEATURES_REGISTRY)),)
 	$(if $(FEATURELIST), \
 		$(foreach module, $(sort ${FEATURELIST}), echo "    jse_${module}_initFeature(handle);" >> $(AJS_FEATURES_REGISTRY);), \
 	)
+	$(if $(CFEATURELIST),, @echo "CFEATURELIST is empty";)
+	$(if $(CFEATURELIST), \
+		$(foreach module, $(sort ${CFEATURELIST}), echo "    jse_${module}_initFeature(handle);" >> $(AJS_FEATURES_REGISTRY);), \
+	)
 	@echo "    return true;" >> $(AJS_FEATURES_REGISTRY)
 	@echo "}" >> $(AJS_FEATURES_REGISTRY)
 endif
