@@ -20,8 +20,11 @@ CXXEXT     := .cpp
 CXXFLAGS   += -std=c++17
 
 # workaround for gcc-13 warning
-CFLAGS     += --param=min-pagesize=0
-CXXFLAGS   += --param=min-pagesize=0
+GCC_VERSION := $(shell gcc -dumpversion)
+ifeq ($(shell expr $(GCC_VERSION) \>= 13), 1)
+  CFLAGS += --param=min-pagesize=0
+  CXXFLAGS += --param=min-pagesize=0
+endif
 
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
