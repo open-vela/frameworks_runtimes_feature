@@ -305,6 +305,8 @@ FEATURELIST += system_brightness
 endif
 
 ifeq ($(CONFIG_MIPLAY),y)
+JIDL_PATH += $(APPDIR)/frameworks/connectivity/miplay_lite/app/feature/jidl/miplay.jidl
+OUT_PATH += $(APPDIR)/frameworks/connectivity/miplay_lite/app/feature/
 FEATURELIST += service_miplay
 endif
 
