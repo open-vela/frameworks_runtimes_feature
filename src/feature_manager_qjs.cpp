@@ -207,6 +207,9 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     const auto method = member.method;
     auto param_types = method->parameters;
     FtPromiseId pid = -1;
+
+    FeatureMethodMeasurer(description->name, member.name);
+
     // feature_value_t promise_obj = FEATURE_VALUE_UNDEFINED;
     //  count size
     bool has_rest_param = false;
@@ -773,6 +776,8 @@ bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototypeQjs* prototype)
     // TODO: initialize js_proto using description
     if (prototype->description()->native_callbacks && prototype->description()->native_callbacks->onCreate) {
         FEATURE_LOG_DEBUG("invoke onCreate callback...");
+
+        FeatureMethodMeasurer(prototype->description()->name, "onCreate");
         prototype->description()->native_callbacks->onCreate(ctx, prototype);
     }
 
@@ -841,6 +846,7 @@ feature_value_t FeatureManagerQjs::featureRequire(context_ref ctx, feature_value
     auto js_instance = createJsInstance((FeaturePrototypeQjs*)prototype, instance_ptr);
     if (description->native_callbacks && description->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
+        FeatureMethodMeasurer(prototype->description()->name, "onRequired");
         description->native_callbacks->onRequired(ctx, instance_ptr);
     }
     return js_instance;
@@ -895,6 +901,7 @@ void FeatureManagerQjs::uninit()
         // call feature's onDestroy
         if (description->native_callbacks && description->native_callbacks->onDestroy) {
             FEATURE_LOG_DEBUG("invoke onDestroy callback...");
+            FeatureMethodMeasurer(description->name, "onDestroy");
             description->native_callbacks->onDestroy(js_ctx, proto);
         }
         FEATURE_LOG_INFO("free feature prototype '%s'", description->name);
@@ -970,6 +977,7 @@ feature_value_t FeatureManagerQjs::createFeature(feature_context_ref ctx, featur
         auto js_instance = createJsInstance(prototype, instance_ptr);
         if (description->native_callbacks && description->native_callbacks->onRequired) {
             FEATURE_LOG_DEBUG("invoke onRequired callback...");
+            FeatureMethodMeasurer(description->name, "onRequired");
             description->native_callbacks->onRequired(ctx, instance_ptr);
         }
         return js_instance;

@@ -96,5 +96,5 @@ private:
     void* args_error_data_ = nullptr;
 };
 
-}
+} // namespace ferry
 #endif // __FEATURE_MANAGE_H__

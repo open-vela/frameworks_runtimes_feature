@@ -75,5 +75,36 @@ private:
     static uv_mutex_t js_class_mutex_;
 };
 
+class FeatureMethodMeasurer {
+public:
+    explicit FeatureMethodMeasurer(const char* feature_name, const char* method)
+        : feature_name_(feature_name)
+        , method_(method)
+        , last_time_(now_ms())
+    {
+    }
+
+    ~FeatureMethodMeasurer()
+    {
+        auto diff = now_ms() - last_time_;
+        if (diff > 10) {
+            FEATURE_LOG_ERROR("feature=%s, method=%s, spent=%lld ms",
+                feature_name_, method_, diff);
+        }
+    }
+
+private:
+    inline static int64_t now_ms()
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    }
+
+    const char* feature_name_ {};
+    const char* method_ {};
+    int64_t last_time_ {};
+};
+
 }
 #endif // __FEATURE_MANAGER_QJS_H__
