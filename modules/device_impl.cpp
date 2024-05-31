@@ -16,6 +16,7 @@
 
 #include "device.h"
 #include "feature_log.h"
+#include "feature_utils.h"
 #include "uv_ext.h"
 #include <sys/statfs.h>
 #ifdef CONFIG_QUICKAPP
@@ -25,9 +26,12 @@
 #define USERSPACE_PATH "/data"
 static const char* file_tag = "[jidl_feature] Device_impl";
 
-#define STRCPY(dst, src)                                          \
-    char* dst = (char*)FeatureMalloc(strlen(src) + 1, FT_STRING); \
-    strcpy(dst, src);
+#define STRCPY(dst, src)                                              \
+    do {                                                              \
+        char* tmp = (char*)FeatureMalloc(strlen(src) + 1, FT_STRING); \
+        strcpy(tmp, src);                                             \
+        dst = tmp;                                                    \
+    } while (0)
 
 void system_device_onRegister(const char* feature_name)
 {
@@ -55,21 +59,21 @@ void system_device_onUnregister(const char* feature_name)
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-static void finish_callback(int status, FeatureInstanceHandle feature, system_device_CallBack* cb, const char* msg,
+static void finish_callback_getinfo(int status, FeatureInstanceHandle feature, system_device_getinfo_params* params, const char* msg,
     system_device_Device* device)
 {
     FtCallbackId success_id, fail_id, complete_id;
-
-    if (cb == NULL) {
+    system_device_common_params* common_params = (system_device_common_params*)params;
+    if (common_params == NULL) {
         return;
     }
-    success_id = cb->success;
-    fail_id = cb->fail;
-    complete_id = cb->complete;
+    success_id = common_params->success;
+    fail_id = common_params->fail;
+    complete_id = common_params->complete;
 
-    if (status == 0) {
+    if (status == 0 && success_id != 0) {
         FeatureInvokeCallback(feature, success_id, device);
-    } else {
+    } else if (fail_id != 0) {
         FeatureInvokeCallback(feature, fail_id, msg, status);
     }
     FeatureInvokeCallback(feature, complete_id);
@@ -78,162 +82,164 @@ static void finish_callback(int status, FeatureInstanceHandle feature, system_de
     FeatureRemoveCallback(feature, complete_id);
 }
 
-system_device_Device* system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
+static void finish_callback_common(int status, FeatureInstanceHandle feature, system_device_common_params* params, const char* msg,
+    ft_value_t* obj)
+{
+    FtCallbackId success_id, fail_id, complete_id;
+
+    if (params == NULL) {
+        return;
+    }
+    success_id = params->success;
+    fail_id = params->fail;
+    complete_id = params->complete;
+
+    if (status == 0 && success_id != 0) {
+        FeatureInvokeCallback(feature, success_id, obj);
+    } else if (fail_id != 0) {
+        FeatureInvokeCallback(feature, fail_id, msg, status);
+    }
+    FeatureInvokeCallback(feature, complete_id);
+    FeatureRemoveCallback(feature, success_id);
+    FeatureRemoveCallback(feature, fail_id);
+    FeatureRemoveCallback(feature, complete_id);
+}
+
+void system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append_data, system_device_getinfo_params* params)
 {
     uv_devinfo_t devinfo;
-    char serial[32 + 1] = { 0 };
-    char totalstorage[32 + 1] = { 0 };
-    char availablestorage[32 + 1] = { 0 };
-    struct statfs fs_buf;
-    int ret;
+    int status;
     system_device_Device* device;
 
     device = system_deviceMallocDevice();
-    ret = uv_devinfobuff(serial, sizeof(serial), UV_EXT_DEVINFO_DID);
-    if (ret != 0) {
-        FEATURE_LOG_ERROR("could not get serial\n");
-    }
-
-    ret = statfs(USERSPACE_PATH, &fs_buf);
-    if (0 != ret) {
-        FEATURE_LOG_ERROR("could not get availablestorage\n");
-    } else {
-        unsigned long long blocksize = fs_buf.f_bsize;
-        unsigned long long totalsize = blocksize * fs_buf.f_blocks;
-        unsigned long long availsize = blocksize * fs_buf.f_bavail;
-
-        snprintf(totalstorage, sizeof(totalstorage), "%lld", totalsize);
-        snprintf(availablestorage, sizeof(availablestorage), "%lld", availsize);
-    }
-
     memset(&devinfo, 0, sizeof(devinfo));
-    ret = uv_getdeviceinfo(&devinfo);
-    if (ret != 0) {
-        finish_callback(ret, feature, cb, "get device info failed", device);
-        return NULL;
+    status = uv_getdeviceinfo(&devinfo);
+    if (status != 0) {
+        finish_callback_getinfo(status, feature, params, "get device info failed", NULL);
+        FeatureFreeValue(device);
+        return;
     }
 
-    STRCPY(deviceserial, serial);
-    STRCPY(totalspace, totalstorage);
-    STRCPY(availablespace, availablestorage);
-    STRCPY(brand, devinfo.brand);
-    STRCPY(did, devinfo.did);
-    STRCPY(deviceid, devinfo.did);
-    STRCPY(manufacturer, devinfo.manufacturer);
-    STRCPY(model, devinfo.model);
-    STRCPY(product, devinfo.product);
-    STRCPY(ostype, devinfo.ostype);
-    STRCPY(osversionname, devinfo.osversionname);
-    STRCPY(language, devinfo.language);
-    STRCPY(region, devinfo.region);
+    STRCPY(device->brand, devinfo.brand);
+    STRCPY(device->IMEI, devinfo.did);
+    STRCPY(device->manufacturer, devinfo.manufacturer);
+    STRCPY(device->model, devinfo.model);
+    STRCPY(device->product, devinfo.product);
+    STRCPY(device->osType, devinfo.ostype);
+    STRCPY(device->osVersionName, devinfo.osversionname);
+    STRCPY(device->language, devinfo.language);
+    STRCPY(device->region, devinfo.region);
 #ifdef CONFIG_QUICKAPP
-    STRCPY(platformVersionName, AIOTJS::version());
+    STRCPY(device->platformVersionName, AIOTJS::version());
     device->platformVersionCode = AIOTJS::versionCode();
     device->APILevel = AIOTJS::APILevel();
 #else
-    STRCPY(platformVersionName, "unknown");
+    STRCPY(device->platformVersionName, "unknown");
 #endif
-    STRCPY(devicetype, devinfo.devicetype);
-    STRCPY(screenShape, devinfo.screenshape);
+    STRCPY(device->deviceType, devinfo.devicetype);
+    STRCPY(device->screenShape, devinfo.screenshape);
 
-    device->serial = deviceserial;
-    device->totalStorage = totalspace;
-    device->availableStorage = availablespace;
-    device->brand = brand;
-    device->IMEI = did;
-    device->deviceId = deviceid;
-    device->manufacturer = manufacturer;
-    device->model = model;
-    device->product = product;
-    device->osType = ostype;
-    device->osVersionName = osversionname;
     device->osVersionCode = devinfo.osversioncode;
-    device->platformVersionName = platformVersionName;
-    device->language = language;
-    device->region = region;
     device->screenWidth = devinfo.screenwidth;
     device->screenHeight = devinfo.screenheight;
-    device->deviceType = devicetype;
-    device->screenShape = screenShape;
-    finish_callback(ret, feature, cb, "get device info successfully", device);
-    return device;
+    device->screenDensity = devinfo.screendensity;
+    finish_callback_getinfo(status, feature, params, "get device info successfully", device);
+    FeatureFreeValue(device);
 }
 
-FtString system_device_wrap_getDeviceId(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
+void system_device_wrap_getDeviceId(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
 {
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     char did[32 + 1] = { 0 };
-    system_device_Device* device = system_device_wrap_getInfo(feature, append_data, NULL);
-    int ret = uv_devinfobuff(did, sizeof(did), UV_EXT_DEVINFO_DID);
-    if (0 == ret && device) {
-        finish_callback(ret, feature, cb, "getDeviceid successfully", device);
-        return device->deviceId;
+
+    int status = uv_devinfobuff(did, sizeof(did), UV_EXT_DEVINFO_DID);
+    if (0 == status) {
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = ft_from_string(ft_ctx, did);
+        ft_obj_set_property(ft_ctx, ret_obj, "deviceId", ret_data);
+        finish_callback_common(status, feature, params, "getDeviceid successfully", &ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get devinfo id with uv_devinfobuff\n");
-        finish_callback(ret, feature, cb, "getDeviceid failed", NULL);
-        return NULL;
+        finish_callback_common(status, feature, params, "getDeviceid failed", NULL);
     }
 }
 
-FtString system_device_wrap_getId(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
+void system_device_wrap_getId(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
 {
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     char did[32 + 1] = { 0 };
-    system_device_Device* device = system_device_wrap_getInfo(feature, append_data, NULL);
-    int ret = uv_devinfobuff(did, sizeof(did), UV_EXT_DEVINFO_DID);
-    if (0 == ret && device) {
-        finish_callback(ret, feature, cb, "getId successfully", device);
-        return device->deviceId;
+    int status = uv_devinfobuff(did, sizeof(did), UV_EXT_DEVINFO_DID);
+
+    if (0 == status) {
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = ft_from_string(ft_ctx, did);
+        ft_obj_set_property(ft_ctx, ret_obj, "deviceId", ret_data);
+        finish_callback_common(status, feature, params, "getId successfully", &ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get devinfo id with uv_devinfobuff\n");
-        finish_callback(ret, feature, cb, "getId failed", NULL);
-        return NULL;
+        finish_callback_common(status, feature, params, "getId failed", NULL);
     }
 }
 
-FtString system_device_wrap_getSerial(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
+void system_device_wrap_getSerial(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
 {
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     char serial[32 + 1] = { 0 };
-    /*暂时拿不到id数据，因此用did替代*/
-    int ret = uv_devinfobuff(serial, sizeof(serial), UV_EXT_DEVINFO_DID);
-    system_device_Device* device = system_device_wrap_getInfo(feature, append_data, NULL);
+    int status = uv_devinfobuff(serial, sizeof(serial), UV_EXT_DEVINFO_SERIAL);
 
-    if (0 == ret && device) {
-        finish_callback(ret, feature, cb, "getSerial successfully", device);
-        return device->serial;
+    if (0 == status) {
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = ft_from_string(ft_ctx, serial);
+        ft_obj_set_property(ft_ctx, ret_obj, "serial", ret_data);
+        finish_callback_common(status, feature, params, "getSerial successfully", &ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get devinfo id with uv_devinfobuff\n");
-        finish_callback(ret, feature, cb, "getSerial failed", NULL);
-        return NULL;
+        finish_callback_common(status, feature, params, "getSerial failed", NULL);
     }
 }
 
-FtString system_device_wrap_getTotalStorage(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
+void system_device_wrap_getTotalStorage(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
 {
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     struct statfs fs_buf;
-    int ret = statfs(USERSPACE_PATH, &fs_buf);
-    system_device_Device* device = system_device_wrap_getInfo(feature, append_data, NULL);
+    int status = statfs(USERSPACE_PATH, &fs_buf);
+    char total_storage[128] = { 0 };
 
-    if (0 == ret && device) {
-        finish_callback(ret, feature, cb, "getTotalStorage successfully", device);
-        return device->totalStorage;
+    if (0 == status) {
+        unsigned long blocksize = fs_buf.f_bsize;
+        unsigned long totalsize = blocksize * fs_buf.f_blocks;
+        snprintf(total_storage, sizeof(total_storage), "%ld", totalsize);
+
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = ft_from_string(ft_ctx, total_storage);
+        ft_obj_set_property(ft_ctx, ret_obj, "totalStorage", ret_data);
+
+        finish_callback_common(status, feature, params, "getTotalStorage successfully", &ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get availablestorage with statfs\n");
-        finish_callback(ret, feature, cb, "getTotalStorage failed", NULL);
-        return NULL;
+        finish_callback_common(status, feature, params, "getTotalStorage failed", NULL);
     }
 }
 
-FtString system_device_wrap_getAvailableStorage(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
+void system_device_wrap_getAvailableStorage(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
 {
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
     struct statfs fs_buf;
-    int ret = statfs(USERSPACE_PATH, &fs_buf);
-    system_device_Device* device = system_device_wrap_getInfo(feature, append_data, NULL);
+    int status = statfs(USERSPACE_PATH, &fs_buf);
+    char available_storage[128] = { 0 };
 
-    if (0 == ret && device) {
-        finish_callback(ret, feature, cb, "getAvailableStorage successfully", device);
-        return device->availableStorage;
+    if (0 == status) {
+        unsigned long blocksize = fs_buf.f_bsize;
+        unsigned long availsize = blocksize * fs_buf.f_bavail;
+        snprintf(available_storage, sizeof(available_storage), "%ld", availsize);
+
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = ft_from_string(ft_ctx, available_storage);
+        ft_obj_set_property(ft_ctx, ret_obj, "availableStorage", ret_data);
+
+        finish_callback_common(status, feature, params, "getAvailableStorage successfully", &ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get availablestorage with statfs\n");
-        finish_callback(ret, feature, cb, "getAvailableStorage failed", NULL);
-        return NULL;
+        finish_callback_common(status, feature, params, "getAvailableStorage failed", NULL);
     }
 }
