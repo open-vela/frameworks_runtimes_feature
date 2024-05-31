@@ -90,15 +90,18 @@ void FeatureManager::addTask(FeatureInstanceHandle handle, FeatureTaskCallback t
 
 void FeatureManager::runAllTasks(int mode)
 {
+    std::queue<TaskData> tasks;
     uv_mutex_lock(&mutex_);
-    int task_queue_size = task_queue_.size();
-    for (int i = 0; i < task_queue_size; i++) {
-        TaskData task_data = task_queue_.front();
+    std::swap(tasks, task_queue_);
+    uv_mutex_unlock(&mutex_);
+
+    int tasks_size = tasks.size();
+    for (int i = 0; i < tasks_size; i++) {
+        TaskData task_data = tasks.front();
         task_data.task_cb(mode, task_data.data);
         FeatureFreeInstanceHandle(task_data.instance);
-        task_queue_.pop();
+        tasks.pop();
     }
-    uv_mutex_unlock(&mutex_);
 }
 
 void FeatureManager::detachFeatureInstances()

@@ -28,3 +28,4 @@ src/ajs_features_list.h
 modules/aidl/message_transport
 modules/src
 modules/jidl/*.json
+src/ajs_features_registry.cpp
