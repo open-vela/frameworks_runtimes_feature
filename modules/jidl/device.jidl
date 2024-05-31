@@ -34,25 +34,30 @@ struct Device {
     int screenHeight
     string deviceType
     string screenShape
-    string deviceId;
-    string serial;
-    string totalStorage;
-    string availableStorage;
+    float screenDensity
 }
 
-callback success_cb(Device device)
+callback getinfo_success_cb(Device device)
+callback common_success_cb(object device)
+
 callback fail_cb(string data, int code)
 callback complete_cb()
 
-struct CallBack {
-    callback success_cb success
+struct getinfo_params {
+    callback getinfo_success_cb success
     callback fail_cb fail
     callback complete_cb complete
 }
 
-Device getInfo(CallBack cb)
-string getDeviceId(CallBack cb)
-string getId(CallBack cb)
-string getSerial(CallBack cb)
-string getTotalStorage(CallBack cb)
-string getAvailableStorage(CallBack cb)
+struct common_params {
+    callback common_success_cb success
+    callback fail_cb fail
+    callback complete_cb complete
+}
+
+void getInfo(getinfo_params cb)
+void getDeviceId(common_params cb)
+void getId(common_params cb)
+void getSerial(common_params cb)
+void getTotalStorage(common_params cb)
+void getAvailableStorage(common_params cb)
