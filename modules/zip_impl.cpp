@@ -303,6 +303,7 @@ static void __extract_zip_after_work_cb(uv_work_t* req, int status)
     zipReq* zr = static_cast<zipReq*>(req->data);
     if (!zr)
         return;
+    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
     FeatureInstanceHandle feature = zr->handle;
     if (!FeatureInstanceIsDetached(feature)) {
         /* status is 0 means success and complete. */
