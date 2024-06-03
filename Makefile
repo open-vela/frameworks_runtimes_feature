@@ -172,6 +172,7 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/framework
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/jse
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/am/include/app
 endif
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/framework/dom-protobuf
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/jumpapp.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += jumpApp
