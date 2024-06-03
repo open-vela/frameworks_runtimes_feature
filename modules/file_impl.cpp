@@ -231,11 +231,11 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
         return __invoke_fs_cb(fr, ARGSERROR, "invalid file path", NULL);
     }
     FILE_INFO("path = %s, new_path = %s", path, new_path);
+    fr->req.data = fr;
     result = move ? uv_fs_rename(fc->loop, &fr->req, path, new_path, __uv_fs_req_cb) : uv_fs_copyfile(fc->loop, &fr->req, path, new_path, 0, __uv_fs_req_cb);
     if (result != 0) {
         FILE_ERROR("wrong result = %d", result);
     }
-    fr->req.data = fr;
     return;
 }
 
@@ -278,11 +278,11 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     }
     FILE_INFO("path = %s", path);
 
+    fr->req.data = fr;
     result = access ? uv_fs_access(fc->loop, &fr->req, path, F_OK, __uv_fs_req_cb) : uv_fs_unlink(fc->loop, &fr->req, path, __uv_fs_req_cb);
     if (result != 0) {
         FILE_ERROR("wrong result = %d", result);
     }
-    fr->req.data = fr;
     return;
 }
 void system_file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, system_file_delete_param_t* param)
@@ -692,9 +692,9 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         fr->len = param->length;
     }
     // 使用 libuv 线程池，处理需要多次回调的接口
+    fr->req.data = fr;
     r = uv_queue_work(fc->loop, &fr->req, __load_file_work_cb,
         __load_after_work_cb);
-    fr->req.data = fr;
     if (r != 0) {
         FILE_ERROR("execute uv_queue_work fail");
     }
@@ -1004,9 +1004,9 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
         fr->flags = param->recursive;
     }
     // 使用 libuv 线程池，处理需要多次回调的接口
+    fr->req.data = fr;
     r = uv_queue_work(fc->loop, &fr->req, __load_dir_work_cb,
         __load_dir_after_work_cb);
-    fr->req.data = fr;
     if (r != 0) {
         FILE_ERROR("execute uv_queue_work fail");
     }
