@@ -212,13 +212,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(APPEND FEATURELIST "system_internal_package")
   endif()
 
-  # for the 'system_internal_activity' feature
-  if(CONFIG_SYSTEM_ACTIVITY_SERVICE)
-    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/activity_feature.cpp)
-    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/activity_feature_impl.cpp)
-    list(APPEND FEATURELIST "system_internal_activity")
-  endif()
-
   # for the 'system_request' feature
   if(CONFIG_UTILS_CURL)
     list(APPEND FEATURE_INC_DIRS ${SYSTEM_DIR}/libuv/ext/include)
@@ -265,16 +258,13 @@ if(CONFIG_FEATURE_FRAMEWORK)
   endif()
 
   if(CONFIG_SYSTEM_ACTIVITY_SERVICE)
-    # handle AIDL related stuffs
-    file(GLOB AIDL_PATHS ./modules/aidl/*.aidl)
-    foreach(AIDL_PATH ${AIDL_PATHS})
-      string(REPLACE ".aidl" ${CXXEXT} AIDL_CPP ${AIDL_PATH})
-      list(APPEND FEATURE_SRCS ${AIDL_CPP})
-    endforeach()
+    # for the 'system_internal_activity' feature
+    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/activity_feature.cpp)
+    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/activity_feature_impl.cpp)
+    list(APPEND FEATURELIST "system_internal_activity")
+
     list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/message_transport.cpp
          ${FEATURE_MODULES_DIR}/message_channel_impl.cpp)
-
-    list(APPEND FEATURE_INC_DIRS ${FEATURE_MODULES_DIR}/aidl)
     list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/message_channel.jidl)
     list(APPEND FEATURELIST "system_messageChannel")
   endif()
@@ -381,9 +371,26 @@ if(CONFIG_FEATURE_FRAMEWORK)
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${FEATURE_TOP} ${FEATURE_TOP}/include)
 
   if(CONFIG_SYSTEM_ACTIVITY_SERVICE)
+    # handle AIDL related stuffs
+    file(GLOB_RECURSE AS_AIDL_PATHS ${FEATURE_MODULES_DIR}/aidl/*.aidl)
+    nuttx_add_aidl(
+      TARGET
+      libfeature
+      AIDL_BASE_DIR
+      ${FEATURE_MODULES_DIR}/aidl
+      AIDL_INCLUDE_DIR
+      ${FEATURE_MODULES_DIR}/aidl
+      AIDL_HEADER_DIR
+      ${CMAKE_CURRENT_BINARY_DIR}/aidl
+      AIDL_OUT_DIR
+      ${CMAKE_CURRENT_BINARY_DIR}/aidl
+      AIDL_FLAGS
+      --lang=cpp
+      AIDLS
+      ${AS_AIDL_PATHS})
+
     list(APPEND FEATURE_CLI_SRCS ${FEATURE_MODULES_DIR}/feature_test_cli.cpp)
-    list(APPEND FEATURE_CLI_INC_DIRS ${FEATURE_EXPORTS})
-    set(AIDL_FLAGS --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/)
+    list(APPEND FEATURE_CLI_INC_DIRS ${FEATURE_TOP}/include ${FEATURE_SRC_DIR})
 
     nuttx_add_application(
       NAME
