@@ -91,6 +91,8 @@ MessageChannel::~MessageChannel()
 
     if (!action_cb_map_.empty()) {
         for (auto& x : action_cb_map_) {
+            // 退出时通知ams清理bpbinder
+            unregisterReceiver(x.first);
             FeatureRemoveCallback(ft_instance_, x.second);
         }
     }
