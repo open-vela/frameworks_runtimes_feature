@@ -201,6 +201,10 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
+    if (instance->isDetached() || instance->prototype() == nullptr) {
+        FEATURE_LOG_ERROR("feature is detached, handle:%p", instance);
+        return ret_val;
+    }
     auto description = instance->prototype()->description();
     const Member& member = description->members[index];
     FEATURE_CHECK_EQ_LOG(member.type, MEMBER_METHOD, "feature:%s method:%s", description->name, member.name);
@@ -468,6 +472,10 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
     int index = magic;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
+    if (instance->isDetached() || instance->prototype() == nullptr) {
+        FEATURE_LOG_ERROR("feature is detached, handle:%p", instance);
+        return ret_val;
+    }
     Member* member = const_cast<Member*>(&instance->prototype()->description()->members[index]);
     FEATURE_CHECK_EQ(member->type == MEMBER_ACCESSOR || member->type == MEMBER_CONST, true);
     bool is_dynamic = instance->prototype()->description()->dynamic;
@@ -532,8 +540,13 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
 {
     // get info from this_val
     int index = magic;
+    feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
     FeatureInstance* instance = getInstance(this_val);
     FEATURE_CHECK_NE(instance, nullptr);
+    if (instance->isDetached() || instance->prototype() == nullptr) {
+        FEATURE_LOG_ERROR("feature is detached, handle:%p", instance);
+        return ret_val;
+    }
     auto description = instance->prototype()->description();
     const Member& member = description->members[index];
     FEATURE_CHECK_EQ(member.type, MEMBER_ACCESSOR);
