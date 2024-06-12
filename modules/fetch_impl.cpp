@@ -144,7 +144,6 @@ Fetch::ContentType get_content_type(const char* type)
 }
 
 static void fetch_request_cb(int state, uv_response_t* response);
-void request_cancel(fetch_t* fetch);
 void fetch_free(fetch_t* p)
 {
     if (p) {
@@ -184,20 +183,24 @@ void system_fetch_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle ha
 }
 void system_fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
+    FETCH_DEBUG("");
     request_context_t* p = get_request_context(handle);
     REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t)
     {
+        FETCH_DEBUG("req=%p req->request=%p", req, req->request);
         if (req->exit) {
             fetch_free(req);
         } else {
             // Cancel instance callback
-            uv_request_set_userp(req->request, NULL);
+            FETCH_INFO("Cancel instance callback %p", req);
+            req->exit = true;
         }
     }
 }
 
 void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
+    FETCH_DEBUG("");
     request_context_t* p = static_cast<request_context_t*>(FeatureGetProtoData(handle));
     assert(p);
 
@@ -206,7 +209,9 @@ void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle
     {
         FETCH_DEBUG("task:%p,request:%p", req, req->request);
         if (req->request) {
-            request_cancel(req);
+            FETCH_DEBUG("req=%p", req);
+            uv_request_delete(req->request);
+            req->request = NULL;
         }
         fetch_free(req);
     }
@@ -214,21 +219,6 @@ void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle
     FeatureSetProtoData(p, NULL);
     free(p);
 }
-
-void request_cancel(fetch_t* fetch)
-{
-    uv_request_set_userp(fetch->request, NULL);
-
-    uv_response_t response = {
-        .httpcode = CANCEL_ERROR_CODE,
-        .headers = NULL,
-        .body = (char*)USER_ABORT_MSG,
-        .size = USER_ABORT_MSG_SIZE,
-        .userp = fetch,
-    };
-    fetch_request_cb(REQUEST_CANCEL, &response);
-}
-
 void system_fetch_onUnregister(const char* feature_name) { FETCH_DEBUG(""); }
 
 bool get_method(FtString method, Fetch::MethodType* out)
@@ -288,8 +278,13 @@ static FtAny get_response_data(fetch_t* fetch, uv_response_t* response,
 static void fetch_request_cb(int state, uv_response_t* response)
 {
     fetch_t* p = static_cast<fetch_t*>(response->userp);
-    ASSERT_RET(p);
+    ASSERT_RET_ECHO(p, "The request has been cancelled");
     GET_FEATURE_AND_CTX(p);
+
+    if (p->exit) {
+        p->request = NULL;
+        return;
+    }
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
     if (state == UV_REQUEST_DONE && response->httpcode < HTTP_BAD_REQUES) {
@@ -307,17 +302,12 @@ static void fetch_request_cb(int state, uv_response_t* response)
             INVOKE_FAIL_CB(p->fail_cb, "responseType dosen't match response data",
                 ErrorCode::IOERROR);
         }
-    } else if (state == REQUEST_CANCEL) {
-        FETCH_INFO(USER_ABORT_MSG);
-        uv_request_delete(p->request);
     } else {
         FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
             response->body);
         INVOKE_FAIL_CB(p->fail_cb, response->body, response->httpcode);
     }
-    if (state != REQUEST_CANCEL) {
-        INVOKE_COMPLET_CB(p->complete_cb);
-    }
+    INVOKE_COMPLET_CB(p->complete_cb);
     p->exit = true;
     // request done,uv_request  has been released
     p->request = NULL;
