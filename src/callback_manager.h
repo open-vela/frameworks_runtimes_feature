@@ -53,6 +53,12 @@ public:
 
     FtCallbackId addCallback(TTarget& cb_val, CallbackType* callbackType)
     {
+        auto cid = findCallbackId(cb_val, callbackType);
+        if (cid > 0) {
+            FEATURE_LOG_DEBUG("callback %d has already added!", cid);
+            return cid;
+        }
+
         auto cb = new cb_data_t(addRef(context(), cb_val), callbackType);
         callbacks_[++curr_cid_] = cb;
         return curr_cid_;
@@ -124,6 +130,20 @@ private:
     TCtx context()
     {
         return static_cast<TInstance*>(this)->getContext();
+    }
+
+    FtCallbackId findCallbackId(TTarget& cb_val, CallbackType* callbackType)
+    {
+        for (auto& it : callbacks_) {
+            if (isSameValue(context(), it.second->cb, cb_val)) {
+                FtCallbackId cid = it.first;
+                if (it.second->type != callbackType) {
+                    FEATURE_LOG_WARN("callback %d has different type!", cid);
+                }
+                return cid;
+            }
+        }
+        return 0;
     }
 
     FtCallbackId curr_cid_ = 0;
