@@ -118,41 +118,41 @@ static ft_value_t from_buff(ft_context_ref ft_ctx, const char* data, size_t size
 // FeatureCallbacks
 void system_crypto_onRegister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_crypto_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
     pkg_name = FeatureGetPackageName(handle);
 }
 
 void system_crypto_onRequired(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_crypto_onDetached(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_crypto_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_crypto_onUnregister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData append_data,
     system_crypto_HashDigestParam* options)
 {
-    FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
+    FEATURE_LOG_DEBUG("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -177,7 +177,7 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
             if (!result && crypto_err) {
                 FEATURE_LOG_ERROR("%s %s, native digest error: %s", file_tag, crypto_err);
             }
-            FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+            FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
         }
     } else if (!check_any(options->data) && check_str(options->uri)) {
         result = digest_file(options->algo, options->uri, pkg_name);
@@ -194,7 +194,7 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
 void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData append_data,
     system_crypto_HmacDigestParam* options)
 {
-    FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
+    FEATURE_LOG_DEBUG("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -210,7 +210,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
             msg = crypto_err ? crypto_err : "digest error";
             code = GENERAL;
         }
-        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+        FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
     }
 
     if (result && options->success) {
@@ -286,7 +286,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
-    FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
+    FEATURE_LOG_DEBUG("%s, result: %p", file_tag, result);
 
     // deal with result
     if (result && options->success) {
@@ -379,7 +379,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         msg = "arguments data and uri are only needed for one";
         code = ARGSERROR;
     }
-    FEATURE_LOG_INFO("%s, result: %d", file_tag, result);
+    FEATURE_LOG_DEBUG("%s, result: %d", file_tag, result);
 
     // deal with result
     if (has_result && options->success) {
@@ -448,7 +448,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                 if (check_str(transformation)) {
                     int seg_count;
                     char** cfg_keys = split_str(transformation, "/", &seg_count);
-                    FEATURE_LOG_INFO("transformation: %s, seg_count: %d", transformation, seg_count);
+                    FEATURE_LOG_DEBUG("transformation: %s, seg_count: %d", transformation, seg_count);
                     ft_value_t cfgs_json = ft_parse_json(ft_ctx, encryptCfgs, strlen(encryptCfgs), NULL);
                     ft_value_t ft_enc_type = ft_obj_get_property(ft_ctx, cfgs_json, cfg_keys[0]);
                     if (seg_count == 3 && ft_get_type(ft_ctx, ft_enc_type) != FT_TYPE_NONE) {
@@ -549,7 +549,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
                     code = GENERAL;
                 }
             }
-            FEATURE_LOG_INFO("%s, result: %p", file_tag, result);
+            FEATURE_LOG_DEBUG("%s, result: %p", file_tag, result);
         }
     }
 
@@ -586,7 +586,7 @@ FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
-        FEATURE_LOG_INFO("%s, wjf result: %s", file_tag, result);
+        FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
     }
 
     return result;
@@ -606,7 +606,7 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
-        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+        FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
     }
 
     return result;

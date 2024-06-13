@@ -40,35 +40,35 @@ typedef enum ErrorCode {
 // FeatureCallbacks
 void system_cipher_onRegister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s\n", file_tag);
+    FEATURE_LOG_INFO("%s", file_tag);
 }
 
 void system_cipher_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s\n", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
     pkg_name = FeatureGetPackageName(handle);
 }
 
 void system_cipher_onRequired(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s\n", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_cipher_onDetached(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s\n", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_cipher_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s\n", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_cipher_onUnregister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s\n", file_tag);
+    FEATURE_LOG_DEBUG("%s", file_tag);
 }
 
 void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_data, system_cipher_RSAParam* opts)
