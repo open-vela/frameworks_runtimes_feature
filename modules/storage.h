@@ -16,7 +16,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 /* clang-format off */
@@ -29,7 +28,7 @@
 
 #include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,7 +42,7 @@ void system_storage_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle hand
 void system_storage_onUnregister(const char* feature_name);
 
 // Struct defines
-typedef struct _GetInfo {
+typedef struct _system_storage_GetInfo {
   FtString key;
   FtString _default;
   FtCallbackId success;
@@ -51,9 +50,9 @@ typedef struct _GetInfo {
   FtCallbackId complete;
 } system_storage_GetInfo;
 
-system_storage_GetInfo* system_storageMallocGetInfo();
+system_storage_GetInfo* system_storageMallocGetInfo(void);
 
-typedef struct _SetInfo {
+typedef struct _system_storage_SetInfo {
   FtString key;
   FtString value;
   FtCallbackId success;
@@ -61,33 +60,33 @@ typedef struct _SetInfo {
   FtCallbackId complete;
 } system_storage_SetInfo;
 
-system_storage_SetInfo* system_storageMallocSetInfo();
+system_storage_SetInfo* system_storageMallocSetInfo(void);
 
-typedef struct _ClearInfo {
+typedef struct _system_storage_ClearInfo {
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
 } system_storage_ClearInfo;
 
-system_storage_ClearInfo* system_storageMallocClearInfo();
+system_storage_ClearInfo* system_storageMallocClearInfo(void);
 
-typedef struct _DeleteInfo {
+typedef struct _system_storage_DeleteInfo {
   FtString key;
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
 } system_storage_DeleteInfo;
 
-system_storage_DeleteInfo* system_storageMallocDeleteInfo();
+system_storage_DeleteInfo* system_storageMallocDeleteInfo(void);
 
-typedef struct _KeyInfo {
+typedef struct _system_storage_KeyInfo {
   FtInt index;
   FtCallbackId success;
   FtCallbackId fail;
   FtCallbackId complete;
 } system_storage_KeyInfo;
 
-system_storage_KeyInfo* system_storageMallocKeyInfo();
+system_storage_KeyInfo* system_storageMallocKeyInfo(void);
 
 
 // Function wrappers to be implemented
