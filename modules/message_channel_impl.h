@@ -65,6 +65,7 @@ public:
     void sendBroadcast(const std::string& action, const std::string& body);
     void registerReceiver(const std::string& action, FtCallbackId action_cb);
     void unregisterReceiver(const std::string& action);
+    void unregisterReceiverCb(const std::string& action, FtCallbackId action_cb);
 
     // session
     int createSession(const std::string& target);
@@ -106,7 +107,7 @@ private:
     FtCallbackId message_server_recv_cb_;
     FtCallbackId session_server_recv_cb_;
 
-    std::map<std::string, FtCallbackId> action_cb_map_;
+    std::map<std::string, std::vector<FtCallbackId>> action_cb_map_;
     std::map<SessionId, FtCallbackId> session_ondata_cb_map_;
     std::map<SessionId, FtCallbackId> session_onclose_cb_map_;
 

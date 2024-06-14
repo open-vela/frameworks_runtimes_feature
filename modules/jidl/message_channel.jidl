@@ -19,8 +19,11 @@ void notifyMessage(string target, string body);
 callback onTopicMessage(string topic, string body);
 void setTopicListener(string topic, onTopicMessage cb);
 
-// 移除对应的topic
+// 移除对应的topic所有的callback
 void unsetTopicListener(string topic);
+
+// 移除对应的topic指定的callback
+void unsetTopicListenerCb(string topic, onTopicMessage cb);
 
 // messageChannel模式
 callback cb_ondata(string data)
