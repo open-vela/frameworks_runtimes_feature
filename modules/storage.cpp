@@ -16,7 +16,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 /* clang-format off */
@@ -33,7 +32,7 @@ static const FeatureType system_storage_success_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_storage_success_cb_callback_type {
+static const CallbackType system_storage_success_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_storage_success_cb_parameters,
     .return_type = FT_VOID
@@ -47,7 +46,7 @@ static const FeatureType system_storage_fail_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_storage_fail_cb_callback_type {
+static const CallbackType system_storage_fail_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_storage_fail_cb_parameters,
     .return_type = FT_VOID
@@ -60,12 +59,15 @@ static const FeatureType system_storage_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_storage_complete_cb_callback_type {
+static const CallbackType system_storage_complete_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_storage_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
+
+/****** for JIDL struct 'GetInfo' ******/
+extern const ObjectMapType system_storage_GetInfo_struct_type;
 
 static OptionalType system_storage_GetInfo_member_default_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -73,18 +75,17 @@ static OptionalType system_storage_GetInfo_member_default_opt_type = {
     .str = ""
 };
 
-/****** for JIDL struct 'GetInfo' ******/
 static ObjectMember system_storage_GetInfo_struct_members[] = {
     { "key", FT_STRING, offsetof(system_storage_GetInfo, key), sizeof(FtString) },
     { "default", FT_MK_OPTIONAL(&system_storage_GetInfo_member_default_opt_type), offsetof(system_storage_GetInfo, _default), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_GetInfo, success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_GetInfo, fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_GetInfo, complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_storage_GetInfo_struct_type {
+const ObjectMapType system_storage_GetInfo_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_GetInfo) },
     .members = system_storage_GetInfo_struct_members
 };
@@ -95,24 +96,26 @@ system_storage_GetInfo* system_storageMallocGetInfo () {
 }
 
 
+/****** for JIDL struct 'SetInfo' ******/
+extern const ObjectMapType system_storage_SetInfo_struct_type;
+
 static OptionalType system_storage_SetInfo_member_value_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = ""
 };
 
-/****** for JIDL struct 'SetInfo' ******/
 static ObjectMember system_storage_SetInfo_struct_members[] = {
     { "key", FT_STRING, offsetof(system_storage_SetInfo, key), sizeof(FtString) },
     { "value", FT_MK_OPTIONAL(&system_storage_SetInfo_member_value_opt_type), offsetof(system_storage_SetInfo, value), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_SetInfo, success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_SetInfo, fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_SetInfo, complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_storage_SetInfo_struct_type {
+const ObjectMapType system_storage_SetInfo_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_SetInfo) },
     .members = system_storage_SetInfo_struct_members
 };
@@ -124,15 +127,17 @@ system_storage_SetInfo* system_storageMallocSetInfo () {
 
 
 /****** for JIDL struct 'ClearInfo' ******/
+extern const ObjectMapType system_storage_ClearInfo_struct_type;
+
 static ObjectMember system_storage_ClearInfo_struct_members[] = {
     { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_ClearInfo, success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_ClearInfo, fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_ClearInfo, complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_storage_ClearInfo_struct_type {
+const ObjectMapType system_storage_ClearInfo_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_ClearInfo) },
     .members = system_storage_ClearInfo_struct_members
 };
@@ -144,16 +149,18 @@ system_storage_ClearInfo* system_storageMallocClearInfo () {
 
 
 /****** for JIDL struct 'DeleteInfo' ******/
+extern const ObjectMapType system_storage_DeleteInfo_struct_type;
+
 static ObjectMember system_storage_DeleteInfo_struct_members[] = {
     { "key", FT_STRING, offsetof(system_storage_DeleteInfo, key), sizeof(FtString) },
     { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_DeleteInfo, success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_DeleteInfo, fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_DeleteInfo, complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_storage_DeleteInfo_struct_type {
+const ObjectMapType system_storage_DeleteInfo_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_DeleteInfo) },
     .members = system_storage_DeleteInfo_struct_members
 };
@@ -165,16 +172,18 @@ system_storage_DeleteInfo* system_storageMallocDeleteInfo () {
 
 
 /****** for JIDL struct 'KeyInfo' ******/
+extern const ObjectMapType system_storage_KeyInfo_struct_type;
+
 static ObjectMember system_storage_KeyInfo_struct_members[] = {
     { "index", FT_INT, offsetof(system_storage_KeyInfo, index), sizeof(FtInt) },
     { "success", FT_MK_COMPLEX(&system_storage_success_cb_callback_type), offsetof(system_storage_KeyInfo, success), sizeof(FtCallbackId) },
     { "fail", FT_MK_COMPLEX(&system_storage_fail_cb_callback_type), offsetof(system_storage_KeyInfo, fail), sizeof(FtCallbackId) },
     { "complete", FT_MK_COMPLEX(&system_storage_complete_cb_callback_type), offsetof(system_storage_KeyInfo, complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_storage_KeyInfo_struct_type {
+const ObjectMapType system_storage_KeyInfo_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_storage_KeyInfo) },
     .members = system_storage_KeyInfo_struct_members
 };
@@ -293,7 +302,7 @@ static const Member system_storage_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks system_storage_callbacks {
+static const struct FeatureCallbacks system_storage_callbacks = {
     system_storage_onRegister,
     system_storage_onCreate,
     system_storage_onRequired,
@@ -306,7 +315,7 @@ static const FeatureDescription system_storage_desc = {
     .version = 1,
     .name = "system.storage",
     .description = "system.storage",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &system_storage_callbacks,
     .member_count = countof(system_storage_members),
     .members = system_storage_members,
