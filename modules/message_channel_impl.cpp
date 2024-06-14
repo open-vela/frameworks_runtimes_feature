@@ -50,10 +50,12 @@ MessageChannel::MessageChannel()
 MessageChannel::~MessageChannel()
 {
     if (!action_cb_map_.empty()) {
-        for (auto& x : action_cb_map_) {
+        for (auto& item : action_cb_map_) {
             // 退出时通知ams清理bpbinder
-            broadcast_channel_->unregisterReceiver(x.first);
-            FeatureRemoveCallback(ft_instance_, x.second);
+            broadcast_channel_->unregisterReceiver(item.first);
+            for (auto& id : item.second) {
+                FeatureRemoveCallback(ft_instance_, id);
+            }
         }
     }
 
@@ -216,17 +218,23 @@ void MessageChannel::onReceive(const std::string& target,
         return;
     }
 
+    std::vector<FtCallbackId> vec = iter->second;
     if (ft_instance_ != nullptr) {
-        bool ret = FeatureInvokeCallback(ft_instance_, iter->second,
-            (iter->first).c_str(), data.c_str());
-        if (!ret) {
-            FEATURE_LOG_ERROR("broadcast recv invoke failed !");
-            return;
+        for (auto& id : vec) {
+            bool ret = FeatureInvokeCallback(ft_instance_, id,
+                (iter->first).c_str(), data.c_str());
+            if (!ret) {
+                FEATURE_LOG_ERROR("broadcast recv invoke failed !");
+                return;
+            }
         }
+
     } else {
-        auto pair = subscribe_map_[iter->second];
-        SubscribeCb cb = pair.first;
-        cb((iter->first).c_str(), data.c_str(), pair.second);
+        for (auto& id : vec) {
+            auto pair = subscribe_map_[id];
+            SubscribeCb cb = pair.first;
+            cb((iter->first).c_str(), data.c_str(), pair.second);
+        }
     }
 }
 
@@ -243,16 +251,34 @@ void MessageChannel::registerReceiver(const std::string& action,
 {
     if (broadcast_channel_) {
         broadcast_channel_->registerReceiver(action);
-        action_cb_map_[action] = action_cb;
+        action_cb_map_[action].push_back(action_cb);
     }
 }
 
 void MessageChannel::unregisterReceiver(const std::string& action)
 {
     if (broadcast_channel_ && action_cb_map_.find(action) != action_cb_map_.end()) {
-        FeatureRemoveCallback(ft_instance_, action_cb_map_[action]);
+        for (auto& id : action_cb_map_[action]) {
+            FeatureRemoveCallback(ft_instance_, id);
+        }
         action_cb_map_.erase(action);
         broadcast_channel_->unregisterReceiver(action);
+    }
+}
+
+void MessageChannel::unregisterReceiverCb(const std::string& action, FtCallbackId action_cb)
+{
+    if (action_cb_map_.find(action) != action_cb_map_.end()) {
+        std::vector<FtCallbackId> vec = action_cb_map_[action];
+        auto it = std::find(vec.begin(), vec.end(), action_cb);
+        if (it != vec.end()) {
+            FeatureRemoveCallback(ft_instance_, *it);
+            vec.erase(it);
+        }
+        if (broadcast_channel_ && vec.empty()) {
+            action_cb_map_.erase(action);
+            broadcast_channel_->unregisterReceiver(action);
+        }
     }
 }
 
@@ -377,7 +403,9 @@ void MessageChannel::registerReceiverForC(const std::string& action, SubscribeCb
 void MessageChannel::unregisterReceiverForC(const std::string& action)
 {
     unregisterReceiver(action);
-    subscribe_map_.erase(action_cb_map_[action]);
+    for (auto& id : action_cb_map_[action]) {
+        subscribe_map_.erase(id);
+    }
 }
 
 ///////////////////////// jidl feature implement
@@ -571,6 +599,12 @@ void system_messageChannel_wrap_unsetTopicListener(
     FEATURE_LOG_DEBUG("%s::%s()", MessageChannelTag, __FUNCTION__);
     MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
     message_channel->unregisterReceiver(topic);
+}
+
+void system_messageChannel_wrap_unsetTopicListenerCb(FeatureInstanceHandle feature, union AppendData append_data, FtString topic, FtCallbackId cb)
+{
+    MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
+    message_channel->unregisterReceiverCb(topic, cb);
 }
 
 void system_messageChannel_wrap_print(FeatureInstanceHandle feature,
