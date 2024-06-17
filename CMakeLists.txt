@@ -145,13 +145,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
   list(APPEND FEATURELIST "system_prompt")
 
   # for the 'jumpApp' feature
-  list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/jumpapp_impl.cpp)
-  if(CONFIG_QUICKAPP_VAPP_XMS)
-    list(APPEND FEATURE_INC_DIRS ${FRAMEWORKS_DIR}/quickapp/src/framework
-         ${FRAMEWORKS_DIR}/quickapp/src/jse
-         ${FRAMEWORKS_DIR}/base/am/include/app)
-  endif()
-  list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/jumpapp.jidl)
+  # compile in quickapp/src/jse/modules/system/CMakeLists.txt
   list(APPEND FEATURELIST "jumpApp")
 
   # for media features
