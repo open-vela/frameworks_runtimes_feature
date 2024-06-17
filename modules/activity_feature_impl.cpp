@@ -36,6 +36,16 @@ public:
     {
     }
 
+    ~FtServiceConnection()
+    {
+        if (FeatureCheckCallbackId(mHandler, mOnConnectedCb)) {
+            FeatureRemoveCallback(mHandler, mOnConnectedCb);
+        }
+        if (FeatureCheckCallbackId(mHandler, mOnDisConnectedCb)) {
+            FeatureRemoveCallback(mHandler, mOnDisConnectedCb);
+        }
+    }
+
     void onConnected(const sp<android::IBinder>& server)
     {
         FeatureInvokeCallback(mHandler, mOnConnectedCb);
@@ -54,9 +64,14 @@ private:
 
 class ServiceConnectManager {
 public:
-    ServiceConnectManager()
+    ServiceConnectManager(Context* ctx)
         : mBindId(0)
+        , mCtx(ctx)
     {
+    }
+    ~ServiceConnectManager()
+    {
+        clearServiceConnect();
     }
 
     int addServiceConnect(const sp<FtServiceConnection>& conn)
@@ -79,9 +94,20 @@ public:
         return nullptr;
     }
 
+    void clearServiceConnect()
+    {
+        for (auto it = mServiceConns.begin(); it != mServiceConns.end(); ++it) {
+            if (mCtx) {
+                mCtx->unbindService(it->second);
+            }
+        }
+        mServiceConns.clear();
+    }
+
 private:
     int mBindId;
     std::map<int, sp<FtServiceConnection>> mServiceConns;
+    Context* mCtx;
 };
 
 // FeatureCallbacks to be implemented
@@ -98,7 +124,8 @@ void system_internal_activity_onCreate(FeatureRuntimeContext ctx, FeatureProtoHa
 void system_internal_activity_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    auto serviceManager = new ServiceConnectManager();
+    Context* nativeContext = static_cast<Context*>(FeatureInstanceGetManagerUserData(handle, "nativeContext"));
+    auto serviceManager = new ServiceConnectManager(nativeContext);
     FeatureSetObjectData(handle, serviceManager);
 }
 
