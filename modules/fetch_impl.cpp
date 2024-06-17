@@ -324,7 +324,12 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
 
     // encode url
     const char* decode = url_decode(obj->url);
-    fetch->url = url_encode(decode);
+    if (strcmp(decode, obj->url) == 0) {
+        fetch->url = url_encode(decode);
+    } else {
+        fetch->url = strdup(obj->url);
+    }
+
     free((void*)decode);
 
     // set url
