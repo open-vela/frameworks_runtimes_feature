@@ -20,7 +20,7 @@
 
 int getAlignedCount(const FeatureType param)
 {
-    if (sizeof(int) / sizeof(intptr_t) == 2) {
+    if (sizeof(void*) == 8) {
         // in 64bit system
         return 1;
     }
@@ -36,10 +36,11 @@ int getAlignedCount(const FeatureType param)
             break;
         }
     } else if (FT_IS_COMPLEX(param)) {
+        ComplexTypeHeader* header = (ComplexTypeHeader*)FT_GET_COMPLEX(param);
         switch (param) {
         case COMPLEX_OPTIONAL: {
-            ComplexTypeHeader* header = (ComplexTypeHeader*)FT_GET_COMPLEX(param);
-            size = getAlignedCount((FeatureType)header->type);
+            OptionalType* opt_type = (OptionalType*)header;
+            size = getAlignedCount(opt_type->type);
         } break;
         }
     }
