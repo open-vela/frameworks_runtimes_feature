@@ -19,8 +19,10 @@
 #include "feature_utils.h"
 #include "unzip.h"
 #include "zip.h"
+#include <atomic>
 #include <utime.h>
 #include <uv.h>
+#include <vector>
 
 #define FOPEN_FUNC(filename, mode) fopen64(filename, mode)
 #define WRITEBUFFERSIZE (8192)
@@ -54,13 +56,47 @@ static const char* file_tag = "[jidl_feature] zip_impl";
     } while (0)
 
 typedef struct {
+    uv_work_t req;
+    std::atomic<bool> unzip_success_flag = false;
+    char* src_path; // src pach
+    char* dst_path; // dst pach
+    int success;
+    int fail;
+    int complete;
+    FeatureInstanceHandle handle;
+} zipReq;
+
+struct ZipContext {
     uv_loop_t* loop;
     const char* pkg_name;
-} ZipContext;
+    std::vector<zipReq*> zr_arr;
+
+    ZipContext(uv_loop_t* loop_, const char* pkg_name_)
+        : loop(loop_)
+        , pkg_name(pkg_name_)
+        , zr_arr()
+    {
+    }
+};
+
+static void freeZipReq(zipReq* zr)
+{
+    if (zr == NULL) {
+        return;
+    }
+    if (zr->handle)
+        FeatureFreeInstanceHandle(zr->handle);
+    if (zr->src_path)
+        free(zr->src_path);
+    if (zr->dst_path)
+        free(zr->dst_path);
+    free(zr);
+    zr = nullptr;
+}
 
 ZipContext* getZipContext(FeatureInstanceHandle handle)
 {
-    void* user_data = FeatureGetProtoData(FeatureGetProtoHandle(handle));
+    void* user_data = FeatureGetObjectData(handle);
     assert(user_data != nullptr);
     return static_cast<ZipContext*>(user_data);
 }
@@ -73,54 +109,59 @@ void system_zip_onRegister(const char* feature_name)
 void system_zip_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    ZipContext* zc = (ZipContext*)FeatureGetProtoData(handle);
-    if (zc == nullptr) {
-        zc = static_cast<ZipContext*>(malloc(sizeof(ZipContext)));
-        FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
-        zc->loop = FeatureGetUVLoop(manager);
-        zc->pkg_name = FeatureGetPackageName(handle);
-        if (!zc->pkg_name || strlen(zc->pkg_name) == 0) {
-            FEATURE_LOG_ERROR("package name is null\n");
-            zc->pkg_name = "zip_test";
-        }
-        FEATURE_LOG_INFO("pkg name = %s \n", zc->pkg_name);
-        FeatureSetProtoData(handle, zc);
-    }
 }
 
 void system_zip_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    ZipContext* zc = (ZipContext*)FeatureGetObjectData(handle);
+    if (zc == nullptr) {
+        FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(handle);
+        FeatureProtoHandle ProtoHandle = FeatureGetProtoHandle(handle);
+        zc = new ZipContext(FeatureGetUVLoop(manager), FeatureGetPackageName(ProtoHandle));
+
+        if (!zc->pkg_name || strlen(zc->pkg_name) == 0) {
+            FEATURE_LOG_ERROR("package name is null\n");
+            zc->pkg_name = "zip_test";
+        }
+        FEATURE_LOG_INFO("pkg name = %s \n", zc->pkg_name);
+        FeatureSetObjectData(handle, zc);
+    }
 }
+
+static void detach(FeatureInstanceHandle handle)
+{
+    ZipContext* zc = (ZipContext*)FeatureGetObjectData(handle);
+    FEATURE_LOG_INFO("%s zc=%p", __func__, zc);
+
+    if (zc != nullptr) {
+        for (size_t i = 0; i < zc->zr_arr.size(); i++) {
+            /* task not start, zc->zr_arr[i] not null, should be cancel the task when page destory */
+            if (zc->zr_arr[i] != nullptr) {
+                uv_cancel((uv_req_t*)(&(zc->zr_arr[i]->req)));
+                zc->zr_arr[i] = nullptr;
+            }
+        }
+        delete zc;
+    }
+    FeatureSetObjectData(handle, nullptr);
+}
+
 void system_zip_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    detach(handle);
 }
 
 void system_zip_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    ZipContext* zc = (ZipContext*)FeatureGetProtoData(handle);
-    if (!zc)
-        return;
-    free(zc);
 }
 
 void system_zip_onUnregister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
-
-typedef struct
-{
-    uv_work_t req;
-    char* src_path; // src pach
-    char* dst_path; // dst pach
-    int success;
-    int fail;
-    int complete;
-    FeatureInstanceHandle handle;
-} zipReq;
 
 /* change_file_date : change the date/time of a file
     filename : the filename of the file where date/time must be modified
@@ -284,18 +325,14 @@ static int __error_code_map(int error)
     return code;
 }
 
-static void freeZipReq(zipReq* zr)
+static void clearZrPtr(std::vector<zipReq*>& zr_arr, zipReq* zr)
 {
-    if (zr == NULL) {
-        return;
+    for (size_t i = 0; i < zr_arr.size(); ++i) {
+        if (zr_arr[i] == zr) {
+            zr_arr[i] = nullptr;
+        }
     }
-    if (zr->handle)
-        FeatureFreeInstanceHandle(zr->handle);
-    if (zr->src_path)
-        free(zr->src_path);
-    if (zr->dst_path)
-        free(zr->dst_path);
-    free(zr);
+    return;
 }
 
 static void __extract_zip_after_work_cb(uv_work_t* req, int status)
@@ -303,23 +340,40 @@ static void __extract_zip_after_work_cb(uv_work_t* req, int status)
     zipReq* zr = static_cast<zipReq*>(req->data);
     if (!zr)
         return;
+
+    if (status == UV_ECANCELED) {
+        FEATURE_LOG_ERROR("%s: uv decompress work was canceled !!!\n", __FUNCTION__);
+        freeZipReq(zr);
+        return;
+    }
+
     FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
     FeatureInstanceHandle feature = zr->handle;
     if (!FeatureInstanceIsDetached(feature)) {
-        /* status is 0 means success and complete. */
-        if (status != 0) {
-            FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
-            INVOKE_FAIL_CB(zr->fail, uv_strerror(status), __error_code_map(status));
+        /* status is 0 means uv task success execute and unzip_success_flag is true means zip operate success. */
+        if (status == 0 && zr->unzip_success_flag) {
+            FEATURE_LOG_INFO("unzip src_path success %s", zr->src_path);
+            FeatureInvokeCallback(feature, zr->success);
         } else {
-            INVOKE_SUCCESS_CB(zr->success);
+            FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
+            FeatureInvokeCallback(feature, zr->fail, uv_strerror(status), __error_code_map(status));
         }
-        INVOKE_COMPLET_CB(zr->complete);
+        FeatureInvokeCallback(feature, zr->complete);
+
         FeatureRemoveCallback(feature, zr->success);
         FeatureRemoveCallback(feature, zr->fail);
         FeatureRemoveCallback(feature, zr->complete);
+
+        /* if task success finished , zr array[i] set null and free zr. */
+        ZipContext* zc = getZipContext(feature);
+        if (zc != nullptr) {
+            clearZrPtr(zc->zr_arr, zr);
+            freeZipReq(zr);
+        }
+    } else {
+        /* work running (can not be canceled) but page has destoryed, should be free zr.*/
+        freeZipReq(zr);
     }
-    /* free resources */
-    freeZipReq(zr);
 }
 
 static void _do_extract_zip_work_cb(uv_work_t* wk)
@@ -372,7 +426,8 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
             }
         }
     }
-
+    /* set unzip file flag is true */
+    zr->unzip_success_flag = true;
     return;
 }
 
@@ -388,6 +443,8 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
 
     ZipContext* zc = getZipContext(feature);
     zipReq* zr = static_cast<zipReq*>(malloc(sizeof(*zr)));
+    /* maybe decompress API called multiple times in a page, need a array save different zr in a ZipContext (instance) */
+    zc->zr_arr.push_back(zr);
 
     if (!zr) {
         FEATURE_LOG_ERROR("malloc fail");
