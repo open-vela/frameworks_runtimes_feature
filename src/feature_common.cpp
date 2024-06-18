@@ -34,13 +34,17 @@ int getAlignedCount(const FeatureType param)
         case FT_UINT64:
             size = 2;
             break;
+        default:
+            break;
         }
     } else if (FT_IS_COMPLEX(param)) {
         ComplexTypeHeader* header = (ComplexTypeHeader*)FT_GET_COMPLEX(param);
-        switch (param) {
+        switch (header->type) {
         case COMPLEX_OPTIONAL: {
             OptionalType* opt_type = (OptionalType*)header;
             size = getAlignedCount(opt_type->type);
+        } break;
+        default: {
         } break;
         }
     }
