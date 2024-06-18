@@ -162,6 +162,7 @@ FtInt system_internal_activity_wrap_startActivity(FeatureInstanceHandle feature,
         const char* jsonStr = ft_to_string(ftCtx, *params);
         intent.setData(jsonStr);
         ret = nativeContext->startActivity(intent);
+        ft_free_string(ftCtx, jsonStr);
     } else {
         FEATURE_LOG_ERROR("Can't get nativeContext in Feature user data");
     }
@@ -197,6 +198,7 @@ FtInt system_internal_activity_wrap_startService(FeatureInstanceHandle feature,
         const char* jsonStr = ft_to_string(ftCtx, *params);
         intent.setData(jsonStr);
         ret = nativeContext->startService(intent);
+        ft_free_string(ftCtx, jsonStr);
     } else {
         FEATURE_LOG_ERROR("Can't get nativeContext in Feature user data");
     }
@@ -235,6 +237,7 @@ FtInt system_internal_activity_wrap_bindService(FeatureInstanceHandle feature,
             const char* jsonStr = ft_to_string(ftCtx, *params);
             intent.setData(jsonStr);
             nativeContext->bindService(intent, ftConn);
+            ft_free_string(ftCtx, jsonStr);
         }
     } else {
         FEATURE_LOG_ERROR("Can't get nativeContext in Feature user data");
