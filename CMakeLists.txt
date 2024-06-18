@@ -93,17 +93,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
   # workaround for gcc-13 warning
   list(APPEND FEATURE_OPTIONS --param=min-pagesize=0)
 
-  # set TARGETDIR according to the CONFIG_ARCH
-  if(CONFIG_ARCH STREQUAL "arm")
-    set(TARGETDIR arm)
-  elseif(CONFIG_ARCH STREQUAL "arm64")
-    set(TARGETDIR aarch64)
-  elseif(CONFIG_ARCH STREQUAL "xtensa")
-    set(TARGETDIR xtensa)
-  else()
-    set(TARGETDIR x86)
-  endif()
-
   # for the 'service_internal_account' feature
   if(CONFIG_ACCOUNT_FEATURE)
     list(APPEND FEATURE_INC_DIRS ${FRAMEWORKS_DIR}/account/include)
@@ -356,7 +345,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
   target_include_directories(libfeature PRIVATE ${FEATURE_INC_DIRS})
   target_compile_options(libfeature PRIVATE ${FEATURE_OPTIONS})
   target_compile_definitions(libfeature PRIVATE ${FEATURE_DEFS})
-  nuttx_add_dependencies(TARGET libfeature DEPENDS libffi)
 
   nuttx_export_header(TARGET libfeature INCLUDE_DIRECTORIES ${FEATURE_EXPORTS})
   set_property(
