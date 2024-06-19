@@ -37,7 +37,7 @@ void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle h
     PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(handle, "PromptInterfaceHandler"));
     promptInit init = pm_hander->init;
     if (init) {
-        init(handle);
+        init(handle, pm_hander->data);
     }
 }
 
