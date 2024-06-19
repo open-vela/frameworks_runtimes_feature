@@ -188,12 +188,14 @@ void system_fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle ha
     REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t)
     {
         FETCH_DEBUG("req=%p req->request=%p", req, req->request);
-        if (req->exit) {
-            fetch_free(req);
-        } else {
-            // Cancel instance callback
-            FETCH_INFO("Cancel instance callback %p", req);
-            req->exit = true;
+        if (req->feature == handle) {
+            if (req->exit) {
+                fetch_free(req);
+            } else {
+                // Cancel instance callback
+                FETCH_INFO("Cancel instance callback %p", req);
+                req->exit = true;
+            }
         }
     }
 }
