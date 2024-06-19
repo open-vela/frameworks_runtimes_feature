@@ -144,7 +144,7 @@ void system_brightness_wrap_setValue(FeatureInstanceHandle feature,
     CHECK_SERVICE_VALID()
     int ret = -1;
     if (param->value >= 0 && param->value <= 255) {
-        auto status = service->setTargetBrightness(param->value, 50);
+        auto status = service->setTargetBrightness(param->value, 0);
         ret = status.isOk() ? 0 : -1;
         FEATURE_LOG_INFO("brightness target level is %d", param->value);
     }
