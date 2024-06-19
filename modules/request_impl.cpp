@@ -24,6 +24,7 @@
 #include "uv_ext.h"
 #include <cassert>
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <malloc.h>
@@ -261,8 +262,11 @@ static void __request_cb(int state, uv_response_t* response)
             // 返回文件绝对地址
             system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
             char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
-            param->uri = body;
+            char* value = (char*)FeatureMalloc(strlen(body) + 1, FT_CHAR);
+            sprintf(value, "%s", body);
+            param->uri = value;
             INVOKE_SUCCESS_CB(info->success, param);
+            FeatureFreeValue(param);
             FeatureRemoveCallback(feature, info->fail);
             res->success = true;
             res->data = strdup(body);
@@ -308,6 +312,7 @@ int __progress_cb(uv_request_t* request, off_t dltotal, off_t dlnow, off_t ultot
             info->pre = dlnow;
             FeatureInvokeCallback(info->feature_handle, info->notify_func, data);
         }
+        FeatureFreeValue(data);
     }
     return 0;
 }
@@ -319,6 +324,7 @@ void __request_cancel(RequestInfo* info)
         uv_request_delete(info->request);
         uv_response_t response;
         response.userp = info;
+        response.body = (char*)"request is canceled";
         __request_cb(REQUEST_CANCEL, &response);
     }
 }
@@ -554,9 +560,12 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
                 if (it->second->success) {
                     REQUEST_INFO("get (*downloadResults).data = %s", it->second->data);
                     succ_param = system_requestMallocdl_cmpl_succ_t();
-                    succ_param->uri = it->second->data;
+                    char* value = (char*)FeatureMalloc(strlen(it->second->data) + 1, FT_CHAR);
+                    sprintf(value, "%s", it->second->data);
+                    succ_param->uri = value;
                     INVOKE_SUCCESS_CB(param->success, succ_param);
                     FeatureRemoveCallback(feature, param->fail);
+                    FeatureFreeValue(succ_param);
                 } else {
                     INVOKE_FAIL_CB(param->fail, it->second->data, it->second->code);
                     FeatureRemoveCallback(feature, param->success);
