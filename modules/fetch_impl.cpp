@@ -308,6 +308,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
         INVOKE_FAIL_CB(p->fail_cb, response->body, response->httpcode);
     }
     INVOKE_COMPLET_CB(p->complete_cb);
+    REMOVE_ALL_CALLBACK(p->success_cb, p->fail_cb, p->complete_cb);
     p->exit = true;
     // request done,uv_request  has been released
     p->request = NULL;
@@ -570,4 +571,5 @@ err:
     FETCH_DEBUG("msg:%s,code:%d", msg, code);
     INVOKE_FAIL_CB(obj->fail, msg, code);
     INVOKE_COMPLET_CB(obj->complete);
+    REMOVE_ALL_CALLBACK(obj->success, obj->fail, obj->complete);
 }
