@@ -3,6 +3,7 @@ include(nuttx_add_jidl)
 # set the C++ file extension and standard
 set(CXXEXT .cpp)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(FEATURE_TOP ${CMAKE_CURRENT_LIST_DIR})
 set(FEATURE_SRC_DIR ${FEATURE_TOP}/src)
@@ -120,8 +121,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
   list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/error.jidl)
   list(APPEND FEATURELIST "Error")
   # for the 'system_device' feature
-  list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/device_impl.cpp)
-  list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/device.jidl)
+  # compile in quickapp/src/jse/modules/system/CMakeLists.txt
   list(APPEND FEATURELIST "system_device")
   # for the 'system_fetch' feature
   list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/net_utils.cpp)
