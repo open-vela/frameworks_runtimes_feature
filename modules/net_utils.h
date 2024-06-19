@@ -100,7 +100,6 @@ typedef enum ErrorCode {
         if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
             FEATURE_LOG_ERROR("invoke success callback failed !"); \
         }                                                          \
-        FeatureRemoveCallback(feature, cb);                        \
     } while (0)
 
 #define INVOKE_FAIL_CB(cb, msg, code)                           \
@@ -108,7 +107,6 @@ typedef enum ErrorCode {
         if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
             FEATURE_LOG_ERROR("invoke fail callback failed !"); \
         }                                                       \
-        FeatureRemoveCallback(feature, cb);                     \
     } while (0)
 
 #define INVOKE_COMPLET_CB(cb)                                       \
@@ -116,12 +114,19 @@ typedef enum ErrorCode {
         if (!FeatureInvokeCallback(feature, cb)) {                  \
             FEATURE_LOG_ERROR("invoke complete callback failed !"); \
         }                                                           \
-        FeatureRemoveCallback(feature, cb);                         \
+    } while (0)
+
+#define REMOVE_ALL_CALLBACK(__succ__, __fail__, __complet__) \
+    do {                                                     \
+        FeatureRemoveCallback(feature, __succ__);            \
+        FeatureRemoveCallback(feature, __fail__);            \
+        FeatureRemoveCallback(feature, __complet__);         \
     } while (0)
 
 #define check_str(ptr) ((ptr) && strlen(ptr) > 0)
 #define check_any(ptr) ((ptr) && (ft_get_type(ft_ctx, *ptr) >= 0))
-uint8_t type_contain(const char** type_array, int size, const char* type, bool ignore_case);
+uint8_t
+type_contain(const char** type_array, int size, const char* type, bool ignore_case);
 
 typedef struct {
     uv_request_session_t* handle;
