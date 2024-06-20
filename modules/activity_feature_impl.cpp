@@ -36,7 +36,9 @@ public:
     {
     }
 
-    ~FtServiceConnection()
+    // FtServiceConnection is sp<IBinder>, it will be destroy after app exit!!!
+    // we must clear feature ref by manual
+    void clearFeatureRef()
     {
         if (FeatureCheckCallbackId(mHandler, mOnConnectedCb)) {
             FeatureRemoveCallback(mHandler, mOnConnectedCb);
@@ -88,6 +90,7 @@ public:
         auto iter = mServiceConns.find(bindId);
         if (iter != mServiceConns.end()) {
             auto serviceConn = iter->second;
+            serviceConn->clearFeatureRef();
             mServiceConns.erase(iter);
             return serviceConn;
         }
@@ -99,6 +102,7 @@ public:
         for (auto it = mServiceConns.begin(); it != mServiceConns.end(); ++it) {
             if (mCtx) {
                 mCtx->unbindService(it->second);
+                it->second->clearFeatureRef();
             }
         }
         mServiceConns.clear();
