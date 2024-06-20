@@ -116,6 +116,7 @@ void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
+    REMOVE_ALL_CBS(opts);
 
     if (result)
         free(result);
@@ -155,6 +156,7 @@ void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
+    REMOVE_ALL_CBS(opts);
 
     if (result)
         free(result);
@@ -198,6 +200,7 @@ void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
+    REMOVE_ALL_CBS(opts);
 }
 
 void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_data, system_cipher_DigestParam* opts)
@@ -233,6 +236,7 @@ void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
+    REMOVE_ALL_CBS(opts);
 
     if (result)
         FeatureFreeValue(result);
@@ -271,6 +275,7 @@ void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
+    REMOVE_ALL_CBS(opts);
 
     if (result)
         FeatureFreeValue(result);
@@ -329,6 +334,7 @@ void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
     if (opts->complete) {
         INVOKE_COMPLET_CB(opts->complete);
     }
+    REMOVE_ALL_CBS(opts);
 
     if (result)
         free(result);
