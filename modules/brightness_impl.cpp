@@ -77,8 +77,8 @@ void detach(FeatureInstanceHandle handle)
         data->callback = nullptr;
         data->service = nullptr;
         delete data;
+        FeatureSetObjectData(handle, nullptr);
     }
-    FeatureSetObjectData(handle, nullptr);
 }
 
 void system_brightness_onDetached(FeatureRuntimeContext ctx,
