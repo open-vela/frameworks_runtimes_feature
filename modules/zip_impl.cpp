@@ -36,7 +36,6 @@ static const char* file_tag = "[jidl_feature] zip_impl";
         if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
             FEATURE_LOG_ERROR("invoke success callback failed !"); \
         }                                                          \
-        FeatureRemoveCallback(feature, cb);                        \
     } while (0)
 
 #define INVOKE_FAIL_CB(cb, msg, code)                           \
@@ -44,7 +43,6 @@ static const char* file_tag = "[jidl_feature] zip_impl";
         if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
             FEATURE_LOG_ERROR("invoke fail callback failed !"); \
         }                                                       \
-        FeatureRemoveCallback(feature, cb);                     \
     } while (0)
 
 #define INVOKE_COMPLET_CB(cb)                                       \
@@ -52,7 +50,13 @@ static const char* file_tag = "[jidl_feature] zip_impl";
         if (!FeatureInvokeCallback(feature, cb)) {                  \
             FEATURE_LOG_ERROR("invoke complete callback failed !"); \
         }                                                           \
-        FeatureRemoveCallback(feature, cb);                         \
+    } while (0)
+
+#define REMOVE_ALL_CALLBACK(__succ__, __fail__, __complet__) \
+    do {                                                     \
+        FeatureRemoveCallback(feature, __succ__);            \
+        FeatureRemoveCallback(feature, __fail__);            \
+        FeatureRemoveCallback(feature, __complet__);         \
     } while (0)
 
 typedef struct {
@@ -353,16 +357,14 @@ static void __extract_zip_after_work_cb(uv_work_t* req, int status)
         /* status is 0 means uv task success execute and unzip_success_flag is true means zip operate success. */
         if (status == 0 && zr->unzip_success_flag) {
             FEATURE_LOG_INFO("unzip src_path success %s", zr->src_path);
-            FeatureInvokeCallback(feature, zr->success);
+            INVOKE_SUCCESS_CB(zr->success);
         } else {
             FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
-            FeatureInvokeCallback(feature, zr->fail, uv_strerror(status), __error_code_map(status));
+            INVOKE_FAIL_CB(zr->fail, uv_strerror(status), __error_code_map(status));
         }
-        FeatureInvokeCallback(feature, zr->complete);
+        INVOKE_COMPLET_CB(zr->complete);
 
-        FeatureRemoveCallback(feature, zr->success);
-        FeatureRemoveCallback(feature, zr->fail);
-        FeatureRemoveCallback(feature, zr->complete);
+        REMOVE_ALL_CALLBACK(zr->success, zr->fail, zr->complete);
 
         /* if task success finished , zr array[i] set null and free zr. */
         ZipContext* zc = getZipContext(feature);
@@ -533,5 +535,6 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
 fail:
     INVOKE_FAIL_CB(info->fail, msg, code);
     INVOKE_COMPLET_CB(info->complete);
+    REMOVE_ALL_CALLBACK(info->success, info->fail, info->complete);
     freeZipReq(zr);
 }
