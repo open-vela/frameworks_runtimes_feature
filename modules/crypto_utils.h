@@ -35,7 +35,6 @@
         if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) { \
             FEATURE_LOG_ERROR("invoke success callback failed !"); \
         } \
-        FeatureRemoveCallback(feature, cb); \
     } while (0)
 
 #define INVOKE_FAIL_CB(cb, msg, code) \
@@ -44,7 +43,6 @@
         if (!FeatureInvokeCallback(feature, cb, ret_data, code)) { \
             FEATURE_LOG_ERROR("invoke fail callback failed !"); \
         } \
-        FeatureRemoveCallback(feature, cb); \
     } while (0)
 
 #define INVOKE_COMPLET_CB(cb) \
@@ -52,7 +50,13 @@
         if (!FeatureInvokeCallback(feature, cb)) { \
             FEATURE_LOG_ERROR("invoke complete callback failed !"); \
         } \
-        FeatureRemoveCallback(feature, cb); \
+    } while (0)
+
+#define REMOVE_ALL_CBS(options) \
+    do {                                                     \
+        FeatureRemoveCallback(feature, options->success);            \
+        FeatureRemoveCallback(feature, options->fail);            \
+        FeatureRemoveCallback(feature, options->complete);         \
     } while (0)
 
 #define CHECK_ERR_RET(ptr, msg) \

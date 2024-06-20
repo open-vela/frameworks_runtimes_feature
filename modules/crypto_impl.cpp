@@ -225,6 +225,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     if (result)
         FeatureFreeValue(result);
@@ -300,6 +301,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     free_str_array(algo_segs, seg_count);
     if (result)
@@ -389,6 +391,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     free_str_array(algo_segs, seg_count);
 }
@@ -492,6 +495,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     if (result)
         free(result);
@@ -562,6 +566,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     if (result)
         free(result);
