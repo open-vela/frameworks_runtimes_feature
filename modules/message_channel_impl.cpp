@@ -49,6 +49,14 @@ MessageChannel::MessageChannel()
 
 MessageChannel::~MessageChannel()
 {
+    if (!action_cb_map_.empty()) {
+        for (auto& x : action_cb_map_) {
+            // 退出时通知ams清理bpbinder
+            broadcast_channel_->unregisterReceiver(x.first);
+            FeatureRemoveCallback(ft_instance_, x.second);
+        }
+    }
+
     // client_channel_ and broadcast_channel_ is the same object.
     if (client_channel_ != nullptr && broadcast_channel_ != nullptr) {
         client_channel_->clearUvTimer();
@@ -85,14 +93,6 @@ MessageChannel::~MessageChannel()
 
     if (!session_onclose_cb_map_.empty()) {
         for (auto& x : session_onclose_cb_map_) {
-            FeatureRemoveCallback(ft_instance_, x.second);
-        }
-    }
-
-    if (!action_cb_map_.empty()) {
-        for (auto& x : action_cb_map_) {
-            // 退出时通知ams清理bpbinder
-            unregisterReceiver(x.first);
             FeatureRemoveCallback(ft_instance_, x.second);
         }
     }
