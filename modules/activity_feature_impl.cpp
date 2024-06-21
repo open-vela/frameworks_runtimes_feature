@@ -30,7 +30,7 @@ class FtServiceConnection : public os::app::ServiceConnection {
 public:
     FtServiceConnection(FeatureInstanceHandle handler, FtCallbackId onConnectedCb,
         FtCallbackId onDisconnectedCb)
-        : mHandler(handler)
+        : mHandler(FeatureDupInstanceHandle(handler))
         , mOnConnectedCb(onConnectedCb)
         , mOnDisConnectedCb(onDisconnectedCb)
     {
@@ -46,16 +46,22 @@ public:
         if (FeatureCheckCallbackId(mHandler, mOnDisConnectedCb)) {
             FeatureRemoveCallback(mHandler, mOnDisConnectedCb);
         }
+        FeatureFreeInstanceHandle(mHandler);
+        mHandler = nullptr;
     }
 
     void onConnected(const sp<android::IBinder>& server)
     {
-        FeatureInvokeCallback(mHandler, mOnConnectedCb);
+        if (mHandler && !FeatureInstanceIsDetached(mHandler)) {
+            FeatureInvokeCallback(mHandler, mOnConnectedCb);
+        }
     }
 
     void onDisconnected(const sp<android::IBinder>& server)
     {
-        FeatureInvokeCallback(mHandler, mOnDisConnectedCb);
+        if (mHandler && !FeatureInstanceIsDetached(mHandler)) {
+            FeatureInvokeCallback(mHandler, mOnDisConnectedCb);
+        }
     }
 
 private:
