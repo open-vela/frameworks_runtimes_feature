@@ -581,7 +581,7 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
     }
 fail:
     INVOKE_FAIL_CB(param->fail, msg, code);
-    FeatureRemoveCallback(feature, param->fail);
+    FeatureRemoveCallback(feature, param->success);
     INVOKE_COMPLET_CB(param->complete);
 }
 
