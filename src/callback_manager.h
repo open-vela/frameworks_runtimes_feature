@@ -66,6 +66,10 @@ public:
 
     bool eraseCallback(FtCallbackId cid)
     {
+        if (cid <= 0) {
+            FEATURE_LOG_DEBUG("callback id %d not exist !", cid);
+            return false;
+        }
         if (!callbacks_.count(cid)) {
             FEATURE_LOG_ERROR("callback id %d not exist !", cid);
             return false;

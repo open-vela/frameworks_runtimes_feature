@@ -77,7 +77,10 @@ void* FeatureDupValue(void* ptr)
 
 void FeatureFreeValue(void* ptr)
 {
-    FEATURE_INSTANCE_CHECK_PTR(ptr, ;, "ptr is null !")
+    if (!ptr) {
+        FEATURE_LOG_DEBUG("ptr is null !");
+        return;
+    }
     void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
     FTObjHeader* header = (FTObjHeader*)header_ptr;
     if (--header->ref_count > 0) {

@@ -164,7 +164,7 @@ void FeatureInstanceQjs::freeWeakRef()
     weakref_list_for_every_entry_safe(&proto->weak_ref_list(), node, node_temp, WeakRef, link)
     {
         if (node == &weak_self_) {
-            FEATURE_LOG_ERROR("node is %p, &node->link is %p", node, &node->link);
+            FEATURE_LOG_DEBUG("node is %p, &node->link is %p", node, &node->link);
             auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(node->ft_value);
             *js_val_ptr = FEATURE_VALUE_UNDEFINED;
             weakref_list_delete(&node->link);
@@ -186,6 +186,10 @@ int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap
 
 int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
 {
+    if (cid <= 0) {
+        FEATURE_LOG_DEBUG("callback is undefined !");
+        return -1;
+    }
     auto cb_data = getCallbackData(cid);
     if (!cb_data) {
         FEATURE_LOG_ERROR("callback is undefined !");

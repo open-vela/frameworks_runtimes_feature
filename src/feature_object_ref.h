@@ -37,7 +37,7 @@ public:
 
     void release()
     {
-        FEATURE_LOG_INFO("FeatureObjectRef count:%d, feature:%p", ref_count_.load() - 1, this);
+        FEATURE_LOG_DEBUG("FeatureObjectRef count:%d, feature:%p", ref_count_.load() - 1, this);
         if (--ref_count_ == 0) {
             delete this;
         }

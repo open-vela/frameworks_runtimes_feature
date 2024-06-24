@@ -71,7 +71,7 @@ static void __feature_finalizer(feature_runtime_ref rt, feature_value_t val)
 {
     auto instance = getInstance(val);
     if (!instance || !instance->prototype()) {
-        FEATURE_LOG_INFO("instance or prototype is null, skip resource free...");
+        FEATURE_LOG_DEBUG("instance or prototype is null, skip resource free...");
         return;
     }
     auto proto = instance->prototype();
@@ -99,7 +99,7 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
 {
     FeatureInstance* instance = getInstance(val);
     if (!instance || !instance->prototype()) {
-        FEATURE_LOG_INFO("instance or prototype is null, skip mark it ...");
+        FEATURE_LOG_DEBUG("instance or prototype is null, skip mark it ...");
         return;
     }
 
@@ -231,7 +231,7 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     // check argument count match.
     // FEATURE_LOG_DEBUG("required param count: %d, received param count: %d", fixed_argc, argc);
     // beacuse we support rest parameters, so argc is greater or equal to fixed_argc.
-    FEATURE_LOG_INFO("feature: %s, method: %s, has_rest_param: %d, argc: %d, fixed_argc: %d, opt_argc: %d",
+    FEATURE_LOG_DEBUG("feature: %s, method: %s, has_rest_param: %d, argc: %d, fixed_argc: %d, opt_argc: %d",
         description->name, member.name, has_rest_param, argc, fixed_argc, optional_argc);
     if (has_rest_param) {
         if (argc < fixed_argc) {
@@ -813,7 +813,7 @@ feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototypeQjs* prototy
     }
 
     // create instance with prototype and set opaque refers to FeatureInstance
-    FEATURE_LOG_INFO("created js instance with class_id: %d.", js_class_id_);
+    FEATURE_LOG_DEBUG("created js instance with class_id: %d.", js_class_id_);
     auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto());
     feature_value_t js_instance = JS_NewObjectProtoClass(ctx, js_proto, js_class_id_);
     feature_set_opaque(js_instance, instance);
@@ -917,7 +917,7 @@ void FeatureManagerQjs::uninit()
             FeatureMethodMeasurer(description->name, "onDestroy");
             description->native_callbacks->onDestroy(js_ctx, proto);
         }
-        FEATURE_LOG_INFO("free feature prototype '%s'", description->name);
+        FEATURE_LOG_DEBUG("free feature prototype '%s'", description->name);
         free_prototype(proto);
         delete pair.second.second;
     }
