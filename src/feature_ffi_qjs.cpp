@@ -209,7 +209,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_STRING: {
                 if (feature_is_null(value) || feature_is_undefined(value)) {
-                    FEATURE_LOG_ERROR("string arg is null or undefined!");
+                    FEATURE_LOG_DEBUG("string arg is null or undefined!");
                     *(const char**)ptr = NULL;
                 } else if (!feature_is_string(value)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need string !");
@@ -224,7 +224,7 @@ namespace FeatureFFIQjs {
             } break;
             case FT_ANY_REF: {
                 if (feature_is_null(value) || feature_is_undefined(value)) {
-                    FEATURE_LOG_ERROR("object is null or undefined!");
+                    FEATURE_LOG_DEBUG("object is null or undefined!");
                     *(ft_value_t**)ptr = NULL;
                 } else {
                     // copy value
@@ -304,10 +304,10 @@ namespace FeatureFFIQjs {
             } break;
             case COMPLEX_CALLBACK: {
                 if (feature_is_undefined(value)) {
-                    FEATURE_LOG_WARN("js callback is undefined!");
+                    FEATURE_LOG_DEBUG("js callback is undefined!");
                     break;
                 } else if (feature_is_null(value)) {
-                    FEATURE_LOG_WARN("js callback is null!");
+                    FEATURE_LOG_DEBUG("js callback is null!");
                     break;
                 } else if (!feature_is_object(value)) {
                     FEATURE_LOG_ERROR("arg type mismatch, need callback function !");

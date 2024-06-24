@@ -111,7 +111,7 @@ void FeatureManager::detachFeatureInstances()
     {
         if (node) {
             FeatureInstance* instance = (FeatureInstance*)(node);
-            FEATURE_LOG_INFO("feature lazy free, base:%p name:%s", node, instance->description()->name);
+            FEATURE_LOG_DEBUG("feature lazy free, base:%p name:%s", node, instance->description()->name);
             instance->onDetached();
         }
     }
