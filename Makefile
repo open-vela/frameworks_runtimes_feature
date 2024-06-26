@@ -263,7 +263,6 @@ FEATURELIST += system_file
 endif
 
 ifeq ($(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER),y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/folme.cpp
 FEATURELIST += system_folme
 endif
 
