@@ -66,7 +66,12 @@
         FeatureRemoveCallback(feature, cb);                         \
     } while (0)
 
-static const char* file_tag = "[jidl_feature] Request_impl";
+#define REQUEST_DEBUG(fmt, ...) \
+    FEATURE_LOG_DEBUG("[feature_request] " fmt, ##__VA_ARGS__)
+
+#define REQUEST_LIFECYCLE_DEBUG() \
+    REQUEST_DEBUG("[jidl_feature] Request_impl:: %s()", __FUNCTION__)
+
 #define REQUEST_INFO(fmt, ...) \
     FEATURE_LOG_INFO("[feature_request] " fmt, ##__VA_ARGS__)
 
@@ -116,12 +121,12 @@ RequestContext* getRequestContext(FeatureInstanceHandle handle)
 
 void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
 {
-    REQUEST_INFO("add download result {%s, %s, code: %d, success: %d}", uuid, result->data, result->code, result->success);
+    REQUEST_DEBUG("add download result {%s, %s, code: %d, success: %d}", uuid, result->data, result->code, result->success);
 
     std::map<std::string, DownloadResult*>* downloadResults = getRequestContext(handle)->download_results;
     (*downloadResults)[uuid] = result;
     if ((*downloadResults).size() >= DOWNLOAD_RESULT_CACHE_SIZE) {
-        REQUEST_INFO("downloadResults size is out of range, free downloadResults.begin()");
+        REQUEST_DEBUG("downloadResults size is out of range, free downloadResults.begin()");
         free((void*)(*downloadResults).begin()->second->data);
         (*downloadResults).erase((*downloadResults).begin());
     }
@@ -133,11 +138,11 @@ void __request_cancel(RequestInfo* info);
 
 void system_request_onRegister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    REQUEST_LIFECYCLE_DEBUG();
 }
 void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    REQUEST_LIFECYCLE_DEBUG();
     FeatureManagerHandle manager = FeatureGetManagerHandleFromProto(handle);
     RequestContext* th = (RequestContext*)FeatureGetProtoData(handle);
     if (th == nullptr) {
@@ -165,11 +170,11 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
 void system_request_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     // 创建一个request实例
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    REQUEST_LIFECYCLE_DEBUG();
 }
 void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    REQUEST_LIFECYCLE_DEBUG();
     // 退出页面，取消挂载在该instancehandle上的request请求
     RequestContext* th = getRequestContext(handle);
     RequestInfo *info, *temp;
@@ -187,7 +192,7 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 }
 void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    REQUEST_LIFECYCLE_DEBUG();
     RequestContext* th = static_cast<RequestContext*>(FeatureGetProtoData(handle));
     if (!th)
         return;
@@ -217,12 +222,12 @@ void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle hand
 }
 void system_request_onUnregister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    REQUEST_LIFECYCLE_DEBUG();
 }
 
 void freeRequestInfo(RequestInfo* info)
 {
-    REQUEST_INFO("free RequestInfo %p", info);
+    REQUEST_DEBUG("free RequestInfo %p", info);
     if (info != NULL) {
         if (info->filename)
             free(info->filename);
@@ -246,7 +251,7 @@ char* uuid()
 
 static void __request_cb(int state, uv_response_t* response)
 {
-    REQUEST_INFO("in __request_cb, state = %d", state);
+    REQUEST_DEBUG("in __request_cb, state = %d", state);
     RequestInfo* info = static_cast<RequestInfo*>(response->userp);
     if (!info)
         return;
@@ -275,7 +280,7 @@ static void __request_cb(int state, uv_response_t* response)
         }
     } else if (state == UV_REQUEST_ERROR) {
         // body内存的是绝对路径的file位置
-        REQUEST_INFO("request error: %s", response->body);
+        REQUEST_ERROR("request error: %s", response->body);
         INVOKE_FAIL_CB(info->fail, response->body, TASK_FAILED);
         FeatureRemoveCallback(feature, info->success);
         res->success = false;
@@ -297,7 +302,7 @@ static void __request_cb(int state, uv_response_t* response)
 
 int __progress_cb(uv_request_t* request, off_t dltotal, off_t dlnow, off_t ultotal, off_t ulnow)
 {
-    // REQUEST_INFO("=== in __progress_cb, total = %ld, now = %ld", dltotal, dlnow);
+    // REQUEST_DEBUG("=== in __progress_cb, total = %ld, now = %ld", dltotal, dlnow);
     RequestInfo* info = (RequestInfo*)uv_request_get_userp(request);
     if (FeatureCheckCallbackId(info->feature_handle, info->notify_func)) {
         system_request_notify_data_t* data = system_requestMallocnotify_data_t();
@@ -373,14 +378,14 @@ char* __get_filename_from_url(const char* url)
     }
     // remove slash mark in backwards
     __remove_trailing_slash(url_main);
-    REQUEST_INFO("url_main = %s", url_main);
+    REQUEST_DEBUG("url_main = %s", url_main);
 
     // get last slash mark in url_main
     const char* slash_mark = strrchr(url_main, '/');
 
     if (slash_mark != NULL) {
         char* filename = strdup(slash_mark + 1);
-        REQUEST_INFO("tmp filename = %s", filename);
+        REQUEST_DEBUG("tmp filename = %s", filename);
         const char* dot_mask = strrchr(filename, '.');
         if (dot_mask != NULL && dot_mask == strchr(filename, '.')) {
             // only one dot in filename, its a valid filename
@@ -391,7 +396,7 @@ char* __get_filename_from_url(const char* url)
     }
     free(url_main);
 
-    REQUEST_INFO("genarate default filename");
+    REQUEST_DEBUG("genarate default filename");
     // cannot get filename from url, create one
     char tmp[64] = "";
     sprintf(tmp, "%s-%d.%s", DEFAULT_FILE_NAME, rand(), DEFAULT_FILE_TYPE);
@@ -427,7 +432,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
 
     // 参数检查
-    // REQUEST_INFO("get url = %s", param->url);
+    // REQUEST_DEBUG("get url = %s", param->url);
     if (param->url == NULL || strlen(param->url) == 0 || !__is_valid_uri(param->url)) {
         code = ARGSERROR;
         msg = "invalid url";
@@ -436,7 +441,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
 
     info->request_type = UV_DOWNLOAD;
     info->feature_handle = feature;
-    // REQUEST_INFO("header = %s", param->header);
+    // REQUEST_DEBUG("header = %s", param->header);
     // header format "{"test":"abc","test2":"ddd"}"
 
     if (param->header != NULL) {
@@ -454,7 +459,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     } else {
         filename = __get_filename_from_url(param->url);
     }
-    // REQUEST_INFO("filename = %s", filename);
+    // REQUEST_DEBUG("filename = %s", filename);
 
     info->filename = app_relative_to_absolute_path(th->pkg_name, filename);
     if (!info->filename) {
@@ -464,7 +469,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
         }
     }
     free(filename);
-    REQUEST_INFO("info->filename = %s", info->filename);
+    REQUEST_DEBUG("info->filename = %s", info->filename);
 
     if (!check_disk_limit()) {
         REQUEST_ERROR("insufficient memory to download file");
@@ -496,7 +501,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
             } else {
                 REQUEST_ERROR("unkown type");
             }
-            // REQUEST_INFO("kv = '%s'", kv);
+            // REQUEST_DEBUG("kv = '%s'", kv);
             uv_request_append_header(info->request, kv);
         }
     }
@@ -510,14 +515,14 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     token = (char*)FeatureMalloc(strlen(info->uuid) + 1, FT_CHAR);
     sprintf(token, "%s", info->uuid);
     suc_param->token = token;
-    // REQUEST_INFO("suc_param._token = %s, info = %p", suc_param->token, info);
+    // REQUEST_DEBUG("suc_param._token = %s, info = %p", suc_param->token, info);
     INVOKE_SUCCESS_CB(param->success, suc_param);
     INVOKE_COMPLET_CB(param->complete);
     FeatureRemoveCallback(feature, param->fail);
     FeatureFreeValue(suc_param);
     return;
 callFail:
-    REQUEST_INFO("code = %d, msg = %s", code, msg);
+    REQUEST_ERROR("code = %d, msg = %s", code, msg);
     INVOKE_FAIL_CB(param->fail, msg, code);
     INVOKE_COMPLET_CB(param->complete);
     FeatureRemoveCallback(feature, param->success);
@@ -528,7 +533,7 @@ callFail:
 
 void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, AppendData append_data, system_request_dl_cmpl_t* param)
 {
-    REQUEST_INFO("onDownloadComplete token = %s", param->token);
+    REQUEST_DEBUG("onDownloadComplete token = %s", param->token);
     int code;
     const char* msg;
     RequestContext* th = getRequestContext(feature);
@@ -550,7 +555,7 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
             }
         }
         if (res) {
-            // REQUEST_INFO("info = %p", res);
+            // REQUEST_DEBUG("info = %p", res);
             res->success = param->success;
             res->fail = param->fail;
             res->complete = param->complete;
@@ -558,7 +563,7 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
             auto it = (*downloadResults).find(param->token);
             if (it != (*downloadResults).end()) {
                 if (it->second->success) {
-                    REQUEST_INFO("get (*downloadResults).data = %s", it->second->data);
+                    REQUEST_DEBUG("get (*downloadResults).data = %s", it->second->data);
                     succ_param = system_requestMallocdl_cmpl_succ_t();
                     char* value = (char*)FeatureMalloc(strlen(it->second->data) + 1, FT_CHAR);
                     sprintf(value, "%s", it->second->data);

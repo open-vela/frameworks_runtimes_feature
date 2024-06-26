@@ -8,33 +8,34 @@
 #include <cstring>
 #include <limits.h>
 
-static const char* file_tag = "[jidl_feature] jumpApp_impl";
+#define JUMPAPP_LIFECYCLE_DEBUG() \
+    FEATURE_LOG_DEBUG("[jidl_feature] jumpApp_impl:: %s()", __FUNCTION__)
 
 void jumpApp_onRegister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    JUMPAPP_LIFECYCLE_DEBUG();
 }
 void jumpApp_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    JUMPAPP_LIFECYCLE_DEBUG();
 }
 void jumpApp_onRequired(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    JUMPAPP_LIFECYCLE_DEBUG();
 }
 void jumpApp_onDetached(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    JUMPAPP_LIFECYCLE_DEBUG();
 }
 void jumpApp_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    JUMPAPP_LIFECYCLE_DEBUG();
 }
 void jumpApp_onUnregister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    JUMPAPP_LIFECYCLE_DEBUG();
 }
 
 #define NATIVE_APP_PREFIX "native://"
@@ -47,13 +48,13 @@ void jumpApp_wrap_jumpApp(FeatureInstanceHandle feature, AppendData append_data,
         return;
     }
 
-    FEATURE_LOG_INFO("[jump native] uri:%s, param:%s", uri, arg);
+    FEATURE_LOG_DEBUG("[jump native] uri:%s, param:%s", uri, arg);
     // TODO jump to native application
 }
 
 void jumpApp_wrap_launchQuickApp(FeatureInstanceHandle feature, AppendData append_data, FtString uri)
 {
-    FEATURE_LOG_INFO("[jump native] jumpApp_wrap_launchQuickApp uri: %s", uri);
+    FEATURE_LOG_DEBUG("[jump native] jumpApp_wrap_launchQuickApp uri: %s", uri);
     if (strncmp(uri, QUICK_APP_PREFIX, strlen(QUICK_APP_PREFIX)) != 0) {
         FEATURE_LOG_ERROR("[jump native] uri should start with %s!", QUICK_APP_PREFIX);
         return;

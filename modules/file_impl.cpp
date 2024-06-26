@@ -46,7 +46,11 @@
         FeatureRemoveCallback(feature, cb);                         \
     } while (0)
 
-static const char* file_tag = "[jidl_feature] file_impl";
+#define FILE_DEBUG(fmt, ...) \
+    FEATURE_LOG_DEBUG("[feature_file] " fmt, ##__VA_ARGS__)
+
+#define FILE_LIFECYCLE_DEBUG() \
+    FILE_DEBUG("[jidl_feature] file_impl:: %s()", __FUNCTION__)
 
 #define FILE_INFO(fmt, ...) \
     FEATURE_LOG_INFO("[feature_file] " fmt, ##__VA_ARGS__)
@@ -71,14 +75,14 @@ FileContext* getFileContext(FeatureInstanceHandle handle)
 
 void system_file_onRegister(const char* feature_name)
 {
-    FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FILE_LIFECYCLE_DEBUG();
 }
 
 static void __directory_init(const char* pkg);
 
 void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FILE_LIFECYCLE_DEBUG();
     FileContext* fc = (FileContext*)FeatureGetProtoData(handle);
     if (fc == nullptr) {
         fc = static_cast<FileContext*>(malloc(sizeof(FileContext)));
@@ -89,22 +93,22 @@ void system_file_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
             FILE_ERROR("package name is null");
             fc->pkg_name = "file_test";
         }
-        FILE_INFO("pkg name = %s", fc->pkg_name);
+        FILE_DEBUG("pkg name = %s", fc->pkg_name);
         FeatureSetProtoData(handle, fc);
         __directory_init(fc->pkg_name);
     }
 }
 void system_file_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FILE_LIFECYCLE_DEBUG();
 }
 void system_file_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FILE_LIFECYCLE_DEBUG();
 }
 void system_file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FILE_LIFECYCLE_DEBUG();
     FileContext* fc = (FileContext*)FeatureGetProtoData(handle);
     if (!fc)
         return;
@@ -112,7 +116,7 @@ void system_file_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 }
 void system_file_onUnregister(const char* feature_name)
 {
-    FILE_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FILE_LIFECYCLE_DEBUG();
 }
 
 typedef struct
@@ -168,7 +172,7 @@ static int __error_code_map(int error)
 
 static void __uv_fs_req_cb(uv_fs_t* req)
 {
-    FILE_INFO("req->result = %d", req->result);
+    FILE_DEBUG("req->result = %d", req->result);
     FsReq* fr = static_cast<FsReq*>(req->data);
     if (!fr) {
         return;
@@ -230,7 +234,7 @@ void file_copy_or_move(FeatureInstanceHandle feature, system_file_move_param_t* 
     if (path == NULL || new_path == NULL) {
         return __invoke_fs_cb(fr, ARGSERROR, "invalid file path", NULL);
     }
-    FILE_INFO("path = %s, new_path = %s", path, new_path);
+    FILE_DEBUG("path = %s, new_path = %s", path, new_path);
     fr->req.data = fr;
     result = move ? uv_fs_rename(fc->loop, &fr->req, path, new_path, __uv_fs_req_cb) : uv_fs_copyfile(fc->loop, &fr->req, path, new_path, 0, __uv_fs_req_cb);
     if (result != 0) {
@@ -276,7 +280,7 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     if (!path) {
         return __invoke_fs_cb(fr, ARGSERROR, "invalid file path", NULL);
     }
-    FILE_INFO("path = %s", path);
+    FILE_DEBUG("path = %s", path);
 
     fr->req.data = fr;
     result = access ? uv_fs_access(fc->loop, &fr->req, path, F_OK, __uv_fs_req_cb) : uv_fs_unlink(fc->loop, &fr->req, path, __uv_fs_req_cb);
@@ -402,7 +406,7 @@ void __invoke_fr_cb(FileReq* fr, int status, const char* err_msg, void* succ_par
  */
 static void __create_dir(char* path, FileReq* fr)
 {
-    FILE_INFO("__create_dir, path = %s", path);
+    FILE_DEBUG("__create_dir, path = %s", path);
     char data[CONFIG_PATH_MAX];
     char* ret;
 
@@ -509,7 +513,7 @@ static void __load_file_work_cb(uv_work_t* wk)
         }
     }
 
-    FILE_INFO("file open file: %s, %d, %d", fr->filename, fr->flags, fr->offset);
+    FILE_DEBUG("file open file: %s, %d, %d", fr->filename, fr->flags, fr->offset);
     if (oflags != O_RDONLY && !check_disk_limit()) {
         fr->r = -ENOSPC;
         FILE_ERROR("file write failed: No space left on device");
@@ -675,7 +679,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
         uint8_t* buffer = NULL;
         if (buffer_type == FT_TYPE_BUFFER || buffer_type == FT_TYPE_TYPED_BUFFER) {
             buffer = ft_to_buffer(ft_ctx, &(fr->len), *(param->buffer));
-            FILE_INFO("got buffer, type: %d, size: %ld", buffer_type, fr->len);
+            FILE_DEBUG("got buffer, type: %d, size: %ld", buffer_type, fr->len);
         } else {
             FILE_ERROR("invalid array buffer type");
             return __invoke_fr_cb(fr, ARGSERROR, "invalid array buffer type", NULL);
@@ -792,7 +796,7 @@ static void __read_dir_c(char* dirname, FileReq* fr, weakref_list_node* dir_list
     FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
     root_file_ptr->file_num = 0;
     root_file_ptr->dir_num = 0;
-    FILE_INFO("in __read_dir_c, cur dir = %s", root_file_ptr->uri);
+    FILE_DEBUG("in __read_dir_c, cur dir = %s", root_file_ptr->uri);
 
     dir = opendir(dirname);
     if (dir == NULL) {
@@ -822,7 +826,7 @@ static void __read_dir_c(char* dirname, FileReq* fr, weakref_list_node* dir_list
         } else {
             root_file_ptr->dir_num++;
         }
-        FILE_INFO("add child num, file = %s", file_info->uri);
+        FILE_DEBUG("add child num, file = %s", file_info->uri);
     }
     closedir(dir);
 }
@@ -902,7 +906,7 @@ FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
 
     FtArray* array;
     FileInfo* root_file_ptr = weakref_container_of(dir_list, FileInfo, dir_list);
-    FILE_INFO("=====> __get_dir_list, root_file_ptr->uri = %s, dir_num = %d, file_num = %d", root_file_ptr->uri, root_file_ptr->dir_num, root_file_ptr->file_num);
+    FILE_DEBUG("=====> __get_dir_list, root_file_ptr->uri = %s, dir_num = %d, file_num = %d", root_file_ptr->uri, root_file_ptr->dir_num, root_file_ptr->file_num);
     if (fr->type == FILE_GET) {
         array = system_file_malloc_extended_file_info_t_struct_type_array();
         array->_size = root_file_ptr->dir_num + root_file_ptr->file_num;
@@ -912,7 +916,7 @@ FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
         array->_size = root_file_ptr->file_num;
         array->_element = malloc(sizeof(system_file_file_info_t*) * array->_size);
     }
-    FILE_INFO("array.size = %d", array->_size);
+    FILE_DEBUG("array.size = %d", array->_size);
 
     int index = 0;
     FileInfo *item, *temp;
@@ -921,12 +925,12 @@ FtArray* __get_dir_list(FileReq* fr, weakref_list_node* dir_list)
         if (fr->type == FILE_LIST) {
             if (item->type == 0) {
                 system_file_file_info_t* file_info = get_file_info(item);
-                FILE_INFO("index = %d, get file_info->uri = %s", index, file_info->uri);
+                FILE_DEBUG("index = %d, get file_info->uri = %s", index, file_info->uri);
                 ((system_file_file_info_t**)array->_element)[index++] = file_info;
             }
         } else {
             ((system_file_extended_file_info_t**)array->_element)[index++] = get_extended_file_info(fr, item);
-            FILE_INFO("index = %d, get file_info->uri: %s", index, ((system_file_extended_file_info_t**)array->_element)[index - 1]->uri);
+            FILE_DEBUG("index = %d, get file_info->uri: %s", index, ((system_file_extended_file_info_t**)array->_element)[index - 1]->uri);
         }
     }
     return array;
