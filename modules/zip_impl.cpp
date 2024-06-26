@@ -107,17 +107,17 @@ ZipContext* getZipContext(FeatureInstanceHandle handle)
 
 void system_zip_onRegister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void system_zip_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void system_zip_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     ZipContext* zc = (ZipContext*)FeatureGetObjectData(handle);
     if (zc == nullptr) {
         FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(handle);
@@ -128,7 +128,7 @@ void system_zip_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle hand
             FEATURE_LOG_ERROR("package name is null\n");
             zc->pkg_name = "zip_test";
         }
-        FEATURE_LOG_INFO("pkg name = %s \n", zc->pkg_name);
+        FEATURE_LOG_DEBUG("pkg name = %s \n", zc->pkg_name);
         FeatureSetObjectData(handle, zc);
     }
 }
@@ -136,7 +136,7 @@ void system_zip_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle hand
 static void detach(FeatureInstanceHandle handle)
 {
     ZipContext* zc = (ZipContext*)FeatureGetObjectData(handle);
-    FEATURE_LOG_INFO("%s zc=%p", __func__, zc);
+    FEATURE_LOG_DEBUG("%s zc=%p", __func__, zc);
 
     if (zc != nullptr) {
         for (size_t i = 0; i < zc->zr_arr.size(); i++) {
@@ -153,18 +153,18 @@ static void detach(FeatureInstanceHandle handle)
 
 void system_zip_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
     detach(handle);
 }
 
 void system_zip_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 void system_zip_onUnregister(const char* feature_name)
 {
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FEATURE_LOG_DEBUG("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
 /* change_file_date : change the date/time of a file
@@ -346,17 +346,17 @@ static void __extract_zip_after_work_cb(uv_work_t* req, int status)
         return;
 
     if (status == UV_ECANCELED) {
-        FEATURE_LOG_ERROR("%s: uv decompress work was canceled !!!\n", __FUNCTION__);
+        FEATURE_LOG_ERROR("%s::%s: uv decompress work was canceled !!!\n", file_tag, __FUNCTION__);
         freeZipReq(zr);
         return;
     }
 
-    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
+    FEATURE_LOG_DEBUG("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
     FeatureInstanceHandle feature = zr->handle;
     if (!FeatureInstanceIsDetached(feature)) {
         /* status is 0 means uv task success execute and unzip_success_flag is true means zip operate success. */
         if (status == 0 && zr->unzip_success_flag) {
-            FEATURE_LOG_INFO("unzip src_path success %s", zr->src_path);
+            FEATURE_LOG_DEBUG("unzip src_path success %s", zr->src_path);
             INVOKE_SUCCESS_CB(zr->success);
         } else {
             FEATURE_LOG_ERROR("unzip src_path failed %s", zr->src_path);
@@ -383,7 +383,7 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
     zipReq* zr = static_cast<zipReq*>(wk->data);
     if (!zr)
         return;
-    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
+    FEATURE_LOG_DEBUG("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
     char filename_try[MAXFILENAME + 16] = "";
     /* if Unzip encrypted zip file */
     const char* password = NULL;
@@ -437,7 +437,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
 {
     if (info == NULL)
         return;
-    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, info->srcUri, info->dstUri);
+    FEATURE_LOG_DEBUG("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, info->srcUri, info->dstUri);
 
     char *src_path = NULL, *dst_path = NULL, *tmp = NULL;
     const char* msg;
@@ -499,7 +499,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         goto fail;
     }
 
-    FEATURE_LOG_INFO("%s: src_path = %s, dst_path = %s", __FUNCTION__, src_path, dst_path);
+    FEATURE_LOG_DEBUG("%s: src_path = %s, dst_path = %s", __FUNCTION__, src_path, dst_path);
     /* if zip file source dir not exsit */
     if (access(src_path, F_OK) == -1) {
         FEATURE_LOG_ERROR("zip source file Path does not exist or is inaccessible! \n");
@@ -514,7 +514,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
     /* if decompress zip file output dir not exsit, need create it */
     if (access(dst_path, F_OK) == -1) {
         tmp = strdup(dst_path);
-        FEATURE_LOG_INFO("decompress output dir does not exist, need to create it \n");
+        FEATURE_LOG_DEBUG("decompress output dir does not exist, need to create it \n");
         if (create_dir(dst_path) == -1) {
             msg = "create dst path failed!";
             code = IOERROR;
