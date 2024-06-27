@@ -55,6 +55,10 @@ public:
 
     const char* envName() const { return env_name_; }
 
+    void setPackageVesion(const char* pkg_version) { pkg_version_ = pkg_version; }
+
+    const char* packageVesion() const { return pkg_version_; };
+
     void setUserData(const char* name, void* data) { user_data_[name] = data; }
 
     void* getUserData(const char* name)
@@ -86,6 +90,7 @@ private:
     ft_context_ref ft_ctx_;
     const char* pkg_name_ = nullptr;
     const char* env_name_ = nullptr;
+    const char* pkg_version_ = nullptr;
     feature_list_node feature_node_list_;
     uv_mutex_t mutex_;
     uv_async_t* async_ = nullptr;

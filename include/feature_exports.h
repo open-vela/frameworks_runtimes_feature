@@ -88,6 +88,14 @@ void FeatureSetProtoData(FeatureProtoHandle handle, void* data);
 const char* FeatureGetPackageName(FeatureProtoHandle handle);
 
 /**
+ * @brief get feature package version from FeatureProtoHandle
+ *
+ * @param handle
+ * @return char*
+ */
+const char* FeatureGetPackageVersion(FeatureProtoHandle handle);
+
+/**
  * @brief get the native object pointer bind to feature instance
  *
  * @param handle

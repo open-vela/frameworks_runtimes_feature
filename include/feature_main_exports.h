@@ -51,6 +51,14 @@ FeatureManagerHandle FeatureCreateManager(const char* package_name);
 void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* data);
 
 /**
+ * @brief set packageVersion to a FeatureManagerHandle
+ * @param handle
+ * @param package_version
+ * @return void
+ */
+void FeatureSetPackageVersion(FeatureManagerHandle handle, const char* package_version);
+
+/**
  * @brief free a FeatureManagerHandle
  * @param handle
  * @return void
