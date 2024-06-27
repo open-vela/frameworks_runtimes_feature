@@ -416,6 +416,10 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
     }
     /* gi.number_entry : the total number of files in the compressed file */
     for (uLong i = 0; i < gi.number_entry; i++) {
+        if (uv_loop_is_close(wk->loop)) {
+            FEATURE_LOG_ERROR("%s:break current unzip task when uv loop closed \n", __FUNCTION__);
+            break;
+        }
         err = do_extract_currentfile(uf, password);
         if (err != UNZ_OK)
             break;
