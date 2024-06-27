@@ -205,6 +205,13 @@ const char* FeatureGetPackageName(FeatureProtoHandle handle)
     return proto->featureManager()->packageName();
 }
 
+const char* FeatureGetPackageVersion(FeatureProtoHandle handle)
+{
+    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
+    return proto->featureManager()->packageVesion();
+}
+
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 {
     FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
@@ -312,6 +319,14 @@ void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* da
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     if (manager) {
         manager->setArgsErrorCb(cb, data);
+    }
+}
+
+void FeatureSetPackageVersion(FeatureManagerHandle handle, const char* package_version)
+{
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    if (manager) {
+        manager->setPackageVesion(package_version);
     }
 }
 
