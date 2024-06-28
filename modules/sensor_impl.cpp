@@ -16,6 +16,7 @@
 
 #include <nuttx/nuttx.h>
 #include <sensor/accel.h>
+#include <sensor/baro.h>
 #include <sensor/light.h>
 #include <sensor/prox.h>
 
@@ -23,6 +24,13 @@
 #include "uv_ext.h"
 
 static const char* file_tag = "[jidl_feature] sensor_impl";
+#define REMOVE_ALL_CALLBACK(__succ__, __fail__)   \
+    do {                                          \
+        FeatureRemoveCallback(feature, __succ__); \
+        FeatureRemoveCallback(feature, __fail__); \
+    } while (0)
+
+#define UV_HANDLE_INTERNAL 0x00000010
 
 typedef enum sensor_magic_e {
     SENSOR_MAGIC_ACCEL = 0,
@@ -30,6 +38,7 @@ typedef enum sensor_magic_e {
     SENSOR_MAGIC_PROX,
     SENSOR_MAGIC_LIGHT,
     SENSOR_MAGIC_STEP,
+    SENSOR_MAGIC_BARO,
     SENSOR_MAGIC_NUM,
 } sensor_magic_t;
 
@@ -41,7 +50,8 @@ struct sensor_orb_t {
 struct MetaData {
     FeatureInstanceHandle instance;
     bool reserved;
-    FtCallbackId id;
+    FtCallbackId callback;
+    FtCallbackId fail;
 };
 
 struct sensor_event_t {
@@ -65,7 +75,7 @@ static void sensor_accel_topic_cb(uv_topic_t* topic, int status, void* data, siz
     accelRet->x = t_r->x;
     accelRet->y = t_r->y;
     accelRet->z = t_r->z;
-    FeatureInvokeCallback(event->meta.instance, event->meta.id, accelRet);
+    FeatureInvokeCallback(event->meta.instance, event->meta.callback, accelRet);
     FeatureFreeValue(accelRet);
 }
 
@@ -79,7 +89,7 @@ static void sensor_prox_topic_cb(uv_topic_t* topic, int status, void* data, size
     sensor_prox* t_r = static_cast<sensor_prox*>(data);
     system_sensor_ProximityRet* proxRet = system_sensorMallocProximityRet();
     proxRet->distance = t_r->proximity;
-    FeatureInvokeCallback(event->meta.instance, event->meta.id, proxRet);
+    FeatureInvokeCallback(event->meta.instance, event->meta.callback, proxRet);
     FeatureFreeValue(proxRet);
 }
 
@@ -93,13 +103,27 @@ static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, siz
     sensor_light* t_r = static_cast<sensor_light*>(data);
     system_sensor_LightRet* lightRet = system_sensorMallocLightRet();
     lightRet->intensity = t_r->light;
-    FeatureInvokeCallback(event->meta.instance, event->meta.id, lightRet);
+    FeatureInvokeCallback(event->meta.instance, event->meta.callback, lightRet);
     FeatureFreeValue(lightRet);
 }
 
 static void sensor_compa_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
 
 static void sensor_step_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
+
+static void sensor_baro_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
+    if (!topic || !data) {
+        FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
+        return;
+    }
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    sensor_baro* t_r = static_cast<sensor_baro*>(data);
+    system_sensor_BaroRet* baroRet = system_sensorMallocBaroRet();
+    baroRet->pressure = t_r->pressure;
+    FeatureInvokeCallback(event->meta.instance, event->meta.callback, baroRet);
+    FeatureFreeValue(baroRet);
+}
 
 const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = { [SENSOR_MAGIC_ACCEL] = {
                                                                      .meta = ORB_ID(sensor_accel),
@@ -108,11 +132,33 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = { [SENSOR_MAGIC_A
     [SENSOR_MAGIC_COMPA] = { .meta = NULL, .topic_cb = sensor_compa_topic_cb },
     [SENSOR_MAGIC_PROX] = { .meta = ORB_ID(sensor_prox), .topic_cb = sensor_prox_topic_cb },
     [SENSOR_MAGIC_LIGHT] = { .meta = ORB_ID(sensor_light), .topic_cb = sensor_light_topic_cb },
-    [SENSOR_MAGIC_STEP] = { .meta = NULL, .topic_cb = sensor_step_topic_cb } };
+    [SENSOR_MAGIC_STEP] = { .meta = NULL, .topic_cb = sensor_step_topic_cb },
+    [SENSOR_MAGIC_BARO] = { .meta = ORB_ID(sensor_baro), .topic_cb = sensor_baro_topic_cb } };
 
-static void unsubscribe(FeatureInstanceHandle handle, int magic, bool is_active)
+static void uv_topic_close_cb(uv_handle_t* handle)
 {
-    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(handle);
+    uv_topic_t* topic = container_of(handle, uv_topic_t, handle);
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    free(event);
+}
+
+/****************************************************************************
+ * Name: uv_topic_close_internal
+ *
+ * Description:
+ * Becasue event->topic->handle will be accessed in `uv__run_closing_handles`, event should
+ * be freed in `uv_topic_close_cb`
+ ****************************************************************************/
+static int uv_topic_close_internal(uv_topic_t* topic)
+{
+    topic->handle.flags |= UV_HANDLE_INTERNAL;
+    uv_close((uv_handle_t*)&topic->handle, uv_topic_close_cb);
+    return 0;
+}
+
+static void unsubscribe(FeatureInstanceHandle feature, int magic, bool is_active)
+{
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     sensor_event_t* event = th->events[magic];
     if (event == NULL) {
@@ -129,8 +175,37 @@ static void unsubscribe(FeatureInstanceHandle handle, int magic, bool is_active)
         FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe failed,ret=%d\n", file_tag, __FUNCTION__,
             ret);
     }
-    free(event);
+    // Because uv_topic_subscribe will call uv_poll_init and create a new handle, the old hanle should be closed
+    ret = uv_topic_close_internal(&event->topic);
+    if (ret < 0) {
+        FEATURE_LOG_ERROR("%s::%s() uv_topic_close failed,ret=%d\n", file_tag, __FUNCTION__,
+            ret);
+    }
+    REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
     th->events[magic] = NULL;
+}
+
+static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_magic_e sensor_type, MetaData* meta_data)
+{
+    sensor_event_t* event = th->events[sensor_type];
+    if (event) {
+        unsubscribe(feature, sensor_type, true);
+    }
+    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
+    event->meta = *meta_data;
+
+    th->events[sensor_type] = event;
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[sensor_type]->topic,
+        sensor_orb_table[sensor_type].meta,
+        sensor_orb_table[sensor_type].topic_cb);
+    if (ret < 0) {
+        th->events[sensor_type] = NULL;
+        free(event);
+        FEATURE_LOG_ERROR("%s::%s() sensor type %d subscribe error\n", file_tag, __FUNCTION__, sensor_type);
+        return false;
+    }
+    return true;
 }
 
 void system_sensor_onRegister(const char* feature_name)
@@ -169,23 +244,6 @@ void system_sensor_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
         return;
     }
-    for (int i = 0; i < SENSOR_MAGIC_NUM; i++) {
-        sensor_event_t* event = th->events[i];
-        if (event) {
-            int ret = uv_topic_unsubscribe(&event->topic);
-            if (ret < 0) {
-                FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe failed,ret=%d\n", file_tag,
-                    __FUNCTION__, ret);
-            }
-            ret = uv_topic_close(&event->topic);
-            if (ret < 0) {
-                FEATURE_LOG_ERROR("%s::%s() uv_topic_close failed,ret=%d\n", file_tag, __FUNCTION__,
-                    ret);
-            }
-            free(event);
-            th->events[i] = NULL;
-        }
-    }
     free(th);
 }
 
@@ -217,35 +275,15 @@ void system_sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, Ap
         return;
     }
 
-    sensor_event_t* event = th->events[SENSOR_MAGIC_ACCEL];
-    if (event) {
-        int ret = uv_topic_unsubscribe(&event->topic);
-        if (ret < 0) {
-            FEATURE_LOG_ERROR("%s::%s() unsubscribe Accelerometer failed,ret=%d\n", file_tag, __FUNCTION__,
-                ret);
-        }
-        free(event);
-        th->events[SENSOR_MAGIC_ACCEL] = NULL;
-    }
-    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->reserved;
-    meta.id = param->callback;
-    event->meta = meta;
+    meta.callback = param->callback;
+    meta.fail = 0;
 
-    th->events[SENSOR_MAGIC_ACCEL] = event;
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_ACCEL]->topic,
-        sensor_orb_table[SENSOR_MAGIC_ACCEL].meta,
-        sensor_orb_table[SENSOR_MAGIC_ACCEL].topic_cb);
-    if (ret < 0) {
-        th->events[SENSOR_MAGIC_ACCEL] = NULL;
-        free(event);
-        FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
-        return;
+    if (subscribe(feature, th, SENSOR_MAGIC_ACCEL, &meta)) {
+        uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
     }
-    uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
 }
 
 void system_sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, AppendData data)
@@ -271,35 +309,15 @@ void system_sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, Append
         return;
     }
 
-    sensor_event_t* event = th->events[SENSOR_MAGIC_PROX];
-    if (event) {
-        int ret = uv_topic_unsubscribe(&event->topic);
-        if (ret < 0) {
-            FEATURE_LOG_ERROR("%s::%s() unsubscribe Proximity failed,ret=%d\n", file_tag, __FUNCTION__,
-                ret);
-        }
-        free(event);
-        th->events[SENSOR_MAGIC_PROX] = NULL;
-    }
-
-    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->reserved;
-    meta.id = param->callback;
-    event->meta = meta;
+    meta.callback = param->callback;
+    meta.fail = 0;
 
-    th->events[SENSOR_MAGIC_PROX] = event;
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_PROX]->topic,
-        sensor_orb_table[SENSOR_MAGIC_PROX].meta,
-        sensor_orb_table[SENSOR_MAGIC_PROX].topic_cb);
-    if (ret < 0) {
-        th->events[SENSOR_MAGIC_PROX] = NULL;
-        free(event);
+    if (!subscribe(feature, th, SENSOR_MAGIC_PROX, &meta)) {
         FeatureInvokeCallback(feature, param->fail,
             "The current device does not support the distance sensor", 203);
-        FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
     }
 }
 
@@ -318,34 +336,13 @@ void system_sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData
         return;
     }
 
-    sensor_event_t* event = th->events[SENSOR_MAGIC_LIGHT];
-    if (event) {
-        int ret = uv_topic_unsubscribe(&event->topic);
-        if (ret < 0) {
-            FEATURE_LOG_ERROR("%s::%s() unsubscribe Light failed,ret=%d\n", file_tag, __FUNCTION__,
-                ret);
-        }
-        free(event);
-        th->events[SENSOR_MAGIC_LIGHT] = NULL;
-    }
-
-    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
     MetaData meta;
     meta.instance = feature;
     meta.reserved = param->reserved;
-    meta.id = param->callback;
-    event->meta = meta;
+    meta.callback = param->callback;
+    meta.fail = 0;
 
-    th->events[SENSOR_MAGIC_LIGHT] = event;
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[SENSOR_MAGIC_LIGHT]->topic,
-        sensor_orb_table[SENSOR_MAGIC_LIGHT].meta,
-        sensor_orb_table[SENSOR_MAGIC_LIGHT].topic_cb);
-    if (ret < 0) {
-        th->events[SENSOR_MAGIC_LIGHT] = NULL;
-        free(event);
-        FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
-    }
+    subscribe(feature, th, SENSOR_MAGIC_LIGHT, &meta);
 }
 
 void system_sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data)
@@ -358,9 +355,38 @@ void system_sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, Appe
 {
     FeatureInvokeCallback(feature, param->fail, "Current device does not support pedometer sensor",
         1000);
+    REMOVE_ALL_CALLBACK(param->callback, param->fail);
 }
 
 void system_sensor_wrap_unsubscribeStepCounter(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_STEP, true);
+}
+
+void system_sensor_wrap_subscribePressure(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Baro* param)
+{
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
+    if (th == NULL) {
+        FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
+        return;
+    }
+
+    MetaData meta;
+    meta.instance = feature;
+    meta.reserved = param->reserved;
+    meta.callback = param->callback;
+    meta.fail = param->fail;
+
+    if (!subscribe(feature, th, SENSOR_MAGIC_BARO, &meta)) {
+        FeatureInvokeCallback(feature, param->fail,
+            "The current device does not support the barometer sensor", -1);
+        REMOVE_ALL_CALLBACK(param->callback, param->fail);
+    }
+}
+
+void system_sensor_wrap_unsubscribePressure(FeatureInstanceHandle feature, AppendData data)
+{
+    unsubscribe(feature, SENSOR_MAGIC_BARO, true);
 }
