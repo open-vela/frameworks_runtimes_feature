@@ -79,3 +79,16 @@ struct StepCount {
 void subscribeStepCounter(StepCount param)
 void unsubscribeStepCounter()
 
+struct BaroRet {
+    double pressure
+}
+
+callback Baro_cb(BaroRet ret)
+struct Baro {
+    boolean reserved = false
+    callback Baro_cb callback
+    callback fail_cb fail
+}
+
+void subscribePressure(Baro param)
+void unsubscribePressure()
