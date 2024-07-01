@@ -92,20 +92,6 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src
 CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)/include
 
-ifeq ($(CONFIG_ARCH), arm)
-TARGETDIR := arm
-else ifeq ($(CONFIG_ARCH), arm64)
-TARGETDIR := aarch64
-else ifeq ($(CONFIG_ARCH), xtensa)
-TARGETDIR := xtensa
-else
-TARGETDIR := x86
-endif
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libffi/libffi/src/$(TARGETDIR)
-
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
 ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
