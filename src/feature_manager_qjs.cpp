@@ -45,6 +45,88 @@
 
 namespace ferry {
 
+#ifdef CONFIG_FEATURE_USE_JS_FUNCTION_BINDING
+static inline int get_ref_count(feature_value_t val)
+{
+    if (JS_VALUE_HAS_REF_COUNT(val)) {
+        JSRefCountHeader* p = (JSRefCountHeader*)JS_VALUE_GET_PTR(val);
+        return p->ref_count;
+    }
+    return -1;
+}
+
+static feature_value_t bind_js_function(feature_context_ref ctx, const feature_value_t func, const feature_value_t this_obj)
+{
+    if (!JS_IsFunction(ctx, func)) {
+        FEATURE_LOG_ERROR("error: func must be a function!");
+        return FEATURE_VALUE_UNDEFINED;
+    }
+
+    feature_value_t res = FEATURE_VALUE_UNDEFINED;
+    feature_value_t bind_func = JS_GetPropertyStr(ctx, func, "bind");
+    if (JS_IsException(bind_func) || !JS_IsFunction(ctx, bind_func)) {
+        FEATURE_LOG_ERROR("error: bind function is missing");
+        feature_free_value(ctx, bind_func);
+        return res;
+    }
+
+    feature_value_t args[] = { this_obj };
+    res = feature_call(ctx, bind_func, func, 1, args);
+    if (!JS_IsFunction(ctx, res)) {
+        FEATURE_LOG_ERROR("error: result is not a function");
+    }
+    feature_free_value(ctx, bind_func);
+    return res;
+}
+
+void free_js_prop_enums(feature_context_ref ctx, JSPropertyEnum* ptab, uint32_t len)
+{
+    if (!ptab)
+        return;
+
+    for (uint32_t i = 0; i < len; i++) {
+        JS_FreeAtom(ctx, ptab[i].atom);
+    }
+    js_free(ctx, ptab);
+}
+
+static bool bind_js_functions_to_instance(feature_context_ref ctx, feature_value_t js_proto, feature_value_t js_instance)
+{
+    JSPropertyEnum* ptab = nullptr;
+    uint32_t len = 0;
+    if (!JS_GetOwnPropertyNames(ctx, &ptab, &len, js_proto, JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK | JS_GPN_ENUM_ONLY)) {
+        for (uint32_t i = 0; i < len; i++) {
+            const char* prop_name = JS_AtomToCString(ctx, ptab[i].atom);
+            if (!prop_name) {
+                continue;
+            }
+            feature_value_t prop_val = JS_GetPropertyStr(ctx, js_proto, prop_name);
+            if (JS_IsException(prop_val)) {
+                feature_free_cstring(ctx, prop_name);
+                feature_free_value(ctx, prop_val);
+                continue;
+            }
+            if (JS_IsFunction(ctx, prop_val)) {
+                feature_value_t bound_func = bind_js_function(ctx, prop_val, js_instance);
+                FEATURE_LOG_DEBUG("bind function: %s, js instance refcount: %d.", prop_name, get_ref_count(js_instance));
+                if (feature_is_undefined(bound_func)) {
+                    FEATURE_LOG_ERROR("bind function %s error!", prop_name);
+                    feature_free_cstring(ctx, prop_name);
+                    feature_free_value(ctx, prop_val);
+                    free_js_prop_enums(ctx, ptab, len);
+                    return false;
+                }
+                JS_DefinePropertyValueStr(ctx, js_instance, prop_name, bound_func, FEATURE_PROP_CONFIGURABLE);
+            }
+            feature_free_cstring(ctx, prop_name);
+            feature_free_value(ctx, prop_val);
+        }
+    }
+    free_js_prop_enums(ctx, ptab, len);
+    return true;
+}
+#endif
+
 static inline FeatureInstance* getInstance(feature_value_t val)
 {
     auto class_id = FeatureManagerQjs::jsClassId();
@@ -817,6 +899,9 @@ feature_value_t FeatureManagerQjs::createJsInstance(FeaturePrototypeQjs* prototy
     auto js_proto = FT_VAL_GET_JS_VAL(prototype->ft_proto());
     feature_value_t js_instance = JS_NewObjectProtoClass(ctx, js_proto, js_class_id_);
     feature_set_opaque(js_instance, instance);
+#ifdef CONFIG_FEATURE_USE_JS_FUNCTION_BINDING
+    bind_js_functions_to_instance(ctx, js_proto, js_instance);
+#endif
     // setup instance WeakRef, refers to js_instance
     ((FeatureInstanceQjs*)instance)->initWeakRef(js_instance);
     return js_instance;
