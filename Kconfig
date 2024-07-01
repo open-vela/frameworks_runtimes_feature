@@ -42,4 +42,8 @@ config FEATURE_USE_WAMR
 	default n
 	depends on INTERPRETERS_WAMR
 
+config FEATURE_USE_JS_FUNCTION_BINDING
+	bool "Enable JS feature functions binding to JS instance"
+	default y
+
 endif
