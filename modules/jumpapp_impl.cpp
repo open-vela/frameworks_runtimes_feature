@@ -65,7 +65,7 @@ void jumpApp_wrap_launchQuickApp(FeatureInstanceHandle feature, AppendData appen
 
     char pkg[PATH_MAX] = "";
     if (pos_path == NULL) {
-        strcpy(pkg, pos_pkg);
+        sprintf(pkg, "%s", pos_pkg);
     } else {
         strncpy(pkg, pos_pkg, pos_path - pos_pkg);
     }
