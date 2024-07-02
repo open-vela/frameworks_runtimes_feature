@@ -1,5 +1,3 @@
-include(nuttx_add_jidl)
-
 # set the C++ file extension and standard
 set(CXXEXT .cpp)
 set(CMAKE_CXX_STANDARD 17)
