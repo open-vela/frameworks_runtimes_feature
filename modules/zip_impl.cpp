@@ -387,6 +387,7 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
     char filename_try[MAXFILENAME + 16] = "";
     /* if Unzip encrypted zip file */
     const char* password = NULL;
+    int err = -1;
     unzFile uf = NULL;
     unz_global_info64 gi;
 
@@ -401,18 +402,18 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
     }
     if (uf == NULL) {
         FEATURE_LOG_ERROR("Cannot open %s or %s.zip\n", zr->src_path, zr->src_path);
-        return;
+        goto ERROR;
     }
     /* cd to dst path */
     if (chdir(zr->dst_path)) {
         FEATURE_LOG_ERROR("Error changing into %s, aborting\n", zr->dst_path);
-        exit(-1);
+        goto ERROR;
     }
     /* unzGetGlobalInfo64 : get the overall information of all files in the compressed file, including total number of files, size before and after compression, etc. */
-    int err = unzGetGlobalInfo64(uf, &gi);
+    err = unzGetGlobalInfo64(uf, &gi);
     if (err != UNZ_OK) {
         FEATURE_LOG_ERROR("error %d with zipfile in unzGetGlobalInfo \n", err);
-        return;
+        goto ERROR;
     }
     /* gi.number_entry : the total number of files in the compressed file */
     for (uLong i = 0; i < gi.number_entry; i++) {
@@ -434,6 +435,11 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
     }
     /* set unzip file flag is true */
     zr->unzip_success_flag = true;
+
+ERROR:
+    if (uf != NULL) {
+        unzClose(uf);
+    }
     return;
 }
 
