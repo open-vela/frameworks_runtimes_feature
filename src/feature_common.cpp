@@ -147,7 +147,6 @@ int getValueSize(FeatureType featureType)
         // allocate complex type
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
         return complexType->size;
-    } else {
-        return 0;
     }
+    return 0;
 }
