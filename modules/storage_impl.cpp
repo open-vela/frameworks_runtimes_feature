@@ -343,7 +343,7 @@ void system_storage_wrap_clear(FeatureInstanceHandle feature, AppendData data,
     if (th == NULL) {
         FEATURE_LOG_ERROR("[STORAGE_CLEAR] FeatureGetObjectData fail");
         finish_callback(-1, feature, info->success, info->fail, info->complete,
-            "FeatureGetObjectData fail", NULL);
+            "FeatureGetObjectData fail", handle);
         return;
     }
     int ret = uv_db_close(th->db);
