@@ -240,7 +240,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    const char* algo = NULL;
+    const char* algo = options->algo;
     int seg_count;
     char** algo_segs = split_str(options->algo, "-", &seg_count);
     // set default value for algo and deal with value
@@ -317,7 +317,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     const char* msg = "";
     int code = 0;
     bool result = false;
-    const char* algo = NULL;
+    const char* algo = options->algo;
     int seg_count;
     char** algo_segs = split_str(options->algo, "-", &seg_count);
     // set default value for algo and deal with value
