@@ -138,12 +138,14 @@ JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/prompt.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_prompt
 
-ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE),y)
+ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 PROGNAME += feature_test_cli
 PRIORITY += 100
 STACKSIZE += 8192000
 MAINSRC += $(APPDIR)/frameworks/base/feature/modules/feature_test_cli.cpp
+endif
 
+ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE), y)
 AIDLSRCS += $(shell find ./modules/aidl -name *.aidl)
 AIDLFLAGS = --lang=cpp -Imodules/aidl/ -hmodules/aidl/ -omodules/aidl/
 CXXSRCS += $(patsubst %.aidl,%$(CXXEXT),$(AIDLSRCS))

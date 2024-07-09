@@ -59,6 +59,7 @@ typedef JS_MarkFunc feature_mark_func;
 #define feature_to_string(ctx, val) JS_ToString(static_cast<JSContext*>(ctx), val)
 
 #define feature_global_object(ctx) JS_GetGlobalObject(static_cast<JSContext*>(ctx))
+#define feature_object(ctx) JS_NewObject(static_cast<JSContext*>(ctx))
 #define feature_eval(ctx, input, input_len, filename, eval_flags) JS_Eval(static_cast<JSContext*>(ctx), input, input_len, filename, eval_flags)
 #define feature_cfunction(ctx, func, name, length) JS_NewCFunction(static_cast<JSContext*>(ctx), func, name, length)
 #define feature_cfunctiondata(ctx, func, len, mgc, dlen, data) JS_NewCFunctionData(static_cast<JSContext*>(ctx), func, len, mgc, dlen, data)
