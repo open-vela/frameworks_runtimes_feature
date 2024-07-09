@@ -449,7 +449,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
         return;
     FEATURE_LOG_DEBUG("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, info->srcUri, info->dstUri);
 
-    char *src_path = NULL, *dst_path = NULL, *tmp = NULL;
+    char *src_path = NULL, *dst_path = NULL;
     const char* msg;
     int code, r;
 
@@ -502,6 +502,10 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
     }
     /* dst path convert to absolute path */
     dst_path = app_relative_to_absolute_path(zc->pkg_name, info->dstUri);
+
+    zr->src_path = src_path;
+    zr->dst_path = dst_path;
+
     if (src_path == NULL || dst_path == NULL) {
         FEATURE_LOG_ERROR("invalid file path: %s, %s", info->srcUri, info->dstUri);
         msg = "invalid file path";
@@ -513,27 +517,19 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData 
     /* if zip file source dir not exsit */
     if (access(src_path, F_OK) == -1) {
         FEATURE_LOG_ERROR("zip source file Path does not exist or is inaccessible! \n");
-        free(src_path);
         msg = "src path invalid!";
         code = PATH_NOT_EXISTS;
         goto fail;
     }
 
-    zr->src_path = src_path;
-
     /* if decompress zip file output dir not exsit, need create it */
     if (access(dst_path, F_OK) == -1) {
-        tmp = strdup(dst_path);
         FEATURE_LOG_DEBUG("decompress output dir does not exist, need to create it \n");
         if (create_dir(dst_path) == -1) {
             msg = "create dst path failed!";
             code = IOERROR;
             goto fail;
         }
-        FEATURE_LOG_DEBUG("tmp is %s \n", tmp);
-        zr->dst_path = tmp;
-    } else {
-        zr->dst_path = dst_path;
     }
 
     r = uv_queue_work(zc->loop, &zr->req, _do_extract_zip_work_cb,
