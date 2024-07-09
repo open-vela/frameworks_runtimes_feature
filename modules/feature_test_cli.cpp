@@ -18,13 +18,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
 #include <binder/IPCThreadState.h>
-
+#endif
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_registry.h"
-
 using namespace ferry;
 using namespace FEATURE;
 
@@ -34,6 +33,8 @@ typedef struct feature_env_t {
     JSRuntime* rt;
     JSContext* ctx;
 } feature_env_t;
+
+
 
 // __require
 feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
@@ -48,6 +49,28 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int
     auto feature_obj = g_manager_qjs->featureRequire(ctx, vm_object, str_module_name);
     feature_free_cstring(ctx, str_module_name);
     return feature_obj;
+}
+
+// console_log
+feature_value_t __log(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
+{
+    int i;
+    const char* str;
+    std::string buff;
+    for (i = 0; i < argc; i++) {
+        if (i != 0)
+            buff += ' ';
+        str = feature_to_cstring(ctx, argv[i]);
+        if (str) {
+            buff += str;
+        } else { // exception
+            buff += "[custom object]";
+        }
+
+        feature_free_cstring(ctx, str);
+    }
+    FEATURE_LOG_INFO("%s\n", buff.c_str());
+    return FEATURE_UNDEFINED;
 }
 
 bool load_file(char* file_name, char** file_content)
@@ -76,6 +99,7 @@ bool load_file(char* file_name, char** file_content)
     return true;
 }
 
+#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
 void execute_jobs(JSContext* ctx)
 {
     JSContext* ctx1;
@@ -103,6 +127,7 @@ static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
 {
     android::IPCThreadState::self()->handlePolledCommands();
 }
+#endif
 
 static void setScriptArgs(JSContext* ctx, JSValue global_obj, int argc, char* argv[], int scriptArgs_beg)
 {
@@ -176,11 +201,14 @@ extern "C" int main(int argc, char** argv)
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
-
+    feature_value_t console = feature_object(js_env.ctx);
+    feature_set_object_property(js_env.ctx, global_obj, "console", console);
     setScriptArgs(js_env.ctx, global_obj, argc, argv, scriptArgs_beg);
 
     feature_value_t require = feature_cfunction(js_env.ctx, __require, "require", 0);
     feature_set_object_property(js_env.ctx, global_obj, "require", require);
+    feature_value_t log = feature_cfunction(js_env.ctx, __log, "console_log", 0);
+    feature_set_object_property(js_env.ctx, console, "log", log);
     feature_free_value(js_env.ctx, global_obj);
 
     auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
@@ -197,6 +225,7 @@ extern "C" int main(int argc, char** argv)
             }
         }
     } else {
+#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
         int binderFd;
         android::IPCThreadState::self()->setupPolling(&binderFd);
         if (binderFd < 0) {
@@ -216,6 +245,7 @@ extern "C" int main(int argc, char** argv)
         uv_poll_start(&poll_t, UV_READABLE, __uv_poll_cb);
         uv_unref((uv_handle_t*)&check_t);
         uv_run(&loop_t, UV_RUN_DEFAULT);
+#endif
     }
 
     feature_free_value(js_env.ctx, result);

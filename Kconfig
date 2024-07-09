@@ -46,4 +46,8 @@ config FEATURE_USE_JS_FUNCTION_BINDING
 	bool "Enable JS feature functions binding to JS instance"
 	default y
 
+config FEATURE_TEST_CLIENT
+	bool "Enable feature test client"
+	default y
+
 endif
