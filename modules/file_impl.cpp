@@ -287,6 +287,7 @@ void file_access_or_delete(FeatureInstanceHandle feature, system_file_access_par
     if (result != 0) {
         FILE_ERROR("wrong result = %d", result);
     }
+    free(path);
     return;
 }
 void system_file_wrap_delete(FeatureInstanceHandle feature, AppendData append_data, system_file_delete_param_t* param)
