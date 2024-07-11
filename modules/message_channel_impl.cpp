@@ -249,10 +249,10 @@ void MessageChannel::sendBroadcast(const std::string& action,
 void MessageChannel::registerReceiver(const std::string& action,
     FtCallbackId action_cb)
 {
-    if (broadcast_channel_) {
+    if (broadcast_channel_ && action_cb_map_.find(action) == action_cb_map_.end()) {
         broadcast_channel_->registerReceiver(action);
-        action_cb_map_[action].push_back(action_cb);
     }
+    action_cb_map_[action].push_back(action_cb);
 }
 
 void MessageChannel::unregisterReceiver(const std::string& action)
@@ -269,7 +269,7 @@ void MessageChannel::unregisterReceiver(const std::string& action)
 void MessageChannel::unregisterReceiverCb(const std::string& action, FtCallbackId action_cb)
 {
     if (action_cb_map_.find(action) != action_cb_map_.end()) {
-        std::vector<FtCallbackId> vec = action_cb_map_[action];
+        std::vector<FtCallbackId>& vec = action_cb_map_[action];
         auto it = std::find(vec.begin(), vec.end(), action_cb);
         if (it != vec.end()) {
             FeatureRemoveCallback(ft_instance_, *it);
