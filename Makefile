@@ -229,8 +229,9 @@ FEATURELIST += system_internal_package
 endif
 
 ifeq ($(CONFIG_SYSTEM_ACTIVITY_SERVICE), y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/activity_feature.cpp
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/activity_feature_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/activity.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_internal_activity
 endif
 

@@ -16,7 +16,7 @@
 
 #include <map>
 
-#include "activity_feature.h"
+#include "activity.h"
 #include "app/Activity.h"
 #include "app/ServiceConnection.h"
 
