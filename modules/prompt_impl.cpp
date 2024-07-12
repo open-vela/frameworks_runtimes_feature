@@ -125,7 +125,9 @@ void showDialog_success_cb(FeatureInstanceHandle feature, FtCallbackId success, 
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     system_prompt_SuccessInfo* success_info = system_promptMallocSuccessInfo();
     success_info->index = index;
-    FeatureInvokeCallback(feature, success, success_info);
+    if (!FeatureInvokeCallback(feature, success, success_info)) {
+        FEATURE_LOG_ERROR("invoke success callback failed!");
+    }
     FeatureRemoveCallback(feature, success);
     FeatureFreeValue(success_info);
 }
@@ -133,14 +135,18 @@ void showDialog_success_cb(FeatureInstanceHandle feature, FtCallbackId success, 
 void showDialog_cancel_cb(FeatureInstanceHandle feature, FtCallbackId cancel)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    FeatureInvokeCallback(feature, cancel);
+    if (!FeatureInvokeCallback(feature, cancel)) {
+        FEATURE_LOG_ERROR("invoke cancel callback failed!");
+    }
     FeatureRemoveCallback(feature, cancel);
 }
 
 void showDialog_complete_cb(FeatureInstanceHandle feature, FtCallbackId complete)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    FeatureInvokeCallback(feature, complete);
+    if (!FeatureInvokeCallback(feature, complete)) {
+        FEATURE_LOG_ERROR("invoke complete callback failed!");
+    }
     FeatureRemoveCallback(feature, complete);
 }
 
