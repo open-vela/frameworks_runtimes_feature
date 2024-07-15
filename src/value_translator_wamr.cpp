@@ -291,7 +291,7 @@ bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint
 
 ft_value_t nullFtVal()
 {
-    ft_value_t ft_val;
+    ft_value_t ft_val = { 0 };
     return ft_val;
 }
 
