@@ -24,6 +24,20 @@
 #include "uv_ext.h"
 
 static const char* file_tag = "[jidl_feature] sensor_impl";
+#define INVOKE_SUCCESS_CB(feature, cb, ...)                        \
+    do {                                                           \
+        if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
+            FEATURE_LOG_ERROR("invoke success callback failed !"); \
+        }                                                          \
+    } while (0)
+
+#define INVOKE_FAIL_CB(feature, cb, msg, code)                  \
+    do {                                                        \
+        if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
+            FEATURE_LOG_ERROR("invoke fail callback failed !"); \
+        }                                                       \
+    } while (0)
+
 #define REMOVE_ALL_CALLBACK(__succ__, __fail__)   \
     do {                                          \
         FeatureRemoveCallback(feature, __succ__); \
@@ -75,7 +89,7 @@ static void sensor_accel_topic_cb(uv_topic_t* topic, int status, void* data, siz
     accelRet->x = t_r->x;
     accelRet->y = t_r->y;
     accelRet->z = t_r->z;
-    FeatureInvokeCallback(event->meta.instance, event->meta.callback, accelRet);
+    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, accelRet);
     FeatureFreeValue(accelRet);
 }
 
@@ -89,7 +103,7 @@ static void sensor_prox_topic_cb(uv_topic_t* topic, int status, void* data, size
     sensor_prox* t_r = static_cast<sensor_prox*>(data);
     system_sensor_ProximityRet* proxRet = system_sensorMallocProximityRet();
     proxRet->distance = t_r->proximity;
-    FeatureInvokeCallback(event->meta.instance, event->meta.callback, proxRet);
+    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, proxRet);
     FeatureFreeValue(proxRet);
 }
 
@@ -103,7 +117,7 @@ static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, siz
     sensor_light* t_r = static_cast<sensor_light*>(data);
     system_sensor_LightRet* lightRet = system_sensorMallocLightRet();
     lightRet->intensity = t_r->light;
-    FeatureInvokeCallback(event->meta.instance, event->meta.callback, lightRet);
+    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, lightRet);
     FeatureFreeValue(lightRet);
 }
 
@@ -121,7 +135,7 @@ static void sensor_baro_topic_cb(uv_topic_t* topic, int status, void* data, size
     sensor_baro* t_r = static_cast<sensor_baro*>(data);
     system_sensor_BaroRet* baroRet = system_sensorMallocBaroRet();
     baroRet->pressure = t_r->pressure;
-    FeatureInvokeCallback(event->meta.instance, event->meta.callback, baroRet);
+    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, baroRet);
     FeatureFreeValue(baroRet);
 }
 
@@ -316,7 +330,7 @@ void system_sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, Append
     meta.fail = 0;
 
     if (!subscribe(feature, th, SENSOR_MAGIC_PROX, &meta)) {
-        FeatureInvokeCallback(feature, param->fail,
+        INVOKE_FAIL_CB(feature, param->fail,
             "The current device does not support the distance sensor", 203);
     }
 }
@@ -353,8 +367,7 @@ void system_sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendDa
 void system_sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
     system_sensor_StepCount* param)
 {
-    FeatureInvokeCallback(feature, param->fail, "Current device does not support pedometer sensor",
-        1000);
+    INVOKE_FAIL_CB(feature, param->fail, "Current device does not support pedometer sensor", 1000);
     REMOVE_ALL_CALLBACK(param->callback, param->fail);
 }
 
@@ -380,7 +393,7 @@ void system_sensor_wrap_subscribePressure(FeatureInstanceHandle feature, AppendD
     meta.fail = param->fail;
 
     if (!subscribe(feature, th, SENSOR_MAGIC_BARO, &meta)) {
-        FeatureInvokeCallback(feature, param->fail,
+        INVOKE_FAIL_CB(feature, param->fail,
             "The current device does not support the barometer sensor", -1);
         REMOVE_ALL_CALLBACK(param->callback, param->fail);
     }
