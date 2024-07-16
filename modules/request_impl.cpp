@@ -128,6 +128,7 @@ void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
     if ((*downloadResults).size() >= DOWNLOAD_RESULT_CACHE_SIZE) {
         REQUEST_DEBUG("downloadResults size is out of range, free downloadResults.begin()");
         free((void*)(*downloadResults).begin()->second->data);
+        free((*downloadResults).begin()->second);
         (*downloadResults).erase((*downloadResults).begin());
     }
 }
@@ -239,13 +240,14 @@ void freeRequestInfo(RequestInfo* info)
     }
 }
 
+static int start_uuid = 0;
 // generate token
 char* uuid()
 {
     char buf[100] = "";
     time_t now = time(NULL);
     srand((unsigned int)now);
-    sprintf(buf, "%ld-%d", (long int)now, rand());
+    sprintf(buf, "%ld-%d-%d", (long int)now, rand(), ++start_uuid);
     return strdup(buf);
 }
 
@@ -264,19 +266,19 @@ static void __request_cb(int state, uv_response_t* response)
     DownloadResult* res = static_cast<DownloadResult*>(malloc(sizeof(DownloadResult)));
     if (state == UV_REQUEST_DONE) {
         if (info->request_type == UV_DOWNLOAD) {
+            char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
             // 返回文件绝对地址
             system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
-            char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
             char* value = (char*)FeatureMalloc(strlen(body) + 1, FT_CHAR);
             sprintf(value, "%s", body);
             param->uri = value;
             INVOKE_SUCCESS_CB(info->success, param);
             FeatureFreeValue(param);
             FeatureRemoveCallback(feature, info->fail);
+
             res->success = true;
-            res->data = strdup(body);
+            res->data = body;
             res->code = UV_REQUEST_DONE;
-            free(body);
         }
     } else if (state == UV_REQUEST_ERROR) {
         // body内存的是绝对路径的file位置
