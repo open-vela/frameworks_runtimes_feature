@@ -81,14 +81,12 @@ static void finish_callback(int status, FeatureInstanceHandle feature, system_de
 system_device_Device* system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append_data, system_device_CallBack* cb)
 {
     uv_devinfo_t devinfo;
-    char* screenShape = NULL;
     char serial[32 + 1] = { 0 };
     char totalstorage[32 + 1] = { 0 };
     char availablestorage[32 + 1] = { 0 };
     struct statfs fs_buf;
     int ret;
     system_device_Device* device;
-    const char* devicetypeMap[] = { "unknown", "watch", "band", "smartspeaker" };
 
     device = system_deviceMallocDevice();
     ret = uv_devinfobuff(serial, sizeof(serial), UV_EXT_DEVINFO_DID);
@@ -135,18 +133,9 @@ system_device_Device* system_device_wrap_getInfo(FeatureInstanceHandle feature, 
 #else
     STRCPY(platformVersionName, "unknown");
 #endif
-    STRCPY(devicetype, devicetypeMap[devinfo.devicetype]);
+    STRCPY(devicetype, devinfo.devicetype);
+    STRCPY(screenShape, devinfo.screenshape);
 
-    if (devinfo.screenshape == UV_EXT_SCREENSHAPE_ROUND) {
-        STRCPY(screenshape, "circle");
-        screenShape = screenshape;
-    } else if (devinfo.screenshape == UV_EXT_SCREENSHAPE_SQUARE) {
-        STRCPY(screenshape, "rect");
-        screenShape = screenshape;
-    } else {
-        STRCPY(screenshape, "unknown");
-        screenShape = screenshape;
-    }
     device->serial = deviceserial;
     device->totalStorage = totalspace;
     device->availableStorage = availablespace;
