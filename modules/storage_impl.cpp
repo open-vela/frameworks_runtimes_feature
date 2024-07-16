@@ -53,6 +53,34 @@ typedef struct {
             msg, handle);                                                        \
     }
 
+#define INVOKE_SUCCESS_CB(cb, ...)                                 \
+    do {                                                           \
+        if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
+            FEATURE_LOG_ERROR("invoke success callback failed !"); \
+        }                                                          \
+    } while (0)
+
+#define INVOKE_FAIL_CB(cb, msg, code)                           \
+    do {                                                        \
+        if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
+            FEATURE_LOG_ERROR("invoke fail callback failed !"); \
+        }                                                       \
+    } while (0)
+
+#define INVOKE_COMPLET_CB(cb, ...)                                  \
+    do {                                                            \
+        if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {   \
+            FEATURE_LOG_ERROR("invoke complete callback failed !"); \
+        }                                                           \
+    } while (0)
+
+#define REMOVE_ALL_CBS(success, fail, complete)   \
+    do {                                          \
+        FeatureRemoveCallback(feature, success);  \
+        FeatureRemoveCallback(feature, fail);     \
+        FeatureRemoveCallback(feature, complete); \
+    } while (0)
+
 int checkpath(const char* path)
 {
     const char s[] = "/";
@@ -199,15 +227,12 @@ static void finish_callback(int status, FeatureInstanceHandle feature,
 {
     if (!FeatureInstanceIsDetached(feature)) {
         if (status == 0) {
-            FeatureInvokeCallback(feature, success_id, msg != NULL ? msg : "success");
+            INVOKE_SUCCESS_CB(success_id, msg != NULL ? msg : "success");
         } else {
-            FeatureInvokeCallback(feature, fail_id, msg, status);
+            INVOKE_FAIL_CB(fail_id, msg, status);
         }
-        FeatureInvokeCallback(feature, complete_id,
-            (status >= 0) ? "success" : "fail");
-        FeatureRemoveCallback(feature, success_id);
-        FeatureRemoveCallback(feature, fail_id);
-        FeatureRemoveCallback(feature, complete_id);
+        INVOKE_COMPLET_CB(complete_id, (status >= 0) ? "success" : "fail");
+        REMOVE_ALL_CBS(success_id, fail_id, complete_id);
     }
     storage_free(handle);
 }
