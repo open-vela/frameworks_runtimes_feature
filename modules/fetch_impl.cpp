@@ -286,10 +286,12 @@ static void fetch_request_cb(int state, uv_response_t* response)
 
         if (check_any(res.data)) {
             INVOKE_SUCCESS_CB(p->success_cb, &res);
+            ft_free_value(p->ft_ctx, *(res.data));
         } else {
             INVOKE_FAIL_CB(p->fail_cb, "responseType dosen't match response data",
                 ErrorCode::IOERROR);
         }
+        ft_free_value(p->ft_ctx, *(res.headers));
     } else {
         FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
             response->body);

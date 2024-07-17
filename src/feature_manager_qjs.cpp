@@ -508,6 +508,8 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
                 feature_free_value(ctx, ret_val);
                 ret_val = FEATURE_EXCEPTION;
                 got_error = true;
+            } else if (FT_IS_PRIMITIVE(method->return_type) && method->return_type == FT_ANY_REF) {
+                feature_free_value(ctx, ret_val);
             }
         }
     } while (0);
@@ -601,6 +603,8 @@ static feature_value_t accessor_get(feature_context_ref ctx, feature_value_t thi
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             feature_free_value(ctx, ret_val);
             ret_val = FEATURE_EXCEPTION;
+        } else if (FT_IS_PRIMITIVE(feature_type) && feature_type == FT_ANY_REF) {
+            feature_free_value(ctx, ret_val);
         }
     } while (0);
     // free resources

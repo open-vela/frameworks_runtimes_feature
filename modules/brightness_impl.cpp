@@ -34,6 +34,7 @@ public:
                 FeatureInvokeCallback(feature, i, &ret_obj);
             }
         }
+        ft_free_value(ft_ctx, ret_obj);
         return android::binder::Status::ok();
     }
     FeatureInstanceHandle feature {};

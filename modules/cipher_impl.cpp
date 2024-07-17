@@ -109,6 +109,7 @@ void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
     }
@@ -149,6 +150,7 @@ void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
     }
@@ -193,6 +195,7 @@ void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "valid", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
     }
@@ -229,6 +232,7 @@ void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
     }
@@ -268,6 +272,7 @@ void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
     }
@@ -327,6 +332,7 @@ void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "text", ret_data);
         INVOKE_SUCCESS_CB(opts->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (opts->fail) {
         INVOKE_FAIL_CB(opts->fail, msg, code);
     }
