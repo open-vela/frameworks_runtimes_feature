@@ -14,22 +14,31 @@
 
 class MonitorBrightnessCallback : public os::brightness::BnBrightnessObserver {
 public:
-    android::binder::Status onBrightnessChanged(int32_t level) override
+    android::binder::Status onBrightnessChanged(os::brightness::MessageType type, int32_t arg) override
     {
         if (feature == nullptr) {
             return android::binder::Status::fromExceptionCode(android::binder::Status::Exception::EX_NULL_POINTER);
         }
         ft_context_ref ft_ctx = FeatureGetContext(feature);
         ft_value_t ret_obj = ft_new_object(ft_ctx);
-        ft_value_t ret_level = ft_from_int(ft_ctx, level);
-        ft_obj_set_property(ft_ctx, ret_obj, "value", ret_level);
-        for (auto i : cid) {
-            FeatureInvokeCallback(feature, i, &ret_obj);
+        if (type == os::brightness::MessageType::BRIGHTNESS_MODE) {
+            ft_value_t ret_mode = ft_from_int(ft_ctx, !arg);
+            ft_obj_set_property(ft_ctx, ret_obj, "mode", ret_mode);
+            for (auto i : mode_cid) {
+                FeatureInvokeCallback(feature, i, &ret_obj);
+            }
+        } else {
+            ft_value_t ret_level = ft_from_int(ft_ctx, arg);
+            ft_obj_set_property(ft_ctx, ret_obj, "value", ret_level);
+            for (auto i : value_cid) {
+                FeatureInvokeCallback(feature, i, &ret_obj);
+            }
         }
         return android::binder::Status::ok();
     }
     FeatureInstanceHandle feature {};
-    std::unordered_set<FtCallbackId> cid;
+    std::unordered_set<FtCallbackId> value_cid;
+    std::unordered_set<FtCallbackId> mode_cid;
 };
 
 struct BrightnessData {
@@ -72,7 +81,8 @@ void detach(FeatureInstanceHandle handle)
             FEATURE_LOG_INFO("unmonitorBrightness %p", data->callback.get());
             data->service->unmonitorBrightness(data->callback);
             data->callback->feature = nullptr;
-            data->callback->cid.clear();
+            data->callback->value_cid.clear();
+            data->callback->mode_cid.clear();
         }
         data->callback = nullptr;
         data->service = nullptr;
@@ -192,5 +202,16 @@ void system_brightness_set_onbrightnesschanged(FeatureInstanceHandle feature, un
         service->monitorBrightness(data->callback);
     }
     data->callback->feature = feature;
-    data->callback->cid.insert(cb);
+    data->callback->value_cid.insert(cb);
+}
+
+void system_brightness_set_onmodechanged(FeatureInstanceHandle feature, union AppendData append_data, FtCallbackId cb)
+{
+    CHECK_SERVICE_VALID()
+    if (!data->callback) {
+        data->callback = android::sp<MonitorBrightnessCallback>::make();
+        service->monitorBrightness(data->callback);
+    }
+    data->callback->feature = feature;
+    data->callback->mode_cid.insert(cb);
 }
