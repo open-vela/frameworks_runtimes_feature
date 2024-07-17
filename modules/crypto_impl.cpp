@@ -218,6 +218,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
         ft_value_t ret_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
     }
@@ -294,6 +295,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
     }
@@ -458,6 +460,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                             int32_t int_val;
                             if (ft_to_int(ft_ctx, ft_mode_val, &int_val))
                                 mode = int_val;
+                            ft_free_value(ft_ctx, ft_mode_val);
                         }
                         ft_value_t ft_padding = ft_obj_get_property(ft_ctx, ft_enc_type, "padding");
                         if (ft_get_type(ft_ctx, ft_padding) != FT_TYPE_NONE) {
@@ -465,8 +468,13 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                             int32_t int_val;
                             if (ft_to_int(ft_ctx, ft_padding_val, &int_val))
                                 padding = int_val;
+                            ft_free_value(ft_ctx, ft_padding_val);
                         }
+                        ft_free_value(ft_ctx, ft_padding);
+                        ft_free_value(ft_ctx, ft_mode);
                     }
+                    ft_free_value(ft_ctx, ft_enc_type);
+                    ft_free_value(ft_ctx, cfgs_json);
                     free_str_array(cfg_keys, seg_count);
                 }
 
@@ -488,6 +496,7 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
     }
@@ -559,6 +568,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
         ft_value_t ret_data = from_buff(ft_ctx, result, size, is_text);
         ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
         INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
     } else if (options->fail) {
         INVOKE_FAIL_CB(options->fail, msg, code);
     }

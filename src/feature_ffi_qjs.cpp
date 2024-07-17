@@ -436,6 +436,7 @@ namespace FeatureFFIQjs {
                 } else {
                     ft_value_t* f_val = *(ft_value_t**)(ptr);
                     value = FT_VAL_GET_JS_VAL(*f_val);
+                    feature_dup_value(ctx, value);
                 }
             } break;
             default: {

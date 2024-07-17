@@ -601,11 +601,13 @@ static void __load_after_work_cb(uv_work_t* req, int status)
         __invoke_fr_cb(fr, 0, NULL, data);
     } else if (fr->type == FILE_READARRBUF) {
         // 将读取的文件内容写入ArrayBuffer
-        ft_value_t buffer = ft_from_typed_buffer(FeatureGetContext(fr->handle), fr->buf, fr->len, 0);
+        ft_context_ref ft_ctx = FeatureGetContext(fr->handle);
+        ft_value_t buffer = ft_from_typed_buffer(ft_ctx, fr->buf, fr->len, 0);
         system_file_read_arr_buf_succ_t* data = system_fileMallocread_arr_buf_succ_t();
         data->buffer = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
         *(data->buffer) = buffer;
         __invoke_fr_cb(fr, 0, NULL, data);
+        ft_free_value(ft_ctx, buffer);
     } else if (fr->type == FILE_WRITETEXT || fr->type == FILE_WRITEARRBUF) {
         __invoke_fr_cb(fr, 0, NULL, NULL);
     }
