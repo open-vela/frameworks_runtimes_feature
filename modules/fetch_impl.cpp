@@ -107,7 +107,6 @@ typedef struct fetch_s {
     std::string filename;
     int type;
     Fetch::ResponseType response_type;
-    bool exit;
     struct weakref_list_node node;
     uv_request_t* request;
     content_t* content;
@@ -147,7 +146,7 @@ static void fetch_request_cb(int state, uv_response_t* response);
 void fetch_free(fetch_t* p)
 {
     if (p) {
-        FETCH_DEBUG("del node %p", p);
+        FETCH_INFO("del node %p", p);
         weakref_list_delete(&p->node);
         if (p->content) {
             delete p->content;
@@ -157,6 +156,7 @@ void fetch_free(fetch_t* p)
             free((void*)p->url);
             p->url = NULL;
         }
+        FeatureFreeInstanceHandle(p->feature);
         delete p;
     }
 }
@@ -183,42 +183,28 @@ void system_fetch_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle ha
 }
 void system_fetch_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    FETCH_DEBUG("");
-    request_context_t* p = get_request_context(handle);
-    REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t)
-    {
-        FETCH_DEBUG("req=%p req->request=%p", req, req->request);
-        if (req->feature == handle) {
-            if (req->exit) {
-                fetch_free(req);
-            } else {
-                // Cancel instance callback
-                FETCH_INFO("Cancel instance callback %p", req);
-                req->exit = true;
-            }
-        }
-    }
+    FETCH_INFO("");
 }
 
 void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    FETCH_DEBUG("");
+    FETCH_INFO("");
     request_context_t* p = static_cast<request_context_t*>(FeatureGetProtoData(handle));
     assert(p);
 
     // Cancel and delete all requests
     REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t)
     {
-        FETCH_DEBUG("task:%p,request:%p", req, req->request);
+        FETCH_INFO("task:%p,request:%p", req, req->request);
         if (req->request) {
-            FETCH_DEBUG("req=%p", req);
+            FETCH_INFO("req=%p", req);
             uv_request_delete(req->request);
             req->request = NULL;
         }
         fetch_free(req);
     }
     uv_request_close(p->handle);
-    FeatureSetProtoData(p, NULL);
+    FeatureSetProtoData(handle, NULL);
     free(p);
 }
 void system_fetch_onUnregister(const char* feature_name) { FETCH_DEBUG(""); }
@@ -283,11 +269,11 @@ static void fetch_request_cb(int state, uv_response_t* response)
     ASSERT_RET_ECHO(p, "The request has been cancelled");
     GET_FEATURE_AND_CTX(p);
 
-    if (p->exit) {
-        p->request = NULL;
-        return;
+    if (FeatureInstanceIsDetached(p->feature)) {
+        FETCH_INFO("");
+        goto exit;
     }
-    FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
+    FETCH_INFO("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
     if (state == UV_REQUEST_DONE && response->httpcode < HTTP_BAD_REQUES) {
         ft_value_t ft_header = ft_form_headers(p->ft_ctx, response->headers);
@@ -311,9 +297,10 @@ static void fetch_request_cb(int state, uv_response_t* response)
     }
     INVOKE_COMPLET_CB(p->complete_cb);
     REMOVE_ALL_CALLBACK(p->success_cb, p->fail_cb, p->complete_cb);
-    p->exit = true;
+
+exit:
     // request done,uv_request  has been released
-    p->request = NULL;
+    fetch_free(p);
 }
 
 static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
@@ -384,7 +371,7 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
     fetch_t* fetch = new fetch_t;
     assert(fetch);
     fetch->ft_ctx = ft_ctx;
-    fetch->feature = feature;
+    fetch->feature = FeatureDupInstanceHandle(feature);
 
     fetch->success_cb = obj->success;
     fetch->fail_cb = obj->fail;
@@ -421,7 +408,6 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
     }
 
     fetch->request = NULL;
-    fetch->exit = false;
     fetch->content = ct;
     fetch->url = NULL;
 
