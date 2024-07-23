@@ -200,6 +200,7 @@ void system_brightness_set_onbrightnesschanged(FeatureInstanceHandle feature, un
     CHECK_SERVICE_VALID()
     if (!data->callback) {
         data->callback = android::sp<MonitorBrightnessCallback>::make();
+        FEATURE_LOG_INFO("monitorBrightness %p", data->callback.get());
         service->monitorBrightness(data->callback);
     }
     data->callback->feature = feature;
@@ -211,6 +212,7 @@ void system_brightness_set_onmodechanged(FeatureInstanceHandle feature, union Ap
     CHECK_SERVICE_VALID()
     if (!data->callback) {
         data->callback = android::sp<MonitorBrightnessCallback>::make();
+        FEATURE_LOG_INFO("monitorBrightness %p", data->callback.get());
         service->monitorBrightness(data->callback);
     }
     data->callback->feature = feature;
