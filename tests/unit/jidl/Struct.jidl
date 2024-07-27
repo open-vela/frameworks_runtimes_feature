@@ -1,0 +1,25 @@
+module Struct@1.0
+
+// Declare a simple struct
+struct Chapter {
+  int page_count = 10
+  string title = "hello world"
+  boolean is_end = false
+}
+
+// Declare a callback
+callback ChapChanged(int index, string title)
+
+// Declare a complex struct
+struct Book {
+  int page_count // primary type member
+  string title // primary type member
+  string[] chap_titles // array type member
+  struct Chapter first_chap // struct type member, refers to the Chapter struct
+  callback ChapChanged chap_changed // callback type member
+}
+
+void foo(int a, Chapter b) // struct as parameter
+Chapter bar(int a) // struct as return value
+void bar2(Book a) // complex struct as parameter
+void print(...)
