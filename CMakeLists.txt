@@ -125,8 +125,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(APPEND FEATURELIST "system_internal_micamera")
   endif()
 
-  list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/app_path.cpp)
-
   # for the 'locale' feature
   list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/locale_impl.cpp)
   list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/feature_locale.jidl)
@@ -325,11 +323,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/request.jidl)
     list(APPEND FEATURELIST "system_request")
   endif()
-
-  # for the 'system_file' feature
-  list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/file_impl.cpp)
-  list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/file.jidl)
-  list(APPEND FEATURELIST "system_file")
 
   # for the 'system_folme' feature
   if(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER)

@@ -27,8 +27,6 @@
 #include <cstdint>
 #include <string.h>
 
-using namespace FEATURE;
-
 #define CFUNCDATA_FN(f) ((feature_value_t(*)(feature_context_ref ctx, feature_value_t, int, feature_value_t*, int, feature_value_t*))f)
 
 namespace feature_framework {

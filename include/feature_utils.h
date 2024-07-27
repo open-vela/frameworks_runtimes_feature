@@ -4,19 +4,17 @@
 #include "feature_list.h"
 #include "feature_log.h"
 
-#include <cassert>
-#include <cstdint>
+#include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-namespace FEATURE {
 
 struct FeatureAssertionInfo {
     const char* fileLine; // 格式为filename:line
     const char* message; // 输出信息
     const char* function; // 发生断言的函数名
 };
-}
 
 #define FEATURE_STRINGIFY_(x) #x
 #define FEATURE_STRINGIFY(x) FEATURE_STRINGIFY_(x)
@@ -26,7 +24,7 @@ struct FeatureAssertionInfo {
  */
 #define FEATURE_ERROR_AND_ABORT(expr, fmt, ...)                                                                                                                \
     do {                                                                                                                                                       \
-        static const struct FEATURE::FeatureAssertionInfo args__ = { __FILE__ ":" FEATURE_STRINGIFY(__LINE__), #expr, FEATURE_PRETTY_FUNCTION_NAME };          \
+        static const struct FeatureAssertionInfo args__ = { __FILE__ ":" FEATURE_STRINGIFY(__LINE__), #expr, FEATURE_PRETTY_FUNCTION_NAME };                   \
         FEATURE_LOG_ERROR("%s:%s%s Assertion `%s' failed." fmt, args__.fileLine, args__.function, *args__.function ? ":" : "", args__.message, ##__VA_ARGS__); \
         /* assert(0); */                                                                                                                                       \
     } while (0)

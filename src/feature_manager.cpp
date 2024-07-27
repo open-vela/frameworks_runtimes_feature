@@ -24,8 +24,6 @@
 
 #include <string.h>
 
-using namespace FEATURE;
-
 namespace feature_framework {
 
 extern FeatureManager* CreateQJSFeatureManager(FeatureRegistry* registry, FeatureManagerCreateInfo* pinfo);
