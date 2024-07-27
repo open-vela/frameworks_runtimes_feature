@@ -20,7 +20,11 @@
 #include "feature_utils.h"
 
 #include <string.h>
-using namespace FEATURE;
+
+#ifndef __NuttX__
+#include <malloc.h>
+#define malloc_size malloc_usable_size
+#endif
 
 namespace feature_framework {
 

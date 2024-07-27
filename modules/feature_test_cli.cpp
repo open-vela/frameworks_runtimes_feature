@@ -31,7 +31,6 @@
 
 #define CLI_TIME_LIMIT 2 // 异步限时 2000ms
 using namespace feature_framework;
-using namespace FEATURE;
 
 static FeatureManagerQjs* g_manager_qjs;
 

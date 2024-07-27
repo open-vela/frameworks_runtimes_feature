@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nuttx/userspace.h>
+#include <pthread.h>
 
 class ThreadChecker {
 public:

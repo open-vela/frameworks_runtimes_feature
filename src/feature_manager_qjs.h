@@ -18,6 +18,7 @@
 
 #include "feature.h"
 #include "feature_manager.h"
+#include <chrono>
 
 namespace feature_framework {
 

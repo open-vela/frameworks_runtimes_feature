@@ -208,7 +208,7 @@ bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid,
  * @param[in] pid promised id
  * @return FeaturePromiseType
  */
-FeaturePromiseType FeatureGetPromiseType(FeatureInstanceHandle handle, FtPromiseId pid);
+enum FeaturePromiseType FeatureGetPromiseType(FeatureInstanceHandle handle, FtPromiseId pid);
 
 /**
  * @brief create a FeatureInterfaceHandle
