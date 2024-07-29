@@ -198,6 +198,7 @@ void ClientConnection::unregisterReceiver(const std::string& action)
     if (broadcast_reply_.find(action) != broadcast_reply_.end()) {
         ActivityManager am;
         am.unregisterReceiver(broadcast_reply_[action]);
+        broadcast_reply_.erase(action);
     }
 }
 
