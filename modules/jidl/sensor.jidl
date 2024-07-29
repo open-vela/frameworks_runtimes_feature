@@ -82,13 +82,35 @@ void unsubscribeStepCounter()
 struct BaroRet {
     double pressure
 }
-
 callback Baro_cb(BaroRet ret)
 struct Baro {
     boolean reserved = false
     callback Baro_cb callback
     callback fail_cb fail
 }
-
 void subscribePressure(Baro param)
 void unsubscribePressure()
+
+struct HumidityRet {
+    double humidity
+}
+callback Humidity_cb(HumidityRet ret)
+struct Humidity {
+    boolean reserved = false
+    callback Humidity_cb callback
+    callback fail_cb fail
+}
+void subscribeHumidity(Humidity param)
+void unsubscribeHumidity()
+
+struct TemperatureRet {
+    double temperature
+}
+callback Temperature_cb(TemperatureRet ret)
+struct Temperature {
+    boolean reserved = false
+    callback Temperature_cb callback
+    callback fail_cb fail
+}
+void subscribeAmbientTemperature(Temperature param)
+void unsubscribeAmbientTemperature()

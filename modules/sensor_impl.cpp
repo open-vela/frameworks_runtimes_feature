@@ -17,8 +17,10 @@
 #include <nuttx/nuttx.h>
 #include <sensor/accel.h>
 #include <sensor/baro.h>
+#include <sensor/humi.h>
 #include <sensor/light.h>
 #include <sensor/prox.h>
+#include <sensor/temp.h>
 
 #include "sensor.h"
 #include "uv_ext.h"
@@ -53,6 +55,8 @@ typedef enum sensor_magic_e {
     SENSOR_MAGIC_LIGHT,
     SENSOR_MAGIC_STEP,
     SENSOR_MAGIC_BARO,
+    SENSOR_MAGIC_AMBIENTTEMPERATURE,
+    SENSOR_MAGIC_HUMIDITY,
     SENSOR_MAGIC_NUM,
 } sensor_magic_t;
 
@@ -139,15 +143,44 @@ static void sensor_baro_topic_cb(uv_topic_t* topic, int status, void* data, size
     FeatureFreeValue(baroRet);
 }
 
-const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = { [SENSOR_MAGIC_ACCEL] = {
-                                                                     .meta = ORB_ID(sensor_accel),
-                                                                     .topic_cb = sensor_accel_topic_cb,
-                                                                 },
+static void sensor_temp_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
+    if (!topic || !data) {
+        FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
+        return;
+    }
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    sensor_temp* t_r = static_cast<sensor_temp*>(data);
+    system_sensor_TemperatureRet* tempRet = system_sensorMallocTemperatureRet();
+    tempRet->temperature = t_r->temperature;
+    FeatureInvokeCallback(event->meta.instance, event->meta.callback, tempRet);
+    FeatureFreeValue(tempRet);
+}
+
+static void sensor_humi_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
+    if (!topic || !data) {
+        FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
+        return;
+    }
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    sensor_humi* t_r = static_cast<sensor_humi*>(data);
+    system_sensor_HumidityRet* humiRet = system_sensorMallocHumidityRet();
+    humiRet->humidity = t_r->humidity;
+    FeatureInvokeCallback(event->meta.instance, event->meta.callback, humiRet);
+    FeatureFreeValue(humiRet);
+}
+
+const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = { 
+    [SENSOR_MAGIC_ACCEL] = { .meta = ORB_ID(sensor_accel), .topic_cb = sensor_accel_topic_cb, },
     [SENSOR_MAGIC_COMPA] = { .meta = NULL, .topic_cb = sensor_compa_topic_cb },
     [SENSOR_MAGIC_PROX] = { .meta = ORB_ID(sensor_prox), .topic_cb = sensor_prox_topic_cb },
     [SENSOR_MAGIC_LIGHT] = { .meta = ORB_ID(sensor_light), .topic_cb = sensor_light_topic_cb },
     [SENSOR_MAGIC_STEP] = { .meta = NULL, .topic_cb = sensor_step_topic_cb },
-    [SENSOR_MAGIC_BARO] = { .meta = ORB_ID(sensor_baro), .topic_cb = sensor_baro_topic_cb } };
+    [SENSOR_MAGIC_BARO] = { .meta = ORB_ID(sensor_baro), .topic_cb = sensor_baro_topic_cb },
+    [SENSOR_MAGIC_AMBIENTTEMPERATURE] = { .meta = ORB_ID(sensor_temp), .topic_cb = sensor_temp_topic_cb },
+    [SENSOR_MAGIC_HUMIDITY] = { .meta = ORB_ID(sensor_humi), .topic_cb = sensor_humi_topic_cb },
+};
 
 static void uv_topic_close_cb(uv_handle_t* handle)
 {
@@ -402,4 +435,60 @@ void system_sensor_wrap_subscribePressure(FeatureInstanceHandle feature, AppendD
 void system_sensor_wrap_unsubscribePressure(FeatureInstanceHandle feature, AppendData data)
 {
     unsubscribe(feature, SENSOR_MAGIC_BARO, true);
+}
+
+void system_sensor_wrap_subscribeAmbientTemperature(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Temperature* param)
+{
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
+    if (th == NULL) {
+        FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
+        return;
+    }
+
+    MetaData meta;
+    meta.instance = feature;
+    meta.reserved = param->reserved;
+    meta.callback = param->callback;
+    meta.fail = param->fail;
+
+    if(!subscribe(feature, th, SENSOR_MAGIC_AMBIENTTEMPERATURE, &meta)) {
+        FeatureInvokeCallback(feature, param->fail,
+            "The current device does not support the temperature sensor", -1);
+        REMOVE_ALL_CALLBACK(param->callback, param->fail);
+    }
+}
+
+void system_sensor_wrap_unsubscribeAmbientTemperature(FeatureInstanceHandle feature, AppendData data)
+{
+    unsubscribe(feature, SENSOR_MAGIC_AMBIENTTEMPERATURE, true);
+}
+
+void system_sensor_wrap_subscribeHumidity(FeatureInstanceHandle feature, AppendData data,
+    system_sensor_Humidity* param)
+{
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
+    if (th == NULL) {
+        FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
+        return;
+    }
+
+    MetaData meta;
+    meta.instance = feature;
+    meta.reserved = param->reserved;
+    meta.callback = param->callback;
+    meta.fail = param->fail;
+
+    if(!subscribe(feature, th, SENSOR_MAGIC_HUMIDITY, &meta)) {
+        FeatureInvokeCallback(feature, param->fail,
+            "The current device does not support the humidity sensor", -1);
+        REMOVE_ALL_CALLBACK(param->callback, param->fail);
+    }
+}
+
+void system_sensor_wrap_unsubscribeHumidity(FeatureInstanceHandle feature, AppendData data)
+{
+    unsubscribe(feature, SENSOR_MAGIC_HUMIDITY, true);
 }
