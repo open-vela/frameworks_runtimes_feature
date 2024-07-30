@@ -20,6 +20,7 @@
 #include "feature_manager_qjs.h"
 #include "feature_prototype_qjs.h"
 #include "feature_utils.h"
+#include "thread_checker.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -176,6 +177,7 @@ void FeatureInstanceQjs::freeWeakRef()
 
 int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
 {
+    THREAD_CHECK(featureManager()->getFeatureContext()->thread_checker);
     int ret = doSettlePromise(resolve, pid, ap);
     if (!removePromise(pid)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
@@ -228,6 +230,7 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
 
 int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
+    THREAD_CHECK(featureManager()->getFeatureContext()->thread_checker);
     return invokeJsCallback(callbackType, callback, ap, fixed_argc, rest_argc);
 }
 

@@ -15,6 +15,7 @@
  */
 #include "feature_manager.h"
 #include "feature_context.h"
+#include "feature_context_private.h"
 #include "feature_exports.h"
 #include "feature_instance.h"
 #include "feature_log.h"
@@ -47,6 +48,9 @@ FeatureManager::~FeatureManager()
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
 {
     ft_ctx_ = ft_ctx;
+#ifdef CONFIG_FEATURE_ENABLE_THREAD_CHECKER
+    ft_ctx->thread_checker = &thread_checker_;
+#endif
 }
 
 static void feature_async_cb(uv_async_t* handle)
