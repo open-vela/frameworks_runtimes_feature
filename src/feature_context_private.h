@@ -17,6 +17,7 @@
 #define __FEATURE_RUNTIME_CONTEXT_PRIVATE_H__
 
 #include "feature_context.h"
+#include "thread_checker.h"
 
 ft_context_ref CreateFeatureContextQjs(void* data);
 
@@ -28,7 +29,9 @@ void ReleaseFeatureContextWamr(ft_context_ref ft_ctx);
 
 typedef struct FeatureContext {
     void* data;
-
+#ifdef CONFIG_FEATURE_ENABLE_THREAD_CHECKER
+    ThreadChecker* thread_checker;
+#endif
     ft_type (*ft_get_type)(ft_context_ref ft_ctx, ft_value_t ft_val);
 
     // feature type creation from native types

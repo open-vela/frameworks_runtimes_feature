@@ -22,6 +22,7 @@
 #include "feature_list.h"
 #include "feature_main_exports.h"
 #include "feature_registry.h"
+#include "thread_checker.h"
 
 #include <queue>
 
@@ -99,6 +100,7 @@ private:
     std::queue<TaskData> task_queue_;
     ArgsErrorCb args_error_cb_ = nullptr;
     void* args_error_data_ = nullptr;
+    ThreadChecker thread_checker_;
 };
 
 } // namespace ferry
