@@ -169,7 +169,7 @@ int PromiseManager::invokeJsCallback(const CallbackType* callbackType, feature_v
         FeatureType ftype = callbackType->parameters[i];
         if (!argToTarget(js_ctx_, ap, ftype, argv[i])) {
             FEATURE_LOG_ERROR("extract callback param failed !");
-            return 0;
+            return -1;
         }
     }
 
@@ -186,7 +186,9 @@ int PromiseManager::invokeJsCallback(const CallbackType* callbackType, feature_v
         }
     }
 
+    feature_dup_value(js_ctx_, callback);
     feature_value_t ret = feature_call(js_ctx_, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
+    feature_free_value(js_ctx_, callback);
     feature_free_value(js_ctx_, ret);
     return 0;
 }
