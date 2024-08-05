@@ -197,6 +197,9 @@ void ClientConnection::unregisterReceiver(const std::string& action)
 {
     if (broadcast_reply_.find(action) != broadcast_reply_.end()) {
         ActivityManager am;
+        // VELAPLATFO-39723::由于ams的unregisterReceiver的接口是异步调用的，可能没有立即生效,
+        // 因此将broadcastCallback置空，避免后续的onReceive回调导致崩溃
+        broadcast_reply_[action]->setBroadcastChannelCallback(nullptr);
         am.unregisterReceiver(broadcast_reply_[action]);
         broadcast_reply_.erase(action);
     }
