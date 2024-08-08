@@ -302,6 +302,22 @@ OUT_PATH += $(APPDIR)/frameworks/connectivity/miplay_lite/app/feature/
 FEATURELIST += service_miplay
 endif
 
+ifneq ($(CONFIG_LYRA_NEW_FEATURE), )
+
+ifneq ($(CONFIG_LYRA_NEW_FEATURE_TRANSFER), )
+FEATURELIST += system_internal_hyperchannel
+endif
+
+ifneq ($(CONFIG_LYRA_NEW_FEATURE_MESSAGE_CENTER), )
+FEATURELIST += system_internal_messagecenter
+endif
+
+ifneq ($(CONFIG_LYRA_NEW_FEATURE_NETWORKING), )
+FEATURELIST += system_internal_networking
+endif
+
+endif
+
 ifeq ($(CONFIG_SERVICE_AGENT_CLIENT),y)
 FEATURE_IGNORE_JIDL = 'utils'
 FEATURELIST += $(shell find $(APPDIR)/vendor/xiaomi/vela/service_agent/feature/jidl/ \
