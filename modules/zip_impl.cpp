@@ -143,7 +143,7 @@ static void detach(FeatureInstanceHandle handle)
             /* task not start, zc->zr_arr[i] not null, should be cancel the task when page destory */
             if (zc->zr_arr[i] != nullptr) {
                 uv_cancel((uv_req_t*)(&(zc->zr_arr[i]->req)));
-                freeZipReq(zc->zr_arr[i]);
+                zc->zr_arr[i] = nullptr;
             }
         }
         delete zc;
@@ -333,7 +333,7 @@ static void clearZrPtr(std::vector<zipReq*>& zr_arr, zipReq* zr)
 {
     for (size_t i = 0; i < zr_arr.size(); ++i) {
         if (zr_arr[i] == zr) {
-            freeZipReq(zr_arr[i]);
+            zr_arr[i] = nullptr;
         }
     }
     return;
