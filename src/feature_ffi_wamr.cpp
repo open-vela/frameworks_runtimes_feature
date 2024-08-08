@@ -40,7 +40,7 @@ namespace FeatureFFIWamr {
 #define PUSH_LOCAL_OBJ_REF(obj)                                                                  \
     {                                                                                            \
         wasm_local_obj_ref_t* ref = (wasm_local_obj_ref_t*)malloc(sizeof(wasm_local_obj_ref_t)); \
-        wasm_runtime_push_local_object_ref(exec_env, ref);                                       \
+        wasm_runtime_push_local_obj_ref(exec_env, ref);                                          \
         ref->val = (wasm_obj_t)obj;                                                              \
     }
 
