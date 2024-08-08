@@ -195,7 +195,7 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
     }
 
     /* Push object to local ref to avoid being freed at next allocation */
-    wasm_runtime_push_local_object_ref(exec_env, &local_ref);
+    wasm_runtime_push_local_obj_ref(exec_env, &local_ref);
     local_ref.val = (wasm_obj_t)array_struct;
 
     wasm_value_t val = { 0 };
@@ -203,7 +203,7 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
     wasm_array_obj_t array_obj = wasm_array_obj_new_with_type(
         exec_env, any_array_type, elem_count, &val);
     if (!array_obj) {
-        wasm_runtime_pop_local_object_ref(exec_env);
+        wasm_runtime_pop_local_obj_ref(exec_env);
         wasm_runtime_set_exception(module_inst, "alloc memory failed");
         return nullptr;
     }
@@ -212,6 +212,6 @@ wasm_struct_obj_t create_any_array_struct(wasm_exec_env_t exec_env, uint32_t ele
     wasm_struct_obj_set_field(array_struct, 0, &val);
     wasm_value_t array_size = { .i32 = (int32_t)elem_count };
     wasm_struct_obj_set_field(array_struct, 1, &array_size);
-    wasm_runtime_pop_local_object_ref(exec_env);
+    wasm_runtime_pop_local_obj_ref(exec_env);
     return array_struct;
 }
