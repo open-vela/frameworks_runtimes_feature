@@ -34,8 +34,6 @@ typedef struct feature_env_t {
     JSContext* ctx;
 } feature_env_t;
 
-
-
 // __require
 feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
 {
@@ -198,6 +196,9 @@ extern "C" int main(int argc, char** argv)
     auto registry = new ferry::FeatureRegistry();
     registry->init(manifast_str);
     g_manager_qjs = new ferry::FeatureManagerQjs(registry);
+    uv_loop_t uv_loop;
+    uv_loop_init(&uv_loop);
+    FeatureSetUVLoop(g_manager_qjs, &uv_loop);
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
