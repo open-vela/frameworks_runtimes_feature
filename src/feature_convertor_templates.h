@@ -17,13 +17,16 @@
 #ifndef __FEATURE_CONVERTOR_TEMPLATES_H__
 #define __FEATURE_CONVERTOR_TEMPLATES_H__
 #include "feature_common.h"
+#include "feature_description.h"
 #include "feature_exports.h"
 #include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_utils.h"
+#include "protobuf/proto_reflection.h"
 #include "value_translator.h"
 #include <cstdarg>
 #include <list>
+#include <protobuf-c/protobuf-c.h>
 #include <stdalign.h>
 
 namespace feature_framework {
@@ -200,6 +203,16 @@ bool convertValueToTarget(FeatureType ftype,
                 pinstance->initialize();
             }
             target = value_translator::targetFromInterface(ctx, pinstance);
+        } break;
+        case COMPLEX_PROTOBUF: {
+            ProtobufMessageType* proto = (ProtobufMessageType*)complex_type;
+            FEATURE_CHECK_EQ(proto->desc, (*(ProtobufCMessage**)pnative)->descriptor);
+            target = value_translator::newObject(ctx);
+            if constexpr (std::is_same_v<JSContext*, std::remove_cv_t<TCtx>>) {
+                proto_reflection::fromNative(ctx, target, *(ProtobufCMessage**)(pnative));
+            } else {
+                FEATURE_LOG_ERROR("protobuf only support JS backend !");
+            }
         } break;
         default: {
             FEATURE_LOG_ERROR("unsupported complex type !");
@@ -477,6 +490,16 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
         } break;
         case COMPLEX_INTERFACE: {
             *(void**)pnative = value_translator::interfaceFromTarget(ctx, target);
+        } break;
+        case COMPLEX_PROTOBUF: {
+            ProtobufMessageType* proto = (ProtobufMessageType*)complex_type;
+            ProtobufCMessage* out {};
+            if constexpr (std::is_same_v<JSContext*, std::remove_cv_t<TCtx>>) {
+                proto_reflection::toNative(instance, ctx, target, proto->desc, &out);
+            } else {
+                FEATURE_LOG_ERROR("protobuf only support JS backend !");
+            }
+            *(void**)pnative = out;
         } break;
         default: {
             FEATURE_LOG_ERROR("unsupported complex type !");

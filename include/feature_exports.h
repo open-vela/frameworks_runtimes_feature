@@ -21,14 +21,22 @@
 #ifndef FEATURE_EXPORTS_H
 #define FEATURE_EXPORTS_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include <stddef.h>
+#include <protobuf-c/protobuf-c.h>
 #include "feature_types.h"
 #include "quickjs/quickjs.h"
 #include "uv.h"
 #include <stdbool.h>
+
+void* FeatureInstanceAllocProtobuf(FeatureInstanceHandle handle, const ProtobufCMessageDescriptor* desc);
+void* FeatureInstanceAllocType(FeatureInstanceHandle hInst, size_t size, FeatureType type);
+void* FeatureInstanceAlloc(FeatureInstanceHandle handle, size_t size);
+void* FeatureInstanceDupValue(void* ptr);
+void FeatureInstanceFreeValue(void* ptr);
 
 /**
  * @brief malloc a memory by featureType

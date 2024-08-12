@@ -16,9 +16,11 @@
 
 #include "promise_manager.h"
 #include "feature_common.h"
+#include "feature_description.h"
 #include "feature_ffi.h"
 #include "feature_log.h"
 // clang-format off
+#include "feature_types.h"
 #include "value_translator_qjs.h"
 #include "feature_convertor_templates.h"
 // clang-format on
@@ -346,10 +348,13 @@ int PromiseManager::invokeJsCallback(const FeatureType* param_types, feature_val
         void* arg = va_arg(ap, void*);
         void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
         FTObjHeader* header = (FTObjHeader*)header_ptr;
-        FeatureType ftype = header->featureType;
-        if (!convertValueToTarget(ftype, js_ctx_, FT_IS_REFERENCE(ftype) ? &arg : arg, argv[i])) {
-            FEATURE_LOG_ERROR("convert callback rest param failed !");
-            argv[i] = FEATURE_VALUE_UNDEFINED;
+
+        if (header->type == MEMORY_FEATURE_TYPE) {
+            FeatureType ftype = *(FeatureType*)arg;
+            if (!convertValueToTarget(ftype, js_ctx_, FT_IS_REFERENCE(ftype) ? &arg : arg, argv[i])) {
+                FEATURE_LOG_ERROR("convert callback rest param failed !");
+                argv[i] = FEATURE_VALUE_UNDEFINED;
+            }
         }
     }
     feature_dup_value(js_ctx_, callback);

@@ -23,6 +23,7 @@
 #include <functional>
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 namespace feature_framework {
 

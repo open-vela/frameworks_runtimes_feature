@@ -29,7 +29,6 @@
 #include <functional>
 #include <stdlib.h>
 
-using namespace FEATURE;
 using namespace feature_framework;
 
 namespace feature_framework {

@@ -23,7 +23,9 @@ extern "C" {
 
 #include "feature_permission.h"
 #include "feature_types.h"
+#include <stdint.h>
 #include <inttypes.h>
+#include <protobuf-c/protobuf-c.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -50,13 +52,29 @@ extern "C" {
 #define FT_GET_COMPLEX(ptr) ((uintptr_t)ptr)
 
 #define FT_IS_PROMISE(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
+#define FT_IS_PROTOBUF_MESSAGE(ptr) (FT_IS_COMPLEX(ptr) && (((ComplexTypeHeader*)FT_GET_COMPLEX(ptr))->type == COMPLEX_PROTOBUF))
 
 typedef void (*StubFunc)(FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret);
 
+#define FT_GET_REF_COUNT(ptr) ((FTObjHeader*)ptr)->ref_count
+
+//
+#define MEMORY_REF_COUNT_ONLY 0
+#define MEMORY_FEATURE_TYPE 1
+#define MEMORY_PROTOBUF 1 << 1
+
 typedef struct FTObjHeader {
-    int32_t ref_count;
-    FeatureType featureType;
+    uint32_t type : 2;
+    uint32_t ref_count : 30;
+#ifdef ENABLE_FEATURE_MEM_TRACE
+    const FeatureDescription* desc; // 只能记录desc, 保证指针一直有效
+#endif
 } FTObjHeader;
+
+typedef struct FTMemory {
+    FTObjHeader header;
+    char payload[0];
+} FTMemory;
 
 #define FT_OBJ_HEADER_SIZE sizeof(FTObjHeader)
 
@@ -75,6 +93,7 @@ enum ComplexTypeBase {
     COMPLEX_ARRAY_BASE,
     COMPLEX_PROMISE_BASE,
     COMPLEX_INTERFACE_BASE,
+    COMPLEX_PROTOBUF_BASE,
 };
 
 #define DEF_COMPLEX_TYPE(base, flags) ((base##_BASE) << 2 | flags)
@@ -85,6 +104,7 @@ enum ComplexType {
     COMPLEX_ARRAY = DEF_COMPLEX_TYPE(COMPLEX_ARRAY, TYPE_FLAGS_POINTER), // array
     COMPLEX_PROMISE = DEF_COMPLEX_TYPE(COMPLEX_PROMISE, TYPE_FLAGS_UNMANAGED_POINTER), // promise
     COMPLEX_INTERFACE = DEF_COMPLEX_TYPE(COMPLEX_INTERFACE, TYPE_FLAGS_UNMANAGED_POINTER), // interface
+    COMPLEX_PROTOBUF = DEF_COMPLEX_TYPE(COMPLEX_PROTOBUF, TYPE_FLAGS_POINTER), // protobuf message
 };
 #undef DEF_COMPLEX_TYPE
 
@@ -210,6 +230,11 @@ typedef struct FeatureDescription {
     int member_count; // 成员数量
     const Member* members; // 定义成员数量, 后面详细介绍
 } FeatureDescription;
+
+typedef struct ProtobufMessageType {
+    ComplexTypeHeader header;
+    const ProtobufCMessageDescriptor* desc;
+} ProtobufMessageType;
 
 /**
  * @brief register feature to feature registry

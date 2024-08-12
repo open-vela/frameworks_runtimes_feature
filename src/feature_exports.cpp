@@ -15,6 +15,7 @@
  */
 
 #include "feature_exports.h"
+#include "feature_description.h"
 #include "feature_instance.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
@@ -23,10 +24,16 @@
 #include "feature_manager_qjs.h"
 #include "feature_prototype.h"
 #include "feature_registry.h"
+#include "feature_types.h"
 #include "feature_utils.h"
+#include "protobuf/proto_utils.h"
 
+#include <cassert>
 #include <cstdarg>
+#include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <protobuf-c/protobuf-c.h>
 #include <string.h>
 
 using namespace feature_framework;
@@ -54,17 +61,7 @@ using namespace feature_framework;
 
 void* FeatureMalloc(size_t size, FeatureType featureType)
 {
-    void* ptr = malloc(size + FT_OBJ_HEADER_SIZE);
-    if (!ptr) {
-        FEATURE_LOG_ERROR("malloc failed !");
-        return nullptr;
-    }
-    FTObjHeader* objHeader = (FTObjHeader*)ptr;
-    objHeader->ref_count = 1;
-    objHeader->featureType = featureType;
-    ptr = (char*)ptr + FT_OBJ_HEADER_SIZE;
-    memset(ptr, 0, size);
-    return ptr;
+    return FeatureInstanceAllocType(nullptr, size, featureType);
 }
 
 void* FeatureDupValue(void* ptr)
@@ -84,65 +81,148 @@ void FeatureFreeValue(void* ptr)
     void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
     FTObjHeader* header = (FTObjHeader*)header_ptr;
     if (--header->ref_count > 0) {
-        // free
         return;
     }
-    FeatureType featureType = header->featureType;
-    if (FT_IS_COMPLEX(featureType)) {
-        ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        switch (complexType1->type) {
-        case COMPLEX_STRUCT_MAP: {
-            ObjectMapType& objMapType = *(ObjectMapType*)complexType1;
-            auto member_count = countMember(objMapType.members);
-            for (int i = 0; i < member_count; i++) {
-                ObjectMember* member = &objMapType.members[i];
-                FeatureType mtype = FT_GET_REAL_TYPE(member->type);
-                if (FT_NEED_FREE(mtype)) {
-                    void* member_ptr = (void*)((char*)ptr + member->offset);
-                    FeatureFreeValue(*(void**)member_ptr);
-                }
-            }
-        } break;
-        case COMPLEX_OPTIONAL: {
-            // shouldn't contains optional
-            // optional is only exit in feature description, we use it's real type for malloc.
-            FEATURE_LOG_ERROR("unreachable for COMPLEX_OPTIONAL in FeatureFreeValue !");
-            FEATURE_CHECK_NE(false, false);
-        } break;
-        case COMPLEX_CALLBACK: {
 
-        } break;
-        case COMPLEX_ARRAY: {
-            // free array elements and ptr
-            ArrayType& arrayType = *(ArrayType*)complexType1;
-            auto element_type = arrayType.element_type;
-            FtArray* arrayData = (FtArray*)ptr;
-            // free elements one by one if it's reference.
-            if (FT_NEED_FREE(element_type)) {
-                size_t element_size = sizeof(uintptr_t);
-                for (int32_t i = 0; i < arrayData->_size; i++) {
-                    void* element_ptr = (char*)arrayData->_element + element_size * i;
-                    if (element_ptr) {
-                        // free element.
-                        FeatureFreeValue(*(void**)element_ptr);
+    if (header->type == MEMORY_FEATURE_TYPE) {
+        FeatureType* featureTypePtr = (FeatureType*)((uintptr_t)header_ptr - sizeof(FeatureType));
+        FeatureType featureType = *featureTypePtr;
+        if (FT_IS_COMPLEX(featureType)) {
+            ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+            switch (complexType1->type) {
+            case COMPLEX_STRUCT_MAP: {
+                ObjectMapType& objMapType = *(ObjectMapType*)complexType1;
+                auto member_count = countMember(objMapType.members);
+                for (int i = 0; i < member_count; i++) {
+                    ObjectMember* member = &objMapType.members[i];
+                    FeatureType mtype = FT_GET_REAL_TYPE(member->type);
+                    if (FT_NEED_FREE(mtype)) {
+                        void* member_ptr = (void*)((char*)ptr + member->offset);
+                        FeatureFreeValue(*(void**)member_ptr);
                     }
                 }
-            }
-            if (arrayData->_element) {
-                free(arrayData->_element);
-            }
-        } break;
-        case COMPLEX_PROMISE: {
+            } break;
+            case COMPLEX_OPTIONAL: {
+                // shouldn't contains optional
+                // optional is only exit in feature description, we use it's real type for malloc.
+                FEATURE_LOG_ERROR("unreachable for COMPLEX_OPTIONAL in FeatureFreeValue !");
+                FEATURE_CHECK_NE(false, false);
+            } break;
+            case COMPLEX_CALLBACK: {
 
-        } break;
-        default: {
-            FEATURE_LOG_ERROR("unsupported type !");
-        } break;
+            } break;
+            case COMPLEX_ARRAY: {
+                // free array elements and ptr
+                ArrayType& arrayType = *(ArrayType*)complexType1;
+                auto element_type = arrayType.element_type;
+                FtArray* arrayData = (FtArray*)ptr;
+                // free elements one by one if it's reference.
+                if (FT_NEED_FREE(element_type)) {
+                    size_t element_size = sizeof(uintptr_t);
+                    for (int32_t i = 0; i < arrayData->_size; i++) {
+                        void* element_ptr = (char*)arrayData->_element + element_size * i;
+                        if (element_ptr) {
+                            // free element.
+                            FeatureFreeValue(*(void**)element_ptr);
+                        }
+                    }
+                }
+                if (arrayData->_element) {
+                    free(arrayData->_element);
+                }
+            } break;
+            case COMPLEX_PROMISE: {
+
+            } break;
+            case COMPLEX_PROTOBUF: {
+                FEATURE_LOG_ERROR("MEM LEAK HERE!!!");
+                assert(0);
+            } break;
+
+            default: {
+                FEATURE_LOG_ERROR("unsupported type !");
+            } break;
+            }
         }
+
+        // finally, free header
+        // NOTE: it's user's responsibility to avoid free unmanaged pointer
+        free(featureTypePtr);
+    } else if (header->type == MEMORY_REF_COUNT_ONLY) {
+        // do nothing
+        free(header);
+    } else if (header->type == MEMORY_PROTOBUF) {
+        proto_utils::release((ProtobufCMessage*)ptr);
+        free(header);
+    } else {
+        FEATURE_LOG_ERROR("UNSUPPORTED FEATURE MEMORY TYPE!!!");
     }
-    // finally, free header
-    // NOTE: it's user's responsibility to avoid free unmanaged pointer
-    free(header);
+}
+
+static void FeatureRecordMemoryUsage(FeatureInstanceHandle handle, FTObjHeader* ptr)
+{
+    if (handle == nullptr) {
+        return;
+    }
+// todo
+#ifdef ENABLE_FEATURE_MEM_TRACE
+    ptr->desc = ...;
+#endif
+}
+
+void* FeatureInstanceAlloc(FeatureInstanceHandle handle, size_t size)
+{
+    size_t len { sizeof(FTObjHeader) + size };
+    void* p = malloc(len);
+    if (!p) {
+        FEATURE_LOG_ERROR("malloc failed !");
+        return nullptr;
+    }
+    memset(p, 0, len);
+    FTObjHeader* header = (FTObjHeader*)p;
+    header->ref_count = 1;
+    header->type = MEMORY_REF_COUNT_ONLY;
+    FeatureRecordMemoryUsage(handle, header);
+    return (void*)((uintptr_t)p + sizeof(FTObjHeader));
+}
+
+void* FeatureInstanceAllocProtobuf(FeatureInstanceHandle handle, const ProtobufCMessageDescriptor* desc)
+{
+    void* p = FeatureInstanceAlloc(handle, desc->sizeof_message);
+    FTObjHeader* header = (FTObjHeader*)(uintptr_t(p) - sizeof(FTObjHeader));
+    header->ref_count = 1;
+    header->type = MEMORY_PROTOBUF;
+    return p;
+}
+
+void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, FeatureType type)
+{
+    size += sizeof(FTObjHeader) + sizeof(FeatureType);
+    void* p = malloc(size);
+    if (!p) {
+        FEATURE_LOG_ERROR("malloc failed !");
+        return nullptr;
+    }
+    memset(p, 0, size);
+    FeatureType* featureType = (FeatureType*)p;
+    *featureType = type;
+    FTObjHeader* header = (FTObjHeader*)((uintptr_t)p + sizeof(FeatureType));
+    header->ref_count = 1;
+    header->type = MEMORY_FEATURE_TYPE;
+    FeatureRecordMemoryUsage(handle, header);
+    return (void*)((uintptr_t)p + sizeof(FeatureType) + sizeof(FTObjHeader));
+}
+
+void* FeatureInstanceDupValue(void* ptr)
+{
+    FTObjHeader* header = (FTObjHeader*)((uintptr_t)ptr - sizeof(FTObjHeader));
+    header->ref_count++;
+    return header;
+}
+
+void FeatureInstanceFreeValue(void* ptr)
+{
+    FeatureFreeValue(ptr);
 }
 
 static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle)

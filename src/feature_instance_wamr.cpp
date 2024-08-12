@@ -216,15 +216,16 @@ bool FeatureInstanceWamr::variArgToTarget(void* arg, wasm_value_t& target)
     wasm_exec_env_t env = getContext();
     dyn_ctx_t dyn_ctx = dyntype_get_context();
     FTObjHeader* header = (FTObjHeader*)((char*)arg - FT_OBJ_HEADER_SIZE);
+    FeatureType ftype = *(FeatureType*)((uintptr_t)header - sizeof(FeatureType));
     uint64_t guest;
-    if (!convertValueToTarget(header->featureType, env, FT_IS_REFERENCE(header->featureType) ? &arg : arg, guest)) {
+    if (!convertValueToTarget(ftype, env, FT_IS_REFERENCE(ftype) ? &arg : arg, guest)) {
         FEATURE_LOG_ERROR("convert callback param failed !");
         return false;
     }
 
     wasm_anyref_obj_t any = nullptr;
-    if (FT_IS_PRIMITIVE(header->featureType)) {
-        switch (header->featureType) {
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (ftype) {
         case FT_VOID: {
             FEATURE_LOG_ERROR("void feature type not supported !");
             return false;

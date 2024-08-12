@@ -49,8 +49,6 @@ typedef struct DynTypeContext {
     JSValue* extref_class;
 } DynTypeContext;
 
-using namespace FEATURE;
-
 namespace feature_framework {
 
 static inline FeatureManagerWamr* manager_from_instance(FeatureInstance* instance)
