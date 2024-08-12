@@ -62,7 +62,12 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${FEATURE_SRC_DIR}/feature_permission.cpp
     ${FEATURE_SRC_DIR}/permissions_manager.cpp
     ${FEATURE_SRC_DIR}/promise_manager.cpp
-    ${FEATURE_SRC_DIR}/value_translator_qjs.cpp)
+    ${FEATURE_SRC_DIR}/value_translator_qjs.cpp
+    
+    ${FEATURE_SRC_DIR}/protobuf/proto_reflection.cpp
+    ${FEATURE_SRC_DIR}/protobuf/proto_utils.cpp
+    
+    )
 
   if(CONFIG_FEATURE_USE_WAMR)
     list(APPEND FEATURE_DEFS -DWASM_ENABLE_GC=1 -DWASM_ENABLE_STRINGREF=1

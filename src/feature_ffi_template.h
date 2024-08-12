@@ -208,7 +208,7 @@ template <typename TInstance, typename TCtx, typename TTarget>
 bool convertValueToNative(TInstance* instance, FeatureType ftype,
     TCtx ctx, TTarget& target, void*& pnative)
 {
-    TRY_GET_REAL_TYPE(ftype);
+    ftype = FT_GET_REAL_TYPE(ftype);
 
     if (FT_IS_PRIMITIVE(ftype)) {
         switch (ftype) {

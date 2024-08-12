@@ -1,9 +1,22 @@
 cmake_minimum_required(VERSION 3.12)
 
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/deps/vcpkg/scripts/buildsystems/vcpkg.cmake)
+
+
+
+
 project(feature_unit_test)
+
+# enable -Werror
+add_definitions(-Werror)
+
+find_package(protobuf-c CONFIG REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+
+find_package(protobuf-c CONFIG REQUIRED)
 
 ################### nuttx function definations ###################
 function(nuttx_add_library NAME)
@@ -24,8 +37,8 @@ add_custom_target(nuttx)
 ####################################################################
 
 # enable asan
-add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g")
-set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fpermissive -Wall")
+add_definitions("-fno-omit-frame-pointer -fsanitize=address -fno-omit-frame-pointer -g")
+set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-fno-omit-frame-pointer -fsanitize=address -fno-omit-frame-pointer -fpermissive -Wall")
 
 set(CURRENT_PATH ${CMAKE_CURRENT_LIST_DIR})
 set(RELATIVE_PATH "../../../../../apps/interpreters")
@@ -87,6 +100,25 @@ jidl_codegen_files(
 file(GLOB BUILDIN_SOURCES CONFIGURE_DEPENDS ./builtin/*.cpp ./builtin/*.h)
 file(GLOB SRC_SOURCES CONFIGURE_DEPENDS ./src/*.cpp ./src/*.h ./src/*.c)
 
+file(GLOB PROTO_SOURCES build/*.c)
+
+set(PROTBUF_FILES
+    ${CMAKE_SOURCE_DIR}/proto/test.proto
+)
+
+set(PROTOBUF_C_FILES "")
+foreach(PROTOFILE ${PROTBUF_FILES})
+    get_filename_component(FILE_NAME ${PROTOFILE} NAME_WE)
+    list(APPEND PROTOBUF_C_FILES ${CMAKE_CURRENT_BINARY_DIR}/proto/${FILE_NAME}.pb-c.c)
+endforeach()
+# get protoc compiler path
+set(PROTOBUFC_EXECUTABLE "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc")
+add_custom_command(OUTPUT ${PROTOBUF_C_FILES}
+    COMMAND mkdir ${CMAKE_CURRENT_BINARY_DIR}/proto
+    COMMAND ${PROTOBUFC_EXECUTABLE} -I${CMAKE_CURRENT_SOURCE_DIR}/proto ${PROTBUF_FILES} --c_out=${CMAKE_CURRENT_BINARY_DIR}/proto
+    DEPENDS ${PROTBUF_FILES}
+)
+
 # add test executable
 add_executable(${PROJECT_NAME}
     ${SRC_SOURCES}
@@ -94,23 +126,24 @@ add_executable(${PROJECT_NAME}
     ${JIDL_GENERATED_CPP_FILES}
     ${JIDL_GENERATED_C_FILES}
     ${JIDL_GENERATED_FEATURE_REGISTERY_FILES}
+    ${PROTO_SOURCES}
+    ${PROTOBUF_C_FILES}
 )
 
-# set(GTEST_DIR ${PROJECT_SOURCE_DIR}/../../../../../external/googletest/googletest/googletest)
+target_link_libraries(libfeature PUBLIC
+    protobuf-c::protobuf-c
+)
 
-# set(GTEST_SRC ${GTEST_DIR}/src/gtest-all.cc)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/proto
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# # add test executable
-# include_directories(${GTEST_DIR}/include
-#                     ${GTEST_DIR})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     libfeature
     uv
-    -lpthread
+    pthread
 )

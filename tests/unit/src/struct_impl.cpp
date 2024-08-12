@@ -3,6 +3,9 @@
 #include "feature_log.h"
 #include "feature_types.h"
 #include "feature_utils.h"
+#include "test.pb-c.h"
+#include <cstdint>
+#include <protobuf-c/protobuf-c.h>
 
 // FeatureCallbacks to be implemented
 void Struct_onRegister(const char* feature_name)
@@ -59,4 +62,33 @@ void Struct_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, Str
 
 void Struct_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
 {
+}
+
+void Struct_wrap_proto(FeatureInstanceHandle feature, AppendData append_data, FtInt a, Computer* b)
+{
+    FEATURE_LOG_INFO("a: %d, b: %p", a, b);
+    FEATURE_LOG_INFO("{name: %s, price: %d, sn: %s, main_monitor w: %d, h:%d, color: %d}", b->name, b->price, b->sn_code.data, b->main_monitor->width, b->main_monitor->height, b->main_monitor->colordepth);
+}
+
+void Struct_proto_cb(void* feature, AppendData append_data, FtCallbackId cb)
+{
+    FEATURE_LOG_INFO("cid %d", cb);
+
+    Computer computer;
+    computer__init(&computer);
+
+    computer.name = (char*)"computerrrrrr";
+    computer.price = 456;
+    computer.sn_code.data = (uint8_t*)"123456";
+    computer.sn_code.len = 6;
+
+    Monitor monitor;
+    monitor__init(&monitor);
+
+    monitor.width = 123;
+    monitor.height = 456;
+    monitor.colordepth = 4;
+    computer.main_monitor = &monitor;
+
+    FeatureInvokeCallback(feature, cb, &computer);
 }

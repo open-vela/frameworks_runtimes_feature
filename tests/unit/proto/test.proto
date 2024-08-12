@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+enum ElementType {
+    unknown = 0;
+    div = 1;
+    image = 2;
+    text = 3;
+    button = 4;
+    radio = 5;
+}
+
+message Monitor
+{
+    int32 width = 1;
+    int32 height = 2;
+    int32 colorDepth = 3;
+}
+
+message SampleMessage
+{
+    oneof test_oneof
+    {
+        string name = 1;
+        int32 age = 2;
+        Monitor sub_monitor = 7;
+    }
+    oneof test_oneof1
+    {
+        string name1 = 5;
+        int32 age1 = 3;
+        Monitor sub_monitor1 = 9;
+    }
+}
+
+message Computer
+{
+    string name = 1;
+    int32 price = 2;
+    repeated Monitor monitors = 3;
+    bytes sn_code = 4;
+    Monitor main_monitor = 5;
+}
+
+message EnumMessage
+{
+    ElementType type = 1;
+}
+
+message ComplexMessage
+{
+    repeated int32 ids = 1;
+    repeated bytes md5 = 2;
+    oneof oneof_1
+    {
+        string name = 3;
+        int32 age = 4;
+        Monitor sub_monitor = 5;
+    }
+    Monitor monitor = 6;
+    repeated string names = 7;
+}
+
+message MapMessage
+{
+    map<int32, string> names1 = 1;
+    map<string, string> mapDef = 2;
+}

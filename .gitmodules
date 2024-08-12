@@ -1,0 +1,3 @@
+[submodule "tests/unit/deps/vcpkg"]
+	path = tests/unit/deps/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
