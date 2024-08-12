@@ -46,7 +46,12 @@ static const char* file_tag = "[jidl_feature] sensor_impl";
         FeatureRemoveCallback(feature, __fail__); \
     } while (0)
 
-#define UV_HANDLE_INTERNAL 0x00000010
+typedef enum ErrorCode {
+    GENERAL = 200,
+    ARGSERROR = 202,
+    IOERROR = 300,
+    TIMEOUT = 204
+} ErrorCode;
 
 typedef enum sensor_magic_e {
     SENSOR_MAGIC_ACCEL = 0,
@@ -171,8 +176,11 @@ static void sensor_humi_topic_cb(uv_topic_t* topic, int status, void* data, size
     FeatureFreeValue(humiRet);
 }
 
-const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = { 
-    [SENSOR_MAGIC_ACCEL] = { .meta = ORB_ID(sensor_accel), .topic_cb = sensor_accel_topic_cb, },
+const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
+    [SENSOR_MAGIC_ACCEL] = {
+        .meta = ORB_ID(sensor_accel),
+        .topic_cb = sensor_accel_topic_cb,
+    },
     [SENSOR_MAGIC_COMPA] = { .meta = NULL, .topic_cb = sensor_compa_topic_cb },
     [SENSOR_MAGIC_PROX] = { .meta = ORB_ID(sensor_prox), .topic_cb = sensor_prox_topic_cb },
     [SENSOR_MAGIC_LIGHT] = { .meta = ORB_ID(sensor_light), .topic_cb = sensor_light_topic_cb },
@@ -182,29 +190,10 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
     [SENSOR_MAGIC_HUMIDITY] = { .meta = ORB_ID(sensor_humi), .topic_cb = sensor_humi_topic_cb },
 };
 
-static void uv_topic_close_cb(uv_handle_t* handle)
-{
-    uv_topic_t* topic = container_of(handle, uv_topic_t, handle);
-    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    free(event);
-}
-
-/****************************************************************************
- * Name: uv_topic_close_internal
- *
- * Description:
- * Becasue event->topic->handle will be accessed in `uv__run_closing_handles`, event should
- * be freed in `uv_topic_close_cb`
- ****************************************************************************/
-static int uv_topic_close_internal(uv_topic_t* topic)
-{
-    topic->handle.flags |= UV_HANDLE_INTERNAL;
-    uv_close((uv_handle_t*)&topic->handle, uv_topic_close_cb);
-    return 0;
-}
-
 static void unsubscribe(FeatureInstanceHandle feature, int magic, bool is_active)
 {
+    int code = 0;
+    const char* msg = "";
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     sensor_event_t* event = th->events[magic];
@@ -217,42 +206,69 @@ static void unsubscribe(FeatureInstanceHandle feature, int magic, bool is_active
         return;
     }
 
-    int ret = uv_topic_unsubscribe(&event->topic);
-    if (ret < 0) {
-        FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe failed,ret=%d\n", file_tag, __FUNCTION__,
-            ret);
+    if (FeatureCheckCallbackId(feature, event->meta.callback)) {
+        int ret = uv_topic_unsubscribe(&event->topic);
+        if (ret < 0) {
+            code = GENERAL;
+            msg = "unsubscribe fail";
+            FEATURE_LOG_ERROR("%s::%s() call uv_topic_unsubscribe Failed,ret=%d", file_tag, __FUNCTION__, ret);
+            goto errout;
+        }
+
+        ret = uv_topic_close(&event->topic);
+        if (ret < 0) {
+            code = GENERAL;
+            msg = "uv topic close fail";
+            FEATURE_LOG_ERROR("%s::%s()call uv_topic_close,ret = %d", file_tag, __FUNCTION__, ret);
+            goto errout;
+        }
+
+        FeatureRemoveCallback(feature, event->meta.callback);
     }
-    // Because uv_topic_subscribe will call uv_poll_init and create a new handle, the old hanle should be closed
-    ret = uv_topic_close_internal(&event->topic);
-    if (ret < 0) {
-        FEATURE_LOG_ERROR("%s::%s() uv_topic_close failed,ret=%d\n", file_tag, __FUNCTION__,
-            ret);
-    }
-    REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
-    th->events[magic] = NULL;
+    FEATURE_LOG_INFO("%s::%s() magic num:%d unsubscirbe", file_tag, __FUNCTION__, magic);
+    INVOKE_SUCCESS_CB(feature, event->meta.callback, "success");
+    return;
+errout:
+    INVOKE_FAIL_CB(feature, event->meta.fail, msg, code);
 }
 
-static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_magic_e sensor_type, MetaData* meta_data)
+static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_magic_e magic, MetaData* meta)
 {
-    sensor_event_t* event = th->events[sensor_type];
-    if (event) {
-        unsubscribe(feature, sensor_type, true);
-    }
-    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
-    event->meta = *meta_data;
-
-    th->events[sensor_type] = event;
+    FEATURE_LOG_INFO("%s::%s() magic:%d subscribe\n", file_tag, __FUNCTION__, magic);
+    int code;
+    const char* msg = "";
+    FtCallbackId temp;
+    FtCallbackId callback = meta->callback;
+    sensor_event_t* event = th->events[magic];
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[sensor_type]->topic,
-        sensor_orb_table[sensor_type].meta,
-        sensor_orb_table[sensor_type].topic_cb);
+    if (event) {
+        temp = event->meta.callback;
+        event->meta.callback = callback;
+        if (FeatureCheckCallbackId(feature, temp)) {
+            FeatureRemoveCallback(feature, temp);
+            return true;
+        }
+    } else {
+        event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
+        event->meta = *meta;
+        th->events[magic] = event;
+    }
+
+    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[magic]->topic,
+        sensor_orb_table[magic].meta,
+        sensor_orb_table[magic].topic_cb);
     if (ret < 0) {
-        th->events[sensor_type] = NULL;
+        code = GENERAL;
+        msg = "subscribe error";
+        th->events[magic] = NULL;
         free(event);
-        FEATURE_LOG_ERROR("%s::%s() sensor type %d subscribe error\n", file_tag, __FUNCTION__, sensor_type);
-        return false;
+        FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
+        goto errout;
     }
     return true;
+errout:
+    INVOKE_FAIL_CB(feature, meta->fail, msg, code);
+    return false;
 }
 
 void system_sensor_onRegister(const char* feature_name)
@@ -326,10 +342,15 @@ void system_sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, Ap
     meta.instance = feature;
     meta.reserved = param->reserved;
     meta.callback = param->callback;
-    meta.fail = 0;
+    meta.fail = param->fail;
 
     if (subscribe(feature, th, SENSOR_MAGIC_ACCEL, &meta)) {
-        uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
+        int ret = uv_topic_set_interval(&th->events[SENSOR_MAGIC_ACCEL]->topic, interval);
+        if (ret < 0) {
+            FEATURE_LOG_ERROR("%s::%s() set interval error:%d\n", file_tag, __FUNCTION__, ret);
+        }
+    } else {
+        FEATURE_LOG_ERROR("%s::%s() accel subscibe fail:%s\n", file_tag, __FUNCTION__);
     }
 }
 
@@ -360,11 +381,10 @@ void system_sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, Append
     meta.instance = feature;
     meta.reserved = param->reserved;
     meta.callback = param->callback;
-    meta.fail = 0;
+    meta.fail = param->fail;
 
     if (!subscribe(feature, th, SENSOR_MAGIC_PROX, &meta)) {
-        INVOKE_FAIL_CB(feature, param->fail,
-            "The current device does not support the distance sensor", 203);
+        FEATURE_LOG_ERROR("%s::%s() proximity subscibe fail:%s\n", file_tag, __FUNCTION__);
     }
 }
 
@@ -389,7 +409,9 @@ void system_sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData
     meta.callback = param->callback;
     meta.fail = 0;
 
-    subscribe(feature, th, SENSOR_MAGIC_LIGHT, &meta);
+    if (!subscribe(feature, th, SENSOR_MAGIC_LIGHT, &meta)) {
+        FEATURE_LOG_ERROR("%s::%s() light subscibe fail:%s\n", file_tag, __FUNCTION__);
+    }
 }
 
 void system_sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data)
@@ -426,9 +448,7 @@ void system_sensor_wrap_subscribePressure(FeatureInstanceHandle feature, AppendD
     meta.fail = param->fail;
 
     if (!subscribe(feature, th, SENSOR_MAGIC_BARO, &meta)) {
-        INVOKE_FAIL_CB(feature, param->fail,
-            "The current device does not support the barometer sensor", -1);
-        REMOVE_ALL_CALLBACK(param->callback, param->fail);
+        FEATURE_LOG_ERROR("%s::%s() pressure subscibe fail:%s\n", file_tag, __FUNCTION__);
     }
 }
 
@@ -453,10 +473,8 @@ void system_sensor_wrap_subscribeAmbientTemperature(FeatureInstanceHandle featur
     meta.callback = param->callback;
     meta.fail = param->fail;
 
-    if(!subscribe(feature, th, SENSOR_MAGIC_AMBIENTTEMPERATURE, &meta)) {
-        FeatureInvokeCallback(feature, param->fail,
-            "The current device does not support the temperature sensor", -1);
-        REMOVE_ALL_CALLBACK(param->callback, param->fail);
+    if (!subscribe(feature, th, SENSOR_MAGIC_AMBIENTTEMPERATURE, &meta)) {
+        FEATURE_LOG_ERROR("%s::%s() accel subscibe fail:%s\n", file_tag, __FUNCTION__);
     }
 }
 
@@ -481,10 +499,8 @@ void system_sensor_wrap_subscribeHumidity(FeatureInstanceHandle feature, AppendD
     meta.callback = param->callback;
     meta.fail = param->fail;
 
-    if(!subscribe(feature, th, SENSOR_MAGIC_HUMIDITY, &meta)) {
-        FeatureInvokeCallback(feature, param->fail,
-            "The current device does not support the humidity sensor", -1);
-        REMOVE_ALL_CALLBACK(param->callback, param->fail);
+    if (!subscribe(feature, th, SENSOR_MAGIC_HUMIDITY, &meta)) {
+        FEATURE_LOG_ERROR("%s::%s() humidity subscibe fail:%s\n", file_tag, __FUNCTION__);
     }
 }
 

@@ -28,6 +28,7 @@ struct Accelerometer {
     boolean reserved = false
     string interval = "normal"
     callback accelerometer_cb callback
+    callback fail_cb fail
 }
 void subscribeAccelerometer(Accelerometer param)
 void unsubscribeAccelerometer()
