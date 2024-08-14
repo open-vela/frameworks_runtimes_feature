@@ -267,3 +267,8 @@ void ft_free_string(ft_context_ref ft_ctx, const char* str)
     THREAD_CHECK(ft_ctx->thread_checker);
     ft_ctx->ft_free_string(ft_ctx, str);
 }
+
+ft_value_t ft_undefined(ft_context_ref ft_ctx)
+{
+    return ft_ctx->ft_undefined(ft_ctx);
+}
