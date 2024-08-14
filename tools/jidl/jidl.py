@@ -226,7 +226,17 @@ class JIDL(Parser):
   def p_module_name(self, p):
     """
     module_name : ID
-                | module_name DOT ID
+                | CALLBACK
+                | MAIN
+                | WORKER
+                | EXTENDS
+                | TYPE
+                | USE
+                | EVENT
+                | PROPERTY
+                | CONST
+                | ASYNC
+                | module_name DOT module_name
     """
     if len(p) == 2:
       p[0] = p[1]
