@@ -74,6 +74,7 @@ typedef struct FeatureContext {
     bool (*ft_obj_set_property)(ft_context_ref ft_ctx, ft_value_t obj, const char* prop, ft_value_t val);
     void (*ft_free_value)(ft_context_ref ft_ctx, ft_value_t ft_val);
     void (*ft_free_string)(ft_context_ref ft_ctx, const char* str);
+    ft_value_t (*ft_undefined)(ft_context_ref ft_ctx);
 
 } FeatureContext;
 

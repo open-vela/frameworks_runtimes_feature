@@ -404,6 +404,13 @@ static void _ft_free_string(ft_context_ref ft_ctx, const char* str)
     JS_FreeCString(js_ctx, str);
 }
 
+static ft_value_t _ft_undefined(ft_context_ref ft_ctx)
+{
+    qjs_val_t ret;
+    ret.js_val = JS_UNDEFINED;
+    return QJS_VAL_TO_FT(ret);
+}
+
 template <typename TCtx, typename TTarget>
 struct InitContext {
     template <typename TNative>
@@ -499,6 +506,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     // free value
     rt_ctx->ft_free_value = _ft_free_value;
     rt_ctx->ft_free_string = _ft_free_string;
+    rt_ctx->ft_undefined = _ft_undefined;
     return true;
 }
 
