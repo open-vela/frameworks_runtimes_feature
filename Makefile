@@ -301,6 +301,19 @@ OUT_PATH += $(APPDIR)/frameworks/connectivity/miplay_lite/app/feature/
 FEATURELIST += service_miplay
 endif
 
+ifeq ($(CONFIG_UORB),y)
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/event_impl.cpp
+JIDL_PATH   += $(APPDIR)/frameworks/base/feature/modules/jidl/event.jidl
+OUT_PATH    += $(APPDIR)/frameworks/base/feature/modules/src/
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/event/topic.cpp
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/event/event_context.cpp
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/event/topics/user_topic.cpp
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/event/topics/battery_topic.cpp
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/topics/include/system/
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/topics/include/system/
+FEATURELIST += system_event
+endif
+
 ifneq ($(CONFIG_LYRA_NEW_FEATURE), )
 
 ifneq ($(CONFIG_LYRA_NEW_FEATURE_TRANSFER), )
