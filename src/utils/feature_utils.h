@@ -65,6 +65,11 @@ public:
         return p_;
     }
 
+    const T* ptr() const
+    {
+        return p_;
+    }
+
     RefPtr(const RefPtr<T>& other)
     {
         p_ = other.p_;
@@ -98,7 +103,12 @@ public:
         return p_;
     }
 
-    RefPtr<T>& operator=(RefPtr<T>& other)
+    const T* operator->() const
+    {
+        return p_;
+    }
+
+    RefPtr<T>& operator=(const RefPtr<T>& other)
     {
         if (p_ == other.p_)
             return *this;
@@ -123,9 +133,9 @@ public:
 
 inline namespace internal {
     template <typename T>
-    struct has_member_getType {
+    struct has_member_getFeatureType {
         template <typename U>
-        constexpr static auto check(const void*) -> decltype(std::declval<U>().getType(), std::true_type());
+        constexpr static auto check(const void*) -> decltype(std::declval<U>().getFeatureType(), std::true_type());
 
         template <typename U>
         constexpr static std::false_type check(...);
@@ -136,8 +146,8 @@ inline namespace internal {
     template <typename T, class... Args>
     RefPtr<T> make(FeatureInstanceHandle handle, Args... args)
     {
-        if constexpr (has_member_getType<T>::value) {
-            T* ret = new (FeatureInstanceAllocType(handle, sizeof(T), T::getType())) T(std::forward<Args>(args)...);
+        if constexpr (has_member_getFeatureType<T>::value) {
+            T* ret = new (FeatureInstanceAllocType(handle, sizeof(T), T::getFeatureType())) T(std::forward<Args>(args)...);
             return RefPtr<T>::adopt(ret);
         } else {
             T* ret = new (FeatureInstanceAlloc(handle, sizeof(T))) T(std::forward<Args>(args)...);
@@ -153,14 +163,9 @@ inline T* From(FeatureInstanceHandle hInst)
 }
 
 class FeatureInstance {
-private:
-    FeatureInstanceHandle _hInst;
 
 public:
-    explicit FeatureInstance(FeatureInstanceHandle hInst)
-        : _hInst(hInst)
-    {
-    }
+    virtual ~FeatureInstance() = default;
 
     // 从句柄获取的对象
 
@@ -169,10 +174,7 @@ public:
      *
      * @return FeatureInstanceHandle
      */
-    inline FeatureInstanceHandle getHandle()
-    {
-        return _hInst;
-    }
+    virtual FeatureInstanceHandle getHandle() const = 0;
 
     /**
      * @brief create FeatureType object
@@ -187,7 +189,14 @@ public:
     RefPtr<T> make(Args... args)
     {
         // 针对任意对象的make函数
-        return internal::make<T>(_hInst, std::forward<Args>(args)...);
+        return internal::make<T>(getHandle(), std::forward<Args>(args)...);
+    }
+
+    FeatureInterfaceHandle makeInterface(void* pInterface)
+    {
+        FeatureInterfaceHandle handle = FeatureCreateInterface(getHandle(), (VTable*)-1);
+        FeatureSetObjectData(handle, pInterface);
+        return handle;
     }
 
     // 基础类型的创建可以放在基类中，具体的Feature中声明的struct的创建在子类中处理

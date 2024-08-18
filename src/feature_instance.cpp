@@ -18,6 +18,7 @@
 #include "feature_context.h"
 #include "feature_log.h"
 #include "feature_utils.h"
+#include "utils/feature_utils.h"
 
 #include <string.h>
 
@@ -65,7 +66,10 @@ FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* v
 
 FeatureInstance::~FeatureInstance()
 {
-    if (vtable_ && vtable_->finalizer) {
+    if ((intptr_t)vtable_ == -1) {
+        FeatureInstance* pInterface = static_cast<FeatureInstance*>(this->native());
+        delete pInterface;
+    } else if (vtable_ && vtable_->finalizer) {
         finalizer_func finalizer = (finalizer_func)(vtable_->finalizer);
         finalizer(this);
     }

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include "feature_exports.h"
+#include "feature_common.h"
 #include "feature_description.h"
+#include "feature_exports.h"
 #include "feature_instance.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
@@ -27,7 +28,6 @@
 #include "feature_types.h"
 #include "feature_utils.h"
 #include "protobuf/proto_utils.h"
-
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -36,7 +36,10 @@
 #include <protobuf-c/protobuf-c.h>
 #include <string.h>
 
+#define CONFIG_FEATURE_FRAMEWORK_UTILS_TYPE_VALIDATE
 using namespace feature_framework;
+
+#define ARRAY_NEW_CAPACITY(size) ((size) + 5)
 
 #define FEATURE_INSTANCE_CHECK(__instance_handle__, __ret__)                                \
     do {                                                                                    \
@@ -58,6 +61,328 @@ using namespace feature_framework;
             return __ret__;                          \
         }                                            \
     } while (0);
+
+static void* FeatureInstanceAllocTypeInternal(FeatureInstanceHandle handle, size_t size, FeatureType type, bool freeType);
+
+// memory utils functions
+char* FeatureStrCopy(FeatureInstanceHandle handle, const char* str)
+{
+    char* buf = static_cast<char*>(FeatureInstanceAllocType(handle, strlen(str) + 1, FT_STRING));
+    strcpy(buf, str);
+    return buf;
+}
+
+FtArray* FeatureCreateArray(FeatureInstanceHandle handle, size_t capacity, FeatureType element_type)
+{
+
+    ArrayType* array_type = static_cast<ArrayType*>(malloc(sizeof(ArrayType)));
+    array_type->header.type = COMPLEX_ARRAY;
+    array_type->header.size = sizeof(FtArray);
+    array_type->element_type = element_type;
+
+    FtArray* pArray = static_cast<FtArray*>(FeatureInstanceAllocTypeInternal(handle, sizeof(FtArray), FT_MK_COMPLEX(array_type), true));
+    pArray->_capacity = capacity;
+    pArray->_size = 0;
+    pArray->_element = malloc(capacity * getValueSize(element_type));
+    memset(pArray->_element, 0, capacity * getValueSize(element_type));
+    return pArray;
+}
+
+FtArray* FeaturenArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count)
+{
+    FtArray* pArray = nullptr;
+    if (element_type == FT_STRING) {
+        pArray = FeatureCreateArray(handle, count, element_type);
+        for (size_t i = 0; i < count; i++) {
+            ((char**)pArray->_element)[i] = FeatureStrCopy(handle, ((char**)data)[i]);
+        }
+        pArray->_size = count;
+    } else {
+        FEATURE_CHECK(false, "invalid element type !");
+    }
+    return pArray;
+}
+
+FtArray* FeaturenArrayCopy(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count)
+{
+    FtArray* pArray = FeatureCreateArray(handle, count, element_type);
+    pArray->_size = count;
+    pArray->_capacity = count;
+
+    int elem_size = getValueSize(element_type);
+    if (FT_IS_REFERENCE(element_type)) {
+        for (size_t i = 0; i < count; ++count) {
+            FeatureInstanceDupValue((void*)((uintptr_t)data + i * elem_size));
+        }
+    }
+
+    memcpy(pArray->_element, data, count * elem_size);
+    return pArray;
+}
+
+FeatureType getElementType(FtArray* arr)
+{
+    FTObjHeader* pHeader = (FTObjHeader*)((uintptr_t)arr - sizeof(FTObjHeader));
+    FEATURE_CHECK_EQ(pHeader->type, MEMORY_FEATURE_TYPE);
+
+    FeatureType featureType = *(FeatureType*)((uintptr_t)pHeader - sizeof(FeatureType));
+    FEATURE_CHECK_EQ(FT_IS_COMPLEX(featureType), true);
+
+    ComplexTypeHeader* complexType1 = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
+    FEATURE_CHECK_EQ(complexType1->type, COMPLEX_ARRAY);
+
+    ArrayType* arrType = (ArrayType*)complexType1;
+    FeatureType elem_type = arrType->element_type;
+    FEATURE_CHECK_NE(elem_type, FT_VOID);
+
+    return elem_type;
+}
+
+FtArray* FeatureArrayResize(FtArray* arr, size_t new_size)
+{
+    if (new_size <= (size_t)arr->_capacity) {
+        return arr;
+    }
+
+    FeatureType element_type = getElementType(arr);
+    int elem_size = getValueSize(element_type);
+    void* new_elem = realloc(arr->_element, new_size * elem_size);
+
+    if (new_elem == nullptr) {
+        // allocate new space
+        new_elem = malloc(new_size * elem_size);
+        // Copy data from old array to new array
+        memcpy(new_elem, arr->_element, arr->_size * elem_size);
+        // Release the original space
+        free(arr->_element);
+    }
+
+    arr->_element = new_elem;
+    arr->_capacity = new_size;
+    return arr;
+}
+
+size_t FeatureArrayGetLength(FtArray* arr)
+{
+    return arr->_size;
+}
+
+void* FeatureArrayGetDatas(FtArray* arr, int start)
+{
+    return arr->_element;
+}
+
+int FeatureArrayClear(FtArray* arr)
+{
+    int ret = arr->_size;
+
+    FeatureType element_type = getElementType(arr);
+    int elem_size = getValueSize(element_type);
+    if (FT_IS_REFERENCE(element_type)) {
+        for (int i = 0; i < arr->_size; i++) {
+            void* elem = *(void**)((char*)arr->_element + elem_size * i);
+            FeatureFreeValue(elem);
+        }
+    }
+
+    arr->_size = 0;
+    return ret;
+}
+
+int FeatureArrayRemove(FtArray* arr, int start, size_t count)
+{
+    // To delete [start,start+count)
+    size_t del_size = std::min((int)count, (int)(arr->_size - start));
+    if (del_size <= 0)
+        return 0;
+
+    FeatureType element_type = getElementType(arr);
+    int elem_size = getValueSize(element_type);
+    size_t left_count = arr->_size - start - del_size;
+    if (FT_IS_REFERENCE(element_type)) {
+        for (size_t i = start; i < start + del_size; i++) {
+            void* elem = *(void**)((char*)arr->_element + elem_size * i);
+            FeatureFreeValue(elem);
+        }
+    }
+    if (left_count) {
+        memmove((void*)((uintptr_t)arr->_element + start * elem_size),
+            (void*)((uintptr_t)arr->_element + (start + del_size) * elem_size), left_count * elem_size);
+    }
+
+    arr->_size -= del_size;
+    return del_size;
+}
+
+#ifdef CONFIG_FEATURE_FRAMEWORK_UTILS_TYPE_VALIDATE
+bool isFeatureTypeEqual(const void* ptr, FeatureType type)
+{
+    auto pHeader = (FTObjHeader*)((uintptr_t)ptr - sizeof(FTObjHeader));
+    if (pHeader->type != MEMORY_FEATURE_TYPE)
+        return false;
+    return *((FeatureType*)((uintptr_t)pHeader - sizeof(FeatureType))) == type;
+}
+#endif
+
+FtArray* FeatureArrayAppend(FtArray* arr, const void* data)
+{
+    FeatureType element_type = getElementType(arr);
+#ifdef CONFIG_FEATURE_FRAMEWORK_UTILS_TYPE_VALIDATE
+    if (!isFeatureTypeEqual(data, element_type)) {
+        FEATURE_LOG_ERROR("element_type do not equal to data type !");
+        return nullptr;
+    }
+#endif
+    int elem_size = getValueSize(element_type);
+    // Determine whether there is still capacity
+    if (arr->_size + 1 > arr->_capacity) {
+        // Allocate another piece of memory and copy the contents of the original array there.
+        arr = FeatureArrayResize(arr, ARRAY_NEW_CAPACITY(arr->_size));
+    }
+    if (FT_IS_REFERENCE(element_type)) {
+        // If data is a string or other object pointer,
+        // the reference count will be increased and the data will not be copied.
+        FeatureInstanceDupValue((void*)data);
+        // Add new content to the end
+        memcpy((void*)((uintptr_t)arr->_element + arr->_size * elem_size), &data, elem_size);
+    } else {
+        // Add new content to the end
+        memcpy((void*)((uintptr_t)arr->_element + arr->_size * elem_size), data, elem_size);
+    }
+
+    arr->_size += 1;
+    return arr;
+}
+
+FtArray* FeatureArrayAppendRaw(FtArray* arr, const void* data)
+{
+    FeatureType element_type = getElementType(arr);
+    if (element_type == FT_STRING) {
+        char* feature_str = FeatureStrCopy(nullptr, (const char*)data);
+        auto ret = FeatureArrayAppend(arr, feature_str);
+        FeatureFreeValue(feature_str);
+        return ret;
+    }
+    FEATURE_LOG_ERROR("only support string as raw data");
+    return nullptr;
+}
+
+int FeatureArrayInsertAfter(FtArray* arr, int start, const void* data, size_t count)
+{
+    // The element at arr->_element[start] does not need to be moved.
+    // The first element to be moved is arr->_element[start+1]
+    if (start >= arr->_size) {
+        return 0;
+    }
+    // Determine whether the capacity is sufficient
+    if ((int)(arr->_size + count) > arr->_capacity) {
+        // Expand capacity
+        arr = FeatureArrayResize(arr, ARRAY_NEW_CAPACITY(arr->_size + count));
+    }
+    // If data is a reference type, increment the reference count
+    FeatureType element_type = getElementType(arr);
+    int elem_size = getValueSize(element_type);
+    if (FT_IS_REFERENCE(element_type)) {
+        for (size_t i = 0; i < count; ++i) {
+            FeatureInstanceDupValue((void*)((uintptr_t)data + i * elem_size));
+        }
+    }
+
+    // Hang the contents of data[0]~data[count-1] to the end of arr->_element
+    if (start == arr->_size - 1) {
+        memcpy((void*)((uintptr_t)arr->_element + elem_size * arr->_size),
+            data, count * elem_size);
+    } else {
+        // The element at the position arr->_element[start] does not need to be moved.
+        // Firstly, move the elements of arr->_element[start+1]~arr->_element[size-1]
+        // to
+        // the position arr->_element[start+count+1]
+        memmove((void*)((uintptr_t)arr->_element + elem_size * (start + count + 1)),
+            (void*)((uintptr_t)arr->_element + elem_size * (start + 1)), elem_size * (arr->_size - start - 1));
+
+        // Then hang the count elements of data to arr->_element[start+1]
+        memcpy((void*)((uintptr_t)arr->_element + elem_size * (start + 1)),
+            data, count * elem_size);
+    }
+    arr->_size += count;
+    return count;
+}
+
+int FeatureArrayInsertRawAfter(FtArray* arr, int start, const void* data, size_t count)
+{
+    // The element at arr->_element[start] does not need to be moved.
+    // The first element to be moved is arr->_element[start+1]
+    if (start >= arr->_size) {
+        return 0;
+    }
+    // Determine whether the capacity is sufficient
+    if ((int)(arr->_size + count) > arr->_capacity) {
+        // Expand capacity
+        arr = FeatureArrayResize(arr, ARRAY_NEW_CAPACITY(arr->_size + count));
+    }
+
+    FeatureType element_type = getElementType(arr);
+    int elem_size = getValueSize(element_type);
+    if (element_type == FT_STRING) {
+        int ret = 0;
+        // The element at the position arr->_element[start] does not need to be moved.
+        // Firstly, move the elements of arr->_element[start+1]~arr->_element[size-1]
+        // to
+        // the position arr->_element[start+count+1]
+        memmove((void*)((uintptr_t)arr->_element + elem_size * (start + count + 1)),
+            (void*)((uintptr_t)arr->_element + elem_size * (start + 1)), elem_size * (arr->_size - start - 1));
+
+        // Then hang the count elements of data to arr->_element[start+1]
+
+        for (size_t i = 0; i < count; ++i) {
+            char* feature_str = FeatureStrCopy(nullptr, ((char**)data)[i]);
+            if (feature_str) {
+                memcpy((void*)((uintptr_t)arr->_element + elem_size * (start + 1 + i)),
+                    &feature_str, elem_size);
+                FeatureInstanceDupValue(feature_str);
+                FeatureFreeValue(feature_str);
+                ++ret;
+            } else {
+                // arr->_element[start + 1+i] waiting for inserting
+                // but copy fail
+                // Move the element (originally moved to the back) to the arr->_element[start + 1+i] position
+                memmove((void*)((uintptr_t)arr->_element + elem_size * (start + i + 1)),
+                    (void*)((uintptr_t)arr->_element + elem_size * (start + 1)), elem_size * (arr->_size - start - 1));
+                break;
+            }
+        }
+
+        arr->_size += ret;
+        return ret;
+    }
+
+    FEATURE_LOG_ERROR("only support string as raw data");
+    return 0;
+}
+
+int FeatureArrayInsertBefore(FtArray* arr, int start, const void* data, size_t count)
+{
+    // The element at arr->_element[start] position needs to be moved
+    if (start < 0) {
+        return 0;
+    }
+
+    // Equivalent to moving to FeatureArrayInsertafter(start-1)
+    //  ==move after the start-1 position
+    return FeatureArrayInsertAfter(arr, start - 1, data, count);
+}
+
+int FeatureArrayInsertRawBefore(FtArray* arr, int start, const void* data, size_t count)
+{
+    // The element at arr->_element[start] position needs to be moved
+    if (start < 0) {
+        return 0;
+    }
+
+    // Equivalent to moving to FeatureArrayInsertRawafter(start-1)
+    //  ==move after the start-1 position
+    return FeatureArrayInsertRawAfter(arr, start - 1, data, count);
+}
 
 void* FeatureMalloc(size_t size, FeatureType featureType)
 {
@@ -143,6 +468,9 @@ void FeatureFreeValue(void* ptr)
                 FEATURE_LOG_ERROR("unsupported type !");
             } break;
             }
+            if (header->complex_free) {
+                free(complexType1);
+            }
         }
 
         // finally, free header
@@ -195,7 +523,7 @@ void* FeatureInstanceAllocProtobuf(FeatureInstanceHandle handle, const ProtobufC
     return p;
 }
 
-void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, FeatureType type)
+static void* FeatureInstanceAllocTypeInternal(FeatureInstanceHandle handle, size_t size, FeatureType type, bool freeType)
 {
     size += sizeof(FTObjHeader) + sizeof(FeatureType);
     void* p = malloc(size);
@@ -204,13 +532,18 @@ void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, Featur
         return nullptr;
     }
     memset(p, 0, size);
-    FeatureType* featureType = (FeatureType*)p;
-    *featureType = type;
+    *(FeatureType*)p = type;
     FTObjHeader* header = (FTObjHeader*)((uintptr_t)p + sizeof(FeatureType));
     header->ref_count = 1;
+    header->complex_free = freeType;
     header->type = MEMORY_FEATURE_TYPE;
     FeatureRecordMemoryUsage(handle, header);
     return (void*)((uintptr_t)p + sizeof(FeatureType) + sizeof(FTObjHeader));
+}
+
+void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, FeatureType type)
+{
+    return FeatureInstanceAllocTypeInternal(handle, size, type, false);
 }
 
 void* FeatureInstanceDupValue(void* ptr)

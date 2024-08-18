@@ -336,12 +336,12 @@ static const FeatureDescription Struct_desc = {
     .members = Struct_members,
 };
 
-FeatureType Book::getType() 
+FeatureType Book::getFeatureType()
 {
     return FT_MK_COMPLEX(&Book_struct_type);
 }
 
-FeatureType Chapter::getType()
+FeatureType Chapter::getFeatureType()
 {
     return FT_MK_COMPLEX(&Chapter_struct_type);
 }

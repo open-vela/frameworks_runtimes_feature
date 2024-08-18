@@ -11,7 +11,7 @@
             "cwd": "${workspaceFolder}/build",
             "program": "${workspaceFolder}/build/feature_unit_test",
             "args": [
-                "../js/Struct.js"
+                "../js/Interface.js"
             ],
             "MIMode": "gdb",
             "setupCommands": [

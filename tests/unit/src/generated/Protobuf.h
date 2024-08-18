@@ -48,7 +48,6 @@ void onUnregister(const char* feature_name);
 // Function wrappers to be implemented
 class ProtobufBase : public ft_utils::FeatureInstance {
 public:
-  explicit ProtobufBase(FeatureInstanceHandle hInstance) : FeatureInstance(hInstance) {}
   virtual ~ProtobufBase()= default;
 public:
   virtual void proto(AppendData append_data, FtInt a, Computer* b) = 0;

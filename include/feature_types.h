@@ -170,8 +170,9 @@ typedef union AppendData {
 
 /** Feature Array struct defination */
 typedef struct FtArray {
-    int32_t _size; /**< actual size of the current array */
-    void* _element; /**< element ptr */
+    int32_t _size;
+    int32_t _capacity;
+    void* _element;
 } FtArray;
 
 /** variadic parameters packet */

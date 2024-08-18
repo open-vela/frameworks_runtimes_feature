@@ -6,7 +6,10 @@
 namespace Feature_Protobuf {
 // 使用CRTP进行静态绑定
 class Protobuf : public ProtobufBase {
+private:
+    FeatureInstanceHandle hInst_ = nullptr;
 public:
+    FeatureInstanceHandle getHandle() const override { return hInst_; }
     Protobuf(FeatureInstanceHandle hInstance);
     ~Protobuf() = default;
     static inline Protobuf* newInstance(FeatureInstanceHandle hInst) { return new Protobuf(hInst); }
