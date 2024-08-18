@@ -38,6 +38,163 @@ void* FeatureInstanceAlloc(FeatureInstanceHandle handle, size_t size);
 void* FeatureInstanceDupValue(void* ptr);
 void FeatureInstanceFreeValue(void* ptr);
 
+// memory utils functions
+/**
+ * @brief Create a new string from a plain C string
+ *
+ * @param handle
+ * @param str
+ * @return char*
+ */
+char* FeatureStrCopy(FeatureInstanceHandle handle, const char* str);
+
+/**
+ * @brief Increase the reference count of a Feature string by one
+ *
+ * @param ptr
+ */
+#define FeatureStrAddRef(ptr) FeatureInstanceDupValue(ptr)
+
+/**
+ * @brief Creates an array with its contents
+ *
+ * @param handle
+ * @param capacity
+ * @param element_type
+ * @return FtArray*
+ */
+FtArray* FeatureCreateArray(FeatureInstanceHandle handle, size_t capacity, FeatureType element_type);
+
+/**
+ * @brief Create an array, specify the length, and copy the data from data
+ *
+ * @param handle
+ * @param element_type
+ * @param data
+ * @param count
+ * @return FtArray*
+ */
+FtArray* FeaturenArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count);
+
+/**
+ * @brief Create an array, specify the length, and copy the data from data
+ *
+ * @param handle
+ * @param element_type
+ * @param data
+ * @param count
+ * @return FtArray*
+ */
+FtArray* FeaturenArrayCopy(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count);
+
+/**
+ * @brief Change the size of an array
+ *
+ * @param arr
+ * @param new_size
+ * @param data
+ * @param count
+ * @return FtArray*
+ */
+FtArray* FeatureArrayResize(FtArray* arr, size_t new_size);
+
+/**
+ * @brief Get the size of the array
+ *
+ * @param arr
+ * @return FtArray*
+ */
+size_t FeatureArrayGetLength(FtArray* arr);
+
+/**
+ * @brief Return element object pointer
+ *
+ * @param arr
+ * @param start
+ * @return FtArray*
+ */
+void* FeatureArrayGetDatas(FtArray* arr, int start);
+
+/**
+ * @brief Add data to array
+ *
+ * @param arr
+ * @param data
+ * @return FtArray*
+ */
+FtArray* FeatureArrayAppend(FtArray* arr, const void* data);
+
+/**
+ * @brief Add data to array
+ *
+ * @param arr
+ * @param data
+ * @return FtArray*
+ */
+FtArray* FeatureArrayAppendRaw(FtArray* arr, const void* data);
+
+/**
+ * @brief Clear the elements in array->element
+ *
+ * @param arr
+ * @return int
+ */
+int FeatureArrayClear(FtArray* arr);
+
+/**
+ * @brief Delete count elements starting from the start position in array->element
+ *
+ * @param arr
+ * @param start
+ * @param count
+ * @return int
+ */
+int FeatureArrayRemove(FtArray* arr, int start, size_t count);
+
+/**
+ * @brief Insert count elements after the start position of array->element
+ *
+ * @param arr
+ * @param start
+ * @param data
+ * @param count
+ * @return int
+ */
+int FeatureArrayInsertAfter(FtArray* arr, int start, const void* data, size_t count);
+
+/**
+ * @brief Insert count elements after the start position of array->element
+ *
+ * @param arr
+ * @param start
+ * @param data
+ * @param count
+ * @return int
+ */
+int FeatureArrayInsertRawAfter(FtArray* arr, int start, const void* data, size_t count);
+
+/**
+ * @brief Insert count elements before the start position of array->element
+ *
+ * @param arr
+ * @param start
+ * @param data
+ * @param count
+ * @return int
+ */
+int FeatureArrayInsertBefore(FtArray* arr, int start, const void* data, size_t count);
+
+/**
+ * @brief Insert count elements before the start position of array->element
+ *
+ * @param arr
+ * @param start
+ * @param data
+ * @param count
+ * @return int
+ */
+int FeatureArrayInsertRawBefore(FtArray* arr, int start, const void* data, size_t count);
+
 /**
  * @brief malloc a memory by featureType
  *

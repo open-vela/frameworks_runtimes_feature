@@ -7,15 +7,13 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/deps/vcpkg/scripts/buildsyste
 
 project(feature_unit_test)
 
-# enable -Werror
-add_definitions(-Werror)
-
-find_package(protobuf-c CONFIG REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
+# enable -Werror
+add_definitions(-Werror)
 find_package(protobuf-c CONFIG REQUIRED)
 
 ################### nuttx function definations ###################
@@ -81,7 +79,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../tools/cmake/jidl.cmake)
 target_link_libraries(libfeature PUBLIC quickjs)
 
 # add feature list
-set(FEATURE_LIST_CPP "Struct" "Protobuf")
+set(FEATURE_LIST_CPP "Struct" "Protobuf" "Interface")
 set(FEATURE_LIST_C "")
 jidl_codegen_registry(
     FEATURE_LIST_CPP ${FEATURE_LIST_CPP}
@@ -135,7 +133,9 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(libfeature PUBLIC
     protobuf-c::protobuf-c
 )
-
+add_executable(test_main
+    tests/test_main.cpp
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_BINARY_DIR}
@@ -144,9 +144,20 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/generated
 )
 
+target_include_directories(test_main PUBLIC
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     libfeature
     uv
     pthread
+)
+
+target_link_libraries(test_main PRIVATE
+    libfeature
+    uv
+    pthread
+    protobuf-c::protobuf-c
 )

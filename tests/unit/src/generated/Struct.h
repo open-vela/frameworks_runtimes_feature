@@ -23,7 +23,6 @@
 #ifndef JSON_AST_GEN_MODULE_STRUCT_H_
 #define JSON_AST_GEN_MODULE_STRUCT_H_
 
-#include "feature_description.h"
 #include "feature_types.h"
 #include "utils/feature_utils.h"
 #include "test.pb-c.h"
@@ -33,9 +32,6 @@
 #include <stdlib.h>
 
 namespace Feature_Struct {
-
-extern const ObjectMapType Chapter_struct_type;
-extern const ObjectMapType Book_struct_type;
 
 // FeatureCallbacks to be implemented
 void onRegister(const char* feature_name);
@@ -63,12 +59,12 @@ private:
   Chapter_Struct data;
 public:
   Chapter() { data.init(); }
-  static FeatureType getType();
+  static FeatureType getFeatureType();
     // getters & setters
   inline FtInt page_count() const { return data._page_count; }
   inline void set_page_count(FtInt val) { data._page_count = val; }
   inline ft_utils::FtStringPtr title() { return data._title; }
-  inline void set_title(ft_utils::FtStringPtr& val) { data._title = val; }
+  inline void set_title(const ft_utils::FtStringPtr& val) { data._title = val; }
   inline FtBool is_end() const { return data._is_end; }
   inline void set_is_end(FtBool val) { data._is_end = val; }
 };
@@ -98,17 +94,17 @@ private:
   Book_Struct data;
 public:
   Book() { data.init(); }
-  static FeatureType getType();
+  static FeatureType getFeatureType();
 public:
     // getters & setters
     inline FtInt page_count() const { return data._page_count; }
     inline void set_page_count(FtInt val) { data._page_count = val; }
     inline ft_utils::FtStringPtr title() { return data._title; }
-    inline void set_title(ft_utils::FtStringPtr& val) { data._title = val; }
+    inline void set_title(const ft_utils::FtStringPtr& val) { data._title = val; }
     inline ft_utils::RefPtr<FtArray> chap_titles() { return data._chap_titles; }
-    inline void set_chap_titles(ft_utils::RefPtr<FtArray>& val) { data._chap_titles = val; }
+    inline void set_chap_titles(const ft_utils::RefPtr<FtArray>& val) { data._chap_titles = val; }
     inline ft_utils::RefPtr<Chapter> first_chap() { return data._first_chap; }
-    inline void set_first_chap(ft_utils::RefPtr<Chapter>& val) { data._first_chap = val; }
+    inline void set_first_chap(const ft_utils::RefPtr<Chapter>& val) { data._first_chap = val; }
     inline FtCallbackId chap_changed() const { return data._chap_changed; }
     inline void set_chap_changed(FtCallbackId val) { data._chap_changed = val; }
 };
@@ -116,7 +112,6 @@ public:
 // Function wrappers to be implemented
 class StructBase : public ft_utils::FeatureInstance {
 public:
-  explicit StructBase(FeatureInstanceHandle hInstance) : FeatureInstance(hInstance) {}
   virtual ~StructBase()= default;
 public:
   virtual void foo(AppendData append_data, FtInt a, class Chapter * b) = 0;

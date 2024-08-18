@@ -4,9 +4,12 @@
 #include "test.pb-c.h"
 
 namespace Feature_Struct {
-// 使用CRTP进行静态绑定
 class Struct : public StructBase {
+private:
+    FeatureInstanceHandle hInst_ = nullptr;
+
 public:
+    FeatureInstanceHandle getHandle() const override { return hInst_; }
     Struct(FeatureInstanceHandle hInstance, int a, int b);
     ~Struct();
     static inline Struct* newInstance(FeatureInstanceHandle hInst) { return new Struct(hInst, 1, 2); }

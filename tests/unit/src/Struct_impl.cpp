@@ -41,7 +41,7 @@ void onUnregister(const char* feature_name)
 }
 
 Struct::Struct(FeatureInstanceHandle hInstance, int a, int b)
-    : StructBase(hInstance)
+    : hInst_(hInstance)
     , a_(a)
     , b_(b)
 {
