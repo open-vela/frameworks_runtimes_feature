@@ -821,7 +821,7 @@ static const MemberEvent ${module_name}_${identifier}_member_event = {
   has_getter = render.PropertyHasGetter(prop_node)
   has_setter = render.PropertyHasSetter(prop_node)
   cpp_type = render.GenerateCppType(value_type)
-  head_params = "void* feature, AppendData append_data"
+  head_params = "FeatureInstanceHandle feature, AppendData append_data"
 
   if has_getter:
     getter_name = f"{module_name}_get_{prop_name}"
@@ -907,6 +907,16 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
 %endif
 %endfor
 </%def>\
+\
+<%def name="GenImportMessageType(msg)">
+static ProtobufMessageType  ${module_name}_${msg['message_name']}_message_type = {
+  .header = {
+     .type = COMPLEX_PROTOBUF,
+     .size = sizeof(ProtobufMessageType)
+  },
+  .desc = (const ProtobufCMessageDescriptor*)(&${render.GetPbVarName(msg['protobuf_name'])}__descriptor),
+};
+</%def>\
 #include "${header_name}"
 #include "ajs_features_init.h"
 #include "feature_description.h"
@@ -914,6 +924,15 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
 #include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
+%if 'imports' in module:
+%for imp in module['imports']:
+%if imp['type'] == 'import_message':
+%for msg in imp['message_list']:
+${GenImportMessageType(msg)}
+%endfor
+%endif
+%endfor
+%endif
 
 %for block in module['members']:
 %if block['type'] == 'function':

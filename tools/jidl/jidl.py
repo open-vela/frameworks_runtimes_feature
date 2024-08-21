@@ -140,7 +140,11 @@ class JIDL(Parser):
     'WORKER',
     'TRUE',
     'FALSE',
-    'NULL'
+    'NULL',
+    'IMPORT_MESSAGE',
+    'FROM',
+    'AS',
+    'MESSAGE',
   )
 
   tokens = reserved + (
@@ -215,7 +219,7 @@ class JIDL(Parser):
   def p_module_head(self, p):
     """
     module_head : module_define
-                | imports module_define
+                | import_list module_define
     """
     count = len(p)
     if count == 2:
@@ -282,16 +286,23 @@ class JIDL(Parser):
     """
     p[0] = p[1]
 
-  def p_imports(self, p):
+  def p_import_list(self, p):
     """
-    imports : import
-        | imports import
+    import_list : import_block
+             | import_list import_block
     """
     count = len(p)
     if count == 2:
       CreateASTNode(p, ast.ImportList, p[1])
     elif count == 3:
       CreateASTNode(p, ast.ImportList.Append, p[1], p[2])
+
+  def p_import_block(self, p):
+    """
+    import_block : import
+                 | import_message
+    """
+    p[0] = p[1]
 
   def p_import(self, p):
     'import : IMPORT module_name AT NUMBER'
@@ -681,6 +692,7 @@ class JIDL(Parser):
               | CALLBACK
               | MAIN
               | WORKER
+              | CONSTRUCTOR
               | EXTENDS
               | TYPE
     """
@@ -704,6 +716,7 @@ class JIDL(Parser):
                 | MODULE
                 | CONST
                 | ASYNC
+                | MESSAGE
     """
     p[0] = p[1]
 
@@ -852,6 +865,7 @@ class JIDL(Parser):
                | id_array_type
                | primary_type
                | unique_buffer_type
+               | message_type
                | id
     """
     p[0] = p[1]
@@ -935,6 +949,88 @@ class JIDL(Parser):
             | FALSE
             | PROPERTY
             | EXTENDS
+            | IMPORT_MESSAGE
+            | FROM
+            | MESSAGE
+            | AS
+    """
+    p[0] = p[1]
+
+  def p_message_type(self, p):
+    """
+    message_type : MESSAGE message_id
+    """
+    CreateASTNode(p, ast.MessageType, p[2])
+
+  def p_import_message(self, p):
+    """
+    import_message : IMPORT_MESSAGE LBRACE message_list RBRACE FROM string_literal
+    """
+    CreateASTNode(p, ast.ImportMessage, p[3], p[6])
+
+  def p_message_list(self, p):
+    """
+    message_list : message_decl
+                 | message_list COMMA message_decl
+    """
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0].append(p[3])
+
+  def p_message_decl(self, p):
+    """
+    message_decl : message_id
+                 | pb_message_id AS message_id
+    """
+    if len(p) == 2:
+        CreateASTNode(p, ast.MessageDeclare, p[1], p[1])
+    else:
+        CreateASTNode(p, ast.MessageDeclare, p[1], p[3])
+
+  def p_message_id(self, p):
+    """
+    message_id : type_name
+    """
+    p[0] = p[1]
+
+  def p_pb_message_id(self, p):
+    """
+    pb_message_id : full_name
+    """
+    p[0] = p[1]
+
+  def p_full_name(self, p):
+   """
+   full_name : normal_name
+             | full_name DOT normal_name
+   """
+   if len(p) == 2:
+     p[0] = p[1]
+   else:
+     p[0] = p[1] + '.' + p[3]
+
+
+  def p_normal_name(self, p):
+    """
+    normal_name : ID
+                  | EVENT
+                  | USE
+                  | FROM
+                  | INTERFACE
+                  | TRUE
+                  | FALSE
+                  | MODULE
+                  | STRUCT
+                  | CLASS
+                  | CONST
+                  | PROPERTY
+                  | CALLBACK
+                  | ENUM
+                  | READONLY
+                  | ASYNC
+                  | MAIN
+                  | WORKER
     """
     p[0] = p[1]
 

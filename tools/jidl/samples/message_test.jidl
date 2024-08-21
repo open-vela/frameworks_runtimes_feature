@@ -1,0 +1,5 @@
+import_message { test.PersonInfo as pb_person } from "./test.proto"
+
+module message_test@1.0
+
+property message pb_person person;

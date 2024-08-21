@@ -279,13 +279,24 @@ bool toProtoField(FeatureInstanceHandle handle, JSContext* ctx, JSValue value, v
     } break;
     case PROTOBUF_C_TYPE_BYTES: {
         ProtobufCBinaryData* pBinaryData = calcOffset ? proto_utils::getValuePtr<ProtobufCBinaryData>(pnative, pFieldDesc->offset) : (ProtobufCBinaryData*)pnative;
-        size_t len = 0;
-        uint8_t* buf = JS_GetArrayBuffer(ctx, &len, value);
-        if (len && buf) {
+        if (JS_IsString(value)) {
+            size_t len = 0;
+            const char* buf = JS_ToCStringLen(ctx, &len, value);
             uint8_t* new_buf = (uint8_t*)FeatureInstanceAlloc(nullptr, len);
             memcpy(new_buf, buf, len);
+            JS_FreeCString(ctx, buf);
             pBinaryData->data = new_buf;
             pBinaryData->len = len;
+        } else {
+            // ArrayBuffer, copy binary data
+            size_t len = 0;
+            uint8_t* buf = JS_GetArrayBuffer(ctx, &len, value);
+            if (len && buf) {
+                uint8_t* new_buf = (uint8_t*)FeatureInstanceAlloc(nullptr, len);
+                memcpy(new_buf, buf, len);
+                pBinaryData->data = new_buf;
+                pBinaryData->len = len;
+            }
         }
     } break;
     }
