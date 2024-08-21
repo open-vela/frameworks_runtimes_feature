@@ -21,16 +21,24 @@
 #ifndef FEATURE_EXPORTS_H
 #define FEATURE_EXPORTS_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stddef.h>
-#include <protobuf-c/protobuf-c.h>
 #include "feature_types.h"
 #include "quickjs/quickjs.h"
 #include "uv.h"
+#include <protobuf-c/protobuf-c.h>
 #include <stdbool.h>
+#include <stddef.h>
+
+enum FeatureWorkerState {
+    FEATURE_WORKER_PENDING, // worker等待中
+    FEATURE_WORKER_RUNNING,
+    FEATURE_WORKER_INVALID, // worker处于无效状态
+    FEATURE_WORKER_RESOLVED,
+    FEATURE_WORKER_REJECTED,
+    FEATURE_WORKER_FINISHED, // worker已经完成
+};
 
 void* FeatureInstanceAllocProtobuf(FeatureInstanceHandle handle, const ProtobufCMessageDescriptor* desc);
 void* FeatureInstanceAllocType(FeatureInstanceHandle hInst, size_t size, FeatureType type);
@@ -548,6 +556,79 @@ static inline int FeatureGetEventCallbackCountByName(FeatureInstanceHandle handl
  * @return false
  */
 bool FeatureRegisterFeatures(FeatureRegistryHandle handle, const FeatureRegistryTableHandle regTable);
+
+/**
+ * @brief create worker
+ *
+ * @param handle
+ * @param pid
+ * @param buf_size
+ * @param do_work
+ * @param do_after_worker
+ * @param free
+ * @return FeatureWorkerHandle
+ */
+FeatureWorkerHandle FeatureCreateWorker(FeatureInstanceHandle handle, FtPromiseId pid, size_t buf_size,
+    void (*do_work)(FeatureWorkerHandle), void (*do_after_worker)(FeatureWorkerHandle),
+    void (*free)(void*));
+
+/**
+ * @brief commit and start worker
+ *
+ * @param hworker
+ * @return bool if commit success
+ */
+bool FeatureWorkerCommit(FeatureInstanceHandle handle, FeatureWorkerHandle hworker);
+
+/**
+ * @brief resolve worker, called by user
+ *
+ * @param hworker
+ * @param result
+ */
+void FeatureWorkerResolve(FeatureInstanceHandle handle, FeatureWorkerHandle hworker, FeatureWorkerResult result);
+
+/**
+ * @brief reject worker, called by user
+ *
+ * @param hwoerk
+ * @param errcode
+ * @param err_msg
+ */
+void FeatureWorkerReject(FeatureInstanceHandle handle, FeatureWorkerHandle hwoerk, int errcode, const char* err_msg);
+
+/**
+ * @brief check if worker is valid
+ *
+ * @param pWorker
+ * @return true
+ * @return false
+ */
+bool FeatureWorkerIsValid(FeatureInstanceHandle handle, FeatureWorkerHandle hworker);
+
+/**
+ * @brief get worker state
+ *
+ * @param hworker
+ * @return int
+ */
+int FeatureWorkerGetState(FeatureWorkerHandle hworker);
+
+enum FeatureWorkerCancelResult {
+    FeatureWorkerCancelSuccess, // 成功取消
+    FeatureWorkerCancelPending, // pending中，未能取消
+    FeatureWorkerCancelInvalid, // worker无效
+    FeatureWorkerCancelUnknownError, // 未知错误
+};
+
+/**
+ * @brief free worker which is not pending
+ *
+ * @param hworker
+ * @param cancel
+ * @return int
+ */
+int FeatureWorkerCancel(FeatureInstanceHandle handle, FeatureWorkerHandle hworker);
 
 #ifdef __cplusplus
 }

@@ -28,6 +28,14 @@ extern "C" {
 #include "feature_context.h"
 #include <stdbool.h>
 
+typedef union _FeatureWorkerResult {
+    int64_t ival;
+    uint64_t uval;
+    double dval;
+    char* str;
+    void* ptr;
+} FeatureWorkerResult;
+
 // primitive type definations
 typedef int FtInt; /**< FtInt for int32_t */
 typedef int8_t FtInt8; /**< FtInt8 for int8_t */
@@ -57,6 +65,8 @@ typedef void* FeatureInterfaceHandle; /**< feature interface handle. */
 
 typedef uintptr_t FeatureType; /**< feature type flag */
 typedef void (*NativeFunc)(void); /**< native func ptr */
+
+typedef struct _FeatureWorker* FeatureWorkerHandle; // feature worker handle.
 
 /** FeatureTaskMode */
 enum FeatureTaskMode {
