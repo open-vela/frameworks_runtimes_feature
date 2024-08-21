@@ -22,6 +22,7 @@
 #include "feature_object_ref.h"
 #include "feature_prototype.h"
 #include "feature_types.h"
+#include "worker_manager.h"
 
 #include <map>
 #include <memory>
@@ -29,7 +30,7 @@
 
 namespace feature_framework {
 
-#define FEATURE_INSTANCE_CPP_VTABLE     ((VTable*)-1)
+#define FEATURE_INSTANCE_CPP_VTABLE ((VTable*)-1)
 
 class FeatureInstance : public FeatureObjectRef, public feature_list_node {
 public:
@@ -97,6 +98,11 @@ public:
         return prototype()->featureManager();
     }
 
+    WorkerManager* workerManager()
+    {
+        return worker_manager_;
+    }
+
     virtual void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
 
     bool requestPermissions(FeaturePermissionsRequestInfo* info);
@@ -111,6 +117,7 @@ private:
     const VTable* vtable_;
     void* native_;
     FeaturePrototype* proto_;
+    WorkerManager* worker_manager_;
     const FeatureDescription* description_;
 };
 

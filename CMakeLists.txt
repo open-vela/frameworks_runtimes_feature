@@ -66,6 +66,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     
     ${FEATURE_SRC_DIR}/protobuf/proto_reflection.cpp
     ${FEATURE_SRC_DIR}/protobuf/proto_utils.cpp
+    ${FEATURE_SRC_DIR}/worker_manager.cpp
     
     )
 

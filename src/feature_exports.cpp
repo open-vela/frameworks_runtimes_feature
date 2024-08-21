@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+#include "feature_exports.h"
 #include "feature_common.h"
 #include "feature_description.h"
-#include "feature_exports.h"
 #include "feature_instance.h"
 #include "feature_instance_qjs.h"
 #include "feature_log.h"
@@ -28,6 +28,7 @@
 #include "feature_types.h"
 #include "feature_utils.h"
 #include "protobuf/proto_utils.h"
+#include "worker_manager.h"
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -325,7 +326,7 @@ int FeatureArrayInsertRawAfter(FtArray* arr, int start, const void* data, size_t
     int elem_size = getValueSize(element_type);
     if (element_type == FT_STRING) {
         // resize
-        FEATURE_CHECK_NE(FeatureArrayResize(arr,  ARRAY_NEW_CAPACITY(arr->_size + count)), nullptr);
+        FEATURE_CHECK_NE(FeatureArrayResize(arr, ARRAY_NEW_CAPACITY(arr->_size + count)), nullptr);
         int ret = 0;
         // The element at the position arr->_element[start] does not need to be moved.
         // Firstly, move the elements of arr->_element[start+1]~arr->_element[size-1]
@@ -1041,4 +1042,51 @@ bool FeatureRequestPermissions(FeatureInstanceHandle handle, FeaturePermissionsR
 
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->requestPermissions(info);
+}
+
+FeatureWorkerHandle FeatureCreateWorker(FeatureInstanceHandle handle, FtPromiseId pid, size_t buf_size,
+    void (*do_work)(FeatureWorkerHandle), void (*do_after_worker)(FeatureWorkerHandle),
+    void (*free)(void*))
+{
+    FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
+    return (FeatureWorkerHandle)pInstance->workerManager()->create(pid, buf_size, do_work, do_after_worker, free);
+}
+
+bool FeatureWorkerCommit(FeatureInstanceHandle handle, FeatureWorkerHandle hworker)
+{
+    FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
+    return (FeatureWorkerHandle)pInstance->workerManager()->commit((FeatureWorker*)hworker);
+}
+
+void FeatureWorkerResolve(FeatureInstanceHandle handle, FeatureWorkerHandle hworker, FeatureWorkerResult result)
+{
+    FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
+    pInstance->workerManager()->resolve((FeatureWorker*)hworker, result);
+}
+
+void FeatureWorkerReject(FeatureInstanceHandle handle, FeatureWorkerHandle hworker, int errcode, const char* err_msg)
+{
+    FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
+    pInstance->workerManager()->reject((FeatureWorker*)hworker, errcode, err_msg);
+}
+
+bool FeatureWorkerIsValid(FeatureInstanceHandle handle, FeatureWorkerHandle hworker)
+{
+    FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
+    return pInstance->workerManager()->checkValid((FeatureWorker*)hworker);
+}
+
+int FeatureWorkerGetState(FeatureWorkerHandle hworker)
+{
+    return ((FeatureWorker*)hworker)->status;
+}
+
+int FeatureWorkerCancel(FeatureInstanceHandle handle, FeatureWorkerHandle hworker)
+{
+    if (!FeatureWorkerIsValid(handle, hworker)) {
+        return FeatureWorkerCancelInvalid;
+    }
+    FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
+    pInstance->workerManager()->cancel((FeatureWorker*)hworker);
+    return 0;
 }

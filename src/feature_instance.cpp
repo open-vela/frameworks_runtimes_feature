@@ -19,7 +19,6 @@
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "utils/feature_utils.h"
-
 #include <string.h>
 
 #ifndef __NuttX__
@@ -46,6 +45,7 @@ FeatureInstance::FeatureInstance(FeaturePrototype* proto, const FeatureDescripti
     if (proto_ && proto_->featureManager()) {
         feature_list_add_tail(proto_->featureManager()->getFeatureNodeList(), this);
     }
+    worker_manager_ = new WorkerManager();
 }
 
 FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* vtable, const FeatureDescription* description)
@@ -62,6 +62,7 @@ FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* v
     if (proto_ && proto_->featureManager()) {
         feature_list_add_tail(proto_->featureManager()->getFeatureNodeList(), this);
     }
+    worker_manager_ = new WorkerManager();
 }
 
 FeatureInstance::~FeatureInstance()
@@ -77,6 +78,8 @@ FeatureInstance::~FeatureInstance()
     if (feature_list_in_list(this)) {
         feature_list_delete(this);
     }
+    if (worker_manager_)
+        delete worker_manager_;
 }
 
 void FeatureInstance::initialize()
