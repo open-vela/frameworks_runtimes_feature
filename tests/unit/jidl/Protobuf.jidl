@@ -1,0 +1,10 @@
+import_message { computer as pb_computer } from "../proto/test.proto"
+
+module Protobuf@1.0
+
+void proto(int a, pb_computer b);
+
+// Declare a callback
+callback proto_cb(pb_computer computer);
+
+void invoke_proto(proto_cb cb);

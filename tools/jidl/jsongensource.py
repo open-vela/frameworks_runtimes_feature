@@ -7,6 +7,7 @@ import re
 import json
 import jidl_error
 from mako.template import Template
+import shutil
 
 g_debug = False
 
@@ -40,11 +41,59 @@ def WriteFile(content, filename):
 def GetFileName(filepath):
   return os.path.basename(filepath)
 
+def runProtobuf(pb_file, out_dir):
+  ## copy to tmp file
+  ## if  pb_file is  samples/test.proto, outdir is /my/out
+  ##     pb file while set to /my/out/samples/test.pb.h
+  ## but we want to set /my/out/test.pb.h
+  ## so, out put a tmp_out first, and the cp to /my/out
+  out_dir = os.path.abspath(out_dir)
+  pb_path = os.path.dirname(pb_file)
+  cmd_list = ['protoc-c', pb_file, '--c_out', out_dir, '-I', pb_path]
+  cmds = ' '.join(cmd_list)
+  print('protobuf: %s' % cmds)
+  os.system(cmds)
+  real_out = os.path.abspath(os.path.join(out_dir, os.path.dirname(pb_file)))
+  if real_out == out_dir:
+    return
+  try:
+    file = os.path.basename(pb_file)
+    file = os.path.splitext(file)[0]
+    shutil.copy(os.path.join(real_out, '%s.pb-c.h'%file), out_dir)
+    shutil.copy(os.path.join(real_out, '%s.pb-c.c'%file), out_dir)
+  except:
+    print("copy protobuf file filed: from %s => %s" % (real_out, out_dir))
+
+def CamelToLowerStr(s):
+    new_s = ''
+    was_upper = True
+    for ch in s:
+       is_upper = ch.isupper()
+       if is_upper:
+         if not was_upper:
+           new_s = new_s + '_'
+         new_s = new_s + ch.lower()
+       else:
+         new_s = new_s + ch
+       was_upper = is_upper
+    return new_s
+
+def CamelToLower(names):
+    # see protobuf https://github.com/protobuf-c/protobuf-c/blob/master/protoc-c/c_helpers.cc:201
+    # in function FullNameToLower
+    #
+    i = 0
+    while i < len(names):
+        name = names[i]
+        names[i] = CamelToLowerStr(name)
+        i = i + 1
+
+
 class Render:
   def __init__(self, json_file, configs):
     self.json_file = json_file
     self.configs = configs
-    self.outdir = None
+    self.outdir = script_dir
     if 'out-dir' in configs:
       self.outdir = configs['out-dir']
     self.module = self.LoadJSON()
@@ -306,9 +355,50 @@ class CPPRender(Render):
   def Generate(self):
     self._GenerateFromTemplate(self.source_tmpl, self.GetCppFilePath())
     self._GenerateFromTemplate(self.header_tmpl, self.GetHeaderFilePath())
+    self._GenerateProtobufs()
 
   def _GenerateFromTemplate(self, tmpl, out):
     WriteFile(tmpl.render(render=self), out)
+
+  def _GenerateProtobufs(self):
+    if not 'imports' in self.module:
+      return None
+    import_list = []
+    for imp in self.module['imports']:
+       self._GeneratorProtobuf(imp['protobuf'])
+
+  def _GeneratorProtobuf(self, pb_path):
+    dir_name = os.path.dirname(self.json_file)
+    pb_file = os.path.join(dir_name, pb_path)
+    runProtobuf(pb_file, self.outdir)
+
+
+  def GetImportsHeadList(self):
+    if not 'imports' in self.module:
+      return None
+    import_list = []
+    for imp in self.module['imports']:
+       import_header = self._TryGetImportHeader(imp)
+       if import_header:
+         import_list.append(import_header)
+    return import_list
+
+  def _TryGetImportHeader(self, imp):
+    if not 'protobuf' in imp:
+      return None
+    pb_path = imp['protobuf']
+    pb_name = os.path.basename(pb_path)
+    pb_name = os.path.splitext(pb_name)[0]
+    return '%s.pb-c.h' % pb_name
+
+  def GetPbTypeName(self, name):
+    names = name.split('.');
+    return ('__'.join([n[0].upper() + n[1:] for n in names]))
+
+  def GetPbVarName(self, name):
+    names = name.split('.')
+    CamelToLower(names)
+    return '__'.join(names)
 
   def GenHeaderDefine(self):
     return 'JSON_AST_GEN_MODULE_%s_H_' % (self.GetModuleName().upper())
@@ -352,6 +442,8 @@ class CPPRender(Render):
     elif ast_type['type'] == 'struct':
         struct_name = ast_type['name']
         return f"{module_name}_{struct_name} *"
+    elif ast_type['type'] == 'message':
+        return f"{module_name}_{ast_type['message_name']}_p"
     else:
       raise Exception('invalid complex type: {}'.format(ast_type))
 
@@ -480,6 +572,8 @@ class CPPRender(Render):
       return self._GenReferredFeatureInfo(ast_type)
     elif ast_type['type'] == 'struct':
       return self._MakeComplexFeatureInfo(ast_type['name'], 'struct_type')
+    elif ast_type['type'] == 'message':
+      return self._MakeComplexFeatureInfo(ast_type['message_name'], 'message_type')
     elif ast_type['type'] == 'promise':
       raise Exception('promise is not supported now, type: {}'.format(ast_type))
     else:
@@ -1084,6 +1178,12 @@ class TSRender(Render):
 def Usage():
    print("usage %s <jidl-file|json-ast-file> -out-dir <outdir> [-options]" % sys.argv[0])
 
+   print("options:")
+   print("\t-lang [c++|ts]")
+   print("\toptions when -lang c++")
+   print("\t\t-header <header-file-name>, header file in <outdir>")
+   print("\t\t-source <source-file-name>, source file in <outdir>")
+
 lang_keys = {
   'c++': ['header', 'source'],
   'ts': ['dts']
@@ -1101,6 +1201,10 @@ def CheckArgs(configs):
       sys.exit(0)
 
 def ParseArgs():
+  if len(sys.argv) <= 1:
+    Usage()
+    sys.exit(0)
+
   configs = {'lang': 'c++', 'debug': False}
   configs['input'] = sys.argv[1]
   options = {}
@@ -1158,7 +1262,7 @@ if __name__ == '__main__':
        # to json
        ast_json = {}
        module.ToJson(ast_json)
-       json_out = json.dumps(ast_json)
+       json_out = json.dumps(ast_json, indent=4, separators=(',',':'))
        WriteFile(json_out, json_file)
     else:
        print("parse file %s failed" % jidl_file)

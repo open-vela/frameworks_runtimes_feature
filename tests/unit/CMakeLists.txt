@@ -81,7 +81,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../tools/cmake/jidl.cmake)
 target_link_libraries(libfeature PUBLIC quickjs)
 
 # add feature list
-set(FEATURE_LIST_CPP "Struct")
+set(FEATURE_LIST_CPP "Struct" "Protobuf")
 set(FEATURE_LIST_C "")
 jidl_codegen_registry(
     FEATURE_LIST_CPP ${FEATURE_LIST_CPP}
@@ -90,44 +90,46 @@ jidl_codegen_registry(
 # collect jidl files
 file(GLOB JIDL_FILES ${CMAKE_CURRENT_SOURCE_DIR}/jidl/*.jidl)
 # generate jidl cpp wrapper files
-jidl_codegen_files(
-    JIDL_TOOL_PATH ${CMAKE_CURRENT_LIST_DIR}/../../tools/jidl
-    OUT_PATH ${CMAKE_BINARY_DIR}
-    JIDL_FILES_CPP ${JIDL_FILES}
-    # JIDL_FILES_C ${JIDL_FILES}
-)
+# jidl_codegen_files(
+#     JIDL_TOOL_PATH ${CMAKE_CURRENT_LIST_DIR}/../../tools/jidl
+#     OUT_PATH ${CMAKE_BINARY_DIR}
+#     JIDL_FILES_CPP ${JIDL_FILES}
+#     # JIDL_FILES_C ${JIDL_FILES}
+# )
 
 file(GLOB BUILDIN_SOURCES CONFIGURE_DEPENDS ./builtin/*.cpp ./builtin/*.h)
 file(GLOB SRC_SOURCES CONFIGURE_DEPENDS ./src/*.cpp ./src/*.h ./src/*.c)
+file(GLOB GENERATED_FILES CONFIGURE_DEPENDS ./src/generated/*.cpp ./src/generated/*.h ./src/generated/*.c)
 
-file(GLOB PROTO_SOURCES build/*.c)
+file(GLOB PROTO_SOURCES CONFIGURE_DEPENDS ${CMAKE_BINARY_DIR}/*.c)
 
 set(PROTBUF_FILES
     ${CMAKE_SOURCE_DIR}/proto/test.proto
 )
 
-set(PROTOBUF_C_FILES "")
-foreach(PROTOFILE ${PROTBUF_FILES})
-    get_filename_component(FILE_NAME ${PROTOFILE} NAME_WE)
-    list(APPEND PROTOBUF_C_FILES ${CMAKE_CURRENT_BINARY_DIR}/proto/${FILE_NAME}.pb-c.c)
-endforeach()
-# get protoc compiler path
-set(PROTOBUFC_EXECUTABLE "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc")
-add_custom_command(OUTPUT ${PROTOBUF_C_FILES}
-    COMMAND mkdir ${CMAKE_CURRENT_BINARY_DIR}/proto
-    COMMAND ${PROTOBUFC_EXECUTABLE} -I${CMAKE_CURRENT_SOURCE_DIR}/proto ${PROTBUF_FILES} --c_out=${CMAKE_CURRENT_BINARY_DIR}/proto
-    DEPENDS ${PROTBUF_FILES}
-)
+# set(PROTOBUF_C_FILES "")
+# foreach(PROTOFILE ${PROTBUF_FILES})
+#     get_filename_component(FILE_NAME ${PROTOFILE} NAME_WE)
+#     list(APPEND PROTOBUF_C_FILES ${CMAKE_CURRENT_BINARY_DIR}/generated/${FILE_NAME}.pb-c.c)
+# endforeach()
+# # get protoc compiler path
+# set(PROTOBUFC_EXECUTABLE "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc")
+# add_custom_command(OUTPUT ${PROTOBUF_C_FILES}
+#     COMMAND mkdir ${CMAKE_CURRENT_BINARY_DIR}/generated
+#     COMMAND ${PROTOBUFC_EXECUTABLE} -I${CMAKE_CURRENT_SOURCE_DIR}/proto ${PROTBUF_FILES} --c_out=${CMAKE_CURRENT_BINARY_DIR}/generated
+#     DEPENDS ${PROTBUF_FILES}
+# )
 
 # add test executable
 add_executable(${PROJECT_NAME}
     ${SRC_SOURCES}
+    ${GENERATED_FILES}
     ${BUILDIN_SOURCES}
     ${JIDL_GENERATED_CPP_FILES}
     ${JIDL_GENERATED_C_FILES}
     ${JIDL_GENERATED_FEATURE_REGISTERY_FILES}
     ${PROTO_SOURCES}
-    ${PROTOBUF_C_FILES}
+    # ${PROTOBUF_C_FILES}
 )
 
 target_link_libraries(libfeature PUBLIC
@@ -137,8 +139,9 @@ target_link_libraries(libfeature PUBLIC
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto
+    ${CMAKE_BINARY_DIR}/generated
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/generated
 )
 
 

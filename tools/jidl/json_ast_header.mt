@@ -23,6 +23,7 @@
   module = render.module
   module_name = render.GetModuleName()
   header_define = render.GenHeaderDefine()
+  imports_head_list = render.GetImportsHeadList()
 %>\
 <%def name="GenInterfaceVTableDefines(func_node, ctor_info)">\
 <%
@@ -72,9 +73,9 @@ ${render.GenerateInterfaceCtorDefine(func_node)};
   has_setter = render.PropertyHasSetter(prop_node)
   cpp_type = render.GenerateCppType(prop_type)
   if has_getter:
-    getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, AppendData append_data)"
+    getter_def = f"{cpp_type} {module_name}_get_{prop_name}(FeatureInstanceHandle feature, AppendData append_data)"
   if has_setter:
-    setter_def = f"void {module_name}_set_{prop_name}(void* feature, AppendData append_data, {cpp_type} {prop_name})"
+    setter_def = f"void {module_name}_set_{prop_name}(FeatureInstanceHandle feature, AppendData append_data, {cpp_type} {prop_name})"
 %>\
 %if has_getter:
 ${getter_def};
@@ -129,6 +130,12 @@ ${malloc_def};
 #include <stdlib.h>
 #include <string.h>
 
+%if imports_head_list:
+%for h in imports_head_list:
+#include "${h}"
+%endfor
+%endif
+
 // FeatureCallbacks to be implemented
 void ${module_name}_onRegister(const char* feature_name);
 void ${module_name}_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
@@ -136,6 +143,17 @@ void ${module_name}_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 void ${module_name}_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle);
 void ${module_name}_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
 void ${module_name}_onUnregister(const char* feature_name);
+
+// message defines
+%if 'imports' in module:
+%for imp in module['imports']:
+%if imp['type'] == 'import_message':
+%for msg in imp['message_list']:
+typedef ${render.GetPbTypeName(msg['protobuf_name'])}* ${module_name}_${msg['message_name']}_p;
+%endfor
+%endif
+%endfor
+%endif
 
 // Struct defines
 %for block in module['members']:

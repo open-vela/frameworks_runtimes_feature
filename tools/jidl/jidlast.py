@@ -38,6 +38,9 @@ ARRAY_LITERAL = 32
 ENUM_DEFINE = 33
 USER_TYPE_DEFINE = 34
 ID_ARRAY_TYPE = 35
+IMPORT_MESSAGE = 36
+MESSAGE_DECLARE = 37
+MESSAGE_TYPE = 38
 
 type_names = {
   LITERVAL : 'literval',
@@ -77,6 +80,9 @@ type_names = {
   ENUM_DEFINE : 'enum_define',
   USER_TYPE_DEFINE : 'type_define',
   ID_ARRAY_TYPE : 'id array',
+  IMPORT_MESSAGE : 'import_message',
+  MESSAGE_DECLARE : 'message_declare',
+  MESSAGE_TYPE : 'message_type'
 }
 
 def TypeName(tp):
@@ -189,6 +195,15 @@ class PrimaryType(Type):
       return
     out['type'] = self.name
 
+class MessageType(Type):
+   def __init__(self, name):
+      Type.__init__(self, name, MESSAGE_TYPE)
+
+   def ToJson(self, out):
+     out['type'] = 'message'
+     out['name'] = self.name
+
+
 class UniqueBufferType(Type):
   def __init__(self, name):
     Type.__init__(self, name, UNIQUE_BUFFER_TYPE)
@@ -278,6 +293,7 @@ class EllipseType(Node):
     if hasattr(self, 'primary'):
       ellipse_def['primary'] = str(self.primary)
     out.append(ellipse_def)
+
 
 def GetTypeJson(tp):
   if tp.IsReferenceType():
@@ -1057,10 +1073,56 @@ class ImportDefine(Node):
   def __str__(self):
     return 'import %s@%s' % (self.module, self.version)
 
+  def Resolve(self, context):
+    pass
+
   def ToJson(self, out):
-    import_def = {}
-    import_def['name'] = '%s@%s' % (self.module, self.version)
-    out.append(import_def)
+    d = {}
+    d['name'] = '%s@%s' % (self.module, self.version)
+    out.append(d)
+
+class ImportMessage(Node):
+  def __init__(self, message_list, pb_path):
+    Node.__init__(self, IMPORT_MESSAGE)
+    self.message_list = message_list
+    self.pb_path = pb_path.value[1:-1]
+
+  def __str__(self):
+    return 'import_message {%s} from "%s"' % (str(self.message_list), self.pb_path)
+
+  def ToJson(self, out):
+    import_message = {"type": "import_message"}
+    message_list = []
+    for msg in self.message_list:
+      message_list.append(msg.GetJson())
+    import_message['message_list'] = message_list
+    import_message['protobuf'] = self.pb_path
+    out.append(import_message)
+
+  def Resolve(self, context):
+    for msg in self.message_list:
+      context.AddId(msg.message_name, msg)
+
+class MessageDeclare(Node):
+  def __init__(self, pb_name, message_name):
+    Node.__init__(self, MESSAGE_DECLARE)
+    self.pb_name = pb_name
+    self.message_name = message_name
+
+  def __str__(self):
+    return self.pb_name == self.message_name and \
+                self.message_name or             \
+                '%s as %s' % (self.pb_name, self.message_name)
+
+  def ToJson(self, message):
+    message['type'] = 'message'
+    message['protobuf_name'] = self.pb_name
+    message['message_name'] = self.message_name
+
+  def GetJson(self):
+    out = {}
+    self.ToJson(out)
+    return out
 
 class ImportList(ListNode):
   def __init__(self, node = None):
@@ -1070,6 +1132,10 @@ class ImportList(ListNode):
 
     def __str__(self):
       return self.toString('\n')
+
+    def Resolve(self, context):
+      for el in self.content:
+          el.Resolve(context)
 
     def Dump(self, out):
       for c in self.content:
@@ -1094,7 +1160,11 @@ class ModuleDefine(InterfaceDefine):
 
   def Resolve(self, context):
     context.AddId(self.name, self)
+    if self.imports:
+      self.imports.Resolve(context)
+    context.PushTable(self)
     InterfaceDefine.Resolve(self, context)
+    context.PopTable()
 
   def GetClassType(self):
     return 'Module'
@@ -1181,7 +1251,8 @@ struct_member_accepted_types = (
   InterfaceDefine,
   CallbackDefine,
   EnumDefine,
-  UserTypeDefine
+  UserTypeDefine,
+  MessageDeclare,
 )
 
 param_accepted_types = (
@@ -1193,7 +1264,8 @@ param_accepted_types = (
   InterfaceDefine,
   EnumDefine,
   EllipseType,
-  UserTypeDefine
+  UserTypeDefine,
+  MessageDeclare,
 )
 
 return_accepted_type = (
@@ -1204,7 +1276,8 @@ return_accepted_type = (
   StructDefine,
   EnumDefine,
   PromiseType,
-  UserTypeDefine
+  UserTypeDefine,
+  MessageDeclare,
 )
 
 value_accepted_type = (
@@ -1214,6 +1287,7 @@ value_accepted_type = (
   InterfaceDefine,
   EnumDefine,
   StructDefine,
+  MessageType,
 )
 
 direct_resolve_types = (
@@ -1233,8 +1307,9 @@ def IsDirectResolveType(tp):
 def ResolveType(context, tp, accepted, owner, holder):
   if IsDirectResolveType(tp):
     return tp
-  #print("==== tp: ", tp, type(tp));
+  #print("==== tp: ", tp, "--", type(tp));
   new_tp = context.GetIdExist(tp.name, accepted, owner)
+  #print("==== new tp: ", new_tp, type(new_tp));
   if not new_tp:
     context.AddError("[%d:%d]Resolve Type '%s' failed in '%s'" % (holder.lineno, holder.lexpos, tp.name, str(holder)))
     return tp
@@ -1349,7 +1424,7 @@ if __name__ == '__main__':
     # to json
     ast_json = {}
     module.ToJson(ast_json)
-    json_out = json.dumps(ast_json)
+    json_out = json.dumps(ast_json, indent=4, separators=(',',':'))
     print("ast json: ", json_out)
     out_file = os.path.splitext(jidl_file)[0]
     WriteFile(json_out, out_file + ".json")
