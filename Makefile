@@ -215,6 +215,13 @@ OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_internal_power
 endif
 
+ifeq ($(CONFIG_VIBRATOR), y)
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/vibrator_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/vibrator.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+FEATURELIST += system_vibrator
+endif
+
 ifeq ($(CONFIG_SYSTEM_PACKAGE_SERVICE), y)
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/package_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/package.jidl
