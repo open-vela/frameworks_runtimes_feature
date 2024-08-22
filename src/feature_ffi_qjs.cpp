@@ -318,9 +318,7 @@ namespace FeatureFFIQjs {
                 auto callback_manager = static_cast<FeatureInstanceQjs*>(instance);
                 FtCallbackId id = callback_manager->addCallback(value, callbackType);
                 if (callback_manager->getCallbacks().size() >= 30) {
-                    FEATURE_LOG_ERROR("callback count of instance[%p] is %d, \
-                        which is larger than 30, \
-                        feature name is[%s]",
+                    FEATURE_LOG_ERROR("callback count of instance[%p] is %d, which is larger than 30, feature name is[%s]",
                         instance,
                         callback_manager->getCallbacks().size(),
                         instance->description()->name);
