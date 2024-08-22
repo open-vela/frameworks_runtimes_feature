@@ -4,9 +4,17 @@
 #include "feature_exports.h"
 #include "feature_types.h"
 #include <new>
+#include <string>
+#include <type_traits>
 #include <utility>
 
+FeatureType getElementType(FtArray* arr);
+
 namespace ft_utils {
+
+template <typename T>
+class FeatureArray;
+
 /**
  * @brief RefPtr utils class for memory management
  *
@@ -39,6 +47,11 @@ public:
         if (p_) {
             release();
         }
+    }
+
+    FeatureArray<T> getArray()
+    {
+        return FeatureArray<T>(p_);
     }
 
     static RefPtr<T> adopt(T* ptr)
@@ -103,6 +116,11 @@ public:
         return p_;
     }
 
+    T& operator*()
+    {
+        return *p_;
+    }
+
     const T* operator->() const
     {
         return p_;
@@ -131,6 +149,205 @@ public:
     }
 };
 
+using FtStringPtr = ft_utils::RefPtr<char>;
+
+template <typename T>
+class ArrayIterator {
+private:
+    int _pos;
+    const class FeatureArray<T>* _p_vec;
+
+public:
+    ArrayIterator(const FeatureArray<T>* p_vec, int pos)
+        : _pos(pos)
+        , _p_vec(p_vec)
+    {
+    }
+
+    bool operator!=(const ArrayIterator<T>& other) const
+    {
+        return _pos != other._pos;
+    }
+
+    T operator*() const
+    {
+        return _p_vec->at(_pos);
+    }
+
+    const ArrayIterator<T>& operator++()
+    {
+        ++_pos;
+        return *this;
+    }
+};
+
+template <typename T>
+class FeatureArray {
+private:
+    FtArray* p_;
+    FeatureArray(FtArray* ptr)
+        : p_(ptr)
+    {
+    }
+
+public:
+    ~FeatureArray()
+    {
+        if (p_) {
+            FeatureFreeValue(p_);
+        }
+    }
+
+    static FeatureArray adopt(FtArray* ptr)
+    {
+        return FeatureArray(ptr);
+    }
+
+    static FeatureArray dup(FtArray* ptr)
+    {
+        return FeatureArray(static_cast<FtArray*>(FeatureInstanceDupValue(ptr)));
+    }
+
+    FeatureArray(const FeatureArray& other)
+    {
+        p_ = FeatureInstanceDupValue(other.p_);
+    }
+
+    FeatureArray(const FeatureArray&& other)
+    {
+        p_ = other.p_;
+        other.p_ = nullptr;
+    }
+
+    FeatureArray& operator=(const FeatureArray& other)
+    {
+        if (p_ == other.p_)
+            return *this;
+        if (p_) {
+            FeatureFreeValue(p_);
+        }
+        if (other.p_) {
+            p_ = FeatureInstanceDupValue(other.p_);
+        }
+        return *this;
+    }
+
+    FeatureArray& operator=(const FeatureArray&& other)
+    {
+        if (p_ == other.p_)
+            return *this;
+        if (p_) {
+            FeatureFreeValue(p_);
+        }
+        p_ = other.p_;
+        other.p_ = nullptr;
+        return *this;
+    }
+
+    RefPtr<FtArray> getShared()
+    {
+        return RefPtr<FtArray>::dup(p_);
+    }
+
+public:
+    inline int32_t size() const
+    {
+        return p_->_size;
+    }
+
+    inline int32_t capacity() const
+    {
+        return p_->_capacity;
+    }
+
+    inline T* data() const
+    {
+        return static_cast<T*>(p_->_element);
+    }
+
+    ArrayIterator<T> begin() const
+    {
+        return ArrayIterator<T>(this, 0);
+    }
+
+    ArrayIterator<T> end() const
+    {
+        return ArrayIterator<T>(this, size());
+    }
+
+    inline T& at(size_t index)
+    {
+        FeatureType element_type = getElementType(p_);
+        T* elem = (T*)((uintptr_t)p_->_element + index * getValueSize(element_type));
+        return *elem;
+    }
+
+    inline T at(size_t index) const
+    {
+        FeatureType element_type = getElementType(p_);
+        T* elem = (T*)((uintptr_t)p_->_element + index * getValueSize(element_type));
+        return *elem;
+    }
+
+    inline T& operator[](size_t index)
+    {
+        return at(index);
+    }
+
+    inline bool resize(size_t new_size)
+    {
+        return FeatureArrayResize(p_, new_size);
+    }
+
+    inline bool append(const T data)
+    {
+        if constexpr (std::is_pointer_v<T>) {
+            return FeatureArrayAppend(p_, data);
+        } else {
+            return FeatureArrayAppend(p_, &data);
+        }
+    }
+
+    inline bool appendRaw(const T data)
+    {
+        if constexpr (std::is_pointer_v<T>) {
+            return FeatureArrayAppendRaw(p_, data);
+        } else {
+            return FeatureArrayAppendRaw(p_, &data);
+        }
+    }
+
+    inline int clear()
+    {
+        return FeatureArrayClear(p_);
+    }
+
+    inline int erase(int start, size_t count)
+    {
+        return FeatureArrayRemove(p_, start, count);
+    }
+
+    inline int insertAfter(int start, const void* data, size_t count)
+    {
+        return FeatureArrayInsertAfter(p_, start, data, count);
+    }
+
+    inline int insertRawAfter(int start, const void* data, size_t count)
+    {
+        return FeatureArrayInsertRawAfter(p_, start, data, count);
+    }
+
+    inline int insertBefore(int start, const void* data, size_t count)
+    {
+        return FeatureArrayInsertBefore(p_, start, data, count);
+    }
+
+    inline int insertRawBefore(int start, const void* data, size_t count)
+    {
+        return FeatureArrayInsertRawBefore(p_, start, data, count);
+    }
+};
+
 inline namespace internal {
     template <typename T>
     struct has_member_getFeatureType {
@@ -153,6 +370,50 @@ inline namespace internal {
             T* ret = new (FeatureInstanceAlloc(handle, sizeof(T))) T(std::forward<Args>(args)...);
             return RefPtr<T>::adopt(ret);
         }
+    }
+
+    /**
+     * @brief Get the Feature Type
+     *
+     * @tparam T
+     * @return FeatureType
+     */
+    template <typename T>
+    inline FeatureType getFeatureType()
+    {
+        FeatureType result = -1;
+        using Ty = std::remove_cv_t<T>;
+        if constexpr (has_member_getFeatureType<Ty>::value) {
+            // for complex type
+            result = Ty::getFeatureType();
+        } else if constexpr (std::is_same_v<Ty, int>) {
+            result = FT_INT;
+        } else if constexpr (std::is_same_v<Ty, int8_t>) {
+            result = FT_INT8;
+        } else if constexpr (std::is_same_v<Ty, uint8_t>) {
+            result = FT_UINT8;
+        } else if constexpr (std::is_same_v<Ty, int16_t>) {
+            result = FT_INT16;
+        } else if constexpr (std::is_same_v<Ty, uint16_t>) {
+            result = FT_UINT16;
+        } else if constexpr (std::is_same_v<Ty, int32_t>) {
+            result = FT_INT32;
+        } else if constexpr (std::is_same_v<Ty, uint32_t>) {
+            result = FT_UINT32;
+        } else if constexpr (std::is_same_v<Ty, int64_t>) {
+            result = FT_INT64;
+        } else if constexpr (std::is_same_v<Ty, uint64_t>) {
+            result = FT_UINT64;
+        } else if constexpr (std::is_same_v<Ty, float>) {
+            result = FT_FLOAT;
+        } else if constexpr (std::is_same_v<Ty, double>) {
+            result = FT_DOUBLE;
+        } else if constexpr (std::is_same_v<Ty, bool>) {
+            result = FT_BOOLEAN;
+        } else if constexpr (std::is_same_v<Ty, char*> || std::is_same_v<Ty, const char*> || std::is_same_v<Ty, std::string>) {
+            result = FT_STRING;
+        }
+        return result;
     }
 }
 
@@ -199,41 +460,43 @@ public:
         return handle;
     }
 
-    // 基础类型的创建可以放在基类中，具体的Feature中声明的struct的创建在子类中处理
-    // inline RefPtr<char> copyStr(const char* str)
-    // {
-    //     return RefPtr<char>(nullptr);
-    // }
+    inline RefPtr<char> strdup(const char* str)
+    {
+        return FtStringPtr::adopt(FeatureStrCopy(getHandle(), str));
+    }
 
-    // inline RefPtr<FtArray> newArray(...)
-    // {
-    //     return RefPtr<FtArray>(nullptr);
-    // }
+    template <typename T>
+    inline FeatureArray<T> makeArray(size_t capacity)
+    {
+        FeatureType featureType = getFeatureType<T>();
+        if (featureType == -1) {
+            FEATURE_LOG_ERROR("get element type failed !");
+            return FeatureArray<T>::adopt(nullptr);
+        }
+        return FeatureArray<T>::adopt(FeatureCreateArray(getHandle(), capacity, featureType));
+    }
+
+    template <typename T>
+    inline FeatureArray<T> makeArray(T* data, size_t count)
+    {
+        FeatureType featureType = getFeatureType<T>();
+        if (featureType == -1) {
+            FEATURE_LOG_ERROR("get element type failed !");
+            return FeatureArray<T>::adopt(nullptr);
+        }
+        return FeatureArray<T>::adopt(FeatureArrayCopy(getHandle(), featureType, data, count));
+    }
+
+    template <typename T>
+    inline FeatureArray<T> makeArrayRaw(T* data, size_t count)
+    {
+        FeatureType featureType = getFeatureType<T>();
+        if (featureType == -1) {
+            FEATURE_LOG_ERROR("get element type failed !");
+            return FeatureArray<T>::adopt(nullptr);
+        }
+        return FeatureArray<T>::adopt(FeatureArrayCopyRaw(getHandle(), featureType, data, count));
+    }
 };
-
-template <typename T>
-class FeatureArray {
-private:
-    FtArray* p_;
-
-public:
-    FeatureArray(FtArray* ptr)
-        : p_(ptr)
-    {
-    }
-    int32_t size()
-    {
-        return p_->_size;
-    }
-
-    T& operator[](size_t index)
-    {
-        FTObjHeader* pHeader = (FTObjHeader*)((uintptr_t)p_ - sizeof(FTObjHeader));
-        T* elem = (T*)((uintptr_t)p_->_element + index * getValueSize(pHeader->type));
-        return *elem;
-    }
-};
-
-using FtStringPtr = ft_utils::RefPtr<char>;
 
 }

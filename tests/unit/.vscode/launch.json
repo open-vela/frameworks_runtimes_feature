@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/build",
-            "program": "${workspaceFolder}/build/feature_unit_test",
+            "program": "${workspaceFolder}/build/test_main",
             "args": [
                 "../js/Interface.js"
             ],

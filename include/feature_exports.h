@@ -74,7 +74,7 @@ FtArray* FeatureCreateArray(FeatureInstanceHandle handle, size_t capacity, Featu
  * @param count
  * @return FtArray*
  */
-FtArray* FeaturenArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count);
+FtArray* FeatureArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count);
 
 /**
  * @brief Create an array, specify the length, and copy the data from data
@@ -85,7 +85,7 @@ FtArray* FeaturenArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_
  * @param count
  * @return FtArray*
  */
-FtArray* FeaturenArrayCopy(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count);
+FtArray* FeatureArrayCopy(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count);
 
 /**
  * @brief Change the size of an array

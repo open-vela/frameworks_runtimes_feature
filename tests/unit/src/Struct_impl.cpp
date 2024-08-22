@@ -72,7 +72,7 @@ class Chapter* Struct::bar(AppendData append_data, FtInt a)
 void Struct::bar2(AppendData append_data, struct Book* a)
 {
     FEATURE_LOG_INFO("a: %p, title: %s chap_changed: %d", a, a->title().ptr(), a->chap_changed());
-    ft_utils::FeatureArray<FtString> arr(a->chap_titles().ptr());
+    auto arr = ft_utils::FeatureArray<FtString>::dup(a->chap_titles().ptr());
     FEATURE_LOG_INFO("chap_titles size: %d", arr.size());
     for (int i = 0; arr.size(); i++) {
         FtString item = arr[i];
