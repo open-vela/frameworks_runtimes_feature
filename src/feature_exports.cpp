@@ -88,7 +88,7 @@ FtArray* FeatureCreateArray(FeatureInstanceHandle handle, size_t capacity, Featu
     return pArray;
 }
 
-FtArray* FeaturenArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count)
+FtArray* FeatureArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count)
 {
     FtArray* pArray = nullptr;
     if (element_type == FT_STRING) {
@@ -103,7 +103,7 @@ FtArray* FeaturenArrayCopyRaw(FeatureInstanceHandle handle, FeatureType element_
     return pArray;
 }
 
-FtArray* FeaturenArrayCopy(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count)
+FtArray* FeatureArrayCopy(FeatureInstanceHandle handle, FeatureType element_type, const void* data, size_t count)
 {
     FtArray* pArray = FeatureCreateArray(handle, count, element_type);
     pArray->_size = count;
@@ -324,6 +324,8 @@ int FeatureArrayInsertRawAfter(FtArray* arr, int start, const void* data, size_t
     FeatureType element_type = getElementType(arr);
     int elem_size = getValueSize(element_type);
     if (element_type == FT_STRING) {
+        // resize
+        FEATURE_CHECK_NE(FeatureArrayResize(arr,  ARRAY_NEW_CAPACITY(arr->_size + count)), nullptr);
         int ret = 0;
         // The element at the position arr->_element[start] does not need to be moved.
         // Firstly, move the elements of arr->_element[start+1]~arr->_element[size-1]
@@ -550,7 +552,7 @@ void* FeatureInstanceDupValue(void* ptr)
 {
     FTObjHeader* header = (FTObjHeader*)((uintptr_t)ptr - sizeof(FTObjHeader));
     header->ref_count++;
-    return header;
+    return ptr;
 }
 
 void FeatureInstanceFreeValue(void* ptr)
