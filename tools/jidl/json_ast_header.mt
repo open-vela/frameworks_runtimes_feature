@@ -147,7 +147,7 @@ void ${module_name}_onUnregister(const char* feature_name);
 // message defines
 %if 'imports' in module:
 %for imp in module['imports']:
-%if imp['type'] == 'import_message':
+%if 'type' in imp and imp['type'] == 'import_message':
 %for msg in imp['message_list']:
 typedef ${render.GetPbTypeName(msg['protobuf_name'])}* ${module_name}_${msg['message_name']}_p;
 %endfor

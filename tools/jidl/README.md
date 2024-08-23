@@ -21,6 +21,10 @@ run the test
 ./run_all_test.sh
 ````
 
+generator c++ file
+```shell
+python3 ./jsongensource.py ./samples/Simple.json -lang c++ -out-dir ./samples/ -header simple_1_0.h -source simple_1_0.cpp
+
 # JIDL规则
 ## 基本规则
 1, JIDL支持的数据类型如下：

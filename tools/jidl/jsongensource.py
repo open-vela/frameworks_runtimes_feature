@@ -110,6 +110,11 @@ class Render:
     name = self.GetRawModuleName()
     return name.replace('.', '_')
 
+  def ToClassName(self, name):
+    name = name.split('@')[0]
+    name = name.replace('.', '_')
+    return name[0].upper() + name[1:]
+
   def GetRawModuleName(self):
     return self.module['name'].split("@")[0]
 
@@ -216,6 +221,26 @@ class CPPRender(Render):
     'DoubleArray' : 'FtArray*',
   }
 
+  ref_types = [
+    'string',
+    'object',
+    'array',
+    'Int8Array',
+    'Uint8Array',
+    'Int16Array',
+    'Uint16Array',
+    'Int32Array',
+    'Uint32Array',
+    'Int64Array',
+    'Uint64Array',
+    'IntArray',
+    'UintArray',
+    'LongArray',
+    'UlongArray',
+    'FloatArray',
+    'DoubleArray',
+  ]
+
   array_cpp_type_map = {
     'Int8Array' : 'FtInt8',
     'Uint8Array' : 'FtUint8',
@@ -321,8 +346,10 @@ class CPPRender(Render):
   }
 
   def __init__(self, json_file, header_file, source_file, configs):
-    self.header_tmpl = GetTemplate('json_ast_header.mt')
-    self.source_tmpl = GetTemplate('json_ast_source.mt')
+    lang = configs['lang']
+    self.isCPP = lang == 'c++'
+    self.header_tmpl = GetTemplate(self.isCPP and 'json_ast_cppheader.mt'  or 'json_ast_header.mt')
+    self.source_tmpl = GetTemplate(self.isCPP and 'json_ast_cppsource.mt'  or 'json_ast_source.mt')
     self.header_file = header_file
     self.source_file = source_file
     self.func_ret_node_map = {}
@@ -365,7 +392,8 @@ class CPPRender(Render):
       return None
     import_list = []
     for imp in self.module['imports']:
-       self._GeneratorProtobuf(imp['protobuf'])
+        if 'type' in imp and imp['type'] == 'import_message':
+            self._GeneratorProtobuf(imp['protobuf'])
 
   def _GeneratorProtobuf(self, pb_path):
     dir_name = os.path.dirname(self.json_file)
@@ -420,6 +448,19 @@ class CPPRender(Render):
     file_name = '%s.cpp' % (self.GetModuleName())
     return self.MakeOutPath(file_name)
 
+  def IsRefType(self, ast_type):
+    if isinstance(ast_type, str):
+        return ast_type in self.ref_types
+
+    if isinstance(ast_type, dict):
+       if 'element' in ast_type:
+           return True
+       elif 'referred_type' in ast_type:
+           referred_type = ast_type['referred_type']
+           return referred_type in ['struct', 'interface']
+       return ast_type['type'] in ['struct', 'interface', 'message']
+    return True
+
   def GenerateCppType(self, ast_type):
     if isinstance(ast_type, str):
       return self._MapType(ast_type, self.cpp_type_map)
@@ -436,14 +477,23 @@ class CPPRender(Render):
         return self.GenerateCppType(referred_type)
       elif referred_type == 'struct':
         referred_name = ast_type['referred_name']
-        return f"{module_name}_{referred_name} *"
+        if self.isCPP:
+          return self.ToClassName(referred_name) + "*"
+        else:
+          return f"{module_name}_{referred_name} *"
       elif referred_type == 'interface':
         return "FeatureInterfaceHandle"
     elif ast_type['type'] == 'struct':
         struct_name = ast_type['name']
-        return f"{module_name}_{struct_name} *"
+        if self.isCPP:
+          return self.ToClassName(struct_name) + "*"
+        else:
+          return f"{module_name}_{struct_name} *"
     elif ast_type['type'] == 'message':
-        return f"{module_name}_{ast_type['message_name']}_p"
+        if self.isCPP:
+          return self.ToClassName(ast_type['message_name']) + "_p"
+        else:
+          return f"{module_name}_{ast_type['message_name']}_p"
     else:
       raise Exception('invalid complex type: {}'.format(ast_type))
 
@@ -545,6 +595,8 @@ class CPPRender(Render):
     elif referred_type == 'interface':
       if not referred_name in self.interface_name_set:
         raise Exception('undefined interface: {}'.format(referred_name))
+      if self.isCPP: # special
+         referred_name = 'I' + self.ToClassName(referred_name)
       ft_info = self._MakeComplexFeatureInfo(referred_name, 'interface_type')
     elif referred_type == 'id':
       if not (referred_name in self.struct_name_set \
@@ -583,7 +635,10 @@ class CPPRender(Render):
     ft_expr = info['type']
     if info['is_complex']:
       module_name = self.GetModuleName()
-      ft_expr = f"{module_name}_{ft_expr}"
+      if self.isCPP: # TODO
+        ft_expr = '%s_%s' % (self.ToClassName(module_name), ft_expr)
+      else:
+        ft_expr = f"{module_name}_{ft_expr}"
       ft_expr = f"FT_MK_COMPLEX(&{ft_expr})"
     return ft_expr
 
@@ -605,7 +660,7 @@ class CPPRender(Render):
         return self.GenerateCppType(ret_node)
     return 'void'
 
-  def GenerateParamList(self, params):
+  def GenerateParamListData(self, params):
     param_list = []
     param_count = len(params)
     for index, param in enumerate(params):
@@ -619,7 +674,10 @@ class CPPRender(Render):
       elif param_type == 'ellipse':
         param_str += f" vari_params"
       param_list.append(param_str)
-    return ", ".join(param_list)
+    return param_list
+
+  def GenerateParamList(self, params):
+    return ", ".join(self.GenerateParamListData(params))
 
   def GenerateParamTypeList(self, params):
     type_list = []
@@ -832,6 +890,12 @@ class CPPRender(Render):
     if name in self.interface_members_map:
       member_list.extend(self.interface_members_map[name])
     return member_list
+
+  def GetInterface(self, name):
+    for m in self.module['members']:
+      if m['type'] == 'interface' and m['name'] == name:
+        return m
+    return None
 
   def CacheVTableItem(self, iname, node, item_type):
     if iname in self.vtable_map:
@@ -1183,8 +1247,10 @@ def Usage():
    print("\toptions when -lang c++")
    print("\t\t-header <header-file-name>, header file in <outdir>")
    print("\t\t-source <source-file-name>, source file in <outdir>")
+   print("\t\t-namespace <name-space>, namespace of c++, default is 'feature_wrap'")
 
 lang_keys = {
+  'c': ['header', 'source'],
   'c++': ['header', 'source'],
   'ts': ['dts']
 }
@@ -1205,7 +1271,7 @@ def ParseArgs():
     Usage()
     sys.exit(0)
 
-  configs = {'lang': 'c++', 'debug': False}
+  configs = {'lang': 'c', 'debug': False}
   configs['input'] = sys.argv[1]
   options = {}
   i = 2
@@ -1268,10 +1334,10 @@ if __name__ == '__main__':
        print("parse file %s failed" % jidl_file)
        sys.exit(-1)
 
-  if configs['lang'] == 'c++':
-      render = CPPRender(json_file, configs['header'], configs['source'], configs)
+  if configs['lang'] == 'c' or configs['lang'] == 'c++':
+    render = CPPRender(json_file, configs['header'], configs['source'], configs)
   elif configs['lang'] == 'ts':
-      render = TSRender(json_file, configs['dts'], configs)
+    render = TSRender(json_file, configs['dts'], configs)
 
   render.Generate()
 
