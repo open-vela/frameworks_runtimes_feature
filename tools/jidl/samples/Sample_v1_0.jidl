@@ -31,7 +31,7 @@ int bar2(int[] values)
 string[] bar3()
 
 void bar4(array arr, object obj);
-promise<int, string> hoo1(int a, double b = 2.1, string c)
+promise<int> hoo1(int a, double b = 2.1, string c)
 promise<string> hoo2(double a, string b)
 promise hoo3(float a, boolean b)
 use hoo4(string c) = hoo1(100, 3.14, c)

@@ -7,15 +7,15 @@ module bluetooth_adapter@1.0
 callback OnDevicePaired(boolean result, object device, string message);
 callback OnTimeout();
 
-promise<void, string> startDiscovery();
-promise<void, string> stopDiscovery();
-promise<void, string> setDiscoveryFilter(object dict_value);
-promise<string[], string> getDiscoveryFilters();
-promise<object, string> connectDevice(object properties);
-promise<void, string> removeDevice(string device_path);
-promise<string[], string> getBondedDevice();
+promise<void> startDiscovery();
+promise<void> stopDiscovery();
+promise<void> setDiscoveryFilter(object dict_value);
+promise<string[]> getDiscoveryFilters();
+promise<object> connectDevice(object properties);
+promise<void> removeDevice(string device_path);
+promise<string[]> getBondedDevice();
 
-promise<object, string> getDevices();
+promise<object> getDevices();
 object getPairedDevices();
 object getConnectedDevices();
 // callback boolean filter_cb(device)
@@ -53,12 +53,12 @@ property string[] UUIDs readonly;
  * device interfaces
  */
 interface device {
-  promise<void, string> connect();
-  promise<void, string> disconnect();
-  promise<void, string> connectProfile(string uuid);
-  promise<void, string> disconnectProfile(string uuid);
-  promise<void, string> pair();
-  promise<void, string> cancelPairing();
+  promise<void> connect();
+  promise<void> disconnect();
+  promise<void> connectProfile(string uuid);
+  promise<void> disconnectProfile(string uuid);
+  promise<void> pair();
+  promise<void> cancelPairing();
 
   property string address readonly;
   property string addressType readonly;

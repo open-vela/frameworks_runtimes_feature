@@ -926,7 +926,7 @@ static ProtobufMessageType  ${module_name}_${msg['message_name']}_message_type =
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 %if 'imports' in module:
 %for imp in module['imports']:
-%if imp['type'] == 'import_message':
+%if 'type' in imp and imp['type'] == 'import_message':
 %for msg in imp['message_list']:
 ${GenImportMessageType(msg)}
 %endfor
