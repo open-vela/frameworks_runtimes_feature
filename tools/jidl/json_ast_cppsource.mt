@@ -25,7 +25,8 @@
   module_name = render.ToClassName(module_name_l)
   raw_mod_name = render.GetRawModuleName()
   header_name = render.GetHeaderFileName()
-  module_namespace = 'ft_wrap'
+  impl_header_name = header_name.strip(".h") + "_impl.h"
+  module_namespace = 'Feature_' + module_name
   if 'namespace' in render.configs:
     module_namespace = render.configs['namespace']
 
@@ -36,7 +37,7 @@
     value = 'NULL'
   val_name = render.GetOptValName(feature_type)
 %>\
-static OptionalType ${module_name}_${name}_opt_type = {
+static OptionalType ${name}_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = ${ft_expr},
     .${val_name} = ${value}
@@ -60,7 +61,7 @@ static OptionalType ${module_name}_${name}_opt_type = {
         raise Exception('wrong default struct member type: {}'.format(m_info['type']))
       m_name = struct_name + '_member_' + member['name']
       GenOptionalType(m_name, m_info['type'], ft_expr, m_default)
-      ft_expr = f"FT_MK_OPTIONAL(&{module_name}_{m_name}_opt_type)"
+      ft_expr = f"FT_MK_OPTIONAL(&{m_name}_opt_type)"
     member_item['ft_expr'] = ft_expr
     member_items.append(member_item)
 %>\
@@ -71,7 +72,7 @@ static OptionalType ${module_name}_${name}_opt_type = {
   render.CacheStructName(struct_name)
 %>\
 /****** for JIDL struct '${struct_name}' ******/
-extern const ObjectMapType ${module_name}_${struct_name}_struct_type;
+extern const ObjectMapType ${struct_name}_struct_type;
 
 <%
   for member in struct_node['members']:
@@ -80,56 +81,39 @@ extern const ObjectMapType ${module_name}_${struct_name}_struct_type;
   member_items = []
   GenStructMemberItems(struct_node['members'], struct_name, member_items)
 %>\
-static ObjectMember ${module_name}_${struct_name}_struct_members[] = {
+static ObjectMember ${struct_name}_struct_members[] = {
 %for member_item in member_items:
 <%
   member_name = member_item['name']
-  member_ft = member_item['ft_expr']
+  member_ft = member_item['ft_expr'].replace(module_name+"_", "")
   cpp_type = member_item['cpp_type']
 %>\
-    { "${member_name}", ${member_ft}, offsetof(${module_name}_${struct_name}, ${member_name}), sizeof(${cpp_type}) },
+    { "${member_name}", ${member_ft}, offsetof(${struct_name}_Internal, _${member_name}), sizeof(${cpp_type}) },
 %endfor
     { NULL },
 };
 
 // complex defination
-const ObjectMapType ${module_name}_${struct_name}_struct_type = {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(${module_name}_${struct_name}) },
-    .members = ${module_name}_${struct_name}_struct_members
+const ObjectMapType ${struct_name}_struct_type = {
+    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(${struct_name}) },
+    .members = ${struct_name}_struct_members
 };
 
-${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
-    return (${module_name}_${struct_name}*)FeatureMalloc(
-        sizeof(${module_name}_${struct_name}), FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type));
+FeatureType ${struct_name}::getFeatureType() {
+   return  FT_MK_COMPLEX(&${struct_name}_struct_type);
 }
-
-FeatureType ${struct_name}::GetFeatureType() {
-   return  FT_MK_COMPLEX(&${module_name}_${struct_name}_struct_type);
-}
-
-ft_utils::RefPtr<${struct_name}> ${struct_name}::Create() {
-   ${struct_name}* p = (${struct_name}*)FeatureMalloc(
-                 sizeof(${struct_name}), GetFeatureType());
-   return ft_utils::RefPtr<${struct_name}>::adopt(p);
-}
-
 </%def>\
 <%def name="GenerateArrayType(elem_type, is_complex)">\
-static const ArrayType ${module_name}_${elem_type}_array = {
+static const ArrayType ${elem_type}_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
 %if is_complex:
-<% ft_expr = f"FT_MK_COMPLEX(&{module_name}_{elem_type})" %>\
+<% ft_expr = f"FT_MK_COMPLEX(&{elem_type})" %>\
     .element_type = ${ft_expr}
 %else:
 <% ft_type = render.ToBaseFeatureType(elem_type) %>\
     .element_type = ${ft_type}
 %endif
 };
-
-FtArray* ${module_name}_malloc_${elem_type}_array() {
-    return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&${module_name}_${elem_type}_array));
-}
 
 </%def>\
 <%!
@@ -160,12 +144,12 @@ FtArray* ${module_name}_malloc_${elem_type}_array() {
           raise Exception('wrong default param type: {}'.format(p_info['type']))
         p_name = identifier + '_param_' + param["name"]
         GenOptionalType(p_name, p_info['type'], ft_expr, p_default)
-        ft_expr = f"FT_MK_OPTIONAL(&{module_name}_{p_name}_opt_type)"
+        ft_expr = f"FT_MK_OPTIONAL(&{p_name}_opt_type)"
       ft_expr_list.append(ft_expr)
 %>\
-static const FeatureType ${module_name}_${iname_prefix}${identifier}_parameters[] = {
+static const FeatureType ${iname_prefix}${identifier}_parameters[] = {
 %for ft_expr in ft_expr_list:
-    ${ft_expr},
+    ${ft_expr.replace(module_name + "_", "")},
 %endfor
 %if not has_ellipse:
     FT_PARAM_END
@@ -180,7 +164,7 @@ static const FeatureType ${module_name}_${iname_prefix}${identifier}_parameters[
   success = render.TryCachePromiseType(promise_ft)
 %>\
 %if success:
-static const PromiseType ${module_name}_${promise_ft} = {
+static const PromiseType ${promise_ft} = {
     .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveType = ${resolve_ft_expr}
 };
@@ -188,7 +172,7 @@ static const PromiseType ${module_name}_${promise_ft} = {
 %endif
 </%def>\
 \
-<%def name="GenMemberMethod(func_node, ret_type_node, intf_name, is_module)">\
+<%def name="GenMemberMethod(func_node, ret_type_node, intf_name, is_module, use_node, ctor_info)">\
 <%
   identifier = func_node['identifier']
   ret_params = render.GenerateReturnParamsDefine(func_node, ret_type_node)
@@ -199,16 +183,31 @@ static const PromiseType ${module_name}_${promise_ft} = {
     has_promise = True
   params_def = ret_params['params_def']
 
-  prefix = module_name
-  if not is_module:
-    prefix = prefix + '_' + intf_name
+  if is_module:
+    func_id = identifier
+  else:
+    func_id = intf_name + "_" + identifier
 
-  func_id = f"{prefix}_{identifier}"
   call_args = render.GenerateWrapFuncCallArgs(func_node, ret_type_node)
   func_call = ''
   if not (has_promise or ret_type == 'void'):
-    func_call += f"*(({ret_type}*)ret) = "
-  func_call += f"self->{identifier}"
+    if ctor_info:
+      func_call += "*((FeatureInterfaceHandle*)ret) = "
+    else:
+      func_call += f"*(({ret_type}*)ret) = "
+  if use_node:
+    ret_type_node = render.GetUseReturnTypeNode(use_node)
+    ret_type = render.GenerateReturnType(ret_type_node)
+    is_promise = (ret_type == 'FtPromiseId')
+    func_call_node = use_node['function_call']
+    func_call += f"self->{func_call_node['identifier']}"
+    param_list = render.GenerateParamCallList(func_call_node["param_calls"])
+    if is_promise:
+      call_args = [call_args[0], param_list]
+    else:
+      call_args = [param_list]
+  else:
+    func_call += f"self->{identifier}"
 
   ret_ft_info = render.GenerateReturnFtInfo(ret_type_node)
   ret_ft_expr = render.GenerateFtExpression(ret_ft_info)
@@ -218,77 +217,70 @@ static const PromiseType ${module_name}_${promise_ft} = {
 static void ${func_id}_stub(
     FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
 {
-    auto *self = ${intf_name}::From(handle);
-    ${func_call}(${','.join(call_args)});
+%if is_module:
+    auto *self = ft_utils::From<${intf_name}Base>(handle);
+%else:
+    auto *self = ft_utils::From<${intf_name}>(handle);
+%endif
+    if (!self) {
+      FEATURE_LOG_ERROR("get self failed !");
+      memset(&ret, 0, sizeof(uintptr_t));
+      return;
+    }
+    ${func_call}(${', '.join(call_args)})\
+%if ctor_info:
+->getHandle()\
+%endif
+;
 }
 
 static const MemberMethod ${func_id}_member_method = {
     .func_stub = ${func_id}_stub,
     .parameters = ${func_id}_parameters,
-    .return_type = ${ret_ft_expr},
+    .return_type = ${ret_ft_expr.replace(module_name + "_", "")},
 };
 </%def>\
-\
 <%def name="GenFunction(func_node, intf_name, is_module)">\
 <%
   identifier = func_node['identifier']
   ret_type_node = func_node['return_type']
   render.CacheFuncReturnNode(identifier, ret_type_node)
+  # for interface constructor function
+  ctor_info = render.GetInterfaceCtorInfo(func_node)
+  prefix = ""
+  if not is_module:
+    prefix = intf_name + "_"
 %>\
-\
 /****** for JIDL function '${identifier}' ******/
-${GenParamsFeatureType(func_node, '')}
-${GenMemberMethod(func_node, ret_type_node, intf_name, is_module)}
+${GenParamsFeatureType(func_node, prefix)}
+${GenMemberMethod(func_node, ret_type_node, intf_name, is_module, None, ctor_info)}
 </%def>\
 \
 <%def name="GenUse(use_node, intf_name, is_module)">\
 <%
   func_node = use_node['function']
-  identifier = func_node['identifier']
-  func_call_node = use_node['function_call']
-  func_call_id = func_call_node['identifier']
   ret_type_node = render.GetUseReturnTypeNode(use_node)
-  ret_type = render.GenerateReturnType(ret_type_node)
-  is_promise = (ret_type == 'FtPromiseId')
-  params = 'FeatureInstanceHandle feature, AppendData append_data'
-  if is_promise:
-    params += ', FtPromiseId pid'
-    ret_type = 'void'
-  if 'params' in func_node:
-    param_list = render.GenerateParamList(func_node["params"])
-    params += f", {param_list}"
-
-  func_call = ''
-  if ret_type != 'void':
-    func_call += 'return '
-  func_call += f"{module_name}_wrap_{func_call_id} (feature, append_data"
-  if is_promise:
-    func_call += ', pid'
-
-  if 'param_calls' in func_call_node:
-    params_call_list = render.GenerateParamCallList(func_call_node["param_calls"])
-    func_call += f", {params_call_list}"
-  func_call += ")"
+  prefix = ""
+  if not is_module:
+    prefix = intf_name + "_"
 %>\
-/****** for JIDL use '${identifier}' ******/
-static ${ret_type} ${module_name}_wrap_${identifier} (${params}) {
-    ${func_call};
-}
-
-${GenParamsFeatureType(func_node, '')}
-${GenMemberMethod(func_node, ret_type_node, intf_name, is_module)}
+${GenParamsFeatureType(func_node, prefix)}
+${GenMemberMethod(func_node, ret_type_node, intf_name, is_module, use_node, None)}
 </%def>\
-<%def name="GenCallback(cb_node)">\
+<%def name="GenCallback(cb_node, intf_name, is_module)">\
 <%
   identifier = cb_node['identifier']
   success = render.TryCacheCallbackId(identifier)
+  prefix = ""
+  if not is_module:
+    prefix = intf_name + "_"
 %>\
 %if success:
 /****** for JIDL callback '${identifier}' ******/
-${GenParamsFeatureType(cb_node, '')}
-static const CallbackType ${module_name}_${identifier}_callback_type = {
+${GenParamsFeatureType(cb_node, prefix)}
+static const CallbackType ${identifier}_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = ${module_name}_${identifier}_parameters,
+    .parameters = ${identifier}_parameters,
     .return_type = FT_VOID
 };
 
@@ -305,7 +297,7 @@ static const CallbackType ${module_name}_${identifier}_callback_type = {
   cpp_type = render.GenerateCppType(value_type)
   head_params = "FeatureInstanceHandle feature, AppendData append_data"
 
-  prefix = module_name + '_'
+  prefix = ''
   if not is_module:
      prefix = prefix + intf_name
 
@@ -322,8 +314,13 @@ static const CallbackType ${module_name}_${identifier}_callback_type = {
 static void ${getter_stub_name}(
     FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
 {
-    auto *self = ${intf_name}::From(handle);
-    *((${cpp_type}*)ret) = self->get_${prop_name}();
+    auto *self = ft_utils::From<${intf_name}>(handle);
+    if (!self) {
+      FEATURE_LOG_ERROR("get self failed !");
+      memset(&ret, 0, sizeof(uintptr_t));
+      return;
+    }
+    *((${cpp_type}*)ret) = self->${prop_name}();
 }
 
 %endif
@@ -331,7 +328,11 @@ static void ${getter_stub_name}(
 static void ${setter_stub_name}(
     FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
 {
-    auto *self = ${intf_name}::From(handle);
+    auto *self = ft_utils::From<${intf_name}>(handle);
+    if (!self) {
+      FEATURE_LOG_ERROR("get self failed !");
+      return;
+    }
     self->set_${prop_name}(*(${cpp_type}*)(argv[0]));
 }
 
@@ -362,7 +363,7 @@ static const MemberAccessor ${prefix}_${prop_name}_member_accessor = {
     cpp_type = render.GenerateArrayCppType(const_type)
   if cpp_type != 'FtString':
     cpp_type = 'const ' + cpp_type
-  const_def = f"{cpp_type} {module_name}_g_const_{const_name}"
+  const_def = f"{cpp_type} g_const_{const_name}"
   if is_array:
     const_def += f"[] = {const_value}"
   else:
@@ -371,15 +372,15 @@ static const MemberAccessor ${prefix}_${prop_name}_member_accessor = {
 /****** for JIDL const '${const_name}' ******/
 ${const_def};
 
-static const MemberConst ${module_name}_${const_name}_member_const = {
+static const MemberConst ${const_name}_member_const = {
     .type = ${const_info['type']},
     .func = { .callback = nullptr },
-    .data = { .${val_name} = ${module_name}_g_const_${const_name} }
+    .data = { .${val_name} = g_const_${const_name} }
 };
 </%def>\
 \
 <%def name="GenImportMessageType(msg)">
-static ProtobufMessageType  ${module_name}_${msg['message_name']}_message_type = {
+static ProtobufMessageType  ${msg['message_name']}_message_type = {
   .header = {
      .type = COMPLEX_PROTOBUF,
      .size = sizeof(ProtobufMessageType)
@@ -402,7 +403,7 @@ ${GenFunction(block, intf_name, is_module)}
 %elif block['type'] == 'use':
 ${GenUse(block, intf_name, is_module)}
 %elif block['type'] == 'callback':
-${GenCallback(block)}
+${GenCallback(block, intf_name, is_module)}
 %elif block['type'] == 'property':
 ${GenProperty(block, intf_name, is_module)}
 %elif block['type'] == 'const':
@@ -419,72 +420,53 @@ ${GenInterface(block, False)}
 <%
   base_name = render.ToClassName(intf['name'])
   intf_name = is_module and base_name or 'I' + base_name
-  prefix = ''
-  if not is_module:
-    prefix = module_name + '_'
 
   member_defines = []
 %>
 ${GenInterfaceMembers(intf, intf_name, is_module, member_defines)}
 
-static const Member ${prefix}${intf_name}_members[] = {
+static const Member ${intf_name}_members[] = {
 %for m in member_defines:
 %if render.IsValidMemberType(m):
 <%
   mi = render.GetMemberInfo(m)
+  prefix = ""
+  if not is_module:
+    prefix = intf_name + "_"
 %>
   {
      .type = ${mi['type']},
-     .name = "${mi['name']},
-     .${mi['val_type']} = &${prefix}${intf_name}_${mi['name']}${mi['suffix']},
+     .name = "${mi['name']}",
+     .${mi['val_type']} = &${prefix}${mi['name']}${mi['suffix']},
   },
 %endif
 %endfor
 };
-// Type description
-static const FeatureDescription ${prefix}${intf_name}_desc = {
-   .version = 1,
-   .name = "${is_module and raw_mod_name or intf_name}",
-   .sescription = "${intf_name} description",
-   .dynamic = ${is_module and "false" or "true"},
-   .native_callbacks = ${is_module and module_name + "_callbacks" or "NULL"},
-   .member_count = countof(${prefix}${intf_name}_members),
-   .members = ${prefix}${intf_name}_members
-};
-
-${intf_name}* ${intf_name}::From(FeatureInterfaceHandle handle) {
-   return ft_utils::FeatureInstance::From<${intf_name}>(handle);
-}
 
 %if not is_module:
-const InterfaceType ${prefix}${intf_name}_interface_type = {
-   .header = { .type = COMPLEX_INTERFACE, .sizeof(InterfaceType) },
-   .desc = &${prefix}${intf_name}_desc
+// Type description
+static const FeatureDescription ${intf_name}_desc = {
+   .version = 1,
+   .name = "${is_module and base_name or intf_name}",
+   .description = "${intf_name} description",
+   .dynamic = ${is_module and "false" or "true"},
+   .native_callbacks = ${is_module and base_name + "_callbacks" or "NULL"},
+   .member_count = countof(${intf_name}_members),
+   .members = ${intf_name}_members
+};
+%endif
+
+%if not is_module:
+const InterfaceType ${intf_name}_interface_type = {
+   .header = { .type = COMPLEX_INTERFACE, .size = sizeof(InterfaceType) },
+   .desc = &${intf_name}_desc
 };
 
-static void ${prefix}${intf_name}_finalize(FeatureInterfaceHandle hInst) {
-   auto* self = ${intf_name}::From(hInst);
-   if (self) {
-      delete self;
-      FeatureSetObjectData(hInst, NULL);
-   }
-}
-};
-
-FeatureInterfaceHandle ${intf_name}::Create(FeatureInstanceHandle hInst, ${intf_name}* intf) {
-   static VTable _vt = {
-      0,
-      (NativeFunc)${prefix}${intf_name}_finalize,
-      NULL
-   };
-   auto hIntf = FeatureCreateInterface(hInst, &_vt);
-   FeatureSetObjectData(hIntf, intf);
-   return hIntf;
-}
 %endif
 </%def>
 
 #include "${header_name}"
+#include "${impl_header_name}"
 #include "ajs_features_init.h"
 #include "feature_description.h"
 #include "feature_exports.h"
@@ -506,15 +488,15 @@ namespace ${module_namespace} {
 ${GenInterface(module, True)}
 
 
-static void ${module_name_l}_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-   auto *p = ${module_name}::Create(ctx, handle);
+static void onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+   auto *p = ${module_name}::Create(handle);
    if (p) {
      FeatureSetObjectData(handle, p);
    }
 }
 
-static void ${module_name_l}_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
-   auto *p = ${module_name}::From(handle);
+static void onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle) {
+   auto *p = ft_utils::From<${module_name}Base>(handle);
    if (p) {
       delete p;
    }
@@ -523,15 +505,15 @@ static void ${module_name_l}_onDetached(FeatureRuntimeContext ctx, FeatureInstan
 
 // callbacks
 static const struct FeatureCallbacks ${module_name}_callbacks = {
-    ${module_name_l}_onRegister,
-    ${module_name_l}_onCreate,
-    ${module_name_l}_onRequired,
-    ${module_name_l}_onDetached,
-    ${module_name_l}_onDestroy,
-    ${module_name_l}_onUnregister
+    onRegister,
+    onCreate,
+    onRequired,
+    onDetached,
+    onDestroy,
+    onUnregister
 };
 
-static const FeatureDescription ${module_name}_desc = {
+static const FeatureDescription desc = {
     .version = 1,
     .name = "${raw_mod_name}",
     .description = "${raw_mod_name}",
@@ -541,9 +523,11 @@ static const FeatureDescription ${module_name}_desc = {
     .members = ${module_name}_members,
 };
 
+} // namespace ${module_namespace}
+
+
 QAPPFEATURE_INIT(${module_name})
 {
-    return FeatureRegisterFeature(handle, &${module_name}_desc);
+    return FeatureRegisterFeature(handle, &Feature_${module_name}::desc);
 }
-} // namespace ${module_namespace}
 /* clang-format on */

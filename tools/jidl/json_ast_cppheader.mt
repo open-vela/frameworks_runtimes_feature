@@ -21,10 +21,11 @@
 /* clang-format off */
 <%
   module = render.module
-  module_name = render.GetModuleName()
+  module_name_l = render.GetModuleName()
+  module_name = render.ToClassName(module_name_l)
   header_define = render.GenHeaderDefine()
   imports_head_list = render.GetImportsHeadList()
-  module_namespace = 'ft_wrap'
+  module_namespace = 'Feature_' + module_name
   if 'namespace' in render.configs:
     module_namespace = render.configs['namespace']
 %>\
@@ -52,57 +53,61 @@
   has_getter = render.PropertyHasGetter(prop_node)
   has_setter = render.PropertyHasSetter(prop_node)
   cpp_type = render.GenerateCppType(prop_type)
+  is_ref = render.IsRefType(prop_type)
 %>
 %if has_getter:
-  virtual ${cpp_type} get_${prop_name}() = 0;
+  virtual ${cpp_type} ${prop_name}() const = 0;
 %endif
 %if has_setter:
+%if is_ref:
+  virtual void set_${prop_name}(const ${cpp_type}& ${prop_name}) = 0;
+%else:
   virtual void set_${prop_name}(${cpp_type} ${prop_name}) = 0;
+%endif
 %endif
 </%def>\
 <%def name="GenStructMemberGetSet(cpp_type, name, is_ref)">\
-    inline ${cpp_type} get_${name}() { return ${name}; }
-    inline void set_${name}(${cpp_type} val) {
+    inline ${cpp_type} ${name}() const { return data._${name}; }
 %if is_ref:
-       if (this->${name} != val)
-          FeatureFreeValue(this->${name});
-%endif
-       this->${name} = val;
-    }
-%if is_ref:
-    inline void set_${name}(const ft_utils::RefPtr<${cpp_type}>& val) {
-       set_${name}(val.dup().drop());
-    }
-    inline void set_${name}(ft_utils::RefPtr<${cpp_type}>&& val) {
-       set_${name}(val.drop());
-   }
+    inline void set_${name}(const ${cpp_type}& val) { data._${name} = val; }
+%else:
+    inline void set_${name}(${cpp_type} val) { data._${name} = val; }
 %endif
 </%def>\
-<%def name="GenStructMember(member_node)">\
+<%def name="GenStructMemberData(member_node)">\
 <%
   member_name = member_node['name']
   member_type = member_node['type']
   cpp_type = render.GenerateCppType(member_type)
-  is_ref = render.IsRefType(member_type)
 %>\
-  private: ${cpp_type} ${member_name}; 
-  public: 
-${GenStructMemberGetSet(cpp_type, member_name, is_ref)}
+  ${cpp_type} _${member_name}; 
 </%def>\
 \
 <%def name="GenStructDefine(struct_node)">\
 <%
   struct_name = render.ToClassName(struct_node['name'])
 %>\
-class ${struct_name} {
-  public: static ft_utils::RefPtr<${struct_name}> Create();
-  public: static FeatureType GetFeatureType();
+struct ${struct_name}_Internal {
 %for member in struct_node['members']:
-${GenStructMember(member)}\
+${GenStructMemberData(member)}\
 %endfor
-  public: ~${struct_name}() {
-    FeatureFreeValue(this);
-  }
+};
+
+class ${struct_name} {
+private:
+  ${struct_name}_Internal data;
+public:
+  static FeatureType getFeatureType();
+public:
+%for member in struct_node['members']:
+<%
+  member_name = member['name']
+  member_type = member['type']
+  cpp_type = render.GenerateCppType(member_type)
+  is_ref = render.IsRefType(member_type)
+%>\
+${GenStructMemberGetSet(cpp_type, member_name, is_ref)}
+%endfor
 };
 
 </%def>\
@@ -142,47 +147,48 @@ ${malloc_def};
 %endfor
 </%def>\
 \
-<%def name="GenInterfaceClass(clazz, is_module)">\
+<%def name="GenInterfaceMembers(members)">\
+<%
+  for member in members:
+    if member['type'] == 'function':
+      GenFunctionDefine(member)
+    if member['type'] == 'property':
+      GenPropertyDefines(member)
+    if member['type'] == 'event':
+      GenEventDefine(member)
+%>
+</%def>\
+<%def name="GenInterfaceClass(clazz, is_module, extendNodes)">\
 <%
   base_name = render.ToClassName(clazz['name'])
-  intf_name = is_module and base_name or 'I' + base_name
+  intf_name = is_module and base_name + "Base" or 'I' + base_name
   members = clazz['members']
   extends = ''
 
   if is_module:
     extends = ': public ft_utils::FeatureInstance'
-  elif 'extends' in clazz and len(clazz['extends']) > 0:
-    extends = ': ' + ', '.join(['public I' + e for e in clazz['extends']])
-
-
+  else:
+    if 'extends' in clazz and len(clazz['extends']) > 0:
+      extends = '/*: ' + ', '.join(['public I' + e for e in clazz['extends']]) + '*/'
+    extends += ': public ft_utils::FeatureInstance'
 %>
 class ${intf_name} ${extends}
 {
   public:
-    virtual ~${intf_name}() {}
-%if is_module:
-    static ${intf_name}* Create(FeatureRuntimeContext ctx, FeatureInstanceHandle hInst);
-%else:
-    static FeatureInterfaceHandle Create(FeatureInstanceHandle hInst, ${intf_name}* intf);
-%endif
-    static ${intf_name}* From(FeatureInstanceHandle hInst);
-
-  protected:
-%for member in members:
-%if member['type'] == 'function':
-${GenFunctionDefine(member)}
-%endif
-%if member['type'] == 'property':
-${GenPropertyDefines(member)}
-%endif
-%if member['type'] == 'event':
-${GenEventDefine(member)}
+  explicit ${intf_name}(FeatureInstanceHandle hInstance)
+    : ft_utils::FeatureInstance(hInstance){}
+  virtual ~${intf_name}() = default;
+%if isinstance(extendNodes, list):
+%for extNode in extendNodes:
+%if extNode:
+// I${extNode['name']} functions
+${GenInterfaceMembers(extNode['members'])}
 %endif
 %endfor
-};
-%if not is_module:
-using ${base_name} = ft_utils::TFeatureInterface<${intf_name}>;
 %endif
+// self functions
+${GenInterfaceMembers(members)}
+};
 </%def>\
 \
 #ifndef ${header_define}
@@ -197,7 +203,7 @@ using ${base_name} = ft_utils::TFeatureInterface<${intf_name}>;
 #include <stdlib.h>
 #include <string.h>
 
-#include "ft_utils.h"
+#include "utils/feature_utils.h"
 
 %if imports_head_list:
 %for h in imports_head_list:
@@ -208,17 +214,17 @@ using ${base_name} = ft_utils::TFeatureInterface<${intf_name}>;
 namespace ${module_namespace} {
 
 // FeatureCallbacks to be implemented
-void ${module_name}_onRegister(const char* feature_name);
-void ${module_name}_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void ${module_name}_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
-void ${module_name}_onUnregister(const char* feature_name);
+void onRegister(const char* feature_name);
+void onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
+void onUnregister(const char* feature_name);
 
 // message defines
 %if 'imports' in module:
 %for imp in module['imports']:
 %if 'type' in imp and imp['type'] == 'import_message':
 %for msg in imp['message_list']:
-typedef ${render.GetPbTypeName(msg['protobuf_name'])}* ${module_name}_${msg['message_name']}_p;
+typedef ${render.GetPbTypeName(msg['protobuf_name'])}* ${render.ToClassName(msg['message_name'])}_p;
 %endfor
 %endif
 %endfor
@@ -232,17 +238,25 @@ ${GenStructDefine(block)}\
 %endfor
 
 // interface vtable functions to be implemented
-%for block in module['members']:
-%if block['type'] == 'interface':
-${GenInterfaceClass(block, False)}
-%endif
-%endfor
-
-${GenInterfaceClass(module, True)}
-
-// Array malloc functions
-${GenArrayMallocFuncDefines()}
-
+<%
+moduleMembers = module['members']
+for block in module['members']:
+  if block['type'] == 'interface':
+    extendsNodes = []
+    if len(block['extends']):
+      for extend in block['extends']:
+        extendFound = False
+        for item in moduleMembers:
+          if item['type'] == 'interface' and item['name'] == extend:
+            extendsNodes.append(item)
+            extendFound = True
+        if not extendFound:
+          print("extend: ", extend, " not found !")
+    GenInterfaceClass(block, False, extendsNodes)
+%>
+${GenInterfaceClass(module, True, [])}
+## // Array malloc functions
+## ${GenArrayMallocFuncDefines()}
 } // namespace ${module_namespace}
 
 #endif // ${header_define}
