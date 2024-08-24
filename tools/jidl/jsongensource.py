@@ -420,7 +420,7 @@ class CPPRender(Render):
     return '%s.pb-c.h' % pb_name
 
   def GetPbTypeName(self, name):
-    names = name.split('.');
+    names = name.split('.')
     return ('__'.join([n[0].upper() + n[1:] for n in names]))
 
   def GetPbVarName(self, name):
@@ -463,14 +463,20 @@ class CPPRender(Render):
 
   def GenerateCppType(self, ast_type):
     if isinstance(ast_type, str):
-      return self._MapType(ast_type, self.cpp_type_map)
+      if self.isCPP and ast_type == "string":
+        return "ft_utils::FtStringPtr"
+      else:
+        return self._MapType(ast_type, self.cpp_type_map)
 
     if not isinstance(ast_type, dict):
       raise Exception('invalid complex type: {}'.format(ast_type))
 
     module_name = self.GetModuleName()
     if 'element' in ast_type:
-      return 'FtArray*'
+      if self.isCPP:
+        return "ft_utils::RefPtr<FtArray>"
+      else:
+        return 'FtArray*'
     elif 'referred_type' in ast_type:
       referred_type = ast_type['referred_type']
       if referred_type == 'callback':
@@ -478,15 +484,19 @@ class CPPRender(Render):
       elif referred_type == 'struct':
         referred_name = ast_type['referred_name']
         if self.isCPP:
-          return self.ToClassName(referred_name) + "*"
+          return "ft_utils::RefPtr<" + self.ToClassName(referred_name) + ">"
         else:
           return f"{module_name}_{referred_name} *"
       elif referred_type == 'interface':
-        return "FeatureInterfaceHandle"
+        if self.isCPP:
+          referred_name = ast_type['referred_name']
+          return "I" + referred_name + "*"
+        else:
+          return "FeatureInterfaceHandle"
     elif ast_type['type'] == 'struct':
         struct_name = ast_type['name']
         if self.isCPP:
-          return self.ToClassName(struct_name) + "*"
+          return "ft_utils::RefPtr<" + self.ToClassName(struct_name) + ">"
         else:
           return f"{module_name}_{struct_name} *"
     elif ast_type['type'] == 'message':
@@ -635,8 +645,8 @@ class CPPRender(Render):
     ft_expr = info['type']
     if info['is_complex']:
       module_name = self.GetModuleName()
-      if self.isCPP: # TODO
-        ft_expr = '%s_%s' % (self.ToClassName(module_name), ft_expr)
+      if self.isCPP:
+        ft_expr = '%s' % (ft_expr)
       else:
         ft_expr = f"{module_name}_{ft_expr}"
       ft_expr = f"FT_MK_COMPLEX(&{ft_expr})"
@@ -652,7 +662,10 @@ class CPPRender(Render):
 
   def GenerateReturnType(self, ret_node):
     if isinstance(ret_node, str):
-      return self._MapType(ret_node, self.cpp_type_map)
+      if self.isCPP and ret_node == "string":
+        return "ft_utils::FtStringPtr"
+      else:
+        return self._MapType(ret_node, self.cpp_type_map)
     elif isinstance(ret_node, dict):
       if ret_node['type'] == 'promise':
         return 'FtPromiseId'
@@ -668,6 +681,10 @@ class CPPRender(Render):
       if index < param_count -1 and param_type == 'ellipse':
         raise Exception('wrong ellipse param position: {}'.format(params))
       param_str = self.GenerateCppType(param_type)
+      if self.isCPP:
+        if self.IsRefType(param_type):
+          param_str = "const " + param_str
+          param_str += "&"
       if 'name' in param:
         p_name = param["name"]
         param_str += f" {p_name}"
@@ -750,6 +767,8 @@ class CPPRender(Render):
       for i in range(extra_argc, argc + extra_argc):
         arg_name = f"argv[{i}]"
         arg_type = param_types[i - extra_argc]
+        if self.isCPP:
+          arg_type = "const " + arg_type
         arg = f"*({arg_type}*)({arg_name})"
         arg_list.append(arg)
     return arg_list

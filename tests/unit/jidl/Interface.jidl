@@ -16,12 +16,12 @@ interface Bird {
 
 interface Chicken extends Animal, Bird {
   property int weight;
-  promise<string[], int> walk();
+  promise<string[]> walk();
 }
 [ctor="true", target="cock"] Chicken createCock();
 
 Animal createCat();
 void setAnimal(Animal animal);
-promise<string[], int> flyFar(int distance);
+promise<string[]> flyFar(int distance);
 use flyAway() = flyFar(100);
 void print(...);
