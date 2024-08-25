@@ -10,8 +10,8 @@ function show_array(arr, pre) {
 
 console.log('\ntest begin')
 let cat = interface.createCat()
-console.log('cat name: ', cat.name)
 cat.name = "dotty"
+console.log('cat name: ', cat.name)
 console.log('cat legCount: ', cat.legCount)
 let cat_foods = ['fish', 'meat', 'beef', 'seefood']
 let cat_eated = cat.eatFood(cat_foods)

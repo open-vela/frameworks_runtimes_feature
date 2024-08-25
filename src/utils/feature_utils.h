@@ -2,6 +2,7 @@
 #include "feature_common.h"
 #include "feature_description.h"
 #include "feature_exports.h"
+#include "feature_instance.h"
 #include "feature_types.h"
 #include <new>
 #include <string>
@@ -22,15 +23,15 @@ class FeatureArray;
  */
 template <typename T>
 class RefPtr {
-private:
+protected:
     T* p_;
 
-private:
     explicit RefPtr(T* ptr)
         : p_(ptr)
     {
     }
 
+private:
     void release()
     {
         FeatureInstanceFreeValue(p_);
@@ -49,9 +50,10 @@ public:
         }
     }
 
-    FeatureArray<T> getArray()
+    template <typename TElement>
+    FeatureArray<TElement> getArray() const
     {
-        return FeatureArray<T>(p_);
+        return FeatureArray<TElement>::dup(p_);
     }
 
     static RefPtr<T> adopt(T* ptr)
@@ -182,12 +184,12 @@ public:
 };
 
 template <typename T>
-class FeatureArray {
+class FeatureArray : public RefPtr<FtArray> {
 private:
-    FtArray* p_;
     FeatureArray(FtArray* ptr)
-        : p_(ptr)
+        : RefPtr(ptr)
     {
+        FeatureInstanceDupValue(ptr);
     }
 
 public:
@@ -217,31 +219,6 @@ public:
     {
         p_ = other.p_;
         other.p_ = nullptr;
-    }
-
-    FeatureArray& operator=(const FeatureArray& other)
-    {
-        if (p_ == other.p_)
-            return *this;
-        if (p_) {
-            FeatureFreeValue(p_);
-        }
-        if (other.p_) {
-            p_ = FeatureInstanceDupValue(other.p_);
-        }
-        return *this;
-    }
-
-    FeatureArray& operator=(const FeatureArray&& other)
-    {
-        if (p_ == other.p_)
-            return *this;
-        if (p_) {
-            FeatureFreeValue(p_);
-        }
-        p_ = other.p_;
-        other.p_ = nullptr;
-        return *this;
     }
 
     RefPtr<FtArray> getShared()
@@ -424,18 +401,23 @@ inline T* From(FeatureInstanceHandle hInst)
 }
 
 class FeatureInstance {
+private:
+    FeatureInstanceHandle _hInst;
 
 public:
+    explicit FeatureInstance(FeatureInstanceHandle hInstance)
+        : _hInst(hInstance)
+    {
+    }
+
     virtual ~FeatureInstance() = default;
 
-    // 从句柄获取的对象
-
     /**
-     * @brief get FeatureInstance Handle
+     * @brief get FeatureInstance handle
      *
      * @return FeatureInstanceHandle
      */
-    virtual FeatureInstanceHandle getHandle() const = 0;
+    inline FeatureInstanceHandle getHandle() const { return _hInst; }
 
     /**
      * @brief create FeatureType object
@@ -453,11 +435,13 @@ public:
         return internal::make<T>(getHandle(), std::forward<Args>(args)...);
     }
 
-    FeatureInterfaceHandle makeInterface(void* pInterface)
+    template <typename T, typename... Args>
+    T* makeInterface(Args... args)
     {
-        FeatureInterfaceHandle handle = FeatureCreateInterface(getHandle(), (VTable*)-1);
-        FeatureSetObjectData(handle, pInterface);
-        return handle;
+        FeatureInterfaceHandle handle = FeatureCreateInterface(getHandle(), FEATURE_INSTANCE_CPP_VTABLE);
+        T* pClass = new T(handle, std::forward<Args>(args)...);
+        FeatureSetObjectData(handle, pClass);
+        return pClass;
     }
 
     inline RefPtr<char> strdup(const char* str)

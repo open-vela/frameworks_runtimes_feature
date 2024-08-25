@@ -8,18 +8,11 @@
 #define countof(ptr) (sizeof(ptr) / sizeof(ptr[0]))
 
 class TestInstance : public ft_utils::FeatureInstance {
-private:
-    FeatureInstanceHandle _hInst = nullptr;
 
 public:
     TestInstance(FeatureInstanceHandle hInstance)
-        : _hInst(hInstance)
+        : ft_utils::FeatureInstance(hInstance)
     {
-    }
-
-    FeatureInstanceHandle getHandle() const override
-    {
-        return _hInst;
     }
 };
 
@@ -167,8 +160,8 @@ int main(int argc, char** argv)
     std::cout << "FeatureCreateArray test end-------------------" << std::endl;
 
     std::cout << "FeatureArrayCopyRaw test begin-------------------" << std::endl;
-    const char* cstr[] = {+
-        "Hello World!",
+    const char* cstr[] = {
+        +"Hello World!",
         "hello world 1",
         "hello world 2",
         "hello world 3",

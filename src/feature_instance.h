@@ -29,6 +29,8 @@
 
 namespace feature_framework {
 
+#define FEATURE_INSTANCE_CPP_VTABLE     ((VTable*)-1)
+
 class FeatureInstance : public FeatureObjectRef, public feature_list_node {
 public:
     FeatureInstance(FeaturePrototype* proto, const FeatureDescription* description);

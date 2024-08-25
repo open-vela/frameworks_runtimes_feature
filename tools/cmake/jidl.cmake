@@ -5,7 +5,7 @@ function(jidl_codegen_files)
     # Define the supported set of keywords
     set(prefix ARG)
     set(noValues)
-    set(singleValues JIDL_TOOL_PATH OUT_PATH)
+    set(singleValues JIDL_TOOL_PATH OUT_PATH LANG)
     set(multiValues JIDL_FILES_CPP JIDL_FILES_C)
     # Process the arguments passed in
     cmake_parse_arguments(
@@ -18,6 +18,8 @@ function(jidl_codegen_files)
             set(JIDL_TOOL_PATH ${${prefix}_${arg}})
         elseif(${arg} STREQUAL "OUT_PATH")
             set(OUT_PATH ${${prefix}_${arg}})
+        elseif(${arg} STREQUAL "LANG")
+            set(LANG ${${prefix}_${arg}})
         elseif(${arg} STREQUAL "JIDL_FILES_CPP")
             set(JIDL_FILES_CPP ${${prefix}_${arg}})
         elseif(${arg} STREQUAL "JIDL_FILES_C")
@@ -30,7 +32,7 @@ function(jidl_codegen_files)
         get_filename_component(JIDL_FILE_NAME ${JIDL_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${OUT_PATH}/${JIDL_FILE_NAME}.cpp ${OUT_PATH}/${JIDL_FILE_NAME}.h
-            COMMAND python3 ${JIDL_TOOL_PATH}/jsongensource.py ${JIDL_FILE} -out-dir ${OUT_PATH} -header ${JIDL_FILE_NAME}.h -source ${JIDL_FILE_NAME}.cpp
+            COMMAND python3 ${JIDL_TOOL_PATH}/jsongensource.py ${JIDL_FILE} -lang ${LANG} -out-dir ${OUT_PATH} -header ${JIDL_FILE_NAME}.h -source ${JIDL_FILE_NAME}.cpp
         )
         list(APPEND GENERATED_FILES ${OUT_PATH}/${JIDL_FILE_NAME}.cpp ${OUT_PATH}/${JIDL_FILE_NAME}.h)
     endforeach(JIDL_FILE ${JIDL_FILES_CPP})
@@ -43,7 +45,7 @@ function(jidl_codegen_files)
         get_filename_component(JIDL_FILE_NAME ${JIDL_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${OUT_PATH}/${JIDL_FILE_NAME}.c ${OUT_PATH}/${JIDL_FILE_NAME}.h
-            COMMAND python3 ${JIDL_TOOL_PATH}/jsongensource.py ${JIDL_FILE} -out-dir ${OUT_PATH} -header ${JIDL_FILE_NAME}.h -source ${JIDL_FILE_NAME}.c
+            COMMAND python3 ${JIDL_TOOL_PATH}/jsongensource.py ${JIDL_FILE} -lang c++ -out-dir ${OUT_PATH} -header ${JIDL_FILE_NAME}.h -source ${JIDL_FILE_NAME}.c
         )
         list(APPEND GENERATED_FILES ${OUT_PATH}/${JIDL_FILE_NAME}.c ${OUT_PATH}/${JIDL_FILE_NAME}.h)
     endforeach(JIDL_FILE ${JIDL_FILES_C})
