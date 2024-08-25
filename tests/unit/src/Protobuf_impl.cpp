@@ -21,22 +21,6 @@ void onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     FEATURE_LOG_INFO("onCreatre: FeatureProtoHandle %p", handle);
 }
 
-void onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
-{
-    FEATURE_LOG_INFO("onRequire: FeatureInstanceHandle %p", handle);
-    auto* p = Protobuf::newInstance(handle);
-    FeatureSetObjectData(handle, p);
-}
-void onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
-{
-    FEATURE_LOG_INFO("onDetached: FeatureInstanceHandle %p", handle);
-    Protobuf* pProtobuf = ft_utils::From<Protobuf>(handle);
-    if (pProtobuf) {
-        delete pProtobuf;
-        FeatureSetObjectData(handle, nullptr);
-    }
-}
-
 void onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("onDestroy: FeatureProtoHandle %p", handle);
@@ -48,18 +32,18 @@ void onUnregister(const char* feature_name)
 }
 
 Protobuf::Protobuf(FeatureInstanceHandle hInstance)
-    :hInst_(hInstance)
+    :ProtobufBase(hInstance)
 {
 }
 
-void Protobuf::proto(AppendData append_data, FtInt a, Feature_Protobuf::Protobuf_pb_computer_p b)
+void Protobuf::proto(FtInt a, const Pb_computer_p& b)
 {
     FEATURE_LOG_INFO("a: %d, b: %p", a, b);
     std::string data = std::string((const char*)b->sn_code.data, b->sn_code.len);
     FEATURE_LOG_INFO("{name: %s, price: %d, sn: %s, main_monitor w: %d, h:%d, color: %d}", b->name, b->price, data.c_str(), b->main_monitor->width, b->main_monitor->height, b->main_monitor->colordepth);
 }
 
-void Protobuf::proto_cb(AppendData append_data, FtCallbackId cb)
+void Protobuf::invoke_proto(FtCallbackId cb)
 {
     FEATURE_LOG_INFO("cid %d", cb);
 

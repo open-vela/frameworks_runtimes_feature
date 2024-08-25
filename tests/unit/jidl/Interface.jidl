@@ -20,7 +20,7 @@ interface Chicken extends Animal, Bird {
 }
 [ctor="true", target="cock"] Chicken createCock();
 
-Animal createCat();
+[ctor="true", target="cat"] Animal createCat();
 void setAnimal(Animal animal);
 promise<string[]> flyFar(int distance);
 use flyAway() = flyFar(100);

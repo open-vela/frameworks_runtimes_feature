@@ -66,8 +66,8 @@ FeatureInstance::FeatureInstance(FeaturePrototype* module_proto, const VTable* v
 
 FeatureInstance::~FeatureInstance()
 {
-    if ((intptr_t)vtable_ == -1) {
-        FeatureInstance* pInterface = static_cast<FeatureInstance*>(this->native());
+    if (vtable_ == FEATURE_INSTANCE_CPP_VTABLE) {
+        ft_utils::FeatureInstance* pInterface = static_cast<ft_utils::FeatureInstance*>(this->native());
         delete pInterface;
     } else if (vtable_ && vtable_->finalizer) {
         finalizer_func finalizer = (finalizer_func)(vtable_->finalizer);

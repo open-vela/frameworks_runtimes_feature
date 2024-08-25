@@ -88,28 +88,27 @@ jidl_codegen_registry(
 # collect jidl files
 file(GLOB JIDL_FILES ${CMAKE_CURRENT_SOURCE_DIR}/jidl/*.jidl)
 # generate jidl cpp wrapper files
-# jidl_codegen_files(
-#     JIDL_TOOL_PATH ${CMAKE_CURRENT_LIST_DIR}/../../tools/jidl
-#     OUT_PATH ${CMAKE_BINARY_DIR}
-#     JIDL_FILES_CPP ${JIDL_FILES}
-#     # JIDL_FILES_C ${JIDL_FILES}
-# )
+jidl_codegen_files(
+    JIDL_TOOL_PATH ${CMAKE_CURRENT_LIST_DIR}/../../tools/jidl
+    OUT_PATH ${CMAKE_BINARY_DIR}
+    JIDL_FILES_CPP ${JIDL_FILES}
+    LANG c++
+    # JIDL_FILES_C ${JIDL_FILES}
+)
 
 file(GLOB BUILDIN_SOURCES CONFIGURE_DEPENDS ./builtin/*.cpp ./builtin/*.h)
 file(GLOB SRC_SOURCES CONFIGURE_DEPENDS ./src/*.cpp ./src/*.h ./src/*.c)
-file(GLOB GENERATED_FILES CONFIGURE_DEPENDS ./src/generated/*.cpp ./src/generated/*.h ./src/generated/*.c)
-
-file(GLOB PROTO_SOURCES CONFIGURE_DEPENDS ${CMAKE_BINARY_DIR}/*.c)
+file(GLOB GENERATED_FILES CONFIGURE_DEPENDS ${CMAKE_BINARY_DIR}/*.cpp ${CMAKE_BINARY_DIR}/*.c ${CMAKE_BINARY_DIR}/*.h)
 
 set(PROTBUF_FILES
     ${CMAKE_SOURCE_DIR}/proto/test.proto
 )
 
-# set(PROTOBUF_C_FILES "")
-# foreach(PROTOFILE ${PROTBUF_FILES})
-#     get_filename_component(FILE_NAME ${PROTOFILE} NAME_WE)
-#     list(APPEND PROTOBUF_C_FILES ${CMAKE_CURRENT_BINARY_DIR}/generated/${FILE_NAME}.pb-c.c)
-# endforeach()
+set(PROTOBUF_C_FILES "")
+foreach(PROTOFILE ${PROTBUF_FILES})
+    get_filename_component(FILE_NAME ${PROTOFILE} NAME_WE)
+    list(APPEND PROTOBUF_C_FILES ${CMAKE_BINARY_DIR}/${FILE_NAME}.pb-c.c)
+endforeach()
 # # get protoc compiler path
 # set(PROTOBUFC_EXECUTABLE "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc")
 # add_custom_command(OUTPUT ${PROTOBUF_C_FILES}
@@ -126,7 +125,6 @@ add_executable(${PROJECT_NAME}
     ${JIDL_GENERATED_CPP_FILES}
     ${JIDL_GENERATED_C_FILES}
     ${JIDL_GENERATED_FEATURE_REGISTERY_FILES}
-    ${PROTO_SOURCES}
     # ${PROTOBUF_C_FILES}
 )
 
@@ -141,7 +139,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/generated
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/generated
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 target_include_directories(test_main PUBLIC
