@@ -15,6 +15,7 @@
  */
 
 #include "value_translator_qjs.h"
+#include "feature_exports.h"
 #include "feature_instance_qjs.h"
 #include "feature_manager_qjs.h"
 
@@ -63,6 +64,21 @@ bool toNative(JSContext* ctx, const JSValue& target, char** pnative)
     JSValue js_str = JS_ToString(ctx, target);
     *((const char**)pnative) = JS_ToCString(ctx, js_str);
     JS_FreeValue(ctx, js_str);
+    return true;
+}
+
+bool toNative(JSContext* ctx, const JSValue& target, FtJSONObject** pnative)
+{
+    if (!JS_IsObject(target) || !pnative) {
+        return false;
+    }
+
+    JSValue json = JS_JSONStringify(ctx, target, JS_UNDEFINED, JS_UNDEFINED);
+    const char* cstr = JS_ToCString(ctx, json);
+    FtJSONObject* json_obj = FeatureNewJSONObject(cstr);
+    JS_FreeCString(ctx, cstr);
+    JS_FreeValue(ctx, json);
+    *pnative = json_obj;
     return true;
 }
 
@@ -156,6 +172,21 @@ bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* pta
 {
     MAKE_JS_ARRAY(ctx, JS_NewString, val, size, ptarget);
     return !JS_IsUndefined(*ptarget);
+}
+
+bool toTargetJson(JSContext* ctx, FtJSONObject* native, JSValue* ptarget)
+{
+    if (!native || !native->str) {
+        *ptarget = JS_NULL;
+        return true;
+    }
+    JSValue json = JS_ParseJSON(ctx, native->str, strlen(native->str), NULL);
+    if (JS_IsException(json)) {
+        JS_FreeValue(ctx, json);
+        return false;
+    }
+    *ptarget = json;
+    return true;
 }
 
 // funcitons for handling objects

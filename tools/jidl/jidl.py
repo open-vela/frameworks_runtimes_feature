@@ -104,6 +104,7 @@ class JIDL(Parser):
     'PROMISE',
     'TYPED_ARRAY',
     'UNIQUE_BUFFER',
+    'JSONOBJECT',
   )
 
   typed_array_types = (
@@ -1068,6 +1069,7 @@ class JIDL(Parser):
            | JSCONTEXT
            | ARRAY
            | OBJECT
+           | JSONOBJECT
     """
     p[0] = ast.GetPrimaryType(p[1])
 

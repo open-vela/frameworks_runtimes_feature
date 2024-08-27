@@ -18,6 +18,7 @@
 #define __VALUE_TRANSLATOR_WAMR_H__
 
 #include "feature.h"
+#include "feature_common.h"
 #include "feature_context.h"
 #include "feature_description.h"
 #include "gc_export.h"
@@ -31,6 +32,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, float* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, double* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, bool* pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative);
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, FtJSONObject** pnative);
 bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, ft_value_t* pnative);
 
 bool toTarget(wasm_exec_env_t exec_env, int32_t native, uint64_t* ptarget);
@@ -42,6 +44,11 @@ bool toTarget(wasm_exec_env_t exec_env, double native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, bool native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, const char* native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget);
+
+static inline bool toTargetJson(wasm_exec_env_t exec_env, FtJSONObject* native, uint64_t* ptarget)
+{
+    return false;
+}
 
 bool isNull(wasm_exec_env_t exec_env, const uint64_t& value);
 

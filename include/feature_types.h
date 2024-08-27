@@ -68,6 +68,8 @@ typedef void (*NativeFunc)(void); /**< native func ptr */
 
 typedef struct _FeatureWorker* FeatureWorkerHandle; // feature worker handle.
 
+typedef struct FtJSONObject* FtJsonObject;
+
 /** FeatureTaskMode */
 enum FeatureTaskMode {
     FEATURE_TASK_MODE_FREE = 0, /**< feature asynchronous task has ended */
@@ -128,6 +130,7 @@ enum FeaturePrimitiveTypeBase {
     FT_BOOLEAN_BASE, /**< 12 */
     FT_STRING_BASE, /**< 13 */
     FT_ANY_REF_BASE, /**< 14 */
+    FT_JSON_OBJ_BASE, /**< 15 */
 };
 
 /** set FeaturePrimitiveType */
@@ -151,6 +154,7 @@ enum FeaturePrimitiveType {
     FT_STRING = FT_SET_PRIMITIVE_TYPE(FT_STRING_BASE, TYPE_FLAGS_POINTER), /**< 54: const char* defination */
     FT_CHAR = FT_STRING, /**< 54: const char* defination */
     FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER), /**< 58: ft_value_t* defination */
+    FT_JSON_OBJ = FT_SET_PRIMITIVE_TYPE(FT_JSON_OBJ_BASE, TYPE_FLAGS_POINTER), /**< 62: json_object* defination */
 };
 
 /** FeatureErrorCode */

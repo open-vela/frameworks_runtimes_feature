@@ -630,6 +630,30 @@ enum FeatureWorkerCancelResult {
  */
 int FeatureWorkerCancel(FeatureInstanceHandle handle, FeatureWorkerHandle hworker);
 
+/**
+ * @brief get json string from FtJsonObject
+ *
+ * @param json_obj
+ * @return char*
+ */
+const char* FeatureGetJSONString(const FtJsonObject json_obj);
+
+/**
+ * @brief alloc a json object with string length
+ *
+ * @param json_str
+ * @return FtJsonObject
+ */
+FtJsonObject FeatureAllocJSONObject(size_t str_len);
+
+/**
+ * @brief create a json object with a string
+ *
+ * @param json_str
+ * @return FtJsonObject
+ */
+FtJsonObject FeatureNewJSONObject(const char* str);
+
 #ifdef __cplusplus
 }
 #endif
