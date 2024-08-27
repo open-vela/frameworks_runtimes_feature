@@ -474,6 +474,11 @@ void FeatureFreeValue(void* ptr)
             if (header->complex_free) {
                 free(complexType1);
             }
+        } else if (featureType == FT_JSON_OBJ) {
+            FtJSONObject* json_obj = (FtJSONObject*)ptr;
+            if (json_obj->str) {
+                FeatureFreeValue(json_obj->str);
+            }
         }
 
         // finally, free header
@@ -1089,4 +1094,23 @@ int FeatureWorkerCancel(FeatureInstanceHandle handle, FeatureWorkerHandle hworke
     FeatureInstance* pInstance = static_cast<FeatureInstance*>(handle);
     pInstance->workerManager()->cancel((FeatureWorker*)hworker);
     return 0;
+}
+
+const char* FeatureGetJSONString(const FtJsonObject json_obj)
+{
+    return json_obj ? json_obj->str : NULL;
+}
+
+FtJsonObject FeatureAllocJSONObject(size_t str_len)
+{
+    FtJSONObject* json_obj = (FtJSONObject*)FeatureMalloc(sizeof(FtJSONObject), FT_JSON_OBJ);
+    json_obj->str = (char*)FeatureMalloc(str_len, FT_STRING);
+    return json_obj;
+}
+
+FtJsonObject FeatureNewJSONObject(const char* str)
+{
+    FtJsonObject json_obj = FeatureAllocJSONObject(strlen(str) + 1);
+    sprintf(json_obj->str, "%s", str);
+    return json_obj;
 }

@@ -166,7 +166,8 @@ class Type(Node):
            self.Is(CALLBACK_DEFINE) or \
            self.Is(PRIMARY_ARRAY_TYPE) or \
            self.Is(ID_ARRAY_TYPE) or \
-           (self.Is(PRIMARY_TYPE) and self.name == "object")
+           (self.Is(PRIMARY_TYPE) and self.name == "object") or \
+           (self.Is(PRIMARY_TYPE) and self.name == "jsonobject")
 
   def SetMetaAttributes(self, meta_attrs):
     self.meta_attributes = meta_attrs
@@ -954,7 +955,7 @@ class StructMemberBase(Type):
   def Resolve(self, context):
     self.type = ResolveStructMemberType(context, self.type, None, self)
     if not self._checkDefault():
-      context.AddError("[%d:%d]Resolve Type '%s' failed in '%s'" % (self.lineno, self.lexpos, self.type.name, str(self)))
+      context.AddError("[%d:%d]Resolve Type '%s' failed in '%s'" % (self.lineno, self.lexpos, str(self.type), str(self)))
     #print("param resolve: ", self.type, str(self.type), str(self))
     #context.AddId(self.name, self.type)
 
@@ -1196,7 +1197,7 @@ def GetPrimaryType(tp_name):
 def InitPrimaryTypes():
   types = ["int", "float", "double", "string", "boolean",
       "long", "uint", "ulong", "null",
-      "array", "object", "void"]
+      "array", "object", "jsonobject", "void"]
   for t in types:
     primary_types[t] = PrimaryType(t)
 

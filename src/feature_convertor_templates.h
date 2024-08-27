@@ -99,6 +99,15 @@ bool convertValueToTarget(FeatureType ftype,
                 nativeToTarget<ft_value_t>(ctx, *(ft_value_t**)pnative, target);
             }
         } break;
+        case FT_JSON_OBJ: {
+            if (!(*(FtJSONObject**)pnative)) {
+                value_translator::toTargetJson(ctx, nullptr, &target);
+            } else {
+                if (!value_translator::toTargetJson(ctx, *(FtJSONObject**)pnative, &target)) {
+                    FEATURE_LOG_WARN("toTargetJson failed, json string: %s", (*(FtJSONObject**)pnative)->str);
+                }
+            }
+        } break;
         default: {
             FEATURE_LOG_WARN("unsupported type detected !");
             return false;
@@ -345,6 +354,20 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                 *(ft_value_t**)pnative = f_val;
             }
             break;
+        case FT_JSON_OBJ:
+            if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
+                FEATURE_LOG_ERROR("jsonobject arg is null or undefined!");
+                *(FtJSONObject**)pnative = NULL;
+            } else if (!value_translator::isObject(ctx, target)) {
+                FEATURE_LOG_ERROR("arg type mismatch, need object !");
+                return false;
+            } else {
+                if (!argToNativePtr<FtJSONObject*>(ctx, target, (void*)(pnative))) {
+                    FEATURE_LOG_ERROR("convert to FtJSONValue* failed !");
+                    return false;
+                }
+            }
+            break;
         default: {
             FEATURE_LOG_WARN("unsupported type detected !");
             return false;
@@ -395,7 +418,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                             }
                         }
                     } else {
-                        if ((member->type != FT_ANY_REF) && (member->type != FT_STRING)) {
+                        if ((member->type != FT_ANY_REF) && (member->type != FT_STRING) && (member->type != FT_JSON_OBJ)) {
                             FEATURE_LOG_ERROR("struct member with type '%d' missing!", member->type);
                             return false;
                         }
