@@ -158,7 +158,7 @@ static void sensor_temp_topic_cb(uv_topic_t* topic, int status, void* data, size
     sensor_temp* t_r = static_cast<sensor_temp*>(data);
     system_sensor_TemperatureRet* tempRet = system_sensorMallocTemperatureRet();
     tempRet->temperature = t_r->temperature;
-    FeatureInvokeCallback(event->meta.instance, event->meta.callback, tempRet);
+    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, tempRet);
     FeatureFreeValue(tempRet);
 }
 
@@ -172,7 +172,7 @@ static void sensor_humi_topic_cb(uv_topic_t* topic, int status, void* data, size
     sensor_humi* t_r = static_cast<sensor_humi*>(data);
     system_sensor_HumidityRet* humiRet = system_sensorMallocHumidityRet();
     humiRet->humidity = t_r->humidity;
-    FeatureInvokeCallback(event->meta.instance, event->meta.callback, humiRet);
+    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, humiRet);
     FeatureFreeValue(humiRet);
 }
 
