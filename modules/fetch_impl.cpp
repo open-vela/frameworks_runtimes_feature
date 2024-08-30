@@ -163,7 +163,7 @@ static void fetch_request_cb(int state, uv_response_t* response);
 void fetch_free(fetch_t* p)
 {
     if (p) {
-        FETCH_INFO("del node %p", p);
+        FETCH_DEBUG("del node %p", p);
         weakref_list_delete(&p->node);
         if (p->content) {
             delete p->content;
@@ -212,9 +212,9 @@ void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle
     // Cancel and delete all requests
     REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t)
     {
-        FETCH_INFO("task:%p,request:%p", req, req->request);
+        FETCH_DEBUG("task:%p,request:%p", req, req->request);
         if (req->request) {
-            FETCH_INFO("req=%p", req);
+            FETCH_DEBUG("req=%p", req);
             uv_request_delete(req->request);
             req->request = NULL;
         }
