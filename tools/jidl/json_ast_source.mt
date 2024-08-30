@@ -553,7 +553,7 @@ ${GenMemberMethod(identifier, ret_type)}
     func_call += f", {params_call_list}"
   func_call += ")"
 
-  prefix_params = 'FeatureInstanceHandle feature, union AppendData append_data'
+  prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
   if is_promise:
     prefix_params += ', FtPromiseId pid'
 %>\

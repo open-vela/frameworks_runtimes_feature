@@ -537,7 +537,7 @@ class CPPRender(Render):
     identifier = node["identifier"]
     ret_type_node = node["return_type"]
     ret_type = self.GenerateReturnType(ret_type_node)
-    prefix_params = 'FeatureInstanceHandle feature, union AppendData append_data'
+    prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
     if ret_type == 'FtPromiseId':
       ret_type = 'void'
       prefix_params += ', FtPromiseId pid'

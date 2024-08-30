@@ -137,7 +137,7 @@ static void do_callback(FeatureInstanceHandle feature, int value, int code,
     }
 
 void system_brightness_wrap_getValue(FeatureInstanceHandle feature,
-    union AppendData append_data,
+    AppendData append_data,
     system_brightness_GetValueParam* param)
 {
     CHECK_SERVICE_VALID()
@@ -149,7 +149,7 @@ void system_brightness_wrap_getValue(FeatureInstanceHandle feature,
 }
 
 void system_brightness_wrap_setValue(FeatureInstanceHandle feature,
-    union AppendData append_data,
+    AppendData append_data,
     system_brightness_SetValueParam* param)
 {
     CHECK_SERVICE_VALID()
@@ -163,7 +163,7 @@ void system_brightness_wrap_setValue(FeatureInstanceHandle feature,
 }
 
 void system_brightness_wrap_getMode(FeatureInstanceHandle feature,
-    union AppendData append_data,
+    AppendData append_data,
     system_brightness_GetModeParam* param)
 {
     CHECK_SERVICE_VALID()
@@ -175,7 +175,7 @@ void system_brightness_wrap_getMode(FeatureInstanceHandle feature,
 }
 
 void system_brightness_wrap_setMode(FeatureInstanceHandle feature,
-    union AppendData append_data,
+    AppendData append_data,
     system_brightness_SetModeParam* param)
 {
     CHECK_SERVICE_VALID()
@@ -189,13 +189,13 @@ void system_brightness_wrap_setMode(FeatureInstanceHandle feature,
 }
 
 void system_brightness_wrap_setKeepScreenOn(
-    FeatureInstanceHandle feature, union AppendData append_data,
+    FeatureInstanceHandle feature, AppendData append_data,
     system_brightness_SetKeepScreenOnParam* param)
 {
     // TODO
 }
 
-void system_brightness_set_onbrightnesschanged(FeatureInstanceHandle feature, union AppendData append_data, FtCallbackId cb)
+void system_brightness_set_onbrightnesschanged(FeatureInstanceHandle feature, AppendData append_data, FtCallbackId cb)
 {
     CHECK_SERVICE_VALID()
     if (!data->callback) {
@@ -207,7 +207,7 @@ void system_brightness_set_onbrightnesschanged(FeatureInstanceHandle feature, un
     data->callback->value_cid.insert(cb);
 }
 
-void system_brightness_set_onmodechanged(FeatureInstanceHandle feature, union AppendData append_data, FtCallbackId cb)
+void system_brightness_set_onmodechanged(FeatureInstanceHandle feature, AppendData append_data, FtCallbackId cb)
 {
     CHECK_SERVICE_VALID()
     if (!data->callback) {

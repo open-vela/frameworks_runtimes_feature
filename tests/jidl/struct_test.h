@@ -64,10 +64,10 @@ struct_test_Book* struct_testMallocBook(void);
 
 
 // Function wrappers to be implemented
-void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData append_data, FtInt a, struct_test_Chapter * b);
-struct_test_Chapter * struct_test_wrap_bar(FeatureInstanceHandle feature, union AppendData append_data, FtInt a);
-void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData append_data, struct_test_Book * a);
-void struct_test_wrap_print(FeatureInstanceHandle feature, union AppendData append_data, FtVariParams vari_params);
+void struct_test_wrap_foo(FeatureInstanceHandle feature, AppendData append_data, FtInt a, struct_test_Chapter * b);
+struct_test_Chapter * struct_test_wrap_bar(FeatureInstanceHandle feature, AppendData append_data, FtInt a);
+void struct_test_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, struct_test_Book * a);
+void struct_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
 
 // Interface constructors
 

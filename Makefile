@@ -95,19 +95,11 @@ CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)/include
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
 ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/account/include
-CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/account_1_0.cpp
-CXXSRCS += $(APPDIR)/frameworks/account/feature/account_1_0_impl.cpp
 FEATURELIST += service_internal_account
 endif
 
 ifeq ($(CONFIG_MIJIA_CAMERA_CLIENT),y)
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/mijia_camera_client/include
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/mijia_camera_client/feature
-CXXSRCS += $(APPDIR)/frameworks/mijia_camera_client/feature/micamera.cpp
-CXXSRCS += $(APPDIR)/frameworks/mijia_camera_client/feature/micamera_impl.cpp
-FEATURELIST += system_internal_micamera
+CFEATURELIST += system_internal_micamera
 endif
 
 CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/app_path.cpp
@@ -169,7 +161,7 @@ OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += jumpApp
 
 ifeq ($(CONFIG_MEDIA_FEATURE),y)
-FEATURELIST += system_volume
+CFEATURELIST += system_volume
 CFEATURELIST += system_audio
 endif
 

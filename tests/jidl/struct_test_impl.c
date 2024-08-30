@@ -36,7 +36,7 @@ void struct_test_onUnregister(const char* feature_name)
 }
 
 // Function wrappers to be implemented
-void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData data, FtInt a, struct_test_Chapter* b)
+void struct_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, struct_test_Chapter* b)
 {
     if (!b) {
         printf("%s::%s(), chapter ptr is null!\n", file_tag, __FUNCTION__);
@@ -47,7 +47,7 @@ void struct_test_wrap_foo(FeatureInstanceHandle feature, union AppendData data, 
         file_tag, __FUNCTION__, b->page_count, b->title, b->is_end);
 }
 
-struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union AppendData data, FtInt a)
+struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, AppendData data, FtInt a)
 {
     printf("%s::%s(), a: %d\n", file_tag, __FUNCTION__, a);
     struct_test_Chapter* chap = struct_testMallocChapter();
@@ -58,7 +58,7 @@ struct_test_Chapter* struct_test_wrap_bar(FeatureInstanceHandle feature, union A
     return chap;
 }
 
-void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data, struct_test_Book* a)
+void struct_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, struct_test_Book* a)
 {
     if (!a) {
         printf("%s::%s(), book ptr is null!\n", file_tag, __FUNCTION__);
@@ -98,7 +98,7 @@ void struct_test_wrap_bar2(FeatureInstanceHandle feature, union AppendData data,
     FeatureRemoveCallback(feature, a->chap_changed);
 }
 
-void struct_test_wrap_print(FeatureInstanceHandle feature, union AppendData data, FtVariParams var_params)
+void struct_test_wrap_print(FeatureInstanceHandle feature, AppendData data, FtVariParams var_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);

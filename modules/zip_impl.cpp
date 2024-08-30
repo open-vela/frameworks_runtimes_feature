@@ -443,7 +443,7 @@ ERROR:
     return;
 }
 
-void system_zip_wrap_decompress(FeatureInstanceHandle feature, union AppendData append_data, system_zip_DecompressInfo* info)
+void system_zip_wrap_decompress(FeatureInstanceHandle feature, AppendData append_data, system_zip_DecompressInfo* info)
 {
     if (info == NULL)
         return;
