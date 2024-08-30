@@ -601,7 +601,7 @@ void system_messageChannel_wrap_unsetTopicListener(
     message_channel->unregisterReceiver(topic);
 }
 
-void system_messageChannel_wrap_unsetTopicListenerCb(FeatureInstanceHandle feature, union AppendData append_data, FtString topic, FtCallbackId cb)
+void system_messageChannel_wrap_unsetTopicListenerCb(FeatureInstanceHandle feature, AppendData append_data, FtString topic, FtCallbackId cb)
 {
     MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
     message_channel->unregisterReceiverCb(topic, cb);

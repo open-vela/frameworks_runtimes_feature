@@ -61,10 +61,10 @@ null_test_Book* null_testMallocBook(void);
 
 
 // Function wrappers to be implemented
-void null_test_wrap_setChapter(FeatureInstanceHandle feature, union AppendData append_data, FtInt index, null_test_Chapter * chap);
-void null_test_wrap_setChapChangedCb(FeatureInstanceHandle feature, union AppendData append_data, FtCallbackId chap_changed);
-void null_test_wrap_setBook(FeatureInstanceHandle feature, union AppendData append_data, null_test_Book * book);
-void null_test_wrap_print(FeatureInstanceHandle feature, union AppendData append_data, FtVariParams vari_params);
+void null_test_wrap_setChapter(FeatureInstanceHandle feature, AppendData append_data, FtInt index, null_test_Chapter * chap);
+void null_test_wrap_setChapChangedCb(FeatureInstanceHandle feature, AppendData append_data, FtCallbackId chap_changed);
+void null_test_wrap_setBook(FeatureInstanceHandle feature, AppendData append_data, null_test_Book * book);
+void null_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params);
 
 // Interface constructors
 

@@ -96,20 +96,20 @@ typedef struct MemberMethod {
     union FuncData func;
     const FeatureType* parameters; // 参数描述数组, 以空结束
     FeatureType return_type;
-    union AppendData data; // 附加数据
+    AppendData data; // 附加数据
 } MemberMethod;
 
 typedef struct MemberAccessor {
     union FuncData getter; // getter & setter可以有一个为空
     union FuncData setter;
     FeatureType type;
-    union AppendData data; // 附加数据
+    AppendData data; // 附加数据
 } MemberAccessor;
 
 typedef struct MemberConst {
     FeatureType type;
     union FuncData func;
-    union AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
+    AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
 } MemberConst;
 
 typedef struct Member {

@@ -50,7 +50,7 @@ static void invoke_chapter_changed_cb(FeatureInstanceHandle feature, FtCallbackI
 }
 
 // Function wrappers to be implemented
-void null_test_wrap_setChapter(FeatureInstanceHandle feature, union AppendData append_data, FtInt index, null_test_Chapter* chap)
+void null_test_wrap_setChapter(FeatureInstanceHandle feature, AppendData append_data, FtInt index, null_test_Chapter* chap)
 {
     printf("%s::%s(), chap: %p \n", file_tag, __FUNCTION__, chap);
     if (!chap) {
@@ -60,13 +60,13 @@ void null_test_wrap_setChapter(FeatureInstanceHandle feature, union AppendData a
     printf("chapter: { title: %s, page_count: %d }\n", chap->title, chap->page_count);
 }
 
-void null_test_wrap_setChapChangedCb(FeatureInstanceHandle feature, union AppendData append_data, FtCallbackId chap_changed)
+void null_test_wrap_setChapChangedCb(FeatureInstanceHandle feature, AppendData append_data, FtCallbackId chap_changed)
 {
     printf("%s::%s()\n", file_tag, __FUNCTION__);
     invoke_chapter_changed_cb(feature, chap_changed, 0, "monkey born from a mountain");
 }
 
-void null_test_wrap_setBook(FeatureInstanceHandle feature, union AppendData append_data, null_test_Book* book)
+void null_test_wrap_setBook(FeatureInstanceHandle feature, AppendData append_data, null_test_Book* book)
 {
     printf("%s::%s(), book: %p \n", file_tag, __FUNCTION__, book);
     if (!book) {
@@ -78,7 +78,7 @@ void null_test_wrap_setBook(FeatureInstanceHandle feature, union AppendData appe
     invoke_chapter_changed_cb(feature, book->chap_changed, 1, "monkey born from a river");
 }
 
-void null_test_wrap_print(FeatureInstanceHandle feature, union AppendData append_data, FtVariParams vari_params)
+void null_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
 {
     printf("[jidl_feature] ");
     ft_context_ref ft_ctx = FeatureGetContext(feature);

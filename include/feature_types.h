@@ -111,7 +111,7 @@ enum FeaturePrimitiveType {
     FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER),
 };
 
-union AppendData {
+typedef union AppendData {
     int32_t i32;
     int64_t i64;
     uint32_t u32;
@@ -120,7 +120,7 @@ union AppendData {
     double f64;
     void* ptr;
     const char* str;
-};
+} AppendData;
 
 /**
  * @brief Feature Array struct defination
