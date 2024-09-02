@@ -180,6 +180,7 @@ endif
 ifeq ($(CONFIG_MEDIA_FEATURE),y)
 CFEATURELIST += system_volume
 CFEATURELIST += system_audio
+CFEATURELIST += system_media_session
 endif
 
 ifeq ($(CONFIG_LIBUV_EXTENSION),y)
