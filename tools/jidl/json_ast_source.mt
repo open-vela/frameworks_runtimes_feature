@@ -355,7 +355,7 @@ static const FeatureDescription ${module_name}_${parent_prefix}desc = {
     .name = "${iname}",
     .description = "${iname} description",
     .dynamic = true,
-    nullptr,
+    NULL,
     countof(${module_name}_${parent_prefix}members),
     ${module_name}_${parent_prefix}members,
 };
@@ -475,7 +475,7 @@ static const MemberMethod ${module_name}_${identifier}_member_method = {
   final_vtable = render.GetFinalVTable(ctor_interface)
   vtable_size = len(final_vtable)
   item_prefix = f"{module_name}_{parent_prefix}{ctor_target}"
-  finalizer = f"NativeFunc({item_prefix}_finalize)"
+  finalizer = f"(NativeFunc){item_prefix}_finalize"
 %>\
 ${func_def} {
     static const NativeFunc ${ctor_target}_vtable_members[] = {
@@ -491,7 +491,7 @@ ${func_def} {
   elif item_type == 2:
     item_content = f"{item_prefix}_set_{item_name}"
   if item_content != '':
-    item_content = f"NativeFunc({item_content})"
+    item_content = f"(NativeFunc){item_content}"
 %>\
 %if item_content != '':
         ${item_content},
@@ -635,7 +635,7 @@ ${const_def};
 
 static const MemberConst ${module_name}_${const_name}_member_const = {
     .type = ${const_info['type']},
-    .func = { .callback = nullptr },
+    .func = { .callback = NULL },
     .data = { .${val_name} = ${module_name}_g_const_${const_name} }
 };
 </%def>\
