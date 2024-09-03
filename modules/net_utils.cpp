@@ -195,7 +195,8 @@ const char* url_decode(const char* str)
 ft_value_t ft_form_headers(ft_context_ref ft_ctx, char* headers)
 {
     ft_value_t ret_obj = ft_new_object(ft_ctx);
-    char* line = strtok(headers, "\n");
+    char* saveptr;
+    char* line = strtok_r(headers, "\n", &saveptr);
 
     while (line != NULL) {
         char* colon = strchr(line, ':');
@@ -220,7 +221,7 @@ ft_value_t ft_form_headers(ft_context_ref ft_ctx, char* headers)
             ft_obj_set_property(ft_ctx, ret_obj, key, ft_value);
         }
 
-        line = strtok(NULL, "\n");
+        line = strtok_r(NULL, "\n", &saveptr);
     }
     return ret_obj;
 }
