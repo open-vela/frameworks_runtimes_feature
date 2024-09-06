@@ -455,8 +455,6 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, AppendData append
 
     ZipContext* zc = getZipContext(feature);
     zipReq* zr = static_cast<zipReq*>(malloc(sizeof(*zr)));
-    /* maybe decompress API called multiple times in a page, need a array save different zr in a ZipContext (instance) */
-    zc->zr_arr.push_back(zr);
 
     if (!zr) {
         FEATURE_LOG_ERROR("malloc fail");
@@ -516,7 +514,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, AppendData append
     FEATURE_LOG_DEBUG("%s: src_path = %s, dst_path = %s", __FUNCTION__, src_path, dst_path);
     /* if zip file source dir not exsit */
     if (access(src_path, F_OK) == -1) {
-        FEATURE_LOG_ERROR("zip source file Path does not exist or is inaccessible! \n");
+        FEATURE_LOG_ERROR("zip source file Path does not exist or is inaccessible! src_path = %s\n", src_path);
         msg = "src path invalid!";
         code = PATH_NOT_EXISTS;
         goto fail;
@@ -531,6 +529,9 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, AppendData append
             goto fail;
         }
     }
+
+    /* maybe decompress API called multiple times in a page, need a array save different zr in a ZipContext (instance) */
+    zc->zr_arr.push_back(zr);
 
     r = uv_queue_work(zc->loop, &zr->req, _do_extract_zip_work_cb,
         __extract_zip_after_work_cb);
