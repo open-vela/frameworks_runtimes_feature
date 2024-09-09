@@ -93,7 +93,10 @@ int countMember(ObjectMember* member)
 
 int getValueSize(FeatureType featureType)
 {
-    if (FT_IS_PRIMITIVE(featureType)) {
+    featureType = FT_GET_REAL_TYPE(featureType);
+    if (FT_IS_REFERENCE(featureType)) {
+        return sizeof(uintptr_t);
+    } else if (FT_IS_PRIMITIVE(featureType)) {
         switch (featureType) {
         case FT_VOID: {
             return 0;
@@ -134,12 +137,6 @@ int getValueSize(FeatureType featureType)
         case FT_BOOLEAN: {
             return sizeof(bool);
         } break;
-        case FT_STRING: {
-            return sizeof(char*);
-        } break;
-        case FT_ANY_REF: {
-            return sizeof(ft_value_t);
-        } break;
         default: {
             FEATURE_LOG_WARN("unsupported type detected !");
             return 0;
@@ -148,7 +145,12 @@ int getValueSize(FeatureType featureType)
     } else if (FT_IS_COMPLEX(featureType)) {
         // allocate complex type
         ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        return complexType->size;
+        if (complexType->type == COMPLEX_CALLBACK) {
+            return sizeof(FtCallbackId);
+        } else {
+            FEATURE_LOG_WARN("unsupported complex type detected !");
+            return 0;
+        }
     }
     return 0;
 }
