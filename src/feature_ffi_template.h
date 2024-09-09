@@ -399,7 +399,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
             array_data->_size = asize;
             if (asize) {
                 // we support reference and primitive types
-                size_t elem_size = FT_IS_REFERENCE(elem_type) ? sizeof(uintptr_t) : getValueSize(elem_type);
+                size_t elem_size = getValueSize(elem_type);
                 auto size = elem_size * asize;
                 FEATURE_CHECK_NE(size, 0);
                 array_data->_element = malloc(size);
