@@ -337,6 +337,7 @@ typedef struct
     int complete;
     int type;
     FeatureInstanceHandle handle;
+    char* pkgname;
 } FileReq;
 
 void freeRootFile(FileInfo* root_file)
@@ -361,6 +362,9 @@ void freeFileReq(FileReq* fr)
         if (fr->root_file) {
             freeRootFile(fr->root_file);
         }
+        if (fr->pkgname) {
+            free(fr->pkgname);
+        }
         free(fr);
     }
 }
@@ -373,6 +377,7 @@ void initFileReq(FileReq* fr)
     fr->filename = NULL;
     fr->buf = NULL;
     fr->root_file = NULL;
+    fr->pkgname = NULL;
 }
 
 void __invoke_fr_cb(FileReq* fr, int status, const char* err_msg, void* succ_param)
@@ -630,6 +635,7 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
     fr->fail = param->fail;
     fr->complete = param->complete;
     fr->type = type;
+    fr->pkgname = strdup(fc->pkg_name);
     if (!fc->loop) {
         FILE_ERROR("uvloop is null");
         return __invoke_fr_cb(fr, GENERAL, "uvloop is null", NULL);
@@ -746,10 +752,9 @@ static FileInfo* __get_info_c(char* path, FileReq* fr)
 {
     struct stat statbuf;
     char* app_path = NULL;
-    FileContext* fc = getFileContext(fr->handle);
     FileInfo* file_info = (FileInfo*)malloc(sizeof(FileInfo));
-    if (file_info == NULL || fc->pkg_name == NULL) {
-        FILE_ERROR("fc->pkg_name=%p\n", fc->pkg_name);
+    if (file_info == NULL || fr->pkgname == NULL) {
+        FILE_ERROR("get info fail: %s", path);
         goto error;
     }
 
@@ -760,9 +765,9 @@ static FileInfo* __get_info_c(char* path, FileReq* fr)
         goto error;
     }
 
-    app_path = app_absolute_to_relative_path(fc->pkg_name, path);
+    app_path = app_absolute_to_relative_path(fr->pkgname, path);
     if (app_path == NULL) {
-        FILE_ERROR("src path:%s, pkg:%s\n", path, fc->pkg_name);
+        FILE_ERROR("src path:%s, pkg:%s\n", path, fr->pkgname);
         goto error;
     }
 
@@ -989,6 +994,7 @@ static void __dir_load(FeatureInstanceHandle feature, T* param, int type)
     fr->fail = param->fail;
     fr->complete = param->complete;
     fr->type = type;
+    fr->pkgname = strdup(fc->pkg_name);
 
     if (!fc->loop) {
         FILE_ERROR("uvloop is null");
