@@ -852,6 +852,7 @@ class JIDL(Parser):
     promise_sub_type : array_object_type
                      | primary_type
                      | unique_buffer_type
+                     | type_name_id
                      | VOID
     """
     if type(p[1]) == str:

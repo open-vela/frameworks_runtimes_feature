@@ -86,7 +86,7 @@ ${setter_def};
 </%def>\
 <%def name="GenStructMember(member_node)">\
 <%
-  member_name = member_node['name']
+  member_name = render.toMemberName(member_node['name'])
   member_type = member_node['type']
   cpp_type = render.GenerateCppType(member_type)
   member_def = f"{cpp_type} {member_name}"
@@ -198,5 +198,16 @@ ${GenPropertyDefines(block)}\
 
 // Array malloc functions
 ${GenArrayMallocFuncDefines()}
+
+/*********** begin get the user defined type ************/
+%for name,tp in render.user_types_map.items():
+%if tp['type'] in ['struct', 'array', 'callback', 'interface']:
+const FeatureType ${module_name}_get_${name}(void);
+%endif
+%endfor
+/*********** end get the user defined type *************/
+
+
+
 #endif // ${header_define}
 /* clang-format on */

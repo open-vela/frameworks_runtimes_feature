@@ -265,6 +265,9 @@ class PromiseType(Node):
     Node.__init__(self, PROMISE_TYPE)
     self.resolve_type = resolve_type
 
+  def Resolve(self, context):
+    self.resolve_type = ResolvePromiseType(context, self.resolve_type, self);
+
   def __str__(self):
     return "promise<%s>" % (str(self.resolve_type))
 
@@ -457,7 +460,8 @@ class FunctionCall(Node):
     self.params.Check(context)
 
   def ToJson(self, out):
-    out['identifier'] = self.name
+    out['identifier'] = self.name # 仅作兼容使用
+    out['name'] = self.name
     out['param_calls'] = []
     self.params.ToJson(out['param_calls'])
 
@@ -542,7 +546,8 @@ class CallbackDefine(Type):
     callback_def = {}
     Type.ToJson(self, callback_def)
     callback_def['type'] = 'callback'
-    callback_def['identifier'] = self.name
+    callback_def['identifier'] = self.name  # 仅做兼容
+    callback_def['name'] = self.name
     if self.params.Count() > 0:
       callback_def['params'] = []
       self.params.ToJson(callback_def['params'])
@@ -581,7 +586,8 @@ class EventDefine(Type):
     event_def = {}
     Type.ToJson(self, event_def)
     event_def['type'] = 'event'
-    event_def['identifier'] = self.name
+    event_def['identifier'] = self.name  #仅作兼容
+    event_def['name'] = self.name
     if self.params.Count() > 0:
       event_def['params'] = []
       self.params.ToJson(event_def['params'])
@@ -679,7 +685,7 @@ class FunctionDefine(Type):
 
   def Check(self, context):
     Type.Check(self, context)
-    #self.return_type.Check(context) // uneed check
+    #self.return_type.Check(context) # uneed check
     context.PushTable(self)
     self.params.Check(context)
     context.PopTable()
@@ -694,7 +700,8 @@ class FunctionDefine(Type):
     self.params.Check(context)
 
   def GetBaseJson(self, func_def):
-    func_def['identifier'] = self.name
+    func_def['identifier'] = self.name # 仅作兼容
+    func_def['name'] = self.name
     if self.params.Count() > 0:
       func_def['params'] = []
       self.params.ToJson(func_def['params'])
@@ -1323,13 +1330,19 @@ def ResolveParamType(context, tp, owner, holder):
   return ResolveType(context, tp, param_accepted_types, None, holder)
 
 def ResolveReturnType(context, tp, owner, holder):
-  return ResolveType(context, tp, return_accepted_type, owner, holder)
+  ret_type = ResolveType(context, tp, return_accepted_type, owner, holder)
+  if isinstance(ret_type, PromiseType):
+     ret_type.Resolve(context)
+  return ret_type
 
 def ResolveStructMemberType(context, tp, owner, holder):
   return ResolveType(context, tp, struct_member_accepted_types, owner, holder)
 
 def ResolvePropertyType(context, tp, owner, holder):
   return ResolveType(context, tp, struct_member_accepted_types, owner, holder)
+
+def ResolvePromiseType(context, tp, holder):
+  return ResolveType(context, tp, value_accepted_type, None, holder)
 
 class Context:
   def __init__(self):
