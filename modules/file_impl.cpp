@@ -138,7 +138,6 @@ void __invoke_fs_cb(FsReq* fr, int status, const char* err_msg, void* succ_param
         } else {
             if (succ_param != NULL) {
                 FeatureInvokeCallback(feature, fr->success, succ_param);
-                FeatureFreeValue(succ_param);
             } else {
                 FeatureInvokeCallback(feature, fr->success);
             }
@@ -151,6 +150,9 @@ void __invoke_fs_cb(FsReq* fr, int status, const char* err_msg, void* succ_param
         FeatureRemoveCallback(feature, fr->complete);
     }
 
+    if (succ_param != NULL) {
+        FeatureFreeValue(succ_param);
+    }
     FeatureFreeInstanceHandle(feature);
     uv_fs_req_cleanup(&fr->req);
     free(fr);
@@ -389,7 +391,6 @@ void __invoke_fr_cb(FileReq* fr, int status, const char* err_msg, void* succ_par
         } else {
             if (succ_param != NULL) {
                 FeatureInvokeCallback(feature, fr->success, succ_param);
-                FeatureFreeValue(succ_param);
             } else {
                 FeatureInvokeCallback(feature, fr->success);
             }
@@ -400,6 +401,9 @@ void __invoke_fr_cb(FileReq* fr, int status, const char* err_msg, void* succ_par
         FeatureRemoveCallback(feature, fr->success);
         FeatureRemoveCallback(feature, fr->fail);
         FeatureRemoveCallback(feature, fr->complete);
+    }
+    if (succ_param != NULL) {
+        FeatureFreeValue(succ_param);
     }
     FeatureFreeInstanceHandle(feature);
     if (fr != NULL) {
