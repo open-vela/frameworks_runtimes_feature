@@ -8,10 +8,12 @@ import json
 import jidl_error
 from mako.template import Template
 import shutil
+from cpp_keywords import CPP_KEYWORDS
 
 g_debug = False
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
+
 
 def Debug(message):
   if g_debug: print(message)
@@ -370,6 +372,66 @@ class CPPRender(Render):
     # cache types
     self._cacheTypes()
 
+    # cache the all user defiend type
+    self.user_types_map = {}
+    self._collectUserTypes(self.module)
+
+  def _collectUserTypes(self, intf):
+    for m in intf['members']:
+      if m['type'] == 'function' or m['type'] == 'callback':
+         self._collectUserTypesFromFunc(m)
+      elif m['type'] == 'property':
+         self._tryCollectUserType(m['value_type'])
+      elif m['type'] == 'struct':
+         self._colloectUserTypesFromStruct(m)
+      elif m['type'] == 'interface':
+         self._collectUserTypes(m)
+      self._tryCollectUserType(m)
+
+  def _tryCollectUserType(self, m):
+    if not isinstance(m, dict):
+       return
+
+    if m['type'] in ['interface', 'struct', 'callback']:
+      self.user_types_map['%s_%s_type' % (m['name'], m['type'])] = m
+    elif m['type'] == 'array':
+      name = self._getArrayElementTypeName(m['element'])
+      self.user_types_map['%s_array' % name] = m
+    elif m['type'] == 'promise':
+      self._tryCollectUserType(m['resolve_type'])
+
+  def _colloectUserTypesFromStruct(self, s):
+    for m in s['members']:
+       self._tryCollectUserType(m['type'])
+
+
+  def _getArrayElementTypeName(self, tp):
+     if isinstance(tp, str):
+         return tp
+     if isinstance(tp, dict):
+         if tp['type'] == 'reference':
+             ref_type = tp['referred_type']
+             ref_name = tp['referred_name']
+             if ref_type == 'id':
+               if ref_name in self.struct_name_set:
+                  ref_type = 'struct'
+               elif ref_name in self.interface_name_set:
+                  ref_type = 'interface'
+
+             if ref_type == 'interface' or ref_type == 'struct':
+               return '%s_%s_type' % (ref_name, ref_type)
+
+         elif tp['type'] == 'array':
+             return '%s_array' % self._getArrayElementTypeName(tp['element'])
+     return str(tp)
+
+  def _collectUserTypesFromFunc(self, f):
+    if 'return_type' in f:
+      self._tryCollectUserType(f['return_type'])
+    if 'params' in f:
+      for p in f['params']:
+        self._tryCollectUserType(p['type'])
+
   def _cacheTypes(self):
     for child in self.module["members"]:
       if not "type" in child: continue
@@ -380,6 +442,15 @@ class CPPRender(Render):
       elif t == "struct":
         name = child["name"]
         self.struct_name_set.add(name)
+
+  def isCPPKeyword(self, word):
+    return word in CPP_KEYWORDS
+
+  def toMemberName(self, name):
+    if self.isCPPKeyword(name):
+      return '_'+name
+    else:
+      return name
 
   def Generate(self):
     self._GenerateFromTemplate(self.source_tmpl, self.GetCppFilePath())

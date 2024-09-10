@@ -42,7 +42,7 @@ static OptionalType ${module_name}_${name}_opt_type = {
 <%
   for member in members:
     member_item = {}
-    member_item['name'] = member['name']
+    member_item['name'] = render.toMemberName(member['name'])
     member_type = member['type']
     cpp_type = render.GenerateCppType(member_type)
     member_item['cpp_type'] = cpp_type
@@ -108,7 +108,7 @@ ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
   ret_ft_expr = render.GenerateFtExpression(ret_ft_info)
   if isinstance(ret_type_node, dict) and ret_type_node['type'] == 'promise':
     GenPromiseFeatureType(ret_type_node, ret_ft_info['type'])
-  
+
   ret_params = render.GenerateReturnParamsDefine(func_node, ret_type_node)
   ret_type = ret_params['ret_type']
   has_promise = False
@@ -957,6 +957,16 @@ ${GenInterface(block)}
 static const Member ${module_name}_members[] = {
 ${GenMembers(module['members'])}\
 };
+
+/*********** begin get the user defined type ************/
+%for name,tp in render.user_types_map.items():
+%if tp['type'] in ['struct', 'array', 'callback', 'interface']:
+const FeatureType ${module_name}_get_${name}(void) {
+   return FT_MK_COMPLEX(&${module_name}_${name});
+}
+%endif
+%endfor
+/*********** end get the user defined type *************/
 
 // callbacks
 static const struct FeatureCallbacks ${module_name}_callbacks = {

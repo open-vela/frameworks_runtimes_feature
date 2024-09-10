@@ -118,6 +118,9 @@ class Utils:
   def cppTypeInterface(self, tp):
     return self.cppTypeDefault(tp)
 
+  def cppTypeStruct(self, tp):
+    return self.cppTypeDefault(tp)
+
   def cppTypeCallback(self, tp):
     return self.cppTypeDefault(tp['referred_type'])
 
@@ -126,7 +129,7 @@ class Utils:
         if 'cppType' in self.vars:
           cppType = self.vars['cppType']
           if tp in cppType:
-            return cppType
+            return cppType[tp]
         new_tp = cpp_type_map[tp]
         return new_tp and new_tp or tp
     elif isinstance(tp, dict):
@@ -150,7 +153,7 @@ class Utils:
     return self.isReferenceType(tp, 'interface')
 
   def getPromiseType(self, tp):
-    return 'xs_promise_type<%s, %s>' % (tp['resolve_type'], tp['reject_type'])
+    return 'xs_promise_type<%s>' % (tp['resolve_type'])
 
   def cppTypeArray(self, tp):
     ele_native_type = self.cppType(tp['element'])
