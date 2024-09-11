@@ -91,7 +91,7 @@ bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, si
         *pnative = ret;
         return true;
     }
-
+    JS_FreeValue(ctx, array_buffer);
     *pnative = JS_GetArrayBuffer(ctx, psize, target);
     return true;
 }
@@ -117,10 +117,11 @@ bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, uint32_t 
 
     JSValue array_buffer = JS_NewArrayBufferCopy(ctx, buff, size);
     JSValueConst global = JS_GetGlobalObject(ctx);
-    JSValueConst uint8array_ctr = JS_GetPropertyStr(ctx, global, type_names[type]);
-    JSValue args[1] = { array_buffer };
-    JSValue ret = JS_CallConstructor(ctx, uint8array_ctr, 1, args);
+    JSValueConst typed_array_ctr = JS_GetPropertyStr(ctx, global, type_names[type]);
+    JSValue ret = JS_CallConstructor(ctx, typed_array_ctr, 1, &array_buffer);
     JS_FreeValue(ctx, array_buffer);
+    JS_FreeValue(ctx, typed_array_ctr);
+    JS_FreeValue(ctx, global);
     *ptarget = ret;
     return true;
 }
