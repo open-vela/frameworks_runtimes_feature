@@ -57,17 +57,6 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
     if (JS_IsNull(js_val))
         return FT_TYPE_NULL;
 
-    size_t size;
-    if (JS_GetArrayBuffer(js_ctx, &size, js_val))
-        return FT_TYPE_BUFFER;
-
-    size_t offset;
-    size_t length;
-    size_t byte_per_elem;
-    JSValue buffer = JS_GetTypedArrayBuffer(js_ctx, js_val, &offset, &length, &byte_per_elem);
-    if (!JS_IsException(buffer) && JS_GetArrayBuffer(js_ctx, &size, buffer))
-        return FT_TYPE_TYPED_BUFFER;
-
     if (JS_IsArray(js_ctx, js_val))
         return FT_TYPE_ARRAY;
     else if (JS_IsNumber(js_val))
@@ -76,8 +65,23 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
         return FT_TYPE_BOOL;
     else if (JS_IsString(js_val))
         return FT_TYPE_STRING;
-    else if (JS_IsObject(js_val))
+    else if (JS_IsObject(js_val)) {
+        size_t size;
+        if (JS_GetArrayBuffer(js_ctx, &size, js_val))
+            return FT_TYPE_BUFFER;
+        size_t offset;
+        size_t length;
+        size_t byte_per_elem;
+        JSValue buffer = JS_GetTypedArrayBuffer(js_ctx, js_val, &offset, &length, &byte_per_elem);
+        if (!JS_IsException(buffer)) {
+            if (JS_GetArrayBuffer(js_ctx, &size, buffer)) {
+                JS_FreeValue(js_ctx, buffer);
+                return FT_TYPE_TYPED_BUFFER;
+            }
+        }
+        JS_FreeValue(js_ctx, buffer);
         return FT_TYPE_OBJECT;
+    }
 
     return FT_TYPE_NONE;
 }
@@ -150,10 +154,11 @@ static ft_value_t _ft_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff,
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
     JSValue array_buffer = JS_NewArrayBufferCopy(js_ctx, buff, size);
     JSValueConst global = JS_GetGlobalObject(js_ctx);
-    JSValueConst uint8array_ctr = JS_GetPropertyStr(js_ctx, global, type_names[type]);
-    JSValue args[1] = { array_buffer };
-    ret.js_val = JS_CallConstructor(js_ctx, uint8array_ctr, 1, args);
+    JSValueConst typed_array_ctr = JS_GetPropertyStr(js_ctx, global, type_names[type]);
+    ret.js_val = JS_CallConstructor(js_ctx, typed_array_ctr, 1, &array_buffer);
     JS_FreeValue(js_ctx, array_buffer);
+    JS_FreeValue(js_ctx, typed_array_ctr);
+    JS_FreeValue(js_ctx, global);
     return QJS_VAL_TO_FT(ret);
 }
 
@@ -252,7 +257,7 @@ static uint8_t* _ft_to_buffer(ft_context_ref ft_ctx, size_t* p_size,
         JS_FreeValue(js_ctx, array_buffer);
         return ret;
     }
-
+    JS_FreeValue(js_ctx, array_buffer);
     // get buffer ptr from an arraybuffer
     return JS_GetArrayBuffer(js_ctx, p_size, val);
 }
