@@ -457,6 +457,12 @@ bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescripti
     return registry->registerFeature(description);
 }
 
+FeatureRegistryHandle FeatureGetRegistryFromManager(FeatureManagerHandle handle)
+{
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return static_cast<FeatureRegistryHandle>(manager->getFeatureRegistry());
+}
+
 FeatureInstanceHandle FeatureDupInstanceHandle(FeatureInstanceHandle handle)
 {
     if (handle) {

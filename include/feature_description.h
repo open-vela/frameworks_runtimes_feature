@@ -220,6 +220,14 @@ typedef struct FeatureDescription {
 bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescription* description);
 
 /**
+ * @brief get registry from manager
+ *
+ * @param handle
+ * @return registry
+ */
+FeatureRegistryHandle FeatureGetRegistryFromManager(FeatureManagerHandle handle);
+
+/**
  * @brief get a member function from the FeatureInterfaceHandle
  *
  * @param handle
