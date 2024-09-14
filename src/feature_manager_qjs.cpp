@@ -904,17 +904,18 @@ ft_value_t FeatureManagerQjs::featureRequire(ft_value_t binding_obj, const char*
     ft_value_t ret;
     auto js_ret_ptr = FT_VAL_GET_JS_VAL_PTR(ret);
     *js_ret_ptr = FEATURE_VALUE_UNDEFINED;
-    auto feature_pair = getFeatureRegistry()->findFeature(name);
-    if (!feature_pair || !feature_pair->first->description) {
+    auto pDesc = getFeatureRegistry()->findFeature(name);
+    if (!pDesc) {
         FEATURE_LOG_DEBUG("can't find native feature '%s', fallback to original JS module load!", name);
         return ret;
     }
-    const FeatureDescription* description = feature_pair->first;
 
-    auto& prototype = feature_pair->second;
+    auto& prototypes = getFeaturePrototypes();
+
+    auto& prototype = prototypes[name];
     if (!prototype) {
         // create proto
-        prototype = new FeaturePrototypeQjs(description);
+        prototype = new FeaturePrototypeQjs(pDesc);
         prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvName(FEATURE_ENV_NAME);
@@ -932,11 +933,11 @@ ft_value_t FeatureManagerQjs::featureRequire(ft_value_t binding_obj, const char*
     instance_ptr->setInstanceId(iid);
 
     auto js_instance = createJsInstance((FeaturePrototypeQjs*)prototype, instance_ptr);
-    if (description->native_callbacks && description->native_callbacks->onRequired) {
+    if (pDesc->native_callbacks && pDesc->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
         FeatureMethodMeasurer(prototype->description()->name, "onRequired");
         auto ctx = (feature_context_ref)ft_context_get_data(ft_ctx);
-        description->native_callbacks->onRequired(ctx, instance_ptr);
+        pDesc->native_callbacks->onRequired(ctx, instance_ptr);
     }
     *js_ret_ptr = js_instance;
     return ret;
@@ -972,9 +973,9 @@ void FeatureManagerQjs::uninit()
         }
     };
 
-    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        auto proto = static_cast<FeaturePrototypeQjs*>(pair.second.second);
-        auto description = pair.second.first;
+    for (const auto& pair : getFeaturePrototypes()) {
+        auto proto = static_cast<FeaturePrototypeQjs*>(pair.second);
+        auto description = getFeatureRegistry()->findFeature(pair.first.c_str());
         FEATURE_CHECK_NE(description, nullptr);
         if (!proto)
             continue;
@@ -997,7 +998,7 @@ void FeatureManagerQjs::uninit()
         }
         FEATURE_LOG_DEBUG("free feature prototype '%s'", description->name);
         free_prototype(proto);
-        delete pair.second.second;
+        delete proto;
     }
 
     // uninit registery
@@ -1014,17 +1015,16 @@ ft_value_t FeatureManagerQjs::findFeature(const char* name)
     ft_value_t ret;
     auto js_ret_ptr = FT_VAL_GET_JS_VAL_PTR(ret);
     *js_ret_ptr = FEATURE_VALUE_UNDEFINED;
-    auto feature_pair = getFeatureRegistry()->findFeature(name);
-    if (!feature_pair || !feature_pair->first) {
+    const FeatureDescription* pDesc = getFeatureRegistry()->findFeature(name);
+    if (!pDesc) {
         FEATURE_LOG_WARN("can't find description for native feature '%s'!", name);
         return ret;
     }
 
     // create proto
-    const FeatureDescription* description = feature_pair->first;
-    auto& prototype = feature_pair->second;
+    auto& prototype = getFeaturePrototypes()[pDesc->name];
     if (!prototype) {
-        prototype = new FeaturePrototypeQjs(description);
+        prototype = new FeaturePrototypeQjs(pDesc);
         prototype->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
         setEnvName(FEATURE_ENV_NAME);
@@ -1048,8 +1048,8 @@ ft_value_t FeatureManagerQjs::createFeature(ft_value_t proto, ft_value_t binding
     ft_value_t ret;
     auto js_ret_ptr = FT_VAL_GET_JS_VAL_PTR(ret);
     *js_ret_ptr = FEATURE_VALUE_UNDEFINED;
-    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        auto prototype = static_cast<FeaturePrototypeQjs*>(pair.second.second);
+    for (const auto& pair : getFeaturePrototypes()) {
+        auto prototype = static_cast<FeaturePrototypeQjs*>(pair.second);
         if (!prototype)
             continue;
 
@@ -1069,7 +1069,7 @@ ft_value_t FeatureManagerQjs::createFeature(ft_value_t proto, ft_value_t binding
         instance_ptr->setInstanceId(iid);
 
         // create prototype class instance
-        auto description = pair.second.first;
+        auto description = getFeatureRegistry()->findFeature(pair.first.c_str());
         auto js_instance = createJsInstance(prototype, instance_ptr);
         if (description->native_callbacks && description->native_callbacks->onRequired) {
             FEATURE_LOG_DEBUG("invoke onRequired callback...");

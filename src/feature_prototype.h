@@ -18,11 +18,12 @@
 #define __FEATURE_PROTOTYPE_H__
 
 #include "feature_description.h"
-#include "feature_manager.h"
+#include "feature_main_exports.h"
 #include "feature_object_ref.h"
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace feature_framework {
@@ -43,9 +44,9 @@ public:
 
     void clearAllInstances();
 
-    void setFeatureManager(FeatureManager* manager) { feature_manager_ = manager; }
+    void setFeatureManager(class FeatureManager* manager) { feature_manager_ = manager; }
 
-    FeatureManager* featureManager() const { return feature_manager_; }
+    class FeatureManager* featureManager() const { return feature_manager_; }
 
     void setNative(void* native) { native_ = native; }
 

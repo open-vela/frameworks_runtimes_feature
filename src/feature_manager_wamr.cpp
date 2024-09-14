@@ -564,7 +564,7 @@ bool FeatureManagerWamr::init()
 
     for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
         auto name = pair.first;
-        auto description = pair.second.first;
+        auto description = pair.second;
         FEATURE_CHECK_NE(description, nullptr);
 
         if (strcmp(name.data(), "ATest") != 0 && strcmp(name.data(), "Simple") != 0 && strcmp(name.data(), "struct_test") != 0 && strcmp(name.data(), "promise_test") != 0 && strcmp(name.data(), "interface_test") != 0 && strcmp(name.data(), "system.messageChannel") != 0) {
@@ -584,13 +584,9 @@ void FeatureManagerWamr::uninit()
         return;
 
     JSContext* js_ctx = (JSContext*)ft_context_get_data(getFeatureContext());
-    auto release_prototype = [js_ctx](const FeatureRegistry::FeatureRegistryPair& pair) {
-        auto proto = pair.second;
-        if (!proto)
-            return;
-
-        auto description = pair.first;
+    auto release_prototype = [js_ctx](const FeatureDescription* description, FeaturePrototype* proto) {
         FEATURE_CHECK_NE(description, nullptr);
+        FEATURE_CHECK_NE(proto, nullptr);
         // clear all feature instance at first, it will free all feature instance and call onDetach for them
         proto->clearAllInstances();
         // call feature's onDestroy
@@ -602,8 +598,9 @@ void FeatureManagerWamr::uninit()
     };
 
     // check if all instances deleted, then clear proto object
-    for (const auto& feature_pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        release_prototype(feature_pair.second);
+    for (auto& feature_pair : getFeaturePrototypes()) {
+        const FeatureDescription* pDesc = getFeatureRegistry()->findFeature(feature_pair.first.c_str());
+        release_prototype(pDesc, feature_pair.second);
     }
     // uninit registery
     delete getFeatureRegistry();
@@ -633,23 +630,22 @@ void FeatureManagerWamr::uninit()
 bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name)
 {
     FEATURE_LOG_INFO("require feature for name: %s", name);
-    auto feature_pair = getFeatureRegistry()->findFeature(name);
-    if (!feature_pair || !feature_pair->first) {
+    const FeatureDescription* pDesc = getFeatureRegistry()->findFeature(name);
+    if (!pDesc) {
         FEATURE_LOG_WARN("can't find native feature '%s'!", name);
         return false;
     }
-    auto description = feature_pair->first;
 
     wamr_env_ = ctx;
     FEATURE_CHECK_NE(getFeatureContext(), nullptr);
-    auto& proto = feature_pair->second;
+    auto& proto = getFeaturePrototypes()[name];
 
     if (!proto) {
         // create proto
-        proto = new FeaturePrototypeWamr(description);
-        if (!description->dynamic && description->native_callbacks->onCreate) {
+        proto = new FeaturePrototypeWamr(pDesc);
+        if (!pDesc->dynamic && pDesc->native_callbacks->onCreate) {
             FEATURE_LOG_DEBUG("invoke onCreate callback...");
-            description->native_callbacks->onCreate(ctx, proto);
+            pDesc->native_callbacks->onCreate(ctx, proto);
         }
         proto->setFeatureManager(this);
         setPackageName(getFeatureRegistry()->getFeaturePackageName());
@@ -666,9 +662,9 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
     instance_ptr->setInstanceId(iid);
 
     // create prototype class instance
-    if (description->native_callbacks && description->native_callbacks->onRequired) {
+    if (pDesc->native_callbacks && pDesc->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        description->native_callbacks->onRequired(ctx, instance_ptr);
+        pDesc->native_callbacks->onRequired(ctx, instance_ptr);
     }
 
     return true;

@@ -17,13 +17,15 @@
 #include "feature_prototype.h"
 #include "feature_instance.h"
 #include "feature_log.h"
+#include "feature_main_exports.h"
+#include "feature_manager.h"
 
+#include <algorithm>
 #include <cstdarg>
 #include <cstdint>
 #include <functional>
 #include <sstream>
 #include <string>
-#include <algorithm>
 
 namespace feature_framework {
 

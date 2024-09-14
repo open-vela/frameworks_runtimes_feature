@@ -17,6 +17,7 @@
 #include "feature_instance.h"
 #include "feature_context.h"
 #include "feature_log.h"
+#include "feature_manager.h"
 #include "feature_utils.h"
 #include "utils/feature_utils.h"
 #include <string.h>

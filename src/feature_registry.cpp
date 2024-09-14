@@ -54,8 +54,7 @@ bool FeatureRegistry::registerFeature(const FeatureDescription* description)
         return false;
 
     if (description->name != nullptr) {
-        registeredFeatures_[description->name] = std::pair<const FeatureDescription*, FeaturePrototype*>(description,
-            nullptr);
+        registeredFeatures_[description->name] = description;
         // invoke onRegister callback
         FEATURE_LOG_DEBUG("registered feature: %s", description->name);
         if (description->native_callbacks && description->native_callbacks->onRegister) {
@@ -70,15 +69,14 @@ bool FeatureRegistry::registerFeature(const FeatureDescription* description)
 void FeatureRegistry::unregisterAllFeatures()
 {
     for (const auto& item : registeredFeatures_) {
-        const auto& description = item.second.first;
+        const auto& description = item.second;
         if (description && description->native_callbacks && description->native_callbacks->onUnregister) {
             description->native_callbacks->onUnregister(description->name);
         }
     }
 }
 
-FeatureRegistry::FeatureRegistryPair*
-FeatureRegistry::findFeature(const char* name)
+const FeatureDescription* FeatureRegistry::findFeature(const char* name)
 {
     FEATURE_LOG_DEBUG("find Feature: %s", name);
     auto pos = registeredFeatures_.find(name);
@@ -86,18 +84,7 @@ FeatureRegistry::findFeature(const char* name)
         FEATURE_LOG_ERROR("can not find feature: %s", name);
         return nullptr;
     }
-    return &pos->second;
-}
-
-void FeatureRegistry::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
-{
-    dump->count(sizeof(FeatureRegistry), userdata);
-    for (auto& e : registeredFeatures_) {
-        if (e.second.second) {
-            void* sub = dump->sub(e.first.c_str(), userdata);
-            e.second.second->onDumpMemory(dump, sub);
-        }
-    }
+    return pos->second;
 }
 
 } // namespace feature_framework

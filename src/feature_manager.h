@@ -21,11 +21,14 @@
 #include "feature_description.h"
 #include "feature_list.h"
 #include "feature_main_exports.h"
+#include "feature_prototype.h"
 #include "feature_registry.h"
 #include "permissions_manager.h"
 #include "thread_checker.h"
 
+#include <map>
 #include <queue>
+#include <string>
 
 namespace feature_framework {
 
@@ -108,8 +111,11 @@ public:
 
     PermissionsManager& permissionsManager() { return perms_manager_; }
 
+    std::map<std::string, FeaturePrototype*>& getFeaturePrototypes() { return prototypes_; }
+
 private:
     FeatureRegistry* registry_;
+    std::map<std::string, FeaturePrototype*> prototypes_;
     ft_context_ref ft_ctx_;
     const char* pkg_name_ = nullptr;
     const char* env_name_ = nullptr;
