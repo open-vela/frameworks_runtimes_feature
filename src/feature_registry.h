@@ -39,7 +39,6 @@ class FeaturePrototype;
  */
 class FeatureRegistry {
 public:
-    using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
     FeatureRegistry() = default;
     ~FeatureRegistry();
     /**
@@ -61,19 +60,17 @@ public:
      */
     bool registerFeature(const FeatureDescription* description);
     void unregisterAllFeatures();
-    FeatureRegistryPair* findFeature(const char* name);
+    const FeatureDescription* findFeature(const char* name);
     const char* getFeaturePackageName() const { return package_name_.data(); }
     /**
      * @brief Get the Registered Features object
      *
      * @return const std::map<std::string, FeatureUnit*>&
      */
-    const std::map<std::string, FeatureRegistryPair>& getRegisteredFeatures() const { return registeredFeatures_; }
-
-    void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
+    const std::map<std::string, const FeatureDescription*>& getRegisteredFeatures() const { return registeredFeatures_; }
 
 private:
-    std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features
+    std::map<std::string, const FeatureDescription*> registeredFeatures_; // 已注册features
     std::string package_name_;
 
 }; // class FeatureRegistry

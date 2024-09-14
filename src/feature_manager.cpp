@@ -171,16 +171,16 @@ bool FeatureManager::hasFeature(const std::string& feature_method)
     const std::string& feature_name = feature_method;
     bool feature_name_only = true;
     size_t last_dot = std::string::npos;
-    auto feature_pair = getFeatureRegistry()->findFeature(feature_name.c_str());
-    if (!feature_pair || !feature_pair->first->description) {
+    const FeatureDescription* pDesc = getFeatureRegistry()->findFeature(feature_name.c_str());
+    if (!pDesc) {
         feature_name_only = false;
         last_dot = feature_name.find_last_of(".");
         if (last_dot == std::string::npos) {
             return false;
         }
 
-        feature_pair = getFeatureRegistry()->findFeature(feature_name.substr(0, last_dot).c_str());
-        if (!feature_pair || !feature_pair->first->description) {
+        pDesc = getFeatureRegistry()->findFeature(feature_name.substr(0, last_dot).c_str());
+        if (!pDesc) {
             return false;
         }
     }
@@ -189,8 +189,8 @@ bool FeatureManager::hasFeature(const std::string& feature_method)
         return true;
 
     std::string method = feature_name.substr(last_dot + 1);
-    auto members = feature_pair->first->members;
-    int n = feature_pair->first->member_count;
+    auto members = pDesc->members;
+    int n = pDesc->member_count;
     for (int i = 0; i < n; i++) {
         if (std::string(members[i].name) == method) {
             return true;
@@ -203,8 +203,12 @@ bool FeatureManager::hasFeature(const std::string& feature_method)
 void FeatureManager::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
 {
     dump->count(sizeof(FeatureManager), userdata);
-    if (registry_)
-        registry_->onDumpMemory(dump, userdata);
+    for (auto& pair : prototypes_) {
+        if (pair.second) {
+            void* sub = dump->sub(pair.first.c_str(), userdata);
+            pair.second->onDumpMemory(dump, sub);
+        }
+    }
 }
 
 }
