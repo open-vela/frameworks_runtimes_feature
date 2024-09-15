@@ -11,7 +11,7 @@ public:
     void foo(FtInt a, const ft_utils::RefPtr<Chapter>& b) override;
     class ft_utils::RefPtr<Chapter> bar(FtInt a) override;
     void bar2(const ft_utils::RefPtr<Book>& a) override;
-    void print(FtVariParams vari_params) override;
+    ft_utils::RefPtr<FtArray> getBooks(FtInt count) override;
 
 private:
     // 用户可以按需定义类，保存逻辑必要的数据
