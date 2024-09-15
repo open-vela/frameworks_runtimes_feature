@@ -78,7 +78,7 @@ void Struct::bar2(const ft_utils::RefPtr<Book>& a)
     if (!a->first_chap()) {
         FEATURE_LOG_INFO("first_chap ptr is null!");
     } else {
-        FEATURE_LOG_INFO("first_chapter: [page_count: %d, title: %s]",a->first_chap()->page_count(), a->first_chap()->title().ptr());
+        FEATURE_LOG_INFO("first_chapter: [page_count: %d, title: %s]", a->first_chap()->page_count(), a->first_chap()->title().ptr());
     }
 
     if (!FeatureInvokeCallback(getHandle(), a->chap_changed(), 0, a->title().ptr())) {
@@ -88,8 +88,30 @@ void Struct::bar2(const ft_utils::RefPtr<Book>& a)
     FeatureRemoveCallback(getHandle(), a->chap_changed());
 }
 
-void Struct::print(FtVariParams vari_params)
+ft_utils::RefPtr<FtArray> Struct::getBooks(FtInt count)
 {
+    auto result = makeArray<Book*>(count);
+    char buf[128];
+    for (int i = 0; i < count; i++) {
+        auto elem = make<Book>();
+        elem->set_page_count(i + 5);
+        elem->set_title(strdup("hello world"));
+        auto titles = makeArray<FtString>(3);
+        for (int j = 0; j < 3; j++) {
+            sprintf(buf, "chapter: %d-%d", i, j);
+            titles.append(strdup((const char*)buf).drop());
+            elem->set_chap_titles(titles.getShared());
+        }
+        auto chapter = make<Chapter>();
+        chapter->set_page_count(i + 3);
+        sprintf(buf, "title: %d", i);
+        chapter->set_title(strdup((const char*)buf));
+        chapter->set_is_end(false);
+        elem->set_first_chap(chapter);
+        elem->set_chap_changed(true);
+        result.append(elem.drop());
+    }
+    return result;
 }
 
 }

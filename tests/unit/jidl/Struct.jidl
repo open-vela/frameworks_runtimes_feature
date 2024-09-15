@@ -22,4 +22,4 @@ struct Book {
 void foo(int a, Chapter b) // struct as parameter
 Chapter bar(int a) // struct as return value
 void bar2(Book a) // complex struct as parameter
-void print(...)
+Book[] getBooks(int count)  // return book array

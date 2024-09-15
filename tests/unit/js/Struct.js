@@ -18,7 +18,5 @@ struct.bar2({
     }
 })
 
-struct.proto(1, { main_monitor: { width: 123, height: 456, colorDepth: 8 }, name: "NAME", price: 666, sn_code: "2.3.4.5.6.7" })
-struct.proto_cb((val)=>{
-    console.log(val)
-})
+let books = struct.getBooks(1)
+console.log("getBooks: ", books)

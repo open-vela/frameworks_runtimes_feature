@@ -147,13 +147,12 @@ bool convertValueToTarget(FeatureType ftype,
             }
         } break;
         case COMPLEX_CALLBACK: {
-            FtCallbackId callback = *(FtCallbackId*)pnative;
-            if (callback == 0) {
-                FEATURE_LOG_WARN("zero callback id!");
-                target = value_translator::nullValue(ctx);
-                break;
+            bool ret = convertValueToTarget(FT_INT32, ctx, pnative, target);
+            if (!ret) {
+                value_translator::freeValue(ctx, target);
+                FEATURE_LOG_ERROR("convert optional to guest failed !");
+                return false;
             }
-            FEATURE_LOG_DEBUG("convert callback to guest is not supported");
         } break;
         case COMPLEX_ARRAY: {
             // convert to guest
@@ -164,7 +163,7 @@ bool convertValueToTarget(FeatureType ftype,
                 break;
             }
             auto elem_type = ((ArrayType*)complex_type)->element_type;
-            size_t elem_size = sizeof(uintptr_t);
+            size_t elem_size = getValueSize(elem_type);
             target = value_translator::createArray(ctx, elem_type, array->_size);
             if (value_translator::isNull(ctx, target)) {
                 FEATURE_LOG_ERROR("create array failed!");

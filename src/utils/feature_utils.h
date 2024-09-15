@@ -360,9 +360,9 @@ inline namespace internal {
     {
         FeatureType result = -1;
         using Ty = std::remove_cv_t<T>;
-        if constexpr (has_member_getFeatureType<Ty>::value) {
+        if constexpr (has_member_getFeatureType<std::remove_pointer_t<Ty>>::value) {
             // for complex type
-            result = Ty::getFeatureType();
+            result = std::remove_pointer_t<Ty>::getFeatureType();
         } else if constexpr (std::is_same_v<Ty, int>) {
             result = FT_INT;
         } else if constexpr (std::is_same_v<Ty, int8_t>) {
