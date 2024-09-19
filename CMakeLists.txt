@@ -422,33 +422,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
   # generate pdat files list
   file(GLOB PDATLIST "registry/*.pdat")
 
-  # generate ajs_features_list.h and ajs_features_registry.cpp
-  set(AJS_REGISTRY_CONTENT
-      [=[
-#include "ajs_features_registry.h"
-#include "ajs_features_list.h"
-
-]=])
-  set(AJS_REGISTRY_CONTENT
-      "${AJS_REGISTRY_CONTENT}bool registerAjsFeatures(FeatureRegistryHandle handle) \{"
-  )
-
-  foreach(FEATURE_ITEM ${FEATURELIST})
-    set(AJS_CALL "    if (!jse_${FEATURE_ITEM}_initFeature(handle))")
-    set(AJS_CALL "${AJS_CALL}\n        return false\;")
-    set(AJS_REGISTRY_CONTENT "${AJS_REGISTRY_CONTENT}\n${AJS_CALL}")
-  endforeach()
-  foreach(FEATURE_ITEM ${CFEATURELIST})
-    set(AJS_CALL "    if (!jse_${FEATURE_ITEM}_initFeature(handle))")
-    set(AJS_CALL "${AJS_CALL}\n        return false\;")
-    set(AJS_REGISTRY_CONTENT "${AJS_REGISTRY_CONTENT}\n${AJS_CALL}")
-  endforeach()
-  set(AJS_REGISTRY_CONTENT "${AJS_REGISTRY_CONTENT}\n    return true\;\n\}")
-
-  file(WRITE ${BINARY_SRC_DIR}/ajs_features_registry.cpp
-       ${AJS_REGISTRY_CONTENT})
-  list(APPEND FEATURE_SRCS ${BINARY_SRC_DIR}/ajs_features_registry.cpp)
-
   # generate ajs_features_init.h and ajs_features_list.h
   set(AJS_LIST_CONTENT
       [=[
@@ -461,22 +434,38 @@ if(CONFIG_FEATURE_FRAMEWORK)
   foreach(FEATURE_ITEM ${FEATURELIST})
     set(FEATURE_DEF
         "bool jse_${FEATURE_ITEM}_initFeature(FeatureRegistryHandle handle);")
-    set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n${FEATURE_DEF}")
+    string(APPEND AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n${FEATURE_DEF}\n")
   endforeach()
 
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n\n#ifdef __cplusplus")
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\nextern \"C\" \{")
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n#endif")
+  string(APPEND AJS_LIST_CONTENT "\n#ifdef __cplusplus\n")
+  string(APPEND AJS_LIST_CONTENT "extern \"C\" \{\n")
+  string(APPEND AJS_LIST_CONTENT "#endif\n\n")
   foreach(FEATURE_ITEM ${CFEATURELIST})
-    set(FEATURE_DEF
-        "bool jse_${FEATURE_ITEM}_initFeature(FeatureRegistryHandle handle);")
-    set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n${FEATURE_DEF}")
+    string(APPEND AJS_LIST_CONTENT "bool jse_${FEATURE_ITEM}_initFeature(FeatureRegistryHandle handle);\n")
   endforeach()
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n#ifdef __cplusplus")
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n\}")
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n#endif")
-  set(AJS_LIST_CONTENT "${AJS_LIST_CONTENT}\n#endif")
-  file(WRITE "${BINARY_SRC_DIR}/ajs_features_list.h" "${AJS_LIST_CONTENT}")
+  string(APPEND AJS_LIST_CONTENT "#ifdef __cplusplus\n")
+  string(APPEND AJS_LIST_CONTENT "\}\n")
+  string(APPEND AJS_LIST_CONTENT "#endif\n\n\n")
+
+  string(APPEND AJS_LIST_CONTENT
+      "typedef bool (*FeatureRegistryFunc)(FeatureRegistryHandle)\;\n"
+      "FeatureRegistryFunc g_ajs_features_registry[] = {\n"
+  )
+
+  foreach(FEATURE_ITEM ${FEATURELIST})
+    list(APPEND AJS_LIST_CONTENT "    jse_${FEATURE_ITEM}_initFeature,\n")
+  endforeach()
+  foreach(FEATURE_ITEM ${CFEATURELIST})
+    list(APPEND AJS_LIST_CONTENT "    jse_${FEATURE_ITEM}_initFeature,\n")
+  endforeach()
+  string(APPEND AJS_LIST_CONTENT "}\;\n")
+	string(APPEND AJS_LIST_CONTENT "size_t g_ajs_features_registry_count = sizeof(g_ajs_features_registry) / sizeof(g_ajs_features_registry[0])\;\n")
+  string(APPEND AJS_LIST_CONTENT "\n#endif\n")
+
+  file(WRITE ${BINARY_SRC_DIR}/ajs_features_registry.cpp
+       ${AJS_LIST_CONTENT})
+  list(APPEND FEATURE_SRCS ${BINARY_SRC_DIR}/ajs_features_registry.cpp)
+
   list(APPEND FEATURE_INC_DIRS ${BINARY_SRC_DIR})
 
   set(FEATURE_EXPORTS

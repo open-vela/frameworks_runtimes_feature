@@ -75,51 +75,8 @@ function(gen_feature_registery_cpp)
             set(FEATURE_LIST_C ${${prefix}_${arg}})
         endif()
     endforeach()
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "/* This file is auto-generated, DO NOT EDIT IT. */\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#include \"ajs_features_registry.h\"\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#include \"ajs_features_list.h\"\n\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "bool registerAjsFeatures(FeatureRegistryHandle handle) {\n")
-    foreach(feature ${FEATURE_LIST_CPP})
-        string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "    jse_${feature}_initFeature(handle);\n")
-    endforeach(feature ${FEATURE_LIST_CPP})
-    foreach(feature ${FEATURE_LIST_C})
-        string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "    jse_${feature}_initFeature(handle);\n")
-    endforeach(feature ${FEATURE_LIST_C})
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "    return true;\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "}\n")
-    configure_file(${CMAKE_ROOT}/Modules/CMakeConfigurableFile.in
-        ${CMAKE_BINARY_DIR}/ajs_features_registry.cpp
-        @ONLY
-    )
-endfunction(gen_feature_registery_cpp)
-
-# generate ajs_features_list.h
-function(gen_feature_registery_h)
-
-    # Define the supported set of keywords
-    set(prefix ARG)
-    set(noValues)
-    set(singleValues "")
-    set(multiValues FEATURE_LIST_CPP FEATURE_LIST_C)
-    # Process the arguments passed in
-    cmake_parse_arguments(
-        PARSE_ARGV 0
-        ${prefix}
-        "${noValues}" "${singleValues}" "${multiValues}"
-    )
-    set(FEATURE_LIST_CPP)
-    set(FEATURE_LIST_C)
-    foreach(arg IN LISTS singleValues multiValues)
-        if(${arg} STREQUAL "FEATURE_LIST_CPP")
-            set(FEATURE_LIST_CPP ${${prefix}_${arg}})
-        elseif(${arg} STREQUAL "FEATURE_LIST_C")
-            set(FEATURE_LIST_C ${${prefix}_${arg}})
-        endif()
-    endforeach()
 
     string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "/* This file is auto-generated, DO NOT EDIT IT. */\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#ifndef AJS_FEATURES_LIST_H_\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#define AJS_FEATURES_LIST_H_\n\n")
     string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#include \"feature_exports.h\"\n\n")
     foreach(feature ${FEATURE_LIST_CPP})
         string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "bool jse_${feature}_initFeature(FeatureRegistryHandle handle);\n")
@@ -133,13 +90,23 @@ function(gen_feature_registery_h)
     endforeach(feature ${FEATURE_LIST_C})
     string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#ifdef __cplusplus\n")
     string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "}\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#endif //__cplusplus\n")
-    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "\n#endif")
+    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "#endif //__cplusplus\n\n")
+
+    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "typedef bool (*FeatureRegistryFunc)(FeatureRegistryHandle);\n")
+    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "FeatureRegistryFunc g_ajs_features_registry[] = {\n")
+    foreach(feature ${FEATURE_LIST_CPP})
+        string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "    jse_${feature}_initFeature,\n")
+    endforeach(feature ${FEATURE_LIST_CPP})
+    foreach(feature ${FEATURE_LIST_C})
+        string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "    jse_${feature}_initFeature,\n")
+    endforeach(feature ${FEATURE_LIST_C})
+    string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "};\n")
+	string(APPEND CMAKE_CONFIGURABLE_FILE_CONTENT "size_t g_ajs_features_registry_count = sizeof(g_ajs_features_registry) / sizeof(g_ajs_features_registry[0]);\n")
     configure_file(${CMAKE_ROOT}/Modules/CMakeConfigurableFile.in
-        ${CMAKE_BINARY_DIR}/ajs_features_list.h
+        ${CMAKE_BINARY_DIR}/ajs_features_registry.cpp
         @ONLY
     )
-endfunction(gen_feature_registery_h)
+endfunction(gen_feature_registery_cpp)
 
 # generate feature registery files
 function(jidl_codegen_registry)
@@ -167,9 +134,5 @@ function(jidl_codegen_registry)
         FEATURE_LIST_CPP ${FEATURE_LIST_CPP}
         FEATURE_LIST_C ${FEATURE_LIST_C}
     )
-    gen_feature_registery_h(
-        FEATURE_LIST_CPP ${FEATURE_LIST_CPP}
-        FEATURE_LIST_C ${FEATURE_LIST_C}
-    )
-    set(JIDL_GENERATED_FEATURE_REGISTERY_FILES ${CMAKE_BINARY_DIR}/ajs_features_registry.cpp ${CMAKE_BINARY_DIR}/ajs_features_list.h PARENT_SCOPE)
+    set(JIDL_GENERATED_FEATURE_REGISTERY_FILES ${CMAKE_BINARY_DIR}/ajs_features_registry.cpp PARENT_SCOPE)
 endfunction(jidl_codegen_registry)
