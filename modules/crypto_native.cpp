@@ -28,11 +28,6 @@ static const char* file_tag = "[jidl_feature] crypto_native";
 
 const char* crypto_err = NULL;
 
-/* clang-format off */
-#define ROUND_UP(x, y) ((((x) + (y) - 1) / (y)) * (y))
-#define BASE64_ENCODED_LENGTH(len) (((len) + 2) / 3 * 4 + 1)
-/* clang-format on */
-
 #define CHECK_ERR_RET(ptr, msg)                                               \
     do {                                                                      \
         if (ptr == NULL) {                                                    \
@@ -49,225 +44,198 @@ const char* crypto_err = NULL;
         break;                                                              \
     }
 
-static bool setup_uv_aes(uv_aes_t* aes_ctx, int mode,
-    const unsigned char* key, const unsigned char* iv, int iv_offset, int iv_len)
+static int setup_uv_aes_key(uv_aes_t* aes_ctx, int mode, const uint8_t* key, size_t key_size)
 {
-    unsigned int key_bitlen = aes_ctx->aes_context.cipher_info->key_bitlen;
-    if (uv_aes_set_key_base64(aes_ctx, mode, key, key_bitlen) != 0) {
-        FEATURE_LOG_ERROR("%s, %s\n", file_tag, "crypto.aes set base64 key failed");
-        return false;
+    if (uv_aes_set_key(aes_ctx, mode, key, key_size * 8) != 0) {
+        FEATURE_LOG_ERROR("%s, %s\n", file_tag, "crypto.aes set key failed");
+        return -1;
     }
 
-    unsigned int iv_size = aes_ctx->aes_context.cipher_info->iv_size;
-    if (iv_size != 0 && uv_aes_set_iv_base64(aes_ctx, iv, iv_offset, iv_len) != 0) {
+    return 0;
+}
+
+static int setup_uv_aes_iv(uv_aes_t* aes_ctx, const unsigned char* iv, int iv_offset, int iv_len)
+{
+    if (uv_aes_set_iv(aes_ctx, iv, iv_offset, iv_len) != 0) {
         FEATURE_LOG_ERROR("%s, %s\n", file_tag, "crypto.aes set base64 iv failed");
-        return false;
+        return -1;
     }
 
-    return true;
+    return 0;
 }
 
-char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text)
+int aes_non_auth_crypto(int mode,
+    int padding,
+    const uint8_t* key, size_t key_size,
+    const uint8_t* iv_str, int ivOffset, int ivLen,
+    const uint8_t* buff, size_t buff_size,
+    uint8_t* output, size_t* output_size,
+    int operation)
 {
-    crypto_err = NULL;
     uv_aes_t aes_ctx = {};
-    uv_buf_t text = { 0, 0 };
-    char* ret_str = NULL;
+    int ret = 0;
 
-    do {
-        CHECK_ERR_BREAK(key_str, "invalid parameter key");
-        CHECK_ERR_BREAK(iv_str, "invalid parameter iv");
-        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
+    ret = uv_aes_init(&aes_ctx, mode, padding);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.aes aes_ctx init failed");
+        return -1;
+    }
 
-        text.base = (char*)buff;
-        text.len = *size;
-        *size = 0;
+    ret = setup_uv_aes_key(&aes_ctx, operation, key, key_size);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.aes set key failed");
+        goto exit;
+    }
 
-        if (uv_aes_init(&aes_ctx, mode, padding) != 0) {
-            CHECK_ERR_BREAK(NULL, "crypto.aes aes_ctx init failed");
+    ret = setup_uv_aes_iv(&aes_ctx, iv_str, ivOffset, ivLen);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.aes set iv failed");
+        goto exit;
+    }
+
+    if (operation == ENCRYPT_OPERATION) {
+        ret = uv_aes_encrypt(&aes_ctx, buff, buff_size, output, output_size);
+        if (ret != 0) {
+            FEATURE_LOG_ERROR("crypto.aes encrypt failed");
+            goto exit;
         }
-
-        if (!setup_uv_aes(&aes_ctx, 1, (const unsigned char*)key_str, (const unsigned char*)iv_str, ivOffset, ivLen)) {
-            CHECK_ERR_BREAK(NULL, "crypto.aes set base64 key or iv failed");
+    } else if (operation == DECRYPT_OPERATION) {
+        ret = uv_aes_decrypt(&aes_ctx, buff, buff_size, output, output_size);
+        if (ret != 0) {
+            FEATURE_LOG_ERROR("crypto.aes decrypt failed");
+            goto exit;
         }
+        // when decrypt operation, the output_data is utf-8 encoded
+        (output)[*output_size] = '\0';
 
-        size_t out_len = 0;
-        size_t out_size = BASE64_ENCODED_LENGTH(ROUND_UP(text.len + 1, 16));
-        unsigned char* out_buff = (unsigned char*)alloca(out_size);
-        memset(out_buff, 0, out_size);
+    } else {
+        FEATURE_LOG_ERROR("crypto.aes wrong operation");
+        goto exit;
+    }
 
-        if (*is_text) {
-            if (uv_aes_encrypt_base64(&aes_ctx, (const unsigned char*)text.base, text.len, out_buff, out_size, &out_len) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.aes encrypt_base64 failed");
-            }
-        } else {
-            if (uv_aes_encrypt(&aes_ctx, (const unsigned char*)text.base, text.len, out_buff, &out_len) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.aes encrypt failed");
-            }
-        }
-        out_buff[out_len] = '\0';
-        *size = out_len;
-        ret_str = (char*)malloc(out_len + 1);
-        memcpy(ret_str, out_buff, out_len);
-        ret_str[out_len] = '\0';
-        uv_aes_free(&aes_ctx);
-        return ret_str;
-    } while (false);
-
+exit:
     uv_aes_free(&aes_ctx);
-    return ret_str;
+
+    return ret;
 }
 
-char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text)
+int aes_auth_crypto(int mode,
+    int padding,
+    const uint8_t* key, size_t key_size,
+    const uint8_t* iv_str, int ivLen,
+    uint8_t* aad, size_t aadLen,
+    uint8_t* tag_input, int tagLen_input,
+    const uint8_t* buff, size_t buff_size,
+    uint8_t* output, size_t output_size, size_t* out_size,
+    int operation)
 {
-    crypto_err = NULL;
     uv_aes_t aes_ctx = {};
-    uv_buf_t text = { 0, 0 };
-    char* ret_str = NULL;
+    int ret = 0;
 
-    do {
-        CHECK_ERR_BREAK(key_str, "invalid parameter key");
-        CHECK_ERR_BREAK(iv_str, "invalid parameter iv");
-        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
-        text.base = (char*)buff;
-        text.len = *size;
-        *size = 0;
+    ret = uv_aes_init(&aes_ctx, mode, padding);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.aes aes_ctx init failed");
+        return -1;
+    }
 
-        if (uv_aes_init(&aes_ctx, mode, padding) != 0) {
-            CHECK_ERR_BREAK(NULL, "crypto.aes aes_ctx init failed");
+    ret = setup_uv_aes_key(&aes_ctx, operation, key, key_size);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.aes set key failed");
+        goto exit;
+    }
+
+    if (operation == ENCRYPT_OPERATION) {
+        ret = uv_aes_auth_encrypt(&aes_ctx,
+            iv_str, ivLen,
+            aad, aadLen,
+            tagLen_input,
+            buff, buff_size,
+            output, output_size,
+            out_size);
+        if (ret != 0) {
+            FEATURE_LOG_ERROR("crypto.aes auth encrypt failed");
+            goto exit;
         }
-
-        if (!setup_uv_aes(&aes_ctx, 0, (const unsigned char*)key_str, (const unsigned char*)iv_str, ivOffset, ivLen)) {
-            CHECK_ERR_BREAK(NULL, "crypto.aes set base64 key or iv failed");
+    } else if (operation == DECRYPT_OPERATION) {
+        size_t buffTag_size = buff_size + tagLen_input;
+        uint8_t* buff_tag = (uint8_t*)malloc(buffTag_size);
+        if (buff_tag == NULL) {
+            FEATURE_LOG_ERROR("crypto.aes malloc buff_tag failed");
+            ret = -1;
+            goto exit;
         }
-
-        size_t out_len = 0;
-        unsigned char* out_buff = NULL;
-        size_t out_size = text.len + 16;
-        out_buff = (unsigned char*)alloca(out_size);
-        memset(out_buff, 0, out_size);
-
-        if (*is_text) {
-            if (uv_aes_decrypt_base64(&aes_ctx, (const unsigned char*)text.base, text.len, out_buff, &out_len) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.aes decrypt_base64 failed");
-            }
-        } else {
-            if (uv_aes_decrypt(&aes_ctx, (const unsigned char*)text.base, text.len, out_buff, &out_len) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.aes decrypt failed");
-                break;
-            }
+        memcpy(buff_tag, buff, buff_size);
+        memcpy(buff_tag + buff_size, tag_input, tagLen_input);
+        ret = uv_aes_auth_decrypt(&aes_ctx,
+            iv_str, ivLen,
+            aad, aadLen,
+            tagLen_input,
+            buff_tag, buffTag_size,
+            output, output_size,
+            out_size);
+        if (ret != 0) {
+            FEATURE_LOG_ERROR("crypto.aes auth decrypt failed");
+            goto exit;
         }
-        out_buff[out_len] = '\0';
+    } else {
+        FEATURE_LOG_ERROR("crypto.aes wrong operation");
+        ret = -1;
+        goto exit;
+    }
 
-        *size = out_len;
-        ret_str = (char*)malloc(out_len + 1);
-        memcpy(ret_str, out_buff, out_len);
-        ret_str[out_len] = '\0';
-        uv_aes_free(&aes_ctx);
-        return ret_str;
-    } while (false);
-
+exit:
     uv_aes_free(&aes_ctx);
-    return ret_str;
+
+    return ret;
 }
 
-char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text)
+int rsa_crypto(const unsigned char* key_str,
+    uint8_t* buff, size_t buff_size,
+    uint8_t** output_data, size_t* output_size,
+    int operation)
 {
-    crypto_err = NULL;
+    if (key_str == NULL || buff == NULL || output_data == NULL || output_size == NULL) {
+        FEATURE_LOG_ERROR("crypto.rsa key_str, buff or output_size is NULL");
+        return -1;
+    }
+
     uv_buf_t text = { 0 };
     uv_buf_t key = { 0 };
     uv_buf_t output = { 0 };
-    uv_buf_t ret = { 0 };
-    char* ret_str = NULL;
+    int ret = 0;
 
-    do {
-        CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
-        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
-        key.base = (char*)key_str;
-        key.len = strlen(key_str);
-        text.base = (char*)buff;
-        text.len = *buff_size;
-        *buff_size = 0;
+    key.base = (char*)key_str;
+    key.len = strlen((const char*)key_str);
+    text.base = (char*)buff;
+    text.len = buff_size;
 
-        if (uv_rsa(key, text, &output, UV_EXT_ENCRYPT) != 0) {
-            CHECK_ERR_BREAK(NULL, "crypto.rsa encrypt failed");
-        }
-        if (*is_text) {
-            if (uv_base64_encode(output, &ret) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.rsa encode base64 failed");
-            }
-            *buff_size = ret.len;
-            ret_str = (char*)malloc((ret.len + 1) * sizeof(char));
-            memset(ret_str, 0, ret.len + 1);
-            memcpy(ret_str, ret.base, ret.len);
-        } else {
-            *buff_size = output.len;
-            ret_str = (char*)malloc(output.len * sizeof(char));
-            memcpy(ret_str, output.base, output.len);
-        }
-        if (output.base)
-            free(output.base);
-        if (ret.base)
-            free(ret.base);
-        return ret_str;
-    } while (false);
+    ret = uv_rsa(key, text, &output, operation);
+    if (ret != 0 || output.base == NULL || output.len == 0) {
+        FEATURE_LOG_ERROR("crypto.rsa encrypt failed");
+        goto exit;
+    }
 
-    if (output.base)
+    *output_data = (uint8_t*)malloc(output.len + 1);
+    if (*output_data == NULL) {
+        *output_size = 0;
+        FEATURE_LOG_ERROR("crypto.rsa malloc output_data failed");
+        ret = -1;
+        goto exit;
+    }
+    memset(*output_data, 0, output.len + 1);
+    memcpy(*output_data, output.base, output.len);
+    *output_size = output.len;
+    // when decrypt operation, the output_data is utf-8 encoded
+    if (operation == DECRYPT_OPERATION) {
+        (*output_data)[*output_size] = '\0';
+    }
+
+exit:
+    if (output.base) {
         free(output.base);
-    if (ret.base)
-        free(ret.base);
-    return ret_str;
-}
+    }
 
-char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text)
-{
-    crypto_err = NULL;
-    uv_buf_t text = { 0 };
-    uv_buf_t key = { 0 };
-    uv_buf_t input = { 0 };
-    uv_buf_t output = { 0 };
-    char* ret_str = NULL;
-
-    do {
-        CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
-        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
-        key.base = (char*)key_str;
-        key.len = strlen(key_str);
-        text.base = (char*)buff;
-        text.len = *buff_size;
-        *buff_size = 0;
-
-        if (*is_text) {
-            if (uv_base64_decode(text, &input)) {
-                CHECK_ERR_BREAK(NULL, "crypto.rsa decode base64 failed");
-            }
-            if (uv_rsa(key, input, &output, UV_EXT_DECRYPT) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.rsa decrypt failed");
-                break;
-            }
-        } else {
-            if (uv_rsa(key, text, &output, UV_EXT_DECRYPT) != 0) {
-                CHECK_ERR_BREAK(NULL, "crypto.rsa decrypt failed");
-            }
-        }
-        *buff_size = output.len;
-        size_t out_len = (*is_text) ? (output.len + 1) : output.len;
-        ret_str = (char*)malloc(out_len * sizeof(char));
-        memset(ret_str, 0, out_len);
-        memcpy(ret_str, output.base, output.len);
-
-        if (input.base)
-            free(input.base);
-        if (output.base)
-            free(output.base);
-        return ret_str;
-    } while (false);
-
-    if (input.base)
-        free(input.base);
-    if (output.base)
-        free(output.base);
-    return ret_str;
+    return ret;
 }
 
 bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, uint8_t* sig_buf, size_t seg_size, bool sig_text)
@@ -281,16 +249,16 @@ bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t
     int res;
 
     do {
-        CHECK_ERR_BREAK(type_str, "crypto.rsa invalid parameter type");
-        CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
-        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
-        CHECK_ERR_BREAK(sig_buf, "crypto.aes invalid parameter signature");
         type.base = (char*)type_str;
         type.len = strlen(type_str);
         key.base = (char*)key_str;
         key.len = strlen(key_str);
         text.base = (char*)buff;
         text.len = buff_size;
+        CHECK_ERR_BREAK(type_str, "crypto.rsa invalid parameter type");
+        CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
+        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
+        CHECK_ERR_BREAK(sig_buf, "crypto.aes invalid parameter signature");
         sig.base = (char*)sig_buf;
         sig.len = seg_size;
 
@@ -398,6 +366,36 @@ char* base64(const char* type_str, const char* text_str)
     return NULL;
 }
 
+int base64_encode(const char* input, size_t input_size, char* output, size_t output_size, size_t* exact_size)
+{
+    if (input == NULL || input_size == 0 || output == NULL || output_size == 0 || exact_size == NULL) {
+        return -1;
+    }
+
+    if (uv_base64_encode_ext(input, input_size, output, output_size, exact_size) != 0) {
+        *exact_size = 0;
+        FEATURE_LOG_ERROR("%s, uv_base64_encode_ext failed\n", file_tag);
+        return -1;
+    }
+
+    return 0;
+}
+
+int base64_decode(const char* input, size_t input_size, char* output, size_t output_size, size_t* exact_size)
+{
+    if (input == NULL || input_size == 0 || output == NULL || output_size == 0 || exact_size == NULL) {
+        return -1;
+    }
+
+    if (uv_base64_decode_ext(input, input_size, output, output_size, exact_size) != 0) {
+        *exact_size = 0;
+        FEATURE_LOG_ERROR("%s, uv_base64_decode_ext failed\n", file_tag);
+        return -1;
+    }
+
+    return 0;
+}
+
 char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text)
 {
     crypto_err = NULL;
@@ -407,9 +405,6 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
     uv_buf_t out = { 0 };
     uv_buf_t ret = { 0 };
     do {
-        CHECK_ERR_BREAK(type_str, "crypto.sign invalid parameter type");
-        CHECK_ERR_BREAK(key_str, "crypto.sign invalid parameter key");
-        CHECK_ERR_BREAK(buff, "crypto.sign invalid parameter text");
         type.base = (char*)type_str;
         type.len = strlen(type_str);
         key.base = (char*)key_str;
@@ -417,6 +412,9 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
         text.base = (char*)buff;
         text.len = *buff_size;
         *buff_size = 0;
+        CHECK_ERR_BREAK(type_str, "crypto.sign invalid parameter type");
+        CHECK_ERR_BREAK(key_str, "crypto.sign invalid parameter key");
+        CHECK_ERR_BREAK(buff, "crypto.sign invalid parameter text");
 
         if (uv_sign(type.base, key, text, &out, UV_EXT_TYPE_BUFFER)) {
             CHECK_ERR_BREAK(NULL, "crypto.sign invalid parameter key");
@@ -516,12 +514,12 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
     uv_buf_t ret = { 0 };
 
     do {
-        CHECK_ERR_BREAK(type_str, "crypto.digest invalid parameter type");
-        CHECK_ERR_BREAK(text_str, "crypto.digest invalid parameter text");
         type.base = (char*)type_str;
         type.len = strlen(type_str);
         text.base = (char*)text_str;
         text.len = text_size;
+        CHECK_ERR_BREAK(type_str, "crypto.digest invalid parameter type");
+        CHECK_ERR_BREAK(text_str, "crypto.digest invalid parameter text");
 
         int res;
         key.base = (char*)key_str;

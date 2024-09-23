@@ -106,19 +106,22 @@ void verify(RSAVerifyParam options)
  * @param options
  */
 struct MixinCryptOption {
-  string transformation // ?
-  string iv // ?
-  int ivOffset = 0 // ?
-  int ivLen = 16 // ?
+  string transformation = "AES/CBC/PKCS7Padding"
+  string iv = ""
+  int ivOffset = 0
+  int ivLen = 0
+  object aad = null  // string | Uint8Array
+  int tagLen = 4
+  object tag = null  // string | Uint8Array
 }
 struct CryptParam {
   object data  // string | Uint8Array
-  string algo = "RSA" // ? AlgoType
-  string key
-  struct MixinCryptOption options // ?
-  callback success_cb_obj_str_u8a_opt success // ?
-  callback fail_cb fail // ?
-  callback complete_cb complete // ?
+  string algo = "RSA"
+  object key  // string | Uint8Array
+  struct MixinCryptOption options = null
+  callback success_cb_obj_str_u8a_opt success = null
+  callback fail_cb fail = null
+  callback complete_cb complete = null
 }
 void encrypt(CryptParam options)
 

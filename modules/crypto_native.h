@@ -31,6 +31,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ROUND_UP(x, y) ((((x) + (y) - 1) / (y)) * (y))
+// NOTICE:  when using base64_decode, the length of input-string MUST equal to the size of output-buffer
+// when using base64_encode, the size of out-string buffer MUST greater than the size of input-buffer
+#define BASE64_ENCODED_LENGTH(len) (((len) % 3) ? (((len) / 3 + 1) * 4) : ((len) / 3 * 4))
+#define ENCRYPT_OPERATION 1
+#define DECRYPT_OPERATION 0
+
 extern const char* crypto_err;
 
 // no need to free the return char* because it is FeatureMalloced
@@ -39,17 +46,28 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
 // no need to free the return char* because it is FeatureMalloced
 char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str);
 
-// must free the return char* because it is malloced
-char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text);
+int rsa_crypto(const unsigned char* key_str,
+    uint8_t* buff, size_t buff_size,
+    uint8_t** output_data, size_t* output_size,
+    int operation);
 
-// must free the return char* because it is malloced
-char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text);
+int aes_non_auth_crypto(int mode,
+    int padding,
+    const uint8_t* key, size_t key_size,
+    const uint8_t* iv_str, int ivOffset, int ivLen,
+    const uint8_t* buff, size_t buff_size,
+    uint8_t* output, size_t* output_size,
+    int operation);
 
-// must free the return char* because it is malloced
-char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text);
-
-// must free the return char* because it is malloced
-char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text);
+int aes_auth_crypto(int mode,
+    int padding,
+    const uint8_t* key, size_t key_size,
+    const uint8_t* iv_str, int ivLen,
+    uint8_t* aad, size_t aadLen,
+    uint8_t* tag_input, int tagLen_input,
+    const uint8_t* buff, size_t buff_size,
+    uint8_t* output, size_t output_size, size_t* out_size,
+    int operation);
 
 // must free the return char* because it is malloced
 char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text);
@@ -63,5 +81,9 @@ bool rsa_verify_file(const char* type_str, const char* key_str, const char* uri_
 
 // no need to free the return char* because it is FeatureMalloced
 char* base64(const char* type_str, const char* text_str);
+
+int base64_encode(const char* input, size_t input_size, char* output, size_t output_size, size_t* exact_size);
+
+int base64_decode(const char* input, size_t input_size, char* output, size_t output_size, size_t* exact_size);
 
 #endif // _CRYPTO_NATIVE_H_
