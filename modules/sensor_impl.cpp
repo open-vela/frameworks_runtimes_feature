@@ -49,6 +49,7 @@ static const char* file_tag = "[jidl_feature] sensor_impl";
 typedef enum ErrorCode {
     GENERAL = 200,
     ARGSERROR = 202,
+    SERVICEUNAVAILABLE = 203,
     IOERROR = 300,
     TIMEOUT = 204
 } ErrorCode;
@@ -422,7 +423,7 @@ void system_sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendDa
 void system_sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
     system_sensor_StepCount* param)
 {
-    INVOKE_FAIL_CB(feature, param->fail, "Current device does not support pedometer sensor", 1000);
+    INVOKE_FAIL_CB(feature, param->fail, "Current device does not support pedometer sensor", 203);
     REMOVE_ALL_CALLBACK(param->callback, param->fail);
 }
 
