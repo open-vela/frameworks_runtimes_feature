@@ -76,6 +76,7 @@ struct MetaData {
     bool reserved;
     FtCallbackId callback;
     FtCallbackId fail;
+    bool subscribed;
 };
 
 struct sensor_event_t {
@@ -191,29 +192,29 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
     [SENSOR_MAGIC_HUMIDITY] = { .meta = ORB_ID(sensor_humi), .topic_cb = sensor_humi_topic_cb },
 };
 
-static void unsubscribe(FeatureInstanceHandle feature, int magic, bool is_active)
+static void unsubscribe(FeatureInstanceHandle feature, int magic, bool detach)
 {
     int code = 0;
     const char* msg = "";
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     sensor_event_t* event = th->events[magic];
-    if (event == NULL) {
-        return;
-    }
-    // 1.active unsubsribe need invoke uv_topic_unsubscribe
-    // 2.page jump,if not reserved need uv_topic_unsubscribe
-    if (!is_active && event->meta.reserved) {
+    if (event == NULL || feature == nullptr) {
         return;
     }
 
-    if (FeatureCheckCallbackId(feature, event->meta.callback)) {
+    bool isreserved = false;
+    if (detach) {
+        isreserved = event->meta.reserved;
+    }
+    // 1.active unsubsribe need invoke uv_topic_unsubscribe
+    // 2.page jump,if not reserved need uv_topic_unsubscribe
+    if (event->meta.subscribed && !isreserved) {
         int ret = uv_topic_unsubscribe(&event->topic);
         if (ret < 0) {
             code = GENERAL;
             msg = "unsubscribe fail";
             FEATURE_LOG_ERROR("%s::%s() call uv_topic_unsubscribe Failed,ret=%d", file_tag, __FUNCTION__, ret);
-            goto errout;
         }
 
         ret = uv_topic_close(&event->topic);
@@ -221,16 +222,22 @@ static void unsubscribe(FeatureInstanceHandle feature, int magic, bool is_active
             code = GENERAL;
             msg = "uv topic close fail";
             FEATURE_LOG_ERROR("%s::%s()call uv_topic_close,ret = %d", file_tag, __FUNCTION__, ret);
-            goto errout;
         }
 
-        FeatureRemoveCallback(feature, event->meta.callback);
+        event->meta.subscribed = false;
+    } else {
+        return;
     }
-    FEATURE_LOG_INFO("%s::%s() magic num:%d unsubscirbe", file_tag, __FUNCTION__, magic);
-    INVOKE_SUCCESS_CB(feature, event->meta.callback, "success");
-    return;
-errout:
-    INVOKE_FAIL_CB(feature, event->meta.fail, msg, code);
+
+    if (!FeatureInstanceIsDetached(feature)) {
+        if (code) {
+            INVOKE_FAIL_CB(feature, event->meta.fail, msg, code);
+        } else {
+            INVOKE_SUCCESS_CB(feature, event->meta.callback, "success");
+        }
+    }
+
+    REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
 }
 
 static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_magic_e magic, MetaData* meta)
@@ -239,22 +246,18 @@ static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_m
     int code;
     const char* msg = "";
     FtCallbackId temp;
-    FtCallbackId callback = meta->callback;
     sensor_event_t* event = th->events[magic];
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     if (event) {
         temp = event->meta.callback;
-        event->meta.callback = callback;
         if (FeatureCheckCallbackId(feature, temp)) {
-            FeatureRemoveCallback(feature, temp);
+            REMOVE_ALL_CALLBACK(meta->callback, meta->fail);
             return true;
         }
-    } else {
-        event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
-        event->meta = *meta;
-        th->events[magic] = event;
     }
-
+    event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
+    event->meta = *meta;
+    th->events[magic] = event;
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
     int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[magic]->topic,
         sensor_orb_table[magic].meta,
         sensor_orb_table[magic].topic_cb);
@@ -266,9 +269,11 @@ static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_m
         FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
         goto errout;
     }
+    event->meta.subscribed = true;
     return true;
 errout:
     INVOKE_FAIL_CB(feature, meta->fail, msg, code);
+    REMOVE_ALL_CALLBACK(meta->callback, meta->fail);
     return false;
 }
 
@@ -296,7 +301,7 @@ void system_sensor_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle h
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     for (int i = 0; i < SENSOR_MAGIC_NUM; i++) {
-        unsubscribe(handle, i, false);
+        unsubscribe(handle, i, true);
     }
 }
 
@@ -357,7 +362,7 @@ void system_sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, Ap
 
 void system_sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_ACCEL, true);
+    unsubscribe(feature, SENSOR_MAGIC_ACCEL, false);
 }
 
 void system_sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendData data,
@@ -365,7 +370,7 @@ void system_sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendDa
 
 void system_sensor_wrap_unsubscribeCompass(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_COMPA, true);
+    unsubscribe(feature, SENSOR_MAGIC_COMPA, false);
 }
 
 void system_sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, AppendData data,
@@ -391,7 +396,7 @@ void system_sensor_wrap_subscribeProximity(FeatureInstanceHandle feature, Append
 
 void system_sensor_wrap_unsubscribeProximity(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_PROX, true);
+    unsubscribe(feature, SENSOR_MAGIC_PROX, false);
 }
 
 void system_sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData data,
@@ -417,7 +422,7 @@ void system_sensor_wrap_subscribeLight(FeatureInstanceHandle feature, AppendData
 
 void system_sensor_wrap_unsubscribeLight(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_LIGHT, true);
+    unsubscribe(feature, SENSOR_MAGIC_LIGHT, false);
 }
 
 void system_sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, AppendData data,
@@ -429,7 +434,7 @@ void system_sensor_wrap_subscribeStepCounter(FeatureInstanceHandle feature, Appe
 
 void system_sensor_wrap_unsubscribeStepCounter(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_STEP, true);
+    unsubscribe(feature, SENSOR_MAGIC_STEP, false);
 }
 
 void system_sensor_wrap_subscribePressure(FeatureInstanceHandle feature, AppendData data,
@@ -455,7 +460,7 @@ void system_sensor_wrap_subscribePressure(FeatureInstanceHandle feature, AppendD
 
 void system_sensor_wrap_unsubscribePressure(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_BARO, true);
+    unsubscribe(feature, SENSOR_MAGIC_BARO, false);
 }
 
 void system_sensor_wrap_subscribeAmbientTemperature(FeatureInstanceHandle feature, AppendData data,
@@ -481,7 +486,7 @@ void system_sensor_wrap_subscribeAmbientTemperature(FeatureInstanceHandle featur
 
 void system_sensor_wrap_unsubscribeAmbientTemperature(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_AMBIENTTEMPERATURE, true);
+    unsubscribe(feature, SENSOR_MAGIC_AMBIENTTEMPERATURE, false);
 }
 
 void system_sensor_wrap_subscribeHumidity(FeatureInstanceHandle feature, AppendData data,
@@ -507,5 +512,5 @@ void system_sensor_wrap_subscribeHumidity(FeatureInstanceHandle feature, AppendD
 
 void system_sensor_wrap_unsubscribeHumidity(FeatureInstanceHandle feature, AppendData data)
 {
-    unsubscribe(feature, SENSOR_MAGIC_HUMIDITY, true);
+    unsubscribe(feature, SENSOR_MAGIC_HUMIDITY, false);
 }
