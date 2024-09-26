@@ -115,3 +115,34 @@ struct Temperature {
 }
 void subscribeAmbientTemperature(Temperature param)
 void unsubscribeAmbientTemperature()
+
+const property object DATA_TYPES;
+
+struct cb_param {
+    object data
+    int dataType
+}
+
+callback Success_cb(cb_param param)
+
+callback sensor_complete_cb()
+struct subscribeParam{
+    int type
+    boolean reserved = false
+    string interval = "low"
+    callback Success_cb callback
+    callback fail_cb fail
+}
+int subscribe(subscribeParam param)
+
+void unsubscribe(int type)
+
+struct getRecentDataParam{
+    int type
+    callback Success_cb success
+    callback fail_cb fail
+    callback sensor_complete_cb complete
+}
+void getRecentData(getRecentDataParam param)
+
+boolean checkAvailable(int type)
