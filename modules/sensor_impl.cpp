@@ -194,8 +194,6 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
 
 static void unsubscribe(FeatureInstanceHandle feature, int magic, bool detach)
 {
-    int code = 0;
-    const char* msg = "";
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
     sensor_event_t* event = th->events[magic];
@@ -203,38 +201,37 @@ static void unsubscribe(FeatureInstanceHandle feature, int magic, bool detach)
         return;
     }
 
-    bool isreserved = false;
-    if (detach) {
-        isreserved = event->meta.reserved;
-    }
     // 1.active unsubsribe need invoke uv_topic_unsubscribe
     // 2.page jump,if not reserved need uv_topic_unsubscribe
-    if (event->meta.subscribed && !isreserved) {
+    if (event->meta.subscribed) {
         int ret = uv_topic_unsubscribe(&event->topic);
         if (ret < 0) {
-            code = GENERAL;
-            msg = "unsubscribe fail";
+            if (detach) {
+                event->meta.instance = nullptr;
+            }
+
             FEATURE_LOG_ERROR("%s::%s() call uv_topic_unsubscribe Failed,ret=%d", file_tag, __FUNCTION__, ret);
+            goto exit;
         }
 
         ret = uv_topic_close(&event->topic);
         if (ret < 0) {
-            code = GENERAL;
-            msg = "uv topic close fail";
+            if (detach) {
+                event->meta.instance = nullptr;
+            }
+
             FEATURE_LOG_ERROR("%s::%s()call uv_topic_close,ret = %d", file_tag, __FUNCTION__, ret);
+            goto exit;
         }
 
         event->meta.subscribed = false;
-    } else {
-        return;
     }
 
-    if (!FeatureInstanceIsDetached(feature)) {
-        if (code) {
-            INVOKE_FAIL_CB(feature, event->meta.fail, msg, code);
-        } else {
-            INVOKE_SUCCESS_CB(feature, event->meta.callback, "success");
-        }
+exit:
+    FEATURE_LOG_INFO("%s unsubscribe success", __FUNCTION__);
+    if (detach) {
+        th->events[magic] = nullptr;
+        return;
     }
 
     REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
