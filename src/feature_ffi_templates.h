@@ -145,8 +145,7 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         ffi_arg_buf[fixed_argc + extra_argc] = &vari_params;
         for (int i = 0; i + fixed_argc < argc; i++) {
             // just passthrough guest param pointers
-            auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(vari_params.vari_args[i]);
-            *js_val_ptr = value_translator::getVariArg(ctx, (argv + fixed_argc), i);
+            *((JSValue*)&vari_params.vari_args[i]) = value_translator::getVariArg(ctx, (argv + fixed_argc), i);
         }
     } else if (opt_argc > 0) {
         for (int i = argc; i < fixed_argc; i++) {

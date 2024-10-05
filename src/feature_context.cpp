@@ -15,9 +15,9 @@
  */
 
 #include "feature_context_private.h"
-#include "feature_context_qjs.h"
+#include "backend/qjs/feature_context_qjs.h"
 #ifdef CONFIG_FEATURE_USE_WAMR
-#include "feature_context_wamr.h"
+#include "backend/wamr/feature_context_wamr.h"
 #endif
 
 #include "thread_checker.h"

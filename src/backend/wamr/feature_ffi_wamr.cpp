@@ -15,12 +15,11 @@
  */
 
 #include "feature_ffi_wamr.h"
-#include "feature_context_qjs.h"
 #include "feature_instance_wamr.h"
 #include "feature_log.h"
 #include "feature_manager_wamr.h"
 #include "feature_prototype.h"
-#include "feature_utils.h"
+#include "feature_utils.h" 
 #include "feature_wamr_utils.h"
 
 #include <alloca.h>
@@ -339,8 +338,7 @@ namespace FeatureFFIWamr {
                 void* param = get_wasm_args_by_type(void*, value);
                 JSValue* js_value = (JSValue*)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
                 ft_value_t* f_val = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
-                qjs_val_t* q_val = (qjs_val_t*)f_val;
-                q_val->js_val = *js_value;
+                *(JSValue*)f_val = *js_value;
                 *(ft_value_t**)ptr = f_val;
             } break;
             default: {

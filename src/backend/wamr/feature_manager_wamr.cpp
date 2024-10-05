@@ -16,7 +16,7 @@
 
 #include "feature_manager_wamr.h"
 #include "feature.h"
-#include "feature_context_qjs.h"
+#include "feature_context.h"
 #include "feature_context_wamr.h"
 #include "feature_exports.h"
 // clang-format off

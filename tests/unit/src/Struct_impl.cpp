@@ -6,7 +6,6 @@
 #include "utils/feature_utils.h"
 #include <cstring>
 #include <protobuf-c/protobuf-c.h>
-#include <string>
 
 namespace Feature_Struct {
 
