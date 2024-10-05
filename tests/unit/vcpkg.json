@@ -3,6 +3,9 @@
     "dependencies": [
         {
             "name": "protobuf-c"
+        },
+        {
+            "name": "gtest"
         }
     ]
 }

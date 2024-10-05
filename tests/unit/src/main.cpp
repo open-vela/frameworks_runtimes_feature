@@ -1,21 +1,20 @@
+#include "backend/qjs/feature_context_qjs.h"
 #include "builtin/builtin_console.h"
 #include "builtin/console.h"
+#include "feature.h"
 #include "feature_context.h"
-#include "feature_context_qjs.h"
+#include "feature_description.h"
 #include "feature_exports.h"
 #include "feature_log.h"
-#include "feature_manager_qjs.h"
-#include "feature_registry.h"
-#include "quickjs/quickjs.h"
+#include "feature_main_exports.h"
+#include "feature_types.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-using namespace feature_framework;
-
-static FeatureManagerQjs* g_manager_qjs;
+static FeatureManagerHandle g_manager_qjs;
 
 extern FeatureRegistryTableHandle g_ajs_features_registry;
 
@@ -34,13 +33,12 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int
 
     const char* str_module_name = feature_to_cstring(ctx, argv[0]);
     auto feature_obj = JS_UNDEFINED;
-    FeatureManagerHandle new_manager = g_manager_qjs;
-    ft_value_t feature_proto = FeatureFindFeature(new_manager, str_module_name);
+    ft_value_t feature_proto = FeatureFindFeature(g_manager_qjs, str_module_name);
     if (!JS_IsUndefined(FT_VAL_GET_JS_VAL(feature_proto))) {
         FEATURE_LOG_INFO("Find feautre in new manager: %s", str_module_name);
         ft_value_t param;
         *FT_VAL_GET_JS_VAL_PTR(param) = JS_UNDEFINED;
-        auto res = FeatureCreateFeature(new_manager, feature_proto, param /* vm */);
+        auto res = FeatureCreateFeature(g_manager_qjs, feature_proto, param /* vm */);
 
         JS_FreeValue(ctx, FT_VAL_GET_JS_VAL(feature_proto));
         if (JS_IsUndefined(FT_VAL_GET_JS_VAL(res))) {
@@ -79,7 +77,52 @@ int load_file(char* file_name, char** file_content)
     return len;
 }
 
-// 支持cli来读取包名以及js文件去执行，命令为：./feature_jidl_test ./test.js pkg_name
+static bool on_feature_args_error(void* data, ArgsErrorInfo* error_info)
+{
+    if (!data) {
+        FEATURE_LOG_ERROR("%s: runtime context is null!", __func__);
+        return false;
+    }
+    feature_env_t* js_env = static_cast<feature_env_t*>(data);
+    if (!error_info) {
+        FEATURE_LOG_ERROR("%s: error_info is null!", __func__);
+        return false;
+    }
+
+    for (int i = 0; i < error_info->argc; ++i) {
+        JSValue arg = *((JSValue*)(error_info->argv) + i);
+        if (JS_IsUndefined(arg)) {
+            FEATURE_LOG_ERROR("%s: arg %d is undefined!", __func__, i);
+            return false;
+        }
+        if (JS_IsObject(arg)) {
+            JSValue fail_cb = JS_GetPropertyStr(js_env->ctx, arg, "fail");
+            if (JS_IsUndefined(fail_cb))
+                continue;
+
+            FEATURE_LOG_INFO("%s: found fail callback from arg %d!", __func__, i);
+            JSValue argv[2];
+            argv[0] = JS_NewString(js_env->ctx, error_info->error_msg);
+            argv[1] = JS_NewInt32(js_env->ctx, error_info->error_code);
+            JSValue ret = JS_Call(js_env->ctx, fail_cb, JS_UNDEFINED, 2, argv);
+            JS_FreeValue(js_env->ctx, ret);
+            JS_FreeValue(js_env->ctx, fail_cb);
+            JS_FreeValue(js_env->ctx, argv[0]);
+
+            JSValue complete_cb = JS_GetPropertyStr(js_env->ctx, arg, "complete");
+            if (JS_IsUndefined(complete_cb)) {
+                FEATURE_LOG_WARN("%s: no complete callback from arg %d!", __func__, i);
+                return true;
+            }
+            ret = JS_Call(js_env->ctx, complete_cb, JS_UNDEFINED, 0, NULL);
+            JS_FreeValue(js_env->ctx, ret);
+            JS_FreeValue(js_env->ctx, complete_cb);
+            return true;
+        }
+    }
+    return false;
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 2) {
@@ -108,12 +151,17 @@ int main(int argc, char** argv)
 
     js_env.rt = JS_NewRuntime();
     js_env.ctx = JS_NewContext(js_env.rt);
-    // JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    auto registry = new FeatureRegistry();
-    registry->init(pkg_name);
 
-    g_manager_qjs = new FeatureManagerQjs(registry, js_env.ctx);
-    FeatureRegisterFeatures(registry, g_ajs_features_registry);
+    FeatureManagerCreateInfo ft_info;
+    ft_info.raw_ctx = (FeatureRawContextHandle)(js_env.ctx);
+    ft_info.release_cb = nullptr;
+    ft_info.manager_type = FEATURE_MANAGER_JS;
+    ft_info.package_name = "com.feature.test";
+    g_manager_qjs = FeatureCreateManager(&ft_info);
+    FeatureRegistryHandle hRegistry = FeatureGetRegistryFromManager(g_manager_qjs);
+    // reigstry features
+    FeatureRegisterFeatures(hRegistry, g_ajs_features_registry);
+    FeatureSetArgsErrorCb(g_manager_qjs, on_feature_args_error, &js_env);
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
@@ -137,11 +185,11 @@ int main(int argc, char** argv)
     }
     feature_free_value(js_env.ctx, result);
     // release manager first
-    g_manager_qjs->uninit();
+    FeatureUninit(g_manager_qjs);
+    FeatureFreeManager(g_manager_qjs);
+    // free js runtime
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
-    // free g_manager_qjs
-    delete g_manager_qjs;
 
     free(file_str);
     return 0;

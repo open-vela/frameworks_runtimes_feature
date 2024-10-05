@@ -34,18 +34,19 @@ endif
 
 TS2WASM_RUNTIMELIB_ROOT := $(APPDIR)/frameworks/runtimes/typescript/ts2wasm/runtime-library
 
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/feature_context_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/feature_ffi_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/value_translator_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/feature_prototype_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/feature_instance_qjs.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/feature_manager_qjs.cpp
+
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_common.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_context_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_context.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_exports.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_ffi_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_ffi.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/value_translator_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_prototype.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_prototype_qjs.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_instance_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_instance.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_manager_qjs.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/promise_manager.cpp
@@ -62,6 +63,7 @@ CFLAGS += -DWASM_DISABLE_WAKEUP_BLOCKING_OP=0
 CXXFLAGS += -DWASM_DISABLE_WAKEUP_BLOCKING_OP=0
 CXXFLAGS += -D__STDC_VERSION__=0
 
+TS2WASM_RUNTIMELIB_ROOT := $(APPDIR)/frameworks/runtimes/typescript/ts2wasm/runtime-library
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/iwasm/include
@@ -72,13 +74,13 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/wamr/wamr/core/shared/platfor
 CXXFLAGS += ${INCDIR_PREFIX}${TS2WASM_RUNTIMELIB_ROOT}/libdyntype
 CXXFLAGS += ${INCDIR_PREFIX}${TS2WASM_RUNTIMELIB_ROOT}/utils
 
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_context_wamr.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_ffi_wamr.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_instance_wamr.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_prototype_wamr.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_manager_wamr.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_wamr_utils.cpp
-CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/value_translator_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_context_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_ffi_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_instance_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_prototype_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_manager_wamr.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_wamr_utils.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/value_translator_wamr.cpp
 endif
 
 GTEST_DIR = $(APPDIR)/external/googletest/googletest/googletest
@@ -106,7 +108,7 @@ endif
 
 EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_description.h \
                 include/feature_exports.h include/feature_main_exports.h include/feature_log.h \
-                include/feature_permission.h include/ajs_features_init.h src/README.md registry/README.md
+                include/feature_permission.h include/ajs_features_init.h include/feature_trace.h src/README.md
 
 endif
 

@@ -15,14 +15,14 @@
  */
 
 #include "feature_exports.h"
+#include "backend/qjs/feature_instance_qjs.h"
+#include "backend/qjs/feature_manager_qjs.h"
 #include "feature_common.h"
 #include "feature_description.h"
 #include "feature_instance.h"
-#include "feature_instance_qjs.h"
 #include "feature_log.h"
 #include "feature_main_exports.h"
 #include "feature_manager.h"
-#include "feature_manager_qjs.h"
 #include "feature_prototype.h"
 #include "feature_registry.h"
 #include "feature_types.h"

@@ -16,14 +16,13 @@
 #ifndef __FEATURE_H__
 #define __FEATURE_H__
 
-#include "feature_utils.h"
-#include <cstddef>
 // use quickjs as default
 #ifndef BACKEND_ENGINE_TYPE
 #define BACKEND_ENGINE_TYPE 0
 #endif
 #if BACKEND_ENGINE_TYPE == 0
 
+#include "feature_log.h"
 #include "quickjs/quickjs.h"
 
 typedef void* context_ref;

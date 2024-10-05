@@ -18,6 +18,7 @@
 
 #include "feature.h"
 #include "feature_log.h"
+#include <string.h>
 
 #ifndef countof
 #define countof(x) (sizeof(x) / sizeof((x)[0]))

@@ -47,27 +47,30 @@ if(CONFIG_FEATURE_FRAMEWORK)
     FEATURE_SRCS
     ${FEATURE_SRC_DIR}/feature_common.cpp
     ${FEATURE_SRC_DIR}/feature_context.cpp
-    ${FEATURE_SRC_DIR}/feature_context_qjs.cpp
     ${FEATURE_SRC_DIR}/feature_exports.cpp
     ${FEATURE_SRC_DIR}/feature_ffi.cpp
-    ${FEATURE_SRC_DIR}/feature_ffi_qjs.cpp
     ${FEATURE_SRC_DIR}/feature_instance.cpp
-    ${FEATURE_SRC_DIR}/feature_instance_qjs.cpp
     ${FEATURE_SRC_DIR}/feature_manager.cpp
-    ${FEATURE_SRC_DIR}/feature_manager_qjs.cpp
     ${FEATURE_SRC_DIR}/feature_prototype.cpp
-    ${FEATURE_SRC_DIR}/feature_prototype_qjs.cpp
     ${FEATURE_SRC_DIR}/feature_object_ref.cpp
     ${FEATURE_SRC_DIR}/feature_registry.cpp
     ${FEATURE_SRC_DIR}/feature_permission.cpp
     ${FEATURE_SRC_DIR}/permissions_manager.cpp
     ${FEATURE_SRC_DIR}/promise_manager.cpp
-    ${FEATURE_SRC_DIR}/value_translator_qjs.cpp
-    
     ${FEATURE_SRC_DIR}/protobuf/proto_reflection.cpp
     ${FEATURE_SRC_DIR}/protobuf/proto_utils.cpp
     ${FEATURE_SRC_DIR}/worker_manager.cpp
-    
+    )
+
+    list(
+      APPEND
+      FEATURE_SRCS
+      ${FEATURE_SRC_DIR}/backend/qjs/feature_context_qjs.cpp
+      ${FEATURE_SRC_DIR}/backend/qjs/feature_ffi_qjs.cpp
+      ${FEATURE_SRC_DIR}/backend/qjs/feature_instance_qjs.cpp
+      ${FEATURE_SRC_DIR}/backend/qjs/feature_manager_qjs.cpp
+      ${FEATURE_SRC_DIR}/backend/qjs/feature_prototype_qjs.cpp
+      ${FEATURE_SRC_DIR}/backend/qjs/value_translator_qjs.cpp
     )
 
   if(CONFIG_FEATURE_USE_WAMR)
@@ -90,13 +93,13 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(
       APPEND
       FEATURE_SRCS
-      ${FEATURE_SRC_DIR}/feature_context_wamr.cpp
-      ${FEATURE_SRC_DIR}/feature_ffi_wamr.cpp
-      ${FEATURE_SRC_DIR}/feature_instance_wamr.cpp
-      ${FEATURE_SRC_DIR}/feature_prototype_wamr.cpp
-      ${FEATURE_SRC_DIR}/feature_manager_wamr.cpp
-      ${FEATURE_SRC_DIR}/feature_wamr_utils.cpp
-      ${FEATURE_SRC_DIR}/value_translator_wamr.cpp)
+      ${FEATURE_SRC_DIR}/backend/wamr/feature_context_wamr.cpp
+      ${FEATURE_SRC_DIR}/backend/wamr/feature_ffi_wamr.cpp
+      ${FEATURE_SRC_DIR}/backend/wamr/feature_instance_wamr.cpp
+      ${FEATURE_SRC_DIR}/backend/wamr/feature_prototype_wamr.cpp
+      ${FEATURE_SRC_DIR}/backend/wamr/feature_manager_wamr.cpp
+      ${FEATURE_SRC_DIR}/backend/wamr/feature_wamr_utils.cpp
+      ${FEATURE_SRC_DIR}/backend/wamr/value_translator_wamr.cpp)
   endif()
 
   # set some include directories

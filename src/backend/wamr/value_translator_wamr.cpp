@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-#include "value_translator_wamr.h"
-#include "feature_context_qjs.h"
-#include "feature_ffi_wamr.h"
+#include "feature_description.h"
 #include "feature_log.h"
 #include "feature_wamr_utils.h"
 #include "libdyntype.h"
@@ -115,8 +113,8 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, ft_value_t* pnative
         return false;
     void* param = get_wasm_args_by_type(void*, val);
     JSValue* js_value = (JSValue*)wasm_anyref_obj_get_value((wasm_anyref_obj_t)param);
-    qjs_val_t* q_val = (qjs_val_t*)pnative;
-    q_val->js_val = *js_value;
+    ft_value_t* ft_val = (ft_value_t*)pnative;
+    memcpy(ft_val, js_value, sizeof(JSValue));
     return true;
 }
 
@@ -215,7 +213,7 @@ wasm_anyref_obj_t new_anyref_obj(wasm_exec_env_t exec_env, const void* ptr, wasm
 bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget)
 {
     JSValue* new_val = (JSValue*)malloc(sizeof(JSValue));
-    *new_val = FT_VAL_GET_JS_VAL(native);
+    *new_val = *((JSValue*)&native);
     wasm_anyref_obj_t any_obj = new_anyref_obj(exec_env, new_val, (wasm_obj_finalizer_t)extern_obj_finalizer);
     *ptarget = (uint64_t)any_obj;
     return true;
@@ -351,8 +349,7 @@ uint64_t newArray(wasm_exec_env_t exec_env)
 ft_value_t nullFtVal()
 {
     ft_value_t ft_val = { 0 };
-    qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
-    qjs_val->js_val = JS_NULL;
+    *((JSValue*)&ft_val) = JS_NULL;
     return ft_val;
 }
 
