@@ -282,14 +282,11 @@ RetCode accessorSet(TInstance* instance, TCtx ctx, const Member* member, TTarget
     return RET_OK;
 }
 
-template <typename TInstance, typename TCtx, typename TTarget>
-bool constGet(TInstance* instance, TCtx ctx, const Member* member, TTarget& ret_val)
+template <typename TCtx, typename TTarget>
+bool constGet(TCtx ctx, const MemberConst* mconst, TTarget& ret_val)
 {
-    FEATURE_CHECK_NE(instance, nullptr);
-    FEATURE_CHECK_NE(member, nullptr);
-    FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
-
-    MemberConst* member_const = const_cast<MemberConst*>(member->value);
+    FEATURE_CHECK_NE(mconst, nullptr);
+    MemberConst* member_const = const_cast<MemberConst*>(mconst);
     void* data = &member_const->data;
     FeatureType ftype = member_const->type;
     FEATURE_CHECK_NE(ftype, FT_VOID);

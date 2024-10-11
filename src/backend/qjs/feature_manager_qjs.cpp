@@ -259,25 +259,6 @@ static feature_value_t accessor_set(feature_context_ref ctx, feature_value_t thi
     return FEATURE_VALUE_UNDEFINED;
 }
 
-static feature_value_t const_get(feature_context_ref ctx, feature_value_t this_val, int magic)
-{
-    int index = magic;
-    FeatureInstanceQjs* instance = (FeatureInstanceQjs*)getInstance(this_val);
-    FEATURE_CHECK_NE(instance, nullptr);
-    auto description = instance->prototype()->description();
-    const Member* member = &description->members[index];
-    FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
-    feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
-    if (!constGet(instance, ctx, member, ret_val)) {
-        ret_val = FEATURE_EXCEPTION;
-    }
-
-    // for const value, redefine the property with result value
-    JS_DefinePropertyValueStr(static_cast<feature_context_ref>(ctx), this_val, member->name,
-        feature_dup_value(ctx, ret_val), FEATURE_PROP_CONFIGURABLE);
-    return ret_val;
-}
-
 static feature_value_t event_set(feature_context_ref ctx, feature_value_t this_val, feature_value_t val, int magic)
 {
     int index = magic;
@@ -690,6 +671,31 @@ static void register_event_on_off_functions(feature_context_ref ctx, feature_val
     feature_free_value(ctx, off_func);
 }
 
+static void build_const_obj_recursive(context_ref ctx, feature_value_t parent, const Member* member)
+{
+    FEATURE_CHECK_NE(member, nullptr);
+    FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
+    const MemberConst* mconst = member->value;
+    FEATURE_CHECK_NE(mconst, nullptr);
+    FEATURE_CHECK_EQ(FT_IS_PRIMITIVE(mconst->type), true);
+    if (mconst->type == FT_ANY_REF) {
+        feature_value_t const_obj = feature_object(ctx);
+        feature_define_object_property(ctx, parent, member->name, const_obj, 0);
+        const Member* child_member = (const Member*)(mconst->data.ptr);
+        FEATURE_CHECK_NE(child_member, nullptr);
+        while (child_member->name != nullptr) {
+            FEATURE_CHECK_EQ(child_member->type, MEMBER_CONST);
+            build_const_obj_recursive(ctx, const_obj, child_member);
+            child_member++;
+        }
+        return;
+    }
+
+    feature_value_t const_val = FEATURE_VALUE_UNDEFINED;
+    FEATURE_CHECK_NE(constGet((JSContext*)(ctx), mconst, const_val), false);
+    feature_define_object_property(ctx, parent, member->name, const_val, 0);
+}
+
 static int init_prototype(context_ref ctx, FeaturePrototype* prototype, feature_value_t js_proto)
 {
     FEATURE_CHECK(prototype != nullptr && prototype->description() != nullptr, "");
@@ -730,14 +736,9 @@ static int init_prototype(context_ref ctx, FeaturePrototype* prototype, feature_
         } break;
         case MEMBER_CONST: {
             // handle member const
-            char buf[128];
-            JSCFunctionType type;
-            type.getter_magic = const_get;
-            sprintf(buf, "get %s", member.name);
-            feature_value_t const_member_getter = JS_NewCFunction2(static_cast<feature_context_ref>(ctx), type.generic, buf, 0, JS_CFUNC_getter_magic, i);
-            feature_atom_t prop_name = feature_atom(static_cast<feature_context_ref>(ctx), member.name);
-            JS_DefinePropertyGetSet(static_cast<feature_context_ref>(ctx), js_proto, prop_name, const_member_getter, FEATURE_VALUE_UNDEFINED, FEATURE_PROP_CONFIGURABLE);
-            feature_free_atom(static_cast<feature_context_ref>(ctx), prop_name);
+            const MemberConst* mconst = member.value;
+            FEATURE_CHECK(FT_IS_COMPLEX(mconst->type), "invalid const value type!");
+            build_const_obj_recursive(ctx, js_proto, &(description->members[i]));
         } break;
         case MEMBER_EVENT: {
             char buf[128];
