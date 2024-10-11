@@ -146,7 +146,7 @@ static void const_get(wasm_exec_env_t exec_env, uint64_t* args)
 
     uint64_t ret_val = 0;
     wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(exec_env);
-    if (constGet(instance, exec_env, member, ret_val)) {
+    if (constGet(exec_env, member->value, ret_val)) {
         *ret_ptr = ret_val;
     }
     /* pop native createD obj local ref ptr */
