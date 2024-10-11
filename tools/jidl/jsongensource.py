@@ -335,6 +335,7 @@ class CPPRender(Render):
     'FT_FLOAT' : 'f32',
     'FT_DOUBLE' : 'f64',
     'FT_STRING' : 'str',
+    'FT_BOOLEAN' : 'i32',
   }
 
   low_perms_map = {
@@ -1063,6 +1064,7 @@ class CPPRender(Render):
         or member['type'] == 'use' \
         or member['type'] == 'property' \
         or member['type'] == 'const' \
+        or member['type'] == 'const_object' \
         or member['type'] == 'event'
 
   def GetMemberInfo(self, member):
@@ -1083,6 +1085,11 @@ class CPPRender(Render):
     elif member['type'] == 'const':
       member_info['type'] = 'MEMBER_CONST'
       member_info['suffix'] = '_member_const'
+      member_info['val_type'] = 'value'
+      member_info['name'] = member['name']
+    elif member['type'] == 'const_object':
+      member_info['type'] = 'MEMBER_CONST'
+      member_info['suffix'] = '_member_const_object'
       member_info['val_type'] = 'value'
       member_info['name'] = member['name']
     elif member['type'] == 'event':

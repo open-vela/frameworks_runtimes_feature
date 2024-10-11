@@ -859,8 +859,9 @@ static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
 };
 
 </%def>\
-<%def name="GenConst(const_node)">\
+<%def name="GenConst(const_node, name_prefix)">\
 <%
+  if not name_prefix: name_prefix = ''
   const_name = const_node['name']
   const_value = const_node['value']
   const_type = const_node['value_type']
@@ -868,28 +869,55 @@ static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
   if const_info['is_complex']:
     raise Exception('wrong const type: {}'.format(const_info['type']))
   val_name = render.GetAppendDataName(const_info['type'])
-  cpp_type = render.GenerateCppType(const_type)
-  is_array = cpp_type == 'FtArray*'
-  if is_array:
-    cpp_type = render.GenerateArrayCppType(const_type)
-  if cpp_type != 'FtString':
-    cpp_type = 'const ' + cpp_type
-  const_def = f"{cpp_type} {module_name}_g_const_{const_name}"
-  if is_array:
-    const_def += f"[] = {const_value}"
-  else:
-    const_def += f" = {const_value}"
 %>\
-/****** for JIDL const '${const_name}' ******/
-${const_def};
-
-static const MemberConst ${module_name}_${const_name}_member_const = {
+// for JIDL const '${name_prefix}${const_name}'
+static const MemberConst ${module_name}_${name_prefix}${const_name}_member_const = {
     .type = ${const_info['type']},
     .func = { .callback = NULL },
-    .data = { .${val_name} = ${module_name}_g_const_${const_name} }
+    .data = { .${val_name} = ${const_value} }
 };
 </%def>\
-<%def name="GenMembers(members)">\
+<%def name="GenConstObject(co_node, name_prefix)">\
+<%
+  name = co_node['name']
+  members = co_node['members']
+  member_count = len(members)
+  if not name_prefix:
+    name_prefix = ''
+  co_name = f"{name_prefix}{name}"
+  name_prefix = f"{name_prefix}{name}_"
+%>\
+/****** begin JIDL const object '${co_name}' ******/
+%for member in members:
+%if member['type'] == 'const_object':
+${GenConstObject(member, name_prefix)}\
+%else:
+${GenConst(member, name_prefix)}
+%endif
+%endfor
+// const object members
+static Member ${module_name}_${co_name}_const_object_members[] = {
+${GenMembers(members, name_prefix)}\
+    {
+        .type = MEMBER_CONST,
+        .name = NULL,
+        .value = NULL,
+    }
+};
+
+// const object
+static const MemberConst ${module_name}_${co_name}_member_const_object = {
+    .type = FT_ANY_REF,
+    .func = { .callback = NULL },
+    .data = { .ptr = ${module_name}_${co_name}_const_object_members }
+};
+/****** end JIDL const object '${co_name}' ******/
+
+</%def>\
+<%def name="GenMembers(members, name_prefix)">\
+<%
+  if not name_prefix: name_prefix = ''
+%>\
 %for member in members:
 %if render.IsValidMemberType(member):
 <%
@@ -902,7 +930,7 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
     {
         .type = ${member_type},
         .name = "${member_name}",
-        .${member_val_type} = &${module_name}_${member_name}${member_suffix},
+        .${member_val_type} = &${module_name}_${name_prefix}${member_name}${member_suffix},
     },
 %endif
 %endfor
@@ -946,7 +974,9 @@ ${GenEvent(block)}
 %elif block['type'] == 'property':
 ${GenProperty(block)}
 %elif block['type'] == 'const':
-${GenConst(block)}
+${GenConst(block, '')}
+%elif block['type'] == 'const_object':
+${GenConstObject(block, '')}
 %elif block['type'] == 'struct':
 ${GenStruct(block)}
 %elif block['type'] == 'interface':
@@ -955,7 +985,7 @@ ${GenInterface(block)}
 %endfor
 // members
 static const Member ${module_name}_members[] = {
-${GenMembers(module['members'])}\
+${GenMembers(module['members'], '')}\
 };
 
 /*********** begin get the user defined type ************/
