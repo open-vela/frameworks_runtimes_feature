@@ -613,9 +613,42 @@ class JIDL(Parser):
 
   def p_const_define(self, p):
     """
-    const_define : CONST ID EQUALS literal_value
+    const_define : CONST const_base
+                 | CONST const_object
     """
-    CreateASTNode(p, ast.ConstDefine, p[2], p[4])
+    p[0] = p[2]
+
+  def p_const_base(self, p):
+    """
+    const_base : ID EQUALS literal_value
+    """
+    CreateASTNode(p, ast.ConstDefine, p[1], p[3])
+
+  def p_const_object(self, p):
+    """
+    const_object : ID EQUALS LBRACE const_body RBRACE
+    """
+    CreateASTNode(p, ast.ConstObjectDefine, p[1], p[4])
+
+  def p_const_body(self, p):
+    """
+    const_body : const_block
+               | const_body COMMA const_block
+    """
+    count = len(p)
+    if count == 2:
+      CreateASTNode(p, ast.BlockList)
+      p[0].Append(p[1])
+    elif count == 4:
+      p[0] = p[1]
+      p[0].Append(p[3])
+
+  def p_const_block(self, p):
+    """
+    const_block : const_base
+                | const_object
+    """
+    p[0] = p[1]
 
   def p_enum_define(self, p):
     """

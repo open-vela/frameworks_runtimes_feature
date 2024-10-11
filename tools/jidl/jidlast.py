@@ -41,6 +41,7 @@ ID_ARRAY_TYPE = 35
 IMPORT_MESSAGE = 36
 MESSAGE_DECLARE = 37
 MESSAGE_TYPE = 38
+CONST_OBJECT_DEFINE = 39
 
 type_names = {
   LITERVAL : 'literval',
@@ -82,7 +83,8 @@ type_names = {
   ID_ARRAY_TYPE : 'id array',
   IMPORT_MESSAGE : 'import_message',
   MESSAGE_DECLARE : 'message_declare',
-  MESSAGE_TYPE : 'message_type'
+  MESSAGE_TYPE : 'message_type',
+  CONST_OBJECT_DEFINE : 'const_object'
 }
 
 def TypeName(tp):
@@ -660,6 +662,49 @@ class ConstDefine(Type):
     else:
       self.value.type.ToJson(const_def['value_type'])
     out.append(const_def)
+
+class ConstObjectDefine(Type):
+  def __init__(self, name, block_list):
+    Type.__init__(self, name, CONST_OBJECT_DEFINE)
+    self.content = block_list
+
+  def __str__(self):
+    return 'const %s = { ... }' % (self.name)
+
+  def Check(self, context):
+    context.AddId(self.name, self)
+    context.PushTable(self)
+    self.content.Check(context)
+    context.PopTable()
+
+  def Resolve(self, context):
+    context.PushTable(self)
+    self.content.Resolve(context)
+    context.PopTable()
+
+  def GetJson(self):
+    t = {
+       'type': 'const_object',
+       'name': self.name,
+    }
+
+    Type.ToJson(self, t)
+    if hasattr(self, 'content'):
+       members = []
+       self.content.ToJson(members)
+       t['members'] = members
+    return t
+
+  def ToJson(self, out):
+    AddJson(self.GetJson(), out)
+
+  def Dump(self, out):
+    out.Write('const %s = {' % (self.name))
+    out.Shift()
+    if hasattr(self, 'content'):
+      self.content.Dump(out)
+    out.Reduce()
+    out.Write('}')
 
 class FunctionDefine(Type):
   def __init__(self, name, params):
