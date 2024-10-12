@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include <vibrator_api.h>
 
+#define EFFECT_ID_BOUNDARY 10
+
 static const char* file_tag = "[jidl_feature] vibrator_impl";
 
 struct VibratorContext {
@@ -105,16 +107,15 @@ void system_vibrator_wrap_vibrate(FeatureInstanceHandle feature, union AppendDat
     const char* mode;
 
     if (!obj) {
-        FEATURE_LOG_ERROR("no obj arg!\n");
-        vibrator_play_predefined(POP, VIBRATION_DEFAULTES, nullptr);
+        vibrator_play_predefined(POP + EFFECT_ID_BOUNDARY, VIBRATION_DEFAULTES, nullptr);
         return;
     }
 
     mode = obj->mode;
     if (strncmp(mode, mode_state[0], strlen(mode_state[0])) == 0) {
-        vibrator_play_predefined(POP, VIBRATION_DEFAULTES, nullptr);
+        vibrator_play_predefined(POP + EFFECT_ID_BOUNDARY, VIBRATION_DEFAULTES, nullptr);
     } else if (strncmp(mode, mode_state[1], strlen(mode_state[1])) == 0) {
-        vibrator_play_predefined(TICK, VIBRATION_DEFAULTES, nullptr);
+        vibrator_play_predefined(TICK + EFFECT_ID_BOUNDARY, VIBRATION_DEFAULTES, nullptr);
     }
 }
 
