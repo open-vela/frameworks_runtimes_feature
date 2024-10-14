@@ -20,7 +20,7 @@
 #include "feature_prototype.h"
 #include "feature_utils.h"
 
-namespace ferry {
+namespace feature_framework {
 
 class FeaturePrototypeQjs : public FeaturePrototype {
 public:

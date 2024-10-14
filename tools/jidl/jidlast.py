@@ -1,6 +1,7 @@
 # Copyright 2023 Xiaomi, Inc. All rights reserved.
 
 import json
+import jidl_error
 
 LITERVAL = 1
 PRIMARY_TYPE = 2
@@ -36,6 +37,7 @@ META_ATTRIBUTE = 31
 ARRAY_LITERAL = 32
 ENUM_DEFINE = 33
 USER_TYPE_DEFINE = 34
+ID_ARRAY_TYPE = 35
 
 type_names = {
   LITERVAL : 'literval',
@@ -74,6 +76,7 @@ type_names = {
   ARRAY_LITERAL : 'array_literal',
   ENUM_DEFINE : 'enum_define',
   USER_TYPE_DEFINE : 'type_define',
+  ID_ARRAY_TYPE : 'id array',
 }
 
 def TypeName(tp):
@@ -155,6 +158,8 @@ class Type(Node):
            self.Is(CLASS_DEFINE) or \
            self.Is(STRUCT_DEFINE) or \
            self.Is(CALLBACK_DEFINE) or \
+           self.Is(PRIMARY_ARRAY_TYPE) or \
+           self.Is(ID_ARRAY_TYPE) or \
            (self.Is(PRIMARY_TYPE) and self.name == "object")
 
   def SetMetaAttributes(self, meta_attrs):
@@ -212,7 +217,7 @@ class PrimaryArrayType(Type):
 
 class IDArrayType(Type):
   def __init__(self, name):
-    Type.__init__(self, name, ID)
+    Type.__init__(self, name, ID_ARRAY_TYPE)
     self.name = name
 
   def __str__(self):
@@ -240,18 +245,16 @@ class TypedArrayType(Type):
     out['element'] = self.base_type.name
 
 class PromiseType(Node):
-  def __init__(self, resolve_type, reject_type):
+  def __init__(self, resolve_type):
     Node.__init__(self, PROMISE_TYPE)
     self.resolve_type = resolve_type
-    self.reject_type = reject_type
 
   def __str__(self):
-    return "promise<%s,%s>" % (str(self.resolve_type), str(self.reject_type))
+    return "promise<%s>" % (str(self.resolve_type))
 
   def GetJson(self):
     return {'type': 'promise',
-            'resolve_type' : GetTypeJson(self.resolve_type),
-            'reject_type' : GetTypeJson(self.reject_type)
+            'resolve_type' : GetTypeJson(self.resolve_type)
     }
 
   def ToJson(self, out):
@@ -1327,21 +1330,29 @@ if __name__ == '__main__':
   from jidl import JIDL
   jidl_file = sys.argv[1]
   f = open(jidl_file)
-  jidl = JIDL()
+  jidl = JIDL(errorReporter = jidl_error.Reporter(jidl_file))
   jidl.parse(f.read())
   f.close()
   module = jidl.module
-  dump_out = DumpOut()
-  module.Dump(dump_out)
-  context = Context()
-  module.Resolve(context)
-  context.ResetTable()
-  module.Check(context)
-  context.ShowError(dump_out)
-  ast_json = {}
-  module.ToJson(ast_json)
-  json_out = json.dumps(ast_json)
-  print("ast json: ", json_out)
-  out_file = os.path.splitext(jidl_file)[0]
-  WriteFile(json_out, out_file + ".json")
+  if module:
+    dump_out = DumpOut()
+    module.Dump(dump_out)
+
+    # resolve
+    context = Context()
+    module.Resolve(context)
+    context.ResetTable()
+    module.Check(context)
+
+    context.ShowError(dump_out)
+
+    # to json
+    ast_json = {}
+    module.ToJson(ast_json)
+    json_out = json.dumps(ast_json)
+    print("ast json: ", json_out)
+    out_file = os.path.splitext(jidl_file)[0]
+    WriteFile(json_out, out_file + ".json")
+  else:
+    print("parse %s failed!" % jidl_file)
 

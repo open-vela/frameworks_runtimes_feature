@@ -50,11 +50,11 @@ static ObjectMember struct_test_Chapter_struct_members[] = {
     { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Chapter, page_count), sizeof(FtInt) },
     { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Chapter, title), sizeof(FtString) },
     { "is_end", FT_MK_OPTIONAL(&struct_test_Chapter_member_is_end_opt_type), offsetof(struct_test_Chapter, is_end), sizeof(FtBool) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType struct_test_Chapter_struct_type {
+static const ObjectMapType struct_test_Chapter_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Chapter) },
     .members = struct_test_Chapter_struct_members
 };
@@ -72,7 +72,7 @@ static const FeatureType struct_test_ChapChanged_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType struct_test_ChapChanged_callback_type {
+static const CallbackType struct_test_ChapChanged_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = struct_test_ChapChanged_parameters,
     .return_type = FT_VOID
@@ -97,11 +97,11 @@ static ObjectMember struct_test_Book_struct_members[] = {
     { "chap_titles", FT_MK_COMPLEX(&struct_test_string_array), offsetof(struct_test_Book, chap_titles), sizeof(FtArray*) },
     { "first_chap", FT_MK_COMPLEX(&struct_test_Chapter_struct_type), offsetof(struct_test_Book, first_chap), sizeof(struct_test_Chapter *) },
     { "chap_changed", FT_MK_COMPLEX(&struct_test_ChapChanged_callback_type), offsetof(struct_test_Book, chap_changed), sizeof(FtCallbackId) },
-    { nullptr },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType struct_test_Book_struct_type {
+static const ObjectMapType struct_test_Book_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Book) },
     .members = struct_test_Book_struct_members
 };
@@ -189,7 +189,7 @@ static const Member struct_test_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks struct_test_callbacks {
+static const struct FeatureCallbacks struct_test_callbacks = {
     struct_test_onRegister,
     struct_test_onCreate,
     struct_test_onRequired,
@@ -202,7 +202,7 @@ static const FeatureDescription struct_test_desc = {
     .version = 1,
     .name = "struct_test",
     .description = "struct_test",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &struct_test_callbacks,
     .member_count = countof(struct_test_members),
     .members = struct_test_members,

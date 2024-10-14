@@ -92,7 +92,7 @@ char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str
         }
 
         size_t out_len = 0;
-        size_t out_size = BASE64_ENCODED_LENGTH(ROUND_UP(text.len, 16));
+        size_t out_size = BASE64_ENCODED_LENGTH(ROUND_UP(text.len + 1, 16));
         unsigned char* out_buff = (unsigned char*)alloca(out_size);
         memset(out_buff, 0, out_size);
 

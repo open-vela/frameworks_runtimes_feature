@@ -27,9 +27,8 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,8 +59,8 @@ void promise_test_wrap_print(FeatureInstanceHandle feature, AppendData append_da
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* promise_test_malloc_string_array();
-FtArray* promise_test_malloc_int_array();
+FtArray* promise_test_malloc_int_array(void);
+FtArray* promise_test_malloc_string_array(void);
 
 #endif // JSON_AST_GEN_MODULE_PROMISE_TEST_H_
 /* clang-format on */

@@ -22,14 +22,6 @@
     FEATURE_DISABLE_COPY(cls);        \
     FEATURE_DISABLE_MOVE(cls)
 
-#define TRY_GET_REAL_TYPE(featureType)                                                    \
-    if (FT_IS_COMPLEX(featureType)) {                                                     \
-        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType); \
-        if (complexType->type == COMPLEX_OPTIONAL) {                                      \
-            featureType = ((OptionalType*)complexType)->type;                             \
-        }                                                                                 \
-    }
-
 #define ALLOCA_PARAM_PTR(featureType, value)                             \
     {                                                                    \
         int type_len = getAlignedCount(featureType) * sizeof(uintptr_t); \

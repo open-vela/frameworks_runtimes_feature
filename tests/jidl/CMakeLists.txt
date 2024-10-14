@@ -1,19 +1,15 @@
 cmake_minimum_required(VERSION 3.12)
 
-
-# Note: need pass CMAKE_TOOLCHAIN_FILE refer to vcpkg in cmdline
-set(CMAKE_TOOLCHAIN_FILE /home/lijianbin/installed/vcpkg/scripts/buildsystems/vcpkg.cmake)
-set(VCPKG_MANIFEST_MODE ON CACHE BOOL "" FORCE)
-set(VCPKG_BINARY_CACHE ON CACHE BOOL "" FORCE)
-
 project(feature_jidl_test)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set (WAMR_BUILD_STRINGREF 1)
 
+option(CONFIG_FEATURE_USE_WAMR "Enable feature use wamr" OFF)
+
 # enable asan
-add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer  -DCONFIG_FEATURE_USE_WAMR -g")
+add_definitions("-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g")
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fpermissive -Wall")
 
 set(CURRENT_PATH ${CMAKE_CURRENT_LIST_DIR})
@@ -23,9 +19,6 @@ get_filename_component(UNITE_PATH ${RELATIVE_PATH} ABSOLUTE BASE_DIR ${CURRENT_P
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdata-sections -ffunction-sections -Wall")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
 
-## WAMR
-include(${UNITE_PATH}/wamr/wamr/runtime-library/wamr_config.cmake)
-add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
 ## quickjs
 set(QUICKJS_SRC_DIR ${UNITE_PATH}/quickjs/quickjs)
 include_directories(${QUICKJS_SRC_DIR})
@@ -36,10 +29,15 @@ set(QUICKJS_SOURCE
     ${QUICKJS_SRC_DIR}/quickjs.c)
 
 add_definitions(-DCONFIG_VERSION="20230815")
+
+if (CONFIG_FEATURE_USE_WAMR)
+## WAMR
+add_definitions("-DCONFIG_FEATURE_USE_WAMR")
+include(${UNITE_PATH}/wamr/wamr/runtime-library/wamr_config.cmake)
+add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
 ## libdyntype
 set(LIBDYNTYPE_DIR ${UNITE_PATH}/wamr/wamr/runtime-library/libdyntype)
 include (${LIBDYNTYPE_DIR}/libdyntype.cmake)
-
 # stdlib
 set(STDLIB_DIR ${UNITE_PATH}/wamr/wamr/runtime-library/stdlib)
 include_directories(${STDLIB_DIR})
@@ -68,6 +66,8 @@ set(OBJECT_UTILS_SOURCE
 set(WAMR_UTILS_SOURCE
     ${UTILS_DIR}/wamr_utils.c
 )
+endif()
+
 # feature demo 
 set(FEATURE_DEMO_SOURCE
     ${CMAKE_CURRENT_LIST_DIR}/feature_demo.cpp
@@ -82,8 +82,6 @@ add_executable(${PROJECT_NAME}
     simple_1_0_impl.cpp
     record_1_0.cpp
     record_1_0_impl.cpp
-    ATest_1_0.cpp
-    ATest_1_0_impl.cpp
     struct_test.c
     struct_test_impl.c
     promise_test.cpp
@@ -135,13 +133,17 @@ add_executable("feat_test"
 target_link_libraries(${PROJECT_NAME} PRIVATE
     feature-framework
     uv
-    vmlib
     -lpthread
 )
+
+if (CONFIG_FEATURE_USE_WAMR)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    vmlib
+)
+endif()
 
 target_link_libraries("feat_test" PRIVATE
     feature-framework
     pthread
     uv
-
 )

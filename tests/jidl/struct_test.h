@@ -27,7 +27,6 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>

@@ -20,10 +20,13 @@
 
 #include <assert.h>
 #include <memory>
+#include <sstream>
 #include <string.h>
 #include <string>
 
-namespace ferry {
+#include "feature_instance.h"
+
+namespace feature_framework {
 
 FeatureRegistry::~FeatureRegistry()
 {
@@ -87,4 +90,15 @@ FeatureRegistry::findFeature(const char* name)
     return &pos->second;
 }
 
-} // namespace ferry
+void FeatureRegistry::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
+{
+    dump->count(sizeof(FeatureRegistry), userdata);
+    for (auto& e : registeredFeatures_) {
+        if (e.second.second) {
+            void* sub = dump->sub(e.first.c_str(), userdata);
+            e.second.second->onDumpMemory(dump, sub);
+        }
+    }
+}
+
+} // namespace feature_framework

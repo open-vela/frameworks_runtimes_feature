@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureInstance : public FeatureObjectRef, public feature_list_node {
 public:
@@ -45,7 +45,21 @@ public:
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count) = 0;
 
-    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap) = 0;
+    virtual int resolvePromise(FtPromiseId pid, va_list& ap) = 0;
+
+    virtual int rejectPromise(FtPromiseId pid, int code, const char* msg) = 0;
+
+    virtual bool emitEvent(FtEventId cid, va_list& ap) = 0;
+
+    virtual void setEventChangeListener(FeatureEventChangeListener listener) = 0;
+
+    virtual FtEventId getEventId(const char* name) = 0;
+
+    virtual const char* getEventName(FtEventId eid) = 0;
+
+    virtual int getEventCallbackCount(FtEventId eid) = 0;
+
+    virtual int getPromiseType(FtPromiseId pid) { return -1; }
 
     int instanceId() { return instance_id_; }
 
@@ -85,6 +99,8 @@ public:
     {
         return prototype()->featureManager();
     }
+
+    virtual void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
 
 private:
     int instance_id_ : 29;

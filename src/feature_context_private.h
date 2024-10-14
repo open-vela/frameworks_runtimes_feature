@@ -17,6 +17,7 @@
 #define __FEATURE_RUNTIME_CONTEXT_PRIVATE_H__
 
 #include "feature_context.h"
+#include "feature_main_exports.h"
 #include "thread_checker.h"
 
 ft_context_ref CreateFeatureContextQjs(void* data);
@@ -27,8 +28,12 @@ ft_context_ref CreateFeatureContextWamr(void* data1, void* data2);
 
 void ReleaseFeatureContextWamr(ft_context_ref ft_ctx);
 
+void SetReleaseRawContextCb(ft_context_ref ft_ctx, ReleaseRawContextCb cb);
+
 typedef struct FeatureContext {
     void* data;
+    ReleaseRawContextCb release_raw_ctx_cb;
+
 #ifdef CONFIG_FEATURE_ENABLE_THREAD_CHECKER
     ThreadChecker* thread_checker;
 #endif

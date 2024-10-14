@@ -25,7 +25,7 @@
 #include <memory>
 #include <vector>
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureInstance;
 
@@ -65,6 +65,16 @@ public:
 
     virtual FeatureInstance* createInterface(VTable* vtable) = 0;
 
+    void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
+
+    void setEventMember(const char* name, const Member* member) { event_map_[name] = member; }
+
+    const Member* getEventMember(const char* name)
+    {
+        auto it = event_map_.find(name);
+        return it != event_map_.end() ? it->second : nullptr;
+    }
+
 protected:
     virtual FeaturePrototype* createInterfacePrototype(const FeatureDescription* description) = 0;
 
@@ -75,6 +85,7 @@ private:
     FeaturePrototype* module_proto_ = nullptr;
     std::map<const char*, std::unique_ptr<FeaturePrototype>> children_; // all interface instance prototype
     std::vector<FeatureObjectUniquePtr<FeatureInstance>> instances_;
+    std::map<std::string, const Member*> event_map_;
 };
 
 }

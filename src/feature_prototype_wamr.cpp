@@ -24,7 +24,7 @@
 #include <functional>
 #include <string>
 
-namespace ferry {
+namespace feature_framework {
 
 FeaturePrototypeWamr::FeaturePrototypeWamr(const FeatureDescription* description)
     : FeaturePrototype(description)

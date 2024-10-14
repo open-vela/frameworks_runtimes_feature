@@ -45,8 +45,6 @@ static OptionalType ${module_name}_${name}_opt_type = {
     member_item['name'] = member['name']
     member_type = member['type']
     cpp_type = render.GenerateCppType(member_type)
-    if cpp_type == 'FtArray':
-      cpp_type += '*'
     member_item['cpp_type'] = cpp_type
 
     m_info = render.GenerateFeatureInfo(member_type)
@@ -101,149 +99,266 @@ ${module_name}_${struct_name}* ${module_name}Malloc${struct_name} () {
 }
 
 </%def>\
-<%def name="GenInterfaceMemberMethod(func_node, parent_name, index)">\
+<%def name="GenInterfaceMemberMethod(func_node, iname, index)">\
 <%
   identifier = func_node['identifier']
-  ret_type = func_node['return_type']
-  parent_prefix = f"{parent_name}_interface_"
-  if isinstance(ret_type, dict) and ret_type['type'] == 'promise':
-    p_ft = {}
-    GenPromiseType(ret_type, p_ft)
-    ret_ft = p_ft['feature_type']
-    ret_ft = f"FT_MK_COMPLEX(&{ret_ft})"
-  else:
-    ret_info = render.GenerateFeatureInfo(ret_type)
-    ret_ft = render.GenerateFtExpression(ret_info)
+  ret_type_node = func_node['return_type']
+  iname_prefix = f"{iname}_interface_"
+  ret_ft_info = render.GenerateReturnFtInfo(ret_type_node)
+  ret_ft_expr = render.GenerateFtExpression(ret_ft_info)
+  if isinstance(ret_type_node, dict) and ret_type_node['type'] == 'promise':
+    GenPromiseFeatureType(ret_type_node, ret_ft_info['type'])
+  
+  ret_params = render.GenerateReturnParamsDefine(func_node, ret_type_node)
+  ret_type = ret_params['ret_type']
+  has_promise = False
+  if ret_type == 'FtPromiseId':
+    ret_type = 'void'
+    has_promise = True
+  params_def = ret_params['params_def']
+  func_id = f"{module_name}_{iname_prefix}{identifier}"
+  func_type = f"{func_id}_wrap_type"
+  func_typedef = f"typedef {ret_type} (*{func_type})"
+  func_typedef += f"(\n        {params_def})"
+  call_args = render.GenerateWrapFuncCallArgs(func_node, ret_type_node)
+  func_call = ''
+  if not (has_promise or ret_type == 'void'):
+    func_call += f"*(({ret_type}*)ret) = "
+  func_call += "func"
 
-  params_ft = f"{module_name}_{parent_prefix}{identifier}_parameters"
-
+  params_ft = f"{func_id}_parameters"
   member_info = render.GetMemberInfo(func_node)
   member_type = member_info['type']
   member_name = member_info['name']
   member_suffix = member_info['suffix']
   member_val_type = member_info['val_type']
-  member_val = f"{parent_prefix}{member_name}{member_suffix}"
-  is_valid_member = member_type != 'MEMBER_NULL'
-  if is_valid_member:
-    member_info = {
-      'type': 0, # 0 for MemberMethod, 1 for MemberAccessor
-      'member_type': member_type,
-      'member_name': member_name,
-      'member_val_type': member_val_type,
-      'member_val': member_val,
-      'params_ft': params_ft,
-      'ret_ft': ret_ft
-    }
-    render.CacheInterfaceMember(parent_name, member_info)
+  member_val = f"{iname_prefix}{member_name}{member_suffix}"
+  member_info = {
+    'iname': iname,
+    'type': 0, # 0 for MemberMethod, 1 for MemberAccessor, 2 for MemberEvent
+    'member_type': member_type,
+    'member_name': member_name,
+    'member_val_type': member_val_type,
+    'member_val': member_val,
+    'params_ft': params_ft,
+    'ret_ft': ret_ft_expr,
+    'func_type': func_type,
+    'func_call': func_call,
+    'call_args': call_args
+  }
+  render.CacheInterfaceMember(iname, member_info)
 %>\
+${func_typedef};
+
+static void ${func_id}_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${func_type} func =
+            (${func_type})FeatureGetInterfaceMember(handle, ${index});
+    ${func_call}(handle, adata
+%for call_arg in call_args:
+        , ${call_arg}
+%endfor
+    );
+}
+
 static const MemberMethod ${module_name}_${member_val} = {
-    .func = { .vtable_idx = ${index} },
+    .func_stub = ${func_id}_stub,
     .parameters = ${params_ft},
-    .return_type = ${ret_ft},
+    .return_type = ${ret_ft_expr},
 };
 </%def>\
-<%def name="GenInterfaceFunction(func_node, parent_name)">\
+<%def name="GenInterfaceFunction(func_node, iname)">\
 <%
   # for interface member method
   identifier = func_node['identifier']
-  return_type = func_node['return_type']
-  parent_prefix = f"{parent_name}_interface_"
+  ret_type_node = func_node['return_type']
+  iname_prefix = f"{iname}_interface_"
 
   index_offset = 0
-  extends = render.GetInterfaceExtends(parent_name)
+  extends = render.GetInterfaceExtends(iname)
   for extend in extends:
     index_offset += render.GetFinalVTableSize(extend)
-  index = render.CacheVTableItem(parent_name, func_node, 0)
+  index = render.CacheVTableItem(iname, func_node, 0)
   index += index_offset
 %>\
 // for member method '${identifier}'
-${GenParamsFeatureType(func_node, parent_prefix)}
-${GenInterfaceMemberMethod(func_node, parent_name, index)}
+${GenParamsFeatureType(func_node, iname_prefix)}
+${GenInterfaceMemberMethod(func_node, iname, index)}
 </%def>\
-<%def name="GenInterfaceProperty(prop_node, parent_name)">\
+<%def name="GenInterfaceProperty(prop_node, iname)">\
 <%
   prop_name = prop_node['name']
   value_type = prop_node['value_type']
   prop_info = render.GenerateFeatureInfo(value_type)
   prop_ft = render.GenerateFtExpression(prop_info)
+  cpp_type = render.GenerateCppType(value_type)
   has_getter = render.PropertyHasGetter(prop_node)
   has_setter = render.PropertyHasSetter(prop_node)
-  parent_prefix = f"{parent_name}_interface_"
+  iname_prefix = f"{iname}_interface_"
+  head_params = "void* feature, AppendData append_data"
 
   index_offset = 0
-  extends = render.GetInterfaceExtends(parent_name)
+  extends = render.GetInterfaceExtends(iname)
   for extend in extends:
     index_offset += render.GetFinalVTableSize(extend)
 
-  getter_info = ''
-  setter_info = ''
+  getter_idx = ''
+  setter_idx = ''
   if has_getter:
-    index = render.CacheVTableItem(parent_name, prop_node, 1)
+    index = render.CacheVTableItem(iname, prop_node, 1)
     index += index_offset
-    getter_info = f".vtable_idx = {index}"
+    getter_idx = f"{index}"
+    getter_name = f"{module_name}_{iname_prefix}get_{prop_name}"
+    getter_stub_name = f"{getter_name}_stub"
+    getter_type = f"{getter_name}_type"
+    getter_typedef = f"typedef {cpp_type} (*{getter_type})"
+    getter_typedef += f"(\n        {head_params})"
   if has_setter:
-    index = render.CacheVTableItem(parent_name, prop_node, 2)
+    index = render.CacheVTableItem(iname, prop_node, 2)
     index += index_offset
-    setter_info = f".vtable_idx = {index}"
+    setter_idx = f"{index}"
+    setter_name = f"{module_name}_{iname_prefix}set_{prop_name}"
+    setter_stub_name = f"{setter_name}_stub"
+    setter_type = f"{setter_name}_type"
+    setter_typedef = f"typedef void (*{setter_type})"
+    setter_typedef += f"(\n        {head_params}, {cpp_type} {prop_name})"
 
   member_info = render.GetMemberInfo(prop_node)
   member_type = member_info['type']
   member_name = member_info['name']
   member_suffix = member_info['suffix']
   member_val_type = member_info['val_type']
-  member_val = f"{parent_prefix}{member_name}{member_suffix}"
-  is_valid_member = member_type != 'MEMBER_NULL'
-  if is_valid_member:
-    member_info = {
-      'type': 1, # 0 for MemberMethod, 1 for MemberAccessor
-      'member_type': member_type,
-      'member_name': member_name,
-      'member_val_type': member_val_type,
-      'member_val': member_val,
-      'has_getter': has_getter,
-      'has_setter': has_setter,
-      'prop_ft': prop_ft
-    }
-    render.CacheInterfaceMember(parent_name, member_info)
+  member_val = f"{iname_prefix}{member_name}{member_suffix}"
+  member_info = {
+    'iname': iname,
+    'type': 1, # 0 for MemberMethod, 1 for MemberAccessor, 2 for MemberEvent
+    'member_type': member_type,
+    'member_name': member_name,
+    'member_val_type': member_val_type,
+    'member_val': member_val,
+    'has_getter': has_getter,
+    'has_setter': has_setter,
+    'prop_ft': prop_ft,
+    'prop_type': cpp_type
+  }
+  if has_getter:
+    member_info['getter_type'] = getter_type
+  if has_setter:
+    member_info['setter_type'] = setter_type
+  render.CacheInterfaceMember(iname, member_info)
 %>\
 // for member property '${prop_name}'
-static const MemberAccessor ${module_name}_${member_val} = {
 %if has_getter:
-    .getter = { ${getter_info} },
+${getter_typedef};
+
+static void ${getter_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${getter_type} func =
+            (${getter_type})FeatureGetInterfaceMember(handle, ${getter_idx});
+    *((${cpp_type}*)ret) = func(handle, adata);
+}
+
 %endif
 %if has_setter:
-    .setter = { ${setter_info} },
+${setter_typedef};
+
+static void ${setter_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${setter_type} func =
+            (${setter_type})FeatureGetInterfaceMember(handle, ${setter_idx});
+    func(handle, adata, *(${cpp_type}*)(argv[0]));
+}
+
+%endif
+static const MemberAccessor ${module_name}_${member_val} = {
+%if has_getter:
+    .getter_stub = ${getter_stub_name},
+%endif
+%if has_setter:
+    .setter_stub = ${setter_stub_name},
 %endif
     .type = ${prop_ft},
 };
 
 </%def>\
-<%def name="GenInterfaceEvent(event_node, parent_name)">\
-// don't support event ${parent_name}.${event_node['identifier']}
-// ${event_node}
-#endif
+<%def name="GenInterfaceEvent(event_node, iname)">\
+<%
+  iname_prefix = f"{iname}_interface_"
+  id = event_node['identifier']
+  success = render.CheckInterfaceEventId(iname, id)
+  if success:
+    index_offset = 0
+    extends = render.GetInterfaceExtends(iname)
+    for extend in extends:
+      index_offset += render.GetInterfaceFinalEventSize(extend)
+    event_idx = render.CacheInterfaceEventId(iname, id)
+    event_idx += index_offset
+    member_event_val = f"{module_name}_{iname_prefix}{id}_member_event"
+    member_event_prefix = f"{iname_prefix}event_"
+    params_ft = f"{module_name}_{member_event_prefix}{id}_parameters"
+    member_info = render.GetMemberInfo(event_node)
+    member_type = member_info['type']
+    member_name = member_info['name']
+    member_suffix = member_info['suffix']
+    member_val_type = member_info['val_type']
+    member_val = f"{iname_prefix}{member_name}{member_suffix}"
+    member_info = {
+      'iname': iname,
+      'type': 2, # 0 for MemberMethod, 1 for MemberAccessor, 2 for MemberEvent
+      'member_type': member_type,
+      'member_name': member_name,
+      'member_val_type': member_val_type,
+      'member_val': member_val,
+      'params_ft': params_ft,
+    }
+    render.CacheInterfaceMember(iname, member_info)
+%>\
+%if success:
+// for member event '${id}'
+${GenParamsFeatureType(event_node, member_event_prefix)}
+static const MemberEvent ${member_event_val} = {
+    .parameters = ${params_ft},
+    .id = ${event_idx},
+    .name = "${id}",
+};
+%endif
+
 </%def>\
-<%def name="GenParentInterFaceMemberDefs(iname, members)">\
+<%def name="GenParentInterFaceMemberDefs(iname, parent_members)">\
 <%
   vtable_idx = 0
+  event_idx = 0
 %>\
 // Overrided parent member defines
-%for member in members:
+%for member in parent_members:
 <%
-  type = member['type'] # 0 for MemberMethod, 1 for MemberAccessor
+  parent_iname = member['iname']
+  parent_iname_prefix = f"{parent_iname}_interface_"
+  type = member['type']
   member_type = member['member_type']
   member_name = member['member_name']
   member_val_type = member['member_val_type']
   member_val = member['member_val']
+  stub_name_prefix = f"{module_name}_{parent_iname_prefix}"
   if type == 0:
+    # 0 for MemberMethod
     params_ft = member['params_ft']
     ret_ft = member['ret_ft']
     func_idx = vtable_idx
     vtable_idx += 1
+    func_stub_name = f"{stub_name_prefix}{iname}_{member_name}_stub"
+    func_type = member['func_type']
+    func_call = member['func_call']
+    call_args = member['call_args']
   elif type == 1:
+    # 1 for MemberAccessor
     has_getter = member['has_getter']
     has_setter = member['has_setter']
     prop_ft = member['prop_ft']
+    prop_type = member['prop_type']
     if has_getter:
       getter_idx = vtable_idx
       if has_setter:
@@ -253,22 +368,70 @@ static const MemberAccessor ${module_name}_${member_val} = {
     elif has_setter:
       setter_idx = vtable_idx
       vtable_idx += 1
+
+    if has_getter:
+      getter_type = member['getter_type']
+      getter_stub_name = f"{stub_name_prefix}{iname}_get_{member_name}_stub"
+    if has_setter:
+      setter_type = member['setter_type']
+      setter_stub_name = f"{stub_name_prefix}{iname}_set_{member_name}_stub"
+  elif type == 2:
+    # 2 for MemberEvent
+    params_ft = member['params_ft']
+    event_idx += 1
 %>\
 %if type == 0:
+static void ${func_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${func_type} func =
+            (${func_type})FeatureGetInterfaceMember(handle, ${func_idx});
+    ${func_call}(handle, adata
+%for call_arg in call_args:
+        , ${call_arg}
+%endfor
+    );
+}
+
 static const MemberMethod ${module_name}_${iname}_${member_val} = {
-    .func = { .vtable_idx = ${func_idx} },
+    .func_stub = ${func_stub_name},
     .parameters = ${params_ft},
     .return_type = ${ret_ft},
 };
 %elif type == 1:
-static const MemberAccessor ${module_name}_${iname}_${member_val} = {
 %if has_getter:
-    .getter = { .vtable_idx = ${getter_idx} },
+static void ${getter_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${getter_type} func =
+            (${getter_type})FeatureGetInterfaceMember(handle, ${getter_idx});
+    *((${prop_type}*)ret) = func(handle, adata);
+}
 %endif
 %if has_setter:
-    .setter = { .vtable_idx = ${setter_idx} },
+static void ${setter_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${setter_type} func =
+            (${setter_type})FeatureGetInterfaceMember(handle, ${setter_idx});
+    func(handle, adata, *(${prop_type}*)(argv[0]));
+}
+%endif
+
+static const MemberAccessor ${module_name}_${iname}_${member_val} = {
+%if has_getter:
+    .getter_stub = ${getter_stub_name},
+%endif
+%if has_setter:
+    .setter_stub = ${setter_stub_name},
 %endif
     .type = ${prop_ft},
+};
+%elif type == 2:
+static const MemberEvent ${module_name}_${iname}_${member_val} = {
+    .parameters = ${params_ft},
+    .id = ${event_idx},
+    .name = "${member_name}",
 };
 %endif
 
@@ -300,31 +463,29 @@ static const MemberAccessor ${module_name}_${iname}_${member_val} = {
   member_name = member_info['name']
   member_suffix = member_info['suffix']
   member_val_type = member_info['val_type']
-  parent_prefix = f"{iname}_interface_"
-  member_val = f"&{module_name}_{parent_prefix}{member_name}{member_suffix}"
-  is_valid_member = member_type != 'MEMBER_NULL'
+  iname_prefix = f"{iname}_interface_"
+  member_val = f"&{module_name}_{iname_prefix}{member_name}{member_suffix}"
 %>\
-%if is_valid_member:
   {
       .type = ${member_type},
       .name = "${member_name}",
       .${member_val_type} = ${member_val},
   },
-%endif
 %endfor
 </%def>\
-<%def name="GenInterface(interface_node)">\
+<%def name="GenInterface(inode)">\
 <%
-  iname = interface_node['name']
+  iname = inode['name']
   render.TryCacheInterface(iname)
-  members = interface_node['members']
-  for extend in interface_node['extends']:
+  members = inode['members']
+  for extend in inode['extends']:
     render.CacheInterfaceExtend(iname, extend)
-  parent_prefix = f"{iname}_interface_"
+  iname_prefix = f"{iname}_interface_"
   parent_members = render.GetFinalInterfaceMembers(iname)
 %>\
 /****** JIDL interface '${iname}' glue code begin ******/
-extern const InterfaceType ${module_name}_${parent_prefix}type;
+extern const InterfaceType ${module_name}_${iname_prefix}type;
+
 %if parent_members:
 ${GenParentInterFaceMemberDefs(iname, parent_members)}\
 %endif
@@ -341,7 +502,7 @@ ${GenParentInterFaceMemberDefs(iname, parent_members)}\
   endfor
 %>\
 // Interface members
-static const Member ${module_name}_${parent_prefix}members[] = {
+static const Member ${module_name}_${iname_prefix}members[] = {
 %if parent_members:
 ${GenParentInterFaceMembers(iname, parent_members)}\
 %endif
@@ -350,20 +511,20 @@ ${GenInterFaceMembers(iname, members)}\
 };
 
 // Interface description
-static const FeatureDescription ${module_name}_${parent_prefix}desc = {
+static const FeatureDescription ${module_name}_${iname_prefix}desc = {
     .version = 1,
     .name = "${iname}",
     .description = "${iname} description",
     .dynamic = true,
-    NULL,
-    countof(${module_name}_${parent_prefix}members),
-    ${module_name}_${parent_prefix}members,
+    .native_callbacks = NULL,
+    .member_count = countof(${module_name}_${iname_prefix}members),
+    .members = ${module_name}_${iname_prefix}members,
 };
 
 // InterfaceType
-const InterfaceType ${module_name}_${parent_prefix}type = {
+const InterfaceType ${module_name}_${iname_prefix}type = {
     .header = { .type = COMPLEX_INTERFACE, .size = 0 },
-    .desc = &${module_name}_${parent_prefix}desc
+    .desc = &${module_name}_${iname_prefix}desc
 };
 /****** JIDL interface '${iname}' glue code end ******/
 </%def>\
@@ -397,13 +558,14 @@ FtArray* ${module_name}_malloc_${elem_type}_array() {
 <%
   render.SetArrayTypeGenerator(ArrayTypeGenerator(GenerateArrayType))
 %>\
-<%def name="GenParamsFeatureType(node, parent_prefix)">\
+<%def name="GenParamsFeatureType(node, iname_prefix)">\
 <%
-  if not parent_prefix: parent_prefix = ''
+  if not iname_prefix: iname_prefix = ''
   identifier = node['identifier']
-  has_ellipse_param = render.HasEllipseParam(node)
+  has_ellipse = False
   ft_expr_list = []
   if 'params' in node:
+    has_ellipse = render.HasEllipseParam(node['params'])
     for param in node['params']:
       p_info = render.GenerateFeatureInfo(param['type'])
       ft_expr = render.GenerateFtExpression(p_info)
@@ -416,53 +578,67 @@ FtArray* ${module_name}_malloc_${elem_type}_array() {
         ft_expr = f"FT_MK_OPTIONAL(&{module_name}_{p_name}_opt_type)"
       ft_expr_list.append(ft_expr)
 %>\
-static const FeatureType ${module_name}_${parent_prefix}${identifier}_parameters[] = {
+static const FeatureType ${module_name}_${iname_prefix}${identifier}_parameters[] = {
 %for ft_expr in ft_expr_list:
     ${ft_expr},
 %endfor
-%if not has_ellipse_param:
+%if not has_ellipse:
     FT_PARAM_END
 %endif
 };
 </%def>\
-<%def name="GenPromiseType(promise_type, promise_ft)">\
+<%def name="GenPromiseFeatureType(promise_node, promise_ft)">\
 <%
-  resolve_type = promise_type['resolve_type']
-  reject_type = promise_type['reject_type']
+  resolve_type = promise_node['resolve_type']
   resolve_info = render.GenerateFeatureInfo(resolve_type)
   resolve_ft_expr = render.GenerateFtExpression(resolve_info)
-  reject_info = render.GenerateFeatureInfo(reject_type)
-  reject_ft_expr = render.GenerateFtExpression(reject_info)
-  resolve_ft = resolve_info['type']
-  reject_ft = reject_info['type']
-  p_feature_type = f"{module_name}_promise_{resolve_ft}_{reject_ft}_type"
-  promise_ft['feature_type'] = p_feature_type
-  success = render.TryCachePromiseType(p_feature_type)
+  success = render.TryCachePromiseType(promise_ft)
 %>\
 %if success:
-static const PromiseType ${p_feature_type} = {
+static const PromiseType ${module_name}_${promise_ft} = {
     .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
-    .resolveTypes = { ${resolve_ft_expr}, ${reject_ft_expr} }
+    .resolveType = ${resolve_ft_expr}
 };
 
 %endif
 </%def>\
-<%def name="GenMemberMethod(identifier, ret_type)">\
+<%def name="GenMemberMethod(func_node, ret_type_node)">\
 <%
-  if isinstance(ret_type, dict) and ret_type['type'] == 'promise':
-    p_ft = {}
-    GenPromiseType(ret_type, p_ft)
-    ret_ft = p_ft['feature_type']
-    ret_ft = f"FT_MK_COMPLEX(&{ret_ft})"
-  else:
-    ret_info = render.GenerateFeatureInfo(ret_type)
-    ret_ft = render.GenerateFtExpression(ret_info)
-  func_info = f".callback = FFI_FN({module_name}_wrap_{identifier})"
+  identifier = func_node['identifier']
+  ret_params = render.GenerateReturnParamsDefine(func_node, ret_type_node)
+  ret_type = ret_params['ret_type']
+  has_promise = False
+  if ret_type == 'FtPromiseId':
+    ret_type = 'void'
+    has_promise = True
+  params_def = ret_params['params_def']
+  func_id = f"{module_name}_{identifier}"
+  wrap_func = f"{module_name}_wrap_{identifier}"
+  call_args = render.GenerateWrapFuncCallArgs(func_node, ret_type_node)
+  func_call = ''
+  if not (has_promise or ret_type == 'void'):
+    func_call += f"*(({ret_type}*)ret) = "
+  func_call += f"{wrap_func}"
+
+  ret_ft_info = render.GenerateReturnFtInfo(ret_type_node)
+  ret_ft_expr = render.GenerateFtExpression(ret_ft_info)
+  if has_promise:
+    GenPromiseFeatureType(ret_type_node, ret_ft_info['type'])
 %>\
-static const MemberMethod ${module_name}_${identifier}_member_method = {
-    .func = { ${func_info} },
-    .parameters = ${module_name}_${identifier}_parameters,
-    .return_type = ${ret_ft},
+static void ${func_id}_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${func_call}(handle, adata
+%for call_arg in call_args:
+        , ${call_arg}
+%endfor
+    );
+}
+
+static const MemberMethod ${func_id}_member_method = {
+    .func_stub = ${func_id}_stub,
+    .parameters = ${func_id}_parameters,
+    .return_type = ${ret_ft_expr},
 };
 </%def>\
 <%def name="GenInterfaceCtorFunction(func_node, ctor_info)">\
@@ -471,10 +647,10 @@ static const MemberMethod ${module_name}_${identifier}_member_method = {
   func_def = render.GenerateInterfaceCtorDefine(func_node)
   ctor_target = ctor_info['target']
   ctor_interface = ctor_info['interface']
-  parent_prefix = f"{ctor_interface}_interface_"
+  iname_prefix = f"{ctor_interface}_interface_"
   final_vtable = render.GetFinalVTable(ctor_interface)
   vtable_size = len(final_vtable)
-  item_prefix = f"{module_name}_{parent_prefix}{ctor_target}"
+  item_prefix = f"{module_name}_{iname_prefix}{ctor_target}"
   finalizer = f"(NativeFunc){item_prefix}_finalize"
 %>\
 ${func_def} {
@@ -511,8 +687,8 @@ ${func_def} {
 <%def name="GenFunction(func_node)">\
 <%
   identifier = func_node['identifier']
-  ret_type = func_node['return_type']
-  render.CacheFuncReturnNode(identifier, ret_type)
+  ret_type_node = func_node['return_type']
+  render.CacheFuncReturnNode(identifier, ret_type_node)
   # for interface constructor function
   ctor_info = render.GetInterfaceCtorInfo(func_node)
 %>\
@@ -522,7 +698,7 @@ ${GenInterfaceCtorFunction(func_node, ctor_info)}
 %endif
 /****** for JIDL function '${identifier}' ******/
 ${GenParamsFeatureType(func_node, '')}
-${GenMemberMethod(identifier, ret_type)}
+${GenMemberMethod(func_node, ret_type_node)}
 </%def>\
 <%def name="GenUse(use_node)">\
 <%
@@ -532,14 +708,14 @@ ${GenMemberMethod(identifier, ret_type)}
   func_call_id = func_call_node['identifier']
   ret_type_node = render.GetUseReturnTypeNode(use_node)
   ret_type = render.GenerateReturnType(ret_type_node)
-  params = ''
+  is_promise = (ret_type == 'FtPromiseId')
+  params = 'FeatureInstanceHandle feature, AppendData append_data'
+  if is_promise:
+    params += ', FtPromiseId pid'
+    ret_type = 'void'
   if 'params' in func_node:
     param_list = render.GenerateParamList(func_node["params"])
     params += f", {param_list}"
-
-  is_promise = (ret_type == 'FtPromiseId')
-  if is_promise:
-    ret_type = 'void'
 
   func_call = ''
   if ret_type != 'void':
@@ -552,18 +728,14 @@ ${GenMemberMethod(identifier, ret_type)}
     params_call_list = render.GenerateParamCallList(func_call_node["param_calls"])
     func_call += f", {params_call_list}"
   func_call += ")"
-
-  prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
-  if is_promise:
-    prefix_params += ', FtPromiseId pid'
 %>\
 /****** for JIDL use '${identifier}' ******/
-static ${ret_type} ${module_name}_wrap_${identifier} (${prefix_params}${params}) {
+static ${ret_type} ${module_name}_wrap_${identifier} (${params}) {
     ${func_call};
 }
 
 ${GenParamsFeatureType(func_node, '')}
-${GenMemberMethod(identifier, ret_type_node)}
+${GenMemberMethod(func_node, ret_type_node)}
 </%def>\
 <%def name="GenCallback(cb_node)">\
 <%
@@ -572,13 +744,30 @@ ${GenMemberMethod(identifier, ret_type_node)}
 %>\
 %if success:
 /****** for JIDL callback '${identifier}' ******/
-${GenParamsFeatureType(cb_node, '')}
+${GenParamsFeatureType(cb_node, 'callback_')}
 static const CallbackType ${module_name}_${identifier}_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
-    .parameters = ${module_name}_${identifier}_parameters,
+    .parameters = ${module_name}_callback_${identifier}_parameters,
     .return_type = FT_VOID
 };
 
+%endif
+</%def>\
+<%def name="GenEvent(ev_node)">\
+<%
+  identifier = ev_node['identifier']
+  event_idx = render.TryCacheEventId(identifier)
+  event_type = f"{module_name}_{identifier}_event_type"
+%>\
+%if event_idx > 0:
+/****** for JIDL event '${identifier}' ******/
+${GenParamsFeatureType(ev_node, 'event_')}
+
+static const MemberEvent ${module_name}_${identifier}_member_event = {
+    .parameters = ${module_name}_event_${identifier}_parameters,
+    .id = ${event_idx},
+    .name = "${identifier}",
+};
 %endif
 </%def>\
 <%def name="GenProperty(prop_node)">\
@@ -589,21 +778,40 @@ static const CallbackType ${module_name}_${identifier}_callback_type = {
   prop_ft = render.GenerateFtExpression(prop_info)
   has_getter = render.PropertyHasGetter(prop_node)
   has_setter = render.PropertyHasSetter(prop_node)
+  cpp_type = render.GenerateCppType(value_type)
+  head_params = "void* feature, AppendData append_data"
 
-  getter_info = ''
-  setter_info = ''
   if has_getter:
-    getter_info = f".callback = FFI_FN({module_name}_get_{prop_name})"
+    getter_name = f"{module_name}_get_{prop_name}"
+    getter_idx = f".callback = (NativeFunc)({getter_name})"
+    getter_stub_name = f"{getter_name}_stub"
   if has_setter:
-    setter_info = f".callback = FFI_FN({module_name}_set_{prop_name})"
+    setter_name = f"{module_name}_set_{prop_name}"
+    setter_stub_name = f"{setter_name}_stub"
 %>\
 /****** for JIDL property '${prop_name}' ******/
-static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
 %if has_getter:
-    .getter = { ${getter_info} },
+static void ${getter_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((${cpp_type}*)ret) = ${getter_name}(handle, adata);
+}
+
 %endif
 %if has_setter:
-    .setter = { ${setter_info} },
+static void ${setter_stub_name}(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    ${setter_name}(handle, adata, *(${cpp_type}*)(argv[0]));
+}
+
+%endif
+static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
+%if has_getter:
+    .getter_stub = ${getter_stub_name},
+%endif
+%if has_setter:
+    .setter_stub = ${setter_stub_name},
 %endif
     .type = ${prop_ft},
 };
@@ -619,7 +827,7 @@ static const MemberAccessor ${module_name}_${prop_name}_member_accessor = {
     raise Exception('wrong const type: {}'.format(const_info['type']))
   val_name = render.GetAppendDataName(const_info['type'])
   cpp_type = render.GenerateCppType(const_type)
-  is_array = cpp_type == 'FtArray'
+  is_array = cpp_type == 'FtArray*'
   if is_array:
     cpp_type = render.GenerateArrayCppType(const_type)
   if cpp_type != 'FtString':
@@ -641,17 +849,14 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
 </%def>\
 <%def name="GenMembers(members)">\
 %for member in members:
+%if render.IsValidMemberType(member):
 <%
   member_info = render.GetMemberInfo(member)
   member_type = member_info['type']
   member_name = member_info['name']
   member_suffix = member_info['suffix']
   member_val_type = member_info['val_type']
-  is_valid_member = True
-  if member_type == 'MEMBER_NULL':
-    is_valid_member = False
 %>\
-%if is_valid_member:
     {
         .type = ${member_type},
         .name = "${member_name}",
@@ -663,6 +868,8 @@ static const MemberConst ${module_name}_${const_name}_member_const = {
 #include "${header_name}"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -673,6 +880,8 @@ ${GenFunction(block)}
 ${GenUse(block)}
 %elif block['type'] == 'callback':
 ${GenCallback(block)}
+%elif block['type'] == 'event':
+${GenEvent(block)}
 %elif block['type'] == 'property':
 ${GenProperty(block)}
 %elif block['type'] == 'const':

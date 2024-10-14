@@ -28,6 +28,8 @@ typedef struct PromptDialogParams {
     completeCb complete_cb;
 } PromptDialogParams;
 
+void prompt_dialog_free(PromptDialogParams* params);
+
 typedef void (*promptShowDialog)(PromptDialogParams* params);
 
 struct PromptInterfaceHandler {

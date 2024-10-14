@@ -14,19 +14,54 @@
  * limitations under the License.
  */
 #include "feature_manager.h"
-#include "feature_context.h"
 #include "feature_context_private.h"
 #include "feature_exports.h"
 #include "feature_instance.h"
 #include "feature_log.h"
 #include "feature_prototype.h"
+#include "feature_registry.h"
 #include "feature_utils.h"
 
 #include <string.h>
 
 using namespace FEATURE;
 
-namespace ferry {
+namespace feature_framework {
+
+extern FeatureManager* CreateQJSFeatureManager(FeatureRegistry* registry, FeatureManagerCreateInfo* pinfo);
+
+#ifdef CONFIG_FEATURE_USE_WAMR
+extern FeatureManager* CreateWamrFeatureManager(FeatureRegistry* registry, FeatureManagerCreateInfo* pinfo);
+#endif
+
+// static
+FeatureManager* FeatureManager::CreateFeatureManager(FeatureManagerCreateInfo* pinfo)
+{
+    if (!pinfo) {
+        return nullptr;
+    }
+    FeatureRegistry* registry = new FeatureRegistry();
+    registry->init(pinfo->package_name);
+    FeatureManager* manager = nullptr;
+    if (pinfo->manager_type == FEATURE_MANAGER_JS) {
+        manager = CreateQJSFeatureManager(registry, pinfo);
+    } else {
+#ifdef CONFIG_FEATURE_USE_WAMR
+        manager = CreateWamrFeatureManager(registry, pinfo);
+#endif
+    }
+    if (manager) {
+        if (!manager->init()) {
+            delete manager;
+            return nullptr;
+        }
+        auto ft_ctx = manager->getFeatureContext();
+        if (ft_ctx) {
+            SetReleaseRawContextCb(ft_ctx, pinfo->release_cb);
+        }
+    }
+    return manager;
+}
 
 /////////////////////////////////////////////////
 FeatureManager::FeatureManager(FeatureRegistry* registry)
@@ -131,6 +166,47 @@ void FeatureManager::checkFeatureInstances()
             FEATURE_LOG_WARN("feature manager has been released, feature(base:%p, name:%s) may have memory leaks", node, instance->description()->name);
         }
     }
+}
+
+bool FeatureManager::hasFeature(const std::string& feature_method)
+{
+    const std::string& feature_name = feature_method;
+    bool feature_name_only = true;
+    size_t last_dot = std::string::npos;
+    auto feature_pair = getFeatureRegistry()->findFeature(feature_name.c_str());
+    if (!feature_pair || !feature_pair->first->description) {
+        feature_name_only = false;
+        last_dot = feature_name.find_last_of(".");
+        if (last_dot == std::string::npos) {
+            return false;
+        }
+
+        feature_pair = getFeatureRegistry()->findFeature(feature_name.substr(0, last_dot).c_str());
+        if (!feature_pair || !feature_pair->first->description) {
+            return false;
+        }
+    }
+
+    if (feature_name_only)
+        return true;
+
+    std::string method = feature_name.substr(last_dot + 1);
+    auto members = feature_pair->first->members;
+    int n = feature_pair->first->member_count;
+    for (int i = 0; i < n; i++) {
+        if (std::string(members[i].name) == method) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void FeatureManager::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
+{
+    dump->count(sizeof(FeatureManager), userdata);
+    if (registry_)
+        registry_->onDumpMemory(dump, userdata);
 }
 
 }

@@ -24,14 +24,16 @@
 #include <map>
 #include <memory>
 
-namespace ferry {
+namespace feature_framework {
 
 class PromiseManager {
 public:
     PromiseManager(JSContext* js_ctx);
     ~PromiseManager();
 
-    FtPromiseId addPromise(FeatureType resolve_type, FeatureType reject_type);
+    FtPromiseId addPromise(FeatureType resolve_type);
+
+    FtPromiseId addAsyncCallbacks(FeatureType resolve_type, feature_value_t success, feature_value_t fail, feature_value_t complete);
 
     bool removePromise(FtPromiseId pid);
 
@@ -42,16 +44,48 @@ public:
     void markPromises(feature_runtime_ref rt, feature_mark_func mark_func);
 
 protected:
-    int doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap);
+    int doResolvePromise(FtPromiseId pid, va_list& ap);
 
-    int invokeJsCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc);
+    int doRejectPromise(FtPromiseId pid, int code, const char* msg);
+
+    int doGetPromiseType(FtPromiseId pid);
+
+    int invokeJsCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc);
 
 private:
-    typedef struct PromiseData {
-        feature_value_t promise; // 保存promise对象
-        feature_value_t resolve_funcs[2]; // functions
-        FeatureType resolve_types[2];
-    } PromiseData;
+    enum PromiseType {
+        kPromise,
+        kCallbacks
+    };
+
+    class PromiseData {
+    public:
+        PromiseData(JSContext* ctx, FeatureType ftype);
+        PromiseData(JSContext* ctx, FeatureType ftype, feature_value_t success, feature_value_t fail, feature_value_t complete);
+        ~PromiseData();
+        bool init();
+        feature_value_t promise();
+        int resolve(va_list& ap);
+        int reject(int code, const char* msg);
+        void mark(feature_runtime_ref rt, feature_mark_func mark_func);
+        PromiseType getPromiseType() { return promise_type; }
+
+    private:
+        FeatureType resolve_type;
+        PromiseType promise_type;
+        JSContext* js_ctx;
+        union {
+            struct {
+                feature_value_t promise; // 保存promise对象, 仅promise情况下有效
+                feature_value_t resolve_funcs[2]; // functions
+            } promise_info;
+            struct {
+                feature_value_t success;
+                feature_value_t fail;
+                feature_value_t complete; // 记录complete, 仅callback形式有效
+            } callbacks;
+        };
+    };
 
     PromiseData* getPromiseData(FtPromiseId pid);
 

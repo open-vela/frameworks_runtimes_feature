@@ -24,6 +24,8 @@
 #include "simple_1_0.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -33,8 +35,16 @@ static const FeatureType Simple_printStr_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_printStr_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_printStr(handle, adata
+        , *(FtString*)(argv[0])
+    );
+}
+
 static const MemberMethod Simple_printStr_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_printStr) },
+    .func_stub = Simple_printStr_stub,
     .parameters = Simple_printStr_parameters,
     .return_type = FT_VOID,
 };
@@ -45,8 +55,16 @@ static const FeatureType Simple_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void Simple_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod Simple_print_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_print) },
+    .func_stub = Simple_print_stub,
     .parameters = Simple_print_parameters,
     .return_type = FT_VOID,
 };
@@ -66,8 +84,18 @@ static const FeatureType Simple_foo_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_foo_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtInt*)ret) = Simple_wrap_foo(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtString*)(argv[1])
+        , *(FtDouble*)(argv[2])
+    );
+}
+
 static const MemberMethod Simple_foo_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_foo) },
+    .func_stub = Simple_foo_stub,
     .parameters = Simple_foo_parameters,
     .return_type = FT_INT,
 };
@@ -78,8 +106,15 @@ static const FeatureType Simple_bar_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_bar_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_bar(handle, adata
+    );
+}
+
 static const MemberMethod Simple_bar_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar) },
+    .func_stub = Simple_bar_stub,
     .parameters = Simple_bar_parameters,
     .return_type = FT_VOID,
 };
@@ -91,8 +126,17 @@ static const FeatureType Simple_bar5_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void Simple_bar5_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_bar5(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtVariParams*)(argv[1])
+    );
+}
+
 static const MemberMethod Simple_bar5_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar5) },
+    .func_stub = Simple_bar5_stub,
     .parameters = Simple_bar5_parameters,
     .return_type = FT_VOID,
 };
@@ -106,8 +150,18 @@ static const FeatureType Simple_bar6_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_bar6_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = Simple_wrap_bar6(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtFloat*)(argv[1])
+        , *(FtBool*)(argv[2])
+    );
+}
+
 static const MemberMethod Simple_bar6_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar6) },
+    .func_stub = Simple_bar6_stub,
     .parameters = Simple_bar6_parameters,
     .return_type = FT_STRING,
 };
@@ -123,8 +177,16 @@ static const FeatureType Simple_ubar6_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_ubar6_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = Simple_wrap_ubar6(handle, adata
+        , *(FtFloat*)(argv[0])
+    );
+}
+
 static const MemberMethod Simple_ubar6_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_ubar6) },
+    .func_stub = Simple_ubar6_stub,
     .parameters = Simple_ubar6_parameters,
     .return_type = FT_STRING,
 };
@@ -138,7 +200,7 @@ static const FeatureType Simple_cb1_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType Simple_cb1_callback_type {
+static const CallbackType Simple_cb1_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb1_parameters,
     .return_type = FT_VOID
@@ -152,7 +214,7 @@ static const FeatureType Simple_cb2_parameters[] = {
     FT_PARAM_REST_END,
 };
 
-static const CallbackType Simple_cb2_callback_type {
+static const CallbackType Simple_cb2_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb2_parameters,
     .return_type = FT_VOID
@@ -164,7 +226,7 @@ static const FeatureType Simple_cb3_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType Simple_cb3_callback_type {
+static const CallbackType Simple_cb3_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb3_parameters,
     .return_type = FT_VOID
@@ -176,7 +238,7 @@ static const FeatureType Simple_cb4_parameters[] = {
     FT_PARAM_REST_END,
 };
 
-static const CallbackType Simple_cb4_callback_type {
+static const CallbackType Simple_cb4_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = Simple_cb4_parameters,
     .return_type = FT_VOID
@@ -191,8 +253,18 @@ static const FeatureType Simple_goo_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_goo_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_goo(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtInt*)(argv[1])
+        , *(FtCallbackId*)(argv[2])
+    );
+}
+
 static const MemberMethod Simple_goo_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_goo) },
+    .func_stub = Simple_goo_stub,
     .parameters = Simple_goo_parameters,
     .return_type = FT_VOID,
 };
@@ -206,8 +278,18 @@ static const FeatureType Simple_goo2_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_goo2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_goo2(handle, adata
+        , *(FtCallbackId*)(argv[0])
+        , *(FtCallbackId*)(argv[1])
+        , *(FtCallbackId*)(argv[2])
+    );
+}
+
 static const MemberMethod Simple_goo2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_goo2) },
+    .func_stub = Simple_goo2_stub,
     .parameters = Simple_goo2_parameters,
     .return_type = FT_VOID,
 };
@@ -223,8 +305,16 @@ static const FeatureType Simple_goo3_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_goo3_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_goo3(handle, adata
+        , *(FtCallbackId*)(argv[0])
+    );
+}
+
 static const MemberMethod Simple_goo3_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_goo3) },
+    .func_stub = Simple_goo3_stub,
     .parameters = Simple_goo3_parameters,
     .return_type = FT_VOID,
 };
@@ -239,8 +329,19 @@ static const FeatureType Simple_foo2_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_foo2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_foo2(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtDouble*)(argv[1])
+        , *(FtCallbackId*)(argv[2])
+        , *(FtCallbackId*)(argv[3])
+    );
+}
+
 static const MemberMethod Simple_foo2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_foo2) },
+    .func_stub = Simple_foo2_stub,
     .parameters = Simple_foo2_parameters,
     .return_type = FT_VOID,
 };
@@ -254,8 +355,18 @@ static const FeatureType Simple_foo3_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_foo3_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_foo3(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtDouble*)(argv[1])
+        , *(FtCallbackId*)(argv[2])
+    );
+}
+
 static const MemberMethod Simple_foo3_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_foo3) },
+    .func_stub = Simple_foo3_stub,
     .parameters = Simple_foo3_parameters,
     .return_type = FT_VOID,
 };
@@ -266,8 +377,15 @@ static const FeatureType Simple_justTestNeverCall1_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_justTestNeverCall1_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_justTestNeverCall1(handle, adata
+    );
+}
+
 static const MemberMethod Simple_justTestNeverCall1_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_justTestNeverCall1) },
+    .func_stub = Simple_justTestNeverCall1_stub,
     .parameters = Simple_justTestNeverCall1_parameters,
     .return_type = FT_VOID,
 };
@@ -278,8 +396,15 @@ static const FeatureType Simple_justTestNeverCall2_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_justTestNeverCall2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_wrap_justTestNeverCall2(handle, adata
+    );
+}
+
 static const MemberMethod Simple_justTestNeverCall2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_justTestNeverCall2) },
+    .func_stub = Simple_justTestNeverCall2_stub,
     .parameters = Simple_justTestNeverCall2_parameters,
     .return_type = FT_VOID,
 };
@@ -301,8 +426,16 @@ static const FeatureType Simple_bar2_parameters[] = {
     FT_PARAM_END
 };
 
+static void Simple_bar2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtInt*)ret) = Simple_wrap_bar2(handle, adata
+        , *(FtArray**)(argv[0])
+    );
+}
+
 static const MemberMethod Simple_bar2_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar2) },
+    .func_stub = Simple_bar2_stub,
     .parameters = Simple_bar2_parameters,
     .return_type = FT_INT,
 };
@@ -323,82 +456,19 @@ FtArray* Simple_malloc_string_array() {
         sizeof(FtArray), FT_MK_COMPLEX(&Simple_string_array));
 }
 
+static void Simple_bar3_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtArray**)ret) = Simple_wrap_bar3(handle, adata
+    );
+}
+
 static const MemberMethod Simple_bar3_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar3) },
+    .func_stub = Simple_bar3_stub,
     .parameters = Simple_bar3_parameters,
     .return_type = FT_MK_COMPLEX(&Simple_string_array),
 };
 
-/****** for JIDL struct 'Chapter' ******/
-static OptionalType struct_test_Chapter_member_page_count_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_INT,
-};
-
-static OptionalType struct_test_Chapter_member_title_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-};
-
-static OptionalType struct_test_Chapter_member_is_end_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_BOOLEAN,
-};
-
-static ObjectMember struct_test_Chapter_struct_members[] = {
-    { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Array, _page_count), sizeof(FtInt) },
-    { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Array, _title), sizeof(FtString) },
-    { "is_end", FT_MK_OPTIONAL(&struct_test_Chapter_member_is_end_opt_type), offsetof(struct_test_Array, _is_end), sizeof(FtBool) },
-    { nullptr },
-};
-
-// complex defination
-static const ObjectMapType struct_test_Array_struct_type {
-    .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Array) },
-    .members = struct_test_Chapter_struct_members
-};
-
-struct_test_Array* struct_testMallocArray () {
-    return (struct_test_Array*)FeatureMalloc(
-        sizeof(struct_test_Array), FT_MK_COMPLEX(&struct_test_Array_struct_type));
-}
-
-/****** for JIDL function 'bar4' ******/
-static const FeatureType Simple_bar4_parameters[] = {
-    FT_PARAM_END
-};
-
-static const ArrayType Simple_struct_array = {
-    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
-    .element_type = FT_MK_COMPLEX(&struct_test_Array_struct_type)
-};
-
-FtArray* Simple_malloc_struct_array() {
-    return (FtArray*)FeatureMalloc(
-        sizeof(FtArray), FT_MK_COMPLEX(&Simple_struct_array));
-}
-
-static const MemberMethod Simple_bar4_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar4) },
-    .parameters = Simple_bar4_parameters,
-    .return_type = FT_MK_COMPLEX(&Simple_struct_array),
-};
-
-
-
-
-
-/****** for JIDL function 'bar7' ******/
-static const FeatureType Simple_bar7_parameters[] = {
-    FT_MK_COMPLEX(&Simple_struct_array),
-    FT_PARAM_END
-};
-
-static const MemberMethod Simple_bar7_member_method = {
-    .func = { .callback = FFI_FN(Simple_wrap_bar7) },
-    .parameters = Simple_bar7_parameters,
-    .return_type = FT_INT,
-};
 
 /****** for JIDL const 'x' ******/
 const FtInt Simple_g_const_x = 1;
@@ -428,23 +498,47 @@ static const MemberConst Simple_z_member_const = {
 };
 
 /****** for JIDL property 'name' ******/
+static void Simple_get_name_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = Simple_get_name(handle, adata);
+}
+
+static void Simple_set_name_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    Simple_set_name(handle, adata, *(FtString*)(argv[0]));
+}
+
 static const MemberAccessor Simple_name_member_accessor = {
-    .getter = { .callback = FFI_FN(Simple_get_name) },
-    .setter = { .callback = FFI_FN(Simple_set_name) },
+    .getter_stub = Simple_get_name_stub,
+    .setter_stub = Simple_set_name_stub,
     .type = FT_STRING,
 };
 
 
 /****** for JIDL property 'version' ******/
+static void Simple_get_version_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = Simple_get_version(handle, adata);
+}
+
 static const MemberAccessor Simple_version_member_accessor = {
-    .getter = { .callback = FFI_FN(Simple_get_version) },
+    .getter_stub = Simple_get_version_stub,
     .type = FT_STRING,
 };
 
 
 /****** for JIDL property 'args' ******/
+static void Simple_get_args_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtArray**)ret) = Simple_get_args(handle, adata);
+}
+
 static const MemberAccessor Simple_args_member_accessor = {
-    .getter = { .callback = FFI_FN(Simple_get_args) },
+    .getter_stub = Simple_get_args_stub,
     .type = FT_MK_COMPLEX(&Simple_string_array),
 };
 
@@ -532,16 +626,6 @@ static const Member Simple_members[] = {
         .method = &Simple_bar3_member_method,
     },
     {
-        .type = MEMBER_METHOD,
-        .name = "bar4",
-        .method = &Simple_bar4_member_method,
-    },
-    {
-        .type = MEMBER_METHOD,
-        .name = "bar7",
-        .method = &Simple_bar7_member_method,
-    },
-    {
         .type = MEMBER_CONST,
         .name = "x",
         .value = &Simple_x_member_const,
@@ -574,7 +658,7 @@ static const Member Simple_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks Simple_callbacks {
+static const struct FeatureCallbacks Simple_callbacks = {
     Simple_onRegister,
     Simple_onCreate,
     Simple_onRequired,

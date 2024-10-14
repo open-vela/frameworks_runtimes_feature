@@ -24,6 +24,8 @@
 #include "promise_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -39,8 +41,18 @@ static const PromiseType promise_test_promise_FT_INT_FT_INT_type = {
     .resolveTypes = { FT_INT, FT_INT }
 };
 
+static void promise_test_foo_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_foo(handle, adata
+        , *(FtPromiseId*)(argv[0])
+        , *(FtInt*)(argv[1])
+        , *(FtString*)(argv[2])
+    );
+}
+
 static const MemberMethod promise_test_foo_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_foo) },
+    .func_stub = promise_test_foo_stub,
     .parameters = promise_test_foo_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_INT_type),
 };
@@ -56,8 +68,17 @@ static const FeatureType promise_test_use_foo_parameters[] = {
     FT_PARAM_END
 };
 
+static void promise_test_use_foo_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_use_foo(handle, adata
+        , *(FtPromiseId*)(argv[0])
+        , *(FtInt*)(argv[1])
+    );
+}
+
 static const MemberMethod promise_test_use_foo_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_use_foo) },
+    .func_stub = promise_test_use_foo_stub,
     .parameters = promise_test_use_foo_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_INT_type),
 };
@@ -74,8 +95,17 @@ static const PromiseType promise_test_promise_FT_INT_FT_STRING_type = {
     .resolveTypes = { FT_INT, FT_STRING }
 };
 
+static void promise_test_foo1_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_foo1(handle, adata
+        , *(FtPromiseId*)(argv[0])
+        , *(FtInt*)(argv[1])
+    );
+}
+
 static const MemberMethod promise_test_foo1_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_foo1) },
+    .func_stub = promise_test_foo1_stub,
     .parameters = promise_test_foo1_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_STRING_type),
 };
@@ -86,8 +116,16 @@ static const FeatureType promise_test_foo2_parameters[] = {
     FT_PARAM_END
 };
 
+static void promise_test_foo2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_foo2(handle, adata
+        , *(FtPromiseId*)(argv[0])
+    );
+}
+
 static const MemberMethod promise_test_foo2_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_foo2) },
+    .func_stub = promise_test_foo2_stub,
     .parameters = promise_test_foo2_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_FT_INT_FT_STRING_type),
 };
@@ -123,8 +161,16 @@ static const PromiseType promise_test_promise_int_array_string_array_type = {
     .resolveTypes = { FT_MK_COMPLEX(&promise_test_int_array), FT_MK_COMPLEX(&promise_test_string_array) }
 };
 
+static void promise_test_bar_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_bar(handle, adata
+        , *(FtPromiseId*)(argv[0])
+    );
+}
+
 static const MemberMethod promise_test_bar_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_bar) },
+    .func_stub = promise_test_bar_stub,
     .parameters = promise_test_bar_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_int_array_string_array_type),
 };
@@ -135,8 +181,16 @@ static const FeatureType promise_test_bar1_parameters[] = {
     FT_PARAM_END
 };
 
+static void promise_test_bar1_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_bar1(handle, adata
+        , *(FtPromiseId*)(argv[0])
+    );
+}
+
 static const MemberMethod promise_test_bar1_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_bar1) },
+    .func_stub = promise_test_bar1_stub,
     .parameters = promise_test_bar1_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_int_array_string_array_type),
 };
@@ -152,8 +206,16 @@ static const PromiseType promise_test_promise_int_array_FT_STRING_type = {
     .resolveTypes = { FT_MK_COMPLEX(&promise_test_int_array), FT_STRING }
 };
 
+static void promise_test_bar2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_bar2(handle, adata
+        , *(FtPromiseId*)(argv[0])
+    );
+}
+
 static const MemberMethod promise_test_bar2_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_bar2) },
+    .func_stub = promise_test_bar2_stub,
     .parameters = promise_test_bar2_parameters,
     .return_type = FT_MK_COMPLEX(&promise_test_promise_int_array_FT_STRING_type),
 };
@@ -164,8 +226,16 @@ static const FeatureType promise_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void promise_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    promise_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod promise_test_print_member_method = {
-    .func = { .callback = FFI_FN(promise_test_wrap_print) },
+    .func_stub = promise_test_print_stub,
     .parameters = promise_test_print_parameters,
     .return_type = FT_VOID,
 };
@@ -216,7 +286,7 @@ static const Member promise_test_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks promise_test_callbacks {
+static const struct FeatureCallbacks promise_test_callbacks = {
     promise_test_onRegister,
     promise_test_onCreate,
     promise_test_onRequired,

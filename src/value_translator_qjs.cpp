@@ -18,6 +18,8 @@
 #include "feature_instance_qjs.h"
 #include "feature_manager_qjs.h"
 
+using namespace feature_framework;
+
 #define MAKE_JS_ARRAY(ctx, func, argv, argc, ptarget)         \
     do {                                                      \
         JSValue array = JS_NewArray(ctx);                     \
@@ -61,19 +63,6 @@ bool toNative(JSContext* ctx, const JSValue& target, char** pnative)
     JSValue js_str = JS_ToString(ctx, target);
     *((const char**)pnative) = JS_ToCString(ctx, js_str);
     JS_FreeValue(ctx, js_str);
-    return true;
-}
-
-bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative)
-{
-    qjs_val_t* q_val = (qjs_val_t*)pnative;
-    if (JS_IsNull(target) || JS_IsUndefined(target)) {
-        FEATURE_LOG_ERROR("object is null or undefined!");
-        q_val->js_val = JS_UNDEFINED;
-        return false;
-    }
-
-    q_val->js_val = target;
     return true;
 }
 
@@ -169,8 +158,8 @@ bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* pta
     return !JS_IsUndefined(*ptarget);
 }
 
-// funcitons for handling objcects
-bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield)
+// funcitons for handling objects
+bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue* pfield)
 {
     *pfield = JS_GetPropertyStr(ctx, obj, name);
     if (JS_IsUndefined(*pfield))
@@ -232,17 +221,71 @@ JSValue parseJson(JSContext* ctx, const char* buf, size_t buf_len, const char* f
     return obj;
 }
 
-void* interfaceFromTarget(JSValue& target)
+void* interfaceFromTarget(JSContext* ctx, JSValue& target)
 {
-    auto opaque = JS_GetOpaque(target, ferry::FeatureManagerQjs::jsClassId());
+    auto opaque = JS_GetOpaque(target, FeatureManagerQjs::jsClassId());
     FEATURE_LOG_DEBUG("value: %p, get opaque: %p", JS_VALUE_GET_PTR(target), opaque);
     FEATURE_CHECK_NE(opaque, nullptr);
     return opaque;
 }
 
-JSValue targetFromInterface(void* instance)
+JSValue targetFromInterface(JSContext* ctx, void* instance)
 {
-    return ((ferry::FeatureInstanceQjs*)instance)->dupTarget();
+    return ((FeatureInstanceQjs*)instance)->dupTarget();
+}
+
+bool hasAsyncCallbacks(JSContext* ctx, JSValue arg)
+{
+    if (JS_IsUndefined(arg) || !JS_IsObject(arg)) {
+        return false;
+    }
+    JSValue success_cb = JS_GetPropertyStr(ctx, arg, "success");
+    JSValue fail_cb = JS_GetPropertyStr(ctx, arg, "fail");
+    bool ret = (JS_IsFunction(ctx, success_cb) || JS_IsFunction(ctx, fail_cb));
+    feature_free_value(ctx, success_cb);
+    feature_free_value(ctx, fail_cb);
+    return ret;
+}
+
+int addAsyncCallbacks(JSContext* ctx, void* instance, FeatureType ftype, JSValue arg)
+{
+    if (JS_IsUndefined(arg) || !JS_IsObject(arg)) {
+        FEATURE_LOG_ERROR("arg is undefined or not object!");
+        return -1;
+    }
+    JSValue success_cb = JS_GetPropertyStr(ctx, arg, "success");
+    JSValue fail_cb = JS_GetPropertyStr(ctx, arg, "fail");
+    JSValue complete_cb = JS_GetPropertyStr(ctx, arg, "complete");
+    JS_SetPropertyStr(ctx, arg, "success", JS_UNDEFINED);
+    JS_SetPropertyStr(ctx, arg, "fail", JS_UNDEFINED);
+    JS_SetPropertyStr(ctx, arg, "complete", JS_UNDEFINED);
+    if (!JS_IsFunction(ctx, success_cb) && !JS_IsFunction(ctx, fail_cb)) {
+        FEATURE_LOG_WARN("cannot find callbacks from last arg!");
+        feature_free_value(ctx, success_cb);
+        feature_free_value(ctx, fail_cb);
+        feature_free_value(ctx, complete_cb);
+        return -1;
+    }
+    return ((FeatureInstanceQjs*)instance)->addAsyncCallbacks(ftype, success_cb, fail_cb, complete_cb);
+}
+
+// funcitons for handling structs
+bool getStructField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield)
+{
+    *pfield = JS_GetPropertyStr(ctx, obj, name);
+    if (JS_IsUndefined(*pfield))
+        return false;
+
+    return true;
+}
+
+bool setStructField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue field)
+{
+    if (!JS_IsObject(obj))
+        return false;
+
+    int ret = JS_SetPropertyStr(ctx, obj, name, field);
+    return ret > 0;
 }
 
 }

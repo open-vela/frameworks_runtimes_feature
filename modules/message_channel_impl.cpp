@@ -196,7 +196,7 @@ void MessageChannel::clientOnTimeOut(int32_t id)
 {
     FEATURE_LOG_WARN("client sendMessage timeout!");
     if (ft_instance_ != nullptr) {
-        FeaturePromiseReject(ft_instance_, id, "reply timeout");
+        FeaturePromiseReject(ft_instance_, id, 202, "reply timeout");
     } else {
         auto pair = request_map_[id];
         RequestCb cb = pair.first;
@@ -473,7 +473,7 @@ void system_messageChannel_wrap_sendMessage(FeatureInstanceHandle feature,
     MessageChannel* message_channel = GET_MESSAGE_CHANNEL(feature);
     int res = message_channel->sendMessage(target, body, pid);
     if (res == -1) {
-        FeaturePromiseReject(feature, pid, "native sendMessage Failed");
+        FeaturePromiseReject(feature, pid, 202, "native sendMessage Failed");
     }
 }
 
@@ -511,7 +511,7 @@ void system_messageChannel_wrap_createSession(FeatureInstanceHandle feature,
         FeaturePromiseResolve(feature, pid, res);
     } else {
         // TODO:error处理
-        FeaturePromiseReject(feature, pid, "native createSession Failed");
+        FeaturePromiseReject(feature, pid, 202, "native createSession Failed");
     }
 }
 

@@ -70,23 +70,16 @@ ${render.GenerateInterfaceCtorDefine(func_node)};
   prop_type = prop_node["value_type"]
   has_getter = render.PropertyHasGetter(prop_node)
   has_setter = render.PropertyHasSetter(prop_node)
+  cpp_type = render.GenerateCppType(prop_type)
+  if has_getter:
+    getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, AppendData append_data)"
+  if has_setter:
+    setter_def = f"void {module_name}_set_{prop_name}(void* feature, AppendData append_data, {cpp_type} {prop_name})"
 %>\
 %if has_getter:
-<%
-  cpp_type = render.GenerateCppType(prop_type)
-  if cpp_type == 'FtArray':
-    cpp_type += '*'
-  getter_def = f"{cpp_type} {module_name}_get_{prop_name}(void* feature, AppendData append_data)"
-%>\
 ${getter_def};
 %endif
 %if has_setter:
-<%
-  cpp_type = render.GenerateCppType(prop_type)
-  if render.IsParamRefType(cpp_type):
-    cpp_type += '&'
-  setter_def = f"void {module_name}_set_{prop_name}(void* feature, AppendData append_data, {cpp_type} {prop_name})"
-%>\
 ${setter_def};
 %endif
 </%def>\
@@ -95,8 +88,6 @@ ${setter_def};
   member_name = member_node['name']
   member_type = member_node['type']
   cpp_type = render.GenerateCppType(member_type)
-  if cpp_type == 'FtArray':
-    cpp_type += '*'
   member_def = f"{cpp_type} {member_name}"
 %>\
 ${member_def};
@@ -132,7 +123,6 @@ ${malloc_def};
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>

@@ -23,6 +23,8 @@
 #include "storage.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -200,8 +202,16 @@ static const FeatureType system_storage_get_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_storage_get_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_storage_wrap_get(handle, adata
+        , *(system_storage_GetInfo **)(argv[0])
+    );
+}
+
 static const MemberMethod system_storage_get_member_method = {
-    .func = { .callback = FFI_FN(system_storage_wrap_get) },
+    .func_stub = system_storage_get_stub,
     .parameters = system_storage_get_parameters,
     .return_type = FT_VOID,
 };
@@ -213,8 +223,16 @@ static const FeatureType system_storage_set_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_storage_set_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_storage_wrap_set(handle, adata
+        , *(system_storage_SetInfo **)(argv[0])
+    );
+}
+
 static const MemberMethod system_storage_set_member_method = {
-    .func = { .callback = FFI_FN(system_storage_wrap_set) },
+    .func_stub = system_storage_set_stub,
     .parameters = system_storage_set_parameters,
     .return_type = FT_VOID,
 };
@@ -226,8 +244,16 @@ static const FeatureType system_storage_clear_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_storage_clear_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_storage_wrap_clear(handle, adata
+        , *(system_storage_ClearInfo **)(argv[0])
+    );
+}
+
 static const MemberMethod system_storage_clear_member_method = {
-    .func = { .callback = FFI_FN(system_storage_wrap_clear) },
+    .func_stub = system_storage_clear_stub,
     .parameters = system_storage_clear_parameters,
     .return_type = FT_VOID,
 };
@@ -239,8 +265,16 @@ static const FeatureType system_storage_delete_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_storage_delete_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_storage_wrap_delete(handle, adata
+        , *(system_storage_DeleteInfo **)(argv[0])
+    );
+}
+
 static const MemberMethod system_storage_delete_member_method = {
-    .func = { .callback = FFI_FN(system_storage_wrap_delete) },
+    .func_stub = system_storage_delete_stub,
     .parameters = system_storage_delete_parameters,
     .return_type = FT_VOID,
 };
@@ -252,17 +286,37 @@ static const FeatureType system_storage_key_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_storage_key_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_storage_wrap_key(handle, adata
+        , *(system_storage_KeyInfo **)(argv[0])
+    );
+}
+
 static const MemberMethod system_storage_key_member_method = {
-    .func = { .callback = FFI_FN(system_storage_wrap_key) },
+    .func_stub = system_storage_key_stub,
     .parameters = system_storage_key_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL property 'length' ******/
+static void system_storage_get_length_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtInt*)ret) = system_storage_get_length(handle, adata);
+}
+
+static void system_storage_set_length_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_storage_set_length(handle, adata, *(FtInt*)(argv[0]));
+}
+
 static const MemberAccessor system_storage_length_member_accessor = {
-    .getter = { .callback = FFI_FN(system_storage_get_length) },
-    .setter = { .callback = FFI_FN(system_storage_set_length) },
+    .getter_stub = system_storage_get_length_stub,
+    .setter_stub = system_storage_set_length_stub,
     .type = FT_INT,
 };
 

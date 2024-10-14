@@ -32,12 +32,16 @@ ft_context_ref CreateFeatureContextQjs(void* data)
     InitFeatureContextQjs(ft_ctx, data);
     return ft_ctx;
 }
+
 void ReleaseFeatureContextQjs(ft_context_ref ft_ctx)
 {
     if (!ft_ctx)
         return;
 
     UninitFeatureContextQjs(ft_ctx);
+    if (ft_ctx->release_raw_ctx_cb) {
+        ft_ctx->release_raw_ctx_cb(ft_ctx->data);
+    }
     free(ft_ctx);
 }
 
@@ -59,8 +63,19 @@ void ReleaseFeatureContextWamr(ft_context_ref ft_ctx)
         return;
 
     UninitFeatureContextWamr(ft_ctx);
+    if (ft_ctx->release_raw_ctx_cb) {
+        ft_ctx->release_raw_ctx_cb(ft_ctx->data);
+    }
     free(ft_ctx);
 #endif
+}
+
+void SetReleaseRawContextCb(ft_context_ref ft_ctx, ReleaseRawContextCb cb)
+{
+    if (!ft_ctx)
+        return;
+
+    ft_ctx->release_raw_ctx_cb = cb;
 }
 
 void* ft_context_get_data(ft_context_ref ft_ctx)

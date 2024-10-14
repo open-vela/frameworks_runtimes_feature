@@ -25,13 +25,13 @@ callback fail_cb(string data, int code)
 callback complete_cb()
 
 struct VibrateObject {
-    string mode = "long"
+    string mode = "default"
 }
 
 struct StartObject {
-    int duration = 0
-    int interval = 0
-    int count = 0
+    double duration = 0
+    double interval = 0
+    double count = 0
     callback success_cb success = null
     callback fail_cb fail = null
     callback complete_cb complete = null
@@ -39,5 +39,5 @@ struct StartObject {
 
 void vibrate(VibrateObject obj)
 void start(StartObject obj)
-int stop(int id)
+boolean stop(int id)
 int getSystemDefaultMode()

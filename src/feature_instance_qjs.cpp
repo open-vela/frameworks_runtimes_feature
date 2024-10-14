@@ -16,6 +16,7 @@
 
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
+#include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_prototype_qjs.h"
@@ -24,14 +25,13 @@
 
 #include <cstdarg>
 #include <cstdint>
-#include <ffi.h>
 #include <string.h>
 
 using namespace FEATURE;
 
 #define CFUNCDATA_FN(f) ((feature_value_t(*)(feature_context_ref ctx, feature_value_t, int, feature_value_t*, int, feature_value_t*))f)
 
-namespace ferry {
+namespace feature_framework {
 
 FeatureInstanceQjs::FeatureInstanceQjs(FeaturePrototype* proto)
     : FeatureInstance(proto, proto->description())
@@ -175,15 +175,30 @@ void FeatureInstanceQjs::freeWeakRef()
     }
 }
 
-int FeatureInstanceQjs::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
+int FeatureInstanceQjs::resolvePromise(FtPromiseId pid, va_list& ap)
 {
     THREAD_CHECK(featureManager()->getFeatureContext()->thread_checker);
-    int ret = doSettlePromise(resolve, pid, ap);
+    int ret = doResolvePromise(pid, ap);
     if (!removePromise(pid)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
         ret = -2;
     }
     return ret;
+}
+
+int FeatureInstanceQjs::rejectPromise(FtPromiseId pid, int code, const char* msg)
+{
+    int ret = doRejectPromise(pid, code, msg);
+    if (!removePromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
+        ret = -2;
+    }
+    return ret;
+}
+
+int FeatureInstanceQjs::getPromiseType(FtPromiseId pid)
+{
+    return doGetPromiseType(pid);
 }
 
 int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
@@ -199,7 +214,7 @@ int FeatureInstanceQjs::invokeCallback(FtCallbackId cid, va_list& ap)
     }
     bool has_rest_param = false;
     int32_t int32_count = 0;
-    CallbackType* callbackType = cb_data->type;
+    const CallbackType* callbackType = cb_data->type;
     int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param, nullptr, &int32_count);
     if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
@@ -217,7 +232,7 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
         return -1;
     }
     bool has_rest_param = false;
-    CallbackType* callbackType = cb_data->type;
+    const CallbackType* callbackType = cb_data->type;
     int32_t int32_count = 0;
     int fixed_argc = getParamCount(callbackType->parameters, &has_rest_param, nullptr, &int32_count);
     if (!has_rest_param || count < fixed_argc) {
@@ -228,10 +243,53 @@ int FeatureInstanceQjs::invokeCallbackCount(FtCallbackId cid, va_list& ap, int c
     return callCallback(cb_data, ap, fixed_argc, count - fixed_argc);
 }
 
-int FeatureInstanceQjs::doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
+bool FeatureInstanceQjs::emitEvent(FtEventId eid, va_list& ap)
+{
+    if (eid <= 0) {
+        FEATURE_LOG_DEBUG("event is undefined !");
+        return false;
+    }
+    auto ev_data = getEventData(eid);
+    if (!ev_data) {
+        FEATURE_LOG_ERROR("event is undefined !");
+        return false;
+    }
+    bool has_rest_param = false;
+    int32_t int32_count = 0;
+    const MemberEvent* member_event = ev_data->memberEvent();
+    int fixed_argc = getParamCount(member_event->parameters, &has_rest_param, nullptr, &int32_count);
+    if (has_rest_param) {
+        FEATURE_LOG_ERROR("wrong param count!");
+        return false;
+    }
+
+    return doEmitEvent(ev_data, ap, fixed_argc, 0);
+}
+
+void FeatureInstanceQjs::setEventChangeListener(FeatureEventChangeListener listener)
+{
+    doSetEventChangeListener(listener, this);
+}
+
+FtEventId FeatureInstanceQjs::getEventId(const char* name)
+{
+    return doGetEventId(name);
+}
+
+const char* FeatureInstanceQjs::getEventName(FtEventId eid)
+{
+    return doGetEventName(eid);
+}
+
+int FeatureInstanceQjs::getEventCallbackCount(FtEventId eid)
+{
+    return doGetEventCallbackCount(eid);
+}
+
+int FeatureInstanceQjs::doInvokeCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
     THREAD_CHECK(featureManager()->getFeatureContext()->thread_checker);
-    return invokeJsCallback(callbackType, callback, ap, fixed_argc, rest_argc);
+    return invokeJsCallback(param_types, callback, ap, fixed_argc, rest_argc);
 }
 
 void FeatureInstanceQjs::onDetached()
@@ -240,7 +298,6 @@ void FeatureInstanceQjs::onDetached()
         return;
     }
 
-    FeatureInstance::onDetached();
     // remove opaque binding
     auto js_val = FT_VAL_GET_JS_VAL(weak_self_.ft_value);
 
@@ -269,6 +326,13 @@ void FeatureInstanceQjs::onDetached()
 
     // release all callback
     clearCallbacks();
+    FeatureInstance::onDetached();
+}
+
+void FeatureInstanceQjs::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
+{
+    FEATURE_LOG_INFO("FeatureInstanceQjs cb: %d", getCallbacks().size());
+    dump->count_meta("js_cb", getCallbacks().size(), userdata);
 }
 
 }

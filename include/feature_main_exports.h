@@ -22,7 +22,6 @@ extern "C" {
 #endif
 
 #include "feature_types.h"
-#include "quickjs/quickjs.h"
 #include "uv.h"
 #include <stdbool.h>
 
@@ -35,12 +34,35 @@ typedef struct {
 
 typedef bool (*ArgsErrorCb)(void* data, ArgsErrorInfo* args_info);
 
+typedef enum FeatureManagerType {
+    FEATURE_MANAGER_JS,
+    FEATURE_MANAGER_WAMR,
+} FeatureManagerType;
+
+typedef void* FeatureRawContextHandle;
+
+typedef void (*ReleaseRawContextCb)(FeatureRawContextHandle);
+
+typedef struct FeatureManagerCreateInfo {
+    FeatureRawContextHandle raw_ctx;
+    ReleaseRawContextCb release_cb;
+    FeatureManagerType manager_type;
+    const char* package_name;
+} FeatureManagerCreateInfo;
+
 /**
- * @brief create a FeatureManagerHandle, read package-name from manifest
- * @param manifest
+ * @brief create a FeatureManagerHandle, read package-name from pinfo
+ * @param pinfo
  * @return FeatureManagerHandle
  */
-FeatureManagerHandle FeatureCreateManager(const char* package_name);
+FeatureManagerHandle FeatureCreateManager(FeatureManagerCreateInfo* pinfo);
+
+/**
+ * @brief get a ft_context_ref from a FeatureManagerHandle
+ * @param handle
+ * @return ft_context_ref
+ */
+ft_context_ref FeatureManagerGetContext(FeatureManagerHandle handle);
 
 /**
  * @brief set a ArgsError callback to a FeatureManagerHandle
@@ -98,19 +120,18 @@ void FeatureUninit(FeatureManagerHandle handle);
  * @param name
  * @return JSValue
  */
-JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx,
-    JSValue binding_object, const char* name);
+ft_value_t FeatureRequire(FeatureManagerHandle handle,
+    ft_value_t binding_obj, const char* name);
 
 /**
  * @brief find a feature with feature name
  *
  * @param handle
  * @param ctx
- * @param module_name
+ * @param name
  * @return JSValue prototype
  */
-JSValue FeatureFindFeature(FeatureManagerHandle handle, JSContext* ctx,
-    const char* module_name);
+ft_value_t FeatureFindFeature(FeatureManagerHandle handle, const char* name);
 
 /**
  * @brief create a feature with prototype
@@ -121,8 +142,32 @@ JSValue FeatureFindFeature(FeatureManagerHandle handle, JSContext* ctx,
  * @param vm_obj
  * @return JSValue feature_instance
  */
-JSValue FeatureCreateFeature(FeatureManagerHandle handle, JSContext* ctx,
-    JSValue prototype, JSValue vm_object);
+ft_value_t FeatureCreateFeature(FeatureManagerHandle handle,
+    ft_value_t prototype, ft_value_t binding_obj);
+
+/**
+ * @brief set feature userdata to FeatureManagerHandle
+ *
+ * @param handle
+ * @param name
+ * @param data
+ * @return void
+ */
+void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data);
+
+bool FeatureHasFeature(FeatureManagerHandle handle, FtString feature_method);
+
+typedef void (*MemoryDumpCountCB)(unsigned int size, void* userdata);
+typedef void (*MemoryDumpCountMetaCB)(const char* name, unsigned int value, void* userdata);
+typedef void* (*MemoryDumpSubCB)(const char* name, void* userdata);
+
+typedef struct {
+    MemoryDumpCountCB count;
+    MemoryDumpCountMetaCB count_meta;
+    MemoryDumpSubCB sub;
+} FeatureMemoryDump;
+
+void FeatureDumpMemory(FeatureManagerHandle feature_manager, FeatureMemoryDump* dump, void* userdata);
 
 #ifdef __cplusplus
 }

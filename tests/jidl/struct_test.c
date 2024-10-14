@@ -24,8 +24,13 @@
 #include "struct_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
+
+/****** for JIDL struct 'Chapter' ******/
+extern const ObjectMapType struct_test_Chapter_struct_type;
 
 static OptionalType struct_test_Chapter_member_page_count_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -45,7 +50,6 @@ static OptionalType struct_test_Chapter_member_is_end_opt_type = {
     .ival = false
 };
 
-/****** for JIDL struct 'Chapter' ******/
 static ObjectMember struct_test_Chapter_struct_members[] = {
     { "page_count", FT_MK_OPTIONAL(&struct_test_Chapter_member_page_count_opt_type), offsetof(struct_test_Chapter, page_count), sizeof(FtInt) },
     { "title", FT_MK_OPTIONAL(&struct_test_Chapter_member_title_opt_type), offsetof(struct_test_Chapter, title), sizeof(FtString) },
@@ -54,7 +58,7 @@ static ObjectMember struct_test_Chapter_struct_members[] = {
 };
 
 // complex defination
-static const ObjectMapType struct_test_Chapter_struct_type = {
+const ObjectMapType struct_test_Chapter_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Chapter) },
     .members = struct_test_Chapter_struct_members
 };
@@ -79,6 +83,9 @@ static const CallbackType struct_test_ChapChanged_callback_type = {
 };
 
 
+/****** for JIDL struct 'Book' ******/
+extern const ObjectMapType struct_test_Book_struct_type;
+
 static const ArrayType struct_test_string_array = {
     .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
     .element_type = FT_STRING
@@ -89,7 +96,6 @@ FtArray* struct_test_malloc_string_array() {
         sizeof(FtArray), FT_MK_COMPLEX(&struct_test_string_array));
 }
 
-/****** for JIDL struct 'Book' ******/
 static ObjectMember struct_test_Book_struct_members[] = {
     { "any_param", FT_ANY_REF, offsetof(struct_test_Book, any_param), sizeof(FtAny) },
     { "page_count", FT_INT, offsetof(struct_test_Book, page_count), sizeof(FtInt) },
@@ -101,7 +107,7 @@ static ObjectMember struct_test_Book_struct_members[] = {
 };
 
 // complex defination
-static const ObjectMapType struct_test_Book_struct_type = {
+const ObjectMapType struct_test_Book_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(struct_test_Book) },
     .members = struct_test_Book_struct_members
 };
@@ -119,8 +125,17 @@ static const FeatureType struct_test_foo_parameters[] = {
     FT_PARAM_END
 };
 
+static void struct_test_foo_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    struct_test_wrap_foo(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(struct_test_Chapter **)(argv[1])
+    );
+}
+
 static const MemberMethod struct_test_foo_member_method = {
-    .func = { .callback = FFI_FN(struct_test_wrap_foo) },
+    .func_stub = struct_test_foo_stub,
     .parameters = struct_test_foo_parameters,
     .return_type = FT_VOID,
 };
@@ -132,8 +147,16 @@ static const FeatureType struct_test_bar_parameters[] = {
     FT_PARAM_END
 };
 
+static void struct_test_bar_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((struct_test_Chapter **)ret) = struct_test_wrap_bar(handle, adata
+        , *(FtInt*)(argv[0])
+    );
+}
+
 static const MemberMethod struct_test_bar_member_method = {
-    .func = { .callback = FFI_FN(struct_test_wrap_bar) },
+    .func_stub = struct_test_bar_stub,
     .parameters = struct_test_bar_parameters,
     .return_type = FT_MK_COMPLEX(&struct_test_Chapter_struct_type),
 };
@@ -145,8 +168,16 @@ static const FeatureType struct_test_bar2_parameters[] = {
     FT_PARAM_END
 };
 
+static void struct_test_bar2_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    struct_test_wrap_bar2(handle, adata
+        , *(struct_test_Book **)(argv[0])
+    );
+}
+
 static const MemberMethod struct_test_bar2_member_method = {
-    .func = { .callback = FFI_FN(struct_test_wrap_bar2) },
+    .func_stub = struct_test_bar2_stub,
     .parameters = struct_test_bar2_parameters,
     .return_type = FT_VOID,
 };
@@ -157,8 +188,16 @@ static const FeatureType struct_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void struct_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    struct_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod struct_test_print_member_method = {
-    .func = { .callback = FFI_FN(struct_test_wrap_print) },
+    .func_stub = struct_test_print_stub,
     .parameters = struct_test_print_parameters,
     .return_type = FT_VOID,
 };
@@ -202,7 +241,7 @@ static const FeatureDescription struct_test_desc = {
     .version = 1,
     .name = "struct_test",
     .description = "struct_test",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &struct_test_callbacks,
     .member_count = countof(struct_test_members),
     .members = struct_test_members,

@@ -22,7 +22,7 @@
 #include <functional>
 #include <stdlib.h>
 
-namespace ferry {
+namespace feature_framework {
 
 bool createHostValue(FeatureType featureType, void*& ptr)
 {
@@ -33,7 +33,8 @@ bool createHostValue(FeatureType featureType, void*& ptr)
     }
     auto flags = FT_GET_FLAG(featureType);
     if (flags & TYPE_FLAGS_POINTER) {
-        // ptr = FeatureMalloc(sizeof(uintptr_t), (flags == TYPE_FLAGS_UNMANAGED_POINTER) ? FT_RAWPOINTER : FT_POINTER);
+        FEATURE_LOG_DEBUG("pointer don't need creating!");
+        return true;
     } else if (FT_IS_PRIMITIVE(featureType)) {
         switch (featureType) {
         case FT_VOID: {
@@ -124,115 +125,6 @@ bool createHostValue(FeatureType featureType, void*& ptr)
         }
     }
     return true;
-}
-
-bool createTypeDeclaration(FeatureType featureType, ffi_type*& type)
-{
-    if (FT_IS_REFERENCE(featureType)) {
-        type = &ffi_type_pointer;
-        return true;
-    }
-
-    if (FT_IS_PRIMITIVE(featureType)) {
-        switch (featureType) {
-        case FT_VOID: {
-            type = &ffi_type_void;
-        } break;
-        case FT_INT: {
-            type = &ffi_type_sint;
-        } break;
-        case FT_INT8: {
-            type = &ffi_type_sint8;
-        } break;
-        case FT_UINT8: {
-            type = &ffi_type_uint8;
-        } break;
-        case FT_INT16: {
-            type = &ffi_type_sint16;
-        } break;
-        case FT_UINT16: {
-            type = &ffi_type_uint16;
-        } break;
-        case FT_INT32: {
-            type = &ffi_type_sint32;
-        } break;
-        case FT_UINT32: {
-            type = &ffi_type_uint32;
-        } break;
-        case FT_INT64: {
-            type = &ffi_type_sint64;
-        } break;
-        case FT_UINT64: {
-            type = &ffi_type_uint64;
-        } break;
-        case FT_FLOAT: {
-            type = &ffi_type_float;
-        } break;
-        case FT_DOUBLE: {
-            type = &ffi_type_double;
-        } break;
-        case FT_BOOLEAN: {
-            type = &ffi_type_sint8;
-        } break;
-        case FT_STRING: {
-            type = &ffi_type_pointer;
-        } break;
-        case FT_ANY_REF: {
-            type = &ffi_type_pointer;
-        } break;
-        default: {
-            FEATURE_LOG_WARN("unsupported type detected !");
-            return false;
-        }
-        }
-    } else if (FT_IS_COMPLEX(featureType)) {
-        // fill members
-        ComplexTypeHeader* complexHeader = (ComplexTypeHeader*)FT_GET_COMPLEX(featureType);
-        switch (complexHeader->type) {
-        case COMPLEX_STRUCT_MAP: {
-            FEATURE_LOG_DEBUG("COMPLEX_STRUCT_MAP will never be reached !");
-        } break;
-        case COMPLEX_OPTIONAL: {
-            OptionalType* optionalType = (OptionalType*)complexHeader;
-            if (!createTypeDeclaration(optionalType->type, type)) {
-                FEATURE_LOG_ERROR("create optional type declaration failed !");
-                return false;
-            }
-        } break;
-        case COMPLEX_CALLBACK: {
-            type = &ffi_type_sint32;
-        } break;
-        case COMPLEX_ARRAY: {
-            // FTArray, will be processed at FT_IS_REFERENCE branch
-            FEATURE_LOG_DEBUG("COMPLEX_ARRAY will never be reached !");
-        } break;
-        case COMPLEX_PROMISE: {
-            type = &ffi_type_sint32;
-        } break;
-        default: {
-            FEATURE_LOG_WARN("unsupported type detected !");
-            return false;
-        } break;
-        }
-    }
-    return true;
-}
-
-void freeTypeDeclaration(ffi_type*& type)
-{
-    if (!type)
-        return;
-
-    auto elem = type->elements;
-    if (elem) {
-        while (*elem) {
-            freeTypeDeclaration(*elem);
-            elem++;
-        }
-        delete[] type->elements;
-        delete type;
-        type = nullptr;
-    }
 }
 
 void* extractVariadicParam(va_list& ap, FeatureType featureType)
@@ -387,4 +279,4 @@ void* extractVariadicParam(va_list& ap, FeatureType featureType)
     return result;
 }
 
-} // namespace ferry
+} // namespace feature_framework

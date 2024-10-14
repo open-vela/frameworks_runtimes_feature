@@ -25,27 +25,9 @@
 #include "feature_instance.h"
 
 #include <cstdarg>
-#include <ffi.h>
 #include <stdalign.h>
 
-namespace ferry {
-
-/**
- * @brief create type declaration using FeatureType
- *
- * @param featureType
- * @param type
- * @return true
- * @return false
- */
-bool createTypeDeclaration(FeatureType featureType, ffi_type*& type);
-
-/**
- * @brief free ffi type declaration
- *
- * @param type
- */
-void freeTypeDeclaration(ffi_type*& type);
+namespace feature_framework {
 
 /**
  * @brief Create a Host Value object

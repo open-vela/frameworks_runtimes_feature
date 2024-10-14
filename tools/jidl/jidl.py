@@ -35,6 +35,7 @@ class Parser:
 
   def __init__(self, **kw):
     self.debug = kw.get('debug', False)
+    self.reporter = kw.get('errorReporter', None)
     self.names = {}
     try:
       modname = os.path.split(os.path.splitext(__file__)[0])[
@@ -43,7 +44,7 @@ class Parser:
       modname = "parser" + "_" + self.__class__.__name__
     self.debugfile = modname + ".dbg"
     self.tabmodule = modname + "_" + "parsetab"
-    # print self.debugfile, self.tabmodule
+    #print(self.debugfile, self.tabmodule)
     logging.basicConfig(
         level = logging.ERROR,
         filename = 'parselog.txt',
@@ -179,7 +180,10 @@ class JIDL(Parser):
     return t
 
   def t_error(self, t):
-    print("Illegal character '%s' in line %d" % (t.value[0], t.lexer.lineno))
+    if self.reporter:
+      self.reportLexError(t)
+    else:
+      print("Illegal character '%s' in line %d" % (t.value[0], t.lexer.lineno))
     t.lexer.skip(1)
 
   # Parsing rules
@@ -811,18 +815,15 @@ class JIDL(Parser):
 
   def p_promise_type(self, p):
     """
-    promise_type : PROMISE LANGULARBRACKET promise_sub_type COMMA promise_sub_type  RANGULARBRACKET
-                 | PROMISE LANGULARBRACKET promise_sub_type RANGULARBRACKET
+    promise_type : PROMISE LANGULARBRACKET promise_sub_type RANGULARBRACKET
                  | PROMISE
     """
     count = len(p)
     void_type = ast.GetPrimaryType('void')
     if count == 2:
-      CreateASTNode(p, ast.PromiseType, void_type, void_type)
+      CreateASTNode(p, ast.PromiseType, void_type)
     elif count == 5:
-      CreateASTNode(p, ast.PromiseType, p[3], void_type)
-    elif count == 7:
-      CreateASTNode(p, ast.PromiseType, p[3], p[5])
+      CreateASTNode(p, ast.PromiseType, p[3])
 
   def p_promise_sub_type(self, p):
     """
@@ -1027,7 +1028,10 @@ class JIDL(Parser):
   def p_error(self, p):
     if p:
       print(p)
-      print("Syntax error at '%s' in line: %d, %d" % (p.value, p.lineno, p.lexpos))
+      if self.reporter:
+         self.reporter.reportYaccError(p)
+      else:
+         print("Syntax error at '%s' in line: %d, %d" % (p.value, p.lineno, p.lexpos))
 
   def __init__(self, **kw):
     Parser.__init__(self, **kw)

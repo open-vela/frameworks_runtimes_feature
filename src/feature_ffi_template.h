@@ -31,7 +31,7 @@
 #include <ffi.h>
 #include <stdalign.h>
 
-namespace ferry {
+namespace feature_framework {
 
 template <typename TNative, typename TCtx, typename TTarget>
 void nativeToTarget(TCtx ctx, void* ptr, TTarget& target)

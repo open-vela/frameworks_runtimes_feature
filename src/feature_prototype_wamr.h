@@ -19,7 +19,7 @@
 
 #include "feature_prototype.h"
 
-namespace ferry {
+namespace feature_framework {
 
 class FeaturePrototypeWamr : public FeaturePrototype {
 public:

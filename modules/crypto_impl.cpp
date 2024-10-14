@@ -57,19 +57,19 @@ typedef enum SignHashType {
 } SignHashType;
 
 static const char encryptCfgs[] = "{\
-    'RSA': {\
-        'mode': {\
-            'None': 0\
+    \"RSA\": {\
+        \"mode\": {\
+            \"None\": 0\
         },\
-        'padding': {}\
+        \"padding\": {}\
     },\
-    'AES': {\
-        'mode': {\
-            'CBC': 5,\
-            'ECB': 2\
+    \"AES\": {\
+        \"mode\": {\
+            \"CBC\": 5,\
+            \"ECB\": 2\
         },\
-        'padding': {\
-            'PKCS7Padding': 0\
+        \"padding\": {\
+            \"PKCS7Padding\": 0\
         }\
     }\
 }";
@@ -94,13 +94,13 @@ static uint8_t* get_buff(ft_context_ref ft_ctx, ft_value_t data, size_t* size, b
     if (type == FT_TYPE_BUFFER || type == FT_TYPE_TYPED_BUFFER) {
         *is_text = false;
         uint8_t* buff = ft_to_buffer(ft_ctx, size, data);
-        FEATURE_LOG_ERROR("%s, got buffer, type: %d, size: %ld", file_tag, type, *size);
+        FEATURE_LOG_INFO("%s, got buffer, type: %d, size: %ld", file_tag, type, *size);
         return buff;
     } else if (type == FT_TYPE_STRING) {
         const char* str = ft_to_string(ft_ctx, data);
         *is_text = true;
         *size = strlen(str);
-        FEATURE_LOG_ERROR("%s, got string: %s", file_tag, str);
+        FEATURE_LOG_INFO("%s, got string: %s", file_tag, str);
         return (uint8_t*)str;
     }
     return NULL;
@@ -112,7 +112,41 @@ static ft_value_t from_buff(ft_context_ref ft_ctx, const char* data, size_t size
     if (is_text)
         return ft_from_string(ft_ctx, data);
 
-    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, 0);
+    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, 1);
+}
+
+static void prase_transformation(ft_context_ref ft_ctx, const char* transformation, int* mode, int* padding)
+{
+    if (check_str(transformation)) {
+        int seg_count;
+        char** cfg_keys = split_str(transformation, "/", &seg_count);
+        FEATURE_LOG_DEBUG("transformation: %s, seg_count: %d", transformation, seg_count);
+        ft_value_t cfgs_json = ft_parse_json(ft_ctx, encryptCfgs, strlen(encryptCfgs), NULL);
+        ft_value_t ft_enc_type = ft_obj_get_property(ft_ctx, cfgs_json, cfg_keys[0]);
+        if (seg_count == 3 && ft_get_type(ft_ctx, ft_enc_type) != FT_TYPE_NONE) {
+            ft_value_t ft_mode = ft_obj_get_property(ft_ctx, ft_enc_type, "mode");
+            if (ft_get_type(ft_ctx, ft_mode) != FT_TYPE_NONE) {
+                ft_value_t ft_mode_val = ft_obj_get_property(ft_ctx, ft_mode, cfg_keys[1]);
+                int32_t int_val;
+                if (ft_to_int(ft_ctx, ft_mode_val, &int_val))
+                    *mode = int_val;
+                ft_free_value(ft_ctx, ft_mode_val);
+            }
+            ft_value_t ft_padding = ft_obj_get_property(ft_ctx, ft_enc_type, "padding");
+            if (ft_get_type(ft_ctx, ft_padding) != FT_TYPE_NONE) {
+                ft_value_t ft_padding_val = ft_obj_get_property(ft_ctx, ft_padding, cfg_keys[2]);
+                int32_t int_val;
+                if (ft_to_int(ft_ctx, ft_padding_val, &int_val))
+                    *padding = int_val;
+                ft_free_value(ft_ctx, ft_padding_val);
+            }
+            ft_free_value(ft_ctx, ft_padding);
+            ft_free_value(ft_ctx, ft_mode);
+        }
+        ft_free_value(ft_ctx, ft_enc_type);
+        ft_free_value(ft_ctx, cfgs_json);
+        free_str_array(cfg_keys, seg_count);
+    }
 }
 
 // FeatureCallbacks
@@ -446,37 +480,8 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                     ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
                     ivLen = opts->ivLen ? opts->ivLen : ivLen;
                 }
-
-                if (check_str(transformation)) {
-                    int seg_count;
-                    char** cfg_keys = split_str(transformation, "/", &seg_count);
-                    FEATURE_LOG_DEBUG("transformation: %s, seg_count: %d", transformation, seg_count);
-                    ft_value_t cfgs_json = ft_parse_json(ft_ctx, encryptCfgs, strlen(encryptCfgs), NULL);
-                    ft_value_t ft_enc_type = ft_obj_get_property(ft_ctx, cfgs_json, cfg_keys[0]);
-                    if (seg_count == 3 && ft_get_type(ft_ctx, ft_enc_type) != FT_TYPE_NONE) {
-                        ft_value_t ft_mode = ft_obj_get_property(ft_ctx, ft_enc_type, "mode");
-                        if (ft_get_type(ft_ctx, ft_mode) != FT_TYPE_NONE) {
-                            ft_value_t ft_mode_val = ft_obj_get_property(ft_ctx, ft_mode, cfg_keys[1]);
-                            int32_t int_val;
-                            if (ft_to_int(ft_ctx, ft_mode_val, &int_val))
-                                mode = int_val;
-                            ft_free_value(ft_ctx, ft_mode_val);
-                        }
-                        ft_value_t ft_padding = ft_obj_get_property(ft_ctx, ft_enc_type, "padding");
-                        if (ft_get_type(ft_ctx, ft_padding) != FT_TYPE_NONE) {
-                            ft_value_t ft_padding_val = ft_obj_get_property(ft_ctx, ft_padding, cfg_keys[2]);
-                            int32_t int_val;
-                            if (ft_to_int(ft_ctx, ft_padding_val, &int_val))
-                                padding = int_val;
-                            ft_free_value(ft_ctx, ft_padding_val);
-                        }
-                        ft_free_value(ft_ctx, ft_padding);
-                        ft_free_value(ft_ctx, ft_mode);
-                    }
-                    ft_free_value(ft_ctx, ft_enc_type);
-                    ft_free_value(ft_ctx, cfgs_json);
-                    free_str_array(cfg_keys, seg_count);
-                }
+                // deal with transformation param
+                prase_transformation(ft_ctx, transformation, &mode, &padding);
 
                 result = aes_encrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
                 if (!result) {
@@ -524,6 +529,7 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
     size_t size = 0;
 
     const char* iv = options->key;
+    const char* transformation = "";
     int ivOffset = 0;
     int ivLen = 16;
     int mode = 5; // encryptCfgs.AES.mode.CBC
@@ -548,10 +554,15 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
             } else if (strcmp(algo, "AES") == 0) {
                 if (options->options) {
                     system_crypto_MixinCryptOption* opts = options->options;
+                    transformation = check_str(opts->transformation)
+                        ? opts->transformation
+                        : transformation;
                     iv = check_str(opts->iv) ? opts->iv : iv;
                     ivOffset = opts->ivOffset ? opts->ivOffset : ivOffset;
                     ivLen = opts->ivLen ? opts->ivLen : ivLen;
                 }
+                // deal with transformation param
+                prase_transformation(ft_ctx, transformation, &mode, &padding);
                 result = aes_decrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
                 if (!result) {
                     msg = crypto_err ? crypto_err : "aes encrypt error";

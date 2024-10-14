@@ -24,14 +24,13 @@
 #include "crypto.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
-static OptionalType system_crypto_HashDigestParam_member_uri_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
+/****** for JIDL struct 'HashDigestParam' ******/
+extern const ObjectMapType system_crypto_HashDigestParam_struct_type;
 
 static OptionalType system_crypto_HashDigestParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -39,16 +38,15 @@ static OptionalType system_crypto_HashDigestParam_member_algo_opt_type = {
     .str = "SHA256"
 };
 
-/****** for JIDL struct 'HashDigestParam' ******/
 static ObjectMember system_crypto_HashDigestParam_struct_members[] = {
-    { "data", FT_ANY_REF, offsetof(system_crypto_HashDigestParam, _data), sizeof(FtAny) },
-    { "uri", FT_MK_OPTIONAL(&system_crypto_HashDigestParam_member_uri_opt_type), offsetof(system_crypto_HashDigestParam, _uri), sizeof(FtString) },
-    { "algo", FT_MK_OPTIONAL(&system_crypto_HashDigestParam_member_algo_opt_type), offsetof(system_crypto_HashDigestParam, _algo), sizeof(FtString) },
-    { nullptr },
+    { "data", FT_ANY_REF, offsetof(system_crypto_HashDigestParam, data), sizeof(FtAny) },
+    { "uri", FT_STRING, offsetof(system_crypto_HashDigestParam, uri), sizeof(FtString) },
+    { "algo", FT_MK_OPTIONAL(&system_crypto_HashDigestParam_member_algo_opt_type), offsetof(system_crypto_HashDigestParam, algo), sizeof(FtString) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_crypto_HashDigestParam_struct_type {
+const ObjectMapType system_crypto_HashDigestParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_crypto_HashDigestParam) },
     .members = system_crypto_HashDigestParam_struct_members
 };
@@ -65,8 +63,16 @@ static const FeatureType system_crypto_hashDigest_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_hashDigest_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = system_crypto_wrap_hashDigest(handle, adata
+        , *(system_crypto_HashDigestParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_hashDigest_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_hashDigest) },
+    .func_stub = system_crypto_hashDigest_stub,
     .parameters = system_crypto_hashDigest_parameters,
     .return_type = FT_STRING,
 };
@@ -78,7 +84,7 @@ static const FeatureType system_crypto_success_cb_bool_opt_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_crypto_success_cb_bool_opt_callback_type {
+static const CallbackType system_crypto_success_cb_bool_opt_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_crypto_success_cb_bool_opt_parameters,
     .return_type = FT_VOID
@@ -91,7 +97,7 @@ static const FeatureType system_crypto_success_cb_obj_str_opt_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_crypto_success_cb_obj_str_opt_callback_type {
+static const CallbackType system_crypto_success_cb_obj_str_opt_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_crypto_success_cb_obj_str_opt_parameters,
     .return_type = FT_VOID
@@ -104,7 +110,7 @@ static const FeatureType system_crypto_success_cb_obj_str_u8a_opt_parameters[] =
     FT_PARAM_END
 };
 
-static const CallbackType system_crypto_success_cb_obj_str_u8a_opt_callback_type {
+static const CallbackType system_crypto_success_cb_obj_str_u8a_opt_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_crypto_success_cb_obj_str_u8a_opt_parameters,
     .return_type = FT_VOID
@@ -118,7 +124,7 @@ static const FeatureType system_crypto_fail_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_crypto_fail_cb_callback_type {
+static const CallbackType system_crypto_fail_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_crypto_fail_cb_parameters,
     .return_type = FT_VOID
@@ -130,12 +136,15 @@ static const FeatureType system_crypto_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_crypto_complete_cb_callback_type {
+static const CallbackType system_crypto_complete_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_crypto_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
+
+/****** for JIDL struct 'HmacDigestParam' ******/
+extern const ObjectMapType system_crypto_HmacDigestParam_struct_type;
 
 static OptionalType system_crypto_HmacDigestParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -143,19 +152,18 @@ static OptionalType system_crypto_HmacDigestParam_member_algo_opt_type = {
     .str = "SHA256"
 };
 
-/****** for JIDL struct 'HmacDigestParam' ******/
 static ObjectMember system_crypto_HmacDigestParam_struct_members[] = {
-    { "data", FT_STRING, offsetof(system_crypto_HmacDigestParam, _data), sizeof(FtString) },
-    { "algo", FT_MK_OPTIONAL(&system_crypto_HmacDigestParam_member_algo_opt_type), offsetof(system_crypto_HmacDigestParam, _algo), sizeof(FtString) },
-    { "key", FT_STRING, offsetof(system_crypto_HmacDigestParam, _key), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_opt_callback_type), offsetof(system_crypto_HmacDigestParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_HmacDigestParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_HmacDigestParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "data", FT_STRING, offsetof(system_crypto_HmacDigestParam, data), sizeof(FtString) },
+    { "algo", FT_MK_OPTIONAL(&system_crypto_HmacDigestParam_member_algo_opt_type), offsetof(system_crypto_HmacDigestParam, algo), sizeof(FtString) },
+    { "key", FT_STRING, offsetof(system_crypto_HmacDigestParam, key), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_opt_callback_type), offsetof(system_crypto_HmacDigestParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_HmacDigestParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_HmacDigestParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_crypto_HmacDigestParam_struct_type {
+const ObjectMapType system_crypto_HmacDigestParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_crypto_HmacDigestParam) },
     .members = system_crypto_HmacDigestParam_struct_members
 };
@@ -172,18 +180,23 @@ static const FeatureType system_crypto_hmacDigest_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_hmacDigest_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_crypto_wrap_hmacDigest(handle, adata
+        , *(system_crypto_HmacDigestParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_hmacDigest_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_hmacDigest) },
+    .func_stub = system_crypto_hmacDigest_stub,
     .parameters = system_crypto_hmacDigest_parameters,
     .return_type = FT_VOID,
 };
 
 
-static OptionalType system_crypto_SignParam_member_uri_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
+/****** for JIDL struct 'SignParam' ******/
+extern const ObjectMapType system_crypto_SignParam_struct_type;
 
 static OptionalType system_crypto_SignParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -191,20 +204,19 @@ static OptionalType system_crypto_SignParam_member_algo_opt_type = {
     .str = "RSA-SHA256"
 };
 
-/****** for JIDL struct 'SignParam' ******/
 static ObjectMember system_crypto_SignParam_struct_members[] = {
-    { "data", FT_ANY_REF, offsetof(system_crypto_SignParam, _data), sizeof(FtAny) },
-    { "uri", FT_MK_OPTIONAL(&system_crypto_SignParam_member_uri_opt_type), offsetof(system_crypto_SignParam, _uri), sizeof(FtString) },
-    { "algo", FT_MK_OPTIONAL(&system_crypto_SignParam_member_algo_opt_type), offsetof(system_crypto_SignParam, _algo), sizeof(FtString) },
-    { "privateKey", FT_STRING, offsetof(system_crypto_SignParam, _privateKey), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_SignParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_SignParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_SignParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "data", FT_ANY_REF, offsetof(system_crypto_SignParam, data), sizeof(FtAny) },
+    { "uri", FT_STRING, offsetof(system_crypto_SignParam, uri), sizeof(FtString) },
+    { "algo", FT_MK_OPTIONAL(&system_crypto_SignParam_member_algo_opt_type), offsetof(system_crypto_SignParam, algo), sizeof(FtString) },
+    { "privateKey", FT_STRING, offsetof(system_crypto_SignParam, privateKey), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_SignParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_SignParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_SignParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_crypto_SignParam_struct_type {
+const ObjectMapType system_crypto_SignParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_crypto_SignParam) },
     .members = system_crypto_SignParam_struct_members
 };
@@ -221,18 +233,23 @@ static const FeatureType system_crypto_sign_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_sign_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_crypto_wrap_sign(handle, adata
+        , *(system_crypto_SignParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_sign_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_sign) },
+    .func_stub = system_crypto_sign_stub,
     .parameters = system_crypto_sign_parameters,
     .return_type = FT_VOID,
 };
 
 
-static OptionalType system_crypto_RSAVerifyParam_member_uri_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
+/****** for JIDL struct 'RSAVerifyParam' ******/
+extern const ObjectMapType system_crypto_RSAVerifyParam_struct_type;
 
 static OptionalType system_crypto_RSAVerifyParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -240,21 +257,20 @@ static OptionalType system_crypto_RSAVerifyParam_member_algo_opt_type = {
     .str = "RSA-SHA256"
 };
 
-/****** for JIDL struct 'RSAVerifyParam' ******/
 static ObjectMember system_crypto_RSAVerifyParam_struct_members[] = {
-    { "data", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, _data), sizeof(FtAny) },
-    { "uri", FT_MK_OPTIONAL(&system_crypto_RSAVerifyParam_member_uri_opt_type), offsetof(system_crypto_RSAVerifyParam, _uri), sizeof(FtString) },
-    { "algo", FT_MK_OPTIONAL(&system_crypto_RSAVerifyParam_member_algo_opt_type), offsetof(system_crypto_RSAVerifyParam, _algo), sizeof(FtString) },
-    { "signature", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, _signature), sizeof(FtAny) },
-    { "publicKey", FT_STRING, offsetof(system_crypto_RSAVerifyParam, _publicKey), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_bool_opt_callback_type), offsetof(system_crypto_RSAVerifyParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "data", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, data), sizeof(FtAny) },
+    { "uri", FT_STRING, offsetof(system_crypto_RSAVerifyParam, uri), sizeof(FtString) },
+    { "algo", FT_MK_OPTIONAL(&system_crypto_RSAVerifyParam_member_algo_opt_type), offsetof(system_crypto_RSAVerifyParam, algo), sizeof(FtString) },
+    { "signature", FT_ANY_REF, offsetof(system_crypto_RSAVerifyParam, signature), sizeof(FtAny) },
+    { "publicKey", FT_STRING, offsetof(system_crypto_RSAVerifyParam, publicKey), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_bool_opt_callback_type), offsetof(system_crypto_RSAVerifyParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_RSAVerifyParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_crypto_RSAVerifyParam_struct_type {
+const ObjectMapType system_crypto_RSAVerifyParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_crypto_RSAVerifyParam) },
     .members = system_crypto_RSAVerifyParam_struct_members
 };
@@ -271,24 +287,23 @@ static const FeatureType system_crypto_verify_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_verify_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_crypto_wrap_verify(handle, adata
+        , *(system_crypto_RSAVerifyParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_verify_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_verify) },
+    .func_stub = system_crypto_verify_stub,
     .parameters = system_crypto_verify_parameters,
     .return_type = FT_VOID,
 };
 
 
-static OptionalType system_crypto_MixinCryptOption_member_transformation_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
-static OptionalType system_crypto_MixinCryptOption_member_iv_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
+/****** for JIDL struct 'MixinCryptOption' ******/
+extern const ObjectMapType system_crypto_MixinCryptOption_struct_type;
 
 static OptionalType system_crypto_MixinCryptOption_member_ivOffset_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -302,17 +317,16 @@ static OptionalType system_crypto_MixinCryptOption_member_ivLen_opt_type = {
     .ival = 16
 };
 
-/****** for JIDL struct 'MixinCryptOption' ******/
 static ObjectMember system_crypto_MixinCryptOption_struct_members[] = {
-    { "transformation", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_transformation_opt_type), offsetof(system_crypto_MixinCryptOption, _transformation), sizeof(FtString) },
-    { "iv", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_iv_opt_type), offsetof(system_crypto_MixinCryptOption, _iv), sizeof(FtString) },
-    { "ivOffset", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_ivOffset_opt_type), offsetof(system_crypto_MixinCryptOption, _ivOffset), sizeof(FtInt) },
-    { "ivLen", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_ivLen_opt_type), offsetof(system_crypto_MixinCryptOption, _ivLen), sizeof(FtInt) },
-    { nullptr },
+    { "transformation", FT_STRING, offsetof(system_crypto_MixinCryptOption, transformation), sizeof(FtString) },
+    { "iv", FT_STRING, offsetof(system_crypto_MixinCryptOption, iv), sizeof(FtString) },
+    { "ivOffset", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_ivOffset_opt_type), offsetof(system_crypto_MixinCryptOption, ivOffset), sizeof(FtInt) },
+    { "ivLen", FT_MK_OPTIONAL(&system_crypto_MixinCryptOption_member_ivLen_opt_type), offsetof(system_crypto_MixinCryptOption, ivLen), sizeof(FtInt) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_crypto_MixinCryptOption_struct_type {
+const ObjectMapType system_crypto_MixinCryptOption_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_crypto_MixinCryptOption) },
     .members = system_crypto_MixinCryptOption_struct_members
 };
@@ -323,26 +337,28 @@ system_crypto_MixinCryptOption* system_cryptoMallocMixinCryptOption () {
 }
 
 
+/****** for JIDL struct 'CryptParam' ******/
+extern const ObjectMapType system_crypto_CryptParam_struct_type;
+
 static OptionalType system_crypto_CryptParam_member_algo_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
     .type = FT_STRING,
     .str = "RSA"
 };
 
-/****** for JIDL struct 'CryptParam' ******/
 static ObjectMember system_crypto_CryptParam_struct_members[] = {
-    { "data", FT_ANY_REF, offsetof(system_crypto_CryptParam, _data), sizeof(FtAny) },
-    { "algo", FT_MK_OPTIONAL(&system_crypto_CryptParam_member_algo_opt_type), offsetof(system_crypto_CryptParam, _algo), sizeof(FtString) },
-    { "key", FT_STRING, offsetof(system_crypto_CryptParam, _key), sizeof(FtString) },
-    { "options", FT_MK_COMPLEX(&system_crypto_MixinCryptOption_struct_type), offsetof(system_crypto_CryptParam, _options), sizeof(system_crypto_MixinCryptOption *) },
-    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_CryptParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_CryptParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_CryptParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "data", FT_ANY_REF, offsetof(system_crypto_CryptParam, data), sizeof(FtAny) },
+    { "algo", FT_MK_OPTIONAL(&system_crypto_CryptParam_member_algo_opt_type), offsetof(system_crypto_CryptParam, algo), sizeof(FtString) },
+    { "key", FT_STRING, offsetof(system_crypto_CryptParam, key), sizeof(FtString) },
+    { "options", FT_MK_COMPLEX(&system_crypto_MixinCryptOption_struct_type), offsetof(system_crypto_CryptParam, options), sizeof(system_crypto_MixinCryptOption *) },
+    { "success", FT_MK_COMPLEX(&system_crypto_success_cb_obj_str_u8a_opt_callback_type), offsetof(system_crypto_CryptParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_crypto_fail_cb_callback_type), offsetof(system_crypto_CryptParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_crypto_complete_cb_callback_type), offsetof(system_crypto_CryptParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_crypto_CryptParam_struct_type {
+const ObjectMapType system_crypto_CryptParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_crypto_CryptParam) },
     .members = system_crypto_CryptParam_struct_members
 };
@@ -359,8 +375,16 @@ static const FeatureType system_crypto_encrypt_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_encrypt_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_crypto_wrap_encrypt(handle, adata
+        , *(system_crypto_CryptParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_encrypt_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_encrypt) },
+    .func_stub = system_crypto_encrypt_stub,
     .parameters = system_crypto_encrypt_parameters,
     .return_type = FT_VOID,
 };
@@ -372,8 +396,16 @@ static const FeatureType system_crypto_decrypt_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_decrypt_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_crypto_wrap_decrypt(handle, adata
+        , *(system_crypto_CryptParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_decrypt_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_decrypt) },
+    .func_stub = system_crypto_decrypt_stub,
     .parameters = system_crypto_decrypt_parameters,
     .return_type = FT_VOID,
 };
@@ -385,8 +417,16 @@ static const FeatureType system_crypto_btoa_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_btoa_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = system_crypto_wrap_btoa(handle, adata
+        , *(FtString*)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_btoa_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_btoa) },
+    .func_stub = system_crypto_btoa_stub,
     .parameters = system_crypto_btoa_parameters,
     .return_type = FT_STRING,
 };
@@ -398,8 +438,16 @@ static const FeatureType system_crypto_atob_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_crypto_atob_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtString*)ret) = system_crypto_wrap_atob(handle, adata
+        , *(FtString*)(argv[0])
+    );
+}
+
 static const MemberMethod system_crypto_atob_member_method = {
-    .func = { .callback = FFI_FN(system_crypto_wrap_atob) },
+    .func_stub = system_crypto_atob_stub,
     .parameters = system_crypto_atob_parameters,
     .return_type = FT_STRING,
 };
@@ -450,7 +498,7 @@ static const Member system_crypto_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks system_crypto_callbacks {
+static const struct FeatureCallbacks system_crypto_callbacks = {
     system_crypto_onRegister,
     system_crypto_onCreate,
     system_crypto_onRequired,
@@ -463,7 +511,7 @@ static const FeatureDescription system_crypto_desc = {
     .version = 1,
     .name = "system.crypto",
     .description = "system.crypto",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &system_crypto_callbacks,
     .member_count = countof(system_crypto_members),
     .members = system_crypto_members,

@@ -205,7 +205,17 @@ bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...);
  * @param ...
  * @return bool
  */
-bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...);
+bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid,
+    int code, const char* msg);
+
+/**
+ * @brief get real promise type
+ *
+ * @param handle
+ * @param pid
+ * @return FeaturePromiseType
+ */
+FeaturePromiseType FeatureGetPromiseType(FeatureInstanceHandle handle, FtPromiseId pid);
 
 /**
  * @brief create a FeatureInterfaceHandle
@@ -306,6 +316,72 @@ void FeatureFreeInstanceHandle(FeatureInstanceHandle handle);
  * @return bool
  */
 bool FeatureInstanceIsDetached(FeatureInstanceHandle handle);
+
+/**
+ * @brief get event id from event name
+ *
+ * @param handle
+ * @param name
+ * @return FtEventId, invalid if FtEventId <= 0
+ */
+FtEventId FeatureGetEventId(FeatureInstanceHandle handle, const char* name);
+
+/**
+ * @brief get event name from event id
+ *
+ * @param handle
+ * @param eid
+ * @return const char*, NULL if event is not exist
+ */
+const char* FeatureGetEventName(FeatureInstanceHandle handle, FtEventId eid);
+
+/**
+ * @brief emit an event with variadic parameters
+ *
+ * @param handle
+ * @param cid
+ * @return bool
+ */
+bool FeatureEmitEvent(FeatureInstanceHandle handle, FtEventId eid, ...);
+
+/**
+ * @brief emit an event by name and with variadic parameters
+ *
+ * @param handle
+ * @param cid
+ * @return bool
+ */
+bool FeatureEmitEventByName(FeatureInstanceHandle handle, const char* name, ...);
+
+/**
+ * @brief set event change listener
+ *
+ * @param handle
+ * @param listener
+ * @return void
+ */
+void FeatureSetEventChangeListener(FeatureInstanceHandle handle, FeatureEventChangeListener listener);
+
+/**
+ * @brief get event callback count by event id
+ *
+ * @param handle
+ * @param eid
+ * @return callback count
+ */
+int FeatureGetEventCallbackCount(FeatureInstanceHandle handle, FtEventId eid);
+
+/**
+ * @brief get event callback count by event name
+ *
+ * @param handle
+ * @param eid
+ * @return callback count
+ */
+static inline int FeatureGetEventCallbackCountByName(FeatureInstanceHandle handle, const char* name)
+{
+    return FeatureGetEventCallbackCount(handle, FeatureGetEventId(handle, name));
+}
 
 #ifdef __cplusplus
 }

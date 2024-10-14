@@ -20,12 +20,12 @@
 
 #include "feature_log.h"
 
-namespace ferry {
+namespace feature_framework {
 
 template <typename TTarget>
 struct CallbackData {
     TTarget cb;
-    CallbackType* type;
+    const CallbackType* type;
 
     CallbackData(const TTarget& callback, CallbackType* cb_type)
         : cb(callback)
@@ -127,7 +127,7 @@ public:
         if (!cb_data)
             return -1;
 
-        return static_cast<TInstance*>(this)->doInvokeCallback(cb_data->type, cb_data->cb, va, fixed_argc, rest_argc);
+        return static_cast<TInstance*>(this)->doInvokeCallback(cb_data->type->parameters, cb_data->cb, va, fixed_argc, rest_argc);
     }
 
 private:

@@ -20,7 +20,7 @@
 
 #include "feature.h"
 
-namespace ferry {
+namespace feature_framework {
 
 static inline JSValue addRef(JSContext* ctx, JSValue& value)
 {

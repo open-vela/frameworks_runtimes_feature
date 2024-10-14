@@ -26,23 +26,15 @@
 #include <alloca.h>
 #include <cstdint>
 #include <cstring>
-#include <ffi.h>
 #include <functional>
 #include <stdlib.h>
 
 using namespace FEATURE;
-using namespace ferry;
+using namespace feature_framework;
 
-namespace ferry {
+namespace feature_framework {
 
 namespace FeatureFFIWamr {
-
-#define PUSH_LOCAL_OBJ_REF(obj)                                                                  \
-    {                                                                                            \
-        wasm_local_obj_ref_t* ref = (wasm_local_obj_ref_t*)malloc(sizeof(wasm_local_obj_ref_t)); \
-        wasm_runtime_push_local_obj_ref(exec_env, ref);                                          \
-        ref->val = (wasm_obj_t)obj;                                                              \
-    }
 
     static void* interface_from_target(uint64_t& target)
     {
@@ -55,99 +47,30 @@ namespace FeatureFFIWamr {
         return (uint64_t)interf;
     }
 
-    static inline void fill_struct_data(ObjectMapType& obj_type, uint64_t ptr, ts_value_t obj_arr[], uint32_t count)
+    static bool get_struct_field_types(ObjectMapType& obj_type, wasm_value_type_t type_arr[], uint32_t count)
     {
         if (count <= 0) {
-            FEATURE_LOG_ERROR("need fill struct is null!");
+            FEATURE_LOG_ERROR("struct field count is invalid!");
+            return false;
         }
-        ts_value_t obj_field;
         for (uint32_t i = 0; i < count; i++) {
-            // fill it
             auto member = obj_type.members[i];
-            void* member_ptr = (void*)((char*)ptr + member.offset);
-            FeatureType ftype = member.type;
-            TRY_GET_REAL_TYPE(ftype);
-            if (FT_IS_PRIMITIVE(ftype)) {
-                switch (ftype) {
-                case FT_BOOLEAN: {
-                    obj_field.of.i32 = *(int32_t*)member_ptr;
-                    obj_field.type = TS_BOOLEAN;
-                    obj_arr[i] = obj_field;
-                } break;
-                case FT_INT:
-                case FT_INT8:
-                case FT_UINT8:
-                case FT_INT16:
-                case FT_UINT16:
-                case FT_INT32:
-                case FT_UINT32:
-                case FT_INT64:
-                case FT_UINT64:
-                case FT_FLOAT:
-                case FT_DOUBLE: {
-                    obj_field.of.f64 = *(int64_t*)member_ptr;
-                    obj_field.type = TS_NUMBER;
-                    obj_arr[i] = obj_field;
-                } break;
-                case FT_STRING: {
-                    char** title_ptr = (char**)member_ptr;
-                    obj_field.of.ref = *title_ptr;
-                    obj_field.type = TS_STRING;
-                    obj_arr[i] = obj_field;
-                } break;
-                default:
-                    break;
-                }
-            }
+            wasm_value_type_t wasm_type = ft_type_to_wasm_type(member.type);
+            if (wasm_type == 0)
+                return false;
+            type_arr[i] = wasm_type;
         }
+        return true;
     }
 
-    char getFeatureSignature(FeatureType ftype)
+    static wasm_struct_type_t get_struct_type(wasm_exec_env_t exec_env, ObjectMapType& obj_map_type, uint32_t member_count)
     {
-        if (FT_IS_PRIMITIVE(ftype)) {
-            switch (ftype) {
-            case FT_VOID:
-                return 0;
-            case FT_BOOLEAN:
-                return 'i';
-            case FT_INT:
-            case FT_INT8:
-            case FT_UINT8:
-            case FT_INT16:
-            case FT_UINT16:
-            case FT_INT32:
-            case FT_UINT32:
-            case FT_INT64:
-            case FT_UINT64:
-            case FT_FLOAT:
-            case FT_DOUBLE:
-                return 'F';
-            case FT_STRING:
-                // wasm string signature is 'r'
-                return 'r';
-            default: {
-                FEATURE_LOG_WARN("unsupported type detected !");
-                return 0;
-            }
-            }
-        } else if (FT_IS_COMPLEX(ftype)) {
-            ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
-            switch (complexType->type) {
-            case COMPLEX_OPTIONAL: {
-                OptionalType* optionalType = (OptionalType*)complexType;
-                char res = getFeatureSignature(optionalType->type);
-                if (res == 0) {
-                    FEATURE_LOG_WARN("unsupported type detected !");
-                    return 0;
-                }
-                return res;
-            } break;
-            default: {
-                return 'r';
-            }
-            }
-        }
-        return 0;
+        wasm_struct_type_t struct_type = NULL;
+        wasm_value_type_t field_types[member_count];
+        if (!get_struct_field_types(obj_map_type, field_types, member_count))
+            return struct_type;
+        find_struct_type(exec_env, field_types, member_count, &struct_type);
+        return struct_type;
     }
 
     bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, const AppendData& const_data, uint64_t& value)
@@ -208,8 +131,7 @@ namespace FeatureFFIWamr {
         return true;
     }
 
-    bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr,
-        wasm_exec_env_t exec_env, uint64_t& value)
+    bool convertValueToGuest(FeatureType ftype, void* ptr, wasm_exec_env_t exec_env, uint64_t& value)
     {
         FEATURE_CHECK_NE(ptr, nullptr);
         if (FT_IS_PRIMITIVE(ftype)) {
@@ -219,45 +141,50 @@ namespace FeatureFFIWamr {
                 return false;
             }
             case FT_INT: {
-                set_wasm_var_by_type(int64_t, *((int32_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((int32_t*)ptr), value);
             } break;
             case FT_INT8: {
-                set_wasm_var_by_type(int64_t, *((int8_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((int8_t*)ptr), value);
             } break;
             case FT_UINT8: {
-                set_wasm_var_by_type(uint64_t, *((uint8_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((uint8_t*)ptr), value);
             } break;
             case FT_INT16: {
-                set_wasm_var_by_type(int64_t, *((int16_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((int16_t*)ptr), value);
             } break;
             case FT_UINT16: {
-                set_wasm_var_by_type(uint64_t, *((uint16_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((uint16_t*)ptr), value);
             } break;
             case FT_INT32: {
-                set_wasm_var_by_type(int64_t, *((int32_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((int32_t*)ptr), value);
             } break;
             case FT_UINT32: {
-                set_wasm_var_by_type(uint64_t, *((uint32_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((uint32_t*)ptr), value);
             } break;
             case FT_INT64: {
-                set_wasm_var_by_type(int64_t, *((int64_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((int64_t*)ptr), value);
             } break;
             case FT_UINT64: {
-                set_wasm_var_by_type(uint64_t, *((uint64_t*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((uint64_t*)ptr), value);
             } break;
             case FT_FLOAT: {
-                set_wasm_var_by_type(float, *((float*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((float*)ptr), value);
             } break;
             case FT_DOUBLE: {
-                set_wasm_var_by_type(double, *((double*)ptr), value);
+                set_wasm_var_by_type(wasm_number, *((double*)ptr), value);
             } break;
             case FT_BOOLEAN: {
                 set_wasm_var_by_type(uint64_t, *((bool*)ptr), value);
             } break;
             case FT_STRING: {
+                wasm_stringref_obj_t obj = NULL;
                 const char* str = *(char**)ptr;
-                wasm_stringref_obj_t obj = create_wasm_string(exec_env, str);
-                PUSH_LOCAL_OBJ_REF(obj);
+                if (!str) {
+                    obj = create_wasm_string(exec_env, "");
+                } else {
+                    obj = create_wasm_string(exec_env, str);
+                }
+                push_local_obj_ref(exec_env, obj);
                 set_wasm_var_by_type(void*, obj, value);
             } break;
             default: {
@@ -269,31 +196,70 @@ namespace FeatureFFIWamr {
             ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
             switch (complex_type->type) {
             case COMPLEX_STRUCT_MAP: {
-                void* tmp_ptr = *(void**)ptr;
+                void* struct_ptr = *(void**)ptr;
+                if (!struct_ptr) {
+                    FEATURE_LOG_INFO("struct ptr is null!");
+                    return true;
+                }
                 ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
-                auto member_count = countMember(obj_map_type.members);
-                ts_value_t obj_arr[member_count];
-                /* call fill_struct_data api to fill data in obj array as above */
-                fill_struct_data(obj_map_type, (uintptr_t)tmp_ptr, obj_arr, member_count);
-                /* call createWasmStruct api from feature_wamr_utils.h */
-                wasm_struct_obj_t obj = create_wasm_struct(exec_env, obj_arr, member_count);
-                PUSH_LOCAL_OBJ_REF(obj);
-                set_wasm_var_by_type(void*, obj, value);
+                auto member = obj_map_type.members;
+                auto member_count = countMember(member);
+                wasm_struct_type_t struct_type = get_struct_type(exec_env, obj_map_type, member_count);
+                if (!struct_type) {
+                    FEATURE_LOG_ERROR("can not find wasm struct type!");
+                    return false;
+                }
+                wasm_struct_obj_t struct_obj = wasm_struct_obj_new_with_type(exec_env, struct_type);
+                for (int i = 0; i < member_count; i++) {
+                    void* member_ptr = (void*)((char*)struct_ptr + member->offset);
+                    uint64_t feild;
+                    bool ret = convertValueToGuest(member->type, member_ptr, exec_env, feild);
+                    if (!ret) {
+                        FEATURE_LOG_ERROR("convert property name: %s failed !", member->name);
+                        return false;
+                    }
+                    wasm_struct_obj_set_field(struct_obj, i + 1, ((wasm_value_t*)&feild));
+                    member++;
+                }
+                push_local_obj_ref(exec_env, struct_obj);
+                set_wasm_var_by_type(void*, struct_obj, value);
             } break;
             case COMPLEX_OPTIONAL: {
                 OptionalType* opt_type = (OptionalType*)complex_type;
-                bool ret = convertValueToGuest(instance, opt_type->type, ptr, exec_env, value);
+                bool ret = convertValueToGuest(opt_type->type, ptr, exec_env, value);
                 if (!ret) {
                     FEATURE_LOG_ERROR("convert optional to guest failed !");
                     return false;
                 }
             } break;
             case COMPLEX_ARRAY: {
+                // convert to guest
                 FtArray* array = *(FtArray**)ptr;
-                uint32_t len = array->_size;
-                wasm_struct_obj_t obj = create_wasm_array_with_string(exec_env, (void**)(array->_element), len);
-                PUSH_LOCAL_OBJ_REF(obj);
-                set_wasm_var_by_type(void*, obj, value);
+                if (!array) {
+                    FEATURE_LOG_INFO("array ptr is null!");
+                    return true;
+                }
+                auto elem_type = ((ArrayType*)complex_type)->element_type;
+                size_t elem_size = sizeof(uintptr_t);
+                wasm_struct_obj_t array_struct = create_array_with_type(
+                    exec_env, array->_size, ft_type_to_wasm_type(elem_type));
+                if (!array_struct) {
+                    FEATURE_LOG_ERROR("create array failed !");
+                    return false;
+                }
+                wasm_array_obj_t array_obj = get_array_ref(array_struct);
+                for (int32_t i = 0; i < array->_size; i++) {
+                    void* elem_ptr = ((char*)array->_element + elem_size * i);
+                    // convert element value
+                    uint64_t elem = 0;
+                    if (!convertValueToGuest(elem_type, elem_ptr, exec_env, elem)) {
+                        FEATURE_LOG_ERROR("convert array element to guest failed !");
+                        return false;
+                    }
+                    wasm_array_obj_set_elem(array_obj, i, (wasm_value_t*)&elem);
+                }
+                push_local_obj_ref(exec_env, array_struct);
+                set_wasm_var_by_type(void*, array_struct, value);
             } break;
             case COMPLEX_INTERFACE: {
                 InterfaceType* interface_type = (InterfaceType*)complex_type;
@@ -436,8 +402,8 @@ namespace FeatureFFIWamr {
             case COMPLEX_ARRAY: {
                 uint32_t len;
                 wasm_value_t value1 = { 0 };
-                ArrayType& arrayType = *(ArrayType*)complex_type;
-                auto element_type = arrayType.element_type;
+                ArrayType& array_type = *(ArrayType*)complex_type;
+                auto element_type = array_type.element_type;
                 wasm_struct_obj_t array_val = get_wasm_args_by_type(wasm_struct_obj_t, value);
                 wasm_array_obj_t arr_ref = get_array_ref(array_val);
                 len = get_array_length(array_val);
@@ -446,19 +412,19 @@ namespace FeatureFFIWamr {
                     // malloc FtArray struct
                     *(void**)ptr = FeatureMalloc(sizeof(FtArray), ftype);
                 }
-                FtArray* arrayData = *(FtArray**)ptr;
-                arrayData->_size = len;
+                FtArray* array = *(FtArray**)ptr;
+                array->_size = len;
                 if (len) {
                     // we support reference and primitive types
-                    size_t element_size = getValueSize(element_type);
-                    auto size = element_size * len;
+                    size_t elem_size = getValueSize(element_type);
+                    auto size = elem_size * len;
                     FEATURE_CHECK_NE(size, 0);
-                    arrayData->_element = malloc(size);
-                    memset(arrayData->_element, 0, size);
+                    array->_element = malloc(size);
+                    memset(array->_element, 0, size);
                     for (size_t i = 0; i < len; i++) {
                         // fill it
                         wasm_array_obj_get_elem(arr_ref, i, false, &value1);
-                        void* element_ptr = ((char*)arrayData->_element + element_size * i);
+                        void* element_ptr = ((char*)array->_element + elem_size * i);
                         if (!convertValueToHost(instance, element_type, element_ptr, exec_env, *((uint64_t*)&value1))) {
                             FEATURE_LOG_ERROR("convert array element failed ");
                             // feature_free_value(ctx, elementValue);
@@ -481,4 +447,4 @@ namespace FeatureFFIWamr {
     }
 
 }
-} // namespace ferry
+} // namespace feature_framework

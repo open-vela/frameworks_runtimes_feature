@@ -48,4 +48,4 @@ struct FetchPara{
   callback complete_cb complete;
 }
 
-void fetch(FetchPara obj);
+promise<object> fetch(FetchPara obj);

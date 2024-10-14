@@ -24,7 +24,7 @@ static const char* file_tag = "[jidl_feature] exchange_impl";
 #define EXCHANGE_PERSIST_LEN 8
 #define ERROR_CODE 202
 
-enum OP {
+enum EXCHAGE_OP {
     EXCHANGE_OP_GET,
     EXCHANGE_OP_SET,
     EXCHANGE_OP_REMOVE,
@@ -34,7 +34,7 @@ enum OP {
 
 typedef struct {
     FeatureInstanceHandle feature;
-    OP op; /* The operation */
+    EXCHAGE_OP op; /* The operation */
     FtCallbackId success;
     FtCallbackId fail;
     FtCallbackId complete;
@@ -44,7 +44,7 @@ typedef struct {
     char* package; /* The package for easily memory freed */
     char* sign; /* The sign of the data provider, SHA-256 */
     char getvalue[PROPERTY_VALUE_MAX + 1]; /* The getvalue buffer to store the value, used to return
-                                            * the get value when OP = EXCHANGE_OP_GET
+                                            * the get value when EXCHAGE_OP = EXCHANGE_OP_GET
                                             */
 } ExchangeHandle;
 

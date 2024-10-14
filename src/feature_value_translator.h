@@ -56,7 +56,7 @@ struct FtValTranslator {
 
     static const char* toString(ft_context_ref ctx_ref, ft_value_t ft_val)
     {
-        const char* ret = NULL;
+        char* ret = NULL;
         if (!value_translator::toNative((TCtx)(ctx_ref->data), value_translator::ftValToTarget(ft_val), &ret))
             return NULL;
         return ret;
@@ -114,6 +114,12 @@ struct FtValTranslator {
     static ft_value_t parseJson(ft_context_ref ctx_ref, const char* buf, size_t buf_len, const char* file_name)
     {
         TTarget target = value_translator::parseJson((TCtx)(ctx_ref->data), buf, buf_len, file_name);
+        return value_translator::targetToFtVal(target);
+    }
+
+    static ft_value_t undefined(ft_context_ref ctx_ref)
+    {
+        TTarget target = value_translator::undefined((TCtx)(ctx_ref->data));
         return value_translator::targetToFtVal(target);
     }
 };

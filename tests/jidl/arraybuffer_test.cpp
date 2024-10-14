@@ -24,6 +24,8 @@
 #include "arraybuffer_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -34,8 +36,17 @@ static const FeatureType arraybuffer_test_setArraybuffer_parameters[] = {
     FT_PARAM_END
 };
 
+static void arraybuffer_test_setArraybuffer_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    arraybuffer_test_wrap_setArraybuffer(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtAny*)(argv[1])
+    );
+}
+
 static const MemberMethod arraybuffer_test_setArraybuffer_member_method = {
-    .func = { .callback = FFI_FN(arraybuffer_test_wrap_setArraybuffer) },
+    .func_stub = arraybuffer_test_setArraybuffer_stub,
     .parameters = arraybuffer_test_setArraybuffer_parameters,
     .return_type = FT_VOID,
 };
@@ -46,8 +57,15 @@ static const FeatureType arraybuffer_test_getArraybuffer_parameters[] = {
     FT_PARAM_END
 };
 
+static void arraybuffer_test_getArraybuffer_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtAny*)ret) = arraybuffer_test_wrap_getArraybuffer(handle, adata
+    );
+}
+
 static const MemberMethod arraybuffer_test_getArraybuffer_member_method = {
-    .func = { .callback = FFI_FN(arraybuffer_test_wrap_getArraybuffer) },
+    .func_stub = arraybuffer_test_getArraybuffer_stub,
     .parameters = arraybuffer_test_getArraybuffer_parameters,
     .return_type = FT_ANY_REF,
 };
@@ -59,8 +77,16 @@ static const FeatureType arraybuffer_test_getTypedArraybuffer_parameters[] = {
     FT_PARAM_END
 };
 
+static void arraybuffer_test_getTypedArraybuffer_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtAny*)ret) = arraybuffer_test_wrap_getTypedArraybuffer(handle, adata
+        , *(FtInt*)(argv[0])
+    );
+}
+
 static const MemberMethod arraybuffer_test_getTypedArraybuffer_member_method = {
-    .func = { .callback = FFI_FN(arraybuffer_test_wrap_getTypedArraybuffer) },
+    .func_stub = arraybuffer_test_getTypedArraybuffer_stub,
     .parameters = arraybuffer_test_getTypedArraybuffer_parameters,
     .return_type = FT_ANY_REF,
 };
@@ -71,8 +97,16 @@ static const FeatureType arraybuffer_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void arraybuffer_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    arraybuffer_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod arraybuffer_test_print_member_method = {
-    .func = { .callback = FFI_FN(arraybuffer_test_wrap_print) },
+    .func_stub = arraybuffer_test_print_stub,
     .parameters = arraybuffer_test_print_parameters,
     .return_type = FT_VOID,
 };
@@ -103,7 +137,7 @@ static const Member arraybuffer_test_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks arraybuffer_test_callbacks {
+static const struct FeatureCallbacks arraybuffer_test_callbacks = {
     arraybuffer_test_onRegister,
     arraybuffer_test_onCreate,
     arraybuffer_test_onRequired,
@@ -116,7 +150,7 @@ static const FeatureDescription arraybuffer_test_desc = {
     .version = 1,
     .name = "arraybuffer_test",
     .description = "arraybuffer_test",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &arraybuffer_test_callbacks,
     .member_count = countof(arraybuffer_test_members),
     .members = arraybuffer_test_members,

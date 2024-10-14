@@ -130,6 +130,11 @@ JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/prompt.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_prompt
 
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/upload_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/uploadtask.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+FEATURELIST += system_uploadtask
+
 ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 PROGNAME += feature_test_cli
 PRIORITY += 100
@@ -159,6 +164,18 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/quickapp/src/framework/dom-prot
 JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/jumpapp.jidl
 OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += jumpApp
+
+ifeq ($(CONFIG_QUICKAPP), y)
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/router.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/router_impl.cpp
+FEATURELIST += system_router
+
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/system_app.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+CXXSRCS += $(APPDIR)/frameworks/base/feature/modules/system_app_impl.cpp
+FEATURELIST += system_app
+endif
 
 ifeq ($(CONFIG_MEDIA_FEATURE),y)
 CFEATURELIST += system_volume
@@ -236,16 +253,30 @@ OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_internal_activity
 endif
 
-ifeq ($(CONFIG_LIB_GOOGLETEST), y)
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test.cpp
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test_impl.cpp
-FEATURELIST += feat_test
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/array_null_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/array_null.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+FEATURELIST += array_null
 
-PROGNAME += feat_test
-PRIORITY += 100
-STACKSIZE += 4096
-CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/builtin/builtin_console.cpp
-MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/promise_callback.cpp
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/promise_callback_impl.cpp
+FEATURELIST += promise_callback
+
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/event_test_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/base/feature/modules/jidl/event_test.jidl
+OUT_PATH += $(APPDIR)/frameworks/base/feature/modules/src/
+FEATURELIST += event_test
+
+ifeq ($(CONFIG_LIB_GOOGLETEST), y)
+#CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test.cpp
+#CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/feat_test_impl.cpp
+#FEATURELIST += feat_test
+#
+#PROGNAME += feat_test
+#PRIORITY += 100
+#STACKSIZE += 4096
+#CXXSRCS += $(APPDIR)/frameworks/base/feature/tests/jidl/builtin/builtin_console.cpp
+#MAINSRC += $(APPDIR)/frameworks/base/feature/tests/jidl/test_main.cpp
 endif
 
 ifeq ($(CONFIG_UTILS_CURL), y)
@@ -293,6 +324,13 @@ CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/brightness_impl.cpp
 JIDL_PATH   += $(APPDIR)/frameworks/base/feature/modules/jidl/brightness.jidl
 OUT_PATH    += $(APPDIR)/frameworks/base/feature/modules/src/
 FEATURELIST += system_brightness
+endif
+
+ifeq ($(CONFIG_APP_WECHAT),y)
+CXXSRCS     += $(APPDIR)/frameworks/base/feature/modules/wechat_impl.cpp
+JIDL_PATH   += $(APPDIR)/frameworks/base/feature/modules/jidl/wechat.jidl
+OUT_PATH    += $(APPDIR)/frameworks/base/feature/modules/src/
+FEATURELIST += service_wechat
 endif
 
 ifeq ($(CONFIG_MIPLAY_QAPP),y)

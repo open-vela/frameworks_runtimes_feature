@@ -19,6 +19,7 @@
 
 #include "feature.h"
 #include "feature_context_qjs.h"
+#include "feature_description.h"
 #include "feature_log.h"
 
 #include <cstdarg>
@@ -76,18 +77,17 @@ bool toNative(JSContext* ctx, const JSValue& target, bool* pnative);
 
 bool toNative(JSContext* ctx, const JSValue& target, char** pnative);
 
-bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative);
+static inline bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative)
+{
+    qjs_val_t* q_val = (qjs_val_t*)pnative;
+    q_val->js_val = target;
+    return true;
+}
 
 // ArrayBuffer or TypedArrayBuffer
 bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, size_t* psize);
 
 // to target values
-static inline bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget)
-{
-    *ptarget = FT_VAL_GET_JS_VAL(native);
-    return true;
-}
-
 static inline bool toTarget(JSContext* ctx, int32_t native, JSValue* ptarget)
 {
     *ptarget = JS_NewInt32(ctx, native);
@@ -130,7 +130,12 @@ static inline bool toTarget(JSContext* ctx, const char* native, JSValue* ptarget
     return true;
 }
 
-bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget);
+static inline bool toTarget(JSContext* ctx, ft_value_t native, JSValue* ptarget)
+{
+    *ptarget = FT_VAL_GET_JS_VAL(native);
+    JS_DupValue(ctx, *ptarget);
+    return true;
+}
 
 // for ArrayBuffer
 static inline bool toTargetBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, JSValue* ptarget)
@@ -163,7 +168,7 @@ static inline JSValue newObject(JSContext* ctx)
     return JS_NewObject(ctx);
 }
 
-bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield);
+bool getObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue* pfield);
 
 bool setObjectField(JSContext* ctx, const JSValue& obj, const char* name, JSValue field);
 
@@ -184,9 +189,19 @@ static inline bool isNull(JSContext* ctx, const JSValue& target)
     return !!JS_IsNull(target);
 }
 
+static inline JSValue nullValue(JSContext* ctx)
+{
+    return JS_NULL;
+}
+
 static inline bool isUndefined(JSContext* ctx, const JSValue& target)
 {
     return !!JS_IsUndefined(target);
+}
+
+static inline JSValue undefined(JSContext* ctx)
+{
+    return JS_UNDEFINED;
 }
 
 static inline bool isString(JSContext* ctx, const JSValue& target)
@@ -199,10 +214,19 @@ static inline bool isArray(JSContext* ctx, const JSValue& target)
     return !!JS_IsArray(ctx, target);
 }
 
+static inline bool isObject(JSContext* ctx, const JSValue& target)
+{
+    return !!JS_IsObject(target);
+}
+
+static inline bool isFunction(JSContext* ctx, const JSValue& target)
+{
+    return !!JS_IsFunction(ctx, target);
+}
+
 static inline void freeValue(JSContext* ctx, JSValue target)
 {
     JS_FreeValue(ctx, target);
-    target = JS_UNDEFINED;
 }
 
 static inline void freeCString(JSContext* ctx, char* str)
@@ -222,8 +246,7 @@ static inline ft_value_t targetToFtVal(JSValue& target)
 
 static inline JSValue ftValToTarget(ft_value_t& ft_val)
 {
-    qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
-    return qjs_val->js_val;
+    return FT_VAL_GET_JS_VAL(ft_val);
 }
 
 static inline ft_value_t nullFtVal()
@@ -242,23 +265,46 @@ static inline ft_value_t undefinedFtVal()
     return ft_val;
 }
 
-static inline JSValue getVariArg(JSContext* ctx, JSValue& arg)
+static inline JSValue getVariArg(JSContext* ctx, JSValue* argv, uint32_t index)
 {
-    return arg;
+    return *(argv + index);
 }
 
-static inline void toTargetPromise(JSContext* ctx, const JSValue& promise, JSValue& ret_val)
+static inline JSValue toTargetPromise(JSContext* ctx, JSContext* js_ctx, JSValue& promise)
 {
-    ret_val = promise;
+    return promise;
 }
 
-void* interfaceFromTarget(JSValue& target);
+void* interfaceFromTarget(JSContext* ctx, JSValue& target);
 
-JSValue targetFromInterface(void* instance);
+JSValue targetFromInterface(JSContext* ctx, void* instance);
+
+bool hasAsyncCallbacks(JSContext* ctx, JSValue arg);
+
+int addAsyncCallbacks(JSContext* ctx, void* instance, FeatureType ftype, JSValue arg);
 
 static inline JSValue toCallbackValue(JSValue& target)
 {
     return target;
+}
+
+static inline JSValue createStruct(JSContext* ctx, ObjectMapType& obj_map_type, uint32_t member_count)
+{
+    return JS_NewObject(ctx);
+}
+
+bool getStructField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue* pfield);
+
+bool setStructField(JSContext* ctx, const JSValue& obj, const char* name, int idx, JSValue field);
+
+static inline JSValue createArray(JSContext* ctx, FeatureType& type, uint32_t array_size)
+{
+    return JS_NewArray(ctx);
+}
+
+static inline JSValue dupValue(JSContext* ctx, JSValue& value)
+{
+    return JS_DupValue(ctx, value);
 }
 
 }

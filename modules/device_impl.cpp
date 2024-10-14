@@ -147,9 +147,10 @@ void system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append
     FeatureFreeValue(device);
 }
 
-void system_device_wrap_getDeviceId(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
+FtString system_device_wrap_getDeviceId(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
 {
     ft_context_ref ft_ctx = FeatureGetContext(feature);
+    FtString ret = NULL;
     char did[32 + 1] = { 0 };
 
     int status = uv_devinfobuff(did, sizeof(did), UV_EXT_DEVINFO_DID);
@@ -158,10 +159,16 @@ void system_device_wrap_getDeviceId(FeatureInstanceHandle feature, AppendData ap
         ft_value_t ret_data = ft_from_string(ft_ctx, did);
         ft_obj_set_property(ft_ctx, ret_obj, "deviceId", ret_data);
         finish_callback_common(status, feature, params, "getDeviceid successfully", &ret_obj);
+        ft_free_value(ft_ctx, ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get devinfo id with uv_devinfobuff\n");
         finish_callback_common(status, feature, params, "getDeviceid failed", NULL);
     }
+    ret = (char*)FeatureMalloc(strlen(did) + 1, FT_STRING);
+    if (ret) {
+        sprintf((char*)ret, "%s", did);
+    }
+    return ret;
 }
 
 void system_device_wrap_getId(FeatureInstanceHandle feature, AppendData append_data, system_device_common_params* params)
@@ -175,6 +182,7 @@ void system_device_wrap_getId(FeatureInstanceHandle feature, AppendData append_d
         ft_value_t ret_data = ft_from_string(ft_ctx, did);
         ft_obj_set_property(ft_ctx, ret_obj, "deviceId", ret_data);
         finish_callback_common(status, feature, params, "getId successfully", &ret_obj);
+        ft_free_value(ft_ctx, ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get devinfo id with uv_devinfobuff\n");
         finish_callback_common(status, feature, params, "getId failed", NULL);
@@ -192,6 +200,7 @@ void system_device_wrap_getSerial(FeatureInstanceHandle feature, AppendData appe
         ft_value_t ret_data = ft_from_string(ft_ctx, serial);
         ft_obj_set_property(ft_ctx, ret_obj, "serial", ret_data);
         finish_callback_common(status, feature, params, "getSerial successfully", &ret_obj);
+        ft_free_value(ft_ctx, ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get devinfo id with uv_devinfobuff\n");
         finish_callback_common(status, feature, params, "getSerial failed", NULL);
@@ -215,6 +224,7 @@ void system_device_wrap_getTotalStorage(FeatureInstanceHandle feature, AppendDat
         ft_obj_set_property(ft_ctx, ret_obj, "totalStorage", ret_data);
 
         finish_callback_common(status, feature, params, "getTotalStorage successfully", &ret_obj);
+        ft_free_value(ft_ctx, ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get availablestorage with statfs\n");
         finish_callback_common(status, feature, params, "getTotalStorage failed", NULL);
@@ -238,6 +248,7 @@ void system_device_wrap_getAvailableStorage(FeatureInstanceHandle feature, Appen
         ft_obj_set_property(ft_ctx, ret_obj, "availableStorage", ret_data);
 
         finish_callback_common(status, feature, params, "getAvailableStorage successfully", &ret_obj);
+        ft_free_value(ft_ctx, ret_obj);
     } else {
         FEATURE_LOG_ERROR("could not get availablestorage with statfs\n");
         finish_callback_common(status, feature, params, "getAvailableStorage failed", NULL);

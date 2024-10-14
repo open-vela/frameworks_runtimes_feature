@@ -30,10 +30,14 @@ extern "C" {
 
 #define FT_IS_PRIMITIVE(type) (((uintptr_t)type) & FT_PRIMITIVE_BIT)
 #define FT_IS_COMPLEX(type) ((((uintptr_t)type) & FT_PRIMITIVE_BIT) == 0)
-#define FT_GET_FLAG(featureType) ((FT_IS_COMPLEX(featureType) ? (((ComplexTypeHeader*)FT_GET_COMPLEX(featureType))->type & TYPE_FLAGS_UNMANAGED_POINTER) : (featureType & TYPE_FLAGS_UNMANAGED_POINTER)))
-#define FT_IS_REFERENCE(featureType) (FT_GET_FLAG(featureType) & TYPE_FLAGS_POINTER)
-#define FT_NEED_FREE(featureType) (FT_GET_FLAG(featureType) == TYPE_FLAGS_POINTER)
-#define FT_IS_RAW_REFERENCE(featureType) (FT_GET_FLAG(featureType) & TYPE_FLAGS_RAWPOINTER)
+
+#define FT_GET_COMPLEX_ENUM(ftype) (((ComplexTypeHeader*)FT_GET_COMPLEX(ftype))->type)
+#define FT_GET_REAL_TYPE(ftype) ((FT_IS_COMPLEX(ftype) && FT_GET_COMPLEX_ENUM(ftype) == COMPLEX_OPTIONAL) ? ((OptionalType*)FT_GET_COMPLEX(ftype))->type : ftype)
+#define FT_GET_TYPE_ENUM(ftype) (FT_IS_COMPLEX(ftype) ? FT_GET_COMPLEX_ENUM(ftype) : ftype)
+#define FT_GET_FLAG(ftype) (FT_GET_TYPE_ENUM(FT_GET_REAL_TYPE(ftype)) & TYPE_FLAGS_UNMANAGED_POINTER)
+#define FT_IS_REFERENCE(ftype) (FT_GET_FLAG(ftype) & TYPE_FLAGS_POINTER)
+#define FT_NEED_FREE(ftype) (FT_GET_FLAG(ftype) == TYPE_FLAGS_POINTER)
+#define FT_IS_RAW_REFERENCE(ftype) (FT_GET_FLAG(ftype) & TYPE_FLAGS_RAWPOINTER)
 
 #define FT_MK_COMPLEX(ptr) ((uintptr_t)ptr)
 #define FT_MK_COMPLEX_REF(ptr) FT_MK_COMPLEX(ptr)
@@ -46,6 +50,8 @@ extern "C" {
 
 #define FT_IS_PROMISE(ptr) (FT_IS_COMPLEX((ptr)) && ((ComplexTypeHeader*)FT_GET_COMPLEX((ptr)))->type == COMPLEX_PROMISE)
 
+typedef void (*StubFunc)(FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret);
+
 typedef struct FTObjHeader {
     int32_t ref_count;
     FeatureType featureType;
@@ -57,7 +63,8 @@ enum MemberType {
     MEMBER_NULL, // 代表结束，定义为0
     MEMBER_METHOD,
     MEMBER_ACCESSOR,
-    MEMBER_CONST
+    MEMBER_CONST,
+    MEMBER_EVENT
 };
 
 enum ComplexTypeBase {
@@ -80,10 +87,10 @@ enum ComplexType {
 };
 #undef DEF_COMPLEX_TYPE
 
-union FuncData {
+typedef union {
     NativeFunc callback; // 最终实现函数
     int32_t vtable_idx; // vtable index
-};
+} FuncData;
 
 typedef struct ObjectMember {
     const char* name;
@@ -93,24 +100,31 @@ typedef struct ObjectMember {
 } ObjectMember;
 
 typedef struct MemberMethod {
-    union FuncData func;
+    StubFunc func_stub;
     const FeatureType* parameters; // 参数描述数组, 以空结束
     FeatureType return_type;
     AppendData data; // 附加数据
 } MemberMethod;
 
 typedef struct MemberAccessor {
-    union FuncData getter; // getter & setter可以有一个为空
-    union FuncData setter;
+    StubFunc getter_stub;
+    StubFunc setter_stub;
     FeatureType type;
     AppendData data; // 附加数据
 } MemberAccessor;
 
 typedef struct MemberConst {
     FeatureType type;
-    union FuncData func;
+    FuncData func;
     AppendData data; // 定义的数据, 如果callback != null, 那么data将传递给callback
 } MemberConst;
+
+typedef struct MemberEvent {
+    const FeatureType* parameters;
+    FtEventId id;
+    const char* name;
+    AppendData data; // 附加数据
+} MemberEvent;
 
 typedef struct Member {
     enum MemberType type;
@@ -119,6 +133,7 @@ typedef struct Member {
         const MemberMethod* method;
         const MemberAccessor* accessor;
         const MemberConst* value;
+        const MemberEvent* event;
     };
 } Member;
 
@@ -163,7 +178,7 @@ typedef struct ArrayType {
 
 typedef struct PromiseType {
     ComplexTypeHeader header;
-    const FeatureType resolveTypes[2];
+    const FeatureType resolveType;
 } PromiseType;
 
 typedef struct InterfaceType {
@@ -203,6 +218,15 @@ typedef struct FeatureDescription {
  * @return bool
  */
 bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescription* description);
+
+/**
+ * @brief get a member function from the FeatureInterfaceHandle
+ *
+ * @param handle
+ * @param index
+ * @return member ptr from vtable
+ */
+NativeFunc FeatureGetInterfaceMember(FeatureInstanceHandle handle, size_t index);
 
 #ifdef __cplusplus
 }

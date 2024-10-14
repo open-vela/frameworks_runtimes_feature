@@ -55,9 +55,9 @@ static FtInt _Interface_cat_get_legCount(FeatureInterfaceHandle handle, AppendDa
     return 4;
 }
 
-static FtInt _Interface_cat_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
+static FtInt _Interface_cat_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray* foods)
 {
-    FtArrayHelper<const char*> string_array(&foods);
+    FtArrayHelper<const char*> string_array(foods);
     printf("%s::%s(), interface: %p, cat eat food, array_size: %d\n", file_tag, __FUNCTION__, handle, string_array.size());
     printf("food array = [\n");
     for (int32_t i = 0; i < string_array.size(); i++) {
@@ -100,9 +100,9 @@ FtInt interface_test_Animal_interface_dog_get_legCount(FeatureInterfaceHandle ha
     return 4;
 }
 
-FtInt interface_test_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
+FtInt interface_test_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray* foods)
 {
-    FtArrayHelper<const char*> string_array(&foods);
+    FtArrayHelper<const char*> string_array(foods);
     printf("%s::%s(), interface: %p, dog eat food, array_size: %d\n", file_tag, __FUNCTION__, handle, string_array.size());
     printf("food array = [\n");
     for (int32_t i = 0; i < string_array.size(); i++) {
@@ -178,9 +178,9 @@ FtInt interface_test_Chicken_interface_cock_get_legCount(FeatureInterfaceHandle 
     return 2;
 }
 
-FtInt interface_test_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray& foods)
+FtInt interface_test_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, AppendData data, FtArray* foods)
 {
-    FtArrayHelper<const char*> string_array(&foods);
+    FtArrayHelper<const char*> string_array(foods);
     printf("%s::%s(), interface: %p, cock eat food, array_size: %d\n", file_tag, __FUNCTION__, handle, string_array.size());
     printf("food array = [\n");
     for (int32_t i = 0; i < string_array.size(); i++) {

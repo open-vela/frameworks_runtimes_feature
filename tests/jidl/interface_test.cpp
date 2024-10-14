@@ -24,21 +24,57 @@
 #include "interface_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
 /****** JIDL interface 'Animal' glue code begin ******/
 extern const InterfaceType interface_test_Animal_interface_type;
+
 // for member property 'name'
+typedef FtString (*interface_test_Animal_interface_get_name_type)(
+        void* feature, AppendData append_data);
+
+static void interface_test_Animal_interface_get_name_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_get_name_type func =
+            (interface_test_Animal_interface_get_name_type)FeatureGetInterfaceMember(handle, 0);
+    *((FtString*)ret) = func(handle, adata);
+}
+
+typedef void (*interface_test_Animal_interface_set_name_type)(
+        void* feature, AppendData append_data, FtString name);
+
+static void interface_test_Animal_interface_set_name_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_set_name_type func =
+            (interface_test_Animal_interface_set_name_type)FeatureGetInterfaceMember(handle, 1);
+    func(handle, adata, *(FtString*)(argv[0]));
+}
+
 static const MemberAccessor interface_test_Animal_interface_name_member_accessor = {
-    .getter = { .vtable_idx = 0 },
-    .setter = { .vtable_idx = 1 },
+    .getter_stub = interface_test_Animal_interface_get_name_stub,
+    .setter_stub = interface_test_Animal_interface_set_name_stub,
     .type = FT_STRING,
 };
 
 // for member property 'legCount'
+typedef FtInt (*interface_test_Animal_interface_get_legCount_type)(
+        void* feature, AppendData append_data);
+
+static void interface_test_Animal_interface_get_legCount_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_get_legCount_type func =
+            (interface_test_Animal_interface_get_legCount_type)FeatureGetInterfaceMember(handle, 2);
+    *((FtInt*)ret) = func(handle, adata);
+}
+
 static const MemberAccessor interface_test_Animal_interface_legCount_member_accessor = {
-    .getter = { .vtable_idx = 2 },
+    .getter_stub = interface_test_Animal_interface_get_legCount_stub,
     .type = FT_INT,
 };
 
@@ -58,8 +94,21 @@ static const FeatureType interface_test_Animal_interface_eatFood_parameters[] = 
     FT_PARAM_END
 };
 
+typedef FtInt (*interface_test_Animal_interface_eatFood_wrap_type)(
+        FeatureInstanceHandle feature, AppendData append_data, FtArray* foods);
+
+static void interface_test_Animal_interface_eatFood_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_eatFood_wrap_type func =
+            (interface_test_Animal_interface_eatFood_wrap_type)FeatureGetInterfaceMember(handle, 3);
+    *((FtInt*)ret) = func(handle, adata
+        , *(FtArray**)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_Animal_interface_eatFood_member_method = {
-    .func = { .vtable_idx = 3 },
+    .func_stub = interface_test_Animal_interface_eatFood_stub,
     .parameters = interface_test_Animal_interface_eatFood_parameters,
     .return_type = FT_INT,
 };
@@ -71,8 +120,22 @@ static const FeatureType interface_test_Animal_interface_run_parameters[] = {
     FT_PARAM_END
 };
 
+typedef FtString (*interface_test_Animal_interface_run_wrap_type)(
+        FeatureInstanceHandle feature, AppendData append_data, FtInt distance, FtString destination);
+
+static void interface_test_Animal_interface_run_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_run_wrap_type func =
+            (interface_test_Animal_interface_run_wrap_type)FeatureGetInterfaceMember(handle, 4);
+    *((FtString*)ret) = func(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtString*)(argv[1])
+    );
+}
+
 static const MemberMethod interface_test_Animal_interface_run_member_method = {
-    .func = { .vtable_idx = 4 },
+    .func_stub = interface_test_Animal_interface_run_stub,
     .parameters = interface_test_Animal_interface_run_parameters,
     .return_type = FT_STRING,
 };
@@ -108,13 +171,13 @@ static const FeatureDescription interface_test_Animal_interface_desc = {
     .name = "Animal",
     .description = "Animal description",
     .dynamic = true,
-    nullptr,
-    countof(interface_test_Animal_interface_members),
-    interface_test_Animal_interface_members,
+    .native_callbacks = nullptr,
+    .member_count = countof(interface_test_Animal_interface_members),
+    .members = interface_test_Animal_interface_members,
 };
 
 // InterfaceType
-const InterfaceType interface_test_Animal_interface_type {
+const InterfaceType interface_test_Animal_interface_type = {
     .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &interface_test_Animal_interface_desc
 };
@@ -145,8 +208,16 @@ static const FeatureType interface_test_createDog_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_createDog_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FeatureInterfaceHandle*)ret) = interface_test_wrap_createDog(handle, adata
+        , *(FtInt*)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_createDog_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_createDog) },
+    .func_stub = interface_test_createDog_stub,
     .parameters = interface_test_createDog_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_Animal_interface_type),
 };
@@ -154,21 +225,56 @@ static const MemberMethod interface_test_createDog_member_method = {
 
 /****** JIDL interface 'Bird' glue code begin ******/
 extern const InterfaceType interface_test_Bird_interface_type;
+
 // for member method 'fly'
 static const FeatureType interface_test_Bird_interface_fly_parameters[] = {
     FT_PARAM_END
 };
 
+typedef FtArray* (*interface_test_Bird_interface_fly_wrap_type)(
+        FeatureInstanceHandle feature, AppendData append_data);
+
+static void interface_test_Bird_interface_fly_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Bird_interface_fly_wrap_type func =
+            (interface_test_Bird_interface_fly_wrap_type)FeatureGetInterfaceMember(handle, 0);
+    *((FtArray**)ret) = func(handle, adata
+    );
+}
+
 static const MemberMethod interface_test_Bird_interface_fly_member_method = {
-    .func = { .vtable_idx = 0 },
+    .func_stub = interface_test_Bird_interface_fly_stub,
     .parameters = interface_test_Bird_interface_fly_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_string_array),
 };
 
 // for member property 'breed'
+typedef FtString (*interface_test_Bird_interface_get_breed_type)(
+        void* feature, AppendData append_data);
+
+static void interface_test_Bird_interface_get_breed_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Bird_interface_get_breed_type func =
+            (interface_test_Bird_interface_get_breed_type)FeatureGetInterfaceMember(handle, 1);
+    *((FtString*)ret) = func(handle, adata);
+}
+
+typedef void (*interface_test_Bird_interface_set_breed_type)(
+        void* feature, AppendData append_data, FtString breed);
+
+static void interface_test_Bird_interface_set_breed_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Bird_interface_set_breed_type func =
+            (interface_test_Bird_interface_set_breed_type)FeatureGetInterfaceMember(handle, 2);
+    func(handle, adata, *(FtString*)(argv[0]));
+}
+
 static const MemberAccessor interface_test_Bird_interface_breed_member_accessor = {
-    .getter = { .vtable_idx = 1 },
-    .setter = { .vtable_idx = 2 },
+    .getter_stub = interface_test_Bird_interface_get_breed_stub,
+    .setter_stub = interface_test_Bird_interface_set_breed_stub,
     .type = FT_STRING,
 };
 
@@ -193,13 +299,13 @@ static const FeatureDescription interface_test_Bird_interface_desc = {
     .name = "Bird",
     .description = "Bird description",
     .dynamic = true,
-    nullptr,
-    countof(interface_test_Bird_interface_members),
-    interface_test_Bird_interface_members,
+    .native_callbacks = nullptr,
+    .member_count = countof(interface_test_Bird_interface_members),
+    .members = interface_test_Bird_interface_members,
 };
 
 // InterfaceType
-const InterfaceType interface_test_Bird_interface_type {
+const InterfaceType interface_test_Bird_interface_type = {
     .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &interface_test_Bird_interface_desc
 };
@@ -227,8 +333,15 @@ static const FeatureType interface_test_createPigeon_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_createPigeon_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FeatureInterfaceHandle*)ret) = interface_test_wrap_createPigeon(handle, adata
+    );
+}
+
 static const MemberMethod interface_test_createPigeon_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_createPigeon) },
+    .func_stub = interface_test_createPigeon_stub,
     .parameters = interface_test_createPigeon_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_Bird_interface_type),
 };
@@ -236,46 +349,137 @@ static const MemberMethod interface_test_createPigeon_member_method = {
 
 /****** JIDL interface 'Chicken' glue code begin ******/
 extern const InterfaceType interface_test_Chicken_interface_type;
+
 // Overrided parent member defines
+static void interface_test_Animal_interface_Chicken_get_name_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_get_name_type func =
+            (interface_test_Animal_interface_get_name_type)FeatureGetInterfaceMember(handle, 0);
+    *((FtString*)ret) = func(handle, adata);
+}
+static void interface_test_Animal_interface_Chicken_set_name_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_set_name_type func =
+            (interface_test_Animal_interface_set_name_type)FeatureGetInterfaceMember(handle, 1);
+    func(handle, adata, *(FtString*)(argv[0]));
+}
+
 static const MemberAccessor interface_test_Chicken_Animal_interface_name_member_accessor = {
-    .getter = { .vtable_idx = 0 },
-    .setter = { .vtable_idx = 1 },
+    .getter_stub = interface_test_Animal_interface_Chicken_get_name_stub,
+    .setter_stub = interface_test_Animal_interface_Chicken_set_name_stub,
     .type = FT_STRING,
 };
 
+static void interface_test_Animal_interface_Chicken_get_legCount_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_get_legCount_type func =
+            (interface_test_Animal_interface_get_legCount_type)FeatureGetInterfaceMember(handle, 2);
+    *((FtInt*)ret) = func(handle, adata);
+}
+
 static const MemberAccessor interface_test_Chicken_Animal_interface_legCount_member_accessor = {
-    .getter = { .vtable_idx = 2 },
+    .getter_stub = interface_test_Animal_interface_Chicken_get_legCount_stub,
     .type = FT_INT,
 };
 
+static void interface_test_Animal_interface_Chicken_eatFood_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_eatFood_wrap_type func =
+            (interface_test_Animal_interface_eatFood_wrap_type)FeatureGetInterfaceMember(handle, 3);
+    *((FtInt*)ret) = func(handle, adata
+        , *(FtArray**)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_Chicken_Animal_interface_eatFood_member_method = {
-    .func = { .vtable_idx = 3 },
+    .func_stub = interface_test_Animal_interface_Chicken_eatFood_stub,
     .parameters = interface_test_Animal_interface_eatFood_parameters,
     .return_type = FT_INT,
 };
 
+static void interface_test_Animal_interface_Chicken_run_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Animal_interface_run_wrap_type func =
+            (interface_test_Animal_interface_run_wrap_type)FeatureGetInterfaceMember(handle, 4);
+    *((FtString*)ret) = func(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtString*)(argv[1])
+    );
+}
+
 static const MemberMethod interface_test_Chicken_Animal_interface_run_member_method = {
-    .func = { .vtable_idx = 4 },
+    .func_stub = interface_test_Animal_interface_Chicken_run_stub,
     .parameters = interface_test_Animal_interface_run_parameters,
     .return_type = FT_STRING,
 };
 
+static void interface_test_Bird_interface_Chicken_fly_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Bird_interface_fly_wrap_type func =
+            (interface_test_Bird_interface_fly_wrap_type)FeatureGetInterfaceMember(handle, 5);
+    *((FtArray**)ret) = func(handle, adata
+    );
+}
+
 static const MemberMethod interface_test_Chicken_Bird_interface_fly_member_method = {
-    .func = { .vtable_idx = 5 },
+    .func_stub = interface_test_Bird_interface_Chicken_fly_stub,
     .parameters = interface_test_Bird_interface_fly_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_string_array),
 };
 
+static void interface_test_Bird_interface_Chicken_get_breed_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Bird_interface_get_breed_type func =
+            (interface_test_Bird_interface_get_breed_type)FeatureGetInterfaceMember(handle, 6);
+    *((FtString*)ret) = func(handle, adata);
+}
+static void interface_test_Bird_interface_Chicken_set_breed_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Bird_interface_set_breed_type func =
+            (interface_test_Bird_interface_set_breed_type)FeatureGetInterfaceMember(handle, 7);
+    func(handle, adata, *(FtString*)(argv[0]));
+}
+
 static const MemberAccessor interface_test_Chicken_Bird_interface_breed_member_accessor = {
-    .getter = { .vtable_idx = 6 },
-    .setter = { .vtable_idx = 7 },
+    .getter_stub = interface_test_Bird_interface_Chicken_get_breed_stub,
+    .setter_stub = interface_test_Bird_interface_Chicken_set_breed_stub,
     .type = FT_STRING,
 };
 
 // for member property 'weight'
+typedef FtInt (*interface_test_Chicken_interface_get_weight_type)(
+        void* feature, AppendData append_data);
+
+static void interface_test_Chicken_interface_get_weight_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Chicken_interface_get_weight_type func =
+            (interface_test_Chicken_interface_get_weight_type)FeatureGetInterfaceMember(handle, 8);
+    *((FtInt*)ret) = func(handle, adata);
+}
+
+typedef void (*interface_test_Chicken_interface_set_weight_type)(
+        void* feature, AppendData append_data, FtInt weight);
+
+static void interface_test_Chicken_interface_set_weight_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Chicken_interface_set_weight_type func =
+            (interface_test_Chicken_interface_set_weight_type)FeatureGetInterfaceMember(handle, 9);
+    func(handle, adata, *(FtInt*)(argv[0]));
+}
+
 static const MemberAccessor interface_test_Chicken_interface_weight_member_accessor = {
-    .getter = { .vtable_idx = 8 },
-    .setter = { .vtable_idx = 9 },
+    .getter_stub = interface_test_Chicken_interface_get_weight_stub,
+    .setter_stub = interface_test_Chicken_interface_set_weight_stub,
     .type = FT_INT,
 };
 
@@ -289,8 +493,21 @@ static const PromiseType interface_test_promise_string_array_FT_INT_type = {
     .resolveTypes = { FT_MK_COMPLEX(&interface_test_string_array), FT_INT }
 };
 
+typedef void (*interface_test_Chicken_interface_walk_wrap_type)(
+        FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid);
+
+static void interface_test_Chicken_interface_walk_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_Chicken_interface_walk_wrap_type func =
+            (interface_test_Chicken_interface_walk_wrap_type)FeatureGetInterfaceMember(handle, 10);
+    func(handle, adata
+        , *(FtPromiseId*)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_Chicken_interface_walk_member_method = {
-    .func = { .vtable_idx = 10 },
+    .func_stub = interface_test_Chicken_interface_walk_stub,
     .parameters = interface_test_Chicken_interface_walk_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_promise_string_array_FT_INT_type),
 };
@@ -347,13 +564,13 @@ static const FeatureDescription interface_test_Chicken_interface_desc = {
     .name = "Chicken",
     .description = "Chicken description",
     .dynamic = true,
-    nullptr,
-    countof(interface_test_Chicken_interface_members),
-    interface_test_Chicken_interface_members,
+    .native_callbacks = nullptr,
+    .member_count = countof(interface_test_Chicken_interface_members),
+    .members = interface_test_Chicken_interface_members,
 };
 
 // InterfaceType
-const InterfaceType interface_test_Chicken_interface_type {
+const InterfaceType interface_test_Chicken_interface_type = {
     .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &interface_test_Chicken_interface_desc
 };
@@ -389,8 +606,15 @@ static const FeatureType interface_test_createCock_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_createCock_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FeatureInterfaceHandle*)ret) = interface_test_wrap_createCock(handle, adata
+    );
+}
+
 static const MemberMethod interface_test_createCock_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_createCock) },
+    .func_stub = interface_test_createCock_stub,
     .parameters = interface_test_createCock_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_Chicken_interface_type),
 };
@@ -401,8 +625,15 @@ static const FeatureType interface_test_createCat_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_createCat_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FeatureInterfaceHandle*)ret) = interface_test_wrap_createCat(handle, adata
+    );
+}
+
 static const MemberMethod interface_test_createCat_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_createCat) },
+    .func_stub = interface_test_createCat_stub,
     .parameters = interface_test_createCat_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_Animal_interface_type),
 };
@@ -414,8 +645,16 @@ static const FeatureType interface_test_setAnimal_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_setAnimal_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_wrap_setAnimal(handle, adata
+        , *(FeatureInterfaceHandle*)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_setAnimal_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_setAnimal) },
+    .func_stub = interface_test_setAnimal_stub,
     .parameters = interface_test_setAnimal_parameters,
     .return_type = FT_VOID,
 };
@@ -427,8 +666,17 @@ static const FeatureType interface_test_flyFar_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_flyFar_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_wrap_flyFar(handle, adata
+        , *(FtPromiseId*)(argv[0])
+        , *(FtInt*)(argv[1])
+    );
+}
+
 static const MemberMethod interface_test_flyFar_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_flyFar) },
+    .func_stub = interface_test_flyFar_stub,
     .parameters = interface_test_flyFar_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_promise_string_array_FT_INT_type),
 };
@@ -443,8 +691,16 @@ static const FeatureType interface_test_flyAway_parameters[] = {
     FT_PARAM_END
 };
 
+static void interface_test_flyAway_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_wrap_flyAway(handle, adata
+        , *(FtPromiseId*)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_flyAway_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_flyAway) },
+    .func_stub = interface_test_flyAway_stub,
     .parameters = interface_test_flyAway_parameters,
     .return_type = FT_MK_COMPLEX(&interface_test_promise_string_array_FT_INT_type),
 };
@@ -455,8 +711,16 @@ static const FeatureType interface_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void interface_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    interface_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod interface_test_print_member_method = {
-    .func = { .callback = FFI_FN(interface_test_wrap_print) },
+    .func_stub = interface_test_print_stub,
     .parameters = interface_test_print_parameters,
     .return_type = FT_VOID,
 };
@@ -507,7 +771,7 @@ static const Member interface_test_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks interface_test_callbacks {
+static const struct FeatureCallbacks interface_test_callbacks = {
     interface_test_onRegister,
     interface_test_onCreate,
     interface_test_onRequired,

@@ -16,6 +16,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 /* clang-format off */
@@ -23,6 +24,8 @@
 #include "feat_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -53,8 +56,19 @@ static const FeatureType feat_test_testsuite_parameters[] = {
     FT_PARAM_END
 };
 
+static void feat_test_testsuite_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtInt*)ret) = feat_test_wrap_testsuite(handle, adata
+        , *(FtString*)(argv[0])
+        , *(FtString*)(argv[1])
+        , *(FtCallbackId*)(argv[2])
+        , *(FtBool*)(argv[3])
+    );
+}
+
 static const MemberMethod feat_test_testsuite_member_method = {
-    .func = { .callback = FFI_FN(feat_test_wrap_testsuite) },
+    .func_stub = feat_test_testsuite_stub,
     .parameters = feat_test_testsuite_parameters,
     .return_type = FT_INT,
 };
@@ -80,8 +94,18 @@ static const FeatureType feat_test_done_parameters[] = {
     FT_PARAM_END
 };
 
+static void feat_test_done_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    feat_test_wrap_done(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtInt*)(argv[1])
+        , *(FtString*)(argv[2])
+    );
+}
+
 static const MemberMethod feat_test_done_member_method = {
-    .func = { .callback = FFI_FN(feat_test_wrap_done) },
+    .func_stub = feat_test_done_stub,
     .parameters = feat_test_done_parameters,
     .return_type = FT_VOID,
 };
@@ -100,8 +124,17 @@ static const FeatureType feat_test_expect_true_parameters[] = {
     FT_PARAM_END
 };
 
+static void feat_test_expect_true_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    feat_test_wrap_expect_true(handle, adata
+        , *(FtBool*)(argv[0])
+        , *(FtString*)(argv[1])
+    );
+}
+
 static const MemberMethod feat_test_expect_true_member_method = {
-    .func = { .callback = FFI_FN(feat_test_wrap_expect_true) },
+    .func_stub = feat_test_expect_true_stub,
     .parameters = feat_test_expect_true_parameters,
     .return_type = FT_VOID,
 };
@@ -112,8 +145,15 @@ static const FeatureType feat_test_run_all_tests_parameters[] = {
     FT_PARAM_END
 };
 
+static void feat_test_run_all_tests_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    feat_test_wrap_run_all_tests(handle, adata
+    );
+}
+
 static const MemberMethod feat_test_run_all_tests_member_method = {
-    .func = { .callback = FFI_FN(feat_test_wrap_run_all_tests) },
+    .func_stub = feat_test_run_all_tests_stub,
     .parameters = feat_test_run_all_tests_parameters,
     .return_type = FT_VOID,
 };
@@ -124,8 +164,16 @@ static const FeatureType feat_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void feat_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    feat_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod feat_test_print_member_method = {
-    .func = { .callback = FFI_FN(feat_test_wrap_print) },
+    .func_stub = feat_test_print_stub,
     .parameters = feat_test_print_parameters,
     .return_type = FT_VOID,
 };

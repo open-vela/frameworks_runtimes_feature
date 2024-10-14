@@ -145,7 +145,8 @@ bool check_header(ft_context_ref ft_ctx, FtAny js_headers,
 const char* url_encode(const char* str);
 const char* url_decode(const char* str);
 ft_value_t ft_form_headers(ft_context_ref ft_ctx, char* headers);
-
+bool check_filename(const char* pkg, FtString filename,
+    std::string& dest_filename);
 // }
 
 #endif

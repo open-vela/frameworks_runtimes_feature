@@ -27,9 +27,8 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,7 +63,7 @@ void interface_test_Animal_interface_dog_finalize(FeatureInterfaceHandle handle)
 FtString interface_test_Animal_interface_dog_get_name(FeatureInterfaceHandle handle, AppendData append_data);
 void interface_test_Animal_interface_dog_set_name(FeatureInterfaceHandle handle, AppendData append_data, FtString name);
 FtInt interface_test_Animal_interface_dog_get_legCount(FeatureInterfaceHandle handle, AppendData append_data);
-FtInt interface_test_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, AppendData append_data, FtArray& foods);
+FtInt interface_test_Animal_interface_dog_eatFood(FeatureInterfaceHandle handle, AppendData append_data, FtArray* foods);
 FtString interface_test_Animal_interface_dog_run(FeatureInterfaceHandle handle, AppendData append_data, FtInt distance, FtString destination);
 
 // vtable functions for interface constructor function 'createPigeon'
@@ -78,7 +77,7 @@ void interface_test_Chicken_interface_cock_finalize(FeatureInterfaceHandle handl
 FtString interface_test_Chicken_interface_cock_get_name(FeatureInterfaceHandle handle, AppendData append_data);
 void interface_test_Chicken_interface_cock_set_name(FeatureInterfaceHandle handle, AppendData append_data, FtString name);
 FtInt interface_test_Chicken_interface_cock_get_legCount(FeatureInterfaceHandle handle, AppendData append_data);
-FtInt interface_test_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, AppendData append_data, FtArray& foods);
+FtInt interface_test_Chicken_interface_cock_eatFood(FeatureInterfaceHandle handle, AppendData append_data, FtArray* foods);
 FtString interface_test_Chicken_interface_cock_run(FeatureInterfaceHandle handle, AppendData append_data, FtInt distance, FtString destination);
 FtArray* interface_test_Chicken_interface_cock_fly(FeatureInterfaceHandle handle, AppendData append_data);
 FtString interface_test_Chicken_interface_cock_get_breed(FeatureInterfaceHandle handle, AppendData append_data);
@@ -91,7 +90,7 @@ void interface_test_Chicken_interface_cock_walk(FeatureInterfaceHandle handle, A
 // Property getters and setters to be implemented
 
 // Array malloc functions
-FtArray* interface_test_malloc_string_array();
+FtArray* interface_test_malloc_string_array(void);
 
 #endif // JSON_AST_GEN_MODULE_INTERFACE_TEST_H_
 /* clang-format on */

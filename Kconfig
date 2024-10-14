@@ -17,7 +17,6 @@ config FEATURE_FRAMEWORK
 	bool "Enable Feature Framework Manager"
 	default n
   depends on NETUTILS_CJSON
-  depends on LIB_FFI
   depends on INTERPRETERS_QUICKJS
 
 if FEATURE_FRAMEWORK
