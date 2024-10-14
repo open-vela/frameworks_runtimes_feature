@@ -1,0 +1,40 @@
+module system.uploadtask@1.0
+
+struct SuccessRes {
+  int statusCode
+  string data
+  object headers
+}
+
+struct ProgressUpdateRes {
+  uint  progress
+  ulong totalBytesSent
+  ulong totalBytesExpectedToSend
+}
+
+callback onProgressUpdate_cb(ProgressUpdateRes res)
+callback offProgressUpdate_cb(ProgressUpdateRes res)
+
+interface UploadTask {
+  void abort();
+  void onProgressUpdate(onProgressUpdate_cb cb);
+  void offProgressUpdate(offProgressUpdate_cb cb = null);
+}
+
+callback success_cb(SuccessRes res)
+callback fail_cb(string data, int code)
+callback complete_cb()
+
+struct FileObject {
+  string url;
+  string filePath;
+  string name;
+  object header;
+  object formData;
+  int timeout = 20000;
+  callback success_cb success;
+  callback fail_cb fail;
+  callback complete_cb complete;
+}
+
+UploadTask uploadFile(FileObject obj);

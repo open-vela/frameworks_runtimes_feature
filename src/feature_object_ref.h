@@ -22,7 +22,7 @@
 #include <atomic>
 #include <memory>
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureObjectRef {
 public:

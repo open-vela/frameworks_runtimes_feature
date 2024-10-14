@@ -17,7 +17,9 @@
 #ifndef __VALUE_TRANSLATOR_WAMR_H__
 #define __VALUE_TRANSLATOR_WAMR_H__
 
+#include "feature.h"
 #include "feature_context.h"
+#include "feature_description.h"
 #include "gc_export.h"
 
 namespace value_translator {
@@ -38,32 +40,59 @@ bool toTarget(wasm_exec_env_t exec_env, uint64_t native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, float native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, double native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, bool native, uint64_t* ptarget);
-bool toTarget(wasm_exec_env_t exec_env, char* native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, const char* native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget);
 
 bool isNull(wasm_exec_env_t exec_env, const uint64_t& value);
+
+static inline uint64_t nullValue(wasm_exec_env_t exec_env)
+{
+    return 0;
+}
+
 bool isUndefined(wasm_exec_env_t exec_env, const uint64_t& value);
+
+static inline uint64_t undefined(wasm_exec_env_t exec_env)
+{
+    return 0;
+}
+
 bool isString(wasm_exec_env_t exec_env, const uint64_t& value);
 void freeCString(wasm_exec_env_t exec_env, char* str);
-bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, int idx, uint64_t* pfield);
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target);
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target);
+bool isObject(wasm_exec_env_t exec_env, uint64_t& target);
+bool isFunction(wasm_exec_env_t exec_env, uint64_t& target);
 uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array);
 uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx);
+bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint64_t val);
 uint64_t newObject(wasm_exec_env_t exec_env);
+bool getObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t* pfield);
 bool setObjectField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, uint64_t field);
 uint64_t newArray(wasm_exec_env_t exec_env);
-bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint64_t val);
 ft_value_t nullFtVal();
-uint64_t getVariArg(wasm_exec_env_t exec_env, uint64_t& arg);
-void toTargetPromise(wasm_exec_env_t exec_env, const uint64_t& promise, uint64_t& ret_val);
-void* interfaceFromTarget(uint64_t& target);
-uint64_t targetFromInterface(void* instance);
+JSValue getVariArg(wasm_exec_env_t exec_env, uint64_t* argv, uint32_t index);
+uint64_t toTargetPromise(wasm_exec_env_t exec_env, JSContext* js_ctx, const JSValue& promise);
+void* interfaceFromTarget(wasm_exec_env_t exec_env, uint64_t& target);
+uint64_t targetFromInterface(wasm_exec_env_t exec_env, void* interf);
+bool hasAsyncCallbacks(wasm_exec_env_t exec_env, uint64_t arg);
+int addAsyncCallbacks(wasm_exec_env_t exec_env, void* instance, FeatureType ftype, uint64_t arg);
 
 static inline wasm_obj_t toCallbackValue(uint64_t& target)
 {
     wasm_obj_t cb_value = *((wasm_obj_t*)(&target));
     return cb_value;
+}
+
+uint64_t createStruct(wasm_exec_env_t exec_env, ObjectMapType& obj_map_type, uint32_t member_count);
+bool getStructField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, int idx, uint64_t* pfield);
+bool setStructField(wasm_exec_env_t exec_env, const uint64_t& obj, const char* name, int idx, uint64_t field);
+
+uint64_t createArray(wasm_exec_env_t exec_env, FeatureType& type, uint32_t array_size);
+
+static inline uint64_t dupValue(wasm_exec_env_t exec_env, uint64_t& target)
+{
+    return target;
 }
 
 }

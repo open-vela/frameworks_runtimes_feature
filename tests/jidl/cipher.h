@@ -27,9 +27,8 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,61 +43,61 @@ void system_cipher_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _RSAParam {
-  FtString _action;
-  FtString _text;
-  FtString _key;
-  FtString _hashType;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtString action;
+  FtString text;
+  FtString key;
+  FtString hashType;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_cipher_RSAParam;
 
-system_cipher_RSAParam* system_cipherMallocRSAParam();
+system_cipher_RSAParam* system_cipherMallocRSAParam(void);
 
 typedef struct _RSAVerifyParam {
-  FtString _text;
-  FtString _key;
-  FtString _hashType;
-  FtString _signature;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtString text;
+  FtString key;
+  FtString hashType;
+  FtString signature;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_cipher_RSAVerifyParam;
 
-system_cipher_RSAVerifyParam* system_cipherMallocRSAVerifyParam();
+system_cipher_RSAVerifyParam* system_cipherMallocRSAVerifyParam(void);
 
 typedef struct _DigestParam {
-  FtString _hashType;
-  FtString _text;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtString hashType;
+  FtString text;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_cipher_DigestParam;
 
-system_cipher_DigestParam* system_cipherMallocDigestParam();
+system_cipher_DigestParam* system_cipherMallocDigestParam(void);
 
 typedef struct _Md5Param {
-  FtString _text;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtString text;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_cipher_Md5Param;
 
-system_cipher_Md5Param* system_cipherMallocMd5Param();
+system_cipher_Md5Param* system_cipherMallocMd5Param(void);
 
 typedef struct _AESParam {
-  FtString _action;
-  FtString _text;
-  FtString _key;
-  FtString _iv;
-  FtInt _ivOffset;
-  FtInt _ivLen;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtString action;
+  FtString text;
+  FtString key;
+  FtString iv;
+  FtInt ivOffset;
+  FtInt ivLen;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_cipher_AESParam;
 
-system_cipher_AESParam* system_cipherMallocAESParam();
+system_cipher_AESParam* system_cipherMallocAESParam(void);
 
 
 // Function wrappers to be implemented

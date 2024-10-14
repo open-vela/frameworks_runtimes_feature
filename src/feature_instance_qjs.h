@@ -24,13 +24,14 @@
 // clang-format off
 #include "callback_manager_qjs.h"
 #include "callback_manager.h"
+#include "feature_event_manager.h"
 // clang-format on
 #include "promise_manager.h"
 
 #include <map>
 #include <memory>
 
-namespace ferry {
+namespace feature_framework {
 
 class FeaturePrototype;
 class PromiseManager;
@@ -40,7 +41,10 @@ typedef struct WeakRef {
     struct weakref_list_node link;
 } WeakRef;
 
-class FeatureInstanceQjs : public FeatureInstance, public PromiseManager, public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs> {
+class FeatureInstanceQjs : public FeatureInstance,
+                           public PromiseManager,
+                           public CallbackManager<JSContext*, JSValue, FeatureInstanceQjs>,
+                           public EventManager<JSContext*, JSValue, FeatureInstanceQjs> {
 public:
     FeatureInstanceQjs(FeaturePrototype* proto);
 
@@ -58,11 +62,25 @@ public:
 
     virtual int getSameCallback(FtCallbackId cid);
 
-    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap);
+    virtual int resolvePromise(FtPromiseId pid, va_list& ap);
+
+    virtual int rejectPromise(FtPromiseId pid, int code, const char* msg);
+
+    virtual int getPromiseType(FtPromiseId pid);
 
     virtual int invokeCallback(FtCallbackId cid, va_list& ap);
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
+
+    virtual bool emitEvent(FtEventId cid, va_list& ap);
+
+    virtual void setEventChangeListener(FeatureEventChangeListener listener);
+
+    virtual FtEventId getEventId(const char* name);
+
+    virtual const char* getEventName(FtEventId eid);
+
+    virtual int getEventCallbackCount(FtEventId eid);
 
     bool checkCallback(FtCallbackId cid);
 
@@ -74,13 +92,15 @@ public:
 
     JSContext* getContext();
 
-    int doInvokeCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int method_param_count, int rest_param_count);
+    int doInvokeCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc);
 
     virtual void initialize();
 
     feature_value_t dupTarget();
 
     virtual void onDetached();
+
+    void onDumpMemory(FeatureMemoryDump* dump, void* userdata) override;
 
 private:
     feature_value_t vm_object_;

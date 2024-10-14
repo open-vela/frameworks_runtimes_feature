@@ -27,7 +27,7 @@
 
 struct Member;
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureInstance;
 class FeatureManagerWamr;
@@ -37,8 +37,8 @@ class FeatureUnit;
 class FeatureManagerWamr : public FeatureManager {
 public:
     FeatureManagerWamr(FeatureRegistry* registry);
-    bool init();
-    void release();
+    virtual bool init();
+    virtual void uninit();
     Member* getFeatureMember(const FeatureDescription* description, int index);
     bool require(wasm_exec_env_t ctx, wasm_obj_t thiz, const char* name);
     void* wamrEnv() { return wamr_env_; }

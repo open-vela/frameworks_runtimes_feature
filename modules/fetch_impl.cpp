@@ -28,7 +28,9 @@
 #include <map>
 #include <string>
 
+#include "feature_trace.h"
 #include "fetch.h"
+#include "framework/app_interface.h"
 #include "net_utils.h"
 #include "uv_ext.h"
 
@@ -60,10 +62,13 @@ typedef enum PostDataType {
     SYS_STRING,
 } PostDataType;
 
-typedef enum ResponseType { TXT = 1,
+typedef enum ResponseType {
+    NONE = 0,
+    TXT = 1,
     JSON,
     FILE,
-    ARRAYBUFFER } ResponseType;
+    ARRAYBUFFER
+} ResponseType;
 
 typedef enum ContentType { TEXT = 1,
     URLENCODED,
@@ -101,9 +106,7 @@ typedef struct content_t {
 typedef struct fetch_s {
     ft_context_ref ft_ctx;
     FeatureInstanceHandle feature;
-    FtCallbackId success_cb;
-    FtCallbackId fail_cb;
-    FtCallbackId complete_cb;
+    FtPromiseId pid;
     std::string filename;
     int type;
     Fetch::ResponseType response_type;
@@ -111,7 +114,21 @@ typedef struct fetch_s {
     uv_request_t* request;
     content_t* content;
     const char* url;
+#ifdef CONFIG_INTERPRETERS_QUICKJS_DEBUG
+    struct {
+        const char* method;
+        int64_t reqId;
+        int64_t reqStartTimer;
+    } debugger;
+#endif
 } fetch_t;
+
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+extern void CDPServer_setLoadingFailed(ferry::IApplication* app, bool ret);
+extern int64_t CDPServer_getReqID(ferry::IApplication* app);
+extern void CDPServer_sendCDPNetResponseEvent(ferry::IApplication* app, int64_t reqId, uv_request_t* req, uv_response_t* resp, const char* header);
+extern void CDPServer_sendCDPNetRequestEvent(ferry::IApplication* app, uv_request_t* req, const char* method, int64_t reqId);
+#endif
 
 Fetch::ResponseType get_response_tpye(const char* type)
 {
@@ -124,7 +141,7 @@ Fetch::ResponseType get_response_tpye(const char* type)
     } else if (!strcmp(type, Fetch::response_type[Fetch::ResponseType::TXT])) {
         return Fetch::ResponseType::TXT;
     } else {
-        return (Fetch::ResponseType)0;
+        return Fetch::ResponseType::NONE;
     }
 }
 
@@ -146,7 +163,7 @@ static void fetch_request_cb(int state, uv_response_t* response);
 void fetch_free(fetch_t* p)
 {
     if (p) {
-        FETCH_DEBUG("del node %p", p);
+        FETCH_INFO("del node %p", p);
         weakref_list_delete(&p->node);
         if (p->content) {
             delete p->content;
@@ -195,9 +212,9 @@ void system_fetch_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle
     // Cancel and delete all requests
     REQUEST_LIST_FOR_EVERY(&p->linklist, fetch_t)
     {
-        FETCH_DEBUG("task:%p,request:%p", req, req->request);
+        FETCH_INFO("task:%p,request:%p", req, req->request);
         if (req->request) {
-            FETCH_DEBUG("req=%p", req);
+            FETCH_INFO("req=%p", req);
             uv_request_delete(req->request);
             req->request = NULL;
         }
@@ -263,12 +280,36 @@ static FtAny get_response_data(fetch_t* fetch, uv_response_t* response,
     return out;
 }
 
+static Fetch::ResponseType get_cy_from_response(std::map<std::string, std::string>& headers)
+{
+    auto it = headers.find("content-type");
+    if (it == headers.end())
+        it = headers.find("Content-Type");
+    if (it == headers.end())
+        return Fetch::ResponseType::TXT;
+    std::string content_type = it->second;
+    size_t semicomma = content_type.find(';');
+    if (semicomma != std::string::npos) {
+        content_type = content_type.substr(0, semicomma);
+    }
+    if (content_type == "application/json") {
+        return Fetch::ResponseType::JSON;
+    } else {
+        return Fetch::ResponseType::TXT;
+    }
+}
+
 static void fetch_request_cb(int state, uv_response_t* response)
 {
+    FEATURE_NOTE_BEGIN_STR("fetch_request_cb");
     fetch_t* p = static_cast<fetch_t*>(response->userp);
+    FeaturePromiseType ret;
     ASSERT_RET_ECHO(p, "The request has been cancelled");
-    GET_FEATURE_AND_CTX(p);
     FETCH_INFO("");
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+    ferry::IApplication* app = static_cast<ferry::IApplication*>(FeatureInstanceGetManagerUserData(p->feature, "app"));
+    assert(app != nullptr);
+#endif
     if (FeatureInstanceIsDetached(p->feature)) {
         FETCH_INFO("");
         goto exit;
@@ -276,45 +317,82 @@ static void fetch_request_cb(int state, uv_response_t* response)
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
     if (state == UV_REQUEST_DONE && response->httpcode < HTTP_BAD_REQUES) {
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+        std::string header = response->headers;
+#endif
         ft_value_t ft_header = ft_form_headers(p->ft_ctx, response->headers);
-        system_fetch_SuccessRes res = {
-            .code = (int)response->httpcode, .data = NULL, .headers = &ft_header
-        };
+        ft_value_t result = ft_new_object(p->ft_ctx);
+        ft_value_t res_code = ft_from_int(p->ft_ctx, (int)response->httpcode);
+        ft_value_t res_data;
 
-        ft_value_t ft_data;
-        res.data = get_response_data(p, response, &ft_data);
-
-        if (check_any(res.data)) {
-            INVOKE_SUCCESS_CB(p->success_cb, &res);
-            ft_free_value(p->ft_ctx, *(res.data));
-        } else {
-            INVOKE_FAIL_CB(p->fail_cb, "responseType dosen't match response data",
-                ErrorCode::IOERROR);
+        if (p->response_type == Fetch::ResponseType::NONE) {
+            std::map<std::string, std::string> headers;
+            if (check_header(p->ft_ctx, &ft_header, headers)) {
+                p->response_type = get_cy_from_response(headers);
+            }
         }
-        ft_free_value(p->ft_ctx, *(res.headers));
+
+        get_response_data(p, response, &res_data);
+
+        ft_obj_set_property(p->ft_ctx, result, "code", res_code);
+        ft_obj_set_property(p->ft_ctx, result, "headers", ft_header);
+        ft_obj_set_property(p->ft_ctx, result, "data", res_data);
+
+        ft_value_t data_ = ft_obj_get_property(p->ft_ctx, result, "data");
+
+        if (ft_get_type(p->ft_ctx, data_) >= 0) {
+            ret = FeatureGetPromiseType(p->feature, p->pid);
+            if (ret == FEATURE_PROMISE_TYPE_CALLBACKS) {
+                FeaturePromiseResolve(p->feature, p->pid, &result);
+            } else if (ret == FEATURE_PROMISE_TYPE_PROMISE) {
+                ft_value_t res = ft_new_object(p->ft_ctx);
+                ft_obj_set_property(p->ft_ctx, res, "data", result);
+                FeaturePromiseResolve(p->feature, p->pid, &res);
+                result = res;
+            } else {
+                FETCH_ERROR("invalid type of callback!");
+            }
+        } else {
+            FeaturePromiseReject(p->feature, p->pid, ErrorCode::IOERROR, "responseType dosen't match response data");
+        }
+        ft_free_value(p->ft_ctx, data_);
+        ft_free_value(p->ft_ctx, result);
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+        CDPServer_sendCDPNetResponseEvent(app, p->debugger.reqId, p->request, response, header.c_str());
+#endif
+    } else if (state == REQUEST_CANCEL) {
+        FETCH_INFO(USER_ABORT_MSG);
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+        CDPServer_setLoadingFailed(app, true);
+#endif
+        uv_request_delete(p->request);
     } else {
         FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
             response->body);
-        INVOKE_FAIL_CB(p->fail_cb, response->body, response->httpcode);
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+        CDPServer_setLoadingFailed(app, true);
+#endif
+        FeaturePromiseReject(p->feature, p->pid, response->httpcode, response->body);
     }
-    INVOKE_COMPLET_CB(p->complete_cb);
-    REMOVE_ALL_CALLBACK(p->success_cb, p->fail_cb, p->complete_cb);
 
 exit:
     // request done,uv_request  has been released
     fetch_free(p);
+    FEATURE_NOTE_END_STR("fetch_request_cb");
 }
 
 static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     Fetch::MethodType method,
     std::map<std::string, std::string>& headers)
 {
+    FEATURE_NOTE_BEGIN_STR("request_create");
     request_context_t* p = get_request_context(fetch->feature);
     // create reques
     ASSERT_RET_NULL(0 == uv_request_create(&fetch->request));
     FETCH_DEBUG("request:%p", fetch->request);
 
     // encode url
+    FEATURE_NOTE_BEGIN_STR("request_decode");
     const char* decode = url_decode(obj->url);
     if (strcmp(decode, obj->url) == 0) {
         fetch->url = url_encode(decode);
@@ -323,6 +401,7 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     }
 
     free((void*)decode);
+    FEATURE_NOTE_END_STR("request_decode");
 
     // set url
     uv_request_set_url(fetch->request, fetch->url);
@@ -331,6 +410,15 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     if (method) {
         uv_request_set_method(fetch->request, Fetch::method_type[method]);
     }
+
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+    FETCH_DEBUG("FEATURE_QUICKJS_DEBUG");
+    ferry::IApplication* app = static_cast<ferry::IApplication*>(FeatureInstanceGetManagerUserData(fetch->feature, "app"));
+    assert(app != nullptr);
+    fetch->debugger.reqId = CDPServer_getReqID(app);
+    fetch->debugger.method = Fetch::method_type[method];
+    fetch->debugger.reqStartTimer = time(NULL);
+#endif
 
     uv_request_set_data(
         fetch->request,
@@ -360,24 +448,26 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     uv_request_set_verbose(fetch->request);
 #endif
 
+#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
+    CDPServer_sendCDPNetRequestEvent(app, fetch->request, fetch->debugger.method, fetch->debugger.reqId);
+#endif
+
     // start upload
     uv_request_commit(p->handle, fetch->request, fetch_request_cb);
 
+    FEATURE_NOTE_END_STR("request_create");
     return true;
 }
 
 static fetch_t* fetch_create(FeatureInstanceHandle feature,
-    ft_context_ref ft_ctx, system_fetch_FetchPara* obj,
+    ft_context_ref ft_ctx, FtPromiseId pid, system_fetch_FetchPara* obj,
     const char* pkg, content_t* ct)
 {
     fetch_t* fetch = new fetch_t;
     assert(fetch);
     fetch->ft_ctx = ft_ctx;
     fetch->feature = FeatureDupInstanceHandle(feature);
-
-    fetch->success_cb = obj->success;
-    fetch->fail_cb = obj->fail;
-    fetch->complete_cb = obj->complete;
+    fetch->pid = pid;
     fetch->response_type = get_response_tpye(obj->responseType);
     fetch->type = (fetch->response_type == Fetch::ResponseType::FILE)
         ? UV_DOWNLOAD
@@ -412,7 +502,6 @@ static fetch_t* fetch_create(FeatureInstanceHandle feature,
     fetch->request = NULL;
     fetch->content = ct;
     fetch->url = NULL;
-
     return fetch;
 }
 
@@ -436,6 +525,12 @@ bool get_post_data_cb(const cJSON* const item, void* userp)
         break;
     case cJSON_String:
         out_str->append(item->valuestring);
+        break;
+    case cJSON_False:
+        out_str->append("false");
+        break;
+    case cJSON_True:
+        out_str->append("true");
         break;
     default:
         FETCH_ERROR("Unsupported %d type!", item->type);
@@ -506,9 +601,9 @@ Fetch::ContentType get_cy_from_header(
     return (Fetch::ContentType)0;
 }
 
-void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data,
-    system_fetch_FetchPara* obj)
+void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, system_fetch_FetchPara* obj)
 {
+    FEATURE_NOTE_BEGIN_STR("WrapFetch");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     assert(ft_ctx);
     const char* msg = "";
@@ -521,10 +616,8 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     SET_JS_ERROR(content, ErrorCode::GENERAL, "create content_t err");
 
     FETCH_DEBUG(
-        "url:%s\ndata:%p\nheader:%p\nmethod:%p\nresponseType:%p\nsuccess:%"
-        "d\nfail:%d\ncomplete:%d",
-        obj->url, obj->data, obj->header, obj->method, obj->responseType,
-        obj->success, obj->fail, obj->complete);
+        "url:%s\ndata:%p\nheader:%p\nmethod:%p\nresponseType:%p\n",
+        obj->url, obj->data, obj->header, obj->method, obj->responseType);
 
     // Check necessary parameters
     obj->timeout = obj->timeout > 0 ? obj->timeout : DEFAULT_TIMEOUT;
@@ -542,24 +635,25 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
         SET_ARGERROR(get_pdata_and_content_type(
                          ft_ctx, obj->data, get_cy_from_header(headers), content),
             "invalid data");
+    } else {
+        headers["Content-Type"] = "text/plain; charset=utf-8";
     }
 
     // create fetch context
-    fetch = fetch_create(feature, ft_ctx, obj, p->pkg, content);
+    fetch = fetch_create(feature, ft_ctx, pid, obj, p->pkg, content);
     SET_JS_ERROR(fetch, ErrorCode::GENERAL, "create native fetch err");
 
     // create curl request
     SET_JS_ERROR(request_create(fetch, obj, method, headers),
         ErrorCode::GENERAL, "create request err");
-
     // add in list
     weakref_list_initialize(&fetch->node);
     weakref_list_add_tail(&p->linklist, &fetch->node);
 
+    FEATURE_NOTE_END_STR("WrapFetch");
     return;
 err:
     FETCH_DEBUG("msg:%s,code:%d", msg, code);
-    INVOKE_FAIL_CB(obj->fail, msg, code);
-    INVOKE_COMPLET_CB(obj->complete);
-    REMOVE_ALL_CALLBACK(obj->success, obj->fail, obj->complete);
+    FeaturePromiseReject(feature, pid, code, msg);
+    FEATURE_NOTE_END_STR("WrapFetch");
 }

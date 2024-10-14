@@ -15,8 +15,7 @@ typedef struct feature_list_node {
 } feature_list_node;
 
 #define feature_list_in_list(item) ((item)->prev != NULL)
-#define feature_list_is_empty(list) ((list)->next == list)
-#define feature_list_is_clear(list) ((list)->next == NULL)
+#define feature_list_is_empty(list) ((list)->next == (list) && (list)->prev == (list))
 #define feature_list_is_singular(list) ((list)->next == (list)->prev)
 
 #define feature_list_initialize(list)              \

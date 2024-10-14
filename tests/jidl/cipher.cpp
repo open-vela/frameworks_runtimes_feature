@@ -24,6 +24,8 @@
 #include "cipher.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -33,7 +35,7 @@ static const FeatureType system_cipher_success_cb_obj_bool_opt_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_cipher_success_cb_obj_bool_opt_callback_type {
+static const CallbackType system_cipher_success_cb_obj_bool_opt_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_cipher_success_cb_obj_bool_opt_parameters,
     .return_type = FT_VOID
@@ -46,7 +48,7 @@ static const FeatureType system_cipher_success_cb_obj_str_opt_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_cipher_success_cb_obj_str_opt_callback_type {
+static const CallbackType system_cipher_success_cb_obj_str_opt_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_cipher_success_cb_obj_str_opt_parameters,
     .return_type = FT_VOID
@@ -60,7 +62,7 @@ static const FeatureType system_cipher_fail_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_cipher_fail_cb_callback_type {
+static const CallbackType system_cipher_fail_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_cipher_fail_cb_parameters,
     .return_type = FT_VOID
@@ -72,12 +74,15 @@ static const FeatureType system_cipher_complete_cb_parameters[] = {
     FT_PARAM_END
 };
 
-static const CallbackType system_cipher_complete_cb_callback_type {
+static const CallbackType system_cipher_complete_cb_callback_type = {
     .header = { .type = COMPLEX_CALLBACK, .size = sizeof(FtCallbackId) },
     .parameters = system_cipher_complete_cb_parameters,
     .return_type = FT_VOID
 };
 
+
+/****** for JIDL struct 'RSAParam' ******/
+extern const ObjectMapType system_cipher_RSAParam_struct_type;
 
 static OptionalType system_cipher_RSAParam_member_hashType_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -85,20 +90,19 @@ static OptionalType system_cipher_RSAParam_member_hashType_opt_type = {
     .str = "SHA256"
 };
 
-/****** for JIDL struct 'RSAParam' ******/
 static ObjectMember system_cipher_RSAParam_struct_members[] = {
-    { "action", FT_STRING, offsetof(system_cipher_RSAParam, _action), sizeof(FtString) },
-    { "text", FT_STRING, offsetof(system_cipher_RSAParam, _text), sizeof(FtString) },
-    { "key", FT_STRING, offsetof(system_cipher_RSAParam, _key), sizeof(FtString) },
-    { "hashType", FT_MK_OPTIONAL(&system_cipher_RSAParam_member_hashType_opt_type), offsetof(system_cipher_RSAParam, _hashType), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_RSAParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_RSAParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_RSAParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "action", FT_STRING, offsetof(system_cipher_RSAParam, action), sizeof(FtString) },
+    { "text", FT_STRING, offsetof(system_cipher_RSAParam, text), sizeof(FtString) },
+    { "key", FT_STRING, offsetof(system_cipher_RSAParam, key), sizeof(FtString) },
+    { "hashType", FT_MK_OPTIONAL(&system_cipher_RSAParam_member_hashType_opt_type), offsetof(system_cipher_RSAParam, hashType), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_RSAParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_RSAParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_RSAParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_cipher_RSAParam_struct_type {
+const ObjectMapType system_cipher_RSAParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_cipher_RSAParam) },
     .members = system_cipher_RSAParam_struct_members
 };
@@ -115,8 +119,16 @@ static const FeatureType system_cipher_rsa_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_cipher_rsa_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_cipher_wrap_rsa(handle, adata
+        , *(system_cipher_RSAParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_cipher_rsa_member_method = {
-    .func = { .callback = FFI_FN(system_cipher_wrap_rsa) },
+    .func_stub = system_cipher_rsa_stub,
     .parameters = system_cipher_rsa_parameters,
     .return_type = FT_VOID,
 };
@@ -128,12 +140,23 @@ static const FeatureType system_cipher_sign_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_cipher_sign_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_cipher_wrap_sign(handle, adata
+        , *(system_cipher_RSAParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_cipher_sign_member_method = {
-    .func = { .callback = FFI_FN(system_cipher_wrap_sign) },
+    .func_stub = system_cipher_sign_stub,
     .parameters = system_cipher_sign_parameters,
     .return_type = FT_VOID,
 };
 
+
+/****** for JIDL struct 'RSAVerifyParam' ******/
+extern const ObjectMapType system_cipher_RSAVerifyParam_struct_type;
 
 static OptionalType system_cipher_RSAVerifyParam_member_hashType_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -141,26 +164,19 @@ static OptionalType system_cipher_RSAVerifyParam_member_hashType_opt_type = {
     .str = "SHA256"
 };
 
-static OptionalType system_cipher_RSAVerifyParam_member_signature_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
-
-/****** for JIDL struct 'RSAVerifyParam' ******/
 static ObjectMember system_cipher_RSAVerifyParam_struct_members[] = {
-    { "text", FT_STRING, offsetof(system_cipher_RSAVerifyParam, _text), sizeof(FtString) },
-    { "key", FT_STRING, offsetof(system_cipher_RSAVerifyParam, _key), sizeof(FtString) },
-    { "hashType", FT_MK_OPTIONAL(&system_cipher_RSAVerifyParam_member_hashType_opt_type), offsetof(system_cipher_RSAVerifyParam, _hashType), sizeof(FtString) },
-    { "signature", FT_MK_OPTIONAL(&system_cipher_RSAVerifyParam_member_signature_opt_type), offsetof(system_cipher_RSAVerifyParam, _signature), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_bool_opt_callback_type), offsetof(system_cipher_RSAVerifyParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_RSAVerifyParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_RSAVerifyParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "text", FT_STRING, offsetof(system_cipher_RSAVerifyParam, text), sizeof(FtString) },
+    { "key", FT_STRING, offsetof(system_cipher_RSAVerifyParam, key), sizeof(FtString) },
+    { "hashType", FT_MK_OPTIONAL(&system_cipher_RSAVerifyParam_member_hashType_opt_type), offsetof(system_cipher_RSAVerifyParam, hashType), sizeof(FtString) },
+    { "signature", FT_STRING, offsetof(system_cipher_RSAVerifyParam, signature), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_bool_opt_callback_type), offsetof(system_cipher_RSAVerifyParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_RSAVerifyParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_RSAVerifyParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_cipher_RSAVerifyParam_struct_type {
+const ObjectMapType system_cipher_RSAVerifyParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_cipher_RSAVerifyParam) },
     .members = system_cipher_RSAVerifyParam_struct_members
 };
@@ -177,12 +193,23 @@ static const FeatureType system_cipher_verify_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_cipher_verify_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_cipher_wrap_verify(handle, adata
+        , *(system_cipher_RSAVerifyParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_cipher_verify_member_method = {
-    .func = { .callback = FFI_FN(system_cipher_wrap_verify) },
+    .func_stub = system_cipher_verify_stub,
     .parameters = system_cipher_verify_parameters,
     .return_type = FT_VOID,
 };
 
+
+/****** for JIDL struct 'DigestParam' ******/
+extern const ObjectMapType system_cipher_DigestParam_struct_type;
 
 static OptionalType system_cipher_DigestParam_member_hashType_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -190,18 +217,17 @@ static OptionalType system_cipher_DigestParam_member_hashType_opt_type = {
     .str = "SHA256"
 };
 
-/****** for JIDL struct 'DigestParam' ******/
 static ObjectMember system_cipher_DigestParam_struct_members[] = {
-    { "hashType", FT_MK_OPTIONAL(&system_cipher_DigestParam_member_hashType_opt_type), offsetof(system_cipher_DigestParam, _hashType), sizeof(FtString) },
-    { "text", FT_STRING, offsetof(system_cipher_DigestParam, _text), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_DigestParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_DigestParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_DigestParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "hashType", FT_MK_OPTIONAL(&system_cipher_DigestParam_member_hashType_opt_type), offsetof(system_cipher_DigestParam, hashType), sizeof(FtString) },
+    { "text", FT_STRING, offsetof(system_cipher_DigestParam, text), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_DigestParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_DigestParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_DigestParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_cipher_DigestParam_struct_type {
+const ObjectMapType system_cipher_DigestParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_cipher_DigestParam) },
     .members = system_cipher_DigestParam_struct_members
 };
@@ -218,24 +244,34 @@ static const FeatureType system_cipher_digest_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_cipher_digest_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_cipher_wrap_digest(handle, adata
+        , *(system_cipher_DigestParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_cipher_digest_member_method = {
-    .func = { .callback = FFI_FN(system_cipher_wrap_digest) },
+    .func_stub = system_cipher_digest_stub,
     .parameters = system_cipher_digest_parameters,
     .return_type = FT_VOID,
 };
 
 
 /****** for JIDL struct 'Md5Param' ******/
+extern const ObjectMapType system_cipher_Md5Param_struct_type;
+
 static ObjectMember system_cipher_Md5Param_struct_members[] = {
-    { "text", FT_STRING, offsetof(system_cipher_Md5Param, _text), sizeof(FtString) },
-    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_Md5Param, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_Md5Param, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_Md5Param, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "text", FT_STRING, offsetof(system_cipher_Md5Param, text), sizeof(FtString) },
+    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_Md5Param, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_Md5Param, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_Md5Param, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_cipher_Md5Param_struct_type {
+const ObjectMapType system_cipher_Md5Param_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_cipher_Md5Param) },
     .members = system_cipher_Md5Param_struct_members
 };
@@ -252,18 +288,23 @@ static const FeatureType system_cipher_md5_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_cipher_md5_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_cipher_wrap_md5(handle, adata
+        , *(system_cipher_Md5Param **)(argv[0])
+    );
+}
+
 static const MemberMethod system_cipher_md5_member_method = {
-    .func = { .callback = FFI_FN(system_cipher_wrap_md5) },
+    .func_stub = system_cipher_md5_stub,
     .parameters = system_cipher_md5_parameters,
     .return_type = FT_VOID,
 };
 
 
-static OptionalType system_cipher_AESParam_member_iv_opt_type = {
-    .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
-    .type = FT_STRING,
-    .str = ""
-};
+/****** for JIDL struct 'AESParam' ******/
+extern const ObjectMapType system_cipher_AESParam_struct_type;
 
 static OptionalType system_cipher_AESParam_member_ivOffset_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
@@ -277,22 +318,21 @@ static OptionalType system_cipher_AESParam_member_ivLen_opt_type = {
     .ival = 16
 };
 
-/****** for JIDL struct 'AESParam' ******/
 static ObjectMember system_cipher_AESParam_struct_members[] = {
-    { "action", FT_STRING, offsetof(system_cipher_AESParam, _action), sizeof(FtString) },
-    { "text", FT_STRING, offsetof(system_cipher_AESParam, _text), sizeof(FtString) },
-    { "key", FT_STRING, offsetof(system_cipher_AESParam, _key), sizeof(FtString) },
-    { "iv", FT_MK_OPTIONAL(&system_cipher_AESParam_member_iv_opt_type), offsetof(system_cipher_AESParam, _iv), sizeof(FtString) },
-    { "ivOffset", FT_MK_OPTIONAL(&system_cipher_AESParam_member_ivOffset_opt_type), offsetof(system_cipher_AESParam, _ivOffset), sizeof(FtInt) },
-    { "ivLen", FT_MK_OPTIONAL(&system_cipher_AESParam_member_ivLen_opt_type), offsetof(system_cipher_AESParam, _ivLen), sizeof(FtInt) },
-    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_AESParam, _success), sizeof(FtCallbackId) },
-    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_AESParam, _fail), sizeof(FtCallbackId) },
-    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_AESParam, _complete), sizeof(FtCallbackId) },
-    { nullptr },
+    { "action", FT_STRING, offsetof(system_cipher_AESParam, action), sizeof(FtString) },
+    { "text", FT_STRING, offsetof(system_cipher_AESParam, text), sizeof(FtString) },
+    { "key", FT_STRING, offsetof(system_cipher_AESParam, key), sizeof(FtString) },
+    { "iv", FT_STRING, offsetof(system_cipher_AESParam, iv), sizeof(FtString) },
+    { "ivOffset", FT_MK_OPTIONAL(&system_cipher_AESParam_member_ivOffset_opt_type), offsetof(system_cipher_AESParam, ivOffset), sizeof(FtInt) },
+    { "ivLen", FT_MK_OPTIONAL(&system_cipher_AESParam_member_ivLen_opt_type), offsetof(system_cipher_AESParam, ivLen), sizeof(FtInt) },
+    { "success", FT_MK_COMPLEX(&system_cipher_success_cb_obj_str_opt_callback_type), offsetof(system_cipher_AESParam, success), sizeof(FtCallbackId) },
+    { "fail", FT_MK_COMPLEX(&system_cipher_fail_cb_callback_type), offsetof(system_cipher_AESParam, fail), sizeof(FtCallbackId) },
+    { "complete", FT_MK_COMPLEX(&system_cipher_complete_cb_callback_type), offsetof(system_cipher_AESParam, complete), sizeof(FtCallbackId) },
+    { NULL },
 };
 
 // complex defination
-static const ObjectMapType system_cipher_AESParam_struct_type {
+const ObjectMapType system_cipher_AESParam_struct_type = {
     .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(system_cipher_AESParam) },
     .members = system_cipher_AESParam_struct_members
 };
@@ -309,8 +349,16 @@ static const FeatureType system_cipher_aes_parameters[] = {
     FT_PARAM_END
 };
 
+static void system_cipher_aes_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    system_cipher_wrap_aes(handle, adata
+        , *(system_cipher_AESParam **)(argv[0])
+    );
+}
+
 static const MemberMethod system_cipher_aes_member_method = {
-    .func = { .callback = FFI_FN(system_cipher_wrap_aes) },
+    .func_stub = system_cipher_aes_stub,
     .parameters = system_cipher_aes_parameters,
     .return_type = FT_VOID,
 };
@@ -351,7 +399,7 @@ static const Member system_cipher_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks system_cipher_callbacks {
+static const struct FeatureCallbacks system_cipher_callbacks = {
     system_cipher_onRegister,
     system_cipher_onCreate,
     system_cipher_onRequired,
@@ -364,7 +412,7 @@ static const FeatureDescription system_cipher_desc = {
     .version = 1,
     .name = "system.cipher",
     .description = "system.cipher",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &system_cipher_callbacks,
     .member_count = countof(system_cipher_members),
     .members = system_cipher_members,

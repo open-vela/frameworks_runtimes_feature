@@ -35,6 +35,11 @@ void system_prompt_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle h
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(handle, "PromptInterfaceHandler"));
+    if (!pm_hander) {
+        FEATURE_LOG_WARN("PromptInterfaceHandler is not register , the prompt feature is abnormal.");
+        return;
+    }
+
     promptInit init = pm_hander->init;
     if (init) {
         init(handle, pm_hander->data);
@@ -45,6 +50,11 @@ void system_prompt_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle h
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(handle, "PromptInterfaceHandler"));
+    if (!pm_hander) {
+        FEATURE_LOG_WARN("PromptInterfaceHandler is not register , the prompt feature is abnormal.");
+        return;
+    }
+
     promptCleanOnDetached cleanup = pm_hander->cleanup;
     if (cleanup) {
         cleanup(handle);
@@ -56,6 +66,11 @@ void system_prompt_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handl
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     FeatureManagerHandle feature_manager = FeatureGetManagerHandleFromProto(handle);
     PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureGetManagerUserData(feature_manager, "PromptInterfaceHandler"));
+    if (!pm_hander) {
+        FEATURE_LOG_WARN("PromptInterfaceHandler is not register , the prompt feature is abnormal.");
+        return;
+    }
+
     promptUninit uninit = pm_hander->uninit;
     if (uninit) {
         uninit(handle);
@@ -71,6 +86,11 @@ void system_prompt_wrap_showToast(FeatureInstanceHandle feature, AppendData appe
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(feature, "PromptInterfaceHandler"));
+    if (!pm_hander) {
+        FEATURE_LOG_WARN("PromptInterfaceHandler is not register , the prompt feature is abnormal. toastInfo message:%s, duration:%d", info->message, info->duration);
+        return;
+    }
+
     promptShowToast show_toast = pm_hander->show_toast;
     if (show_toast) {
         show_toast(feature, info->message, info->duration);
@@ -91,7 +111,6 @@ PromptDialogParams* prompt_dialog_malloc(FeatureInstanceHandle feature)
     params->handle = feature;
     params->msg = NULL;
     params->title = NULL;
-    params->buttons = NULL;
     params->autocancel = true;
     params->success = -1;
     params->cancel = -1;
@@ -112,9 +131,6 @@ void prompt_dialog_free(PromptDialogParams* params)
     }
     if (params->title) {
         free(params->title);
-    }
-    if (params->buttons) {
-        free(params->buttons);
     }
     free(params);
     params = NULL;
@@ -154,6 +170,11 @@ void system_prompt_wrap_showDialog(FeatureInstanceHandle feature, AppendData app
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     PromptInterfaceHandler* pm_hander = static_cast<PromptInterfaceHandler*>(FeatureInstanceGetManagerUserData(feature, "PromptInterfaceHandler"));
+    if (!pm_hander) {
+        FEATURE_LOG_WARN("PromptInterfaceHandler is not register , the prompt feature is abnormal.");
+        return;
+    }
+
     promptShowDialog show_dialog = pm_hander->show_dialog;
     PromptDialogParams* params = prompt_dialog_malloc(feature);
     if (params == NULL) {
@@ -173,5 +194,6 @@ void system_prompt_wrap_showDialog(FeatureInstanceHandle feature, AppendData app
     if (show_dialog) {
         show_dialog(params);
     }
-    prompt_dialog_free(params);
+    // show_dialog 是异步执行的, 需要交给 show_dialog 来释放内存.
+    // prompt_dialog_free(params);
 }

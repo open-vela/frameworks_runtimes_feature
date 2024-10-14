@@ -21,9 +21,8 @@
 #include "feature_exports.h"
 // clang-format off
 #include "value_translator_wamr.h"
-#include "feature_ffi_template.h"
+#include "feature_ffi_templates.h"
 // clang-format on
-#include "feature_ffi_wamr.h"
 #include "feature_instance_wamr.h"
 #include "feature_log.h"
 #include "feature_prototype_wamr.h"
@@ -33,8 +32,9 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <ffi.h>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #define FEATURE_ENV_NAME "wamr"
@@ -51,7 +51,7 @@ typedef struct DynTypeContext {
 
 using namespace FEATURE;
 
-namespace ferry {
+namespace feature_framework {
 
 static inline FeatureManagerWamr* manager_from_instance(FeatureInstance* instance)
 {
@@ -81,6 +81,36 @@ static void module_object_finalizer(wasm_obj_t obj, void* data)
     instance->release();
 }
 
+static void reportArgsError(FeatureInstance* instance, RetCode ret_code, std::string& message, void* argv, int argc)
+{
+    FEATURE_CHECK_NE(instance, nullptr);
+    if (ret_code == RET_OK) {
+        return;
+    }
+    std::ostringstream oss;
+    if (ret_code == RET_ARGS_COUNT_ERR) {
+        oss << "args count error";
+    } else if (ret_code == RET_ARGS_TYPE_ERR) {
+        oss << "args type error";
+    } else {
+        oss << "internal error";
+    }
+    oss << ", " << message;
+    std::string msg = oss.str();
+    ArgsErrorInfo error_info;
+    error_info.error_code = ARGSERROR;
+    error_info.error_msg = msg.data();
+    error_info.argc = argc;
+    error_info.argv = argv;
+
+    auto manager = instance->featureManager();
+    if (manager && manager->argsErrorCb()) {
+        manager->argsErrorCb()(manager->argsErrorData(), &error_info);
+        return;
+    }
+    FEATURE_LOG_ERROR("error: %s", error_info.error_msg);
+}
+
 static void init_native(wasm_exec_env_t exec_env, uint64_t* args)
 {
     native_raw_get_arg(void*, thiz_ptr, args);
@@ -106,6 +136,109 @@ static void init_native(wasm_exec_env_t exec_env, uint64_t* args)
     wasm_obj_set_gc_finalizer(exec_env, (wasm_obj_t)thiz_ptr, (wasm_obj_finalizer_t)module_object_finalizer, nullptr);
 }
 
+static void const_get(wasm_exec_env_t exec_env, uint64_t* args)
+{
+    uint64_t* ret_ptr = args;
+    native_raw_get_arg(void*, thiz_ptr, args); // pop this pointer
+    *ret_ptr = 0;
+
+    auto instance = (FeatureInstanceWamr*)instance_from_target((wasm_obj_t)thiz_ptr);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
+
+    uint64_t ret_val = 0;
+    wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(exec_env);
+    if (constGet(instance, exec_env, member, ret_val)) {
+        *ret_ptr = ret_val;
+    }
+    /* pop native createD obj local ref ptr */
+    pop_local_obj_ref_to_head(exec_env, obj_ref_head);
+}
+
+static void accessor_get(wasm_exec_env_t exec_env, uint64_t* args)
+{
+    uint64_t* ret_ptr = args;
+    native_raw_get_arg(void*, thiz_ptr, args); // pop this pointer
+    *ret_ptr = 0;
+
+    auto instance = (FeatureInstanceWamr*)instance_from_target((wasm_obj_t)thiz_ptr);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
+
+    uint64_t ret_val = 0;
+    wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(exec_env);
+    RetCode ret_code = accessorGet(instance, exec_env, member, ret_val);
+    if (ret_code == RET_OK) {
+        *ret_ptr = ret_val;
+    }
+    /* pop native createD obj local ref ptr */
+    pop_local_obj_ref_to_head(exec_env, obj_ref_head);
+}
+
+static void accessor_set(wasm_exec_env_t exec_env, uint64_t* args)
+{
+    native_raw_get_arg(void*, thiz_ptr, args); // pop this pointer
+    auto instance = (FeatureInstanceWamr*)instance_from_target((wasm_obj_t)thiz_ptr);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto description = instance->prototype()->description();
+    auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
+
+    if (!accessorSet(instance, exec_env, member, *args)) {
+        FEATURE_LOG_ERROR("accessor set failed!");
+    }
+
+    RetCode ret_code = accessorSet(instance, exec_env, member, *args);
+    if (ret_code != RET_OK) {
+        std::ostringstream oss;
+        oss << "feature: " << description->name << ", property:" << member->name;
+        std::string msg = oss.str();
+        reportArgsError(instance, ret_code, msg, (void*)args, 1);
+    }
+}
+
+static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
+{
+    uint64_t* ret_ptr = args;
+    native_raw_get_arg(void*, thiz_ptr, args);
+    *ret_ptr = 0;
+    auto instance = (FeatureInstanceWamr*)instance_from_target((wasm_obj_t)thiz_ptr);
+    FEATURE_CHECK_NE(instance, nullptr);
+    auto manager = manager_from_instance(instance);
+    auto description = instance->prototype()->description();
+    auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
+    auto js_ctx = (JSContext*)ft_context_get_data(manager->getFeatureContext());
+    auto param_types = member->method->parameters;
+
+    bool has_rest_params = false;
+    int opt_argc = 0;
+    size_t fixed_argc = getParamCount(param_types, &has_rest_params, &opt_argc);
+    size_t argc = fixed_argc;
+    FEATURE_CHECK_NE(has_rest_params && opt_argc, true);
+
+    if (has_rest_params) {
+        uint64_t* vari_argv = args + fixed_argc;
+        native_raw_get_arg(wasm_obj_t, obj, vari_argv);
+        assert(wasm_obj_is_struct_obj(obj));
+        int32_t vari_argc = get_array_length((wasm_struct_obj_t)obj);
+        argc += vari_argc;
+    }
+
+    uint64_t ret_val = 0;
+    wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(exec_env);
+    RetCode ret_code = methodCall(instance, exec_env, js_ctx, member, argc, args, ret_val);
+    /* pop native createD obj local ref ptr */
+    pop_local_obj_ref_to_head(exec_env, obj_ref_head);
+    if (ret_code != RET_OK) {
+        std::ostringstream oss;
+        oss << "feature: " << description->name << ", method:" << member->name;
+        std::string msg = oss.str();
+        reportArgsError(instance, ret_code, msg, (void*)args, argc);
+        return;
+    }
+    *ret_ptr = ret_val;
+}
+
+#ifdef NO_C_PLUS_TEMPLATE
 static void accessor_get(wasm_exec_env_t exec_env, uint64_t* args)
 {
     uint64_t* ret_ptr = args;
@@ -116,39 +249,28 @@ static void accessor_get(wasm_exec_env_t exec_env, uint64_t* args)
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor* accessor = const_cast<MemberAccessor*>(member->accessor);
-    auto description = instance->prototype()->description();
+    FeatureType ftype = accessor->type;
 
     // handle parameter
-    // 1. FeatureInstance pointer
-    // 2. data
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor->getter.vtable_idx) : accessor->getter.callback;
-    FEATURE_CHECK_NE(callback, nullptr);
-
-    ffi_type* ffi_arg_types[2] = { &ffi_type_pointer, &ffi_type_sint64 };
-    void* ffi_arg_values[2] = { &instance, (void*)(&accessor->data) };
-    AutoPtr<ffi_type*> ffi_ret_type(free_ffi_type);
     void* ffi_ret_value = nullptr;
-    ALLOCA_PARAM_PTR(accessor->type, ffi_ret_value);
-    if (!createTypeDeclaration(accessor->type, ffi_ret_type)) {
-        FEATURE_LOG_ERROR("createTypeDeclaration for ret type failed!");
-        return;
-    }
-
-    // prepare and call method
-    ffi_cif cif;
-    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, ffi_ret_type, ffi_arg_types);
-    if (ret) {
-        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-        return;
-    }
-
+    ALLOCA_PARAM_PTR(ftype, ffi_ret_value);
     // invoke
-    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_values);
+    StubFunc getter_stub = accessor->getter_stub;
+    FEATURE_CHECK_NE(getter_stub, nullptr);
+    getter_stub(instance, accessor->data, nullptr, 0, ffi_ret_value);
+    wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(exec_env);
     // process return value
-    if (!FeatureFFIWamr::convertValueToGuest(instance, accessor->type, ffi_ret_value, exec_env, ret_val)) {
+    if (!FeatureFFIWamr::convertValueToGuest(ftype, ffi_ret_value, exec_env, ret_val)) {
         FEATURE_LOG_ERROR("can not convert return value to guest!");
         return;
     }
+
+    if (FT_NEED_FREE(ftype)) {
+        FeatureFreeValue(*(void**)ffi_ret_value);
+    }
+
+    /* pop native createD obj local ref ptr */
+    pop_local_obj_ref_to_head(exec_env, obj_ref_head);
     *ret_ptr = ret_val;
 }
 
@@ -159,42 +281,27 @@ static void accessor_set(wasm_exec_env_t exec_env, uint64_t* args)
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     FEATURE_CHECK_EQ(member->type, MEMBER_ACCESSOR);
     MemberAccessor* accessor = const_cast<MemberAccessor*>(member->accessor);
-    auto description = instance->prototype()->description();
+    FeatureType ftype = accessor->type;
 
     // handle parameter
-    // 1. FeatureInstance pointer
-    // 2. data
-    ffi_type* ffi_arg_types[3] = { &ffi_type_pointer, &ffi_type_sint64, nullptr };
-    void* ffi_arg_values[3] = { &instance, (void*)(&accessor->data), nullptr };
+    void* ffi_arg_values[1] = { 0 };
     void* arg_value = nullptr;
-    AutoPtr<ffi_type*> arg_type(free_ffi_type);
-    ALLOCA_PARAM_PTR(accessor->type, arg_value);
+    ALLOCA_PARAM_PTR(ftype, arg_value);
 
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(accessor->setter.vtable_idx) : accessor->setter.callback;
-    FEATURE_CHECK_NE(callback, nullptr);
-
-    // prepare third param type declaration, create by accessor type
-    if (!createTypeDeclaration(accessor->type, arg_type)) {
-        FEATURE_LOG_ERROR("create type declaration for input failed!");
-        return;
-    }
-
-    ffi_arg_types[2] = arg_type;
     // fill third param using guest value and accesor type
-    if (!FeatureFFIWamr::convertValueToHost(instance, accessor->type, arg_value, exec_env, *args)) {
+    if (!FeatureFFIWamr::convertValueToHost(instance, ftype, arg_value, exec_env, *args)) {
         FEATURE_LOG_ERROR("convert to host value failed!");
         return;
     }
-    ffi_arg_values[2] = arg_value;
-    // prepare and call method
-    ffi_cif cif;
-    ffi_status ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 3, &ffi_type_void, ffi_arg_types);
-    if (ret) {
-        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-        return;
-    }
+    ffi_arg_values[0] = arg_value;
     // invoke
-    ffi_call(&cif, callback, ffi_arg_values[2], ffi_arg_values);
+    StubFunc setter_stub = accessor->setter_stub;
+    FEATURE_CHECK_NE(setter_stub, nullptr);
+    setter_stub(instance, accessor->data, ffi_arg_values, 1, ffi_arg_values[0]);
+
+    if (FT_NEED_FREE(ftype)) {
+        FeatureFreeValue(*(void**)arg_value);
+    }
 }
 
 static void const_get(wasm_exec_env_t exec_env, uint64_t* args)
@@ -226,7 +333,6 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
     auto manager = manager_from_instance(instance);
     auto member = (const Member*)wasm_runtime_get_function_attachment(exec_env);
     auto js_ctx = (JSContext*)ft_context_get_data(manager->getFeatureContext());
-    auto description = instance->prototype()->description();
 
     FEATURE_CHECK_EQ(member->type, MEMBER_METHOD);
     const auto method = member->method;
@@ -241,8 +347,6 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
     size_t argc = fixed_argc;
 
     // variadic parameters type
-    ffi_type vari_arg_type;
-    ffi_type* vari_arg_elem_types[3];
     FtVariParams vari_params;
     memset(&vari_params, 0, sizeof(vari_params));
 
@@ -276,7 +380,8 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
     // prepare and get args
     int32_t packed_argc = has_rest_params ? fixed_argc + 1 : fixed_argc;
     bool is_promise = FT_IS_PROMISE(method->return_type);
-    int extra_argc = is_promise ? 3 : 2;
+    int extra_argc = is_promise ? 1 : 0;
+    int total_argc = packed_argc + opt_argc + extra_argc;
 
     // // FeaturInstance, data, maybe return promise, maybe variadic count, empty placeholder
     // AutoArgs<void*, ffi_type*> ffi_arg_types(nullptr, free_arg_type, nullptr,
@@ -288,26 +393,17 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
     // AutoPtr<void*> ffi_ret_value(FeatureFreeValue);
     // AutoPtr<ft_value_t*> vari_args(free_ft_values);
 
-    ffi_type** ffi_arg_types = (ffi_type**)alloca(sizeof(ffi_type*) * (packed_argc + opt_argc + extra_argc + 1)); // FeaturInstance, data, maybe return promise, empty placeholder
-    memset(ffi_arg_types, 0, sizeof(ffi_type*) * (packed_argc + opt_argc + extra_argc + 1));
     // malloc ffi arg buf
-    void** ffi_arg_buf = (void**)alloca(sizeof(void*) * (packed_argc + opt_argc + extra_argc)); // FeaturInstance, data, maybe return promise
-    memset(ffi_arg_buf, 0, sizeof(void*) * (packed_argc + opt_argc + extra_argc));
+    void** ffi_arg_buf = nullptr;
+    if (total_argc > 0) {
+        ffi_arg_buf = (void**)alloca(sizeof(void*) * total_argc);
+        memset(ffi_arg_buf, 0, sizeof(void*) * total_argc);
+    }
     // malloc ffi arg values, only contains packed param, optional args use &
     int ffi_arg_values_len = sizeof(uintptr_t) * param_value_count;
     uintptr_t* ffi_arg_values = (uintptr_t*)alloca(ffi_arg_values_len);
     memset(ffi_arg_values, 0, ffi_arg_values_len);
-    ffi_type* ffi_ret_type = nullptr;
     void* ffi_ret_value = nullptr;
-
-    // prepare first two param
-    ffi_arg_types[0] = &ffi_type_pointer; // FeatureContext
-    ffi_arg_types[1] = &ffi_type_sint64; // data
-    if (is_promise) {
-        ffi_arg_types[2] = &ffi_type_sint32;
-    }
-    ffi_arg_buf[0] = &instance;
-    ffi_arg_buf[1] = (void*)&method->data;
 
     for (size_t i = 0; i < fixed_argc; i++) {
         uint64_t curr_arg = args[i];
@@ -321,10 +417,6 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
             FEATURE_LOG_ERROR("do not support promise as input param!");
             return;
         }
-        if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
-            FEATURE_LOG_ERROR("prepareType for type failed!");
-            return;
-        }
         if (!FeatureFFIWamr::convertValueToHost(instance, param, ffi_arg_buf[extra_argc + i], exec_env, curr_arg)) {
             FEATURE_LOG_ERROR("convert argument %d failed!", i);
             return;
@@ -333,17 +425,9 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
 
     // process rest parameters
     if (has_rest_params) {
-        // prepare vari_params type
-        vari_arg_type.size = 0;
-        vari_arg_type.type = FFI_TYPE_STRUCT;
-        vari_arg_type.elements = vari_arg_elem_types;
-        vari_arg_elem_types[0] = &ffi_type_sint32;
-        vari_arg_elem_types[1] = &ffi_type_pointer;
-        vari_arg_elem_types[2] = nullptr;
         // prepare vari_params struct
         vari_params.vari_args = (ft_value_t*)alloca(sizeof(ft_value_t) * vari_params.vari_count);
         // pass param
-        ffi_arg_types[fixed_argc + extra_argc] = &vari_arg_type;
         ffi_arg_buf[fixed_argc + extra_argc] = &vari_params;
         for (int i = 0; i + fixed_argc < argc; i++) {
             void* addr = wasm_array_obj_elem_addr(array_obj, i);
@@ -359,36 +443,13 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
             FEATURE_CHECK_EQ(FT_IS_COMPLEX(param), true);
             OptionalType* optional_type = (OptionalType*)FT_GET_COMPLEX(param);
             FEATURE_CHECK_EQ(optional_type->header.type, COMPLEX_OPTIONAL);
-            if (!createTypeDeclaration(param, ffi_arg_types[extra_argc + i])) {
-                FEATURE_LOG_ERROR("prepareType for type failed!");
-                return;
-            }
             ffi_arg_buf[extra_argc + i] = &optional_type->fval;
         }
     }
 
-    // prepeare return type
-    if (!createTypeDeclaration(method->return_type, ffi_ret_type)) {
-        FEATURE_LOG_ERROR("prepareType for complex type failed!");
-        return;
-    }
     // create return value pointer inneed.
     if (!is_promise && method->return_type != FT_VOID) {
         ALLOCA_PARAM_PTR(method->return_type, ffi_ret_value);
-    }
-    // prepare ffi call
-    ffi_cif cif;
-    ffi_status ret = FFI_OK;
-    if (has_rest_params) {
-        // FEATURE_LOG_DEBUG("prepare for variadic parameter function...");
-        ret = ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, packed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
-    } else {
-        // FEATURE_LOG_DEBUG("prepare for function...");
-        ret = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, fixed_argc + extra_argc, ffi_ret_type, ffi_arg_types);
-    }
-    if (ret) {
-        FEATURE_LOG_ERROR("ffi_prep_cif failed: %d", ret);
-        return;
     }
 
     // special handle for promise
@@ -402,20 +463,25 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
         pid = w_instance->addPromise(promise_type->resolveTypes[0], promise_type->resolveTypes[1]);
         promise = feature_dup_value(js_ctx, w_instance->getPromise(pid));
         // pass pid to native function
-        ffi_arg_buf[2] = &pid;
+        ffi_arg_buf[0] = &pid;
     }
 
     // invoke method
-    NativeFunc callback = description->dynamic ? instance->getVirtualFunction(method->func.vtable_idx) : method->func.callback;
-    FEATURE_CHECK_NE(callback, nullptr);
-    ffi_call(&cif, callback, ffi_ret_value, ffi_arg_buf);
+    StubFunc func_stub = method->func_stub;
+    FEATURE_CHECK_NE(func_stub, nullptr);
+    func_stub(instance, method->data, ffi_arg_buf, total_argc, ffi_ret_value);
+
     // process return value, do not handle promise, it is handled before we invoke ffi_call.
     if (!is_promise && method->return_type != FT_VOID) {
+        wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(exec_env);
         // process return value
-        if (!FeatureFFIWamr::convertValueToGuest(instance, method->return_type, ffi_ret_value, exec_env, ret_val)) {
+        if (!FeatureFFIWamr::convertValueToGuest(method->return_type, ffi_ret_value, exec_env, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
+            pop_local_obj_ref_to_head(exec_env, obj_ref_head);
             return;
         }
+        /* pop native createD obj local ref ptr */
+        pop_local_obj_ref_to_head(exec_env, obj_ref_head);
     } else if (is_promise) {
         feature_value_t* ppromise = dynamic_dup_value(js_ctx, promise);
         // 把promise返回给ts层
@@ -429,24 +495,31 @@ static void method_call(wasm_exec_env_t exec_env, uint64_t* args)
 
     // free ffi call resources
     for (size_t i = 0; i < fixed_argc; i++) {
-        // free type
-        if (ffi_arg_types[i + extra_argc]) {
-            freeTypeDeclaration(ffi_arg_types[i + extra_argc]);
-        }
         // free value
         if (ffi_arg_buf[i + extra_argc] && FT_NEED_FREE(param_types[i])) {
             FeatureFreeValue(*(void**)ffi_arg_buf[i + extra_argc]);
         }
     }
-    freeTypeDeclaration(ffi_ret_type);
+
+    if (ffi_ret_value && FT_NEED_FREE(method->return_type)) {
+        FeatureFreeValue(*(void**)ffi_ret_value);
+    }
 
     *ret_ptr = ret_val;
+}
+#endif
+
+FeatureManager* CreateWamrFeatureManager(FeatureRegistry* registry, FeatureManagerCreateInfo* pinfo)
+{
+    return new FeatureManagerWamr(registry);
 }
 
 FeatureManagerWamr::FeatureManagerWamr(FeatureRegistry* registry)
     : FeatureManager(registry)
     , wamr_env_(nullptr)
 {
+    ft_context_ref ft_ctx = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
+    setFeatureContext(ft_ctx);
 }
 
 bool FeatureManagerWamr::init()
@@ -507,7 +580,7 @@ bool FeatureManagerWamr::init()
     return true;
 }
 
-void FeatureManagerWamr::release()
+void FeatureManagerWamr::uninit()
 {
     if (!getFeatureRegistry())
         return;
@@ -570,11 +643,7 @@ bool FeatureManagerWamr::require(wasm_exec_env_t ctx, wasm_obj_t thiz, const cha
     auto description = feature_pair->first;
 
     wamr_env_ = ctx;
-    if (!getFeatureContext()) {
-        ft_context_ref ft_ctx = CreateFeatureContextQjs(dyntype_get_context()->js_ctx);
-        setFeatureContext(ft_ctx);
-    }
-
+    FEATURE_CHECK_NE(getFeatureContext(), nullptr);
     auto& proto = feature_pair->second;
 
     if (!proto) {
@@ -623,6 +692,54 @@ bool FeatureManagerWamr::registerSymbol(void* func, const char* name, const char
     native_symbols_.push_back(symbol);
 
     return true;
+}
+
+static char getFeatureSignature(FeatureType ftype)
+{
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (ftype) {
+        case FT_VOID:
+            return 0;
+        case FT_BOOLEAN:
+            return 'i';
+        case FT_INT:
+        case FT_INT8:
+        case FT_UINT8:
+        case FT_INT16:
+        case FT_UINT16:
+        case FT_INT32:
+        case FT_UINT32:
+        case FT_INT64:
+        case FT_UINT64:
+        case FT_FLOAT:
+        case FT_DOUBLE:
+            return 'F';
+        case FT_STRING:
+            // wasm string signature is 'r'
+            return 'r';
+        default: {
+            FEATURE_LOG_WARN("unsupported type detected !");
+            return 0;
+        }
+        }
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader* complexType = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+        switch (complexType->type) {
+        case COMPLEX_OPTIONAL: {
+            OptionalType* optionalType = (OptionalType*)complexType;
+            char res = getFeatureSignature(optionalType->type);
+            if (res == 0) {
+                FEATURE_LOG_WARN("unsupported type detected !");
+                return 0;
+            }
+            return res;
+        } break;
+        default: {
+            return 'r';
+        }
+        }
+    }
+    return 0;
 }
 
 int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
@@ -690,7 +807,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     signature[strlen(signature)] = 'r';
                     break;
                 }
-                char sig = FeatureFFIWamr::getFeatureSignature(*ftype);
+                char sig = getFeatureSignature(*ftype);
                 if (sig != 0) {
                     signature[strlen(signature)] = sig;
                 }
@@ -706,13 +823,13 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     signature[strlen(signature)] = 'F';
                 } else {
                     /* COMPLEX TYPE, such as FTArray, deal with is as brefore */
-                    char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
+                    char retc = getFeatureSignature(method->return_type);
                     if (retc != 0)
                         signature[strlen(signature)] = retc;
                 }
             } else {
                 /* PRIMITIVE TYPE, deal with is as brefore */
-                char retc = FeatureFFIWamr::getFeatureSignature(method->return_type);
+                char retc = getFeatureSignature(method->return_type);
                 if (retc != 0)
                     signature[strlen(signature)] = retc;
             }
@@ -724,7 +841,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
         case MEMBER_ACCESSOR: {
             // register accessor_get and accessor_set
             const MemberAccessor* accessor = member->accessor;
-            if (accessor->getter.vtable_idx >= 0 || accessor->getter.callback) {
+            if (accessor->getter_stub) {
                 char* getter_name = new char[128];
                 native_strings_.push_back(getter_name);
                 strcpy(getter_name, class_name.c_str());
@@ -735,7 +852,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 native_strings_.push_back(signature);
                 memset(signature, 0, 64);
                 strcpy(signature, "(r");
-                char type = FeatureFFIWamr::getFeatureSignature(accessor->type);
+                char type = getFeatureSignature(accessor->type);
                 strcat(signature, ")");
                 if (type != 0)
                     signature[strlen(signature)] = type;
@@ -743,7 +860,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                     return false;
                 }
             }
-            if (accessor->setter.vtable_idx >= 0 || accessor->setter.callback) {
+            if (accessor->setter_stub) {
                 char* setter_name = new char[128];
                 native_strings_.push_back(setter_name);
                 strcpy(setter_name, class_name.c_str());
@@ -754,7 +871,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
                 native_strings_.push_back(signature);
                 memset(signature, 0, 64);
                 strcpy(signature, "(r");
-                char sig = FeatureFFIWamr::getFeatureSignature(accessor->type);
+                char sig = getFeatureSignature(accessor->type);
                 if (sig != 0)
                     signature[strlen(signature)] = sig;
                 strcat(signature, ")");
@@ -776,7 +893,7 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             native_strings_.push_back(signature);
             memset(signature, 0, 64);
             strcpy(signature, "(r");
-            char sig = FeatureFFIWamr::getFeatureSignature(member_const->type);
+            char sig = getFeatureSignature(member_const->type);
             strcat(signature, ")");
             if (sig != 0)
                 signature[strlen(signature)] = sig;
@@ -785,6 +902,9 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
             }
             break;
         }
+        case MEMBER_EVENT: {
+            // not supported for wamr now
+        } break;
         }
     }
     return 0;

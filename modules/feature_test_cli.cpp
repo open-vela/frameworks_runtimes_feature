@@ -23,11 +23,13 @@
 #endif
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
+#include "feature_qjs_exports.h"
 #include "feature_registry.h"
-using namespace ferry;
+
+using namespace feature_framework;
 using namespace FEATURE;
 
-static ferry::FeatureManagerQjs* g_manager_qjs;
+static FeatureManagerQjs* g_manager_qjs;
 
 typedef struct feature_env_t {
     JSRuntime* rt;
@@ -42,11 +44,13 @@ feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int
         return FEATURE_UNDEFINED;
     }
 
-    const char* str_module_name = feature_to_cstring(ctx, argv[0]);
-    feature_value_t vm_object = JS_UNDEFINED;
-    auto feature_obj = g_manager_qjs->featureRequire(ctx, vm_object, str_module_name);
-    feature_free_cstring(ctx, str_module_name);
-    return feature_obj;
+    const char* module_name = feature_to_cstring(ctx, argv[0]);
+    ft_context_ref ft_ctx = g_manager_qjs->getFeatureContext();
+    ft_value_t ft_vm_obj = ft_from_jsvalue(ft_ctx, JS_UNDEFINED);
+    ft_value_t ft_obj = g_manager_qjs->featureRequire(ft_vm_obj, module_name);
+    auto js_obj = ft_to_jsvalue(ft_ctx, ft_obj);
+    feature_free_cstring(ctx, module_name);
+    return js_obj;
 }
 
 // console_log
@@ -193,9 +197,9 @@ extern "C" int main(int argc, char** argv)
     js_env.rt = JS_NewRuntime();
     js_env.ctx = JS_NewContext(js_env.rt);
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-    auto registry = new ferry::FeatureRegistry();
+    auto registry = new FeatureRegistry();
     registry->init(manifast_str);
-    g_manager_qjs = new ferry::FeatureManagerQjs(registry);
+    g_manager_qjs = new FeatureManagerQjs(registry, (feature_context_ref)(js_env.ctx));
     uv_loop_t uv_loop;
     uv_loop_init(&uv_loop);
     FeatureSetUVLoop(g_manager_qjs, &uv_loop);
@@ -235,17 +239,15 @@ extern "C" int main(int argc, char** argv)
         }
 
         // init uv_check_t & uv_poll_t
-        uv_loop_t loop_t;
-        uv_check_t check_t;
-        uv_poll_t poll_t;
-        uv_loop_init(&loop_t);
-        uv_check_init(&loop_t, &check_t);
-        uv_poll_init(&loop_t, &poll_t, binderFd);
-        check_t.data = &js_env;
-        uv_check_start(&check_t, __uv_check_cb);
-        uv_poll_start(&poll_t, UV_READABLE, __uv_poll_cb);
-        uv_unref((uv_handle_t*)&check_t);
-        uv_run(&loop_t, UV_RUN_DEFAULT);
+        uv_check_t uv_check;
+        uv_poll_t uv_poll;
+        uv_check_init(&uv_loop, &uv_check);
+        uv_poll_init(&uv_loop, &uv_poll, binderFd);
+        uv_check.data = &js_env;
+        uv_check_start(&uv_check, __uv_check_cb);
+        uv_poll_start(&uv_poll, UV_READABLE, __uv_poll_cb);
+        uv_unref((uv_handle_t*)&uv_check);
+        uv_run(&uv_loop, UV_RUN_DEFAULT);
 #endif
     }
 

@@ -16,8 +16,12 @@
 
 #include "promise_manager.h"
 #include "feature_common.h"
-#include "feature_ffi_qjs.h"
+#include "feature_ffi.h"
 #include "feature_log.h"
+// clang-format off
+#include "value_translator_qjs.h"
+#include "feature_convertor_templates.h"
+// clang-format on
 
 static inline void free_arg(JSContext* ctx, JSValue& arg)
 {
@@ -29,7 +33,176 @@ static inline JSValue undefined_arg(JSContext* ctx)
     return JS_UNDEFINED;
 }
 
-namespace ferry {
+static int invoke_js_Callback(JSContext* ctx, feature_value_t cb, int argc, feature_value_t* argv)
+{
+    if (feature_is_undefined(cb)) {
+        FEATURE_LOG_ERROR("callback is undefined!");
+        return -1;
+    }
+
+    // create argv list and initialize to undefined
+    feature_value_t ret = feature_call(ctx, cb, FEATURE_VALUE_UNDEFINED, argc, argv);
+    feature_free_value(ctx, ret);
+    return 0;
+}
+
+static bool arg_to_target(JSContext* js_ctx, va_list& ap, FeatureType ftype, JSValue& target)
+{
+    void* param = feature_framework::extractVariadicParam(ap, ftype);
+    if (!param) {
+        FEATURE_LOG_ERROR("extract callback param failed !");
+        return false;
+    }
+    if (!feature_framework::convertValueToTarget(ftype, js_ctx, param, target)) {
+        FEATURE_LOG_ERROR("convert callback param failed !");
+        free(param);
+        return false;
+    }
+    free(param);
+    return true;
+}
+
+namespace feature_framework {
+
+PromiseManager::PromiseData::PromiseData(JSContext* ctx, FeatureType ftype)
+    : resolve_type(ftype)
+    , promise_type(kPromise)
+    , js_ctx(ctx)
+{
+    promise_info.promise = FEATURE_VALUE_UNDEFINED;
+    promise_info.resolve_funcs[0] = FEATURE_VALUE_UNDEFINED;
+    promise_info.resolve_funcs[1] = FEATURE_VALUE_UNDEFINED;
+}
+
+PromiseManager::PromiseData::PromiseData(JSContext* ctx, FeatureType ftype, feature_value_t success, feature_value_t fail, feature_value_t complete)
+    : resolve_type(ftype)
+    , promise_type(kCallbacks)
+    , js_ctx(ctx)
+{
+    callbacks.success = success;
+    callbacks.fail = fail;
+    callbacks.complete = complete;
+}
+
+PromiseManager::PromiseData::~PromiseData()
+{
+    if (promise_type == kPromise) {
+        feature_free_value(js_ctx, promise_info.promise);
+        feature_free_value(js_ctx, promise_info.resolve_funcs[0]);
+        feature_free_value(js_ctx, promise_info.resolve_funcs[1]);
+    } else {
+        feature_free_value(js_ctx, callbacks.success);
+        feature_free_value(js_ctx, callbacks.fail);
+        feature_free_value(js_ctx, callbacks.complete);
+    }
+}
+
+bool PromiseManager::PromiseData::init()
+{
+    if (promise_type == kPromise) {
+        feature_value_t promise = feature_promise_capability(js_ctx, promise_info.resolve_funcs);
+        if (feature_is_exception(promise)) {
+            feature_free_value(js_ctx, promise_info.resolve_funcs[0]);
+            feature_free_value(js_ctx, promise_info.resolve_funcs[1]);
+            feature_free_value(js_ctx, promise_info.promise);
+            return false;
+        }
+        promise_info.promise = promise;
+    }
+    return true;
+}
+
+feature_value_t PromiseManager::PromiseData::promise()
+{
+    if (promise_type == kCallbacks) {
+        return FEATURE_VALUE_UNDEFINED;
+    }
+    return promise_info.promise;
+}
+
+int PromiseManager::PromiseData::resolve(va_list& ap)
+{
+    feature_value_t resolve_func = FEATURE_VALUE_UNDEFINED;
+    if (promise_type == kCallbacks) {
+        resolve_func = callbacks.success;
+    } else {
+        resolve_func = promise_info.resolve_funcs[0];
+    }
+    if (feature_is_undefined(resolve_func)) {
+        FEATURE_LOG_ERROR("resolve func undefined!");
+        return -1;
+    }
+    JSValue target;
+    if (!arg_to_target(js_ctx, ap, resolve_type, target)) {
+        FEATURE_LOG_ERROR("convert resolve param failed !");
+        return -1;
+    }
+    feature_value_t argv[] = { target };
+    int ret = invoke_js_Callback(js_ctx, resolve_func, 1, argv);
+    feature_free_value(js_ctx, target);
+
+    if (promise_type == kCallbacks) {
+        feature_value_t complete_func = callbacks.complete;
+        if (feature_is_undefined(complete_func)) {
+            FEATURE_LOG_DEBUG("complete func undefined!");
+            return 0;
+        }
+        invoke_js_Callback(js_ctx, complete_func, 0, nullptr);
+    }
+    return ret;
+}
+
+int PromiseManager::PromiseData::reject(int code, const char* msg)
+{
+    feature_value_t reject_func = FEATURE_VALUE_UNDEFINED;
+    if (promise_type == kCallbacks) {
+        reject_func = callbacks.fail;
+    } else {
+        reject_func = promise_info.resolve_funcs[1];
+    }
+    if (feature_is_undefined(reject_func)) {
+        FEATURE_LOG_ERROR("reject func undefined!");
+        return -1;
+    }
+
+    feature_value_t js_code = feature_int(js_ctx, code);
+    feature_value_t js_msg = feature_string(js_ctx, msg);
+    if (promise_type == kPromise) {
+        feature_value_t js_data = feature_object(js_ctx);
+        feature_set_object_property(js_ctx, js_data, "code", js_code);
+        feature_set_object_property(js_ctx, js_data, "msg", js_msg);
+        feature_value_t argv[] = { js_data };
+        int ret = invoke_js_Callback(js_ctx, reject_func, 1, argv);
+        feature_free_value(js_ctx, js_data);
+        return ret;
+    }
+
+    feature_value_t argv[] = { js_code, js_msg };
+    int ret = invoke_js_Callback(js_ctx, reject_func, 2, argv);
+    feature_free_value(js_ctx, js_code);
+    feature_free_value(js_ctx, js_msg);
+
+    feature_value_t complete_func = callbacks.complete;
+    if (feature_is_undefined(complete_func)) {
+        FEATURE_LOG_DEBUG("complete func undefined!");
+        return 0;
+    }
+    invoke_js_Callback(js_ctx, complete_func, 0, nullptr);
+    return ret;
+}
+
+void PromiseManager::PromiseData::mark(feature_runtime_ref rt, feature_mark_func mark_func)
+{
+    if (promise_type == kPromise) {
+        feature_mark_value(rt, promise_info.promise, mark_func);
+        feature_mark_value(rt, promise_info.resolve_funcs[0], mark_func);
+        feature_mark_value(rt, promise_info.resolve_funcs[1], mark_func);
+    } else {
+        feature_mark_value(rt, callbacks.success, mark_func);
+        feature_mark_value(rt, callbacks.fail, mark_func);
+        feature_mark_value(rt, callbacks.complete, mark_func);
+    }
+}
 
 PromiseManager::PromiseManager(JSContext* js_ctx)
     : js_ctx_(js_ctx)
@@ -41,24 +214,24 @@ PromiseManager::~PromiseManager()
     releasePromises();
 }
 
-FtPromiseId PromiseManager::addPromise(FeatureType resolve_type, FeatureType reject_type)
+FtPromiseId PromiseManager::addPromise(FeatureType resolve_type)
 {
-    PromiseData* data = (PromiseData*)malloc(sizeof(PromiseData));
-    data->promise = FEATURE_VALUE_UNDEFINED;
-    data->resolve_funcs[0] = FEATURE_VALUE_UNDEFINED;
-    data->resolve_funcs[1] = FEATURE_VALUE_UNDEFINED;
-    data->resolve_types[0] = resolve_type;
-    data->resolve_types[1] = reject_type;
-
-    feature_value_t promise = feature_promise_capability(js_ctx_, data->resolve_funcs);
-    if (feature_is_exception(promise)) {
-        feature_free_value(js_ctx_, data->resolve_funcs[0]);
-        feature_free_value(js_ctx_, data->resolve_funcs[1]);
-        feature_free_value(js_ctx_, promise);
-        free(data);
+    PromiseData* data = new PromiseData(js_ctx_, resolve_type);
+    if (!data->init()) {
+        delete data;
         return -1;
     }
-    data->promise = promise;
+    promises_[curr_pid_] = data;
+    return curr_pid_++;
+}
+
+FtPromiseId PromiseManager::addAsyncCallbacks(FeatureType resolve_type, feature_value_t success, feature_value_t fail, feature_value_t complete)
+{
+    PromiseData* data = new PromiseData(js_ctx_, resolve_type, success, fail, complete);
+    if (!data->init()) {
+        delete data;
+        return -1;
+    }
     promises_[curr_pid_] = data;
     return curr_pid_++;
 }
@@ -72,11 +245,7 @@ bool PromiseManager::removePromise(FtPromiseId pid)
     PromiseData* data = promises_[pid];
     FEATURE_CHECK_NE(data, nullptr);
     promises_.erase(pid);
-    // free js values
-    feature_free_value(js_ctx_, data->promise);
-    feature_free_value(js_ctx_, data->resolve_funcs[0]);
-    feature_free_value(js_ctx_, data->resolve_funcs[1]);
-    free(data);
+    delete data;
     return true;
 }
 
@@ -84,32 +253,41 @@ void PromiseManager::releasePromises()
 {
     for (const auto& pair : promises_) {
         FEATURE_LOG_DEBUG("promise: %d freed !", pair.first);
-        PromiseData* data = pair.second;
-        feature_free_value(js_ctx_, data->promise);
-        feature_free_value(js_ctx_, data->resolve_funcs[0]);
-        feature_free_value(js_ctx_, data->resolve_funcs[1]);
-        free(data);
+        delete pair.second;
     }
     promises_.clear();
 }
 
-int PromiseManager::doSettlePromise(bool resolve, FtPromiseId pid, va_list& ap)
+int PromiseManager::doResolvePromise(FtPromiseId pid, va_list& ap)
 {
     // get feature instance
-    PromiseData* promise_data = getPromiseData(pid);
-    if (!promise_data) {
+    PromiseData* data = getPromiseData(pid);
+    if (!data) {
         FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
         return -1;
     }
-    int idx = resolve ? 0 : 1;
-    if (feature_is_undefined(promise_data->resolve_funcs[idx])) {
-        FEATURE_LOG_ERROR("callback is undefined!");
+    return data->resolve(ap);
+}
+
+int PromiseManager::doRejectPromise(FtPromiseId pid, int code, const char* msg)
+{
+    // get feature instance
+    PromiseData* data = getPromiseData(pid);
+    if (!data) {
+        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
         return -1;
     }
+    return data->reject(code, msg);
+}
 
-    FeatureType param_types[2] = { promise_data->resolve_types[idx], FT_VOID };
-    CallbackType cb_type = { .header = { .type = COMPLEX_PROMISE, .size = 0 }, .parameters = param_types, .return_type = FT_VOID };
-    return invokeJsCallback(&cb_type, promise_data->resolve_funcs[idx], ap, 1, 0);
+int PromiseManager::doGetPromiseType(FtPromiseId pid)
+{
+    PromiseData* data = getPromiseData(pid);
+    if (!data) {
+        FEATURE_LOG_ERROR("get promise data with handle: %" PRId32 " failed !", pid);
+        return -1;
+    }
+    return data->getPromiseType();
 }
 
 PromiseManager::PromiseData* PromiseManager::getPromiseData(FtPromiseId pid)
@@ -123,39 +301,22 @@ PromiseManager::PromiseData* PromiseManager::getPromiseData(FtPromiseId pid)
 feature_value_t PromiseManager::getPromise(FtPromiseId pid)
 {
     PromiseData* data = getPromiseData(pid);
-    if (!data)
-        return FEATURE_VALUE_UNDEFINED;
-
-    return data->promise;
+    if (data) {
+        return data->promise();
+    }
+    return FEATURE_VALUE_UNDEFINED;
 }
 
 void PromiseManager::markPromises(feature_runtime_ref rt, feature_mark_func mark_func)
 {
     // mark promies
     for (auto& pair : promises_) {
-        feature_mark_value(rt, pair.second->promise, mark_func);
-        feature_mark_value(rt, pair.second->resolve_funcs[0], mark_func);
-        feature_mark_value(rt, pair.second->resolve_funcs[1], mark_func);
+        PromiseData* data = pair.second;
+        data->mark(rt, mark_func);
     }
 }
 
-static bool argToTarget(JSContext* js_ctx, va_list& ap, FeatureType ftype, JSValue& target)
-{
-    void* param = extractVariadicParam(ap, ftype);
-    if (!param) {
-        FEATURE_LOG_ERROR("extract callback param failed !");
-        return false;
-    }
-    if (!FeatureFFIQjs::convertValueToGuest(ftype, param, js_ctx, target)) {
-        FEATURE_LOG_ERROR("convert callback param failed !");
-        free(param);
-        return false;
-    }
-    free(param);
-    return true;
-}
-
-int PromiseManager::invokeJsCallback(const CallbackType* callbackType, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
+int PromiseManager::invokeJsCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
     if (feature_is_undefined(callback)) {
         FEATURE_LOG_ERROR("callback is undefined !");
@@ -164,28 +325,27 @@ int PromiseManager::invokeJsCallback(const CallbackType* callbackType, feature_v
 
     // create argv list and initialize to undefined
     AutoArgs<JSContext*, JSValue> argv(js_ctx_, free_arg, undefined_arg, fixed_argc + rest_argc);
-    // convert parameters to feature_value_t
+    // convert params to feature_value_t
     for (int i = 0; i < fixed_argc; i++) {
-        FeatureType ftype = callbackType->parameters[i];
-        if (!argToTarget(js_ctx_, ap, ftype, argv[i])) {
+        FeatureType ftype = param_types[i];
+        if (!arg_to_target(js_ctx_, ap, ftype, argv[i])) {
             FEATURE_LOG_ERROR("extract callback param failed !");
             return -1;
         }
     }
 
-    // prepare for rest parameters
+    // prepare for rest params
     for (int i = fixed_argc; i < fixed_argc + rest_argc; i++) {
         // it must be FtMalloced.
         void* arg = va_arg(ap, void*);
         void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
         FTObjHeader* header = (FTObjHeader*)header_ptr;
         FeatureType ftype = header->featureType;
-        if (!FeatureFFIQjs::convertValueToGuest(ftype, FT_IS_REFERENCE(ftype) ? &arg : arg, js_ctx_, argv[i])) {
+        if (!convertValueToTarget(ftype, js_ctx_, FT_IS_REFERENCE(ftype) ? &arg : arg, argv[i])) {
             FEATURE_LOG_ERROR("convert callback rest param failed !");
             argv[i] = FEATURE_VALUE_UNDEFINED;
         }
     }
-
     feature_dup_value(js_ctx_, callback);
     feature_value_t ret = feature_call(js_ctx_, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
     feature_free_value(js_ctx_, callback);

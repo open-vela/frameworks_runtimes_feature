@@ -606,6 +606,7 @@ static void __load_after_work_cb(uv_work_t* req, int status)
         system_file_read_txt_succ_t* data = system_fileMallocread_txt_succ_t();
         char* buf = (char*)FeatureMalloc(fr->len + 1, FT_CHAR);
         memcpy(buf, fr->buf, fr->len);
+        buf[fr->len] = 0;
         data->text = (const char*)buf;
         __invoke_fr_cb(fr, 0, NULL, data);
     } else if (fr->type == FILE_READARRBUF) {
@@ -877,7 +878,7 @@ system_file_file_info_t* get_file_info(FileInfo* info)
 {
     system_file_file_info_t* file_info = system_fileMallocfile_info_t();
     char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_STRING));
-    sprintf(uri, "%s", info->uri);
+    strncpy(uri, info->uri, strlen(info->uri));
     file_info->uri = uri;
     file_info->length = info->length;
     file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;
@@ -893,7 +894,7 @@ system_file_extended_file_info_t* get_extended_file_info(FileReq* fr, FileInfo* 
     sprintf(type, info->type == 0 ? "file" : "dir");
     file_info->type = type;
     char* uri = static_cast<char*>(FeatureMalloc(strlen(info->uri) + 1, FT_STRING));
-    sprintf(uri, "%s", info->uri);
+    strncpy(uri, info->uri, strlen(info->uri));
     file_info->uri = uri;
     file_info->length = info->length;
     file_info->lastModifiedTime = (info->last_modified_time) * 1000LL;

@@ -25,11 +25,10 @@
 #include <alloca.h>
 #include <cstdint>
 #include <cstring>
-#include <ffi.h>
 #include <functional>
 #include <stdlib.h>
 
-namespace ferry {
+namespace feature_framework {
 
 namespace FeatureFFIQjs {
 
@@ -554,4 +553,4 @@ namespace FeatureFFIQjs {
     }
 
 }
-} // namespace ferry
+} // namespace feature_framework

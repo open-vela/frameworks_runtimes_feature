@@ -27,9 +27,8 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,13 +42,6 @@ void Simple_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle);
 void Simple_onUnregister(const char* feature_name);
 
 // Struct defines
-typedef struct _Struct_test_Array {
-  FtInt _page_count;
-  FtString _title;
-  FtBool _is_end;
-} struct_test_Array;
-
-struct_test_Array* struct_testMallocArray();
 
 // Function wrappers to be implemented
 void Simple_wrap_printStr(FeatureInstanceHandle feature, AppendData append_data, FtString c);
@@ -64,10 +56,8 @@ void Simple_wrap_foo2(FeatureInstanceHandle feature, AppendData append_data, FtI
 void Simple_wrap_foo3(FeatureInstanceHandle feature, AppendData append_data, FtInt x, FtDouble y, FtCallbackId cb);
 void Simple_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData append_data);
 void Simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData append_data);
-FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, FtArray& values);
+FtInt Simple_wrap_bar2(FeatureInstanceHandle feature, AppendData append_data, FtArray* values);
 FtArray* Simple_wrap_bar3(FeatureInstanceHandle feature, AppendData append_data);
-FtArray* Simple_wrap_bar4(FeatureInstanceHandle feature, AppendData append_data);
-FtInt Simple_wrap_bar7(FeatureInstanceHandle feature, AppendData append_data, FtArray& values);
 
 // Interface constructors
 
@@ -80,10 +70,8 @@ FtString Simple_get_version(void* feature, AppendData append_data);
 FtArray* Simple_get_args(void* feature, AppendData append_data);
 
 // Array malloc functions
-FtArray* Simple_malloc_string_array();
-FtArray* Simple_malloc_int_array();
-
-FtArray* Simple_malloc_struct_array();
+FtArray* Simple_malloc_int_array(void);
+FtArray* Simple_malloc_string_array(void);
 
 #endif // JSON_AST_GEN_MODULE_SIMPLE_H_
 /* clang-format on */

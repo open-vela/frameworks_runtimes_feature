@@ -56,7 +56,7 @@ struct common_params {
 }
 
 void getInfo(getinfo_params cb)
-void getDeviceId(common_params cb)
+string getDeviceId(common_params cb = null)
 void getId(common_params cb)
 void getSerial(common_params cb)
 void getTotalStorage(common_params cb)

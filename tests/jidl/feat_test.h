@@ -16,6 +16,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 /* clang-format off */
@@ -26,7 +27,6 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>

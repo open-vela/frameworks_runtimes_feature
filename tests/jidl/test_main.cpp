@@ -16,6 +16,8 @@
 #include <binder/IPCThreadState.h>
 #endif
 
+using namespace feature_framework;
+
 bool load_file(const char* file_name, char** file_content);
 
 #define TIME_LIMIT 2000 // 异步限时 2000ms
@@ -124,7 +126,7 @@ static void execute_job_cb(uv_prepare_t* handle)
 static void async_limit_cb(uv_timer_t* handle)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(handle->data);
-    uv_loop_t* ploop = static_cast<ferry::FeatureManager*>(env->manager)->getUVLoop();
+    uv_loop_t* ploop = static_cast<FeatureManager*>(env->manager)->getUVLoop();
     uv_stop(ploop);
 }
 
@@ -135,7 +137,7 @@ static void async_limit_cb(uv_timer_t* handle)
 static int run_loop(void* feat_test_env)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(feat_test_env);
-    ferry::FeatureManager* manager = static_cast<ferry::FeatureManager*>(env->manager);
+    FeatureManager* manager = static_cast<FeatureManager*>(env->manager);
     uv_timer_t* async_timer = static_cast<uv_timer_t*>(env->async_limiter);
     uv_loop_t* ploop = manager->getUVLoop();
     uv_timer_start(async_timer, async_limit_cb, env->time_limit, 0);
@@ -160,7 +162,7 @@ static int run_loop(void* feat_test_env)
 static int stop_loop(void* feat_test_env)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(feat_test_env);
-    ferry::FeatureManager* manager = static_cast<ferry::FeatureManager*>(env->manager);
+    FeatureManager* manager = static_cast<FeatureManager*>(env->manager);
     uv_loop_t* ploop = manager->getUVLoop();
     uv_stop(ploop);
     return 0;

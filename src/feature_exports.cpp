@@ -29,7 +29,7 @@
 #include <cstdint>
 #include <string.h>
 
-using namespace ferry;
+using namespace feature_framework;
 
 #define FEATURE_INSTANCE_CHECK(__instance_handle__, __ret__)                                \
     do {                                                                                    \
@@ -44,12 +44,12 @@ using namespace ferry;
         }                                                                                   \
     } while (0);
 
-#define FEATURE_INSTANCE_CHECK_PTR(__ptr__, __ret__, __log__) \
-    do {                                                      \
-        if (!__ptr__) {                                       \
-            FEATURE_LOG_ERROR(__log__);                       \
-            return __ret__;                                   \
-        }                                                     \
+#define FEATURE_CHECK_PTR(__ptr__, __ret__, __log__) \
+    do {                                             \
+        if (!__ptr__) {                              \
+            FEATURE_LOG_ERROR(__log__);              \
+            return __ret__;                          \
+        }                                            \
     } while (0);
 
 void* FeatureMalloc(size_t size, FeatureType featureType)
@@ -69,7 +69,7 @@ void* FeatureMalloc(size_t size, FeatureType featureType)
 
 void* FeatureDupValue(void* ptr)
 {
-    FEATURE_INSTANCE_CHECK_PTR(ptr, nullptr, "ptr is null !")
+    FEATURE_CHECK_PTR(ptr, nullptr, "ptr is null !")
     FTObjHeader* header = (FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
     header->ref_count++;
     return ptr;
@@ -96,9 +96,8 @@ void FeatureFreeValue(void* ptr)
             auto member_count = countMember(objMapType.members);
             for (int i = 0; i < member_count; i++) {
                 ObjectMember* member = &objMapType.members[i];
-                auto member_type = member->type;
-                TRY_GET_REAL_TYPE(member_type);
-                if (FT_NEED_FREE(member_type)) {
+                FeatureType mtype = FT_GET_REAL_TYPE(member->type);
+                if (FT_NEED_FREE(mtype)) {
                     void* member_ptr = (void*)((char*)ptr + member->offset);
                     FeatureFreeValue(*(void**)member_ptr);
                 }
@@ -153,41 +152,41 @@ static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle
 
 FeatureProtoHandle FeatureGetProtoHandle(FeatureInstanceHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     return (FeatureProtoHandle) static_cast<FeatureInstance*>(handle)
         ->prototype();
 }
 
 void* FeatureGetProtoData(FeatureProtoHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->native();
 }
 
 void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
+    FEATURE_CHECK_PTR(handle, ;, "handle is null !")
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     proto->setNative(data);
 }
 
 void* FeatureGetObjectData(FeatureInstanceHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     return static_cast<FeatureInstance*>(handle)->native();
 }
 
 void FeatureSetObjectData(FeatureInstanceHandle handle, void* data)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
+    FEATURE_CHECK_PTR(handle, ;, "handle is null !")
     auto instance = static_cast<FeatureInstance*>(handle);
     instance->setNative(data);
 }
 
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     return manager_from_instance(handle)->getFeatureContext();
 }
 
@@ -200,21 +199,21 @@ JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
 
 const char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->featureManager()->packageName();
 }
 
 const char* FeatureGetPackageVersion(FeatureProtoHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->featureManager()->packageVesion();
 }
 
 const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->featureManager()->envName();
 }
@@ -222,7 +221,7 @@ const char* FeatureGetEnvironmentName(FeatureProtoHandle handle)
 void* FeatureInstanceGetManagerUserData(FeatureInstanceHandle handle,
     const char* name)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     return manager_from_instance(handle)->getUserData(name);
 }
 
@@ -272,29 +271,48 @@ bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     va_list ap;
     va_start(ap, pid);
-    int ret = instance->settlePromise(true, pid, ap);
+    int ret = instance->resolvePromise(pid, ap);
     va_end(ap);
     return ret == 0;
 }
 
-bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid, ...)
+bool FeaturePromiseReject(FeatureInstanceHandle handle, FtPromiseId pid,
+    int code, const char* msg)
 {
     FEATURE_INSTANCE_CHECK(handle, false)
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
-    va_list ap;
-    va_start(ap, pid);
-    int ret = instance->settlePromise(false, pid, ap);
-    va_end(ap);
+    int ret = instance->rejectPromise(pid, code, msg);
     return ret == 0;
+}
+
+FeaturePromiseType FeatureGetPromiseType(FeatureInstanceHandle handle, FtPromiseId pid)
+{
+    FEATURE_INSTANCE_CHECK(handle, FEATURE_PROMISE_TYPE_INVALID)
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    int promise_type = instance->getPromiseType(pid);
+    if (promise_type < 0 || promise_type > 1) {
+        return FEATURE_PROMISE_TYPE_INVALID;
+    }
+    return (FeaturePromiseType)promise_type;
 }
 
 FeatureInterfaceHandle FeatureCreateInterface(FeatureInstanceHandle handle,
     VTable* vtable)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     FeaturePrototype* module_proto = instance->prototype()->modulePrototype();
     return module_proto->createInterface(vtable);
+}
+
+NativeFunc FeatureGetInterfaceMember(FeatureInterfaceHandle handle, size_t index)
+{
+    if (!handle) {
+        FEATURE_LOG_ERROR("handle is null !");
+        return nullptr;
+    }
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->getVirtualFunction(index);
 }
 
 bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
@@ -305,17 +323,21 @@ bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     return true;
 }
 
-FeatureManagerHandle FeatureCreateManager(const char* package_name)
+FeatureManagerHandle FeatureCreateManager(FeatureManagerCreateInfo* pinfo)
 {
-    FeatureRegistry* registry = new ferry::FeatureRegistry();
-    registry->init(package_name);
-    FeatureManagerQjs* manager = new ferry::FeatureManagerQjs(registry);
+    return (FeatureManagerHandle)FeatureManager::CreateFeatureManager(pinfo);
+}
 
-    return manager;
+ft_context_ref FeatureManagerGetContext(FeatureManagerHandle handle)
+{
+    FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return manager->getFeatureContext();
 }
 
 void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* data)
 {
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     if (manager) {
         manager->setArgsErrorCb(cb, data);
@@ -324,6 +346,7 @@ void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* da
 
 void FeatureSetPackageVersion(FeatureManagerHandle handle, const char* package_version)
 {
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     if (manager) {
         manager->setPackageVesion(package_version);
@@ -332,83 +355,93 @@ void FeatureSetPackageVersion(FeatureManagerHandle handle, const char* package_v
 
 void FeatureFreeManager(FeatureManagerHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
     delete manager;
 }
 
 void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
     manager->setUVLoop(loop);
 }
 
 void FeatureUnsetUVLoop(FeatureManagerHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
     manager->unsetUVLoop();
 }
 
 uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->getUVLoop();
 }
 
 void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
     manager->setUserData(name, data);
+}
+
+bool FeatureHasFeature(FeatureManagerHandle handle, FtString feature_method)
+{
+    FEATURE_CHECK_PTR(handle, false, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return manager->hasFeature(feature_method);
 }
 
 void* FeatureGetManagerUserData(FeatureManagerHandle handle, const char* name)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
+    FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->getUserData(name);
 }
 
 void FeatureUninit(FeatureManagerHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, ;, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
-    return manager->uninit();
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    manager->uninit();
 }
 
-JSValue FeatureRequire(FeatureManagerHandle handle, void* ctx, JSValue binding_object, const char* name)
+ft_value_t FeatureRequire(FeatureManagerHandle handle, ft_value_t binding_obj, const char* name)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, JS_UNDEFINED, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
-    return manager->featureRequire(ctx, binding_object, name);
+    ft_value_t ret = { 0 };
+    FEATURE_CHECK_PTR(handle, ret, "handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return manager->featureRequire(binding_obj, name);
 }
 
-JSValue FeatureFindFeature(FeatureManagerHandle handle, feature_context_ref ctx, const char* module_name)
+ft_value_t FeatureFindFeature(FeatureManagerHandle handle, const char* name)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, JS_UNDEFINED, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
-    return manager->findFeature(ctx, module_name);
+    ft_value_t ret = { 0 };
+    FEATURE_CHECK_PTR(handle, ret, "handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return manager->findFeature(name);
 }
 
-JSValue FeatureCreateFeature(FeatureManagerHandle handle, feature_context_ref ctx, JSValue prototype, JSValue vm_object)
+ft_value_t FeatureCreateFeature(FeatureManagerHandle handle, ft_value_t prototype, ft_value_t binding_obj)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, JS_UNDEFINED, "handle is null !")
-    FeatureManagerQjs* manager = static_cast<FeatureManagerQjs*>(handle);
-    return manager->createFeature(ctx, prototype, vm_object);
+    ft_value_t ret = { 0 };
+    FEATURE_CHECK_PTR(handle, ret, "handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return manager->createFeature(prototype, binding_obj);
 }
 
 FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     return manager_from_instance(handle);
 }
 
 FeatureManagerHandle FeatureGetManagerHandleFromProto(FeatureProtoHandle handle)
 {
-    FEATURE_INSTANCE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
     FeaturePrototype* proto = static_cast<FeaturePrototype*>(handle);
     return proto->featureManager();
 }
@@ -422,7 +455,7 @@ bool FeatureCheckCallbackId(FeatureInstanceHandle handle, FtCallbackId cid)
 
 bool FeatureRegisterFeature(FeatureRegistryHandle handle, const FeatureDescription* description)
 {
-    FEATURE_INSTANCE_CHECK_PTR(description, false, "description is null !")
+    FEATURE_CHECK_PTR(description, false, "description is null !")
     FeatureRegistry* registry = static_cast<FeatureRegistry*>(handle);
     if (!registry) {
         FEATURE_LOG_ERROR("Failed to get FeatureRegistry instance!");
@@ -455,4 +488,67 @@ bool FeatureInstanceIsDetached(FeatureInstanceHandle handle)
         return instance->isDetached();
     }
     return false;
+}
+
+void FeatureDumpMemory(FeatureManagerHandle handle, FeatureMemoryDump* dump, void* userdata)
+{
+    if (handle) {
+        FeatureManager* manager = static_cast<FeatureManager*>(handle);
+        manager->onDumpMemory(dump, userdata);
+    }
+}
+
+FtEventId FeatureGetEventId(FeatureInstanceHandle handle, const char* name)
+{
+    FEATURE_INSTANCE_CHECK(handle, 0)
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->getEventId(name);
+}
+
+const char* FeatureGetEventName(FeatureInstanceHandle handle, FtEventId eid)
+{
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->getEventName(eid);
+}
+
+bool FeatureEmitEvent(FeatureInstanceHandle handle, FtEventId eid, ...)
+{
+    FEATURE_INSTANCE_CHECK(handle, false)
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    va_list ap;
+    va_start(ap, eid);
+    bool ret = instance->emitEvent(eid, ap);
+    va_end(ap);
+    return ret;
+}
+
+bool FeatureEmitEventByName(FeatureInstanceHandle handle, const char* name, ...)
+{
+    FEATURE_INSTANCE_CHECK(handle, false)
+    FtEventId eid = FeatureGetEventId(handle, name);
+    if (eid <= 0) {
+        return false;
+    }
+
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    va_list ap;
+    va_start(ap, name);
+    bool ret = instance->emitEvent(eid, ap);
+    va_end(ap);
+    return ret;
+}
+
+void FeatureSetEventChangeListener(FeatureInstanceHandle handle, FeatureEventChangeListener listener)
+{
+    FEATURE_INSTANCE_CHECK(handle, ;)
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    instance->setEventChangeListener(listener);
+}
+
+int FeatureGetEventCallbackCount(FeatureInstanceHandle handle, FtEventId eid)
+{
+    FEATURE_INSTANCE_CHECK(handle, 0)
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->getEventCallbackCount(eid);
 }

@@ -25,7 +25,7 @@
 #include <functional>
 #include <string>
 
-namespace ferry {
+namespace feature_framework {
 
 FeaturePrototypeQjs::FeaturePrototypeQjs(const FeatureDescription* description)
     : FeaturePrototype(description)

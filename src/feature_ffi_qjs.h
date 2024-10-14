@@ -20,7 +20,7 @@
 #include "feature.h"
 #include "feature_ffi.h"
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureInstance;
 

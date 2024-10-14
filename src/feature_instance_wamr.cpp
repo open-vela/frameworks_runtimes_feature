@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 #include "feature_instance_wamr.h"
-#include "feature_manager_wamr.h"
-
-#include "feature_ffi_wamr.h"
+#include "feature_ffi.h"
 #include "feature_log.h"
+#include "feature_manager_wamr.h"
 #include "feature_prototype.h"
 #include "feature_utils.h"
 #include "feature_wamr_utils.h"
+// clang-format off
+#include "value_translator_wamr.h"
+#include "feature_convertor_templates.h"
+// clang-format on
 
 #include <cstdarg>
 #include <cstdint>
-#include <ffi.h>
 #include <string.h>
 
 static void fillArg(char* argp, uint32 args, FeatureType& ftype, uint64_t target, uint32& filled)
@@ -54,7 +56,7 @@ static void fillArg(char* argp, uint32 args, FeatureType& ftype, uint64_t target
     }
 }
 
-namespace ferry {
+namespace feature_framework {
 
 FeatureInstanceWamr::FeatureInstanceWamr(FeaturePrototype* proto)
     : FeatureInstance(proto, proto->description())
@@ -85,9 +87,19 @@ bool FeatureInstanceWamr::removeCallback(FtCallbackId cid)
     return eraseCallback(cid);
 }
 
-int FeatureInstanceWamr::settlePromise(bool resolve, FtPromiseId pid, va_list& ap)
+int FeatureInstanceWamr::resolvePromise(FtPromiseId pid, va_list& ap)
 {
-    int ret = doSettlePromise(resolve, pid, ap);
+    int ret = doResolvePromise(pid, ap);
+    if (!removePromise(pid)) {
+        FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
+        ret = -2;
+    }
+    return ret;
+}
+
+int FeatureInstanceWamr::rejectPromise(FtPromiseId pid, int code, const char* msg)
+{
+    int ret = doRejectPromise(pid, code, msg);
     if (!removePromise(pid)) {
         FEATURE_LOG_ERROR("remove promise:%" PRId32 " failed !", pid);
         ret = -2;
@@ -104,7 +116,7 @@ int FeatureInstanceWamr::invokeCallback(FtCallbackId cid, va_list& ap)
     }
     bool has_rest_param = false;
     int32_t int32_count = 0;
-    CallbackType* cb_type = cb_data->type;
+    const CallbackType* cb_type = cb_data->type;
     int fixed_argc = getParamCount(cb_type->parameters, &has_rest_param, nullptr, &int32_count);
     if (has_rest_param) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
@@ -123,7 +135,7 @@ int FeatureInstanceWamr::invokeCallbackCount(FtCallbackId cid, va_list& ap, int 
     }
     bool has_rest_param = false;
     int32_t int32_count = 0;
-    CallbackType* cb_type = cb_data->type;
+    const CallbackType* cb_type = cb_data->type;
     int fixed_argc = getParamCount(cb_type->parameters, &has_rest_param, nullptr, &int32_count);
     if (!has_rest_param || count < fixed_argc) {
         FEATURE_LOG_ERROR("resut parameter callback must invoke with FeatureInvokeCallbackCount!");
@@ -131,6 +143,49 @@ int FeatureInstanceWamr::invokeCallbackCount(FtCallbackId cid, va_list& ap, int 
     }
 
     return callCallback(cb_data, ap, fixed_argc, count - fixed_argc);
+}
+
+bool FeatureInstanceWamr::emitEvent(FtEventId eid, va_list& ap)
+{
+    if (eid <= 0) {
+        FEATURE_LOG_DEBUG("event is undefined !");
+        return false;
+    }
+    auto ev_data = getEventData(eid);
+    if (!ev_data) {
+        FEATURE_LOG_ERROR("event is undefined !");
+        return false;
+    }
+    bool has_rest_param = false;
+    int32_t int32_count = 0;
+    const MemberEvent* member_event = ev_data->memberEvent();
+    int fixed_argc = getParamCount(member_event->parameters, &has_rest_param, nullptr, &int32_count);
+    if (has_rest_param) {
+        FEATURE_LOG_ERROR("wrong param count!");
+        return false;
+    }
+
+    return doEmitEvent(ev_data, ap, fixed_argc, 0);
+}
+
+void FeatureInstanceWamr::setEventChangeListener(FeatureEventChangeListener listener)
+{
+    doSetEventChangeListener(listener, this);
+}
+
+FtEventId FeatureInstanceWamr::getEventId(const char* name)
+{
+    return doGetEventId(name);
+}
+
+const char* FeatureInstanceWamr::getEventName(FtEventId eid)
+{
+    return doGetEventName(eid);
+}
+
+int FeatureInstanceWamr::getEventCallbackCount(FtEventId eid)
+{
+    return doGetEventCallbackCount(eid);
 }
 
 wasm_exec_env_t FeatureInstanceWamr::getContext()
@@ -147,7 +202,7 @@ bool FeatureInstanceWamr::argToTarget(va_list& ap, FeatureType ftype, uint64_t& 
         FEATURE_LOG_ERROR("extract callback param failed !");
         return false;
     }
-    if (!FeatureFFIWamr::convertValueToGuest(this, ftype, param, env, target)) {
+    if (!convertValueToTarget(ftype, env, param, target)) {
         FEATURE_LOG_ERROR("convert callback param failed !");
         free(param);
         return false;
@@ -162,7 +217,7 @@ bool FeatureInstanceWamr::variArgToTarget(void* arg, wasm_value_t& target)
     dyn_ctx_t dyn_ctx = dyntype_get_context();
     FTObjHeader* header = (FTObjHeader*)((char*)arg - FT_OBJ_HEADER_SIZE);
     uint64_t guest;
-    if (!FeatureFFIWamr::convertValueToGuest(this, header->featureType, FT_IS_REFERENCE(header->featureType) ? &arg : arg, env, guest)) {
+    if (!convertValueToTarget(header->featureType, env, FT_IS_REFERENCE(header->featureType) ? &arg : arg, guest)) {
         FEATURE_LOG_ERROR("convert callback param failed !");
         return false;
     }
@@ -206,7 +261,7 @@ bool FeatureInstanceWamr::variArgToTarget(void* arg, wasm_value_t& target)
     return true;
 }
 
-int FeatureInstanceWamr::doInvokeCallback(const CallbackType* cb_type, wasm_obj_t callback, va_list& ap, int fixed_argc, int rest_argc)
+int FeatureInstanceWamr::doInvokeCallback(const FeatureType* param_types, wasm_obj_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
     if (callback == nullptr) {
         FEATURE_LOG_ERROR("callback is undefined !");
@@ -231,20 +286,11 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType* cb_type, wasm_obj_
     bh_memcpy_s(argp + filled, args - filled, &thiz.gc_obj, sizeof(void*));
     filled += sizeof(void*);
 
-    uint32_t obj_cnt = 0;
+    wasm_local_obj_ref_t* obj_ref_head = wasm_runtime_get_cur_local_obj_ref(env);
     /* convert parameters to feature_value_t */
     for (int i = 0; i < fixed_argc; i++) {
-        FeatureType ftype = cb_type->parameters[i];
+        FeatureType ftype = param_types[i];
         uint64_t target = 0;
-        /* if need create obj is string obj */
-        if (FT_IS_PRIMITIVE(ftype) && ftype == FT_STRING)
-            obj_cnt++;
-        /* if need create obj is struct obj or array obj */
-        if (FT_IS_COMPLEX(ftype)) {
-            ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
-            if (complex_type->type == COMPLEX_STRUCT_MAP || complex_type->type == COMPLEX_ARRAY)
-                obj_cnt++;
-        }
         if (!argToTarget(ap, ftype, target)) {
             FEATURE_LOG_ERROR("extract callback param failed !");
             return -1;
@@ -254,7 +300,7 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType* cb_type, wasm_obj_
 
     /* create an array object with element type any rest_argc number of elements if the callback func have rest_argc. */
     if (rest_argc > 0) {
-        wasm_struct_obj_t array_struct = create_any_array_struct(env, rest_argc);
+        wasm_struct_obj_t array_struct = create_array_with_type(env, rest_argc, VALUE_TYPE_ANYREF);
         /*  Take out the array data field of the array object,
          *  then wrap and assign any type to each element of the array.
          */
@@ -281,11 +327,8 @@ int FeatureInstanceWamr::doInvokeCallback(const CallbackType* cb_type, wasm_obj_
     filled = filled / (sizeof(uint32) / sizeof(char));
     wasm_runtime_call_func_ref(env, (wasm_func_obj_t)func_obj.gc_obj, filled, argv);
 
-    /* pop native create obj local ref ptr */
-    for (uint32_t i = 0; i < obj_cnt; i++) {
-        wasm_local_obj_ref_t* local_ref = wasm_runtime_pop_local_obj_ref(env);
-        free(local_ref);
-    }
+    /* pop native createD obj local ref ptr */
+    pop_local_obj_ref_to_head(env, obj_ref_head);
     return 0;
 }
 

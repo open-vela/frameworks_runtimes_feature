@@ -1,7 +1,7 @@
 module system.messageChannel@1.0
 
 // Message模式
-promise<string, string> sendMessage(string target, string body);
+promise<string> sendMessage(string target, string body);
 void reply(int reply_id, string reply);
 
 // event ReciveRequest(string target, int reply, string message); //接收来自sendMessage消息
@@ -31,7 +31,7 @@ callback cb_onclose(int code)
 callback cb_onerror(int code, string data)
 callback cb_onreceive(int session_id, string message)
 
-promise<int, string> createSession(string target); // return sessionId
+promise<int> createSession(string target); // return sessionId
 void sessionSend(int session_id, string message); // 通过session发送消息
 void sessionClose(int session_id); // 主动关闭session
 void acceptSession(int session_id); // no use now

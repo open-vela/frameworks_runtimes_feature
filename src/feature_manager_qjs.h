@@ -19,18 +19,11 @@
 #include "feature.h"
 #include "feature_manager.h"
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureRegistry;
 class FeatureInstance;
 class FeaturePrototypeQjs;
-
-typedef enum ErrorCode {
-    GENERAL = 200,
-    ARGSERROR = 202,
-    IOERROR = 300,
-    TIMEOUT = 204
-} ErrorCode;
 
 /**
  * @brief Feature Manager, Manage all feature instance.
@@ -42,8 +35,17 @@ typedef enum ErrorCode {
  */
 class FeatureManagerQjs : public FeatureManager {
 public:
-    FeatureManagerQjs(FeatureRegistry* registry);
+    FeatureManagerQjs(FeatureRegistry* registry, feature_context_ref ctx);
     virtual ~FeatureManagerQjs();
+
+    virtual void uninit();
+
+    virtual ft_value_t featureRequire(ft_value_t binding_obj, const char* name);
+
+    virtual ft_value_t findFeature(const char* name);
+
+    virtual ft_value_t createFeature(ft_value_t prototype, ft_value_t binding_obj);
+
     /**
      * @brief featureRequire, return feature object by name
      *
@@ -52,8 +54,6 @@ public:
      * @return JSValue
      */
     feature_value_t featureRequire(context_ref ctx, feature_value_t vm_object, const char* name);
-
-    void uninit();
 
     feature_value_t findFeature(feature_context_ref ctx, const char* name);
 

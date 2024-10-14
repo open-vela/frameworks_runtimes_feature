@@ -5,6 +5,7 @@ import sys
 import os
 import re
 import json
+import jidl_error
 from mako.template import Template
 
 g_debug = False
@@ -70,7 +71,7 @@ class Render:
 
   def _MapType(self, ast_type, type_map):
     if not isinstance(ast_type, str):
-      raise Exception('not a valid str type: {}'.format(ast_type))
+      raise Exception('invalid str type: {}'.format(ast_type))
     if ast_type not in type_map:
       raise Exception('can not map type: {}'.format(ast_type))
     return type_map[ast_type]
@@ -128,10 +129,6 @@ class Render:
 
 ### CPP Render
 class CPPRender(Render):
-  param_ref_types = (
-    'FtArray',
-  )
-
   cpp_type_map = {
     'int' : 'FtInt',
     'uint' : 'unsigned int',
@@ -153,21 +150,21 @@ class CPPRender(Render):
     'ellipse' : 'FtVariParams',
     'callback' : 'FtCallbackId',
     'object' : 'FtAny',
-    'array'  : 'FtArray',
-    'Int8Array' : 'FtArray',
-    'Uint8Array' : 'FtArray',
-    'Int16Array' : 'FtArray',
-    'Uint16Array' : 'FtArray',
-    'Int32Array' : 'FtArray',
-    'Uint32Array' : 'FtArray',
-    'Int64Array' : 'FtArray',
-    'Uint64Array' : 'FtArray',
-    'IntArray' : 'FtArray',
-    'UintArray' : 'FtArray',
-    'LongArray' : 'FtArray',
-    'UlongArray' : 'FtArray',
-    'FloatArray' : 'FtArray',
-    'DoubleArray' : 'FtArray',
+    'array'  : 'FtArray*',
+    'Int8Array' : 'FtArray*',
+    'Uint8Array' : 'FtArray*',
+    'Int16Array' : 'FtArray*',
+    'Uint16Array' : 'FtArray*',
+    'Int32Array' : 'FtArray*',
+    'Uint32Array' : 'FtArray*',
+    'Int64Array' : 'FtArray*',
+    'Uint64Array' : 'FtArray*',
+    'IntArray' : 'FtArray*',
+    'UintArray' : 'FtArray*',
+    'LongArray' : 'FtArray*',
+    'UlongArray' : 'FtArray*',
+    'FloatArray' : 'FtArray*',
+    'DoubleArray' : 'FtArray*',
   }
 
   array_cpp_type_map = {
@@ -269,6 +266,9 @@ class CPPRender(Render):
     self.source_file = source_file
     self.func_ret_node_map = {}
     self.callback_id_set = set()
+    self.event_id_map = {}
+    self.interface_events_map = {}
+    self.event_idx = 0
     self.promise_type_set = set()
     self.struct_name_set = set()
     self.interface_name_set = set()
@@ -323,11 +323,11 @@ class CPPRender(Render):
       return self._MapType(ast_type, self.cpp_type_map)
 
     if not isinstance(ast_type, dict):
-      raise Exception('not a valid complex type: {}'.format(ast_type))
+      raise Exception('invalid complex type: {}'.format(ast_type))
 
     module_name = self.GetModuleName()
     if 'element' in ast_type:
-      return 'FtArray'
+      return 'FtArray*'
     elif 'referred_type' in ast_type:
       referred_type = ast_type['referred_type']
       if referred_type == 'callback':
@@ -341,16 +341,13 @@ class CPPRender(Render):
         struct_name = ast_type['name']
         return f"{module_name}_{struct_name} *"
     else:
-      raise Exception('not a valid complex type: {}'.format(ast_type))
-
-  def IsParamRefType(self, cpp_type):
-    return cpp_type in self.param_ref_types
+      raise Exception('invalid complex type: {}'.format(ast_type))
 
   def GenerateArrayCppType(self, ast_type):
     if isinstance(ast_type, str):
       return self._MapType(ast_type, self.array_cpp_type_map)
     if not isinstance(ast_type, dict) or ('element' not in ast_type):
-      raise Exception('not a valid array type: {}'.format(ast_type))
+      raise Exception('invalid array type: {}'.format(ast_type))
     return self._MapType(ast_type['element'], self.cpp_type_map)
 
   def GetOptValName(self, feature_type):
@@ -474,7 +471,7 @@ class CPPRender(Render):
     elif ast_type['type'] == 'promise':
       raise Exception('promise is not supported now, type: {}'.format(ast_type))
     else:
-      raise Exception('not a valid complex type: {}'.format(ast_type))
+      raise Exception('invalid complex type: {}'.format(ast_type))
 
   def GenerateFtExpression(self, info):
     ft_expr = info['type']
@@ -484,33 +481,23 @@ class CPPRender(Render):
       ft_expr = f"FT_MK_COMPLEX(&{ft_expr})"
     return ft_expr
 
-  def GeneratePromiseType(self, ret_type):
-    if not isinstance(ret_type, dict) \
-      or ret_type['type'] != 'promise':
-        raise Exception('not a valid promise type: {}'.format(ret_type))
+  def GenerateReturnFtInfo(self, ret_node):
+    if isinstance(ret_node, dict) and ret_node['type'] == 'promise':
+      resolve_info = self.GenerateFeatureInfo(ret_node['resolve_type'])
+      resolve_ft = resolve_info['type']
+      promise_ft = f"promise_{resolve_ft}_type"
+      return {'type': promise_ft, 'is_complex': True}
+    return render.GenerateFeatureInfo(ret_node)
 
-    if not ('resolve_type' in ret_type and 'reject_type' in ret_type):
-      raise Exception('not a complete promise type: {}'.format(ret_type))
-
-    resolve_type = self.GenerateCppType(ret_type['resolve_type'])
-    reject_type = self.GenerateCppType(ret_type['reject_type'])
-    return f"promise<{resolve_type}, {reject_type}>"
-
-  def _GenerateReturnType(self, ret_type):
-    if isinstance(ret_type, str):
-      return self._MapType(ret_type, self.cpp_type_map)
-    elif isinstance(ret_type, dict):
-      if ret_type['type'] == 'promise':
+  def GenerateReturnType(self, ret_node):
+    if isinstance(ret_node, str):
+      return self._MapType(ret_node, self.cpp_type_map)
+    elif isinstance(ret_node, dict):
+      if ret_node['type'] == 'promise':
         return 'FtPromiseId'
       else:
-        return self.GenerateCppType(ret_type)
+        return self.GenerateCppType(ret_node)
     return 'void'
-
-  def GenerateReturnType(self, ret_type):
-    ret_type = self._GenerateReturnType(ret_type)
-    if ret_type == 'FtArray':
-      ret_type += '*'
-    return ret_type
 
   def GenerateParamList(self, params):
     param_list = []
@@ -520,8 +507,6 @@ class CPPRender(Render):
       if index < param_count -1 and param_type == 'ellipse':
         raise Exception('wrong ellipse param position: {}'.format(params))
       param_str = self.GenerateCppType(param_type)
-      if param_str in self.param_ref_types:
-        param_str += '&'
       if 'name' in param:
         p_name = param["name"]
         param_str += f" {p_name}"
@@ -530,24 +515,80 @@ class CPPRender(Render):
       param_list.append(param_str)
     return ", ".join(param_list)
 
-  def GenerateFunctionDefine(self, node):
-    if node['type'] != 'function':
-      return None
+  def GenerateParamTypeList(self, params):
+    type_list = []
+    param_count = len(params)
+    for index, param in enumerate(params):
+      param_type = param["type"]
+      if index < param_count -1 and param_type == 'ellipse':
+        raise Exception('wrong ellipse param position: {}'.format(params))
+      param_type = self.GenerateCppType(param_type)
+      type_list.append(param_type)
+    return type_list
 
-    identifier = node["identifier"]
-    ret_type_node = node["return_type"]
-    ret_type = self.GenerateReturnType(ret_type_node)
-    prefix_params = 'FeatureInstanceHandle feature, AppendData append_data'
+  def _GenerateParamsDefine(self, node, ret_type):
+    if 'identifier' not in node:
+      raise Exception('not a function or use node: {}'.format(node))
+    params_def = 'FeatureInstanceHandle feature, AppendData append_data'
     if ret_type == 'FtPromiseId':
-      ret_type = 'void'
-      prefix_params += ', FtPromiseId pid'
-    module_name = self.GetModuleName()
-    func_define = f"{ret_type} {module_name}_wrap_{identifier}({prefix_params}"
+      params_def += ', FtPromiseId pid'
     if 'params' in node:
       params_str = self.GenerateParamList(node["params"])
-      func_define += f", {params_str}"
-    func_define += ")"
+      params_def += f", {params_str}"
+    return params_def
+
+  def GenerateReturnParamsDefine(self, node, ret_node):
+    if 'identifier' not in node:
+      raise Exception('not a function or use node: {}'.format(node))
+    ret_type = self.GenerateReturnType(ret_node)
+    params_def = self._GenerateParamsDefine(node, ret_type)
+    return {'ret_type': ret_type, 'params_def': params_def}
+
+  def GenerateFunctionDefine(self, node):
+    if node['type'] != 'function':
+      raise Exception('not a function node: {}'.format(node))
+    identifier = node["identifier"]
+    ret_params = self.GenerateReturnParamsDefine(node, node["return_type"])
+    ret_type = ret_params['ret_type']
+    if ret_type == 'FtPromiseId':
+      ret_type = 'void'
+    params_def = ret_params['params_def']
+    module_name = self.GetModuleName()
+    func_define = f"{ret_type} {module_name}_wrap_{identifier}({params_def})"
     return func_define
+
+  def GenerateFuncStubDefine(self, node):
+    if node['type'] != 'function':
+      raise Exception('not a function node: {}'.format(node))
+    module_name = self.GetModuleName()
+    identifier = node["identifier"]
+    stub_define = f"void {module_name}_{identifier}_stub(NativeFunc wrap_func, void** argv, void* ret)"
+    return stub_define
+
+  def GenerateWrapFuncCallArgs(self, node, ret_node):
+    if 'identifier' not in node:
+      raise Exception('not a function or use node: {}'.format(node))
+    has_promise = isinstance(ret_node, dict) and ret_node['type'] == 'promise'
+    extra_argc = 0
+    arg_list = []
+    if has_promise:
+      extra_argc += 1
+      promis_arg = "*(FtPromiseId*)(argv[0])"
+      arg_list.append(promis_arg)
+    if 'params' in node:
+      argc = 0
+      for param in node['params']:
+        ptype = param['type']
+        argc += 1
+        if isinstance(ptype, str) and ptype == 'ellipse':
+          break
+      param_types = self.GenerateParamTypeList(node['params'])
+      for i in range(extra_argc, argc + extra_argc):
+        arg_name = f"argv[{i}]"
+        arg_type = param_types[i - extra_argc]
+        arg = f"*({arg_type}*)({arg_name})"
+        arg_list.append(arg)
+    return arg_list
 
   def GenerateInterfaceCtorDefine(self, node):
     if node['type'] != 'function':
@@ -559,15 +600,12 @@ class CPPRender(Render):
     ctor_name = f"{module_name}_{identifier}_instance"
     return f"{ret_type} {ctor_name}(FeatureInstanceHandle feature)"
 
-  def HasEllipseParam(self, node):
-    if not 'params' in node:
-      return False
-
-    params = node['params']
+  def HasEllipseParam(self, params):
+    if not isinstance(params, list):
+      raise Exception('params node is not a list: {}'.format(params))
     param_count = len(params)
     if param_count <= 0:
       return False
-
     last_param = params[param_count - 1]
     if last_param['type'] == 'ellipse':
       return True
@@ -600,11 +638,55 @@ class CPPRender(Render):
         call_list += f"{call_value}"
     return call_list
 
-  def TryCacheCallbackId(self, id):                                                                                                                                                                                                             
+  def TryCacheCallbackId(self, id):
     if not id in self.callback_id_set:
       self.callback_id_set.add(id)
       return True
     return False
+
+  def TryCacheEventId(self, id):
+    if not id in self.event_id_map:
+      self.event_idx += 1
+      self.event_id_map[id] = self.event_idx
+      return self.event_idx
+    print('warning: event id already exists: {}'.format(id))
+    return 0
+
+  def CheckInterfaceEventId(self, iname, id):
+    extends = self.GetInterfaceExtends(iname)
+    for extend in extends:
+      if not self.CheckInterfaceEventId(extend, id):
+        return False
+
+    if iname in self.interface_events_map:
+      event_set = self.interface_events_map[iname]
+      if id in event_set:
+        print('warning: event {} already exists in ancestor interface: {}'.format(id, iname))
+        return False
+    return True
+
+  def CacheInterfaceEventId(self, iname, id):
+    if iname in self.interface_events_map:
+      event_set = self.interface_events_map[iname]
+    else:
+      event_set = set()
+      self.interface_events_map[iname] = event_set
+
+    if id in event_set:
+      raise Exception('event {} already exists in interface: {}'.format(id, iname))
+    event_set.add(id)
+    return len(event_set)
+
+  def GetInterfaceFinalEventSize(self, iname):
+    final_size = 0
+    extends = self.GetInterfaceExtends(iname)
+    for extend in extends:
+      final_size += self.GetInterfaceFinalEventSize(extend)
+
+    if iname in self.interface_events_map:
+      event_set = self.interface_events_map[iname]
+      final_size += len(event_set)
+    return final_size
 
   def TryCachePromiseType(self, type):
     if not type in self.promise_type_set:
@@ -635,28 +717,28 @@ class CPPRender(Render):
     member_list.append(member_info)
 
   def GetFinalInterfaceMembers(self, name):
-    parent_members = []
+    member_list = []
     extends = self.GetInterfaceExtends(name)
     for extend in extends:
       # print('get parent member, parent: {}'.format(extend))
-      parent_members.extend(self.GetFinalInterfaceMembers(extend))
+      member_list.extend(self.GetFinalInterfaceMembers(extend))
 
     if name in self.interface_members_map:
-      parent_members.extend(self.interface_members_map[name])
-    return parent_members
+      member_list.extend(self.interface_members_map[name])
+    return member_list
 
-  def CacheVTableItem(self, interface_name, node, func_type):
-    if interface_name in self.vtable_map:
-      item_list = self.vtable_map[interface_name]
+  def CacheVTableItem(self, iname, node, item_type):
+    if iname in self.vtable_map:
+      item_list = self.vtable_map[iname]
     else:
       item_list = []
-      self.vtable_map[interface_name] = item_list
+      self.vtable_map[iname] = item_list
 
     params = ''
     ret_type = 'void'
     if node['type'] == 'function':
-      if func_type != 0:
-        raise Exception('interface member function with wrong type: {}'.format(func_type))
+      if item_type != 0:
+        raise Exception('interface member function with wrong type: {}'.format(item_type))
       name = node['identifier']
       ret_type = self.GenerateReturnType(node["return_type"])
       has_params = 'params' in node
@@ -671,52 +753,55 @@ class CPPRender(Render):
       name = node['name']
       prop_type = node["value_type"]
       cpp_type = self.GenerateCppType(prop_type)
-      if func_type == 1:
-        if cpp_type == 'FtArray':
-          cpp_type += '*'
+      if item_type == 1:
         ret_type = cpp_type
-      elif func_type == 2:
-        if self.IsParamRefType(cpp_type):
-          cpp_type += '&'
+      elif item_type == 2:
         params = f"{cpp_type} {name}"
       else:
-        raise Exception('interface member property with wrong type: {}'.format(func_type))
+        raise Exception('interface member property with wrong type: {}'.format(item_type))
     else:
-      raise Exception('not a valid interface member type: {}'.format(node))
+      raise Exception('invalid interface member type: {}'.format(node))
 
     func_item = {
        'index': 0,
        'name': name,
        'params': params,
        'return_type': ret_type,
-       'type': func_type # 0 for method, 1 for getter, 2 for setter
+       'type': item_type # 0 for method, 1 for getter, 2 for setter
     }
     item_list.append(func_item)
     index = item_list.index(func_item)
     func_item['index'] = index
     return index
 
-  def GetFinalVTable(self, interface_name):
+  def GetFinalVTable(self, iname):
     final_vtable = []
-    extends = self.GetInterfaceExtends(interface_name)
+    extends = self.GetInterfaceExtends(iname)
     for extend in extends:
       final_vtable.extend(self.GetFinalVTable(extend))
 
-    if not interface_name in self.vtable_map:
-      raise Exception('cannot find vtable for name: {}'.format(interface_name))
-    final_vtable.extend(self.vtable_map[interface_name])
+    if not iname in self.vtable_map:
+      raise Exception('cannot find vtable for name: {}'.format(iname))
+    final_vtable.extend(self.vtable_map[iname])
     return final_vtable
 
-  def GetFinalVTableSize(self, interface_name):
+  def GetFinalVTableSize(self, iname):
     final_size = 0
-    extends = self.GetInterfaceExtends(interface_name)
+    extends = self.GetInterfaceExtends(iname)
     for extend in extends:
       final_size += self.GetFinalVTableSize(extend)
 
-    if not interface_name in self.vtable_map:
-      raise Exception('cannot find vtable for name: {}'.format(interface_name))
-    final_size += len(self.vtable_map[interface_name])
+    if not iname in self.vtable_map:
+      raise Exception('cannot find vtable for name: {}'.format(iname))
+    final_size += len(self.vtable_map[iname])
     return final_size
+
+  def IsValidMemberType(self, member):
+    return member['type'] == 'function' \
+        or member['type'] == 'use' \
+        or member['type'] == 'property' \
+        or member['type'] == 'const' \
+        or member['type'] == 'event'
 
   def GetMemberInfo(self, member):
     member_info = {}
@@ -738,11 +823,13 @@ class CPPRender(Render):
       member_info['suffix'] = '_member_const'
       member_info['val_type'] = 'value'
       member_info['name'] = member['name']
+    elif member['type'] == 'event':
+      member_info['type'] = 'MEMBER_EVENT'
+      member_info['suffix'] = '_member_event'
+      member_info['val_type'] = 'event'
+      member_info['name'] = member['identifier']
     else:
-      member_info['type'] = 'MEMBER_NULL'
-      member_info['suffix'] = ''
-      member_info['val_type'] = ''
-      member_info['name'] = ''
+      raise Exception('invalid member type: {}'.format(member))
     return member_info
 
 ### TS Render
@@ -943,21 +1030,21 @@ class TSRender(Render):
       list_map[list_key] = list
     list.append(value)
 
-  def CacheInterfaceMember(self, interface_name, method_def):
-    # print("cache Interface({}) member: {}".format(interface_name, method_def))
-    self._CacheToListMap(self.interface_member_map, interface_name, method_def)
+  def CacheInterfaceMember(self, iname, method_def):
+    # print("cache Interface({}) member: {}".format(iname, method_def))
+    self._CacheToListMap(self.interface_member_map, iname, method_def)
 
-  def GetFinalInterfaceMembers(self, interface_name):
-    # print("get Interface({}) members".format(interface_name))
+  def GetFinalInterfaceMembers(self, iname):
+    # print("get Interface({}) members".format(iname))
     method_list = []
-    extends = self.GetInterfaceExtends(interface_name)
+    extends = self.GetInterfaceExtends(iname)
     for extend in extends:
       method_list.extend(self.GetFinalInterfaceMembers(extend))
 
-    if not interface_name in self.interface_member_map:
+    if not iname in self.interface_member_map:
       return method_list
-      # raise Exception('cannot find methods for interface: {}'.format(interface_name))
-    method_list.extend(self.interface_member_map[interface_name])
+      # raise Exception('cannot find methods for interface: {}'.format(iname))
+    method_list.extend(self.interface_member_map[iname])
     return method_list
 
 ### Usage and main entry point
@@ -1009,35 +1096,43 @@ if __name__ == '__main__':
   input_file = configs['input']
   file_ext = os.path.splitext(input_file)[1]
   if file_ext != '.json' and file_ext != '.jidl':
-    print("error! not a valid input file extension: '%s'" % (file_ext))
+    print("error! invalid input file extension: '%s'" % (file_ext))
     Usage()
     sys.exit(0)
-  
+
   file_path_name = os.path.splitext(input_file)[0]
   json_file = file_path_name + ".json"
   if file_ext == '.jidl':
     # print("generating json ast file: '%s' ..." % (json_file))
     jidl_file = open(input_file)
-    jidl = JIDL()
+    jidl = JIDL(errorReporter = jidl_error.Reporter(input_file))
     jidl.parse(jidl_file.read())
     jidl_file.close()
     module = jidl.module
-    dump_out = jidlast.DumpOut()
-    module.Dump(dump_out)
-    context = jidlast.Context()
-    module.Resolve(context)
-    context.ResetTable()
-    module.Check(context)
-    context.ShowError(dump_out)
-    ast_json = {}
-    module.ToJson(ast_json)
-    json_out = json.dumps(ast_json)
-    WriteFile(json_out, json_file)
+    if module:
+       dump_out = jidlast.DumpOut()
+       module.Dump(dump_out)
+
+       # resolve the types
+       context = jidlast.Context()
+       module.Resolve(context)
+       context.ResetTable()
+       module.Check(context)
+       context.ShowError(dump_out)
+
+       # to json
+       ast_json = {}
+       module.ToJson(ast_json)
+       json_out = json.dumps(ast_json)
+       WriteFile(json_out, json_file)
+    else:
+       print("parse file %s failed" % jidl_file)
+       sys.exit(-1)
 
   if configs['lang'] == 'c++':
-    # print("generating c/c++ glue files from: '%s' ..." % (json_file))
-    render = CPPRender(json_file, configs['header'], configs['source'], configs)
+      render = CPPRender(json_file, configs['header'], configs['source'], configs)
   elif configs['lang'] == 'ts':
-    render = TSRender(json_file, configs['dts'], configs)
+      render = TSRender(json_file, configs['dts'], configs)
+
   render.Generate()
 

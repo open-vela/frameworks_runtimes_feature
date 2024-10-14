@@ -20,7 +20,7 @@
 
 #include "gc_export.h"
 
-namespace ferry {
+namespace feature_framework {
 
 static inline wasm_obj_t addRef(wasm_exec_env_t env, wasm_obj_t& value)
 {

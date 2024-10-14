@@ -1,0 +1,35 @@
+module system.router@1.0
+
+struct RouteObj{
+  string uri
+  object params
+}
+
+struct BackObj{
+  string path
+}
+
+struct RouteState {
+  int index
+  string name
+  string path
+}
+
+struct RouteStack {
+  string name
+  string path
+}
+
+RouteStack[] getPages();
+
+void push(RouteObj obj);
+
+void replace(RouteObj obj);
+
+void back(BackObj obj = null);
+
+void clear();
+
+int getLength();
+
+RouteState getState();

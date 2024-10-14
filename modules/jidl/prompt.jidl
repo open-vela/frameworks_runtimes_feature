@@ -35,9 +35,8 @@ struct button {
 }
 
 struct DialogInfo {
-    string title
+    string title = ""
     string message
-    button[] buttons
     boolean autocancel = true
     callback success_cb success
     callback cancel_cb cancel

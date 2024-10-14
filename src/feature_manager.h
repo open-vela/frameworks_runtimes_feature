@@ -26,7 +26,14 @@
 
 #include <queue>
 
-namespace ferry {
+namespace feature_framework {
+
+typedef enum ErrorCode {
+    GENERAL = 200,
+    ARGSERROR = 202,
+    IOERROR = 300,
+    TIMEOUT = 204
+} ErrorCode;
 
 struct TaskData {
     FeatureInstanceHandle instance;
@@ -39,9 +46,24 @@ public:
     FeatureManager(FeatureRegistry* registry);
     virtual ~FeatureManager();
 
+    static FeatureManager* CreateFeatureManager(FeatureManagerCreateInfo* pinfo);
+
+    virtual ft_value_t featureRequire(ft_value_t binding_obj, const char* name) { return ft_undefined(ft_ctx_); }
+
+    virtual ft_value_t findFeature(const char* name) { return ft_undefined(ft_ctx_); }
+
+    virtual ft_value_t createFeature(ft_value_t prototype, ft_value_t binding_obj) { return ft_undefined(ft_ctx_); }
+
+    virtual bool init() { return true; }
+
+    virtual void uninit() { }
+
     FeatureRegistry* getFeatureRegistry() { return registry_; }
+
     ft_context_ref getFeatureContext() { return ft_ctx_; }
+
     void setFeatureContext(ft_context_ref ft_ctx);
+
     uv_loop_t* getUVLoop() const { return loop_; }
 
     void setUVLoop(uv_loop_t* loop);
@@ -86,6 +108,10 @@ public:
     ArgsErrorCb argsErrorCb() { return args_error_cb_; }
     void* argsErrorData() { return args_error_data_; }
 
+    bool hasFeature(const std::string& feature_method);
+
+    void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
+
 private:
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
@@ -103,5 +129,5 @@ private:
     ThreadChecker thread_checker_;
 };
 
-} // namespace ferry
+} // namespace feature_framework
 #endif // __FEATURE_MANAGE_H__

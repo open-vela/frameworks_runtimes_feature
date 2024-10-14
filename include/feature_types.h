@@ -40,6 +40,7 @@ typedef bool FtBool;
 typedef const char* FtString;
 typedef ft_value_t* FtAny;
 typedef int32_t FtCallbackId; // feature callback id
+typedef int32_t FtEventId; // feature event id
 typedef int32_t FtPromiseId; // feature promise id
 
 typedef void* FeatureRuntimeContext; // guest runtime context, e.g qucikjs RuntimeContext
@@ -58,13 +59,27 @@ enum FeatureTaskMode {
     FEATURE_TASK_MODE_NORMAL = 1,
 };
 
+typedef enum FeaturePromiseType {
+    FEATURE_PROMISE_TYPE_INVALID = -1,
+    FEATURE_PROMISE_TYPE_PROMISE = 0,
+    FEATURE_PROMISE_TYPE_CALLBACKS = 1,
+} FeaturePromiseType;
+
 enum TypeFlags {
     TYPE_FLAGS_VALUE = 1, // value
     TYPE_FLAGS_POINTER, // pointer, need malloc/free
-    TYPE_FLAGS_UNMANAGED_POINTER = TYPE_FLAGS_POINTER | 1, // unmanaged pointer, do not malloc/free
+    TYPE_FLAGS_RAWPOINTER = TYPE_FLAGS_POINTER | 1, // raw pointer, do not malloc/free
+    TYPE_FLAGS_UNMANAGED_POINTER = TYPE_FLAGS_RAWPOINTER,
 };
 
 typedef void (*FeatureTaskCallback)(int status, void* data);
+
+typedef enum FeatureEventStatus {
+    FEATURE_EVENT_ADDED,
+    FEATURE_EVENT_REMOVED,
+} FeatureEventStatus;
+
+typedef void (*FeatureEventChangeListener)(FeatureInstanceHandle data, FtEventId eid, FeatureEventStatus status);
 
 typedef struct VTable {
     int size;

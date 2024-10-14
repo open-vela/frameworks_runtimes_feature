@@ -26,6 +26,7 @@
 #include <ostream>
 #include <regex>
 #include <string>
+#include <sys/types.h>
 
 #include "feature_exports.h"
 #include "feature_log.h"
@@ -84,11 +85,12 @@ static bool parse_header_cb(const cJSON* const item, void* userp)
 {
     std::map<std::string, std::string>* out_headers = static_cast<std::map<std::string, std::string>*>(userp);
 
-    FEATURE_LOG_DEBUG("%s type:%d", file_tag, item->type);
-    if (item->type != cJSON_String)
+    if (out_headers == NULL) {
         return false;
-    // If is no user data, just check
-    if (out_headers) {
+    }
+    FEATURE_LOG_DEBUG("%s type:%d", file_tag, item->type);
+    if (item->type == cJSON_String) {
+        // If is no user data, just check
         if (strcasecmp(item->string, CONTENT_TYPE) == 0 && strstr(item->valuestring, "charset=") == NULL) {
             out_headers->insert(
                 std::pair<std::string, std::string>(CONTENT_TYPE, item->valuestring));
@@ -97,6 +99,11 @@ static bool parse_header_cb(const cJSON* const item, void* userp)
             out_headers->insert(
                 std::pair<std::string, std::string>(item->string, item->valuestring));
         }
+    } else if (item->type == cJSON_Number) {
+        out_headers->insert(
+            std::pair<std::string, std::string>(item->string, std::to_string(item->valueint)));
+    } else {
+        return false;
     }
     return true;
 }
@@ -224,4 +231,20 @@ ft_value_t ft_form_headers(ft_context_ref ft_ctx, char* headers)
         line = strtok_r(NULL, "\n", &saveptr);
     }
     return ret_obj;
+}
+
+bool check_filename(const char* pkg, FtString filename,
+    std::string& dest_filename)
+{
+    ASSERT_RET_NULL(pkg);
+    const char* path = app_relative_to_absolute_path(pkg, (char*)filename);
+
+    if (path == NULL) {
+        path = app_absolute_path_generator(pkg, "app", (char*)filename);
+        ASSERT_RET_NULL(path);
+    }
+    dest_filename.assign(path);
+    free((void*)path);
+    ASSERT_RET_NULL(access(dest_filename.c_str(), F_OK) != -1);
+    return true;
 }

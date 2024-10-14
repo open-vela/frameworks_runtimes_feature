@@ -27,9 +27,8 @@
 #include "feature_exports.h"
 #include "feature_log.h"
 
-#include <ffi.h>
 #include <assert.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,69 +43,69 @@ void system_crypto_onUnregister(const char* feature_name);
 
 // Struct defines
 typedef struct _HashDigestParam {
-  FtAny _data;
-  FtString _uri;
-  FtString _algo;
+  FtAny data;
+  FtString uri;
+  FtString algo;
 } system_crypto_HashDigestParam;
 
-system_crypto_HashDigestParam* system_cryptoMallocHashDigestParam();
+system_crypto_HashDigestParam* system_cryptoMallocHashDigestParam(void);
 
 typedef struct _HmacDigestParam {
-  FtString _data;
-  FtString _algo;
-  FtString _key;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtString data;
+  FtString algo;
+  FtString key;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_crypto_HmacDigestParam;
 
-system_crypto_HmacDigestParam* system_cryptoMallocHmacDigestParam();
+system_crypto_HmacDigestParam* system_cryptoMallocHmacDigestParam(void);
 
 typedef struct _SignParam {
-  FtAny _data;
-  FtString _uri;
-  FtString _algo;
-  FtString _privateKey;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtAny data;
+  FtString uri;
+  FtString algo;
+  FtString privateKey;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_crypto_SignParam;
 
-system_crypto_SignParam* system_cryptoMallocSignParam();
+system_crypto_SignParam* system_cryptoMallocSignParam(void);
 
 typedef struct _RSAVerifyParam {
-  FtAny _data;
-  FtString _uri;
-  FtString _algo;
-  FtAny _signature;
-  FtString _publicKey;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtAny data;
+  FtString uri;
+  FtString algo;
+  FtAny signature;
+  FtString publicKey;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_crypto_RSAVerifyParam;
 
-system_crypto_RSAVerifyParam* system_cryptoMallocRSAVerifyParam();
+system_crypto_RSAVerifyParam* system_cryptoMallocRSAVerifyParam(void);
 
 typedef struct _MixinCryptOption {
-  FtString _transformation;
-  FtString _iv;
-  FtInt _ivOffset;
-  FtInt _ivLen;
+  FtString transformation;
+  FtString iv;
+  FtInt ivOffset;
+  FtInt ivLen;
 } system_crypto_MixinCryptOption;
 
-system_crypto_MixinCryptOption* system_cryptoMallocMixinCryptOption();
+system_crypto_MixinCryptOption* system_cryptoMallocMixinCryptOption(void);
 
 typedef struct _CryptParam {
-  FtAny _data;
-  FtString _algo;
-  FtString _key;
-  system_crypto_MixinCryptOption * _options;
-  FtCallbackId _success;
-  FtCallbackId _fail;
-  FtCallbackId _complete;
+  FtAny data;
+  FtString algo;
+  FtString key;
+  system_crypto_MixinCryptOption * options;
+  FtCallbackId success;
+  FtCallbackId fail;
+  FtCallbackId complete;
 } system_crypto_CryptParam;
 
-system_crypto_CryptParam* system_cryptoMallocCryptParam();
+system_crypto_CryptParam* system_cryptoMallocCryptParam(void);
 
 
 // Function wrappers to be implemented

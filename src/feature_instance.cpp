@@ -22,7 +22,7 @@
 #include <string.h>
 using namespace FEATURE;
 
-namespace ferry {
+namespace feature_framework {
 
 typedef void (*finalizer_func)(FeatureInstance*);
 
@@ -84,4 +84,9 @@ void FeatureInstance::initialize()
     initialized_ = 1;
 }
 
-} // namespace ferry
+void FeatureInstance::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
+{
+    dump->count(malloc_size(this), userdata);
+}
+
+} // namespace feature_framework

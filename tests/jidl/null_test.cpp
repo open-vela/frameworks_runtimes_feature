@@ -16,6 +16,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 /* clang-format off */
@@ -23,6 +24,8 @@
 #include "null_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -140,8 +143,17 @@ static const FeatureType null_test_setChapter_parameters[] = {
     FT_PARAM_END
 };
 
+static void null_test_setChapter_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    null_test_wrap_setChapter(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(null_test_Chapter **)(argv[1])
+    );
+}
+
 static const MemberMethod null_test_setChapter_member_method = {
-    .func = { .callback = FFI_FN(null_test_wrap_setChapter) },
+    .func_stub = null_test_setChapter_stub,
     .parameters = null_test_setChapter_parameters,
     .return_type = FT_VOID,
 };
@@ -159,8 +171,16 @@ static const FeatureType null_test_setChapChangedCb_parameters[] = {
     FT_PARAM_END
 };
 
+static void null_test_setChapChangedCb_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    null_test_wrap_setChapChangedCb(handle, adata
+        , *(FtCallbackId*)(argv[0])
+    );
+}
+
 static const MemberMethod null_test_setChapChangedCb_member_method = {
-    .func = { .callback = FFI_FN(null_test_wrap_setChapChangedCb) },
+    .func_stub = null_test_setChapChangedCb_stub,
     .parameters = null_test_setChapChangedCb_parameters,
     .return_type = FT_VOID,
 };
@@ -178,8 +198,16 @@ static const FeatureType null_test_setBook_parameters[] = {
     FT_PARAM_END
 };
 
+static void null_test_setBook_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    null_test_wrap_setBook(handle, adata
+        , *(null_test_Book **)(argv[0])
+    );
+}
+
 static const MemberMethod null_test_setBook_member_method = {
-    .func = { .callback = FFI_FN(null_test_wrap_setBook) },
+    .func_stub = null_test_setBook_stub,
     .parameters = null_test_setBook_parameters,
     .return_type = FT_VOID,
 };
@@ -190,8 +218,16 @@ static const FeatureType null_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void null_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    null_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod null_test_print_member_method = {
-    .func = { .callback = FFI_FN(null_test_wrap_print) },
+    .func_stub = null_test_print_stub,
     .parameters = null_test_print_parameters,
     .return_type = FT_VOID,
 };

@@ -15,6 +15,7 @@
  */
 
 #include "feature_context_qjs.h"
+#include "feature_qjs_exports.h"
 // clang-format off
 #include "value_translator_qjs.h"
 #include "feature_value_translator.h"
@@ -23,6 +24,7 @@
 #include <malloc.h>
 #include <stdio.h>
 
+#ifdef NO_C_PLUS_TEMPLATE
 #define MAKE_JS_VALUE_WITH_NEW_FUNC_AND_TYPE(ft_ctx, func, val) \
     do {                                                        \
         JSContext* js_ctx = GET_QJS_CTX(ft_ctx);                \
@@ -45,6 +47,7 @@
         ret.js_val = array;                                            \
         return QJS_VAL_TO_FT(ret);                                     \
     } while (false)
+#endif
 
 ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
 {
@@ -86,6 +89,7 @@ ft_type _ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val)
     return FT_TYPE_NONE;
 }
 
+#ifdef NO_C_PLUS_TEMPLATE
 // value creation
 static ft_value_t _ft_int(ft_context_ref ft_ctx, int32_t val)
 {
@@ -415,6 +419,7 @@ static ft_value_t _ft_undefined(ft_context_ref ft_ctx)
     ret.js_val = JS_UNDEFINED;
     return QJS_VAL_TO_FT(ret);
 }
+#endif
 
 template <typename TCtx, typename TTarget>
 struct InitContext {
@@ -462,6 +467,7 @@ struct InitContext {
         rt_ctx->ft_free_value = TransType<int>::freeValue;
         rt_ctx->ft_free_string = TransType<int>::freeCString;
         rt_ctx->ft_parse_json = TransType<int>::parseJson;
+        rt_ctx->ft_undefined = TransType<int>::undefined;
     }
 };
 
@@ -470,8 +476,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     rt_ctx->data = data;
     rt_ctx->ft_get_type = _ft_get_type;
 
-    // InitContext<JSContext*, JSValue>::init(rt_ctx);
-
+#ifdef NO_C_PLUS_TEMPLATE
     // value creation
     rt_ctx->ft_from_int = _ft_int;
     rt_ctx->ft_from_uint = _ft_uint;
@@ -512,7 +517,23 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     rt_ctx->ft_free_value = _ft_free_value;
     rt_ctx->ft_free_string = _ft_free_string;
     rt_ctx->ft_undefined = _ft_undefined;
+#endif
+
+    InitContext<JSContext*, JSValue>::init(rt_ctx);
     return true;
 }
 
 void UninitFeatureContextQjs(ft_context_ref context) { }
+
+ft_value_t ft_from_jsvalue(ft_context_ref rt_ctx, JSValue val)
+{
+    ft_value_t ft_val;
+    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(ft_val);
+    *js_val_ptr = val;
+    return ft_val;
+}
+
+JSValue ft_to_jsvalue(ft_context_ref rt_ctx, ft_value_t ft_val)
+{
+    return FT_VAL_GET_JS_VAL(ft_val);
+}

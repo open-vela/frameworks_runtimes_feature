@@ -16,6 +16,7 @@
 #ifndef __FEATURE_REGISTRY_H__
 #define __FEATURE_REGISTRY_H__
 
+#include "feature_main_exports.h"
 #include <map>
 #include <string>
 #include <uv.h>
@@ -23,7 +24,7 @@
 
 struct FeatureDescription;
 
-namespace ferry {
+namespace feature_framework {
 
 struct FeatureUnit;
 class FeaturePrototype;
@@ -40,7 +41,7 @@ class FeatureRegistry {
 public:
     using FeatureRegistryPair = std::pair<const FeatureDescription*, FeaturePrototype*>;
     FeatureRegistry() = default;
-    virtual ~FeatureRegistry();
+    ~FeatureRegistry();
     /**
      * @brief initialie FeatureRegistry
      *
@@ -68,6 +69,8 @@ public:
      * @return const std::map<std::string, FeatureUnit*>&
      */
     const std::map<std::string, FeatureRegistryPair>& getRegisteredFeatures() const { return registeredFeatures_; }
+
+    void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
 
 private:
     std::map<std::string, FeatureRegistryPair> registeredFeatures_; // 已注册features

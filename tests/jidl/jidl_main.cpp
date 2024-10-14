@@ -2,7 +2,9 @@
 #include "builtin/console.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
+#ifdef CONFIG_FEATURE_USE_WAMR
 #include "feature_manager_wamr.h"
+#endif
 #include "feature_registry.h"
 
 #include <assert.h>
@@ -10,17 +12,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-using namespace ferry;
+using namespace feature_framework;
 using namespace FEATURE;
 
-static ferry::FeatureManagerQjs* g_manager_qjs;
-static ferry::FeatureManagerWamr* g_manager_wamr;
+static FeatureManagerQjs* g_manager_qjs;
+#ifdef CONFIG_FEATURE_USE_WAMR
+static FeatureManagerWamr* g_manager_wamr;
+#endif
 
 typedef struct feature_env_t {
     JSRuntime* rt;
     JSContext* ctx;
 } feature_env_t;
 
+#ifdef CONFIG_FEATURE_USE_WAMR
 int events_poll(wasm_exec_env_t exec_env)
 {
     /* TODO: not detect macro tasks yet */
@@ -47,6 +52,7 @@ void execute_micro_tasks(wasm_exec_env_t exec_env, dyn_ctx_t ctx)
             break;
     }
 }
+#endif
 
 // __require
 feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
@@ -120,10 +126,10 @@ int main(int argc, char** argv)
         js_env.rt = JS_NewRuntime();
         js_env.ctx = JS_NewContext(js_env.rt);
         // JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
-        auto registry = new ferry::FeatureRegistry();
+        auto registry = new FeatureRegistry();
         registry->init(pkg_name);
 
-        g_manager_qjs = new ferry::FeatureManagerQjs(registry);
+        g_manager_qjs = new FeatureManagerQjs(registry);
 
         // register global require
         feature_value_t global_obj = feature_global_object(js_env.ctx);
@@ -153,6 +159,7 @@ int main(int argc, char** argv)
         // free g_manager_qjs
         delete g_manager_qjs;
     } else { /* file is wasm file */
+#ifdef CONFIG_FEATURE_USE_WAMR
         wasm_module_t module = NULL;
         wasm_module_inst_t module_inst = NULL;
         wasm_exec_env_t exec_env = NULL;
@@ -176,9 +183,9 @@ int main(int argc, char** argv)
         dyntype_set_callback_dispatcher(dyntype_callback_wasm_dispatcher);
 
         /* init feature about wasm */
-        auto registry = new ferry::FeatureRegistry();
+        auto registry = new FeatureRegistry();
         registry->init(pkg_name);
-        g_manager_wamr = new ferry::FeatureManagerWamr(registry);
+        g_manager_wamr = new FeatureManagerWamr(registry);
         if (!g_manager_wamr->init()) {
             printf(" wamr init error!\n");
             return 0;
@@ -220,6 +227,7 @@ int main(int argc, char** argv)
         /* destroy runtime environment */
         wasm_runtime_destroy();
         delete g_manager_wamr;
+#endif
     }
 
     free(file_str);

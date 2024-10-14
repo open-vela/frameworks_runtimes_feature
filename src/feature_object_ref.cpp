@@ -16,7 +16,7 @@
 
 #include "feature_object_ref.h"
 
-namespace ferry {
+namespace feature_framework {
 
 FeatureObjectRef::FeatureObjectRef()
     : ref_count_(1)
@@ -27,4 +27,4 @@ FeatureObjectRef::~FeatureObjectRef()
 {
 }
 
-} // namespace ferry
+} // namespace feature_framework

@@ -21,21 +21,18 @@
 #include "gc_object.h"
 #include "wasm_export.h"
 
-namespace ferry {
+namespace feature_framework {
 
 class FeatureInstance;
 
 namespace FeatureFFIWamr {
-
-    char getFeatureSignature(FeatureType ftype);
 
     bool convertConstToGuest(wasm_exec_env_t exec_env, FeatureType ftype, const AppendData& adata, uint64_t& value);
 
     bool convertValueToHost(FeatureInstance* instance, FeatureType ftype, void*& ptr,
         wasm_exec_env_t exec_env, uint64_t value);
 
-    bool convertValueToGuest(FeatureInstance* instance, FeatureType ftype, void* ptr,
-        wasm_exec_env_t exec_env, uint64_t& value);
+    bool convertValueToGuest(FeatureType ftype, void* ptr, wasm_exec_env_t exec_env, uint64_t& value);
 }
 
 }

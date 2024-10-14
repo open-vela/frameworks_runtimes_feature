@@ -28,6 +28,11 @@ struct VibratorContext {
     int owner;
 };
 
+static bool is_positive_integer(double value)
+{
+    return value > 0 && (floor(value) == value);
+}
+
 static void vibrator_start_timer_cb(uv_timer_t* timer)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
@@ -36,6 +41,15 @@ static void vibrator_start_timer_cb(uv_timer_t* timer)
     uv_timer_stop(timer);
     if (th->owner != -1) {
         th->owner = -1;
+    }
+}
+
+static void timer_close_cb(uv_handle_t* handle)
+{
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    VibratorContext* th = (VibratorContext*)handle->data;
+    if (th) {
+        free(th);
     }
 }
 
@@ -73,6 +87,8 @@ void system_vibrator_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle han
         FEATURE_LOG_ERROR("%s::%s() vibraotr context is NULL\n", file_tag, __FUNCTION__);
         return;
     }
+
+    uv_close((uv_handle_t*)&th->timer, timer_close_cb);
     free(th);
 }
 
@@ -90,6 +106,7 @@ void system_vibrator_wrap_vibrate(FeatureInstanceHandle feature, union AppendDat
 
     if (!obj) {
         FEATURE_LOG_ERROR("no obj arg!\n");
+        vibrator_play_predefined(POP, VIBRATION_DEFAULTES, nullptr);
         return;
     }
 
@@ -107,14 +124,19 @@ void system_vibrator_wrap_start(FeatureInstanceHandle feature, union AppendData 
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     VibratorContext* th = static_cast<VibratorContext*>(FeatureGetProtoData(proto_handle));
+    int ret;
     if (!th) {
         FEATURE_LOG_ERROR("%s::%s() vibraotr context is NULL\n", file_tag, __FUNCTION__);
         return;
     }
 
-    if (!obj || obj->count <= 0) {
+    if (!obj || !is_positive_integer(obj->duration) || !is_positive_integer(obj->interval) || !is_positive_integer(obj->count)) {
         FEATURE_LOG_ERROR("unvaild arg!\n");
-        return;
+        if (FeatureCheckCallbackId(feature, obj->fail)) {
+            FeatureInvokeCallback(feature, obj->fail, "unvaild arg", 202);
+            FeatureRemoveCallback(feature, obj->fail);
+        }
+        goto out;
     }
 
     if (th->owner != -1) {
@@ -123,14 +145,15 @@ void system_vibrator_wrap_start(FeatureInstanceHandle feature, union AppendData 
             FeatureInvokeCallback(feature, obj->fail, "task already exists", 201);
             FeatureRemoveCallback(feature, obj->fail);
         }
-        return;
+        goto out;
     }
 
-    int ret = vibrator_play_interval(obj->duration, obj->interval, obj->count);
+    ret = vibrator_play_interval(obj->duration, obj->interval, obj->count);
     if (ret < 0) {
         if (FeatureCheckCallbackId(feature, obj->fail)) {
             FeatureInvokeCallback(feature, obj->fail, "fail", ret);
         }
+        goto out;
     } else {
         th->owner = 1;
         if (FeatureCheckCallbackId(feature, obj->success)) {
@@ -140,6 +163,11 @@ void system_vibrator_wrap_start(FeatureInstanceHandle feature, union AppendData 
             FeatureFreeValue(data);
         }
     }
+
+    ret = uv_timer_start(&th->timer, vibrator_start_timer_cb,
+        (obj->duration + obj->interval) * obj->count, 0);
+
+out:
     if (FeatureCheckCallbackId(feature, obj->complete)) {
         FeatureInvokeCallback(feature, obj->complete);
     }
@@ -153,16 +181,19 @@ void system_vibrator_wrap_start(FeatureInstanceHandle feature, union AppendData 
     if (FeatureCheckCallbackId(feature, obj->complete)) {
         FeatureRemoveCallback(feature, obj->complete);
     }
-
-    ret = uv_timer_start(&th->timer, vibrator_start_timer_cb,
-        (obj->duration + obj->interval) * obj->count, 0);
 }
 
-FtInt system_vibrator_wrap_stop(FeatureInstanceHandle feature, union AppendData append_data, FtInt id)
+FtBool system_vibrator_wrap_stop(FeatureInstanceHandle feature, union AppendData append_data, FtInt id)
 {
     FEATURE_LOG_INFO("%s::%s() id is %d\n", file_tag, __FUNCTION__, id);
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     VibratorContext* th = static_cast<VibratorContext*>(FeatureGetProtoData(proto_handle));
+
+    if (id != th->owner) {
+        FEATURE_LOG_ERROR("%s::%s() id is not owner %d\n", file_tag, __FUNCTION__, th->owner);
+        return false;
+    }
+
     uv_timer_stop(&th->timer);
 
     int ret = vibrator_cancel();

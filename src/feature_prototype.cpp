@@ -21,9 +21,10 @@
 #include <cstdarg>
 #include <cstdint>
 #include <functional>
+#include <sstream>
 #include <string>
 
-namespace ferry {
+namespace feature_framework {
 
 FeaturePrototype::FeaturePrototype(const FeatureDescription* description)
     : native_(nullptr)
@@ -38,6 +39,7 @@ FeaturePrototype::~FeaturePrototype()
 {
     clearAllInstances();
     children_.clear();
+    event_map_.clear();
 }
 
 int FeaturePrototype::addInstance(FeatureObjectUniquePtr<FeatureInstance>&& inst)
@@ -89,6 +91,17 @@ FeaturePrototype* FeaturePrototype::getInterfacePrototype(const FeatureDescripti
         intf_proto->setModulePrototype(this);
     }
     return intf_proto.get();
+}
+
+void FeaturePrototype::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
+{
+    dump->count(sizeof(FeaturePrototype), userdata);
+    for (size_t i = 0; i < instances_.size(); ++i) {
+        std::ostringstream oss;
+        oss << "instance" << i;
+        void* sub = dump->sub(oss.str().c_str(), userdata);
+        instances_[i]->onDumpMemory(dump, sub);
+    }
 }
 
 }

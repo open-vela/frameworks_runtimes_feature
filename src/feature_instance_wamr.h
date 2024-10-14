@@ -23,17 +23,21 @@
 // clang-format off
 #include "callback_manager_wamr.h"
 #include "callback_manager.h"
+#include "feature_event_manager.h"
 // clang-format on
 #include "promise_manager.h"
 
 #include <map>
 #include <memory>
 
-namespace ferry {
+namespace feature_framework {
 
 class FeaturePrototype;
 
-class FeatureInstanceWamr : public FeatureInstance, public PromiseManager, public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
+class FeatureInstanceWamr : public FeatureInstance,
+                            public PromiseManager,
+                            public CallbackManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr>,
+                            public EventManager<wasm_exec_env_t, wasm_obj_t, FeatureInstanceWamr> {
 public:
     FeatureInstanceWamr(FeaturePrototype* proto);
 
@@ -45,17 +49,29 @@ public:
 
     virtual bool removeCallback(FtCallbackId cid);
 
-    virtual int settlePromise(bool resolve, FtPromiseId pid, va_list& ap);
+    virtual int resolvePromise(FtPromiseId pid, va_list& ap);
+
+    virtual int rejectPromise(FtPromiseId pid, int code, const char* msg);
 
     virtual int invokeCallback(FtCallbackId cid, va_list& ap);
 
     virtual int invokeCallbackCount(FtCallbackId cid, va_list& ap, int count);
 
+    virtual bool emitEvent(FtEventId cid, va_list& ap);
+
+    virtual void setEventChangeListener(FeatureEventChangeListener listener);
+
+    virtual FtEventId getEventId(const char* name);
+
+    virtual const char* getEventName(FtEventId eid);
+
+    virtual int getEventCallbackCount(FtEventId eid);
+
     void release();
 
     wasm_exec_env_t getContext();
 
-    int doInvokeCallback(const CallbackType* callbackType, wasm_obj_t callback, va_list& ap, int method_param_count, int rest_param_count);
+    int doInvokeCallback(const FeatureType* param_types, wasm_obj_t callback, va_list& ap, int fixed_argc, int rest_argc);
 
 private:
     bool argToTarget(va_list& ap, FeatureType ftype, uint64_t& target);

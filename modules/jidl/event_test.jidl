@@ -1,0 +1,24 @@
+module event_test@1.0
+
+event data_changed(string data);
+event state_changed(int status);
+void invoke_event(string event_name);
+
+interface Animal {
+  property string name;
+  event weight_changed(int weight);
+}
+[ctor="true", target="dog"] Animal createDog(int type);
+
+interface Bird {
+  void fly();
+  event ascended(int height);
+}
+[ctor="true", target="pigeon"] Bird createPigeon();
+
+interface Chicken extends Animal, Bird {
+  property int weight readonly;
+  event egg_layed(int count);
+  void invoke(string event_name);
+}
+[ctor="true", target="cock"] Chicken createCock();

@@ -24,6 +24,8 @@
 #include "any_test.h"
 #include "ajs_features_init.h"
 #include "feature_description.h"
+#include "feature_exports.h"
+#include "feature_log.h"
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
@@ -34,8 +36,17 @@ static const FeatureType any_test_setAny_parameters[] = {
     FT_PARAM_END
 };
 
+static void any_test_setAny_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    any_test_wrap_setAny(handle, adata
+        , *(FtInt*)(argv[0])
+        , *(FtAny*)(argv[1])
+    );
+}
+
 static const MemberMethod any_test_setAny_member_method = {
-    .func = { .callback = FFI_FN(any_test_wrap_setAny) },
+    .func_stub = any_test_setAny_stub,
     .parameters = any_test_setAny_parameters,
     .return_type = FT_VOID,
 };
@@ -46,8 +57,15 @@ static const FeatureType any_test_getAny_parameters[] = {
     FT_PARAM_END
 };
 
+static void any_test_getAny_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    *((FtAny*)ret) = any_test_wrap_getAny(handle, adata
+    );
+}
+
 static const MemberMethod any_test_getAny_member_method = {
-    .func = { .callback = FFI_FN(any_test_wrap_getAny) },
+    .func_stub = any_test_getAny_stub,
     .parameters = any_test_getAny_parameters,
     .return_type = FT_ANY_REF,
 };
@@ -58,8 +76,16 @@ static const FeatureType any_test_print_parameters[] = {
     FT_PARAM_REST_END,
 };
 
+static void any_test_print_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+    any_test_wrap_print(handle, adata
+        , *(FtVariParams*)(argv[0])
+    );
+}
+
 static const MemberMethod any_test_print_member_method = {
-    .func = { .callback = FFI_FN(any_test_wrap_print) },
+    .func_stub = any_test_print_stub,
     .parameters = any_test_print_parameters,
     .return_type = FT_VOID,
 };
@@ -85,7 +111,7 @@ static const Member any_test_members[] = {
 };
 
 // callbacks
-static const struct FeatureCallbacks any_test_callbacks {
+static const struct FeatureCallbacks any_test_callbacks = {
     any_test_onRegister,
     any_test_onCreate,
     any_test_onRequired,
@@ -98,7 +124,7 @@ static const FeatureDescription any_test_desc = {
     .version = 1,
     .name = "any_test",
     .description = "any_test",
-    { .dynamic = false },
+    .dynamic = false,
     .native_callbacks = &any_test_callbacks,
     .member_count = countof(any_test_members),
     .members = any_test_members,

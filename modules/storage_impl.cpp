@@ -26,7 +26,7 @@ typedef struct {
     char* db_path;
 } StorageContext;
 
-enum OP {
+enum STORAGE_OP {
     STORAGE_OP_GET,
     STORAGE_OP_SET,
     STORAGE_OP_CLEAR,
@@ -39,7 +39,7 @@ enum OP {
 typedef struct {
     FeatureInstanceHandle feature;
     StorageContext* th;
-    OP op;
+    STORAGE_OP op;
     FtCallbackId success;
     FtCallbackId fail;
     FtCallbackId complete;
