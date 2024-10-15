@@ -1191,3 +1191,93 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
 
     return result;
 }
+
+void system_crypto_wrap_hkdf(FeatureInstanceHandle feature, AppendData append_data,
+    system_crypto_HkdfParam* options)
+{
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
+    FEATURE_CHECK_NE(ft_ctx, NULL);
+
+    const char* algo = check_str(options->algo) ? (const char*)options->algo : "SHA256";
+    uint8_t* key = NULL;
+    size_t key_size = 0;
+    size_t keyLen = 0;
+    uint8_t* salt = NULL;
+    size_t salt_size = 0;
+    uint8_t* info = NULL;
+    size_t info_size = 0;
+    uint8_t* output = NULL;
+    size_t output_size = 0;
+    const char* msg = "";
+    int ret = 0;
+
+    if(options->key == NULL || options->salt == NULL || options->info == NULL) {
+        FEATURE_LOG_ERROR("system_crypto_wrap_hkdf key, salt and info must be valid");
+        msg = "key, salt and info must be valid";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    if (translate_string_and_uint8array_to_byte(ft_ctx, *(options->key), &key, &key_size) == false || translate_string_and_uint8array_to_byte(ft_ctx, *(options->salt), &salt, &salt_size) == false || translate_string_and_uint8array_to_byte(ft_ctx, *(options->info), &info, &info_size) == false || options->keyLen <= 0) {
+        FEATURE_LOG_ERROR("system_crypto_wrap_hkdf translate_string_and_uint8array_to_byte failed ");
+        msg = "wrong input parament";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    if ((strcmp(algo, "SHA256") == 0) || (strcmp(algo, "SHA512") == 0)) {
+        output_size = options->keyLen;
+    } else {
+        FEATURE_LOG_ERROR("system_crypto_wrap_hkdf wrong algorithm");
+        msg = "wrong algorithm";
+        ret = UNSUPPORTED;
+        goto exit;
+    }
+
+    output = (uint8_t*)malloc(output_size);
+    if (output == NULL) {
+        FEATURE_LOG_ERROR("malloc output failed");
+        msg = "malloc output failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    if (hkdf_key_derivation(algo, salt, salt_size, key, key_size, info, info_size, output, output_size) != 0) {
+        FEATURE_LOG_ERROR("crypto.hkdf_key_derivation failed");
+        msg = "create hkdf key failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+exit:
+    // deal with result
+    if (output && options->success) {
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = from_buff(ft_ctx, (const char*)output, output_size, false);
+        ft_obj_set_property(ft_ctx, ret_obj, "data", ret_data);
+        INVOKE_SUCCESS_CB(options->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
+    } else if (options->fail) {
+        INVOKE_FAIL_CB(options->fail, msg, ret);
+    }
+
+    if (options->complete) {
+        INVOKE_COMPLET_CB(options->complete);
+    }
+
+    if (key) {
+        free(key);
+    }
+
+    if (salt) {
+        free(salt);
+    }
+
+    if (info) {
+        free(info);
+    }
+
+    if (output) {
+        free(output);
+    }
+}

@@ -79,6 +79,12 @@ bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t
 
 bool rsa_verify_file(const char* type_str, const char* key_str, const char* uri_str, const char* sig_str, const char* pkg_str);
 
+int hkdf_key_derivation(const char* algo,
+    uint8_t *salt, size_t salt_len,
+    const uint8_t *ikm, size_t ikm_len,
+    const unsigned char *info, size_t info_len,
+    uint8_t *okm, size_t okm_len);
+
 // no need to free the return char* because it is FeatureMalloced
 char* base64(const char* type_str, const char* text_str);
 

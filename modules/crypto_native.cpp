@@ -595,3 +595,17 @@ char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str
     free(ret.base);
     return NULL;
 }
+
+int hkdf_key_derivation(const char* algo,
+    uint8_t* salt, size_t salt_len,
+    const uint8_t* ikm, size_t ikm_len,
+    const unsigned char* info, size_t info_len,
+    uint8_t* okm, size_t okm_len)
+{
+    if (uv_hkdf_key_derivation(algo, salt, salt_len, ikm, ikm_len, info, info_len, okm, okm_len) != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "crypto.hkdf_key_derivation failed");
+        return -1;
+    }
+
+    return 0;
+}
