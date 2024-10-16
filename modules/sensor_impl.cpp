@@ -24,6 +24,10 @@
 #include <sensor/prox.h>
 #include <sensor/temp.h>
 
+#ifdef CONFIG_MIWEAR_COMMON
+#include <topics/algo_wrist_tilt.h>
+#endif
+
 #include "sensor.h"
 #include "uv_ext.h"
 
@@ -70,6 +74,9 @@ typedef enum sensor_magic_e {
     SENSOR_MAGIC_STEP,
     SENSOR_MAGIC_AMBIENTTEMPERATURE,
     SENSOR_MAGIC_HUMIDITY,
+#ifdef CONFIG_MIWEAR_COMMON
+    SENSOR_MAGIC_WRIST_TILT,
+#endif
     SENSOR_MAGIC_NUM,
 } sensor_magic_t;
 
@@ -217,6 +224,9 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
     [SENSOR_MAGIC_STEP] = { .index = 6, .sensor_name = "STEP_COUNTER", .meta = NULL, .topic_cb = sensor_step_topic_cb },
     [SENSOR_MAGIC_AMBIENTTEMPERATURE] = { .index = 7, .sensor_name = "AMBIENT_TEMPERATURE", .meta = ORB_ID(sensor_temp), .topic_cb = sensor_temp_topic_cb },
     [SENSOR_MAGIC_HUMIDITY] = { .index = 12, .sensor_name = "HUMIDITY", .meta = ORB_ID(sensor_humi), .topic_cb = sensor_humi_topic_cb },
+#ifdef CONFIG_MIWEAR_COMMON
+    [SENSOR_MAGIC_WRIST_TILT] = { .index = 22, .sensor_name = "WRIST_TILT", .meta = ORB_ID(algo_wrist_tilt), .topic_cb = NULL },
+#endif
 };
 
 static void unsubscribe(FeatureInstanceHandle feature, int magic, bool detach)
@@ -497,7 +507,6 @@ void system_sensor_wrap_unsubscribeHumidity(FeatureInstanceHandle feature, Appen
 
 FtAny system_sensor_get_DATA_TYPES(void* feature, AppendData append_data)
 {
-    FEATURE_LOG_INFO("%s:: get types", __FUNCTION__);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     ft_value_t* any_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     ft_value_t ret_obj = ft_new_object(ft_ctx);
@@ -596,6 +605,17 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
         ft_obj_set_property(ft_ctx, sensor_obj, "HUMIDITY", ret_obj);
         break;
     }
+#ifdef CONFIG_MIWEAR_COMMON
+    case SENSOR_MAGIC_WRIST_TILT: {
+        algo_wrist_tilt* ret_t = static_cast<algo_wrist_tilt*>(data);
+        if (ret_t->event != WRIST_TILT_UP) {
+            ft_free_value(ft_ctx, sensor_obj);
+            FeatureFreeValue(t_r);
+            return;
+        }
+        break;
+    }
+#endif
     default:
         break;
     }

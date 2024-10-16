@@ -353,6 +353,11 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/topics/include/system/
 FEATURELIST += system_event
 endif
 
+ifeq ($(CONFIG_MIWEAR_COMMON),y)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/common/base/include/
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miwear/common/base/include/
+endif
+
 ifneq ($(CONFIG_LYRA_NEW_FEATURE), )
 
 ifneq ($(CONFIG_LYRA_NEW_FEATURE_TRANSFER), )
