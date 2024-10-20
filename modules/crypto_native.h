@@ -85,11 +85,34 @@ int hkdf_key_derivation(const char* algo,
     const unsigned char *info, size_t info_len,
     uint8_t *okm, size_t okm_len);
 
+int ECDH_generate_key(int group_id,
+    unsigned char* pubKey, size_t pubKey_len, size_t* pubKey_outSize,
+    unsigned char* privKey, size_t privKey_outSize);
+
+int ECDH_compute_shared_key(int group_id,
+    unsigned char* pubKey_input, size_t pubKey_size,
+    unsigned char* privKey_self, size_t privKey_self_size,
+    unsigned char* secretKey, size_t* secretKey_size);
+
+int ECDH_generate_keypair_by_pem(int group_id,
+    unsigned char* priKey_pem, size_t priKey_pem_len,
+    unsigned char* priKey_data, size_t priKey_size,
+    unsigned char* pubkey, size_t pubkey_size, size_t* pubkey_outsize);
+
+int ECDH_generate_keypair_by_binary(int group_id,
+    unsigned char* priKey_input, size_t priKey_input_len,
+    unsigned char* priKey_data, size_t* priKey_size,
+    unsigned char* pubkey, size_t pubkey_size, size_t* pubkey_outsize);
+
 // no need to free the return char* because it is FeatureMalloced
 char* base64(const char* type_str, const char* text_str);
 
 int base64_encode(const char* input, size_t input_size, char* output, size_t output_size, size_t* exact_size);
 
 int base64_decode(const char* input, size_t input_size, char* output, size_t output_size, size_t* exact_size);
+
+void crypto_hexify(char* input_data, size_t input_size, char* output_string, size_t* output_len);
+
+void crypto_unhexify(const char* hex_str, size_t hex_len, unsigned char* output, size_t* output_size);
 
 #endif // _CRYPTO_NATIVE_H_

@@ -125,7 +125,7 @@ static CipherSupported AESCipherSupported[] = {
     { { "AES/CBC/PKCS7Padding", AES_192, AES, AES_192_CBC, PKCS7Padding }, true },
     { { "AES/CBC/PKCS7Padding", AES_256, AES, AES_256_CBC, PKCS7Padding }, true },
     { { "AES/CBC/ZeroPadding", AES_128, AES, AES_128_CBC, PADDING_ZEROS }, false },
-    { { "AES/CBC/NoPadding", AES_128, AES, AES_128_CBC, PADDING_NONE }, false },
+    { { "AES/CBC/NoPadding", AES_128, AES, AES_128_CBC, PADDING_NONE }, true },
     { { "AES/CBC/ISO10126Padding", AES_128, AES, AES_128_CBC, ISO10126Padding }, false },
     { { "AES/ECB/PKCS5Padding", AES_128, AES, AES_128_ECB, PKCS5Padding }, true },
     { { "AES/ECB/PKCS7Padding", AES_128, AES, AES_128_ECB, PKCS7Padding }, true },
@@ -149,6 +149,52 @@ static CipherSupported RSACipherSupported[] = {
 };
 
 #define RSA_SUPPORTED_COUNT sizeof(RSACipherSupported) / sizeof(RSACipherSupported[0])
+typedef enum {
+    ECP_DP_NONE = 0, /*!< Curve not defined. */
+    ECP_DP_SECP192R1, /*!< Domain parameters for the 192-bit curve defined by FIPS 186-4 and SEC1. */
+    ECP_DP_SECP224R1, /*!< Domain parameters for the 224-bit curve defined by FIPS 186-4 and SEC1. */
+    ECP_DP_SECP256R1, /*!< Domain parameters for the 256-bit curve defined by FIPS 186-4 and SEC1. */
+    ECP_DP_SECP384R1, /*!< Domain parameters for the 384-bit curve defined by FIPS 186-4 and SEC1. */
+    ECP_DP_SECP521R1, /*!< Domain parameters for the 521-bit curve defined by FIPS 186-4 and SEC1. */
+    ECP_DP_BP256R1, /*!< Domain parameters for 256-bit Brainpool curve. */
+    ECP_DP_BP384R1, /*!< Domain parameters for 384-bit Brainpool curve. */
+    ECP_DP_BP512R1, /*!< Domain parameters for 512-bit Brainpool curve. */
+    ECP_DP_CURVE25519, /*!< Domain parameters for Curve25519. */
+    ECP_DP_SECP192K1, /*!< Domain parameters for 192-bit "Koblitz" curve. */
+    ECP_DP_SECP224K1, /*!< Domain parameters for 224-bit "Koblitz" curve. */
+    ECP_DP_SECP256K1, /*!< Domain parameters for 256-bit "Koblitz" curve. */
+    ECP_DP_CURVE448, /*!< Domain parameters for Curve448. */
+} ecp_group_id;
+
+typedef struct ECDHCfg {
+    const char* curve;
+    int group_id;
+    size_t privateKey_size;
+    size_t publicKey_size;
+} ECDHCfg;
+
+typedef struct ECDHSupported {
+    ECDHCfg cfg_index;
+    bool is_supported;
+} ECDHSupported;
+
+static ECDHSupported ECDHCfgSupported[] = {
+    { { "secp192r1", ECP_DP_SECP192R1, 0, 0 }, false },
+    { { "secp224r1", ECP_DP_SECP224R1, 0, 0 }, false },
+    { { "secp256r1", ECP_DP_SECP256R1, 32, 65 }, true },
+    { { "secp384r1", ECP_DP_SECP384R1, 0, 0 }, false },
+    { { "secp521r1", ECP_DP_SECP521R1, 0, 0 }, false },
+    { { "bp256r1", ECP_DP_BP256R1, 0, 0 }, false },
+    { { "bp384r1", ECP_DP_BP384R1, 0, 0 }, false },
+    { { "bp512r1", ECP_DP_BP512R1, 0, 0 }, false },
+    { { "curve25519", ECP_DP_CURVE25519, 0, 0 }, false },
+    { { "secp192k1", ECP_DP_SECP192K1, 0, 0 }, false },
+    { { "secp224k1", ECP_DP_SECP224K1, 0, 0 }, false },
+    { { "secp256k1", ECP_DP_SECP256K1, 0, 0 }, false },
+    { { "curve448", ECP_DP_CURVE448, 0, 0 }, false },
+};
+
+#define ECDH_SUPPORTED_COUNT sizeof(ECDHCfgSupported) / sizeof(ECDHCfgSupported[0])
 
 static const char* hash_types[] = {
     "MD5",
@@ -531,6 +577,7 @@ static bool translate_string_and_uint8array_to_byte(ft_context_ref ft_ctx, ft_va
 {
     size_t data_size;
     bool is_data_text;
+
     uint8_t* data = get_buff(ft_ctx, input_key, &data_size, &is_data_text);
     if (data == NULL || data_size == 0) {
         FEATURE_LOG_ERROR("invalid data type");
@@ -1191,7 +1238,6 @@ FtString system_crypto_wrap_atob(FeatureInstanceHandle feature, AppendData appen
 
     return result;
 }
-
 void system_crypto_wrap_hkdf(FeatureInstanceHandle feature, AppendData append_data,
     system_crypto_HkdfParam* options)
 {
@@ -1201,7 +1247,6 @@ void system_crypto_wrap_hkdf(FeatureInstanceHandle feature, AppendData append_da
     const char* algo = check_str(options->algo) ? (const char*)options->algo : "SHA256";
     uint8_t* key = NULL;
     size_t key_size = 0;
-    size_t keyLen = 0;
     uint8_t* salt = NULL;
     size_t salt_size = 0;
     uint8_t* info = NULL;
@@ -1211,7 +1256,7 @@ void system_crypto_wrap_hkdf(FeatureInstanceHandle feature, AppendData append_da
     const char* msg = "";
     int ret = 0;
 
-    if(options->key == NULL || options->salt == NULL || options->info == NULL) {
+    if (options->key == NULL || options->salt == NULL || options->info == NULL) {
         FEATURE_LOG_ERROR("system_crypto_wrap_hkdf key, salt and info must be valid");
         msg = "key, salt and info must be valid";
         ret = ARGSERROR;
@@ -1280,4 +1325,556 @@ exit:
     if (output) {
         free(output);
     }
+}
+
+typedef struct CryptoECDH {
+    int group_id;
+    unsigned char* privateKey;
+    size_t privateKey_size;
+    unsigned char* publicKey;
+    size_t publicKey_size;
+} CryptoECDH;
+
+static int check_cruve_type(FtString type, int* group_id, size_t* privateKey_size, size_t* publicKey_size)
+{
+    *group_id = 0;
+    for (size_t i = 0; i < ECDH_SUPPORTED_COUNT; i++) {
+        if (strcmp(type, ECDHCfgSupported[i].cfg_index.curve) == 0 && ECDHCfgSupported[i].is_supported == true) {
+            *group_id = ECDHCfgSupported[i].cfg_index.group_id;
+            *privateKey_size = ECDHCfgSupported[i].cfg_index.privateKey_size;
+            *publicKey_size = ECDHCfgSupported[i].cfg_index.publicKey_size;
+            break;
+        }
+    }
+
+    if (*group_id == 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+static bool ECDH_allocate_keys(CryptoECDH* ecdh)
+{
+    if (ecdh == NULL) {
+        return false;
+    }
+
+    if (ecdh->publicKey) {
+        free(ecdh->publicKey);
+    }
+
+    ecdh->publicKey = (unsigned char*)malloc(ecdh->publicKey_size);
+    if (ecdh->publicKey == NULL) {
+        return false;
+    }
+
+    if (ecdh->privateKey) {
+        free(ecdh->privateKey);
+    }
+    ecdh->privateKey = (unsigned char*)malloc(ecdh->privateKey_size);
+    if (ecdh->privateKey == NULL) {
+        free(ecdh->publicKey);
+        ecdh->publicKey = NULL;
+        return false;
+    }
+
+    return true;
+}
+
+static int initialize_ecdh(FtString type, CryptoECDH* ecdh)
+{
+    if (ecdh == NULL) {
+        return -1;
+    }
+
+    if (check_cruve_type(type, &ecdh->group_id, &ecdh->privateKey_size, &ecdh->publicKey_size) != 0) {
+        return -1;
+    }
+
+    ecdh->privateKey = NULL;
+    ecdh->publicKey = NULL;
+
+    if (!ECDH_allocate_keys(ecdh)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+static int ecdh_get_decoding_data(const char* encoding,
+    const unsigned char* input, size_t input_size,
+    unsigned char* output, size_t output_size, size_t* exact_size,
+    bool* is_text)
+{
+    int ret = 0;
+    if (encoding) {
+        if (strcmp(encoding, "base64") == 0) {
+            ret = base64_decode((const char*)input, input_size, (char*)output, output_size, exact_size);
+            if (ret != 0) {
+                FEATURE_LOG_ERROR("crypto.ecdh_get_decoding_data base64_encode failed");
+                return -1;
+            }
+            *is_text = true;
+            return 0;
+        } else if (strcmp(encoding, "hex") == 0) {
+            crypto_unhexify((const char*)input, input_size, output, exact_size);
+            if (output == NULL || *exact_size == 0) {
+                FEATURE_LOG_ERROR("crypto.ecdh_get_decoding_data crypto_unhexify failed");
+                return -1;
+            }
+            *is_text = true;
+            return 0;
+        } else if (strcmp(encoding, "buffer") == 0 || strcmp(encoding, "") == 0) {
+            memcpy(output, input, input_size);
+            *exact_size = input_size;
+            return 0;
+        } else {
+            FEATURE_LOG_ERROR("crypto.ecdh_get_decoding_data wrong encoding type");
+            return -1;
+        }
+    } else {
+        memcpy(output, input, input_size);
+        *exact_size = input_size;
+        return 0;
+    }
+}
+
+static int ecdh_get_encoding_data(const char* encoding,
+    const unsigned char* input, size_t input_size,
+    unsigned char* output, size_t output_size, size_t* exact_size,
+    bool* is_text)
+{
+    int ret = 0;
+    if (encoding) {
+        if (strcmp(encoding, "base64") == 0) {
+            ret = base64_encode((const char*)input, input_size, (char*)output, output_size, exact_size);
+            if (ret != 0) {
+                FEATURE_LOG_ERROR("crypto.ecdh_get_encoding_data base64_encode failed");
+                return -1;
+            }
+            *is_text = true;
+            return 0;
+        } else if (strcmp(encoding, "hex") == 0) {
+            crypto_hexify((char*)input, input_size, (char*)output, exact_size);
+            if (output == NULL || *exact_size == 0) {
+                FEATURE_LOG_ERROR("crypto.ecdh_get_encoding_data crypto_hexify failed");
+                return -1;
+            }
+            output[*exact_size] = '\0';
+            *is_text = true;
+            return 0;
+        } else if (strcmp(encoding, "buffer") == 0 || strcmp(encoding, "") == 0) {
+            memcpy(output, input, input_size);
+            *exact_size = input_size;
+            return 0;
+        } else {
+            FEATURE_LOG_ERROR("crypto.ecdh_get_encoding_data wrong encoding type");
+            return -1;
+        }
+    } else {
+        memcpy(output, input, input_size);
+        *exact_size = input_size;
+        return 0;
+    }
+}
+
+void system_crypto_ECDH_interface_ECDH_imp_finalize(FeatureInterfaceHandle handle)
+{
+    void* data = FeatureGetObjectData(handle);
+    if (data == NULL) {
+        return;
+    }
+    CryptoECDH* ecdh = static_cast<CryptoECDH*>(data);
+
+    if (ecdh->privateKey) {
+        free(ecdh->privateKey);
+        ecdh->privateKey = NULL;
+    }
+    ecdh->privateKey_size = 0;
+
+    if (ecdh->publicKey) {
+        free(ecdh->publicKey);
+        ecdh->publicKey = NULL;
+    }
+    ecdh->publicKey_size = 0;
+
+    if (ecdh) {
+        free(ecdh);
+    }
+}
+
+void system_crypto_ECDH_interface_ECDH_imp_generateKeys(FeatureInterfaceHandle handle, AppendData append_data, system_crypto_CurveParam* param)
+{
+    int ret = 0;
+    const char* msg = "";
+    size_t publicKey_outSize = 0;
+    size_t output_size = 0;
+    unsigned char* output = NULL;
+    bool is_text = false;
+    CryptoECDH* ecdh = NULL;
+
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
+    void* data = FeatureGetObjectData(handle);
+    if (data == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys please create ECDH object first");
+        msg = "please create ECDH object first";
+        ret = GENERAL;
+        goto exit;
+    }
+    ecdh = static_cast<CryptoECDH*>(data);
+
+    if (!ECDH_allocate_keys(ecdh)) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys ECDH_allocate_keys failed");
+        msg = "ECDH_allocate_keys failed";
+        ret = GENERAL;
+        return;
+    }
+
+    ret = ECDH_generate_key(ecdh->group_id, ecdh->publicKey, ecdh->publicKey_size, &publicKey_outSize, ecdh->privateKey, ecdh->privateKey_size);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys ECDH_generate_key failed");
+        msg = "ECDH_generate_key failed";
+        ret = GENERAL;
+        goto exit;
+    }
+    ecdh->publicKey_size = publicKey_outSize;
+
+    // make sure output is large enough when using "hex" encoding
+    output = (unsigned char*)malloc(2 * (ecdh->publicKey_size) + 1);
+    if (output == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys malloc output failed");
+        msg = "malloc output failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    ret = ecdh_get_encoding_data(param->encoding, ecdh->publicKey, ecdh->publicKey_size, output, 2 * (ecdh->publicKey_size) + 1, &output_size, &is_text);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys ecdh_get_encoding_data failed");
+        msg = "ecdh_get_encoding_data failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+exit:
+    // deal with result
+    if (!ret && param->success) {
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = from_buff(ft_ctx, (const char*)output, output_size, is_text);
+        ft_obj_set_property(ft_ctx, ret_obj, "publicKey", ret_data);
+        INVOKE_SUCCESS_CB_INTERFACE(param->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
+    } else if (param->fail) {
+        INVOKE_FAIL_CB_INTERFACE(param->fail, msg, ret);
+    }
+
+    if (param->complete) {
+        INVOKE_COMPLET_CB_INTERFACE(param->complete);
+    }
+    REMOVE_ALL_CBS_INTERFACE(param);
+
+    if (output) {
+        free(output);
+    }
+}
+
+FtAny system_crypto_ECDH_interface_ECDH_imp_getPrivateKey(FeatureInterfaceHandle handle, AppendData append_data, FtString encoding)
+{
+    int ret = 0;
+    size_t output_size = 0;
+    unsigned char* output = NULL;
+    bool is_text = false;
+
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
+    void* data = FeatureGetObjectData(handle);
+    if (data == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys please generate keypair first");
+        ret = GENERAL;
+        return NULL;
+    }
+    CryptoECDH* ecdh = static_cast<CryptoECDH*>(data);
+
+    // make sure output is large enough when using "hex" encoding
+    output = (unsigned char*)malloc(2 * (ecdh->privateKey_size) + 1);
+    if (output == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_getPrivateKey malloc output failed");
+        return NULL;
+    }
+
+    ret = ecdh_get_encoding_data(encoding, ecdh->privateKey, ecdh->privateKey_size, output, 2 * (ecdh->privateKey_size) + 1, &output_size, &is_text);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_getPrivateKey ecdh_get_encoding_data failed");
+        free(output);
+        return NULL;
+    }
+
+    ft_value_t* ret_data = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
+    *ret_data = from_buff(ft_ctx, (const char*)output, output_size, is_text);
+    free(output);
+    return ret_data;
+}
+
+FtAny system_crypto_ECDH_interface_ECDH_imp_getPublicKey(FeatureInterfaceHandle handle, AppendData append_data, FtString encoding)
+{
+    int ret = 0;
+    size_t output_size = 0;
+    unsigned char* output = NULL;
+    bool is_text = false;
+
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
+    void* data = FeatureGetObjectData(handle);
+    if (data == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys please generate keypair first");
+        ret = GENERAL;
+        return NULL;
+    }
+    CryptoECDH* ecdh = static_cast<CryptoECDH*>(data);
+
+    // make sure output is large enough when using "hex" encoding
+    output = (unsigned char*)malloc(2 * (ecdh->publicKey_size) + 1);
+    if (output == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_getPublicKey malloc output failed");
+        return NULL;
+    }
+
+    ret = ecdh_get_encoding_data(encoding, ecdh->publicKey, ecdh->publicKey_size, output, 2 * (ecdh->publicKey_size) + 1, &output_size, &is_text);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_getPublicKey ecdh_get_encoding_data failed");
+        free(output);
+        return NULL;
+    }
+
+    ft_value_t* ret_data = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
+    *ret_data = from_buff(ft_ctx, (const char*)output, output_size, is_text);
+    free(output);
+    return ret_data;
+}
+
+void system_crypto_ECDH_interface_ECDH_imp_setPrivateKey(FeatureInterfaceHandle handle, AppendData append_data, system_crypto_setPrivateKeyParam* param)
+{
+    unsigned char* privateKey_data = NULL;
+    size_t privateKey_len = 0;
+    size_t pubkey_outsize = 0;
+    bool is_text = false;
+    const char* msg = "";
+    ErrorCode ret = GOOD;
+    CryptoECDH* ecdh = NULL;
+
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
+    void* data = FeatureGetObjectData(handle);
+    if (data == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys please create ECDH object first");
+        msg = "please create ECDH object first";
+        ret = GENERAL;
+        goto exit;
+    }
+    ecdh = static_cast<CryptoECDH*>(data);
+
+    if (!param->privateKey) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_setPrivateKey privateKey is NULL");
+        msg = "privateKey is NULL";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    privateKey_data = get_buff(ft_ctx, *(param->privateKey), &privateKey_len, &is_text);
+    if (privateKey_data == NULL || privateKey_len == 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_setPrivateKey get_buff failed");
+        msg = "get_buff failed";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    if (!ECDH_allocate_keys(ecdh)) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_setPrivateKey ECDH_allocate_keys failed");
+        msg = "ECDH_allocate_keys failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    if (is_text) {
+        if (ECDH_generate_keypair_by_pem(ecdh->group_id,
+                privateKey_data, privateKey_len,
+                ecdh->privateKey, ecdh->privateKey_size,
+                ecdh->publicKey, ecdh->publicKey_size, &pubkey_outsize)
+            != 0) {
+            FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_setPrivateKey ECDH_generate_keypair_by_pem failed");
+            msg = "ECDH_generate_keypair_by_pem failed";
+            ret = GENERAL;
+            goto exit;
+        }
+    } else {
+        if (ECDH_generate_keypair_by_binary(ecdh->group_id,
+                privateKey_data, privateKey_len,
+                ecdh->privateKey, &ecdh->privateKey_size,
+                ecdh->publicKey, ecdh->publicKey_size, &pubkey_outsize)
+            != 0) {
+            FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_setPrivateKey ECDH_generate_keypair_by_binary failed");
+            msg = "ECDH_generate_keypair_by_binary failed";
+            ret = GENERAL;
+            goto exit;
+        }
+    }
+
+exit:
+    // deal with result
+    if (!ret && param->success) {
+        INVOKE_SUCCESS_CB_INTERFACE(param->success, "");
+    } else if (param->fail) {
+        INVOKE_FAIL_CB_INTERFACE(param->fail, msg, ret);
+    }
+
+    if (param->complete) {
+        INVOKE_COMPLET_CB_INTERFACE(param->complete);
+    }
+    REMOVE_ALL_CBS_INTERFACE(param);
+}
+
+void system_crypto_ECDH_interface_ECDH_imp_computeSecret(FeatureInterfaceHandle handle, AppendData append_data, system_crypto_ComputeParam* param)
+{
+    int ret = 0;
+    const char* msg = "";
+    unsigned char* publicKey_input = NULL;
+    size_t publicKey_size = 0;
+    unsigned char* publicKey_decode = NULL;
+    size_t publicKey_decode_size = 0;
+    unsigned char* secretKey = NULL;
+    unsigned char* output = NULL;
+    size_t output_size = 0;
+    bool is_text = false;
+    CryptoECDH* ecdh = NULL;
+    size_t secretKey_size = 0;
+
+    ft_context_ref ft_ctx = FeatureGetContext(handle);
+    void* data = FeatureGetObjectData(handle);
+    if (data == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_generateKeys please create ECDH object first");
+        msg = "please create ECDH object first";
+        ret = GENERAL;
+        goto exit;
+    }
+    ecdh = static_cast<CryptoECDH*>(data);
+    secretKey_size = ecdh->privateKey_size;
+
+    if (!param->otherPublicKey) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret otherPublicKey is NULL");
+        msg = "otherPublicKey is NULL";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    publicKey_input = get_buff(ft_ctx, *(param->otherPublicKey), &publicKey_size, &is_text);
+    if (publicKey_input == NULL || publicKey_size == 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret get_buff failed");
+        msg = "wrong otherPublicKey type";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    publicKey_decode = (unsigned char*)malloc(publicKey_size);
+    if (publicKey_decode == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret malloc publicKey_decode failed");
+        msg = "malloc publicKey_decode failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    // decoding intput data to bytes
+    ret = ecdh_get_decoding_data(param->inputEncoding, publicKey_input, publicKey_size, publicKey_decode, publicKey_size, &publicKey_decode_size, &is_text);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret ecdh_get_decoding_data failed");
+        msg = "ecdh_get_decoding_data failed";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+    secretKey = (unsigned char*)malloc(ecdh->privateKey_size);
+    if (secretKey == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret malloc secretKey failed");
+        msg = "malloc secretKey failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    ret = ECDH_compute_shared_key(ecdh->group_id,
+        publicKey_decode, publicKey_decode_size,
+        ecdh->privateKey, ecdh->privateKey_size,
+        secretKey, &secretKey_size);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret ECDH_compute_shared_key failed");
+        msg = "ECDH_compute_shared_key failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    // make sure output is large enough when using "hex" encoding
+    output = (unsigned char*)malloc(2 * secretKey_size + 1);
+    if (output == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret malloc output failed");
+        msg = "malloc output failed";
+        ret = GENERAL;
+        goto exit;
+    }
+
+    // encoding output data
+    ret = ecdh_get_encoding_data(param->outputEncoding, secretKey, secretKey_size, output, 2 * secretKey_size + 1, &output_size, &is_text);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_ECDH_interface_ECDH_imp_computeSecret ecdh_get_encoding_data failed");
+        msg = "ecdh_get_encoding_data failed";
+        ret = ARGSERROR;
+        goto exit;
+    }
+
+exit:
+    // deal with result
+    if (!ret && param->success) {
+        ft_value_t ret_obj = ft_new_object(ft_ctx);
+        ft_value_t ret_data = from_buff(ft_ctx, (const char*)output, output_size, is_text);
+        ft_obj_set_property(ft_ctx, ret_obj, "shareKey", ret_data);
+        INVOKE_SUCCESS_CB_INTERFACE(param->success, (&ret_obj));
+        ft_free_value(ft_ctx, ret_obj);
+    } else if (param->fail) {
+        INVOKE_FAIL_CB_INTERFACE(param->fail, msg, ret);
+    }
+
+    if (param->complete) {
+        INVOKE_COMPLET_CB_INTERFACE(param->complete);
+    }
+    REMOVE_ALL_CBS_INTERFACE(param);
+
+    if (publicKey_decode) {
+        free(publicKey_decode);
+    }
+
+    if (secretKey) {
+        free(secretKey);
+    }
+
+    if (output) {
+        free(output);
+    }
+}
+
+FeatureInterfaceHandle system_crypto_wrap_createECDH(FeatureInstanceHandle feature, AppendData data, FtString type)
+{
+    FeatureInterfaceHandle handle = system_crypto_createECDH_instance(feature);
+    printf("%s::%s(), feature: %p, interface: %p\n", file_tag, __FUNCTION__, feature, handle);
+
+    int ret;
+    CryptoECDH* ecdh = (CryptoECDH*)malloc(sizeof(CryptoECDH));
+    if (ecdh == NULL) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_wrap_createECDH malloc ecdh failed");
+        return handle;
+    }
+
+    ret = initialize_ecdh(type, ecdh);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("crypto.system_crypto_wrap_createECDH initialize_ecdh failed");
+        free(ecdh);
+        return handle;
+    }
+    FeatureSetObjectData(handle, ecdh);
+
+    return handle;
 }

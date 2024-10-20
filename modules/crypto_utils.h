@@ -30,6 +30,35 @@
 
 #define arrayof(array) sizeof(array) / sizeof(array[0])
 
+#define INVOKE_SUCCESS_CB_INTERFACE(cb, ...) \
+    do { \
+        if (!FeatureInvokeCallback(handle, cb, ##__VA_ARGS__)) { \
+            FEATURE_LOG_ERROR("invoke success callback failed !"); \
+        } \
+    } while (0)
+
+#define INVOKE_FAIL_CB_INTERFACE(cb, msg, code) \
+    do { \
+        ft_value_t ret_data = ft_from_string(ft_ctx, msg); \
+        if (!FeatureInvokeCallback(handle, cb, ret_data, code)) { \
+            FEATURE_LOG_ERROR("invoke fail callback failed !"); \
+        } \
+    } while (0)
+
+#define INVOKE_COMPLET_CB_INTERFACE(cb) \
+    do { \
+        if (!FeatureInvokeCallback(handle, cb)) { \
+            FEATURE_LOG_ERROR("invoke complete callback failed !"); \
+        } \
+    } while (0)
+
+#define REMOVE_ALL_CBS_INTERFACE(options) \
+    do { \
+        FeatureRemoveCallback(handle, options->success); \
+        FeatureRemoveCallback(handle, options->fail); \
+        FeatureRemoveCallback(handle, options->complete); \
+    } while (0)
+
 #define INVOKE_SUCCESS_CB(cb, ...) \
     do { \
         if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) { \

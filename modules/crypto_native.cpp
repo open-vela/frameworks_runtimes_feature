@@ -20,8 +20,8 @@
 #include "feature_log.h"
 #include "feature_utils.h"
 #include "uv_ext.h"
-
 #include <alloca.h>
+#include <ctype.h>
 #include <stdio.h>
 
 static const char* file_tag = "[jidl_feature] crypto_native";
@@ -43,6 +43,20 @@ const char* crypto_err = NULL;
         crypto_err = msg;                                                   \
         break;                                                              \
     }
+
+static int hex_char_to_value(char c)
+{
+    if (isxdigit(c)) {
+        if (c >= '0' && c <= '9') {
+            return c - '0';
+        } else if (c >= 'a' && c <= 'f') {
+            return c - 'a' + 10;
+        } else if (c >= 'A' && c <= 'F') {
+            return c - 'A' + 10;
+        }
+    }
+    return -1;
+}
 
 static int setup_uv_aes_key(uv_aes_t* aes_ctx, int mode, const uint8_t* key, size_t key_size)
 {
@@ -608,4 +622,187 @@ int hkdf_key_derivation(const char* algo,
     }
 
     return 0;
+}
+
+int ECDH_generate_key(int group_id,
+    unsigned char* pubKey, size_t pubKey_len, size_t* pubKey_outSize,
+    unsigned char* privKey, size_t privKey_outSize)
+{
+    uv_ecp_t ctx;
+    int ret;
+
+    ret = uv_ecdh_init(&ctx, group_id);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_init failed");
+        return -1;
+    }
+
+    ret = uv_ecdh_gen_keypair(&ctx);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_gen_keypair failed");
+        goto free_and_exit;
+    }
+
+    ret = uv_ecdh_get_privkey(&ctx, privKey, privKey_outSize);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_get_privkey failed");
+        goto free_and_exit;
+    }
+
+    ret = uv_ecdh_get_pubkey(&ctx, group_id, pubKey, pubKey_len, pubKey_outSize);
+    if (ret != 0 || pubKey_len != *pubKey_outSize) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_get_pubkey failed");
+        goto free_and_exit;
+    }
+
+free_and_exit:
+    uv_ecdh_free(&ctx);
+
+    return ret;
+}
+
+int ECDH_compute_shared_key(int group_id,
+    unsigned char* pubKey_input, size_t pubKey_size,
+    unsigned char* privKey_self, size_t privKey_self_size,
+    unsigned char* secretKey, size_t* secretKey_size)
+{
+    uv_ecp_t ctx;
+    int ret;
+
+    ret = uv_ecdh_init(&ctx, group_id);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_init failed");
+        return -1;
+    }
+
+    ret = uv_ecdh_gen_keypair_from_binary(&ctx, MBEDTLS_ECP_DP_SECP256R1, privKey_self, privKey_self_size);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_gen_keypair_from_binary failed\n");
+        goto free_and_exit;
+    }
+
+    ret = uv_ecdh_compute_sharedkey(&ctx, pubKey_input, pubKey_size, secretKey, secretKey_size);
+    if (ret != 0 || privKey_self_size != *secretKey_size) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_compute_sharedkey failed");
+        goto free_and_exit;
+    }
+
+free_and_exit:
+    uv_ecdh_free(&ctx);
+
+    return ret;
+}
+
+void crypto_hexify(char* input_data, size_t input_size, char* output_string, size_t* output_len)
+{
+    uv_buf_t input = { 0 };
+    uv_buf_t output = { 0 };
+
+    input.base = input_data;
+    input.len = input_size;
+
+    uv_hexify(input, &output);
+    if (output.base == NULL || output.len == 0) {
+        return;
+    }
+
+    memcpy(output_string, (char*)output.base, output.len);
+    *output_len = output.len;
+}
+
+void crypto_unhexify(const char* hex_str, size_t hex_len, unsigned char* output, size_t* output_size)
+{
+    if (hex_len % 2 != 0 || hex_str == NULL || output == NULL || output_size == NULL) {
+        FEATURE_LOG_ERROR("Invalid input parameters");
+        *output_size = 0;
+        return;
+    }
+
+    size_t byte_len = hex_len / 2;
+    unsigned char* obuf = (unsigned char*)malloc(byte_len);
+    if (obuf == NULL) {
+        FEATURE_LOG_ERROR("malloc obuf failed");
+        *output_size = 0;
+        return;
+    }
+
+    const char* ibuf = hex_str;
+    size_t byte_index = 0;
+
+    while (byte_index < byte_len && *ibuf != '\0') {
+        int high_nibble = hex_char_to_value(*ibuf++);
+        int low_nibble = hex_char_to_value(*ibuf++);
+
+        if (high_nibble == -1 || low_nibble == -1) {
+            free(obuf);
+            FEATURE_LOG_ERROR("Non-hexadecimal character encountered");
+            *output_size = 0;
+            return;
+        }
+
+        obuf[byte_index++] = (high_nibble << 4) | low_nibble;
+    }
+
+    if (byte_index != byte_len) {
+        free(obuf);
+        FEATURE_LOG_ERROR("Incomplete hex string or non-hex character encountered");
+        *output_size = 0;
+        return;
+    }
+
+    memcpy(output, obuf, byte_len);
+    *output_size = byte_len;
+
+    free(obuf);
+}
+
+int ECDH_generate_keypair_by_pem(int group_id,
+    unsigned char* priKey_pem, size_t priKey_pem_len,
+    unsigned char* priKey_data, size_t priKey_size,
+    unsigned char* pubkey, size_t pubkey_size, size_t* pubkey_outsize)
+{
+    int ret;
+
+    ret = uv_ecdh_gen_keypair_from_pem(group_id, (const char*)priKey_pem, priKey_pem_len, priKey_data, priKey_size, pubkey, pubkey_size, pubkey_outsize);
+    if (ret != 0 || pubkey_size != *pubkey_outsize) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_gen_keypair_from_pem failed\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int ECDH_generate_keypair_by_binary(int group_id,
+    unsigned char* priKey_input, size_t priKey_input_len,
+    unsigned char* priKey_data, size_t* priKey_size,
+    unsigned char* pubkey, size_t pubkey_size, size_t* pubkey_outsize)
+{
+    int ret;
+    uv_ecp_t ctx;
+
+    ret = uv_ecdh_init(&ctx, group_id);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_init failed\n");
+        return -1;
+    }
+
+    ret = uv_ecdh_gen_keypair_from_binary(&ctx, MBEDTLS_ECP_DP_SECP256R1, priKey_input, priKey_input_len);
+    if (ret != 0) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_gen_keypair_from_binary failed\n");
+        goto free_and_exit;
+    }
+
+    ret = uv_ecdh_get_pubkey(&ctx, group_id, pubkey, pubkey_size, pubkey_outsize);
+    if (ret != 0 || pubkey_size != *pubkey_outsize) {
+        FEATURE_LOG_ERROR("%s::%s(), %s\n", file_tag, __FUNCTION__, "uv_ecdh_get_pubkey failed\n");
+        goto free_and_exit;
+    }
+
+    memcpy(priKey_data, priKey_input, priKey_input_len);
+    *priKey_size = priKey_input_len;
+
+free_and_exit:
+    uv_ecdh_free(&ctx);
+
+    return ret;
 }
