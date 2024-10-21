@@ -205,18 +205,18 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
         bool is_text;
         uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
         if (!buff) {
-            FEATURE_LOG_ERROR("%s %s, %s", file_tag, "invalid data type!");
+            FEATURE_LOG_ERROR("%s %s", file_tag, "invalid data type!");
         } else {
             result = digest(options->algo, buff, size, NULL);
             if (!result && crypto_err) {
-                FEATURE_LOG_ERROR("%s %s, native digest error: %s", file_tag, crypto_err);
+                FEATURE_LOG_ERROR("%s, native digest error: %s", file_tag, crypto_err);
             }
             FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
         }
     } else if (!check_any(options->data) && check_str(options->uri)) {
         result = digest_file(options->algo, options->uri, pkg_name);
         if (!result && crypto_err) {
-            FEATURE_LOG_ERROR("%s %s, native digest_file error: %s", file_tag, crypto_err);
+            FEATURE_LOG_ERROR("%s, native digest_file error: %s", file_tag, crypto_err);
         }
     } else {
         FEATURE_LOG_ERROR("%s %s", file_tag, "arguments data and uri are only needed for one'");
