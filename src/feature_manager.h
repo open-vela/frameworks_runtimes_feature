@@ -28,13 +28,6 @@
 
 namespace feature_framework {
 
-typedef enum ErrorCode {
-    GENERAL = 200,
-    ARGSERROR = 202,
-    IOERROR = 300,
-    TIMEOUT = 204
-} ErrorCode;
-
 struct TaskData {
     FeatureInstanceHandle instance;
     FeatureTaskCallback task_cb;
