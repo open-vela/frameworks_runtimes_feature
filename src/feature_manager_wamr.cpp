@@ -98,7 +98,7 @@ static void reportArgsError(FeatureInstance* instance, RetCode ret_code, std::st
     oss << ", " << message;
     std::string msg = oss.str();
     ArgsErrorInfo error_info;
-    error_info.error_code = ARGSERROR;
+    error_info.error_code = FT_ERR_ARGS;
     error_info.error_msg = msg.data();
     error_info.argc = argc;
     error_info.argv = argv;

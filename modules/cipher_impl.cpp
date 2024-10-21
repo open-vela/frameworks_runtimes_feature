@@ -30,13 +30,6 @@ static const char* file_tag = "[system_cipher_impl]";
 
 static const char* pkg_name = NULL;
 
-typedef enum ErrorCode {
-    GENERAL = 200,
-    ARGSERROR = 202,
-    IOERROR = 300,
-    TIMEOUT = 204
-} ErrorCode;
-
 // FeatureCallbacks
 void system_cipher_onRegister(const char* feature_name)
 {
@@ -82,7 +75,7 @@ void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
 
     if (!(check_str(opts->action) && check_str(opts->text) && check_str(opts->key))) {
         msg = "arguments action, text or key are needed";
-        code = ARGSERROR;
+        code = FT_ERR_ARGS;
     } else {
         size_t size = strlen(opts->text);
         bool is_text = true;
@@ -90,17 +83,17 @@ void system_cipher_wrap_rsa(FeatureInstanceHandle feature, AppendData append_dat
             result = rsa_encrypt(opts->key, (uint8_t*)(opts->text), &size, &is_text);
             if (!result) {
                 msg = crypto_err ? crypto_err : "rsa encrypt error";
-                code = GENERAL;
+                code = FT_ERR_GENERAL;
             }
         } else if (strcmp(opts->action, "decrypt") == 0) {
             result = rsa_decrypt(opts->key, (uint8_t*)(opts->text), &size, &is_text);
             if (!result) {
                 msg = crypto_err ? crypto_err : "rsa decrypt error";
-                code = GENERAL;
+                code = FT_ERR_GENERAL;
             }
         } else {
             msg = "invalid action";
-            code = ARGSERROR;
+            code = FT_ERR_ARGS;
         }
     }
 
@@ -134,14 +127,14 @@ void system_cipher_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
 
     if (!(check_str(opts->hashType) && check_str(opts->text) && check_str(opts->key))) {
         msg = "arguments hashType, text or key are needed";
-        code = ARGSERROR;
+        code = FT_ERR_ARGS;
     } else {
         size_t size = strlen(opts->text);
         bool is_text = true;
         result = rsa_sign(opts->hashType, opts->key, (uint8_t*)(opts->text), &size, &is_text);
         if (!result) {
             msg = crypto_err ? crypto_err : "rsa sign error";
-            code = GENERAL;
+            code = FT_ERR_GENERAL;
         }
     }
 
@@ -177,14 +170,14 @@ void system_cipher_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     if (!(check_str(opts->hashType) && check_str(opts->signature)
             && check_str(opts->text) && check_str(opts->key))) {
         msg = "arguments hashType, signature, text or key are needed";
-        code = ARGSERROR;
+        code = FT_ERR_ARGS;
     } else {
         size_t size = strlen(opts->text);
         size_t sig_size = strlen(opts->signature);
         result = rsa_verify(opts->hashType, opts->key, (uint8_t*)(opts->text), size, (uint8_t*)(opts->signature), sig_size, true);
         if (crypto_err) {
             msg = crypto_err;
-            code = GENERAL;
+            code = FT_ERR_GENERAL;
         } else {
             has_result = true;
         }
@@ -217,12 +210,12 @@ void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
 
     if (!(check_str(opts->hashType) && check_str(opts->text))) {
         msg = "arguments hashtype or text are needed";
-        code = ARGSERROR;
+        code = FT_ERR_ARGS;
     } else {
         result = digest(opts->hashType, (uint8_t*)(opts->text), strlen(opts->text), NULL);
         if (!result && crypto_err) {
             msg = crypto_err;
-            code = GENERAL;
+            code = FT_ERR_GENERAL;
         }
     }
 
@@ -257,12 +250,12 @@ void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
 
     if (!check_str(opts->text)) {
         msg = "argument text is needed";
-        code = ARGSERROR;
+        code = FT_ERR_ARGS;
     } else {
         result = digest("MD5", (uint8_t*)(opts->text), strlen(opts->text), NULL);
         if (!result && crypto_err) {
             msg = crypto_err;
-            code = GENERAL;
+            code = FT_ERR_GENERAL;
         }
     }
 
@@ -297,7 +290,7 @@ void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
 
     if (!(check_str(opts->action) && check_str(opts->text) && check_str(opts->key))) {
         msg = "arguments action, text or key are needed";
-        code = ARGSERROR;
+        code = FT_ERR_ARGS;
     } else {
         const char* iv = check_str(opts->iv) ? opts->iv : opts->key;
         size_t ivOffset = opts->ivOffset ? opts->ivOffset : 0;
@@ -307,22 +300,22 @@ void system_cipher_wrap_aes(FeatureInstanceHandle feature, AppendData append_dat
         bool is_text = true;
         if (ivOffset > strlen(iv)) {
             msg = "argument ivOffset shouldn\'t be larger than iv\'s length";
-            code = ARGSERROR;
+            code = FT_ERR_ARGS;
         } else if (strcmp(opts->action, "encrypt") == 0) {
             result = aes_encrypt(5, 0, opts->key, iv, ivOffset, ivLen, (uint8_t*)(opts->text), &size, &is_text);
             if (!result) {
                 msg = crypto_err ? crypto_err : "aes encrypt error";
-                code = GENERAL;
+                code = FT_ERR_GENERAL;
             }
         } else if (strcmp(opts->action, "decrypt") == 0) {
             result = aes_decrypt(5, 0, opts->key, iv, ivOffset, ivLen, (uint8_t*)(opts->text), &size, &is_text);
             if (!result) {
                 msg = crypto_err ? crypto_err : "aes decrypt error";
-                code = GENERAL;
+                code = FT_ERR_GENERAL;
             }
         } else {
             msg = "invalid action";
-            code = ARGSERROR;
+            code = FT_ERR_ARGS;
         }
     }
 

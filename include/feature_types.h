@@ -126,6 +126,14 @@ enum FeaturePrimitiveType {
     FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER),
 };
 
+typedef enum FeatureErrorCode {
+    FT_ERR_GENERAL = 200,
+    FT_ERR_ARGS = 202,
+    FT_ERR_TIMEOUT = 204,
+    FT_ERR_IOERROR = 300,
+    FT_ERR_CUSTOM_BEGIN = 400, // Future error codes can be added here
+} FeatureErrorCode;
+
 typedef union AppendData {
     int32_t i32;
     int64_t i64;
