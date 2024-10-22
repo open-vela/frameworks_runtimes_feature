@@ -348,6 +348,12 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                 FEATURE_LOG_WARN("js struct is null!");
                 break;
             }
+            // check js argv is object or not.
+            if (!value_translator::isObject(ctx, target)) {
+                FEATURE_LOG_ERROR("arg type mismatch, need struct!");
+                return false;
+            }
+
             if (!*(void**)pnative) {
                 *(void**)pnative = FeatureMalloc(complex_type->size, ftype);
             }
