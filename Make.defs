@@ -1,5 +1,5 @@
 ############################################################################
-# frameworks/feature/Make.defs
+# frameworks/runtimes/feature/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements. See the NOTICE file distributed with
@@ -18,10 +18,10 @@
 #
 ############################################################################
 
-CONFIGURED_APPS += $(APPDIR)/frameworks/base/feature
+CONFIGURED_APPS += $(APPDIR)/frameworks/runtimes/feature
 
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/include
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/src
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/base/feature/modules
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/modules
