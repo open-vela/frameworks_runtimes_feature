@@ -189,16 +189,10 @@ private:
     FeatureArray(FtArray* ptr)
         : RefPtr(ptr)
     {
-        FeatureInstanceDupValue(ptr);
     }
 
 public:
-    ~FeatureArray()
-    {
-        if (p_) {
-            FeatureFreeValue(p_);
-        }
-    }
+    ~FeatureArray() = default;
 
     static FeatureArray adopt(FtArray* ptr)
     {
@@ -283,6 +277,12 @@ public:
         } else {
             return FeatureArrayAppend(p_, &data);
         }
+    }
+
+    // for RefPtr<T> specialization
+    inline bool append(const RefPtr<std::remove_cv_t<std::remove_pointer_t<T>>>& data)
+    {
+        return FeatureArrayAppend(p_, data.ptr());
     }
 
     inline bool appendRaw(const T data)
