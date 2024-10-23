@@ -15,9 +15,11 @@
  */
 
 #include <assert.h>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
 #include <binder/IPCThreadState.h>
 #endif
@@ -26,15 +28,56 @@
 #include "feature_qjs_exports.h"
 #include "feature_registry.h"
 
+#define CLI_TIME_LIMIT 2 // 异步限时 2000ms
 using namespace feature_framework;
 using namespace FEATURE;
 
 static FeatureManagerQjs* g_manager_qjs;
 
-typedef struct feature_env_t {
+struct cli_timeout_host;
+
+typedef struct {
+    cli_timeout_host* host;
+    uv_timer_t* timer;
+    JSContext* ctx;
+    JSValue callback;
+    bool triggered;
+} cli_time_callback;
+
+struct cli_timeout_host {
+    uv_loop_t* loop;
+    std::set<cli_time_callback*> timers;
+};
+
+typedef struct {
+    cli_timeout_host time_host;
+    uv_timer_t* async_limiter;
+    uint32_t time_limit;
     JSRuntime* rt;
     JSContext* ctx;
 } feature_env_t;
+
+/** setTimeOut 回调 */
+void cli_time_cb(uv_timer_t* handle)
+{
+    cli_time_callback* tc = static_cast<cli_time_callback*>(handle->data);
+    JS_Call(tc->ctx, tc->callback, JS_UNDEFINED, 0, NULL);
+    JS_FreeValue(tc->ctx, tc->callback);
+    tc->triggered = true;
+    handle->data = 0;
+    uv_timer_stop(handle);
+    uv_close((uv_handle_t*)handle, NULL);
+}
+
+static void setScriptArgs(JSContext* ctx, JSValue global_obj, int argc, char* argv[], int scriptArgs_beg)
+{
+    JSValue arr = JS_NewArray(ctx);
+    for (int i = 0, j = scriptArgs_beg; j < argc; i++, j++) {
+        JSValue js_string = JS_NewString(ctx, argv[j]);
+        JS_SetPropertyUint32(ctx, arr, i, js_string);
+    }
+    JS_SetPropertyStr(ctx, global_obj, "scriptArgs", arr);
+}
 
 // __require
 feature_value_t __require(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
@@ -75,7 +118,39 @@ feature_value_t __log(feature_context_ref ctx, feature_value_t this_val, int arg
     return FEATURE_UNDEFINED;
 }
 
-bool load_file(char* file_name, char** file_content)
+feature_value_t __setCliTimeout(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv,
+    int magic, feature_value_t* func_data)
+{
+    if (argc < 2) {
+        FEATURE_THROW_INTERNAL_ERROR(ctx, "setTimeout need a callback and time!");
+        return FEATURE_UNDEFINED;
+    }
+    cli_timeout_host* time_host = (cli_timeout_host*)JS_GetOpaque(func_data[0], 1);
+    int t = JS_VALUE_GET_INT(argv[1]);
+    cli_time_callback* tc = (cli_time_callback*)malloc(sizeof(cli_time_callback));
+    tc->callback = JS_DupValue(ctx, argv[0]);
+    tc->triggered = false;
+    tc->host = time_host;
+    tc->ctx = ctx;
+    tc->host->timers.insert(tc);
+    uv_timer_t* timer = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+    tc->timer = timer;
+    uv_timer_init(tc->host->loop, timer);
+    timer->data = tc;
+    uv_timer_start(timer, cli_time_cb, t, 0);
+    return FEATURE_UNDEFINED;
+}
+
+// exit
+feature_value_t __cliExit(feature_context_ref ctx, feature_value_t this_val, int argc, feature_value_t* argv)
+{
+    uv_loop_t* ploop = g_manager_qjs->getUVLoop();
+    uv_stop(ploop);
+    FEATURE_LOG_INFO("feature_cli_test exit!");
+    return FEATURE_UNDEFINED;
+}
+
+bool cli_load_file(char* file_name, char** file_content)
 {
     if (file_name == NULL || file_content == NULL) {
         printf("file_name or file_content is NULL!\n");
@@ -101,55 +176,42 @@ bool load_file(char* file_name, char** file_content)
     return true;
 }
 
-#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
-void execute_jobs(JSContext* ctx)
+static void cli_execute_job_cb(uv_prepare_t* handle)
 {
-    JSContext* ctx1;
+    feature_env_t* env = static_cast<feature_env_t*>(handle->data);
+    JSContext* r_ctx;
     int err;
-
-    // 执行挂起任务
     for (;;) {
-        // 返回0表示任务全部完成
-        err = JS_ExecutePendingJob(JS_GetRuntime(ctx), &ctx1);
+        err = JS_ExecutePendingJob(env->rt, &r_ctx);
         if (err <= 0) {
             if (err < 0)
-                feature_dump_error(ctx1);
+                feature_dump_error(r_ctx);
             break;
         }
     }
 }
 
-static void __uv_check_cb(uv_check_t* handle)
+static void cli_async_limit_cb(uv_timer_t* handle)
 {
-    feature_env_t* env = static_cast<feature_env_t*>(handle->data);
-    execute_jobs(env->ctx);
+    uv_loop_t* ploop = g_manager_qjs->getUVLoop();
+    uv_stop(ploop);
 }
 
-static void __uv_poll_cb(uv_poll_t* handle, int status, int events)
+#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
+static void __cli_uv_poll_cb(uv_poll_t* handle, int status, int events)
 {
     android::IPCThreadState::self()->handlePolledCommands();
 }
 #endif
 
-static void setScriptArgs(JSContext* ctx, JSValue global_obj, int argc, char* argv[], int scriptArgs_beg)
-{
-    JSValue arr = JS_NewArray(ctx);
-    for (int i = 0, j = scriptArgs_beg; j < argc; i++, j++) {
-        JSValue js_string = JS_NewString(ctx, argv[j]);
-        JS_SetPropertyUint32(ctx, arr, i, js_string);
-    }
-    JS_SetPropertyStr(ctx, global_obj, "scriptArgs", arr);
-}
-
-// 支持cli来读取manitest.json以及js文件去执行，命令为:./feature_test_cli ./test.js ../manifest.json
-// 当test.js使用message channel, 命令为:./feature_test_cli -m ./test.js ../manifest.json
+// 当test.js使用异步任务, 命令为:./feature_test_cli -m 5 ./test.js
 extern "C" int main(int argc, char** argv)
 {
     if (argc < 2) {
-        printf("help: feature_test_cli js_file.js [manifest] [--scriptArgs ....]\n");
+        FEATURE_LOG_INFO("help: feature_test_cli js_file.js [manifest] [--scriptArgs ....]");
         return 0;
     }
-
+    int time_limit = CLI_TIME_LIMIT;
     char* js_file = NULL;
     char* js_str = NULL;
     char* manifast_str = NULL;
@@ -160,6 +222,10 @@ extern "C" int main(int argc, char** argv)
     for (; i < argc; i++) {
         if (strcmp(argv[i], "-m") == 0) {
             use_uvloop_async = true;
+            i++;
+            if (i >= argc)
+                break;
+            time_limit = atoi(argv[i]);
         } else if (strcmp(argv[i], "--scriptArgs") == 0) { // script after thie args will give js
             scriptArgs_beg = i;
             argv[i] = js_file;
@@ -172,7 +238,7 @@ extern "C" int main(int argc, char** argv)
     }
 
     // manifest file is not required
-    load_file(manifest_file, &manifast_str);
+    cli_load_file(manifest_file, &manifast_str);
 
     // 打开manifest.json文件,读取内容到一个字符串中
     // 打开js文件
@@ -181,7 +247,7 @@ extern "C" int main(int argc, char** argv)
         return 1;
     }
 
-    load_file(js_file, &js_str);
+    cli_load_file(js_file, &js_str);
     if (js_str == NULL) {
         printf("malloc js file failed!\n");
         if (manifast_str != NULL) {
@@ -191,7 +257,6 @@ extern "C" int main(int argc, char** argv)
         return 0;
     }
 
-    // initialize quickjs engine
     feature_env_t js_env;
 
     js_env.rt = JS_NewRuntime();
@@ -200,63 +265,107 @@ extern "C" int main(int argc, char** argv)
     auto registry = new FeatureRegistry();
     registry->init(manifast_str);
     g_manager_qjs = new FeatureManagerQjs(registry, (feature_context_ref)(js_env.ctx));
-    uv_loop_t uv_loop;
-    uv_loop_init(&uv_loop);
-    FeatureSetUVLoop(g_manager_qjs, &uv_loop);
 
-    // register global require
+    // 初始化
+    uv_loop_t* main_loop = (uv_loop_t*)malloc(sizeof(uv_loop_t));
+    uv_loop_init(main_loop);
+
+    uv_timer_t timer;
+    uv_timer_init(main_loop, &timer);
+
+    uv_prepare_t prepare;
+    uv_prepare_init(main_loop, &prepare);
+
+    prepare.data = &js_env;
+    uv_prepare_start(&prepare, cli_execute_job_cb);
+
+    js_env.async_limiter = &timer;
+    js_env.time_limit = time_limit * 1000;
+    timer.data = &js_env;
+
+    js_env.time_host.loop = main_loop;
+#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
+    // init binder
+    int binderFd = -1;
+    android::IPCThreadState::self()->setupPolling(&binderFd);
+    if (binderFd < 0) {
+        printf("failed to open binder device:%d", errno);
+    } else {
+        uv_poll_t binder_poll;
+        uv_poll_init(main_loop, &binder_poll, binderFd);
+        uv_poll_start(&binder_poll, UV_READABLE, __cli_uv_poll_cb);
+    }
+#endif
+
+    FeatureSetUVLoop(g_manager_qjs, main_loop);
     feature_value_t global_obj = feature_global_object(js_env.ctx);
     feature_value_t console = feature_object(js_env.ctx);
     feature_set_object_property(js_env.ctx, global_obj, "console", console);
-    setScriptArgs(js_env.ctx, global_obj, argc, argv, scriptArgs_beg);
 
     feature_value_t require = feature_cfunction(js_env.ctx, __require, "require", 0);
     feature_set_object_property(js_env.ctx, global_obj, "require", require);
+
     feature_value_t log = feature_cfunction(js_env.ctx, __log, "console_log", 0);
     feature_set_object_property(js_env.ctx, console, "log", log);
+
+    feature_value_t exit = feature_cfunction(js_env.ctx, __cliExit, "exit", 0);
+    feature_set_object_property(js_env.ctx, global_obj, "exit", exit);
+
+    feature_value_t time_func_data = feature_object(js_env.ctx);
+    feature_set_opaque(time_func_data, &(js_env.time_host));
+    feature_value_t setTimeout = feature_cfunctiondata(js_env.ctx, __setCliTimeout, 1, 0, 1, &time_func_data);
+    feature_free_value(js_env.ctx, time_func_data);
+    feature_set_object_property(js_env.ctx, global_obj, "setTimeout", setTimeout);
+
+    setScriptArgs(js_env.ctx, global_obj, argc, argv, scriptArgs_beg);
+
     feature_free_value(js_env.ctx, global_obj);
-
     auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
-
-    if (!use_uvloop_async) {
-        int err;
-        feature_context_ref ctx1;
-        while (!!JS_IsJobPending(js_env.rt)) {
-            err = JS_ExecutePendingJob(js_env.rt, &ctx1);
-            if (err <= 0) {
-                if (err < 0)
-                    feature_dump_error(ctx1);
-                break;
-            }
+    if (use_uvloop_async) {
+        uv_timer_t* async_timer = static_cast<uv_timer_t*>(js_env.async_limiter);
+        uv_timer_start(async_timer, cli_async_limit_cb, js_env.time_limit, 0);
+        uv_run(main_loop, UV_RUN_DEFAULT);
+        if (uv_is_active((uv_handle_t*)async_timer)) {
+            uv_timer_stop(async_timer); // 异步测试正常结束
         }
-    } else {
-#ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
-        int binderFd;
-        android::IPCThreadState::self()->setupPolling(&binderFd);
-        if (binderFd < 0) {
-            printf("failed to open binder device:%d", errno);
-            return -1;
-        }
+    }
 
-        // init uv_check_t & uv_poll_t
-        uv_check_t uv_check;
-        uv_poll_t uv_poll;
-        uv_check_init(&uv_loop, &uv_check);
-        uv_poll_init(&uv_loop, &uv_poll, binderFd);
-        uv_check.data = &js_env;
-        uv_check_start(&uv_check, __uv_check_cb);
-        uv_poll_start(&uv_poll, UV_READABLE, __uv_poll_cb);
-        uv_unref((uv_handle_t*)&uv_check);
-        uv_run(&uv_loop, UV_RUN_DEFAULT);
-#endif
+    int err;
+    feature_context_ref ctx1;
+    while (!!JS_IsJobPending(js_env.rt)) {
+        err = JS_ExecutePendingJob(js_env.rt, &ctx1);
+        if (err <= 0) {
+            if (err < 0)
+                feature_dump_error(ctx1);
+            break;
+        }
     }
 
     feature_free_value(js_env.ctx, result);
     // release manager first
+    FeatureUnsetUVLoop(g_manager_qjs);
     g_manager_qjs->uninit();
-    JS_FreeContext(js_env.ctx);
-    JS_FreeRuntime(js_env.rt);
 
+    for (cli_time_callback* tc : js_env.time_host.timers) {
+        if (!tc->triggered) {
+            JS_FreeValue(tc->ctx, tc->callback);
+            uv_close((uv_handle_t*)tc->timer, NULL);
+        }
+        free(tc->timer);
+        tc->timer = NULL;
+
+        free(tc);
+        tc = NULL;
+    }
+    js_env.time_host.timers.clear();
+    uv_close((uv_handle_t*)&prepare, NULL);
+    uv_close((uv_handle_t*)&timer, NULL);
+    if (uv_loop_alive(main_loop)) {
+        uv_stop(main_loop);
+        uv_loop_close(main_loop);
+        free(main_loop);
+        main_loop = NULL;
+    }
     // 释放manifast_str
     if (manifast_str != NULL) {
         free(manifast_str);
@@ -269,6 +378,7 @@ extern "C" int main(int argc, char** argv)
     }
     // free g_manager_qjs
     delete g_manager_qjs;
-
+    JS_FreeContext(js_env.ctx);
+    JS_FreeRuntime(js_env.rt);
     return 0;
 }
