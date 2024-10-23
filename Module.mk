@@ -17,11 +17,11 @@ ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 
 .PHONY: all clean distclean depend register context
 
-FEATURE_REGISTRY = $(APPDIR)/frameworks/base/feature/registry
+FEATURE_REGISTRY = $(APPDIR)/frameworks/runtimes/feature/registry
 FEATURE_LIST_PATH := $(addprefix $(FEATURE_REGISTRY)/,$(addsuffix .pdat,$(FEATURELIST)))
 FEATURE_LIST_PATH += $(addprefix $(FEATURE_REGISTRY)/,$(addsuffix .pdat,$(CFEATURELIST)))
-AJS_FEATURES_REGISTRY = $(APPDIR)/frameworks/base/feature/src/ajs_features_registry.cpp
-AJS_FEATURES_LIST = $(APPDIR)/frameworks/base/feature/src/ajs_features_list.h
+AJS_FEATURES_REGISTRY = $(APPDIR)/frameworks/runtimes/feature/src/ajs_features_registry.cpp
+AJS_FEATURES_LIST = $(APPDIR)/frameworks/runtimes/feature/src/ajs_features_list.h
 
 #打印FEATURE_LIST_PATH
 #$(info FEATURE_LIST_PATH is ${FEATURE_LIST_PATH})
@@ -38,7 +38,7 @@ depend::
 		$(eval jidl_path=$(word $(i),$(JIDL_PATH))) \
 		$(eval out_path=$(word $(i),$(OUT_PATH))) \
 		$(eval file_name=$(strip $(basename $(notdir $(word $(i),$(JIDL_PATH))) .jidl))) \
-		python3 $(APPDIR)/frameworks/base/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp; \
+		python3 $(APPDIR)/frameworks/runtimes/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -header $(file_name).h -source $(file_name).cpp; \
 	)
 
 ifeq ($(wildcard $(AJS_FEATURES_REGISTRY)),)
