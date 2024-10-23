@@ -225,7 +225,7 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
     [SENSOR_MAGIC_AMBIENTTEMPERATURE] = { .index = 7, .sensor_name = "AMBIENT_TEMPERATURE", .meta = ORB_ID(sensor_temp), .topic_cb = sensor_temp_topic_cb },
     [SENSOR_MAGIC_HUMIDITY] = { .index = 12, .sensor_name = "HUMIDITY", .meta = ORB_ID(sensor_humi), .topic_cb = sensor_humi_topic_cb },
 #ifdef CONFIG_MIWEAR_COMMON
-    [SENSOR_MAGIC_WRIST_TILT] = { .index = 22, .sensor_name = "WRIST_TILT", .meta = ORB_ID(algo_wrist_tilt), .topic_cb = NULL },
+    [SENSOR_MAGIC_WRIST_TILT] = { .index = 22, .sensor_name = "WRIST_LIFT", .meta = ORB_ID(algo_wrist_tilt), .topic_cb = NULL },
 #endif
 };
 
