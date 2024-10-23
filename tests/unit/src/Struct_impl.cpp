@@ -98,7 +98,7 @@ ft_utils::RefPtr<FtArray> Struct::getBooks(FtInt count)
         auto titles = makeArray<FtString>(3);
         for (int j = 0; j < 3; j++) {
             sprintf(buf, "chapter: %d-%d", i, j);
-            titles.append(strdup((const char*)buf).drop());
+            titles.append(strdup((const char*)buf));
             elem->set_chap_titles(titles.getShared());
         }
         auto chapter = make<Chapter>();
@@ -108,7 +108,7 @@ ft_utils::RefPtr<FtArray> Struct::getBooks(FtInt count)
         chapter->set_is_end(false);
         elem->set_first_chap(chapter);
         elem->set_chap_changed(true);
-        result.append(elem.drop());
+        result.append(elem);
     }
     return result;
 }
