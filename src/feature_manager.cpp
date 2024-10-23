@@ -106,9 +106,8 @@ void FeatureManager::setUVLoop(uv_loop_t* loop)
 void FeatureManager::unsetUVLoop()
 {
     if (async_ && !uv_is_closing((uv_handle_t*)async_)) {
-        uv_close((uv_handle_t*)async_, [](uv_handle_t* handler) {
-            free(reinterpret_cast<uv_async_t*>(handler));
-        });
+        uv_close((uv_handle_t*)async_, nullptr);
+        free(async_);
         async_ = nullptr;
         loop_ = nullptr;
     }
