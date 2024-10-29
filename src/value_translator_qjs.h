@@ -30,8 +30,9 @@ namespace value_translator {
 // to native values
 static inline bool toNative(JSContext* ctx, const JSValue& target, int32_t* pnative)
 {
-    if (!JS_IsNumber(target)) {
-        FEATURE_LOG_ERROR("arg type mismatch, need number type arg !");
+    int tag = JS_VALUE_GET_TAG(target);
+    if (tag != JS_TAG_INT) {
+        FEATURE_LOG_ERROR("arg type mismatch, need number type arg!");
         return false;
     }
     return JS_ToInt32(ctx, pnative, target) == 0;
