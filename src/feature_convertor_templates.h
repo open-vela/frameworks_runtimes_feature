@@ -392,7 +392,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                 ret = convertValueToNative(instance, member->type, ctx, field, member_ptr);
                 value_translator::freeValue(ctx, field);
                 if (!ret) {
-                    printf("get property value for key: %s failed !", member->name);
+                    FEATURE_LOG_ERROR("get property value for key: %s failed !", member->name);
                     return false;
                 }
             }
