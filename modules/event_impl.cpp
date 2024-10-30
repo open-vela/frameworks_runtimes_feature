@@ -105,7 +105,7 @@ void system_event_onUnregister(const char* feature_name)
 void system_event_wrap_publish(FeatureInstanceHandle feature, union AppendData append_data, system_event_publish_t* param)
 {
     EVENT_DEBUG("system_event_wrap_publish, event = %s", param->eventName);
-    if (strlen(param->eventName) == 0) {
+    if (!param->eventName || strlen(param->eventName) == 0) {
         EVENT_ERROR("eventName length is 0, publish fail");
         return;
     }
@@ -130,7 +130,7 @@ void system_event_wrap_publish(FeatureInstanceHandle feature, union AppendData a
         goto free_value;
     }
     pkg_name = FeatureGetPackageName(FeatureGetProtoHandle(feature));
-    if (strlen(pkg_name) < sizeof(data->pkg)) {
+    if (pkg_name && strlen(pkg_name) < sizeof(data->pkg)) {
         sprintf(data->pkg, "%s", pkg_name);
     } else {
         EVENT_ERROR("package name [%s] should shorter than %d", pkg_name, sizeof(data->eventName));
@@ -143,7 +143,7 @@ void system_event_wrap_publish(FeatureInstanceHandle feature, union AppendData a
             if (params_t > 0) {
                 if (params_t == FT_TYPE_OBJECT) {
                     options_params = ft_to_string(ft_ctx, *(param->options->params));
-                    if (strlen(options_params) > 0) {
+                    if (options_params && strlen(options_params) > 0) {
                         if (strlen(options_params) < sizeof(data->params)) {
                             sprintf(data->params, "%s", options_params);
                             ft_free_string(ft_ctx, options_params);
@@ -168,8 +168,10 @@ void system_event_wrap_publish(FeatureInstanceHandle feature, union AppendData a
                     sprintf(pos, "%s", ",");
                     pos++;
                 }
-                sprintf(pos, "%s", permissions_array[i]);
-                pos += strlen(permissions_array[i]);
+                if (permissions_array[i]) {
+                    sprintf(pos, "%s", permissions_array[i]);
+                    pos += strlen(permissions_array[i]);
+                }
             }
             EVENT_DEBUG("permissions = %s", permissions);
             if (strlen(permissions) < sizeof(data->permissions)) {
@@ -195,7 +197,7 @@ FtAny system_event_wrap_subscribe(FeatureInstanceHandle feature, union AppendDat
 {
     ft_value_t* ret_ptr = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     ft_context_ref ctx = FeatureGetContext(feature);
-    if (strlen(param->eventName) == 0 || !FeatureCheckCallbackId(feature, param->callback)) {
+    if (!param->eventName || strlen(param->eventName) == 0 || !FeatureCheckCallbackId(feature, param->callback)) {
         EVENT_ERROR("parameter [%s or callback %d] error!", param->eventName, param->callback);
         *ret_ptr = ft_undefined(ctx);
         return ret_ptr;
