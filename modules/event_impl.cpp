@@ -109,6 +109,10 @@ void system_event_wrap_publish(FeatureInstanceHandle feature, union AppendData a
         EVENT_ERROR("eventName length is 0, publish fail");
         return;
     }
+    if (isSystemEvent(param->eventName)) {
+        EVENT_ERROR("event %s is system event, publish fail", param->eventName);
+        return;
+    }
     __GET_EVENT_HANDLE_MANAGER__();
     printEventInfo();
     if (!isEventSubscribed(param->eventName)) {
