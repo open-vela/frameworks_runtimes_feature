@@ -32,6 +32,7 @@
 
 namespace ft_system_event {
 #define SYSTEM_EVENT_PACKAGE "system"
+#define SYSTEM_EVENT_PREFIX "usual.event."
 
 #define EVENT_CONTEXT_DEBUG(fmt, ...) \
     FEATURE_LOG_DEBUG(fmt, ##__VA_ARGS__)
@@ -40,6 +41,8 @@ namespace ft_system_event {
 
 // Check if current user event has been subscribed
 bool isEventSubscribed(const char* eventName);
+
+bool isSystemEvent(const char* eventName);
 
 void printEventInfo();
 

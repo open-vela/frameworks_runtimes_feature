@@ -117,9 +117,7 @@ void removeSubscribe(FeatureInstanceHandle handle, int id)
     EVENT_CONTEXT_ERROR("no such subscription info");
 }
 
-#define SYSTEM_EVENT_PREFIX "usual.event."
-
-bool __is_system_event(const char* eventName)
+bool isSystemEvent(const char* eventName)
 {
     return strncmp(eventName, SYSTEM_EVENT_PREFIX, strlen(SYSTEM_EVENT_PREFIX)) == 0;
 }
@@ -193,7 +191,7 @@ void EventContext::handleEvent(FeatureInstanceHandle handle, void* pre, void* cu
         system_event_subs_cb_t* arg = system_eventMallocsubs_cb_t();
         arg->params = &res;
         char* pkgName = (char*)FeatureMalloc(PATH_MAX, FT_CHAR);
-        if (__is_system_event(event_name.c_str())) {
+        if (isSystemEvent(event_name.c_str())) {
             sprintf(pkgName, "%s", SYSTEM_EVENT_PACKAGE);
         } else {
             sprintf(pkgName, "%s", ((user_event_meta*)cur)->pkg);
@@ -233,7 +231,7 @@ int SubscriptionManager::addEvent(const char* eventName, int cb)
         EventContext* event_ctx;
         if (event_info != nullptr) {
             event_ctx = new EventContext(eventName, event_info->func);
-        } else if (!__is_system_event(eventName)) {
+        } else if (!isSystemEvent(eventName)) {
             event_ctx = new EventContext(eventName, GetUserEventInfo()->func);
         } else {
             EVENT_CONTEXT_ERROR("current topic dont support event [%s]", eventName);
@@ -362,7 +360,7 @@ int EventManager::subscribeEvent(FeatureInstanceHandle handle, const char* event
 {
     EVENT_CONTEXT_DEBUG("subscribeEvent, event = %s, cb = %d", eventName, cb);
     const topic_info_t* topic_info;
-    if (__is_system_event(eventName)) {
+    if (isSystemEvent(eventName)) {
         topic_info = GetTopicInfoGlobal(eventName);
     } else {
         topic_info = GetUserToopicInfo();
