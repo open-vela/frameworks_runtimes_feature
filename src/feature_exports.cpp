@@ -112,8 +112,8 @@ FtArray* FeatureArrayCopy(FeatureInstanceHandle handle, FeatureType element_type
 
     int elem_size = getValueSize(element_type);
     if (FT_IS_REFERENCE(element_type)) {
-        for (size_t i = 0; i < count; ++count) {
-            FeatureInstanceDupValue((void*)((uintptr_t)data + i * elem_size));
+        for (size_t i = 0; i < count; ++i) {
+            FeatureInstanceDupValue(*(void**)((uintptr_t)data + i * elem_size));
         }
     }
 
@@ -168,9 +168,15 @@ size_t FeatureArrayGetLength(FtArray* arr)
     return arr->_size;
 }
 
-void* FeatureArrayGetDatas(FtArray* arr, int start)
+void* FeatureArrayGetData(FtArray* arr, int start)
 {
-    return arr->_element;
+    if (start < arr->_size) {
+        auto element_type = getElementType(arr);
+        return (void*)((uintptr_t)(arr->_element) + start * getValueSize(element_type));
+    } else {
+        FEATURE_LOG_ERROR("OUT OF RANGE!!");
+        return nullptr;
+    }
 }
 
 int FeatureArrayClear(FtArray* arr)
