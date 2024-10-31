@@ -121,7 +121,7 @@ size_t FeatureArrayGetLength(FtArray* arr);
  * @param start
  * @return FtArray*
  */
-void* FeatureArrayGetDatas(FtArray* arr, int start);
+void* FeatureArrayGetData(FtArray* arr, int start);
 
 /**
  * @brief Add data to array
