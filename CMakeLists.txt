@@ -14,7 +14,7 @@ set(EXTERNAL_DIR ${APP_DIR}/external)
 set(FRAMEWORKS_DIR ${APP_DIR}/frameworks)
 set(WAMR_DIR ${APP_DIR}/interpreters/wamr/wamr)
 set(QUICKJS_DIR ${APP_DIR}/interpreters/quickjs)
-set(QUICKAPP_DIR ${FRAMEWORKS_DIR}/quickapp)
+set(QUICKAPP_DIR ${FRAMEWORKS_DIR}/runtimes/quickapp)
 set(TS2WASM_RUNTIME_DIR ${FRAMEWORKS_DIR}/typescript/ts2wasm/runtime-library)
 set(RAPIDJSON_DIR ${EXTERNAL_DIR}/rapidjson/rapidjson)
 set(GTEST_DIR ${EXTERNAL_DIR}/googletest/googletest/googletest)
@@ -118,8 +118,8 @@ if(CONFIG_FEATURE_FRAMEWORK)
   list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/error_impl.cpp)
   list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/error.jidl)
   list(APPEND FEATURELIST "Error")
-  # for the 'system_device' feature
-  # compile in quickapp/src/jse/modules/system/CMakeLists.txt
+  # for the 'system_device' feature compile in
+  # quickapp/src/jse/modules/system/CMakeLists.txt
   list(APPEND FEATURELIST "system_device")
   # for the 'system_fetch' feature
   list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/net_utils.cpp)
@@ -131,8 +131,8 @@ if(CONFIG_FEATURE_FRAMEWORK)
   list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/prompt.jidl)
   list(APPEND FEATURELIST "system_prompt")
 
-  # for the 'jumpApp' feature
-  # compile in quickapp/src/jse/modules/system/CMakeLists.txt
+  # for the 'jumpApp' feature compile in
+  # quickapp/src/jse/modules/system/CMakeLists.txt
   list(APPEND FEATURELIST "jumpApp")
 
   # for media features
@@ -208,7 +208,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
 
   # for the 'system_folme' feature
   if(CONFIG_QUICKAPP_FOLME_ANIMENGINE_ADAPTER)
-    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/folme.cpp)
     list(APPEND FEATURELIST "system_folme")
   endif()
 
