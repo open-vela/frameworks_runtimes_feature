@@ -91,7 +91,6 @@ void system_vibrator_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle han
     }
 
     uv_close((uv_handle_t*)&th->timer, timer_close_cb);
-    free(th);
 }
 
 void system_vibrator_onUnregister(const char* feature_name)
