@@ -37,6 +37,17 @@ typedef enum RetCode {
     RET_INTERNAL_ERR
 } RetCode;
 
+static inline void free_method_args(int fixed_argc, int extra_argc,
+    const FeatureType* param_types, void** ffi_arg_buf)
+{
+    for (int j = 0; j < fixed_argc; j++) {
+        auto arg = (void**)ffi_arg_buf[j + extra_argc];
+        if (arg && *arg && FT_NEED_FREE(param_types[j])) {
+            FeatureFreeValue(*arg);
+        }
+    }
+}
+
 template <typename TInstance, typename TCtx, typename TTarget>
 RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     const Member* member, int argc, TTarget* argv, TTarget& ret_val)
@@ -116,10 +127,12 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         ffi_arg_values += getAlignedCount(param_type);
         if (FT_IS_PROMISE(param_type)) {
             FEATURE_LOG_ERROR("do not support promise as input param!");
+            free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
             return RET_ARGS_TYPE_ERR;
         }
         if (!convertValueToNative(instance, param_type, ctx, curr_arg, ffi_arg_buf[extra_argc + i])) {
             FEATURE_LOG_ERROR("convert argument %d failed!", i);
+            free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
             return RET_ARGS_TYPE_ERR;
         }
     }
@@ -175,6 +188,7 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         // process return value
         if (!convertValueToTarget(ret_type, ctx, ffi_ret_value, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
+            free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
             value_translator::freeValue(ctx, ret_val);
             return RET_INTERNAL_ERR;
         } else if (FT_IS_PRIMITIVE(ret_type) && ret_type == FT_ANY_REF) {
@@ -186,14 +200,8 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         }
     }
 
-    // free ffi call resources
-    for (int i = 0; i < fixed_argc; i++) {
-        // free value
-        auto arg = (void**)ffi_arg_buf[i + extra_argc];
-        if (arg && *arg && FT_NEED_FREE(param_types[i])) {
-            FeatureFreeValue(*arg);
-        }
-    }
+    // free call resources
+    free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
 
     if (ffi_ret_value && FT_NEED_FREE(ret_type)) {
         FeatureFreeValue(*(void**)ffi_ret_value);
