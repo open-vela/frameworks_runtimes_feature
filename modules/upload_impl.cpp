@@ -49,6 +49,7 @@ typedef struct upload_task_s {
     FtCallbackId fail_cb;
     FtCallbackId complete_cb;
 
+    system_uploadtask_ProgressUpdateRes res;
     off_t last_sent_byte;
     std::set<FtCallbackId> progress_update_cb;
     struct weakref_list_node node;
@@ -94,19 +95,16 @@ static int upload_progress_cb(uv_request_t* userp, off_t dltotal, off_t dlnow,
         return 1;
     }
 
-    system_uploadtask_ProgressUpdateRes res = {
-        .progress = 0, .totalBytesSent = 0, .totalBytesExpectedToSend = 0
-    };
     if (ultotal != 0) {
-        res.totalBytesExpectedToSend = ulnow;
-        res.totalBytesSent = ultotal;
-        res.progress = 100 * ulnow / ultotal;
+        upload_task->res.totalBytesExpectedToSend = ultotal;
+        upload_task->res.totalBytesSent = ulnow;
+        upload_task->res.progress = 100 * ulnow / ultotal;
     }
     for (const auto& it : upload_task->progress_update_cb) {
         if (FeatureCheckCallbackId(upload_task->interface_hd, it)) {
             if (ulnow != upload_task->last_sent_byte) {
                 upload_task->last_sent_byte = ulnow;
-                if (!FeatureInvokeCallback(upload_task->interface_hd, it, &res)) {
+                if (!FeatureInvokeCallback(upload_task->interface_hd, it, &upload_task->res)) {
                     UPLOAD_ERROR("invoke failed !");
                 }
             }
@@ -330,6 +328,9 @@ static upload_task_t* uploadtask_create(FeatureInstanceHandle feature,
     upload_task->fail_cb = obj->fail;
     upload_task->success_cb = obj->success;
     upload_task->last_sent_byte = 0;
+    upload_task->res = {
+        .progress = 0, .totalBytesSent = 0, .totalBytesExpectedToSend = 0
+    };
 
     upload_task->feature = feature;
     upload_task->interface_hd = NULL;

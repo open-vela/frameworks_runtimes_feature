@@ -8,8 +8,8 @@ struct SuccessRes {
 
 struct ProgressUpdateRes {
   uint  progress
-  ulong totalBytesSent
-  ulong totalBytesExpectedToSend
+  long totalBytesSent
+  long totalBytesExpectedToSend
 }
 
 callback onProgressUpdate_cb(ProgressUpdateRes res)
