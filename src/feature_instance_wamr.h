@@ -45,8 +45,6 @@ public:
 
     virtual ~FeatureInstanceWamr();
 
-    virtual int getSameCallback(FtCallbackId cid);
-
     virtual bool removeCallback(FtCallbackId cid);
 
     virtual int resolvePromise(FtPromiseId pid, va_list& ap);

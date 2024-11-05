@@ -179,15 +179,6 @@ bool FeatureInvokeCallbackCount(FeatureInstanceHandle handle, FtCallbackId cid,
 bool FeatureRemoveCallback(FeatureInstanceHandle handle, FtCallbackId cid);
 
 /**
- * @brief cancel same callback from instance via cid.
- *
- * @param handle
- * @param id
- * @return bool
- */
-int FeatureGetSameCallback(FeatureInstanceHandle handle, FtCallbackId cid);
-
-/**
  * @brief promise resolve, only support one param
  *
  * @param handle

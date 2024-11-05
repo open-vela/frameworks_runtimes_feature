@@ -102,26 +102,6 @@ public:
         return callbacks_;
     }
 
-    /* temporarily for callback cancelling.
-     * if js/ts wants to cancel a callback previously passed down through a function parameter,
-     * it will pass the same callback down again through another function(the cancel function).
-     * but the later will be asgined a different callback_id by the framework even though they
-     * actually represent the same callback. feature developer use new callback_id to find the
-     * initial callback_id with this funciton and then use it to remove the callback.
-     */
-    int getInitialCallbackId(FtCallbackId cid)
-    {
-        if (!callbacks_.count(cid)) {
-            return 0;
-        }
-
-        for (auto& it : callbacks_) {
-            if (it.first != cid && isSameValue(context(), it.second->cb, callbacks_[cid]->cb))
-                return it.first;
-        }
-        return 0;
-    }
-
     int callCallback(cb_data_t* cb_data, va_list& va, int fixed_argc, int rest_argc)
     {
         if (!cb_data)

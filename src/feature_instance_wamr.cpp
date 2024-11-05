@@ -339,9 +339,4 @@ void FeatureInstanceWamr::release()
     releasePromises();
 }
 
-int FeatureInstanceWamr::getSameCallback(FtCallbackId cid)
-{
-    return getInitialCallbackId(cid); // to do
-}
-
 }
