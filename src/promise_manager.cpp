@@ -350,7 +350,7 @@ int PromiseManager::invokeJsCallback(const FeatureType* param_types, feature_val
         FTObjHeader* header = (FTObjHeader*)header_ptr;
 
         if (header->type == MEMORY_FEATURE_TYPE) {
-            FeatureType ftype = *(FeatureType*)arg;
+            FeatureType ftype = *(FeatureType*)((char*)header - sizeof(FeatureType));
             if (!convertValueToTarget(ftype, js_ctx_, FT_IS_REFERENCE(ftype) ? &arg : arg, argv[i])) {
                 FEATURE_LOG_ERROR("convert callback rest param failed !");
                 argv[i] = FEATURE_VALUE_UNDEFINED;
