@@ -25,7 +25,9 @@
   module_name = render.ToClassName(module_name_l)
   raw_mod_name = render.GetRawModuleName()
   header_name = render.GetHeaderFileName()
-  impl_header_name = header_name.strip(".h") + "_impl.h"
+  if header_name.endswith(".h"):
+    impl_header_name = header_name[:-2]
+  impl_header_name = impl_header_name + "_impl.h"
   module_namespace = 'Feature_' + module_name
   if 'namespace' in render.configs:
     module_namespace = render.configs['namespace']
