@@ -60,8 +60,6 @@ public:
 
     virtual bool removeCallback(FtCallbackId cid);
 
-    virtual int getSameCallback(FtCallbackId cid);
-
     virtual int resolvePromise(FtPromiseId pid, va_list& ap);
 
     virtual int rejectPromise(FtPromiseId pid, int code, const char* msg);

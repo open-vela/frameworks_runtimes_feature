@@ -112,11 +112,6 @@ bool FeatureInstanceQjs::removeCallback(FtCallbackId cid)
     return eraseCallback(cid);
 }
 
-int FeatureInstanceQjs::getSameCallback(FtCallbackId cid)
-{
-    return getInitialCallbackId(cid);
-}
-
 void FeatureInstanceQjs::markValues(feature_runtime_ref rt, feature_mark_func mark_func)
 {
     // mark callbacks

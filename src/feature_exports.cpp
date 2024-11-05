@@ -258,13 +258,6 @@ bool FeatureRemoveCallback(FeatureInstanceHandle handle, FtCallbackId cid)
     return instance->removeCallback(cid);
 }
 
-int FeatureGetSameCallback(FeatureInstanceHandle handle, FtCallbackId cid)
-{
-    FEATURE_INSTANCE_CHECK(handle, 0)
-    auto instance = static_cast<FeatureInstance*>(handle);
-    return instance->getSameCallback(cid);
-}
-
 bool FeaturePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, ...)
 {
     FEATURE_INSTANCE_CHECK(handle, false)
