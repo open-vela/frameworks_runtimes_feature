@@ -83,6 +83,13 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_wamr_u
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/value_translator_wamr.cpp
 endif
 
+ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
+	PROGNAME += feature_test_cli
+	PRIORITY += 100
+	STACKSIZE += 8192000
+	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/feature_test_cli.cpp
+endif
+
 GTEST_DIR = $(APPDIR)/external/googletest/googletest/googletest
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
