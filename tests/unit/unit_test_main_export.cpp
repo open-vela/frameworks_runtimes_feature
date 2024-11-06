@@ -220,9 +220,8 @@ TEST_F(FeatureMainExportTestQjs, FeatureFindFeature1)
     auto ft_obj = FeatureFindFeature(manager_handle_qjs, pDesc1.name);
     auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
     EXPECT_NE(js_obj, JS_UNDEFINED);
-    auto feature_pair = manager->getFeatureRegistry()->findFeature(pDesc1.name);
-    auto& prototype = feature_pair->second;
-    EXPECT_EQ(FT_VAL_GET_JS_VAL(((FeaturePrototypeQjs*)prototype)->ft_proto()), js_obj);
+    auto pDesc2 = manager->getFeatureRegistry()->findFeature(pDesc1.name);
+    EXPECT_EQ(pDesc2, &pDesc1);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), ft_obj);
 }
 // =============================================================================

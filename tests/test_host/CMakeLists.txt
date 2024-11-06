@@ -80,6 +80,7 @@ target_link_libraries(libfeature PUBLIC quickjs)
 
 # add feature list
 set(FEATURE_LIST_CPP "Struct" "Protobuf" "Interface")
+
 set(FEATURE_LIST_C "")
 jidl_codegen_registry(
     FEATURE_LIST_CPP ${FEATURE_LIST_CPP}
@@ -159,3 +160,23 @@ target_link_libraries(test_main PRIVATE
     pthread
     protobuf-c::protobuf-c
 )
+
+
+
+add_executable(unit_test 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../unit/unit_test.cpp
+)
+
+target_include_directories(unit_test PUBLIC
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
+find_package(GTest CONFIG REQUIRED)
+
+target_link_libraries(unit_test PRIVATE
+    libfeature
+    uv
+    GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main
+)
+
