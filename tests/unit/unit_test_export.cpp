@@ -1,10 +1,10 @@
-#include "feature_context_qjs.h"
+#include "backend/qjs/feature_context_qjs.h"
+#include "backend/qjs/feature_instance_qjs.h"
+#include "backend/qjs/feature_manager_qjs.h"
+#include "backend/qjs/feature_prototype_qjs.h"
 #include "feature_description.h"
 #include "feature_exports.h"
-#include "feature_instance_qjs.h"
 #include "feature_main_exports.h"
-#include "feature_manager_qjs.h"
-#include "feature_prototype_qjs.h"
 
 namespace feature_framework {
 typedef struct _UnitEventData {
@@ -110,7 +110,8 @@ static bool test_featureMalloc(size_t size, FeatureType featureType)
     auto header = (FTObjHeader*)((char*)data - FT_OBJ_HEADER_SIZE);
     if (header->ref_count != 1)
         return false;
-    if (header->featureType != featureType)
+    auto type = *(FeatureType*)((char*)header - sizeof(FeatureType));
+    if (type != featureType)
         return false;
     FeatureFreeValue(data);
     return true;
@@ -228,7 +229,7 @@ TEST_F(FeatureExportTestQjs, FeatureDupValue1)
     auto dup_data = FeatureDupValue(data);
     EXPECT_EQ(dup_data, data);
     auto header = (FTObjHeader*)((char*)data - FT_OBJ_HEADER_SIZE);
-    EXPECT_EQ(header->ref_count, 2);
+    EXPECT_EQ(header->ref_count, (uint32_t)2);
     FeatureFreeValue(dup_data);
     FeatureFreeValue(data);
 }
@@ -242,7 +243,7 @@ TEST_F(FeatureExportTestQjs, FeatureFreeValue1)
     FeatureDupValue(data);
     auto header = (FTObjHeader*)((char*)data - FT_OBJ_HEADER_SIZE);
     FeatureFreeValue(data);
-    EXPECT_EQ(header->ref_count, 1);
+    EXPECT_EQ(header->ref_count, (uint32_t)1);
     FeatureFreeValue(data);
 }
 

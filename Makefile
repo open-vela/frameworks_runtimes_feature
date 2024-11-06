@@ -90,6 +90,13 @@ ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/feature_test_cli.cpp
 endif
 
+ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
+	PROGNAME += feature_unit_test
+	PRIORITY += 100
+	STACKSIZE += 1024
+	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test.cpp
+endif
+
 GTEST_DIR = $(APPDIR)/external/googletest/googletest/googletest
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
