@@ -178,9 +178,9 @@ int EventContext::addEventSubsInfo(int cb)
 void EventContext::handleEvent(FeatureInstanceHandle handle, void* pre, void* cur)
 {
     EVENT_CONTEXT_DEBUG("EventContext::handleEvent, pkg = %s", FeatureGetPackageName(FeatureGetProtoHandle(handle)));
-    EVENT_CONTEXT_DEBUG("event_name = %s, data->eventName = %s", event_name.c_str(), ((user_event_meta*)cur)->eventName);
-    if (strcmp(event_name.c_str(), ((user_event_meta*)cur)->eventName) != 0) {
-        EVENT_CONTEXT_DEBUG("event_name not match");
+    EVENT_CONTEXT_DEBUG("event_name = %s", event_name.c_str());
+    if (!isSystemEvent(event_name.c_str()) && strcmp(event_name.c_str(), ((user_event_meta*)cur)->eventName) != 0) {
+        EVENT_CONTEXT_DEBUG("user event_name [%s] not match", ((user_event_meta*)cur)->eventName);
         return;
     }
 
