@@ -23,6 +23,21 @@ set(BINARY_MODULES_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules)
 set(BINARY_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 if(CONFIG_FEATURE_FRAMEWORK)
+
+  nuttx_add_prebuilt(
+    BIN_TARGETS
+    libfeature
+    EXPORT_FILES
+    include/feature_types.h
+    include/feature_context.h
+    include/feature_description.h
+    include/feature_exports.h
+    include/feature_main_exports.h
+    include/feature_log.h
+    include/ajs_features_init.h
+    src/README.md
+    registry/README.md)
+
   if(CONFIG_FEATURE_LOG_LEVEL)
     list(APPEND FEATURE_DEFS -DFEATURE_LOG_LEVEL=${CONFIG_FEATURE_LOG_LEVEL})
   endif()
@@ -458,8 +473,8 @@ if(CONFIG_FEATURE_FRAMEWORK)
     set(FEATURE_MODULE ${CONFIG_FEATURE_FRAMEWORK})
   endif()
 
-  nuttx_add_library(libfeature)
-  target_sources(libfeature PRIVATE ${FEATURE_SRCS})
+  nuttx_library_ifndef(SKIP_PREBUILT libfeature)
+  nuttx_sources(${FEATURE_SRCS})
   nuttx_add_jidl(
     TARGET
     libfeature
@@ -469,9 +484,9 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${BINARY_MODULES_DIR}/src
     JIDLS
     ${JIDL_PATHS})
-  target_include_directories(libfeature PRIVATE ${FEATURE_INC_DIRS})
-  target_compile_options(libfeature PRIVATE ${FEATURE_OPTIONS})
-  target_compile_definitions(libfeature PRIVATE ${FEATURE_DEFS})
+  nuttx_include_directories(${FEATURE_INC_DIRS})
+  nuttx_compile_options(${FEATURE_OPTIONS})
+  nuttx_compile_definitions(${FEATURE_DEFS})
 
   nuttx_export_header(TARGET libfeature INCLUDE_DIRECTORIES ${FEATURE_EXPORTS})
   set_property(
