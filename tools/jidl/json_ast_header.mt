@@ -25,7 +25,7 @@
   header_define = render.GenHeaderDefine()
   imports_head_list = render.GetImportsHeadList()
 %>\
-<%def name="GenInterfaceVTableDefines(func_node, ctor_info)">\
+<%def name="GenInterfaceTargetVTableDefines(func_node, ctor_info)">\
 <%
   identifier = func_node['identifier']
   func_def = render.GenerateFunctionDefine(func_node)
@@ -40,20 +40,20 @@
 ${dtor_def};
 %for vtable_item in final_vtable:
 <%
-  i_name = vtable_item['name']
-  i_type = vtable_item['type']
-  i_params = vtable_item['params']
-  i_ret_type = vtable_item['return_type']
+  item_name = vtable_item['name']
+  item_type = vtable_item['type']
+  item_params = vtable_item['params']
+  item_ret_type = vtable_item['return_type']
   params = "FeatureInterfaceHandle handle, AppendData append_data"
-  if i_params != '':
-    params = f"{params}, {i_params}"
-  func_def = f"{i_ret_type} {item_prefix}"
-  if i_type == 0:
-    func_def = f"{func_def}_{i_name}({params})"
-  elif i_type == 1:
-    func_def = f"{func_def}_get_{i_name}({params})"
-  elif i_type == 2:
-    func_def = f"{func_def}_set_{i_name}({params})"
+  if item_params != '':
+    params = f"{params}, {item_params}"
+  func_def = f"{item_ret_type} {item_prefix}"
+  if item_type == 0:
+    func_def = f"{func_def}_{item_name}({params})"
+  elif item_type == 1:
+    func_def = f"{func_def}_get_{item_name}({params})"
+  elif item_type == 2:
+    func_def = f"{func_def}_set_{item_name}({params})"
 %>\
 ${func_def};
 %endfor
@@ -64,6 +64,39 @@ ${render.GenerateFunctionDefine(func_node)};
 </%def>\
 <%def name="GenInterfaceCtorDefine(func_node)">\
 ${render.GenerateInterfaceCtorDefine(func_node)};
+</%def>\
+<%def name="GenInterfaceVTableDefines(inode)">\
+<%
+  iname = inode['name']
+  final_vtable = render.GetFinalVTable(iname)
+  vtable_struct = f"{module_name}_{iname}_interface_vtable"
+%>\
+// VTable defines for interface '${iname}'
+typedef struct ${vtable_struct} {
+    VTable base; // vtable base
+%for vtable_item in final_vtable:
+<%
+  item_name = vtable_item['name']
+  item_type = vtable_item['type']
+  item_params = vtable_item['params']
+  item_ret_type = vtable_item['return_type']
+  params = "FeatureInterfaceHandle handle, AppendData append_data"
+  if item_params != '':
+    params = f"{params}, {item_params}"
+  if item_type == 0:
+    func_ptr = f"{item_ret_type} (*{item_name})({params})"
+  elif item_type == 1:
+    func_ptr = f"{item_ret_type} (*get_{item_name})({params})"
+  elif item_type == 2:
+    func_ptr = f"{item_ret_type} (*set_{item_name})({params})"
+%>\
+    ${func_ptr};
+%endfor
+} ${vtable_struct};
+
+FeatureInterfaceHandle ${module_name}_${iname}_create(
+        FeatureInstanceHandle handle, ${vtable_struct}* vtable, void* data);
+
 </%def>\
 <%def name="GenPropertyDefines(prop_node)">\
 <%
@@ -185,7 +218,7 @@ ${GenInterfaceCtorDefine(block)}\
   ctor_info = render.GetInterfaceCtorInfo(block)
 %>\
 %if ctor_info:
-${GenInterfaceVTableDefines(block, ctor_info)}\
+${GenInterfaceTargetVTableDefines(block, ctor_info)}\
 %endif
 %endfor
 
@@ -198,6 +231,12 @@ ${GenPropertyDefines(block)}\
 
 // Array malloc functions
 ${GenArrayMallocFuncDefines()}
+
+%for block in module['members']:
+%if block['type'] == 'interface':
+${GenInterfaceVTableDefines(block)}\
+%endif
+%endfor
 
 /*********** begin get the user defined type ************/
 %for name,tp in render.user_types_map.items():

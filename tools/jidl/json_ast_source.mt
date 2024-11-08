@@ -481,6 +481,7 @@ static const MemberEvent ${module_name}_${iname}_${member_val} = {
   for extend in inode['extends']:
     render.CacheInterfaceExtend(iname, extend)
   iname_prefix = f"{iname}_interface_"
+  vtable_struct = f"{module_name}_{iname}_interface_vtable"
   parent_members = render.GetFinalInterfaceMembers(iname)
 %>\
 /****** JIDL interface '${iname}' glue code begin ******/
@@ -526,6 +527,21 @@ const InterfaceType ${module_name}_${iname_prefix}type = {
     .header = { .type = COMPLEX_INTERFACE, .size = 0 },
     .desc = &${module_name}_${iname_prefix}desc
 };
+
+// Interface creation
+FeatureInterfaceHandle ${module_name}_${iname}_create(
+        FeatureInstanceHandle handle, ${vtable_struct}* vtable, void* data) {
+    if (vtable == NULL) {
+        return NULL;
+    }
+    vtable->base.size = (sizeof(*vtable) - (sizeof(VTable))) / sizeof(void*);
+    vtable->base.members = (const NativeFunc*)(&vtable->base + 1);
+    FeatureInterfaceHandle hInterface = FeatureCreateInterface(handle, &(vtable->base));
+    if (data) {
+        FeatureSetObjectData(hInterface, data);
+    }
+    return hInterface;
+}
 /****** JIDL interface '${iname}' glue code end ******/
 </%def>\
 
@@ -689,27 +705,26 @@ static void ${func_id}_stub(
   func_def = render.GenerateInterfaceCtorDefine(func_node)
   ctor_target = ctor_info['target']
   ctor_interface = ctor_info['interface']
-  iname_prefix = f"{ctor_interface}_interface_"
+  iname_prefix = f"{module_name}_{ctor_interface}_interface"
   final_vtable = render.GetFinalVTable(ctor_interface)
   vtable_size = len(final_vtable)
-  item_prefix = f"{module_name}_{iname_prefix}{ctor_target}"
+  item_prefix = f"{iname_prefix}_{ctor_target}"
   finalizer = f"(NativeFunc){item_prefix}_finalize"
 %>\
 ${func_def} {
-    static const NativeFunc ${ctor_target}_vtable_members[] = {
+    static ${iname_prefix}_vtable ${ctor_target}_vtable = {
+        .base = { .finalizer = ${finalizer} },
 %for vtable_item in final_vtable:
 <%
   item_name = vtable_item['name']
   item_type = vtable_item['type']
   item_content = ''
   if item_type == 0:
-    item_content = f"{item_prefix}_{item_name}"
+    item_content = f".{item_name} = {item_prefix}_{item_name}"
   elif item_type == 1:
-    item_content = f"{item_prefix}_get_{item_name}"
+    item_content = f".get_{item_name} = {item_prefix}_get_{item_name}"
   elif item_type == 2:
-    item_content = f"{item_prefix}_set_{item_name}"
-  if item_content != '':
-    item_content = f"(NativeFunc){item_content}"
+    item_content = f".set_{item_name} = {item_prefix}_set_{item_name}"
 %>\
 %if item_content != '':
         ${item_content},
@@ -717,13 +732,7 @@ ${func_def} {
 %endfor
     };
 
-    static VTable ${ctor_target}_vtable = {
-        .size = ${vtable_size},
-        .finalizer = ${finalizer},
-        .members = ${ctor_target}_vtable_members
-    };
-
-    return FeatureCreateInterface(feature, &${ctor_target}_vtable);
+    return ${module_name}_${ctor_interface}_create(feature, &${ctor_target}_vtable, NULL);
 }
 </%def>\
 <%def name="GenFunction(func_node)">\
