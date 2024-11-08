@@ -37,7 +37,7 @@ struct StartObject {
     callback complete_cb complete = null
 }
 
-void vibrate(VibrateObject obj)
+void vibrate(VibrateObject obj = null)
 void start(StartObject obj)
 boolean stop(int id)
 int getSystemDefaultMode()
