@@ -434,7 +434,7 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     }
 
     // set timeout
-    if (!obj->timeout) {
+    if (obj->timeout) {
         uv_request_set_timeout(fetch->request, obj->timeout);
     }
 
