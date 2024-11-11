@@ -5,6 +5,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 import jidlast as ast
 import logging
+import os
 
 def CreateASTNode(p, t, *args):
   n = t(*args)
@@ -36,6 +37,7 @@ class Parser:
   def __init__(self, **kw):
     self.debug = kw.get('debug', False)
     self.reporter = kw.get('errorReporter', None)
+    self.jidl_file_name = kw.get('jidlFileName', "")
     self.names = {}
     try:
       modname = os.path.split(os.path.splitext(__file__)[0])[
@@ -43,7 +45,7 @@ class Parser:
     except:
       modname = "parser" + "_" + self.__class__.__name__
     self.debugfile = modname + ".dbg"
-    self.tabmodule = modname + "_" + "parsetab"
+    self.tabmodule = modname + "_" + "parsetab" + "_" + self.jidl_file_name
     #print(self.debugfile, self.tabmodule)
     logging.basicConfig(
         level = logging.ERROR,
@@ -65,6 +67,12 @@ class Parser:
   def log(self, *args):
     if self.debug:
       print(args)
+
+  def clean(self):
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    tabmodule_file = dir_path + "/" + self.tabmodule + ".py"
+    if os.path.exists(tabmodule_file):
+      os.remove(tabmodule_file)
 
 def create_reserved_map(reserved):
   reserved_map = { }
