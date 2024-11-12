@@ -119,6 +119,13 @@ JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/device.jidl
 OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
 FEATURELIST += system_device
 
+ifeq ($(CONFIG_QUICKAPP_TEST_FRAMEWORK),y)
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/internal_test_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/internal_test.jidl
+OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+FEATURELIST += system_internal_test
+endif
+
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/net_utils.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/fetch_impl.cpp
 JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/fetch.jidl
