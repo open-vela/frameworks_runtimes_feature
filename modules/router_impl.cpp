@@ -23,7 +23,7 @@
 #include "feature_exports.h"
 #include "router.h"
 #ifdef CONFIG_QUICKAPP_VAPP_XMS
-#include "application.h"
+#include "app/Context.h"
 #endif
 
 #include "framework/app_interface.h"
