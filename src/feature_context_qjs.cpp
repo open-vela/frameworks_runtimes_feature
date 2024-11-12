@@ -136,7 +136,7 @@ static ft_value_t _ft_buffer(ft_context_ref ft_ctx, uint8_t* buff,
 }
 
 static ft_value_t _ft_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff,
-    uint32_t size, uint32_t type)
+    uint32_t size, FtTypedArrayType type)
 {
     static const char* type_names[] = {
         "Int8Array",

@@ -86,7 +86,7 @@ bool toNativeBuffer(JSContext* ctx, const JSValue& target, uint8_t** pnative, si
 }
 
 // for TypedArrayBuffer
-bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, uint32_t type, JSValue* ptarget)
+bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, FtTypedArrayType type, JSValue* ptarget)
 {
     static const char* type_names[] = {
         "Int8Array",
