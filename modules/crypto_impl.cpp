@@ -105,7 +105,7 @@ static ft_value_t from_buff(ft_context_ref ft_ctx, const char* data, size_t size
     if (is_text)
         return ft_from_string(ft_ctx, data);
 
-    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, 1);
+    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, FT_Uint8Array);
 }
 
 static void prase_transformation(ft_context_ref ft_ctx, const char* transformation, int* mode, int* padding)

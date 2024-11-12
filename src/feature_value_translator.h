@@ -42,7 +42,7 @@ struct FtValTranslator {
         return value_translator::targetToFtVal(target);
     }
 
-    static ft_value_t fromTypedBuffer(ft_context_ref ctx_ref, uint8_t* buff, uint32_t size, uint32_t type)
+    static ft_value_t fromTypedBuffer(ft_context_ref ctx_ref, uint8_t* buff, uint32_t size, FtTypedArrayType type)
     {
         TTarget target;
         value_translator::toTargetTypedBuffer((TCtx)(ctx_ref->data), buff, size, type, &target);

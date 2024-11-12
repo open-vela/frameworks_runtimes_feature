@@ -37,6 +37,17 @@ typedef enum ft_type {
     FT_TYPE_OBJECT
 } ft_type;
 
+/** enum for ft_from_typed_buffer interface */
+typedef enum FtTypedArrayType {
+    FT_Int8Array = 0, /**< 0 */
+    FT_Uint8Array, /**< 1 */
+    FT_Int16Array, /**< 2 */
+    FT_Uint16Array, /**< 3 */
+    FT_Int32Array, /**< 4 */
+    FT_Uint32Array, /**< 5 */
+    FT_Float32Array, /**< 6 */
+    FT_Float64Array /**< 7 */
+} FtTypedArrayType;
 typedef struct ft_value_t {
 #if INTPTR_MAX >= INT64_MAX
     uint64_t val[2];
@@ -64,7 +75,7 @@ ft_value_t ft_from_double(ft_context_ref ft_ctx, double val);
 ft_value_t ft_from_bool(ft_context_ref ft_ctx, bool val);
 ft_value_t ft_from_string(ft_context_ref ft_ctx, const char* val);
 ft_value_t ft_from_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
-ft_value_t ft_from_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, uint32_t type);
+ft_value_t ft_from_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, FtTypedArrayType type);
 
 ft_value_t ft_from_int_array(ft_context_ref ft_ctx, int32_t* val, uint32_t size);
 ft_value_t ft_from_uint_array(ft_context_ref ft_ctx, uint32_t* val, uint32_t size);

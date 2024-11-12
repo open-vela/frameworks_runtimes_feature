@@ -146,7 +146,7 @@ static inline bool toTargetBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, 
 }
 
 // for TypedArrayBuffer
-bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, uint32_t type, JSValue* ptarget);
+bool toTargetTypedBuffer(JSContext* ctx, uint8_t* buff, uint32_t size, FtTypedArrayType type, JSValue* ptarget);
 
 // for arrays
 bool toTargetArray(JSContext* ctx, int32_t* val, uint32_t size, JSValue* ptarget);
