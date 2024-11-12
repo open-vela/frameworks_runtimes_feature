@@ -31,9 +31,9 @@
 
 #define TAG "[uploadtask] "
 
-#define UPLOAD_DEBUG(fmt, ...) FEATURE_LOG_ERROR(TAG fmt, ##__VA_ARGS__)
+#define UPLOAD_DEBUG(fmt, ...) FEATURE_LOG_DEBUG(TAG fmt, ##__VA_ARGS__)
 
-#define UPLOAD_INFO(fmt, ...) FEATURE_LOG_ERROR(TAG fmt, ##__VA_ARGS__)
+#define UPLOAD_INFO(fmt, ...) FEATURE_LOG_INFO(TAG fmt, ##__VA_ARGS__)
 
 #define UPLOAD_ERROR(fmt, ...) FEATURE_LOG_ERROR(TAG fmt, ##__VA_ARGS__)
 
