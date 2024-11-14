@@ -831,7 +831,7 @@ FtBool system_sensor_wrap_checkAvailable(FeatureInstanceHandle feature, union Ap
     sensor_magic_t magic = get_sensor_magic(type);
     if (magic != SENSOR_MAGIC_NUM) {
         orb_id_t meta = sensor_orb_table[magic].meta;
-        return orb_exists(meta, 0);
+        return !!orb_exists(meta, 0);
     }
     return false;
 }
