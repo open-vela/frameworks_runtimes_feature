@@ -348,6 +348,9 @@ int PromiseManager::invokeJsCallback(const FeatureType* param_types, feature_val
     }
     feature_dup_value(js_ctx_, callback);
     feature_value_t ret = feature_call(js_ctx_, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
+    if (feature_is_exception(ret)) {
+        feature_dump_error(js_ctx_);
+    }
     feature_free_value(js_ctx_, callback);
     feature_free_value(js_ctx_, ret);
     return 0;

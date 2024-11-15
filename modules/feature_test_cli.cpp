@@ -114,7 +114,7 @@ feature_value_t __log(feature_context_ref ctx, feature_value_t this_val, int arg
 
         feature_free_cstring(ctx, str);
     }
-    FEATURE_LOG_INFO("%s\n", buff.c_str());
+    FEATURE_LOG_INFO("%s", buff.c_str());
     return FEATURE_UNDEFINED;
 }
 
@@ -329,6 +329,9 @@ extern "C" int main(int argc, char** argv)
             uv_timer_stop(async_timer); // 异步测试正常结束
         }
     }
+    if (feature_is_exception(result)) {
+        feature_dump_error(js_env.ctx);
+    }
 
     int err;
     feature_context_ref ctx1;
@@ -340,7 +343,6 @@ extern "C" int main(int argc, char** argv)
             break;
         }
     }
-
     feature_free_value(js_env.ctx, result);
     // release manager first
     FeatureUnsetUVLoop(g_manager_qjs);
