@@ -747,7 +747,7 @@ class CPPRender(Render):
         return self.GenerateCppType(ret_node)
     return 'void'
 
-  def GenerateParamListData(self, params):
+  def GenerateParamsStr(self, params):
     param_list = []
     param_count = len(params)
     for index, param in enumerate(params):
@@ -765,10 +765,7 @@ class CPPRender(Render):
       elif param_type == 'ellipse':
         param_str += f" vari_params"
       param_list.append(param_str)
-    return param_list
-
-  def GenerateParamList(self, params):
-    return ", ".join(self.GenerateParamListData(params))
+    return ", ".join(param_list)
 
   def GenerateParamTypeList(self, params):
     type_list = []
@@ -781,6 +778,14 @@ class CPPRender(Render):
       type_list.append(param_type)
     return type_list
 
+  def GenerateParamValuesStr(self, params):
+    value_list = []
+    for param in params:
+      if param["type"] == 'ellipse':
+        raise Exception('ellipse param not allowed : {}'.format(params))
+      value_list.append(param["name"])
+    return ", ".join(value_list)
+
   def _GenerateParamsDefine(self, node, ret_type):
     if 'identifier' not in node:
       raise Exception('not a function or use node: {}'.format(node))
@@ -788,7 +793,7 @@ class CPPRender(Render):
     if ret_type == 'FtPromiseId':
       params_def += ', FtPromiseId pid'
     if 'params' in node:
-      params_str = self.GenerateParamList(node["params"])
+      params_str = self.GenerateParamsStr(node["params"])
       params_def += f", {params_str}"
     return params_def
 
@@ -898,6 +903,11 @@ class CPPRender(Render):
   def TryCacheCallbackId(self, id):
     if not id in self.callback_id_set:
       self.callback_id_set.add(id)
+      return True
+    return False
+
+  def HasCallbackId(self, id):
+    if id in self.callback_id_set:
       return True
     return False
 
@@ -1011,7 +1021,7 @@ class CPPRender(Render):
         if has_params:
           params += ', '
       if has_params:
-        params += self.GenerateParamList(node["params"])
+        params += self.GenerateParamsStr(node["params"])
     elif node['type'] == 'property':
       name = node['name']
       prop_type = node["value_type"]
@@ -1224,7 +1234,7 @@ class TSRender(Render):
     else:
       raise Exception('invalid complex type: {}'.format(ast_type))
 
-  def GenerateParamList(self, params):
+  def GenerateParamsStr(self, params):
     param_list = []
     param_count = len(params)
     if param_count == 0:
@@ -1248,7 +1258,7 @@ class TSRender(Render):
     ret_type = self.GenerateTsType(node["return_type"])
     params = ''
     if 'params' in node:
-      params = self.GenerateParamList(node["params"])
+      params = self.GenerateParamsStr(node["params"])
     func_define = f"{identifier}({params}): {ret_type}"
     return func_define
 
@@ -1261,7 +1271,7 @@ class TSRender(Render):
       return False
     params = ''
     if 'params' in ast_type:
-      params = self.GenerateParamList(ast_type['params'])
+      params = self.GenerateParamsStr(ast_type['params'])
     cb_def = f"({params}) => void"
     self.callback_map[id] = cb_def
     return True

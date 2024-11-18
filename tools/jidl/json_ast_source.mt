@@ -765,8 +765,8 @@ ${GenMemberMethod(func_node, ret_type_node)}
     params += ', FtPromiseId pid'
     ret_type = 'void'
   if 'params' in func_node:
-    param_list = render.GenerateParamList(func_node["params"])
-    params += f", {param_list}"
+    params_str = render.GenerateParamsStr(func_node["params"])
+    params += f", {params_str}"
 
   func_call = ''
   if ret_type != 'void':

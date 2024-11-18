@@ -150,7 +150,36 @@ ${module_name}_${struct_name}* ${module_name}Malloc${struct_name}(void);
 ${malloc_def};
 %endfor
 </%def>\
+<%def name="GenCallbackHelper(cb_node)">\
+<%
+  identifier = cb_node['identifier']
+  success = render.HasCallbackId(identifier)
+  has_params = 'params' in cb_node
+  has_ellipse = False
+  if has_params:
+    params_str = render.GenerateParamsStr(cb_node["params"])
+    has_ellipse = render.HasEllipseParam(cb_node["params"])
+    if not has_ellipse:
+      param_values = render.GenerateParamValuesStr(cb_node["params"])
+  success = success and not has_ellipse
+%>\
+%if success:
+// for JIDL callback '${identifier}'
+static inline int ${module_name}_${identifier}_invoke(FeatureInstanceHandle handle, FtCallbackId callback_id
+%if has_params:
+        , ${params_str}
+%endif
+        )
+{
+    return FeatureInvokeCallback(handle, callback_id
+%if has_params:
+        , ${param_values}
+%endif
+    );
+}
 
+%endif
+</%def>\
 #ifndef ${header_define}
 #define ${header_define}
 
@@ -235,6 +264,13 @@ ${GenArrayMallocFuncDefines()}
 %for block in module['members']:
 %if block['type'] == 'interface':
 ${GenInterfaceVTableDefines(block)}\
+%endif
+%endfor
+
+// Callback helpers
+%for block in module['members']:
+%if block['type'] == 'callback':
+${GenCallbackHelper(block)}\
 %endif
 %endfor
 
