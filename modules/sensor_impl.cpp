@@ -542,8 +542,6 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
     ft_value_t sensor_obj = ft_new_object(ft_ctx);
     ft_value_t ret_obj = ft_new_object(ft_ctx);
     sensor_magic_t magic = get_sensor_magic(user->type);
-    system_sensor_cb_param* t_r = system_sensorMalloccb_param();
-    ft_value_t* t_r_data = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     switch (magic) {
     case SENSOR_MAGIC_GNSS: {
         sensor_gnss* ret_t = static_cast<sensor_gnss*>(data);
@@ -610,7 +608,7 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
         algo_wrist_tilt* ret_t = static_cast<algo_wrist_tilt*>(data);
         if (ret_t->event != WRIST_TILT_UP) {
             ft_free_value(ft_ctx, sensor_obj);
-            FeatureFreeValue(t_r);
+            ft_free_value(ft_ctx, ret_obj);
             return;
         }
         break;
@@ -619,12 +617,20 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
     default:
         break;
     }
+    ft_value_t* t_r_data = (ft_value_t*)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
     *t_r_data = sensor_obj;
-    t_r->data = t_r_data;
-    t_r->dataType = user->type;
-    INVOKE_SUCCESS_CB(user->event.meta.instance, user->event.meta.callback, t_r);
+    if (user->oneshot) {
+        system_sensor_cb_param* t_r = system_sensorMalloccb_param();
+        t_r->data = t_r_data;
+        t_r->dataType = user->type;
+        INVOKE_SUCCESS_CB(user->event.meta.instance, user->event.meta.callback, t_r);
+        FeatureFreeValue(t_r);
+    } else {
+        INVOKE_SUCCESS_CB(user->event.meta.instance, user->event.meta.callback, t_r_data);
+        FeatureFreeValue(t_r_data);
+    }
+
     ft_free_value(ft_ctx, sensor_obj);
-    FeatureFreeValue(t_r);
     if (user->oneshot) {
         ret = uv_topic_unsubscribe(topic);
         if (ret < 0) {
