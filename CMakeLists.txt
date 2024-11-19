@@ -407,4 +407,24 @@ if(CONFIG_FEATURE_FRAMEWORK)
       INCLUDE_DIRECTORIES
       ${FEATURE_TEST_INC_DIRS})
   endif()
+
+  if(CONFIG_FEATURE_UNIT_TEST)
+    list(APPEND UNIT_TEST_SRCS ${FEATURE_TOP}/tests/unit/unit_test.cpp)
+    list(APPEND UNIT_TEST_INC_DIRS ${FEATURE_TOP}/include ${FEATURE_SRC_DIR}
+         ${GTEST_DIR}/include)
+
+    nuttx_add_application(
+      NAME
+      unit_test
+      PRIORITY
+      100
+      STACKSIZE
+      4096
+      DEPENDS
+      libfeature
+      SRCS
+      ${UNIT_TEST_SRCS}
+      INCLUDE_DIRECTORIES
+      ${UNIT_TEST_INC_DIRS})
+  endif()
 endif()
