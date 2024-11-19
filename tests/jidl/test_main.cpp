@@ -11,6 +11,7 @@
 #include "feature_log.h"
 #include "feature_main_exports.h"
 #include "feature_manager_qjs.h"
+#include "feature_qjs_exports.h"
 #include "feature_registry.h"
 #if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
 #include <binder/IPCThreadState.h>
@@ -59,12 +60,13 @@ JSValue __require(JSContext* ctx, JSValue this_val, int argc, JSValue* argv,
     }
 
     FeatureManagerHandle manager = static_cast<FeatureManagerHandle>(JS_GetOpaque(func_data[0], 1));
-
-    const char* str_module_name = JS_ToCString(ctx, argv[0]);
-    JSValue vm_object = JS_UNDEFINED;
-    auto feature_obj = FeatureRequire(manager, ctx, vm_object, str_module_name);
-    JS_FreeCString(ctx, str_module_name);
-    return feature_obj;
+    ft_context_ref ft_ctx = FeatureManagerGetContext(manager);
+    ft_value_t ft_vm_obj = ft_from_jsvalue(ft_ctx, JS_UNDEFINED);
+    const char* module_name = JS_ToCString(ctx, argv[0]);
+    ft_value_t ft_obj = FeatureRequire(manager, ft_vm_obj, module_name);
+    auto js_obj = ft_to_jsvalue(ft_ctx, ft_obj);
+    JS_FreeCString(ctx, module_name);
+    return js_obj;
 }
 
 /**
@@ -232,7 +234,13 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
 
     // init feature framework
     // TODO: use factory pattern: manager = CreateFeatureManager(registry, "js");
-    FeatureManagerHandle manager = FeatureCreateManager(package_name);
+    FeatureManagerCreateInfo ft_info;
+    ft_info.raw_ctx = (FeatureRawContextHandle)(env.ctx);
+    ft_info.release_cb = nullptr;
+    ft_info.manager_type = FEATURE_MANAGER_JS;
+    ft_info.package_name = package_name;
+    FeatureManagerHandle manager = FeatureCreateManager(&ft_info);
+
     env.manager = manager;
     env.run_loop = run_loop;
     env.stop_loop = stop_loop;
