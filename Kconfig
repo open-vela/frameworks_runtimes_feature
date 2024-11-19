@@ -53,4 +53,9 @@ config FEATURE_ENABLE_THREAD_CHECKER
 	bool "Enable thread checker"
 	default n
 
+config FEATURE_UNIT_TEST
+	depends on LIB_GOOGLETEST
+	bool "Enable feature unit test"
+	default n
+
 endif

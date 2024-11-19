@@ -287,6 +287,13 @@ ifeq ($(CONFIG_LIB_GOOGLETEST), y)
 #MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_main.cpp
 endif
 
+ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
+PROGNAME += feature_unit_test
+PRIORITY += 100
+STACKSIZE += 1024
+MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test.cpp
+endif
+
 ifeq ($(CONFIG_UTILS_CURL), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libuv/ext/include
