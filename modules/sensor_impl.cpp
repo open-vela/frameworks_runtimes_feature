@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cmath>
 #include <map>
 #include <nuttx/nuttx.h>
 #include <sensor/accel.h>
@@ -55,6 +56,7 @@ static const char* file_tag = "[jidl_feature] sensor_impl";
 #define HIGH_INTERVAL 20000
 #define MID_INTERVAL 50000
 #define LOW_INTERVAL 200000
+#define PRECISION 100000
 
 typedef enum ErrorCode {
     GENERAL = 200,
@@ -172,7 +174,7 @@ static void sensor_baro_topic_cb(uv_topic_t* topic, int status, void* data, size
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
     sensor_baro* t_r = static_cast<sensor_baro*>(data);
     system_sensor_BaroRet* baroRet = system_sensorMallocBaroRet();
-    baroRet->pressure = t_r->pressure;
+    baroRet->pressure = round(t_r->pressure * PRECISION) / PRECISION;
     INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, baroRet);
     FeatureFreeValue(baroRet);
 }
@@ -545,11 +547,11 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
     switch (magic) {
     case SENSOR_MAGIC_GNSS: {
         sensor_gnss* ret_t = static_cast<sensor_gnss*>(data);
-        ft_value_t latitude = ft_from_double(ft_ctx, ret_t->latitude);
-        ft_value_t longitude = ft_from_double(ft_ctx, ret_t->longitude);
-        ft_value_t altitude = ft_from_double(ft_ctx, ret_t->altitude);
-        ft_value_t speed = ft_from_double(ft_ctx, ret_t->ground_speed);
-        ft_value_t accuracy = ft_from_double(ft_ctx, ret_t->eph);
+        ft_value_t latitude = ft_from_double(ft_ctx, round(ret_t->latitude * PRECISION) / PRECISION);
+        ft_value_t longitude = ft_from_double(ft_ctx, round(ret_t->longitude * PRECISION) / PRECISION);
+        ft_value_t altitude = ft_from_double(ft_ctx, round(ret_t->altitude * PRECISION) / PRECISION);
+        ft_value_t speed = ft_from_double(ft_ctx, round(ret_t->ground_speed * PRECISION) / PRECISION);
+        ft_value_t accuracy = ft_from_int(ft_ctx, static_cast<int>(ret_t->eph));
         ft_obj_set_property(ft_ctx, ret_obj, "latitude", latitude);
         ft_obj_set_property(ft_ctx, ret_obj, "longitude", longitude);
         ft_obj_set_property(ft_ctx, ret_obj, "altitude", altitude);
@@ -560,16 +562,16 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
     }
     case SENSOR_MAGIC_BARO: {
         sensor_baro* ret_t = static_cast<sensor_baro*>(data);
-        ft_value_t pressure = ft_from_double(ft_ctx, ret_t->pressure);
+        ft_value_t pressure = ft_from_double(ft_ctx, round(ret_t->pressure * PRECISION) / PRECISION);
         ft_obj_set_property(ft_ctx, ret_obj, "pressure", pressure);
         ft_obj_set_property(ft_ctx, sensor_obj, "BAROMETER", ret_obj);
         break;
     }
     case SENSOR_MAGIC_ACCEL: {
         sensor_accel* ret_t = static_cast<sensor_accel*>(data);
-        ft_value_t ret_x = ft_from_double(ft_ctx, ret_t->x);
-        ft_value_t ret_y = ft_from_double(ft_ctx, ret_t->y);
-        ft_value_t ret_z = ft_from_double(ft_ctx, ret_t->z);
+        ft_value_t ret_x = ft_from_double(ft_ctx, round(ret_t->x * PRECISION) / PRECISION);
+        ft_value_t ret_y = ft_from_double(ft_ctx, round(ret_t->y * PRECISION) / PRECISION);
+        ft_value_t ret_z = ft_from_double(ft_ctx, round(ret_t->z * PRECISION) / PRECISION);
         ft_obj_set_property(ft_ctx, ret_obj, "x", ret_x);
         ft_obj_set_property(ft_ctx, ret_obj, "y", ret_y);
         ft_obj_set_property(ft_ctx, ret_obj, "z", ret_z);
@@ -591,14 +593,14 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
     }
     case SENSOR_MAGIC_AMBIENTTEMPERATURE: {
         sensor_temp* ret_t = static_cast<sensor_temp*>(data);
-        ft_value_t temp = ft_from_double(ft_ctx, ret_t->temperature);
+        ft_value_t temp = ft_from_double(ft_ctx, round(ret_t->temperature * 10) / 10);
         ft_obj_set_property(ft_ctx, ret_obj, "temperature", temp);
         ft_obj_set_property(ft_ctx, sensor_obj, "AMBIENTTEMPERATURE", ret_obj);
         break;
     }
     case SENSOR_MAGIC_HUMIDITY: {
         sensor_humi* ret_t = static_cast<sensor_humi*>(data);
-        ft_value_t humi = ft_from_double(ft_ctx, ret_t->humidity);
+        ft_value_t humi = ft_from_int(ft_ctx, round(ret_t->humidity * PRECISION) / PRECISION);
         ft_obj_set_property(ft_ctx, ret_obj, "humidity", humi);
         ft_obj_set_property(ft_ctx, sensor_obj, "HUMIDITY", ret_obj);
         break;
