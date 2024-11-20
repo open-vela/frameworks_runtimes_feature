@@ -21,7 +21,6 @@
 #include "feature_description.h"
 #include "feature_instance.h"
 #include "feature_log.h"
-#include "feature_main_exports.h"
 #include "feature_manager.h"
 #include "feature_prototype.h"
 #include "feature_registry.h"
@@ -743,57 +742,6 @@ bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     return true;
 }
 
-FeatureManagerHandle FeatureCreateManager(FeatureManagerCreateInfo* pinfo)
-{
-    return (FeatureManagerHandle)FeatureManager::CreateFeatureManager(pinfo);
-}
-
-ft_context_ref FeatureManagerGetContext(FeatureManagerHandle handle)
-{
-    FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    return manager->getFeatureContext();
-}
-
-void FeatureSetArgsErrorCb(FeatureManagerHandle handle, ArgsErrorCb cb, void* data)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    if (manager) {
-        manager->setArgsErrorCb(cb, data);
-    }
-}
-
-void FeatureSetPackageVersion(FeatureManagerHandle handle, const char* package_version)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    if (manager) {
-        manager->setPackageVesion(package_version);
-    }
-}
-
-void FeatureFreeManager(FeatureManagerHandle handle)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    delete manager;
-}
-
-void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    manager->setUVLoop(loop);
-}
-
-void FeatureUnsetUVLoop(FeatureManagerHandle handle)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    manager->unsetUVLoop();
-}
-
 uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 {
     FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
@@ -801,56 +749,11 @@ uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
     return manager->getUVLoop();
 }
 
-void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    manager->setUserData(name, data);
-}
-
-bool FeatureHasFeature(FeatureManagerHandle handle, FtString feature_method)
-{
-    FEATURE_CHECK_PTR(handle, false, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    return manager->hasFeature(feature_method);
-}
-
 void* FeatureGetManagerUserData(FeatureManagerHandle handle, const char* name)
 {
     FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->getUserData(name);
-}
-
-void FeatureUninit(FeatureManagerHandle handle)
-{
-    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    manager->uninit();
-}
-
-ft_value_t FeatureRequire(FeatureManagerHandle handle, ft_value_t binding_obj, const char* name)
-{
-    ft_value_t ret = { 0 };
-    FEATURE_CHECK_PTR(handle, ret, "handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    return manager->featureRequire(binding_obj, name);
-}
-
-ft_value_t FeatureFindFeature(FeatureManagerHandle handle, const char* name)
-{
-    ft_value_t ret = { 0 };
-    FEATURE_CHECK_PTR(handle, ret, "handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    return manager->findFeature(name);
-}
-
-ft_value_t FeatureCreateFeature(FeatureManagerHandle handle, ft_value_t prototype, ft_value_t binding_obj)
-{
-    ft_value_t ret = { 0 };
-    FEATURE_CHECK_PTR(handle, ret, "handle is null !")
-    FeatureManager* manager = static_cast<FeatureManager*>(handle);
-    return manager->createFeature(prototype, binding_obj);
 }
 
 FeatureManagerHandle FeatureGetManagerHandleFromInstance(FeatureInstanceHandle handle)
@@ -931,14 +834,6 @@ bool FeatureInstanceIsDetached(FeatureInstanceHandle handle)
         return instance->isDetached();
     }
     return false;
-}
-
-void FeatureDumpMemory(FeatureManagerHandle handle, FeatureMemoryDump* dump, void* userdata)
-{
-    if (handle) {
-        FeatureManager* manager = static_cast<FeatureManager*>(handle);
-        manager->onDumpMemory(dump, userdata);
-    }
 }
 
 FtEventId FeatureGetEventId(FeatureInstanceHandle handle, const char* name)

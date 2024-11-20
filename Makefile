@@ -44,6 +44,7 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/qjs/feature_manager
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_common.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_context.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_exports.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_main_exports.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_ffi.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_prototype.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_instance.cpp
