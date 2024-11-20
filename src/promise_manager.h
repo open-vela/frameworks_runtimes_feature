@@ -50,8 +50,6 @@ protected:
 
     int doGetPromiseType(FtPromiseId pid);
 
-    int invokeJsCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc);
-
 private:
     enum PromiseType {
         kPromise,

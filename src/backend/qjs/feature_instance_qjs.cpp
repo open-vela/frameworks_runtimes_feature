@@ -17,17 +17,48 @@
 #include "feature_instance_qjs.h"
 #include "feature_context_qjs.h"
 #include "feature_exports.h"
+#include "feature_ffi.h"
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
 #include "feature_prototype_qjs.h"
 #include "feature_utils.h"
 #include "thread_checker.h"
+// clang-format off
+#include "backend/qjs/value_translator_qjs.h"
+#include "feature_convertor_templates.h"
+// clang-format on
 
 #include <cstdarg>
 #include <cstdint>
 #include <string.h>
 
 #define CFUNCDATA_FN(f) ((feature_value_t(*)(feature_context_ref ctx, feature_value_t, int, feature_value_t*, int, feature_value_t*))f)
+
+static inline void free_arg(JSContext* ctx, JSValue& arg)
+{
+    JS_FreeValue(ctx, arg);
+}
+
+static inline JSValue undefined_arg(JSContext* ctx)
+{
+    return JS_UNDEFINED;
+}
+
+static bool arg_to_target(JSContext* js_ctx, va_list& ap, FeatureType ftype, JSValue& target)
+{
+    void* param = feature_framework::extractVariadicParam(ap, ftype);
+    if (!param) {
+        FEATURE_LOG_ERROR("extract callback param failed !");
+        return false;
+    }
+    if (!feature_framework::convertValueToTarget(ftype, js_ctx, param, target)) {
+        FEATURE_LOG_ERROR("convert callback param failed !");
+        free(param);
+        return false;
+    }
+    free(param);
+    return true;
+}
 
 namespace feature_framework {
 
@@ -282,7 +313,47 @@ int FeatureInstanceQjs::getEventCallbackCount(FtEventId eid)
 int FeatureInstanceQjs::doInvokeCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
 {
     THREAD_CHECK(featureManager()->getFeatureContext()->thread_checker);
-    return invokeJsCallback(param_types, callback, ap, fixed_argc, rest_argc);
+
+    JSContext* js_ctx = getContext();
+    if (feature_is_undefined(callback)) {
+        FEATURE_LOG_ERROR("callback is undefined !");
+        return -1;
+    }
+
+    // create argv list and initialize to undefined
+    AutoArgs<JSContext*, JSValue> argv(js_ctx, free_arg, undefined_arg, fixed_argc + rest_argc);
+    // convert params to feature_value_t
+    for (int i = 0; i < fixed_argc; i++) {
+        FeatureType ftype = param_types[i];
+        if (!arg_to_target(js_ctx, ap, ftype, argv[i])) {
+            FEATURE_LOG_ERROR("extract callback param failed !");
+            return -1;
+        }
+    }
+
+    // prepare for rest params
+    for (int i = fixed_argc; i < fixed_argc + rest_argc; i++) {
+        // it must be FtMalloced.
+        void* arg = va_arg(ap, void*);
+        void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
+        FTObjHeader* header = (FTObjHeader*)header_ptr;
+
+        if (header->type == MEMORY_FEATURE_TYPE) {
+            FeatureType ftype = *(FeatureType*)((char*)header - sizeof(FeatureType));
+            if (!convertValueToTarget(ftype, js_ctx, FT_IS_REFERENCE(ftype) ? &arg : arg, argv[i])) {
+                FEATURE_LOG_ERROR("convert callback rest param failed !");
+                argv[i] = FEATURE_VALUE_UNDEFINED;
+            }
+        }
+    }
+    feature_dup_value(js_ctx, callback);
+    feature_value_t ret = feature_call(js_ctx, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
+    if (feature_is_exception(ret)) {
+        feature_dump_error(js_ctx);
+    }
+    feature_free_value(js_ctx, callback);
+    feature_free_value(js_ctx, ret);
+    return 0;
 }
 
 void FeatureInstanceQjs::onDetached()

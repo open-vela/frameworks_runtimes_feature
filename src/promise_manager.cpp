@@ -25,16 +25,6 @@
 #include "feature_convertor_templates.h"
 // clang-format on
 
-static inline void free_arg(JSContext* ctx, JSValue& arg)
-{
-    JS_FreeValue(ctx, arg);
-}
-
-static inline JSValue undefined_arg(JSContext* ctx)
-{
-    return JS_UNDEFINED;
-}
-
 static int invoke_js_Callback(JSContext* ctx, feature_value_t cb, int argc, feature_value_t* argv)
 {
     if (feature_is_undefined(cb)) {
@@ -322,49 +312,6 @@ void PromiseManager::markPromises(feature_runtime_ref rt, feature_mark_func mark
         PromiseData* data = pair.second;
         data->mark(rt, mark_func);
     }
-}
-
-int PromiseManager::invokeJsCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)
-{
-    if (feature_is_undefined(callback)) {
-        FEATURE_LOG_ERROR("callback is undefined !");
-        return -1;
-    }
-
-    // create argv list and initialize to undefined
-    AutoArgs<JSContext*, JSValue> argv(js_ctx_, free_arg, undefined_arg, fixed_argc + rest_argc);
-    // convert params to feature_value_t
-    for (int i = 0; i < fixed_argc; i++) {
-        FeatureType ftype = param_types[i];
-        if (!arg_to_target(js_ctx_, ap, ftype, argv[i])) {
-            FEATURE_LOG_ERROR("extract callback param failed !");
-            return -1;
-        }
-    }
-
-    // prepare for rest params
-    for (int i = fixed_argc; i < fixed_argc + rest_argc; i++) {
-        // it must be FtMalloced.
-        void* arg = va_arg(ap, void*);
-        void* header_ptr = ((char*)arg - FT_OBJ_HEADER_SIZE);
-        FTObjHeader* header = (FTObjHeader*)header_ptr;
-
-        if (header->type == MEMORY_FEATURE_TYPE) {
-            FeatureType ftype = *(FeatureType*)((char*)header - sizeof(FeatureType));
-            if (!convertValueToTarget(ftype, js_ctx_, FT_IS_REFERENCE(ftype) ? &arg : arg, argv[i])) {
-                FEATURE_LOG_ERROR("convert callback rest param failed !");
-                argv[i] = FEATURE_VALUE_UNDEFINED;
-            }
-        }
-    }
-    feature_dup_value(js_ctx_, callback);
-    feature_value_t ret = feature_call(js_ctx_, callback, FEATURE_VALUE_UNDEFINED, fixed_argc + rest_argc, argv);
-    if (feature_is_exception(ret)) {
-        feature_dump_error(js_ctx_);
-    }
-    feature_free_value(js_ctx_, callback);
-    feature_free_value(js_ctx_, ret);
-    return 0;
 }
 
 }
