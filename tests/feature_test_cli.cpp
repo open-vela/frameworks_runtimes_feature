@@ -85,7 +85,7 @@ JSValue __require(JSContext* ctx, JSValue this_val, int argc, JSValue* argv)
     }
 
     const char* module_name = JS_ToCString(ctx, argv[0]);
-    ft_context_ref ft_ctx = FeatureGetContext(g_manager);
+    ft_context_ref ft_ctx = FeatureManagerGetContext(g_manager);
     ft_value_t ft_vm_obj = ft_from_jsvalue(ft_ctx, JS_UNDEFINED);
     ft_value_t ft_obj = FeatureRequire(g_manager, ft_vm_obj, module_name);
     auto js_obj = ft_to_jsvalue(ft_ctx, ft_obj);
