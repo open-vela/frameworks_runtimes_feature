@@ -142,7 +142,7 @@ void system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append
     device->osVersionCode = devinfo.osversioncode;
     device->screenWidth = devinfo.screenwidth;
     device->screenHeight = devinfo.screenheight;
-    device->screenDensity = devinfo.screendensity;
+    device->screenDensity = (int)((devinfo.screendensity + 0.05) * 10) / 10.0;
     finish_callback_getinfo(status, feature, params, "get device info successfully", device);
     FeatureFreeValue(device);
 }

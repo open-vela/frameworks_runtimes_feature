@@ -34,7 +34,7 @@ struct Device {
     int screenHeight
     string deviceType
     string screenShape
-    float screenDensity
+    double screenDensity
 }
 
 callback getinfo_success_cb(Device device)
