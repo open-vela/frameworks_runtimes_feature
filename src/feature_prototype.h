@@ -20,6 +20,9 @@
 #include "feature_description.h"
 #include "feature_main_exports.h"
 #include "feature_object_ref.h"
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+#include "feature_tracker.h"
+#endif
 
 #include <map>
 #include <memory>
@@ -58,7 +61,7 @@ public:
 
     const FeatureDescription* description() { return description_; }
 
-    void setModulePrototype(FeaturePrototype* proto) { module_proto_ = proto; }
+    void setModulePrototype(FeaturePrototype* proto);
 
     FeaturePrototype* modulePrototype() { return module_proto_; }
 
@@ -76,6 +79,13 @@ public:
         return it != event_map_.end() ? it->second : nullptr;
     }
 
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+    FeatureTracker& featureTracker()
+    {
+        return feature_tracker_;
+    }
+#endif
+
 protected:
     virtual FeaturePrototype* createInterfacePrototype(const FeatureDescription* description) = 0;
 
@@ -87,6 +97,9 @@ private:
     std::map<const char*, std::unique_ptr<FeaturePrototype>> children_; // all interface instance prototype
     std::vector<FeatureObjectUniquePtr<FeatureInstance>> instances_;
     std::map<std::string, const Member*> event_map_;
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+    FeatureTracker feature_tracker_;
+#endif
 };
 
 }

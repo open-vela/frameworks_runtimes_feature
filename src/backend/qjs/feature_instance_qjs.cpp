@@ -382,7 +382,14 @@ void FeatureInstanceQjs::onDetached()
     // invoke callback
     if (proto->description()->native_callbacks && proto->description()->native_callbacks->onDetached) {
         FEATURE_LOG_DEBUG("invoke onDettached callback...");
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+        auto& feature_tracker = proto->featureTracker();
+        feature_tracker.begin("onDetached");
+#endif
         proto->description()->native_callbacks->onDetached(js_ctx, this);
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+        feature_tracker.end("onDetached");
+#endif
     }
 
     // release all promises

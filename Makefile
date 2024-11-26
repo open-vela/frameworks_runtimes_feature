@@ -50,6 +50,9 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_prototype.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_instance.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_registry.cpp
+ifeq ($(CONFIG_FEATURE_ENABLE_TRACKER),y)
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_tracker.cpp
+endif
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/promise_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_object_ref.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_permission.cpp

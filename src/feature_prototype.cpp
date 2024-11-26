@@ -33,6 +33,9 @@ FeaturePrototype::FeaturePrototype(const FeatureDescription* description)
     : native_(nullptr)
     , description_(description)
     , module_proto_(this)
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+    , feature_tracker_(description_->name)
+#endif
 {
     // default capacity as 10 element
     instances_.reserve(10);
@@ -105,6 +108,19 @@ void FeaturePrototype::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
         void* sub = dump->sub(oss.str().c_str(), userdata);
         instances_[i]->onDumpMemory(dump, sub);
     }
+}
+
+void FeaturePrototype::setModulePrototype(FeaturePrototype* proto)
+{
+    module_proto_ = proto;
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+    if (description_->dynamic && module_proto_) {
+        std::string feature_name = module_proto_->description()->name;
+        std::string full_name = feature_name + "::" + description_->name;
+        feature_tracker_.setIsInterface(true);
+        feature_tracker_.setName(full_name.data());
+    }
+#endif
 }
 
 }

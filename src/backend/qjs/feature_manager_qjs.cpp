@@ -216,7 +216,15 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     auto description = instance->prototype()->description();
     const Member* member = &description->members[index];
     feature_value_t ret_val = FEATURE_VALUE_UNDEFINED;
+
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+    auto& feature_tracker = instance->prototype()->featureTracker();
+    feature_tracker.begin(member->name);
+#endif
     RetCode ret_code = methodCall(instance, ctx, ctx, member, argc, argv, ret_val);
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+    feature_tracker.end(member->name);
+#endif
     if (ret_code != RET_OK) {
         std::ostringstream oss;
         oss << "feature: " << description->name << ", method:" << member->name;
@@ -523,11 +531,17 @@ bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototypeQjs* prototype)
     init_prototype(ctx, prototype, js_proto);
     register_event_on_off_functions(ctx, js_proto);
     // TODO: initialize js_proto using description
+
     if (prototype->description()->native_callbacks && prototype->description()->native_callbacks->onCreate) {
         FEATURE_LOG_DEBUG("invoke onCreate callback...");
-
-        FeatureMethodMeasurer(prototype->description()->name, "onCreate");
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+        auto& feature_tracker = prototype->featureTracker();
+        feature_tracker.begin("onCreate");
+#endif
         prototype->description()->native_callbacks->onCreate(ctx, prototype);
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+        feature_tracker.end("onCreate");
+#endif
     }
 
     *js_proto_ptr = js_proto;
@@ -599,9 +613,15 @@ ft_value_t FeatureManagerQjs::featureRequire(ft_value_t binding_obj, const char*
     auto js_instance = createJsInstance((FeaturePrototypeQjs*)prototype, instance_ptr);
     if (pDesc->native_callbacks && pDesc->native_callbacks->onRequired) {
         FEATURE_LOG_DEBUG("invoke onRequired callback...");
-        FeatureMethodMeasurer(prototype->description()->name, "onRequired");
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+        auto& feature_tracker = prototype->featureTracker();
+        feature_tracker.begin("onRequired");
+#endif
         auto ctx = (feature_context_ref)ft_context_get_data(ft_ctx);
         pDesc->native_callbacks->onRequired(ctx, instance_ptr);
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+        feature_tracker.end("onRequired");
+#endif
     }
     *js_ret_ptr = js_instance;
     return ret;
@@ -657,8 +677,14 @@ void FeatureManagerQjs::uninit()
         // call feature's onDestroy
         if (description->native_callbacks && description->native_callbacks->onDestroy) {
             FEATURE_LOG_DEBUG("invoke onDestroy callback...");
-            FeatureMethodMeasurer(description->name, "onDestroy");
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+            auto& feature_tracker = proto->featureTracker();
+            feature_tracker.begin("onDestroy");
+#endif
             description->native_callbacks->onDestroy(js_ctx, proto);
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+            feature_tracker.end("onDestroy");
+#endif
         }
         FEATURE_LOG_DEBUG("free feature prototype '%s'", description->name);
         free_prototype(proto);
@@ -737,8 +763,14 @@ ft_value_t FeatureManagerQjs::createFeature(ft_value_t proto, ft_value_t binding
         auto js_instance = createJsInstance(prototype, instance_ptr);
         if (description->native_callbacks && description->native_callbacks->onRequired) {
             FEATURE_LOG_DEBUG("invoke onRequired callback...");
-            FeatureMethodMeasurer(description->name, "onRequired");
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+            auto& feature_tracker = prototype->featureTracker();
+            feature_tracker.begin("onRequired");
+#endif
             description->native_callbacks->onRequired(ctx, instance_ptr);
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+            feature_tracker.end("onRequired");
+#endif
         }
         *js_ret_ptr = js_instance;
         return ret;
