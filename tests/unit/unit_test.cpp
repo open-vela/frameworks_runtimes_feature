@@ -190,7 +190,7 @@ TEST_F(FeatureFrameworkTest, FeatureInvokeCallback1)
     //测试是否能正确调用回调
     auto callback = JS_NewCFunction(
         js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-            int a = 0;
+            int32_t a = 0;
             JS_ToInt32(ctx, &a, argv[0]);
             FEATURE_LOG_INFO("callback param is %d", ++a);
             FEATURE_LOG_INFO("hello callback");
@@ -218,7 +218,7 @@ TEST_F(FeatureFrameworkTest, FeatureInvokeCallbackCount1)
     //测试是否能正确调用变参回调
     auto callback = JS_NewCFunction(
         js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-            int a = 0;
+            int32_t a = 0;
             JS_ToInt32(ctx, &a, argv[0]);
             FEATURE_LOG_INFO("callback fixed param is %d", ++a);
             double pi = 0;
@@ -345,7 +345,7 @@ TEST_F(FeatureFrameworkTest, FeatureCheckCallbackId1)
     //测试能否正确检查callbackId是否存在
     auto callback = JS_NewCFunction(
         js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-            int a = 0;
+            int32_t a = 0;
             JS_ToInt32(ctx, &a, argv[0]);
             FEATURE_LOG_INFO("callback param is %d", ++a);
             FEATURE_LOG_INFO("hello callback");
