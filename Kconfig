@@ -82,4 +82,9 @@ config FRAMEWORK_LOG_BUFFER_SIZE
 	depends on FRAMEWORK_ENABLE_LOG
 endif
 
+config FEATURE_ENABLE_TRACKER
+	bool "Enable feature tracker"
+	default y
+	depends on FRAMEWORK_ENABLE_LOG
+
 endif
