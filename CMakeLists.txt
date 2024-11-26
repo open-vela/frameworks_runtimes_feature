@@ -239,7 +239,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
 
   if(CONFIG_SYSTEM_ACTIVITY_SERVICE)
     # for the 'system_internal_activity' feature
-    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/activity_feature.cpp)
+    list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/activity.jidl)
     list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/activity_feature_impl.cpp)
     list(APPEND FEATURELIST "system_internal_activity")
 

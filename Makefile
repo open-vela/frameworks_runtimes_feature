@@ -165,7 +165,7 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/jumpapp_impl.cpp
 ifeq ($(CONFIG_QUICKAPP_VAPP_XMS), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/jse
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/am/include/app
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/services/am/include/app
 endif
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework/dom-protobuf
 JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/jumpapp.jidl
