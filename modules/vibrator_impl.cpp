@@ -142,7 +142,7 @@ void system_vibrator_wrap_start(FeatureInstanceHandle feature, union AppendData 
     if (th->owner != -1) {
         FEATURE_LOG_ERROR("%s::%s() already has owner %d\n", file_tag, __FUNCTION__, th->owner);
         if (FeatureCheckCallbackId(feature, obj->fail)) {
-            FeatureInvokeCallback(feature, obj->fail, "task already exists", 201);
+            FeatureInvokeCallback(feature, obj->fail, "task already exists", 205);
             FeatureRemoveCallback(feature, obj->fail);
         }
         goto out;
