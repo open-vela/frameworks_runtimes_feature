@@ -74,15 +74,9 @@ void system_internal_power_wrap_shutDown(FeatureInstanceHandle feature, AppendDa
         FeatureInvokeCallback(feature, status->complete, (ret == 0) ? "success" : "fail");
     }
 
-    if (FeatureCheckCallbackId(feature, status->success)) {
-        FeatureRemoveCallback(feature, status->success);
-    }
-    if (FeatureCheckCallbackId(feature, status->fail)) {
-        FeatureRemoveCallback(feature, status->fail);
-    }
-    if (FeatureCheckCallbackId(feature, status->complete)) {
-        FeatureRemoveCallback(feature, status->complete);
-    }
+    FeatureRemoveCallback(feature, status->success);
+    FeatureRemoveCallback(feature, status->fail);
+    FeatureRemoveCallback(feature, status->complete);
 }
 
 void system_internal_power_wrap_reboot(FeatureInstanceHandle feature, AppendData append_data, system_internal_power_RetStatus* status)
@@ -105,13 +99,7 @@ void system_internal_power_wrap_reboot(FeatureInstanceHandle feature, AppendData
         FeatureInvokeCallback(feature, status->complete, (ret == 0) ? "success" : "fail");
     }
 
-    if (FeatureCheckCallbackId(feature, status->success)) {
-        FeatureRemoveCallback(feature, status->success);
-    }
-    if (FeatureCheckCallbackId(feature, status->fail)) {
-        FeatureRemoveCallback(feature, status->fail);
-    }
-    if (FeatureCheckCallbackId(feature, status->complete)) {
-        FeatureRemoveCallback(feature, status->complete);
-    }
+    FeatureRemoveCallback(feature, status->success);
+    FeatureRemoveCallback(feature, status->fail);
+    FeatureRemoveCallback(feature, status->complete);
 }
