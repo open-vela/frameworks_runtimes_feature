@@ -794,7 +794,15 @@ void system_sensor_wrap_getRecentData(FeatureInstanceHandle feature, union Appen
     const char* msg = "";
     sensorMulti_user_t* recent_meta;
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    sensor_magic_t magic = get_sensor_magic(param->type);
+    sensor_magic_t magic;
+    if (!FeatureCheckCallbackId(feature, param->success)) {
+        FEATURE_LOG_ERROR("%s::%s() callback id is invalid", file_tag, __FUNCTION__);
+        code = GENERAL;
+        msg = "success callback id is invalid";
+        goto errout;
+    }
+
+    magic = get_sensor_magic(param->type);
     if (magic == SENSOR_MAGIC_NUM) {
         FEATURE_LOG_ERROR("%s::%s() sensor not exist", file_tag, __FUNCTION__);
         code = GENERAL;
@@ -832,6 +840,10 @@ void system_sensor_wrap_getRecentData(FeatureInstanceHandle feature, union Appen
 errout:
     INVOKE_FAIL_CB(feature, param->fail, msg, code);
     REMOVE_ALL_CALLBACK(param->success, param->fail);
+    if (param->complete) {
+        FeatureInvokeCallback(feature, param->complete, "get recent data complete");
+        FeatureRemoveCallback(feature, param->complete);
+    }
 }
 
 FtBool system_sensor_wrap_checkAvailable(FeatureInstanceHandle feature, union AppendData append_data, FtInt type)
