@@ -105,15 +105,15 @@ bool convertValueToTarget(FeatureType ftype,
         ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
         switch (complex_type->type) {
         case COMPLEX_STRUCT_MAP: {
+            ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
+            auto member = obj_map_type.members;
+            auto member_count = countMember(member);
+            target = value_translator::createStruct(ctx, obj_map_type, member_count);
             void* struct_ptr = *(void**)pnative;
             if (!struct_ptr) {
                 FEATURE_LOG_WARN("null struct ptr!");
                 break;
             }
-            ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
-            auto member = obj_map_type.members;
-            auto member_count = countMember(member);
-            target = value_translator::createStruct(ctx, obj_map_type, member_count);
             if (value_translator::isNull(ctx, target)) {
                 FEATURE_LOG_ERROR("create struct failed!");
                 return false;
