@@ -702,6 +702,7 @@ FtInt system_sensor_wrap_subscribe(FeatureInstanceHandle feature, union AppendDa
     const char* msg = "";
     int ret = 0;
     int interval = 0;
+    sensor_magic_t magic;
     sensorMulti_user_t* user;
     sensorMulti_event_t* event;
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
@@ -712,7 +713,14 @@ FtInt system_sensor_wrap_subscribe(FeatureInstanceHandle feature, union AppendDa
         return -1;
     }
 
-    sensor_magic_t magic = get_sensor_magic(param->type);
+    if (!FeatureCheckCallbackId(feature, param->callback)) {
+        code = GENERAL;
+        msg = "callback id is invalid";
+        FEATURE_LOG_ERROR("%s::%s() callback id is invalid", file_tag, __FUNCTION__);
+        goto errout;
+    }
+
+    magic = get_sensor_magic(param->type);
     if (magic == SENSOR_MAGIC_NUM) {
         code = SERVICEUNAVAILABLE;
         msg = "current sensor is not support";
