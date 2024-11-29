@@ -277,7 +277,13 @@ bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t
         sig.len = seg_size;
 
         if (sig_text) {
-            if (uv_base64_decode(sig, &md)) {
+            md.len = sig.len;
+            md.base = (char*)malloc(md.len);
+            if (md.base == NULL) {
+                CHECK_ERR_BREAK(NULL, "crypto.verify malloc md failed");
+            }
+            memset(md.base, 0, md.len);
+            if (uv_base64_decode(sig.base, sig.len, md.base, md.len, &md.len)) {
                 CHECK_ERR_BREAK(NULL, "crypto.verify base64 failed");
             }
             res = uv_verify(type.base, key, text, md, UV_EXT_TYPE_BUFFER);
@@ -288,8 +294,11 @@ bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t
         return res == 0;
     } while (false);
 
-    if (sig_text)
-        free(md.base);
+    if (sig_text) {
+        if (md.base) {
+            free(md.base);
+        }
+    }
 
     return false;
 }
@@ -321,15 +330,27 @@ bool rsa_verify_file(const char* type_str, const char* key_str, const char* uri_
         text.len = strlen(text.base);
         FEATURE_LOG_INFO("abs_path: %s\n", text.base);
 
-        if (uv_base64_decode(md_64, &md) == 0) {
+        md.len = md_64.len;
+        md.base = (char*)malloc(md.len);
+        if (md.base == NULL) {
+            CHECK_ERR_BREAK(NULL, "crypto.verify malloc md failed");
+        }
+        memset(md.base, 0, md.len);
+        if (uv_base64_decode(md_64.base, md_64.len, md.base, md.len, &md.len) == 0) {
             ret = uv_verify(type.base, key, text, md, UV_EXT_TYPE_FILE) == 0;
         } else {
             CHECK_ERR_BREAK(NULL, "crypto.verify base64 failed");
         }
     } while (false);
 
-    free(text.base);
-    free(md.base);
+    if (text.base) {
+        free(text.base);
+    }
+
+    if (md.base) {
+        free(md.base);
+    }
+
     return ret;
 }
 
@@ -359,21 +380,35 @@ char* base64(const char* type_str, const char* text_str)
 
         int res;
         if (type == UV_EXT_ENCRYPT) {
-            res = uv_base64_encode(text, &out);
+            out.len = BASE64_ENCODED_LENGTH(text.len) + 1;
+            out.base = (char*)malloc(out.len);
+            if (out.base == NULL) {
+                CHECK_ERR_RET(NULL, "crypto.base64 malloc failed");
+            }
+            memset(out.base, 0, out.len);
+            res = uv_base64_encode(text.base, text.len, out.base, out.len, &out.len);
         } else {
-            res = uv_base64_decode(text, &out);
+            out.len = text.len;
+            out.base = (char*)malloc(out.len);
+            if (out.base == NULL) {
+                CHECK_ERR_RET(NULL, "crypto.base64 malloc failed");
+            }
+            memset(out.base, 0, out.len);
+            res = uv_base64_decode(text.base, text.len, out.base, out.len, &out.len);
         }
 
         if (res != 0) {
-            if (out.base)
+            if (out.base) {
                 free(out.base);
+            }
             CHECK_ERR_RET(NULL, "crypto.base64 calculate failed");
         }
 
         char* ret_str = (char*)FeatureMalloc(out.len + 1, FT_STRING);
         memcpy(ret_str, out.base, out.len);
-        if (out.base)
+        if (out.base) {
             free(out.base);
+        }
         return ret_str;
     } while (false);
 
@@ -386,9 +421,9 @@ int base64_encode(const char* input, size_t input_size, char* output, size_t out
         return -1;
     }
 
-    if (uv_base64_encode_ext(input, input_size, output, output_size, exact_size) != 0) {
+    if (uv_base64_encode(input, input_size, output, output_size, exact_size) != 0) {
         *exact_size = 0;
-        FEATURE_LOG_ERROR("%s, uv_base64_encode_ext failed\n", file_tag);
+        FEATURE_LOG_ERROR("%s, uv_base64_encode failed\n", file_tag);
         return -1;
     }
 
@@ -401,9 +436,9 @@ int base64_decode(const char* input, size_t input_size, char* output, size_t out
         return -1;
     }
 
-    if (uv_base64_decode_ext(input, input_size, output, output_size, exact_size) != 0) {
+    if (uv_base64_decode(input, input_size, output, output_size, exact_size) != 0) {
         *exact_size = 0;
-        FEATURE_LOG_ERROR("%s, uv_base64_decode_ext failed\n", file_tag);
+        FEATURE_LOG_ERROR("%s, uv_base64_decode failed\n", file_tag);
         return -1;
     }
 
@@ -437,7 +472,13 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
 
         char* ret_str = NULL;
         if (*is_text) {
-            if (uv_base64_encode(out, &ret) != 0) {
+            ret.len = BASE64_ENCODED_LENGTH(out.len) + 1;
+            ret.base = (char*)malloc(ret.len);
+            if (ret.base == NULL) {
+                CHECK_ERR_BREAK(NULL, "crypto.sign malloc ret failed");
+            }
+            memset(ret.base, 0, ret.len);
+            if (uv_base64_encode(out.base, out.len, ret.base, ret.len, &ret.len) != 0) {
                 CHECK_ERR_BREAK(NULL, "crypto.sign base64 failed");
                 break;
             }
@@ -492,7 +533,14 @@ char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_s
         if (uv_sign(type.base, key, text, &out, UV_EXT_TYPE_FILE)) {
             CHECK_ERR_BREAK(NULL, "crypto.sign invalid parameter key");
         }
-        if (uv_base64_encode(out, &ret) != 0) {
+
+        ret.len = BASE64_ENCODED_LENGTH(out.len) + 1;
+        ret.base = (char*)malloc(ret.len);
+        if (ret.base == NULL) {
+            CHECK_ERR_BREAK(NULL, "crypto.sign malloc ret failed");
+        }
+        memset(ret.base, 0, ret.len);
+        if (uv_base64_encode(out.base, out.len, ret.base, ret.len, &ret.len) != 0) {
             CHECK_ERR_BREAK(NULL, "crypto.sign base64 failed");
             break;
         }

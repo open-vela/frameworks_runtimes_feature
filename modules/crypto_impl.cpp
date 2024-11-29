@@ -1213,7 +1213,7 @@ FtString system_crypto_wrap_btoa(FeatureInstanceHandle feature, AppendData appen
         if (!result) {
             FEATURE_LOG_ERROR("native base64 error: %s", crypto_err);
         }
-        FEATURE_LOG_INFO("%s, wjf result: %s", file_tag, result);
+        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     return result;
