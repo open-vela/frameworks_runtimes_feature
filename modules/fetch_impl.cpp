@@ -96,7 +96,7 @@ static const char* response_type[] = {
 
 } // namespace Fetch
 
-typedef struct content_t {
+typedef struct content_s {
     Fetch::ContentType content_type;
     std::string data;
     uint8_t* buf_type_data = NULL;
