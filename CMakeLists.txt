@@ -48,6 +48,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${FEATURE_SRC_DIR}/feature_common.cpp
     ${FEATURE_SRC_DIR}/feature_context.cpp
     ${FEATURE_SRC_DIR}/feature_exports.cpp
+    ${FEATURE_SRC_DIR}/feature_main_exports.cpp
     ${FEATURE_SRC_DIR}/feature_ffi.cpp
     ${FEATURE_SRC_DIR}/feature_instance.cpp
     ${FEATURE_SRC_DIR}/feature_manager.cpp
