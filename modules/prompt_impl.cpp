@@ -16,7 +16,12 @@
 
 #include "modules/prompt_impl.h"
 #include "prompt.h"
+#include <cfloat>
+#include <math.h>
 
+#define PROMPT_DURATION_DEFAULT 1500
+#define PROMPT_DURATION_SHORT 2000
+#define PROMPT_DURATION_LONG 3500
 static const char* file_tag = "[jidl_feature] Prompt_impl";
 
 void system_prompt_onRegister(const char* feature_name)
@@ -91,9 +96,22 @@ void system_prompt_wrap_showToast(FeatureInstanceHandle feature, AppendData appe
         return;
     }
 
+    if (info->message == nullptr || *(info->message) == '\0') {
+        FEATURE_LOG_ERROR("message is null!");
+        return;
+    }
     promptShowToast show_toast = pm_hander->show_toast;
     if (show_toast) {
-        show_toast(feature, info->message, info->duration);
+        double duration = PROMPT_DURATION_DEFAULT;
+        ft_context_ref ft_ctx = FeatureGetContext(feature);
+        if (info->duration && ft_to_double(ft_ctx, *info->duration, &duration)) {
+            if (fabs(duration - 0.0) < DBL_EPSILON) {
+                duration = PROMPT_DURATION_SHORT;
+            } else if (fabs(duration - 1.0) < DBL_EPSILON) {
+                duration = PROMPT_DURATION_LONG;
+            }
+        }
+        show_toast(feature, info->message, (int)duration);
     }
 }
 
