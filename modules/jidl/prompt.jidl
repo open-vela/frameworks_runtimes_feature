@@ -26,7 +26,7 @@ callback complete_cb()
 
 struct ToastInfo {
     string message
-    int duration = 0
+    object duration
 }
 
 struct button {
