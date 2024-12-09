@@ -124,13 +124,16 @@ static void sensor_accel_topic_cb(uv_topic_t* topic, int status, void* data, siz
         return;
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    sensor_accel* t_r = static_cast<sensor_accel*>(data);
-    system_sensor_AccelerometerRet* accelRet = system_sensorMallocAccelerometerRet();
-    accelRet->x = t_r->x;
-    accelRet->y = t_r->y;
-    accelRet->z = t_r->z;
-    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, accelRet);
-    FeatureFreeValue(accelRet);
+    int cnt = datalen / sizeof(sensor_accel);
+    for (int i = 0; i < cnt; i++) {
+        sensor_accel* t_r = (sensor_accel*)data + i;
+        system_sensor_AccelerometerRet* accelRet = system_sensorMallocAccelerometerRet();
+        accelRet->x = t_r->x;
+        accelRet->y = t_r->y;
+        accelRet->z = t_r->z;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, accelRet);
+        FeatureFreeValue(accelRet);
+    }
 }
 
 static void sensor_prox_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
@@ -140,11 +143,14 @@ static void sensor_prox_topic_cb(uv_topic_t* topic, int status, void* data, size
         return;
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    sensor_prox* t_r = static_cast<sensor_prox*>(data);
-    system_sensor_ProximityRet* proxRet = system_sensorMallocProximityRet();
-    proxRet->distance = t_r->proximity;
-    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, proxRet);
-    FeatureFreeValue(proxRet);
+    int cnt = datalen / sizeof(sensor_accel);
+    for (int i = 0; i < cnt; i++) {
+        sensor_prox* t_r = (sensor_prox*)data + i;
+        system_sensor_ProximityRet* proxRet = system_sensorMallocProximityRet();
+        proxRet->distance = t_r->proximity;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, proxRet);
+        FeatureFreeValue(proxRet);
+    }
 }
 
 static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
@@ -154,11 +160,14 @@ static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, siz
         return;
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    sensor_light* t_r = static_cast<sensor_light*>(data);
-    system_sensor_LightRet* lightRet = system_sensorMallocLightRet();
-    lightRet->intensity = t_r->light;
-    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, lightRet);
-    FeatureFreeValue(lightRet);
+    int cnt = datalen / sizeof(sensor_accel);
+    for (int i = 0; i < cnt; i++) {
+        sensor_light* t_r = (sensor_light*)data + i;
+        system_sensor_LightRet* lightRet = system_sensorMallocLightRet();
+        lightRet->intensity = t_r->light;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, lightRet);
+        FeatureFreeValue(lightRet);
+    }
 }
 
 static void sensor_compa_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
@@ -172,11 +181,14 @@ static void sensor_baro_topic_cb(uv_topic_t* topic, int status, void* data, size
         return;
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    sensor_baro* t_r = static_cast<sensor_baro*>(data);
-    system_sensor_BaroRet* baroRet = system_sensorMallocBaroRet();
-    baroRet->pressure = round(t_r->pressure * PRECISION) / PRECISION;
-    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, baroRet);
-    FeatureFreeValue(baroRet);
+    int cnt = datalen / sizeof(sensor_baro);
+    for (int i = 0; i < cnt; i++) {
+        sensor_baro* t_r = (sensor_baro*)data + i;
+        system_sensor_BaroRet* baroRet = system_sensorMallocBaroRet();
+        baroRet->pressure = t_r->pressure;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, baroRet);
+        FeatureFreeValue(baroRet);
+    }
 }
 
 static void sensor_temp_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
@@ -186,11 +198,14 @@ static void sensor_temp_topic_cb(uv_topic_t* topic, int status, void* data, size
         return;
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    sensor_temp* t_r = static_cast<sensor_temp*>(data);
-    system_sensor_TemperatureRet* tempRet = system_sensorMallocTemperatureRet();
-    tempRet->temperature = t_r->temperature;
-    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, tempRet);
-    FeatureFreeValue(tempRet);
+    int cnt = datalen / sizeof(sensor_temp);
+    for (int i = 0; i < cnt; i++) {
+        sensor_temp* t_r = (sensor_temp*)data + i;
+        system_sensor_TemperatureRet* tempRet = system_sensorMallocTemperatureRet();
+        tempRet->temperature = t_r->temperature;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, tempRet);
+        FeatureFreeValue(tempRet);
+    }
 }
 
 static void sensor_humi_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
@@ -200,11 +215,14 @@ static void sensor_humi_topic_cb(uv_topic_t* topic, int status, void* data, size
         return;
     }
     sensor_event_t* event = container_of(topic, sensor_event_t, topic);
-    sensor_humi* t_r = static_cast<sensor_humi*>(data);
-    system_sensor_HumidityRet* humiRet = system_sensorMallocHumidityRet();
-    humiRet->humidity = t_r->humidity;
-    INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, humiRet);
-    FeatureFreeValue(humiRet);
+    int cnt = datalen / sizeof(sensor_humi);
+    for (int i = 0; i < cnt; i++) {
+        sensor_humi* t_r = (sensor_humi*)data + i;
+        system_sensor_HumidityRet* humiRet = system_sensorMallocHumidityRet();
+        humiRet->humidity = t_r->humidity;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, humiRet);
+        FeatureFreeValue(humiRet);
+    }
 }
 
 const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
@@ -327,7 +345,7 @@ void system_sensor_wrap_subscribeAccelerometer(FeatureInstanceHandle feature, Ap
     if (strcmp(param->interval, "game") == 0) {
         interval = 20000;
     } else if (strcmp(param->interval, "ui") == 0) {
-        interval = 60000;
+        interval = 50000;
     } else if (strcmp(param->interval, "normal") == 0) {
         interval = 200000;
     } else {
