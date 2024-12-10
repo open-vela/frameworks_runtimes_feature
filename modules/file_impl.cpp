@@ -317,7 +317,7 @@ typedef struct
     int8_t type; // 0:file 1:dir
     char* uri;
     uint64_t length;
-    long last_modified_time;
+    long long last_modified_time;
     int dir_num;
     int file_num;
     struct weakref_list_node file_node;
