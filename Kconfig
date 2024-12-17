@@ -67,6 +67,10 @@ config FEATURE_TEST_JSFILE
 	bool "Enable feature test using JavaScript file"
 	default n
 
+config FRAMEWORK_ENABLE_LOG
+	bool "Enable framework trace"
+	default n
+
 config FEATURE_TEST_FEATURES
 	bool "enable test features"
 	default n
