@@ -228,6 +228,13 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     const char* msg = "";
     int code = 0;
     char* result = NULL;
+
+    // set default value SHA256
+    if (!check_str(options->algo)) {
+        options->algo = hash_types[SHA256];
+    } else if (!has_type(hash_types, arrayof(hash_types), options->algo)) {
+        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, options->algo);
+    }
     if (!(check_str(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
         code = FT_ERR_ARGS;
