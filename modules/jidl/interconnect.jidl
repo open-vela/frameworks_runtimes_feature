@@ -1,0 +1,90 @@
+/*
+ * Copyright (C) 2025 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+module system.interconnect@1.0
+
+
+struct StatusInfo {
+    int status;
+}
+
+callback ReadyStateSuccessCb(StatusInfo status)
+callback ReadyStateFailCb(string errMsg, int code)
+struct ReadystateParams {
+    ReadyStateSuccessCb success
+    ReadyStateFailCb fail
+}
+
+struct Message {
+    string data
+}
+
+callback OnMessage(Message msg)
+callback OnOpen(object is_reconnect)
+
+struct CloseInfo {
+    string data // reason
+    int code
+}
+callback OnClose(CloseInfo info)
+
+struct ErrorInfo {
+    string data
+    int code
+}
+callback OnError(ErrorInfo error)
+
+struct FailInfo {
+    string data;
+    int code;
+}
+
+callback SendSuccessCB()
+callback SendFailCB(FailInfo data)
+
+struct SendParams {
+    object data = null
+    int timeout = 5000
+}
+
+struct DiagnosisParams {
+    int timeout = 10000;
+}
+
+interface InterConn {
+    promise<object> getReadyState(ReadystateParams parms = null)
+    promise<void> send(SendParams parms)
+    promise<object> diagnosis(DiagnosisParams param = null)
+
+    property OnMessage onmessage
+    property OnOpen onopen
+    property OnClose onclose
+    property OnError onerror
+
+    // 废弃的接口，保持兼容性
+    string getApkStatus() // CONNECTED DISCONNECTED UNINSTALLED
+}
+
+
+struct AppInfo {
+    string package;
+    string fingerprint;
+}
+
+// @brief 获取一个 interconnect 实例，类型是InterConn
+//        当前底层实现是一个单例
+// @param AppInfo 应用信息，用于连接并验证手机上的应用
+[ctor="true", target="MiwearConnect"] InterConn instance(AppInfo info = null)
