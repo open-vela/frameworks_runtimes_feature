@@ -181,10 +181,10 @@ char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
     char* ret_str = NULL;
 
     do {
-        key.base = (char*)key_str;
-        key.len = strlen(key_str);
         CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
         CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
+        key.base = (char*)key_str;
+        key.len = strlen(key_str);
         text.base = (char*)buff;
         text.len = *buff_size;
         *buff_size = 0;
@@ -229,10 +229,10 @@ char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* i
     char* ret_str = NULL;
 
     do {
-        key.base = (char*)key_str;
-        key.len = strlen(key_str);
         CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
         CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
+        key.base = (char*)key_str;
+        key.len = strlen(key_str);
         text.base = (char*)buff;
         text.len = *buff_size;
         *buff_size = 0;
@@ -281,16 +281,16 @@ bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t
     int res;
 
     do {
+        CHECK_ERR_BREAK(type_str, "crypto.rsa invalid parameter type");
+        CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
+        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
+        CHECK_ERR_BREAK(sig_buf, "crypto.aes invalid parameter signature");
         type.base = (char*)type_str;
         type.len = strlen(type_str);
         key.base = (char*)key_str;
         key.len = strlen(key_str);
         text.base = (char*)buff;
         text.len = buff_size;
-        CHECK_ERR_BREAK(type_str, "crypto.rsa invalid parameter type");
-        CHECK_ERR_BREAK(key_str, "crypto.rsa invalid parameter key");
-        CHECK_ERR_BREAK(buff, "crypto.aes invalid parameter text");
-        CHECK_ERR_BREAK(sig_buf, "crypto.aes invalid parameter signature");
         sig.base = (char*)sig_buf;
         sig.len = seg_size;
 
@@ -407,6 +407,9 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
     uv_buf_t out = { 0 };
     uv_buf_t ret = { 0 };
     do {
+        CHECK_ERR_BREAK(type_str, "crypto.sign invalid parameter type");
+        CHECK_ERR_BREAK(key_str, "crypto.sign invalid parameter key");
+        CHECK_ERR_BREAK(buff, "crypto.sign invalid parameter text");
         type.base = (char*)type_str;
         type.len = strlen(type_str);
         key.base = (char*)key_str;
@@ -414,9 +417,6 @@ char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t*
         text.base = (char*)buff;
         text.len = *buff_size;
         *buff_size = 0;
-        CHECK_ERR_BREAK(type_str, "crypto.sign invalid parameter type");
-        CHECK_ERR_BREAK(key_str, "crypto.sign invalid parameter key");
-        CHECK_ERR_BREAK(buff, "crypto.sign invalid parameter text");
 
         if (uv_sign(type.base, key, text, &out, UV_EXT_TYPE_BUFFER)) {
             CHECK_ERR_BREAK(NULL, "crypto.sign invalid parameter key");
@@ -516,12 +516,12 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
     uv_buf_t ret = { 0 };
 
     do {
+        CHECK_ERR_BREAK(type_str, "crypto.digest invalid parameter type");
+        CHECK_ERR_BREAK(text_str, "crypto.digest invalid parameter text");
         type.base = (char*)type_str;
         type.len = strlen(type_str);
         text.base = (char*)text_str;
         text.len = text_size;
-        CHECK_ERR_BREAK(type_str, "crypto.digest invalid parameter type");
-        CHECK_ERR_BREAK(text_str, "crypto.digest invalid parameter text");
 
         int res;
         key.base = (char*)key_str;
