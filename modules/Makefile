@@ -345,6 +345,13 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_EVENT_TEST),y)
 	FEATURELIST += system_event_test
 endif
 
+ifeq ($(CONFIG_FEATURE_SYSTEM_INTERCONNECT),y)
+	CXXSRCS     += $(APPDIR)/frameworks/runtimes/feature/modules/interconnect_impl.cpp
+	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/interconnect.jidl
+	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+	FEATURELIST += system_interconnect
+endif
+
 ifeq ($(CONFIG_FEATURE_SYSTEM_STORAGE),y)
 	CXXFLAGS 	+= ${INCDIR_PREFIX}$(APPDIR)/external/unqlite/unqlite
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/storage_impl.cpp

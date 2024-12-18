@@ -185,3 +185,10 @@ config FEATURE_SYSTEM_GEOLOCATION
     default y
     --help--
         enable system.geolocation feature
+
+config FEATURE_SYSTEM_INTERCONNECT
+    bool "system.interconnect"
+    default y
+    depends on UV_MIWEAR
+    --help--
+        enable system.interconnect feature

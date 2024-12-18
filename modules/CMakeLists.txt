@@ -350,6 +350,21 @@ if(CONFIG_FEATURE_SYSTEM_DEVICE)
         system_device)
 endif()
 
+if (CONFIG_FEATURE_SYSTEM_INTERCONNECT)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/interconnect_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/interconnect.jidl)
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_interconnect)
+endif()
+
 if(CONFIG_FEATURE_SYSTEM_BRIGHTNESS)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/brightness_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/brightness.jidl)
