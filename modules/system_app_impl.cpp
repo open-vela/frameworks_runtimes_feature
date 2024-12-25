@@ -117,6 +117,12 @@ FtAny system_app_wrap_loadLibrary(FeatureInstanceHandle feature, AppendData appe
     if (!hmanager) {
         return ft_lib;
     }
-    *ft_lib = FeatureRequire(hmanager, ft_undef, name);
+
+    if (strcmp(name, "WECHAT_APP") == 0) {
+        *ft_lib = FeatureRequire(hmanager, ft_undef, "service.wechat");
+    } else {
+        *ft_lib = FeatureRequire(hmanager, ft_undef, name);
+    }
+
     return ft_lib;
 }

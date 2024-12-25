@@ -99,8 +99,11 @@ void wechat_free(WechatHandle* handle)
     uv_async_queue_close(&handle->event_async, NULL);
 
     if (handle->feature) {
+        FeatureRemoveCallback(handle->feature, handle->event_cb);
+        FeatureRemoveCallback(handle->feature, handle->task_cb);
         FeatureFreeInstanceHandle(handle->feature);
     }
+
     free(handle);
     handle = NULL;
 }
@@ -133,7 +136,6 @@ static void async_js_event_callback(uv_async_queue_t* async, void* data)
     FEATURE_LOG_INFO("[wechat] OnJsEvent exit");
     free(wechat_event);
     FeatureFreeValue(event_data);
-    FeatureRemoveCallback(wechat_handle->feature, wechat_handle->event_cb);
 }
 
 static void OnJsTask(double task_id, double error_code, const char* resp_body)
@@ -170,7 +172,6 @@ static void async_js_task_callback(uv_async_queue_t* async, void* data)
     FEATURE_LOG_INFO("[wechat] OnJsTask exit");
     free(wechat_task);
     FeatureFreeValue(task_data);
-    FeatureRemoveCallback(wechat_handle->feature, wechat_handle->task_cb);
 }
 
 void service_wechat_wrap_js_invoke_function(FeatureInstanceHandle feature, AppendData append_data, service_wechat_invokeInfo* info)
