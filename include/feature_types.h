@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * @file feature_types.h
+ * @brief 该文件中定义了一系列featrue框架及feature开发者用到的数据类型
+ */
 #ifndef FEATURE_TYPES_H
 #define FEATURE_TYPES_H
 
@@ -25,142 +29,148 @@ extern "C" {
 #include <stdbool.h>
 
 // primitive type definations
-typedef int FtInt;
-typedef int8_t FtInt8;
-typedef uint8_t FtUint8;
-typedef int16_t FtInt16;
-typedef uint16_t FtUint16;
-typedef int32_t FtInt32;
-typedef uint32_t FtUint32;
-typedef int64_t FtInt64;
-typedef uint64_t FtUint64;
-typedef float FtFloat;
-typedef double FtDouble;
-typedef bool FtBool;
-typedef const char* FtString;
-typedef ft_value_t* FtAny;
-typedef int32_t FtCallbackId; // feature callback id
-typedef int32_t FtEventId; // feature event id
-typedef int32_t FtPromiseId; // feature promise id
+typedef int FtInt; /**< FtInt for int32_t */
+typedef int8_t FtInt8; /**< FtInt8 for int8_t */
+typedef uint8_t FtUint8; /**< FtUint8 for uint8_t */
+typedef int16_t FtInt16; /**< FtInt16 for int16_t */
+typedef uint16_t FtUint16; /**< FtUint16 for uint16_t */
+typedef int32_t FtInt32; /**< FtInt32 for int32_t */
+typedef uint32_t FtUint32; /**< FtUint32 for uint32_t */
+typedef int64_t FtInt64; /**< FtInt64 for int64_t */
+typedef uint64_t FtUint64; /**< FtUint64 for uint64_t */
+typedef float FtFloat; /**< FtFloat for float */
+typedef double FtDouble; /**< FtDouble for double */
+typedef bool FtBool; /**< FtBool for bool */
+typedef const char* FtString; /**< FtString for const char* */
+typedef ft_value_t* FtAny; /**< FtAny for ft_value_t* */
+typedef int32_t FtCallbackId; /**< callbackid */
+typedef int32_t FtEventId; /**< event id */
+typedef int32_t FtPromiseId; /**< promise id */
 
-typedef void* FeatureRuntimeContext; // guest runtime context, e.g qucikjs RuntimeContext
+typedef void* FeatureRuntimeContext; /**< guest runtime context, e.g qucikjs RuntimeContext */
 
-typedef void* FeatureRegistryHandle; // feature registry handle.
-typedef void* FeatureManagerHandle; // feature manage handle.
-typedef void* FeatureProtoHandle; // feature prototype handle.
-typedef void* FeatureInstanceHandle; // feature instance handle.
-typedef void* FeatureInterfaceHandle; // feature interface handle.
+typedef void* FeatureRegistryHandle; /**< feature registry handle. */
+typedef void* FeatureManagerHandle; /**< feature manage handle. */
+typedef void* FeatureProtoHandle; /**< feature prototype handle. */
+typedef void* FeatureInstanceHandle; /**< feature instance handle. */
+typedef void* FeatureInterfaceHandle; /**< feature interface handle. */
 
-typedef uintptr_t FeatureType; // feature type flag
-typedef void (*NativeFunc)(void);
+typedef uintptr_t FeatureType; /**< feature type flag */
+typedef void (*NativeFunc)(void); /**< native func ptr */
 
+/** 异步任务模式枚举 */
 enum FeatureTaskMode {
-    FEATURE_TASK_MODE_FREE = 0,
-    FEATURE_TASK_MODE_NORMAL = 1,
+    FEATURE_TASK_MODE_FREE = 0, /**< 异步任务已结束 */
+    FEATURE_TASK_MODE_NORMAL = 1, /**< 异步任务正常 */
 };
 
+/** FeaturePromiseType枚举 */
 typedef enum FeaturePromiseType {
-    FEATURE_PROMISE_TYPE_INVALID = -1,
-    FEATURE_PROMISE_TYPE_PROMISE = 0,
-    FEATURE_PROMISE_TYPE_CALLBACKS = 1,
+    FEATURE_PROMISE_TYPE_INVALID = -1, /**< 非法类型 */
+    FEATURE_PROMISE_TYPE_PROMISE = 0, /**< 表示Promise */
+    FEATURE_PROMISE_TYPE_CALLBACKS = 1, /**< 表示Callback */
 } FeaturePromiseType;
 
+/** feature类型标志枚举，标记是否需要free */
 enum TypeFlags {
-    TYPE_FLAGS_VALUE = 1, // value
-    TYPE_FLAGS_POINTER, // pointer, need malloc/free
-    TYPE_FLAGS_RAWPOINTER = TYPE_FLAGS_POINTER | 1, // raw pointer, do not malloc/free
-    TYPE_FLAGS_UNMANAGED_POINTER = TYPE_FLAGS_RAWPOINTER,
+    TYPE_FLAGS_VALUE = 1, /**< 值类型，不需要free */
+    TYPE_FLAGS_POINTER, /**< 指针类型, 需要malloc&free */
+    TYPE_FLAGS_RAWPOINTER = TYPE_FLAGS_POINTER | 1, /**< raw pointer, 不需要free */
+    TYPE_FLAGS_UNMANAGED_POINTER = TYPE_FLAGS_RAWPOINTER, /**< such as TYPE_FLAGS_RAWPOINTER */
 };
 
+/** 异步任务回调 */
 typedef void (*FeatureTaskCallback)(int status, void* data);
 
+/** 事件状态枚举 */
 typedef enum FeatureEventStatus {
-    FEATURE_EVENT_ADDED,
-    FEATURE_EVENT_REMOVED,
+    FEATURE_EVENT_ADDED, /**< 事件添加 */
+    FEATURE_EVENT_REMOVED, /**< 事件移出 */
 } FeatureEventStatus;
 
+/** 事件监听函数指针 */
 typedef void (*FeatureEventChangeListener)(FeatureInstanceHandle data, FtEventId eid, FeatureEventStatus status);
 
+/** 虚表结构体，用于创建feature interface */
 typedef struct VTable {
-    int size;
-    NativeFunc finalizer;
-    const NativeFunc* members;
+    int size; /**< 虚表成员个数 */
+    NativeFunc finalizer; /**< 接口析构函数指针 */
+    const NativeFunc* members; /**< 虚表成员数组 */
 } VTable;
 
+/** FeaturePrimitiveTypeBase */
 enum FeaturePrimitiveTypeBase {
-    FT_VOID_BASE = 0,
-    FT_INT_BASE,
-    FT_INT8_BASE,
-    FT_UINT8_BASE,
-    FT_INT16_BASE,
-    FT_UINT16_BASE,
-    FT_INT32_BASE,
-    FT_UINT32_BASE,
-    FT_INT64_BASE,
-    FT_UINT64_BASE,
-    FT_FLOAT_BASE,
-    FT_DOUBLE_BASE,
-    FT_BOOLEAN_BASE,
-    FT_STRING_BASE,
-    FT_ANY_REF_BASE,
+    FT_VOID_BASE = 0, /**< 0 */
+    FT_INT_BASE, /**< 1 */
+    FT_INT8_BASE, /**< 2 */
+    FT_UINT8_BASE, /**< 3 */
+    FT_INT16_BASE, /**< 4 */
+    FT_UINT16_BASE, /**< 5 */
+    FT_INT32_BASE, /**< 6 */
+    FT_UINT32_BASE, /**< 7 */
+    FT_INT64_BASE, /**< 8 */
+    FT_UINT64_BASE, /**< 9 */
+    FT_FLOAT_BASE, /**< 10 */
+    FT_DOUBLE_BASE, /**< 11 */
+    FT_BOOLEAN_BASE, /**< 12 */
+    FT_STRING_BASE, /**< 13 */
+    FT_ANY_REF_BASE, /**< 14 */
 };
-//
+
+/** set FeaturePrimitiveType */
 #define FT_SET_PRIMITIVE_TYPE(base, flags) ((base << 2) | (flags))
 
+/** FeaturePrimitiveType */
 enum FeaturePrimitiveType {
-    FT_VOID = FT_SET_PRIMITIVE_TYPE(FT_VOID_BASE, TYPE_FLAGS_VALUE), // void defination
-    FT_INT = FT_SET_PRIMITIVE_TYPE(FT_INT_BASE, TYPE_FLAGS_VALUE),
-    FT_INT8 = FT_SET_PRIMITIVE_TYPE(FT_INT8_BASE, TYPE_FLAGS_VALUE),
-    FT_UINT8 = FT_SET_PRIMITIVE_TYPE(FT_UINT8_BASE, TYPE_FLAGS_VALUE),
-    FT_INT16 = FT_SET_PRIMITIVE_TYPE(FT_INT16_BASE, TYPE_FLAGS_VALUE),
-    FT_UINT16 = FT_SET_PRIMITIVE_TYPE(FT_UINT16_BASE, TYPE_FLAGS_VALUE),
-    FT_INT32 = FT_SET_PRIMITIVE_TYPE(FT_INT32_BASE, TYPE_FLAGS_VALUE),
-    FT_UINT32 = FT_SET_PRIMITIVE_TYPE(FT_UINT32_BASE, TYPE_FLAGS_VALUE),
-    FT_INT64 = FT_SET_PRIMITIVE_TYPE(FT_INT64_BASE, TYPE_FLAGS_VALUE),
-    FT_UINT64 = FT_SET_PRIMITIVE_TYPE(FT_UINT64_BASE, TYPE_FLAGS_VALUE),
-    FT_FLOAT = FT_SET_PRIMITIVE_TYPE(FT_FLOAT_BASE, TYPE_FLAGS_VALUE),
-    FT_DOUBLE = FT_SET_PRIMITIVE_TYPE(FT_DOUBLE_BASE, TYPE_FLAGS_VALUE),
-    FT_BOOLEAN = FT_SET_PRIMITIVE_TYPE(FT_BOOLEAN_BASE, TYPE_FLAGS_VALUE),
-    FT_STRING = FT_SET_PRIMITIVE_TYPE(FT_STRING_BASE, TYPE_FLAGS_POINTER),
-    FT_CHAR = FT_STRING,
-    FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER),
+    FT_VOID = FT_SET_PRIMITIVE_TYPE(FT_VOID_BASE, TYPE_FLAGS_VALUE), /**< 1: void defination */
+    FT_INT = FT_SET_PRIMITIVE_TYPE(FT_INT_BASE, TYPE_FLAGS_VALUE), /**< 5: int32_t defination */
+    FT_INT8 = FT_SET_PRIMITIVE_TYPE(FT_INT8_BASE, TYPE_FLAGS_VALUE), /**< 9: int8_t defination */
+    FT_UINT8 = FT_SET_PRIMITIVE_TYPE(FT_UINT8_BASE, TYPE_FLAGS_VALUE), /**< 13: uint8_t defination */
+    FT_INT16 = FT_SET_PRIMITIVE_TYPE(FT_INT16_BASE, TYPE_FLAGS_VALUE), /**< 17: int16_t defination */
+    FT_UINT16 = FT_SET_PRIMITIVE_TYPE(FT_UINT16_BASE, TYPE_FLAGS_VALUE), /**< 21: uint16_t defination */
+    FT_INT32 = FT_SET_PRIMITIVE_TYPE(FT_INT32_BASE, TYPE_FLAGS_VALUE), /**< 25: int32_t defination */
+    FT_UINT32 = FT_SET_PRIMITIVE_TYPE(FT_UINT32_BASE, TYPE_FLAGS_VALUE), /**< 29: uint32_t defination */
+    FT_INT64 = FT_SET_PRIMITIVE_TYPE(FT_INT64_BASE, TYPE_FLAGS_VALUE), /**< 33: int64_t defination */
+    FT_UINT64 = FT_SET_PRIMITIVE_TYPE(FT_UINT64_BASE, TYPE_FLAGS_VALUE), /**< 37: uint64_t defination */
+    FT_FLOAT = FT_SET_PRIMITIVE_TYPE(FT_FLOAT_BASE, TYPE_FLAGS_VALUE), /**< 41: float defination */
+    FT_DOUBLE = FT_SET_PRIMITIVE_TYPE(FT_DOUBLE_BASE, TYPE_FLAGS_VALUE), /**< 45: double defination */
+    FT_BOOLEAN = FT_SET_PRIMITIVE_TYPE(FT_BOOLEAN_BASE, TYPE_FLAGS_VALUE), /**< 49: bool defination */
+    FT_STRING = FT_SET_PRIMITIVE_TYPE(FT_STRING_BASE, TYPE_FLAGS_POINTER), /**< 54: const char* defination */
+    FT_CHAR = FT_STRING, /**< 54: const char* defination */
+    FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER), /**< 58: ft_value_t* defination */
 };
 
+/** Feature异常退出码 */
 typedef enum FeatureErrorCode {
-    FT_ERR_GENERAL = 200,
-    FT_ERR_ARGS = 202,
-    FT_ERR_TIMEOUT = 204,
-    FT_ERR_IOERROR = 300,
-    FT_ERR_CUSTOM_BEGIN = 400, // Future error codes can be added here
+    FT_ERR_GENERAL = 200, /**< 一般错误 */
+    FT_ERR_ARGS = 202, /**< 参数错误 */
+    FT_ERR_TIMEOUT = 204, /**< 超时 */
+    FT_ERR_IOERROR = 300, /**< IO错误 */
+    FT_ERR_CUSTOM_BEGIN = 400, /**< 自定义错误，从400开始拓展 */
 } FeatureErrorCode;
 
+/** union for AppendData */
 typedef union AppendData {
-    int32_t i32;
-    int64_t i64;
-    uint32_t u32;
-    uint64_t u64;
-    float f32;
-    double f64;
-    void* ptr;
-    const char* str;
+    int32_t i32; /**< 32位整数 */
+    int64_t i64; /**< 64位整数 */
+    uint32_t u32; /**< 32位无符号整数 */
+    uint64_t u64; /**< 64位无符号整数 */
+    float f32; /**< 32位浮点数 */
+    double f64; /**< 64位浮点数 */
+    void* ptr; /**< 指针 */
+    const char* str; /**< 字符串 */
 } AppendData;
 
-/**
- * @brief Feature Array struct defination
- *
- */
+/** Feature Array struct defination */
 typedef struct FtArray {
-    int32_t _size;
-    void* _element;
+    int32_t _size; /**< 当前数组实际size大小 */
+    void* _element; /**< 数组成员指针 */
 } FtArray;
 
-/**
- * @brief variadic parameters packet
- *
- */
+/** variadic parameters packet */
 typedef struct FtVariParams {
-    int32_t vari_count; // variadic parameter count
-    ft_value_t* vari_args; // variadic parameter pointer array
+    int32_t vari_count; /**< 参数数量 */
+    ft_value_t* vari_args; /**< 参数指针 */
 } FtVariParams;
 
 #ifdef __cplusplus
