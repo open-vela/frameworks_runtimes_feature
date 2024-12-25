@@ -747,7 +747,7 @@ class CPPRender(Render):
         return self.GenerateCppType(ret_node)
     return 'void'
 
-  def GenerateParamsStr(self, params):
+  def GenerateParamList(self, params):
     param_list = []
     param_count = len(params)
     for index, param in enumerate(params):
@@ -765,7 +765,10 @@ class CPPRender(Render):
       elif param_type == 'ellipse':
         param_str += f" vari_params"
       param_list.append(param_str)
-    return ", ".join(param_list)
+    return param_list
+
+  def GenerateParamsStr(self, params):
+    return ", ".join(self.GenerateParamList(params))
 
   def GenerateParamTypeList(self, params):
     type_list = []
