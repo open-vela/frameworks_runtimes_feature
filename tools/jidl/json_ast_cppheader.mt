@@ -34,7 +34,7 @@
   name = func['identifier']
   ret_type = render.GenerateReturnType(func['return_type'])
   if 'params' in func:
-    params = render.GenerateParamListData(func['params'])
+    params = render.GenerateParamList(func['params'])
   else:
     params = []
   has_promise = False
@@ -122,7 +122,7 @@ ${GenStructMemberGetSet(cpp_type, member_name, is_ref)}
        if len(params_type) > 0 and params_type[-1]['type'] == 'ellipse':
            has_ellipse = True
            params_type = params_type[:-1]
-       params = render.GenerateParamListData(params_type)
+       params = render.GenerateParamList(params_type)
        param_names = [p['name'] for p in params_type]
    if not params: params = []
    if not param_names : param_names = []

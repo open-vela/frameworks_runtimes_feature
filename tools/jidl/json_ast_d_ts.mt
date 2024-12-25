@@ -12,7 +12,7 @@
   params = ''
   param_names = ''
   if 'params' in func_node:
-    params = render.GenerateParamList(func_node["params"])
+    params = render.GenerateParamsStr(func_node["params"])
     param_names = render.GenerateParamNameList(func_node["params"])
   func_head = f"{identifier}({params})"
 
@@ -214,7 +214,7 @@ ${GenInterfaceClass(i_node)}\
   ret_type = render.GenerateTsType(ret_node)
   params = ''
   if 'params' in func_node:
-    params += render.GenerateParamList(func_node["params"])
+    params += render.GenerateParamsStr(func_node["params"])
 
   func_call = ''
   if ret_type != 'void':
