@@ -690,9 +690,10 @@ static void register_event_on_off_functions(feature_context_ref ctx, feature_val
     feature_free_value(ctx, off_func);
 }
 
-static int initialize_prototype(context_ref ctx, const FeatureDescription* description, FeaturePrototype* prototype, feature_value_t js_proto)
+static int init_prototype(context_ref ctx, FeaturePrototype* prototype, feature_value_t js_proto)
 {
-    FEATURE_CHECK(description != nullptr && prototype != nullptr, "");
+    FEATURE_CHECK(prototype != nullptr && prototype->description() != nullptr, "");
+    auto description = prototype->description();
     for (int i = 0; i < description->member_count; i++) {
         const Member& member = description->members[i];
         switch (member.type) {
@@ -754,6 +755,30 @@ static int initialize_prototype(context_ref ctx, const FeatureDescription* descr
             feature_free_atom((JSContext*)(ctx), event_name);
             // for on/off funcs
             prototype->setEventMember(member.name, &member);
+        } break;
+        }
+    }
+    return 0;
+}
+
+static int uninit_prototype(JSContext* ctx, const FeatureDescription* description, feature_value_t js_proto)
+{
+    FEATURE_CHECK(description != nullptr, "");
+    for (int i = 0; i < description->member_count; i++) {
+        const Member& member = description->members[i];
+        switch (member.type) {
+        case MEMBER_NULL: {
+            // not allowed
+            FEATURE_CHECK(false, "invalid member type!");
+        } break;
+        case MEMBER_METHOD:
+        case MEMBER_ACCESSOR:
+        case MEMBER_CONST:
+        case MEMBER_EVENT: {
+            // register different type
+            JSAtom name = JS_NewAtom(ctx, member.name);
+            JS_DeleteProperty(ctx, js_proto, name, JS_PROP_THROW);
+            JS_FreeAtom(ctx, name);
         } break;
         }
     }
@@ -831,7 +856,7 @@ bool FeatureManagerQjs::ensureJsPrototype(FeaturePrototypeQjs* prototype)
         return false;
     }
 
-    initialize_prototype(ctx, prototype->description(), prototype, js_proto);
+    init_prototype(ctx, prototype, js_proto);
     register_event_on_off_functions(ctx, js_proto);
     // TODO: initialize js_proto using description
     if (prototype->description()->native_callbacks && prototype->description()->native_callbacks->onCreate) {
@@ -941,6 +966,7 @@ void FeatureManagerQjs::uninit()
     auto free_prototype = [js_ctx](FeaturePrototypeQjs* prototype) {
         auto js_proto_ptr = FT_VAL_GET_JS_VAL_PTR(prototype->ft_proto());
         if (!feature_is_undefined(*js_proto_ptr)) {
+            uninit_prototype(js_ctx, prototype->description(), *js_proto_ptr);
             feature_free_value(js_ctx, *js_proto_ptr);
             *js_proto_ptr = FEATURE_VALUE_UNDEFINED;
         }
