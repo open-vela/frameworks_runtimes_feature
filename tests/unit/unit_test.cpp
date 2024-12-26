@@ -85,6 +85,25 @@ protected:
     void TearDown() override
     {
         FeatureUnsetUVLoop(g_manager_qjs);
+        int closed = 0;
+        for (int i = 0; i < 200; i++) {
+            if (uv_loop_close(loop) == 0) {
+                closed = 1;
+                break;
+            }
+            uv_run(loop, UV_RUN_NOWAIT);
+        }
+
+        if (!closed) {
+            FILE* fp = fopen("/dev/log", "wb");
+            fp = fp ? fp : stderr;
+            uv_print_all_handles(loop, fp);
+            if (fp != stderr) {
+                fclose(fp);
+            }
+            // assert directly if we can't stop uv loop successfuly.
+            assert(0);
+        }
         JS_FreeValue(js_env.ctx, feature_obj);
         FeatureUninit(g_manager_qjs);
         FeatureFreeManager(g_manager_qjs);
@@ -114,6 +133,7 @@ TEST_F(FeatureFrameworkTest, FeatureDupValue1)
     FeatureDupValue(str);
     auto header = (FTObjHeader*)(str - sizeof(FTObjHeader));
     EXPECT_EQ(header->ref_count, (int32_t)2);
+    FeatureFreeValue(str);
     FeatureFreeValue(str);
 }
 
