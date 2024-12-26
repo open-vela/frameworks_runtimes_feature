@@ -16,7 +16,7 @@
 
 /**
  * @file feature_types.h
- * @brief 该文件中定义了一系列featrue框架及feature开发者用到的数据类型
+ * @brief This file defines a series of data types used by the feature framework and feature developers.
  */
 #ifndef FEATURE_TYPES_H
 #define FEATURE_TYPES_H
@@ -58,44 +58,47 @@ typedef void* FeatureInterfaceHandle; /**< feature interface handle. */
 typedef uintptr_t FeatureType; /**< feature type flag */
 typedef void (*NativeFunc)(void); /**< native func ptr */
 
-/** 异步任务模式枚举 */
+/** FeatureTaskMode */
 enum FeatureTaskMode {
-    FEATURE_TASK_MODE_FREE = 0, /**< 异步任务已结束 */
-    FEATURE_TASK_MODE_NORMAL = 1, /**< 异步任务正常 */
+    FEATURE_TASK_MODE_FREE = 0, /**< feature asynchronous task has ended */
+    FEATURE_TASK_MODE_NORMAL = 1, /**< feature asynchronous task normal */
 };
 
-/** FeaturePromiseType枚举 */
+/**
+ * @brief FeaturePromiseType
+ * @note now feature framework can compatible with callbacks
+ */
 typedef enum FeaturePromiseType {
-    FEATURE_PROMISE_TYPE_INVALID = -1, /**< 非法类型 */
-    FEATURE_PROMISE_TYPE_PROMISE = 0, /**< 表示Promise */
-    FEATURE_PROMISE_TYPE_CALLBACKS = 1, /**< 表示Callback */
+    FEATURE_PROMISE_TYPE_INVALID = -1, /**< void promise type */
+    FEATURE_PROMISE_TYPE_PROMISE = 0, /**< Promise */
+    FEATURE_PROMISE_TYPE_CALLBACKS = 1, /**< Callback */
 } FeaturePromiseType;
 
-/** feature类型标志枚举，标记是否需要free */
+/** feature TypeFlag marks which needs free */
 enum TypeFlags {
-    TYPE_FLAGS_VALUE = 1, /**< 值类型，不需要free */
-    TYPE_FLAGS_POINTER, /**< 指针类型, 需要malloc&free */
-    TYPE_FLAGS_RAWPOINTER = TYPE_FLAGS_POINTER | 1, /**< raw pointer, 不需要free */
+    TYPE_FLAGS_VALUE = 1, /**< value，no need free */
+    TYPE_FLAGS_POINTER, /**< ptr, need malloc&free */
+    TYPE_FLAGS_RAWPOINTER = TYPE_FLAGS_POINTER | 1, /**< raw pointer, no free */
     TYPE_FLAGS_UNMANAGED_POINTER = TYPE_FLAGS_RAWPOINTER, /**< such as TYPE_FLAGS_RAWPOINTER */
 };
 
-/** 异步任务回调 */
+/** FeatureTaskCallback */
 typedef void (*FeatureTaskCallback)(int status, void* data);
 
-/** 事件状态枚举 */
+/** FeatureEventStatus */
 typedef enum FeatureEventStatus {
-    FEATURE_EVENT_ADDED, /**< 事件添加 */
-    FEATURE_EVENT_REMOVED, /**< 事件移出 */
+    FEATURE_EVENT_ADDED, /**< add event */
+    FEATURE_EVENT_REMOVED, /**< remove event */
 } FeatureEventStatus;
 
-/** 事件监听函数指针 */
+/** FeatureEventChangeListener ptr */
 typedef void (*FeatureEventChangeListener)(FeatureInstanceHandle data, FtEventId eid, FeatureEventStatus status);
 
-/** 虚表结构体，用于创建feature interface */
+/** VTable: used for create feature interface */
 typedef struct VTable {
-    int size; /**< 虚表成员个数 */
-    NativeFunc finalizer; /**< 接口析构函数指针 */
-    const NativeFunc* members; /**< 虚表成员数组 */
+    int size; /**< VTable member counts */
+    NativeFunc finalizer; /**< finalizer func */
+    const NativeFunc* members; /**< VTable member list */
 } VTable;
 
 /** FeaturePrimitiveTypeBase */
@@ -140,37 +143,37 @@ enum FeaturePrimitiveType {
     FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER), /**< 58: ft_value_t* defination */
 };
 
-/** Feature异常退出码 */
+/** FeatureErrorCode */
 typedef enum FeatureErrorCode {
-    FT_ERR_GENERAL = 200, /**< 一般错误 */
-    FT_ERR_ARGS = 202, /**< 参数错误 */
-    FT_ERR_TIMEOUT = 204, /**< 超时 */
-    FT_ERR_IOERROR = 300, /**< IO错误 */
-    FT_ERR_CUSTOM_BEGIN = 400, /**< 自定义错误，从400开始拓展 */
+    FT_ERR_GENERAL = 200, /**< general errors */
+    FT_ERR_ARGS = 202, /**< args errors */
+    FT_ERR_TIMEOUT = 204, /**< timeout */
+    FT_ERR_IOERROR = 300, /**< IO error */
+    FT_ERR_CUSTOM_BEGIN = 400, /**< custom errors, starting from 400 */
 } FeatureErrorCode;
 
 /** union for AppendData */
 typedef union AppendData {
-    int32_t i32; /**< 32位整数 */
-    int64_t i64; /**< 64位整数 */
-    uint32_t u32; /**< 32位无符号整数 */
-    uint64_t u64; /**< 64位无符号整数 */
-    float f32; /**< 32位浮点数 */
-    double f64; /**< 64位浮点数 */
-    void* ptr; /**< 指针 */
-    const char* str; /**< 字符串 */
+    int32_t i32; /**< 32-bit integer */
+    int64_t i64; /**< 64-bit integer */
+    uint32_t u32; /**< 32-bit unsigned integer */
+    uint64_t u64; /**< 64-bit unsigned integer */
+    float f32; /**< float */
+    double f64; /**< double */
+    void* ptr; /**< void*: convertible to any type */
+    const char* str; /**< string */
 } AppendData;
 
 /** Feature Array struct defination */
 typedef struct FtArray {
-    int32_t _size; /**< 当前数组实际size大小 */
-    void* _element; /**< 数组成员指针 */
+    int32_t _size; /**< actual size of the current array */
+    void* _element; /**< element ptr */
 } FtArray;
 
 /** variadic parameters packet */
 typedef struct FtVariParams {
-    int32_t vari_count; /**< 参数数量 */
-    ft_value_t* vari_args; /**< 参数指针 */
+    int32_t vari_count; /**< params counts */
+    ft_value_t* vari_args; /**< params ptr */
 } FtVariParams;
 
 #ifdef __cplusplus

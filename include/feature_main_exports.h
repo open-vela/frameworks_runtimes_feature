@@ -16,7 +16,7 @@
 
 /**
  * @file feature_exports.h
- * @brief 这里定义了一系列feature框架相关接口，帮助feature管理者管理feature
+ * @brief A series of feature framework related interfaces to help feature managers manage features
  */
 #ifndef FEATURE_MAIN_EXPORTS_H
 #define FEATURE_MAIN_EXPORTS_H
@@ -29,35 +29,35 @@ extern "C" {
 #include "uv.h"
 #include <stdbool.h>
 
-/** 参数错误信息 */
+/** args error message */
 typedef struct {
-    int argc; /**< 参数个数 */
-    void* argv; /**< 参数列表 */
-    int error_code; /**< 错误码 */
-    const char* error_msg; /**< 错误信息 */
+    int argc; /**< parameters count */
+    void* argv; /**< parameters list */
+    int error_code; /**< error code */
+    const char* error_msg; /**< error message */
 } ArgsErrorInfo;
 
-/** 参数错误回调函数指针 */
+/** ArgsErrorCb ptr */
 typedef bool (*ArgsErrorCb)(void* data, ArgsErrorInfo* args_info);
 
-/** feature管理类型 */
+/** FeatureManagerType */
 typedef enum FeatureManagerType {
     FEATURE_MANAGER_JS, /**< js feature manager */
     FEATURE_MANAGER_WAMR, /**< wamr feature manager */
 } FeatureManagerType;
 
-/** feature原始上下文句柄 */
+/** FeatureRawContextHandle */
 typedef void* FeatureRawContextHandle;
 
 /** ReleaseRawContextCb ptr */
 typedef void (*ReleaseRawContextCb)(FeatureRawContextHandle);
 
-/** 一个结构体声明，用来描述feature管理者创建时需要的信息 */
+/** A structure declaration that describes the information needed when creating a feature manager. */
 typedef struct FeatureManagerCreateInfo {
-    FeatureRawContextHandle raw_ctx; /**< 原始feature上下文句柄 */
-    ReleaseRawContextCb release_cb; /**< 释放原始feature上下文句柄的回调函数 */
-    FeatureManagerType manager_type; /**< feature管理类型 */
-    const char* package_name; /**< 包名 */
+    FeatureRawContextHandle raw_ctx; /**< raw context handle */
+    ReleaseRawContextCb release_cb; /**< release raw context cb */
+    FeatureManagerType manager_type; /**< JS or Warm */
+    const char* package_name; /**< package name */
 } FeatureManagerCreateInfo;
 
 /**

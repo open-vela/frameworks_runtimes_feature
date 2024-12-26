@@ -16,7 +16,7 @@
 
 /**
  * @file feature_exports.h
- * @brief 这里定义了一系列feature框架相关接口，帮助开发者操作feature完成其功能
+ * @brief A series of feature framework related interfaces to help developers operate features to complete their abilities.
  */
 #ifndef FEATURE_EXPORTS_H
 #define FEATURE_EXPORTS_H

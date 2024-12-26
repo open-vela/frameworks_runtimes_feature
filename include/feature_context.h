@@ -16,8 +16,9 @@
 
 /**
  * @file feature_context.h
- * @brief Feature开发者无法直接使用JSValue or Wasm等前端对象, \n
- * 该文件定义了ft_value_t和一系列通用的接口函数帮助开发者处理这些值，而无须关心前端对象的差异。
+ * @brief Feature developers cannot directly use front-end objects such as JSValue or Wasm. \n
+ * This file defines ft_value_t and a series of common interface functions \n
+ * to help developers process these values ​​without having to worry about the differences in front-end objects.。
  */
 #ifndef __FEATURE_CONTEXT_H__
 #define __FEATURE_CONTEXT_H__
@@ -30,21 +31,21 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 
-/** ft_value_t类型枚举 */
+/** ft_value_t type */
 typedef enum ft_type {
-    FT_TYPE_NULL = -2, /**< 空值 */
-    FT_TYPE_UNDEF = -1, /**< 未定义 */
-    FT_TYPE_NONE = 0, /**< 未识别类型 */
-    FT_TYPE_NUMBER, /**< 数字 */
-    FT_TYPE_BOOL, /**< bool值 */
-    FT_TYPE_STRING, /**< 字符串 */
-    FT_TYPE_ARRAY, /**< 数组 */
+    FT_TYPE_NULL = -2, /**< null */
+    FT_TYPE_UNDEF = -1, /**< undefined */
+    FT_TYPE_NONE = 0, /**< none */
+    FT_TYPE_NUMBER, /**< number */
+    FT_TYPE_BOOL, /**< bool */
+    FT_TYPE_STRING, /**< string */
+    FT_TYPE_ARRAY, /**< array */
     FT_TYPE_BUFFER, /**< buffer */
-    FT_TYPE_TYPED_BUFFER, /**< 带类型buffer */
+    FT_TYPE_TYPED_BUFFER, /**< typed_buffer */
     FT_TYPE_OBJECT /**< obj */
 } ft_type;
 
-/** ft_array数组类型枚举 */
+/** ft_array type */
 typedef enum FtTypedArrayType {
     FT_Int8Array = 0, /**< 0 */
     FT_Uint8Array, /**< 1 */
@@ -57,90 +58,101 @@ typedef enum FtTypedArrayType {
 } FtTypedArrayType;
 
 /**
- * @brief 服务于feature运行时上下文的结构体定义
+ * @brief a base struct for feature framwork
  *
- * @note 虽然Feature框架提供了一组API和工具, 帮助开发者隔离JS环境 \n
- * 但是毕竟有一些场景下, 需要传递非常复杂的数据结构, 而这些结构很难映射到具体的C/C++结构体或者对象上. \n
- * 为了解决该问题, 框架对js对象进行包装并定义为ft_value_t, 并且开放一些接口, 方便开发者使用.
+ * @note Although the Feature framework provides a set of APIs and tools to help developers isolate the JS environment \n
+ * in some scenarios, very complex data structures need to be passed, \n
+ * and these structures are difficult to map to specific C/C++ structures or objects. \n
+ * To solve this problem, the framework packages the js object and defines it as ft_value_t, and opens some interfaces for developers to use.
  */
 typedef struct ft_value_t {
 #if INTPTR_MAX >= INT64_MAX
-    uint64_t val[2]; /**< 真实值 */
+    uint64_t val[2]; /**< value */
 #else
-    uint64_t val; /**< 真实值 */
+    uint64_t val; /**< value */
 #endif
 } ft_value_t;
 
+/** pointer of ft_value_t */
 typedef ft_value_t* ft_value_ref;
+
+/** const ft_value_t */
+
 typedef const ft_value_t ft_value_const;
 
+/** a struct representing the context */
 struct FeatureContext;
 
 /**
- * @brief 是一个上下文对象，用于保存和管理特定数据。
+ * @brief A context object used to store and manage user data
  *
- * @note ft_value_t需要一个伴生对象ft_context_ref（*FeatureContext）,该对象代表着一个上下文，是ft_value_t必须的
- * @image html ft_context.svg JS层和feature框架接口关系 width=900px
+ * @note ft_value_t requires a companion object: ft_context_ref(*FeatureContext) \n
+ * This object represents a context and is required by ft_value_t.
+ * @image html ft_context.svg JS&&FeatureFramework width=900px
  */
 typedef struct FeatureContext* ft_context_ref;
 
 /**
- * @brief 从FeatureContext中获取数据
+ * @brief get data from FeatureContext
  *
  * @param[in] ft_ctx current feature context
- * @return 用户数据
- * @note 该函数开发者并未用到，可通过`FeatureGetObjectData()`获取用户数据
+ * @return userdata
  */
 void* ft_context_get_data(ft_context_ref ft_ctx);
 
 /**
- * @brief 获取ft_value_t类型
+ * @brief get type from a ft_value_t
  *
  * @param[in] ft_ctx current feature context
- * @param[in] ft_val a ft_value_t argv
- * @return 该ft_value_t对象类型 @see ft_type
- * @note 开发者使用object对象时，可以通过该接口拿到更确切的参数类型
+ * @param[in] ft_val a ft_value_t arguments
+ * @return the type of the ft_value_t @see ft_type
+ * @note this func can be used to sure the type of the ft_value_t
  */
 ft_type ft_get_type(ft_context_ref ft_ctx, ft_value_t ft_val);
 
-// feature type creation from native types
+/** convert int to ft_value_t */
 ft_value_t ft_from_int(ft_context_ref ft_ctx, int32_t val);
+/** convert uint32_t to ft_value_t */
 ft_value_t ft_from_uint(ft_context_ref ft_ctx, uint32_t val);
+/** convert int64_t to ft_value_t */
 ft_value_t ft_from_int64(ft_context_ref ft_ctx, int64_t val);
+/** convert uint64_t to ft_value_t */
 ft_value_t ft_from_uint64(ft_context_ref ft_ctx, uint64_t val);
+/** convert double to ft_value_t */
 ft_value_t ft_from_double(ft_context_ref ft_ctx, double val);
+/** convert bool to ft_value_t */
 ft_value_t ft_from_bool(ft_context_ref ft_ctx, bool val);
 
 /**
- * @brief 将native字符转换成ft_value_t
+ * @brief convert string to ft_value_t
  *
  * @param[in] ft_ctx current feature context
- * @param[in] val a const char* argv
+ * @param[in] val the string argment
  * @return ft_value_t
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
  */
 ft_value_t ft_from_string(ft_context_ref ft_ctx, const char* val);
 
 /**
- * @brief 将native buffer转换成ft_value_t
+ * @brief convert native buffer to ft_value_t
  *
  * @param[in] ft_ctx current feature context
  * @param[in] buff a uint8_t* buffer
  * @param[in] size the size of the buffer
  * @return ft_value_t
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
  */
 ft_value_t ft_from_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
 
 /**
- * @brief 将native buffer转换成指定类型的array ft_value_t
+ * @brief convert typed_array_buffer to ft_value_t
  *
  * @param[in] ft_ctx current feature context
  * @param[in] buff a uint8_t* buffer
  * @param[in] size the size of the buffer
- * @param[in] type 指定buffer类型 @see FtTypedArrayType
+ * @param[in] type buffer type @see FtTypedArrayType
  * @return ft_value_t
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
  * @code
  * // get buff from js_ctx
  * uint8_t* buff = ft_to_buffer(ft_ctx, size, data);
@@ -151,12 +163,19 @@ ft_value_t ft_from_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size);
  */
 ft_value_t ft_from_typed_buffer(ft_context_ref ft_ctx, uint8_t* buff, uint32_t size, FtTypedArrayType type);
 
+/** convert int_array to ft_value_t */
 ft_value_t ft_from_int_array(ft_context_ref ft_ctx, int32_t* val, uint32_t size);
+/** convert uint_array to ft_value_t */
 ft_value_t ft_from_uint_array(ft_context_ref ft_ctx, uint32_t* val, uint32_t size);
+/** convert int64_array to ft_value_t */
 ft_value_t ft_from_int64_array(ft_context_ref ft_ctx, int64_t* val, uint32_t size);
+/** convert uint64_array to ft_value_t */
 ft_value_t ft_from_uint64_array(ft_context_ref ft_ctx, uint64_t* val, uint32_t size);
+/** convert bool_array to ft_value_t */
 ft_value_t ft_from_bool_array(ft_context_ref ft_ctx, bool* val, uint32_t size);
+/** convert double_array to ft_value_t */
 ft_value_t ft_from_double_array(ft_context_ref ft_ctx, double* val, uint32_t size);
+/** convert string_array to ft_value_t */
 ft_value_t ft_from_string_array(ft_context_ref ft_ctx, const char** val, uint32_t size);
 
 /**
@@ -167,17 +186,24 @@ ft_value_t ft_from_string_array(ft_context_ref ft_ctx, const char** val, uint32_
  * @param[in] buf_len size of the json string
  * @param[in] filename the filename of the json string
  * @return ft_value_t
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
  */
 ft_value_t ft_parse_json(ft_context_ref ft_ctx, const char* buf, size_t buf_len, const char* filename);
 
-// feature type to native types
+/** convert ft_value_t to int32_t */
 bool ft_to_int(ft_context_ref ft_ctx, ft_value_t f_val, int32_t* val);
+/** convert ft_value_t to uint32_t */
 bool ft_to_uint(ft_context_ref ft_ctx, ft_value_t f_val, uint32_t* val);
+/** convert ft_value_t to int64_t */
 bool ft_to_int64(ft_context_ref ft_ctx, ft_value_t f_val, int64_t* val);
+/** convert ft_value_t to uint64_t */
 bool ft_to_uint64(ft_context_ref ft_ctx, ft_value_t f_val, uint64_t* val);
+/** convert ft_value_t to double */
 bool ft_to_double(ft_context_ref ft_ctx, ft_value_t f_val, double* val);
+/** convert ft_value_t to bool */
 bool ft_to_bool(ft_context_ref ft_ctx, ft_value_t ft_val, bool* val);
+/** convert ft_value_t to buffer */
+uint8_t* ft_to_buffer(ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val);
 
 /**
  * @brief convert ft_value_t to string
@@ -185,45 +211,51 @@ bool ft_to_bool(ft_context_ref ft_ctx, ft_value_t ft_val, bool* val);
  * @param[in] ft_ctx current feature context
  * @param[in] f_val a ft_value_t argument
  * @return const char*
- * @note `ft_to_string()`得到的字符串，需要调用`ft_free_string()`来删除
+ * @note The string obtained by `ft_to_string()` needs to be deleted by calling `ft_free_string()`
  */
 const char* ft_to_string(ft_context_ref ft_ctx, ft_value_t f_val);
 
 /** convert ft_value_t to buffer */
 uint8_t* ft_to_buffer(ft_context_ref ft_ctx, size_t* p_size, ft_value_t f_val);
 
-// array operations
+/**
+ * @brief get size of the array
+ *
+ * @param[in] ft_ctx current feature context
+ * @param[in] array a ft_value_t typed array
+ * @return size of the array
+ */
 uint32_t ft_array_size(ft_context_ref ft_ctx, const ft_value_t array);
 
 /**
- * @brief 通过下标查找数组中一个元素
+ * @brief find the element of the array by index
  *
  * @param[in] ft_ctx current feature context
  * @param[in] array a ft_value_t typed array
  * @param[in] idx the index of the element
- * @return 数组下标对应位置元素
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
+ * @return The array index corresponds to the position element
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
  */
 ft_value_t ft_array_at(ft_context_ref ft_ctx, const ft_value_t array, uint32_t idx);
 
 /**
- * @brief 创建一个新的ft_object对象,可以自定义内部数据
+ * @brief create a new ft_object, developers can customize internal data
  *
  * @param[in] ft_ctx current feature context
  * @return ft_value_t
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
- * @attention ft_object支持挂载子属性，释放内存时仅需释放根节点对应的ft_object
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
+ * @attention ft_object supports mounting sub-attributes. When releasing memory, only the ft_object corresponding to the root node needs to be released.
  */
 ft_value_t ft_new_object(ft_context_ref ft_ctx);
 
 /**
- * @brief 从ft_val中拿到属性名对应的值
+ * @brief get property value of the ft_val
  *
  * @param[in] ft_ctx current feature context
  * @param[in] ft_val a ft_value_t object
- * @param[in] prop 属性名称
- * @return 与属性名绑定的值
- * @note 开发者需要注意：通过该接口返回的ft_value_t需要用`ft_free_value()`释放内存
+ * @param[in] prop prop name
+ * @return prop value
+ * @note Developers need to note: the ft_value_t returned by this interface needs to be freed using `ft_free_value()`
  */
 ft_value_t ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t ft_val, const char* prop);
 
@@ -232,10 +264,10 @@ ft_value_t ft_obj_get_property(ft_context_ref ft_ctx, ft_value_t ft_val, const c
  *
  * @param[in] ft_ctx current feature context
  * @param[in] obj a ft_value_t object
- * @param[in] prop 属性名称
- * @param[in] val 属性值
- * @return true 设置成功
- * @return false 设置失败
+ * @param[in] prop prop name
+ * @param[in] val value
+ * @return true set success
+ * @return false set failed
  */
 bool ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t obj, const char* prop, ft_value_t val);
 
@@ -244,17 +276,17 @@ bool ft_obj_set_property(ft_context_ref ft_ctx, ft_value_t obj, const char* prop
  *
  * @param[in] ft_ctx current feature context
  * @param[in] ft_val a ft_value_t object
- * @note 如果不能正确释放ft_value_t对象，就可能导致内存泄漏。
- * @attention 调用`ft_free_value()`是有要求的，不是所有的场合都需要free \n
- * 下列场合不需要free: \n
- * (1) 当ft_value_t作为参数传递给feature实现wrap函数时 \n
- * (2) 当创建的ft_value_t对象需要返回给前端的时候 \n
- * 下列场合需要free: \n
- * (1) 当调用ft_from_xxx系列函数，`ft_new_object()`创建的对象 \n
- * (2) `ft_array_at()`返回的对象 \n
- * (3) `ft_obj_get_property()`获得的对象 \n
- * (4) `ft_parse_json()`获得的对象 \n
- * @warning `ft_to_string()`得到的字符串，需要调用`ft_free_string()`来删除
+ * @note if ft_value_t objects are not released correctly, memory leaks may occur.
+ * @attention Calling `ft_free_value()` is required, not all situations require free \n
+ * not need free: \n
+ * (1) When ft_value_t is passed as a parameter to the feature implementation wrap function \n
+ * (2) When the created ft_value_t object needs to be returned to the front end \n
+ * need free: \n
+ * (1) When calling the ft_from_xxx series of functions and the object created by `ft_new_object()` \n
+ * (2) The object returned by `ft_array_at()` \n
+ * (3) Object obtained by `ft_obj_get_property()` \n
+ * (4) Object obtained from `ft_parse_json()` \n
+ * @warning The string obtained by `ft_to_string()` needs to be deleted by calling `ft_free_string()`
  */
 void ft_free_value(ft_context_ref ft_ctx, ft_value_t ft_val);
 
@@ -263,8 +295,8 @@ void ft_free_value(ft_context_ref ft_ctx, ft_value_t ft_val);
  *
  * @param[in] ft_ctx current feature context
  * @param[in] str a string
- * @attention `ft_to_string()` 这两个函数必须成对出现 \n
- * feature框架不保证`ft_to_string()`获取的对象长期有效，开发者应该及时copy字符串的值
+ * @attention The feature framework does not guarantee that the object obtained by `ft_to_string()` is valid for a long time. \n
+ * Developers should copy the string value in time.
  */
 void ft_free_string(ft_context_ref ft_ctx, const char* str);
 ft_value_t ft_undefined(ft_context_ref ft_ctx);
