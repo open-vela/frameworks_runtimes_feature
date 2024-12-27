@@ -25,19 +25,10 @@ struct getLocationRet {
     object accuracyInfo
 }
 
-callback getLocation_cb(getLocationRet ret)
-callback geolocation_fail_cb(string data, int code)
-callback geolocation_complete_cb()
-
-struct LocationParam {
+struct getParam {
     int timeout = 30000
-    callback getLocation_cb success
-    callback geolocation_fail_cb fail = null
-    callback geolocation_complete_cb complete = null
-
 }
-void getLocation(LocationParam param)
-
+promise<getLocationRet> getLocation(getParam param)
 
 struct subscribeRet {
     double longitude
@@ -48,6 +39,7 @@ struct subscribeRet {
 }
 
 callback subscribe_cb(subscribeRet ret)
+callback geolocation_fail_cb(string data, int code)
 struct subscribeParam {
     callback subscribe_cb callback
     callback geolocation_fail_cb fail = null
