@@ -295,7 +295,7 @@ void system_storage_wrap_get(FeatureInstanceHandle feature, AppendData data,
 
     if ((info->key == NULL) || strcmp(info->key, "") == 0) {
         FEATURE_LOG_ERROR("[STORAGE_GET]  key is empty");
-        return finish_callback(0, feature, info->success, info->fail,
+        return finish_callback(-1, feature, info->success, info->fail,
             info->complete, info->_default, handle);
     }
 
