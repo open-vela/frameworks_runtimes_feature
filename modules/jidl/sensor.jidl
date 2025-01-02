@@ -124,7 +124,7 @@ struct subscribeParam{
     boolean reserved = false
     string interval = "low"
     callback Subscribe_cb callback
-    callback fail_cb fail
+    callback fail_cb fail = null
 }
 int subscribe(subscribeParam param)
 
@@ -142,8 +142,8 @@ callback sensor_complete_cb()
 struct getRecentDataParam{
     int type
     callback Success_cb success
-    callback fail_cb fail
-    callback sensor_complete_cb complete
+    callback fail_cb fail = null
+    callback sensor_complete_cb complete = null
 }
 void getRecentData(getRecentDataParam param)
 
