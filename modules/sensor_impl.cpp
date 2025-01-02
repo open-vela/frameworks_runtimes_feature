@@ -271,7 +271,7 @@ static void unsubscribe(FeatureInstanceHandle feature, int magic, bool detach)
             goto exit;
         }
 
-        ret = uv_topic_close(&event->topic);
+        ret = uv_topic_close(&event->topic, NULL);
         if (ret < 0) {
             if (detach) {
                 event->meta.instance = nullptr;
@@ -549,6 +549,19 @@ static sensor_magic_t get_sensor_magic(int type)
     return SENSOR_MAGIC_NUM;
 }
 
+static void sensor_topic_close_cb(uv_handle_t* handle)
+{
+    sensor_event_t* event = container_of(handle, sensor_event_t, topic);
+    sensorMulti_user_t* user = container_of(event, sensorMulti_user_t, event);
+    FeatureInstanceHandle feature = user->event.meta.instance;
+    if (user->event.meta.complete > 0) {
+        INVOKE_SUCCESS_CB(feature, user->event.meta.complete, "get recent data complete");
+        FeatureRemoveCallback(feature, user->event.meta.complete);
+    }
+
+    free(user);
+}
+
 static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
 {
     int ret;
@@ -655,18 +668,14 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
         ret = uv_topic_unsubscribe(topic);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe fail", file_tag, __FUNCTION__);
-            goto next;
         }
-        ret = uv_topic_close(topic);
+
+        ret = uv_topic_close(topic, sensor_topic_close_cb);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
         }
-    next:
+
         FeatureInstanceHandle feature = user->event.meta.instance;
-        if (user->event.meta.complete) {
-            INVOKE_SUCCESS_CB(feature, user->event.meta.complete, "get recent data complete");
-        }
-        FeatureRemoveCallback(feature, user->event.meta.complete);
         REMOVE_ALL_CALLBACK(user->event.meta.callback, user->event.meta.fail);
     }
 }
@@ -680,16 +689,18 @@ static void multi_unsubscribe(sensorMulti_event_t* multi_event, FtInt type, bool
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe failed,ret=%d\n", file_tag, __FUNCTION__,
                 ret);
-            goto next;
         }
 
-        ret = uv_topic_close(&it->second->event.topic);
+        ret = uv_topic_close(&it->second->event.topic, sensor_topic_close_cb);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() uv_topic_close failed,ret=%d\n", file_tag, __FUNCTION__,
                 ret);
         }
-    next:
-        FeatureRemoveCallback(it->second->event.meta.instance, it->second->event.meta.callback);
+
+        if (!detach) {
+            FeatureInstanceHandle feature = it->second->event.meta.instance;
+            REMOVE_ALL_CALLBACK(it->second->event.meta.callback, it->second->event.meta.fail);
+        }
     }
 
     if (!detach) {
@@ -877,8 +888,9 @@ FtBool system_sensor_wrap_checkAvailable(FeatureInstanceHandle feature, union Ap
     sensor_magic_t magic = get_sensor_magic(type);
     if (magic != SENSOR_MAGIC_NUM) {
         orb_id_t meta = sensor_orb_table[magic].meta;
-        return !!orb_exists(meta, 0);
+        return !orb_exists(meta, 0);
     }
+
     return false;
 }
 
