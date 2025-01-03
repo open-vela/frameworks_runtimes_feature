@@ -394,6 +394,11 @@ if(CONFIG_FEATURE_FRAMEWORK)
     set(AJS_CALL "${AJS_CALL}\n        return false\;")
     set(AJS_REGISTRY_CONTENT "${AJS_REGISTRY_CONTENT}\n${AJS_CALL}")
   endforeach()
+  foreach(FEATURE_ITEM ${CFEATURELIST})
+    set(AJS_CALL "    if (!jse_${FEATURE_ITEM}_initFeature(handle))")
+    set(AJS_CALL "${AJS_CALL}\n        return false\;")
+    set(AJS_REGISTRY_CONTENT "${AJS_REGISTRY_CONTENT}\n${AJS_CALL}")
+  endforeach()
   set(AJS_REGISTRY_CONTENT "${AJS_REGISTRY_CONTENT}\n    return true\;\n\}")
 
   file(WRITE ${BINARY_SRC_DIR}/ajs_features_registry.cpp
