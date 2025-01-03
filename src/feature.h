@@ -103,6 +103,11 @@ static inline bool feature_to_boolean(context_ref ctx, bool* pres, feature_value
     return false;
 }
 
+static inline uint8_t* feature_to_arraybuffer(context_ref ctx, size_t* psize, feature_value_t obj)
+{
+    return JS_GetArrayBuffer(static_cast<JSContext*>(ctx), psize, obj);
+}
+
 // free value
 #define feature_free_value(ctx, value) JS_FreeValue(static_cast<JSContext*>(ctx), value)
 #define feature_free_cstring(ctx, val) JS_FreeCString(static_cast<JSContext*>(ctx), val)
