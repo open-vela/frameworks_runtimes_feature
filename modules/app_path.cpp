@@ -27,10 +27,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef __NuttX__
-#define ABS_PATH_PREFIX "/data/quickapp"
+#ifdef CONFIG_HAP_APP_PATH
+#define ABS_PATH_PREFIX CONFIG_HAP_APP_PATH
 #else
-#define ABS_PATH_PREFIX "/quickapp"
+#define ABS_PATH_PREFIX "/data/quickapp"
 #endif
 
 #define APP_PATH_PREFIX "internal://"
