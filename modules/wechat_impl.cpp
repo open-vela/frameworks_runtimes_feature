@@ -22,6 +22,12 @@
 #include <unistd.h>
 
 static const char* file_tag = "[jidl_feature] wechat_impl";
+#define COPYSTR(dst, src)                                             \
+    do {                                                              \
+        char* tmp = (char*)FeatureMalloc(strlen(src) + 1, FT_STRING); \
+        strcpy(tmp, src);                                             \
+        dst = tmp;                                                    \
+    } while (0)
 
 struct WechatTask {
     char* resp_body;
@@ -129,8 +135,9 @@ static void async_js_event_callback(uv_async_queue_t* async, void* data)
         return;
     }
     service_wechat_eventData* event_data = service_wechatMalloceventData();
-    event_data->event = wechat_event->event;
-    event_data->event_body = wechat_event->event_body;
+
+    COPYSTR(event_data->event, wechat_event->event);
+    COPYSTR(event_data->event_body, wechat_event->event_body);
 
     FeatureInvokeCallback(wechat_handle->feature, wechat_handle->event_cb, event_data);
     FEATURE_LOG_INFO("[wechat] OnJsEvent exit");
@@ -164,7 +171,8 @@ static void async_js_task_callback(uv_async_queue_t* async, void* data)
     service_wechat_taskData* task_data = service_wechatMalloctaskData();
     task_data->task_id = wechat_task->task_id;
     task_data->error_code = wechat_task->error_code;
-    task_data->resp_body = wechat_task->resp_body;
+    COPYSTR(task_data->resp_body, wechat_task->resp_body);
+
     FEATURE_LOG_INFO("[wechat] task_callback entry:%p, task_id:%d, error_code:%d, resp_body:%s",
         wechat_task, (uint32_t)wechat_task->task_id, (uint32_t)wechat_task->error_code, wechat_task->resp_body);
 
@@ -177,6 +185,11 @@ static void async_js_task_callback(uv_async_queue_t* async, void* data)
 void service_wechat_wrap_js_invoke_function(FeatureInstanceHandle feature, AppendData append_data, service_wechat_invokeInfo* info)
 {
     FEATURE_LOG_INFO("%s::%s()", file_tag, __FUNCTION__);
+    if (!info) {
+        FEATURE_LOG_ERROR("[Invoke Function] invaild arguments");
+        return;
+    }
+
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     WechatHandle* wechat = static_cast<WechatHandle*>(FeatureGetProtoData(proto_handle));
     if (wechat == NULL) {
@@ -185,12 +198,14 @@ void service_wechat_wrap_js_invoke_function(FeatureInstanceHandle feature, Appen
     }
 
     double task_id;
-    char* func_name = (char*)FeatureMalloc(strlen(info->func_name) + 1, FT_STRING);
-    char* request_body = (char*)FeatureMalloc(strlen(info->request_body) + 1, FT_STRING);
-
     task_id = info->task_id;
-    func_name = strdup(info->func_name);
-    request_body = strdup(info->request_body);
+
+    char* func_name = (char*)FeatureMalloc(strlen(info->func_name) + 1, FT_STRING);
+    sprintf(func_name, "%s", info->func_name);
+
+    char* request_body = (char*)FeatureMalloc(strlen(info->request_body) + 1, FT_STRING);
+    sprintf(request_body, "%s", info->request_body);
+
     FEATURE_LOG_INFO("[wechat] invoke entry task_id=%d func_name:%s, request_body=%s",
         (uint32_t)task_id, func_name, request_body);
     adam::js_invoke_function(task_id, func_name, request_body);
