@@ -15,7 +15,6 @@
  */
 
 #include "feature_registry.h"
-#include "ajs_features_registry.h"
 #include "feature_common.h"
 
 #include <assert.h>
@@ -46,7 +45,7 @@ bool FeatureRegistry::init(const char* package_name)
         FEATURE_LOG_INFO("package_name is %s!", package_name_.c_str());
     }
 
-    return registerAjsFeatures((FeatureRegistryHandle)this);
+    return true;
 }
 
 bool FeatureRegistry::registerFeature(const FeatureDescription* description)

@@ -180,6 +180,12 @@ typedef struct FtVariParams {
     ft_value_t* vari_args; /**< params ptr */
 } FtVariParams;
 
+typedef bool (*FeatureRegistryFunc)(FeatureRegistryHandle);
+typedef struct _FeatureRegistryTable {
+    size_t count;
+    FeatureRegistryFunc data[];
+} FeatureRegistryTable, *FeatureRegistryTableHandle;
+
 #ifdef __cplusplus
 }
 #endif
