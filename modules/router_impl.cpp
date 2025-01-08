@@ -143,13 +143,6 @@ void jsonToQueryString(const rapidjson::Document& doc, std::string& result)
     }
 }
 
-std::string convertJsonToQueryString(rapidjson::Document& user_param)
-{
-    std::string result;
-    jsonToQueryString(user_param, result);
-    return result;
-}
-
 int parse_routerobj(RouteInfo& info, ft_context_ref ft_ctx, system_router_RouteObj* obj, std::string* query_result_ptr = nullptr)
 {
     if (Navigator::getRouteInfoFromUri(&info, obj->uri) != 0) {
@@ -213,7 +206,9 @@ int parse_routerobj(RouteInfo& info, ft_context_ref ft_ctx, system_router_RouteO
     }
 
     if (query_result_ptr) {
-        *query_result_ptr = convertJsonToQueryString(user_param);
+        /* Originally: *query_result_ptr = convertJsonToQueryString(user_param); However, it will cause a crash during unit testing,
+        which may be caused by insufficient stack size when calling multiple times */
+        jsonToQueryString(user_param, *query_result_ptr);
     }
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
