@@ -463,6 +463,23 @@ FeatureRegistryHandle FeatureGetRegistryFromManager(FeatureManagerHandle handle)
     return static_cast<FeatureRegistryHandle>(manager->getFeatureRegistry());
 }
 
+bool FeatureRegisterFeatures(FeatureRegistryHandle handle, const FeatureRegistryTableHandle regTableHandle)
+{
+    FeatureRegistry* registry = static_cast<FeatureRegistry*>(handle);
+    FEATURE_CHECK_PTR(registry, false, "Failed to get FeatureRegistry instance!")
+    FeatureRegistryTable* regTable = static_cast<FeatureRegistryTable*>(regTableHandle);
+    FEATURE_CHECK_PTR(regTable, false, "registry table is null !")
+    if (regTable->data[0] == nullptr) {
+        FEATURE_LOG_WARN("registry table is empty !");
+        return true;
+    }
+    int16_t i = 0;
+    while(regTable->data[i] != nullptr) {
+        regTable->data[i++](handle);
+    }
+    return true;
+}
+
 FeatureInstanceHandle FeatureDupInstanceHandle(FeatureInstanceHandle handle)
 {
     if (handle) {

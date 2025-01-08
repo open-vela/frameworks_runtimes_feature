@@ -374,6 +374,16 @@ static inline int FeatureGetEventCallbackCountByName(FeatureInstanceHandle handl
     return FeatureGetEventCallbackCount(handle, FeatureGetEventId(handle, name));
 }
 
+/**
+ * @brief registry Features to feature registry
+ *
+ * @param handle    feature registry handle
+ * @param regTable  feature registry table handle
+ * @return true
+ * @return false
+ */
+bool FeatureRegisterFeatures(FeatureRegistryHandle handle, const FeatureRegistryTableHandle regTable);
+
 #ifdef __cplusplus
 }
 #endif
