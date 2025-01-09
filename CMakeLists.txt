@@ -375,6 +375,12 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(APPEND FEATURELIST ${service_agent_features})
   endif()
 
+  if(CONFIG_FEATURE_FEAT_TEST)
+    list(APPEND FEATURE_SRCS ${FEATURE_TOP}/tests/jidl/feat_test_impl.cpp)
+    list(APPEND JIDL_PATHS ${FEATURE_TOP}/tools/jidl/samples/feat_test.jidl)
+    list(APPEND FEATURELIST "feat_test")
+  endif()
+
   # generate pdat files list
   file(GLOB PDATLIST "registry/*.pdat")
 
@@ -473,25 +479,35 @@ if(CONFIG_FEATURE_FRAMEWORK)
     APPEND
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${FEATURE_TOP} ${FEATURE_TOP}/include)
 
-  # if(CONFIG_LIB_GOOGLETEST)
-  #   list(APPEND FEATURE_TEST_SRCS ${FEATURE_TEST_DIR}/jidl/test_main.cpp)
-  #   list(APPEND FEATURE_TEST_INC_DIRS ${FEATURE_TOP}/include ${FEATURE_SRC_DIR}
-  #        ${GTEST_DIR}/include)
+  if(CONFIG_FEAT_TEST)
+    list(APPEND FEATURE_TEST_SRCS ${FEATURE_TEST_DIR}/jidl/test_main.cpp ${FEATURE_TEST_DIR}/jidl/builtin/builtin_console.cpp)
+    list(APPEND FEATURE_TEST_INC_DIRS ${FEATURE_TOP}/include ${FEATURE_SRC_DIR}
+         ${GTEST_DIR}/include
+         ${QUICKAPP_DIR}/src
+         ${QUICKAPP_DIR}/src/framework
+         ${QUICKAPP_DIR}/src/jse
+         ${QUICKAPP_DIR}/src/jse/quickjs
+         ${QUICKAPP_DIR}/src/jse/modules
+         ${QUICKAPP_DIR}/src/jse/modules/system
+         ${CMAKE_BINARY_DIR}
+         ${CMAKE_BINARY_DIR}/vdom.pb-c.h
+         ${NUTTX_APPS_DIR}/external/protobuf-c/protobuf-c/
+         ${NUTTX_APPS_DIR}/external/rapidjson/rapidjson/include/)
 
-  #   nuttx_add_application(
-  #     NAME
-  #     feat_test
-  #     PRIORITY
-  #     100
-  #     STACKSIZE
-  #     4096
-  #     DEPENDS
-  #     libfeature
-  #     SRCS
-  #     ${FEATURE_TEST_SRCS}
-  #     INCLUDE_DIRECTORIES
-  #     ${FEATURE_TEST_INC_DIRS})
-  # endif()
+    nuttx_add_application(
+      NAME
+      feat_test
+      PRIORITY
+      100
+      STACKSIZE
+      4096
+      DEPENDS
+      libfeature
+      SRCS
+      ${FEATURE_TEST_SRCS}
+      INCLUDE_DIRECTORIES
+      ${FEATURE_TEST_INC_DIRS})
+  endif()
 
   if(CONFIG_FEATURE_UNIT_TEST)
     list(APPEND UNIT_TEST_SRCS ${FEATURE_TOP}/tests/unit/unit_test.cpp)
