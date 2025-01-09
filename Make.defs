@@ -22,6 +22,3 @@ CONFIGURED_APPS += $(APPDIR)/frameworks/runtimes/feature
 
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/modules
