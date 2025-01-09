@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <memory>
 #include <set>
 
+#include "application.h"
 #include "builtin/builtin_console.h"
 #include "builtin/console.h"
 #include "feature_exports.h"
@@ -18,6 +20,70 @@
 #endif
 
 using namespace feature_framework;
+
+namespace {
+class TestNavigator : public Navigator {
+public:
+    TestNavigator() {};
+    ~TestNavigator() {};
+    int replace(const RouteInfo& route) { return 0; }
+    int push(const RouteInfo& route) { return 0; }
+    int back(const std::string& path = "") { return 0; }
+    void clear() { }
+    int getState(NavigatorInfo* info) { return 0; }
+    int getStateByIndex(NavigatorInfo* info, int index) { return 0; }
+    int getLength() { return 0; }
+    void show() { }
+    void hide() { }
+    void clearAll() { }
+    int getRouteInfoFromUri(RouteInfo* info, const char* uri) { return 0; }
+};
+
+class TestApplication : public IApplication {
+public:
+    TestApplication()
+    {
+        navigator_ = std::make_unique<TestNavigator>();
+    };
+    ~TestApplication() {};
+    bool init(AIOTJS::CLIParsedArgument* args, uv_loop_t* loop) { return true; }
+    void thread_memory_status() { }
+    void run() { }
+    void stop() { }
+    void show() { }
+    void hide() { }
+    void destroy() { }
+    AIOTJS::RuntimeContext* runtime() { return nullptr; }
+    void setRuntime(AIOTJS::RuntimeContext* runtime) { }
+    std::shared_ptr<Page> page() { return nullptr; }
+    std::shared_ptr<AppManifest> getAppManifest() { return nullptr; }
+    void evalScript(const char* code) { }
+    Navigator* navigator() const { return static_cast<Navigator*>(navigator_.get()); }
+    void callHook(const char* hook) { }
+    const char* packageName() { return ""; }
+    const char* packagePath() { return ""; }
+    uv_thread_t& threadId() { return thread_; }
+    int state() { return 0; }
+    void setState(int state) { }
+    AIOTJS::WidgetContextHandle widgetContext() { return nullptr; }
+    void clearRuntime() { }
+    void postAppNotify(ApplicationNotifyType type) { }
+    bool isExitRequest() { return true; }
+    void setExitRequested() { }
+    bool isAsyncMode() { return true; }
+    void notifyEvent(int evt) { }
+    AIOTJS::CLIParsedArgument* getCLIArgument() { return nullptr; }
+    void setCLIArgument(AIOTJS::CLIParsedArgument* args) { }
+    void* getXmsContext() const { return nullptr; }
+    void setXmsContext(void* xms_context) { }
+    bool route(const char* uri) { return true; }
+    void* getDebugHandler() { return nullptr; }
+
+private:
+    std::unique_ptr<TestNavigator> navigator_;
+    uv_thread_t thread_ { 0 };
+};
+}
 
 bool load_file(const char* file_name, char** file_content);
 
@@ -244,6 +310,9 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
     env.manager = manager;
     env.run_loop = run_loop;
     env.stop_loop = stop_loop;
+
+    TestApplication* app = new TestApplication();
+    FeatureSetManagerUserData(manager, "app", app);
 
     FeatureSetManagerUserData(manager, "run_loop", &env);
     FeatureSetUVLoop(manager, main_loop);

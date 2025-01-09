@@ -275,16 +275,17 @@ JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/event_test.jidl
 OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
 FEATURELIST += event_test
 
-ifeq ($(CONFIG_LIB_GOOGLETEST), y)
-#CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test.cpp
-#CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test_impl.cpp
-#FEATURELIST += feat_test
-#
-#PROGNAME += feat_test
-#PRIORITY += 100
-#STACKSIZE += 4096
-#CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/builtin/builtin_console.cpp
-#MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_main.cpp
+ifeq ($(CONFIG_FEAT_TEST), y)
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test_impl.cpp
+FEATURELIST += feat_test
+
+PROGNAME += feat_test
+PRIORITY += 100
+STACKSIZE += 4096
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/builtin/builtin_console.cpp
+MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_main.cpp
 endif
 
 ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
