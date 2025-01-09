@@ -17,9 +17,7 @@ using namespace feature_framework;
 
 static FeatureManagerQjs* g_manager_qjs;
 
-typedef bool (*FeatureRegistryFunc)(FeatureRegistryHandle);
-extern FeatureRegistryFunc g_ajs_features_registry[];
-extern size_t g_ajs_features_registry_count;
+extern FeatureRegistryTableHandle g_ajs_features_registry;
 
 typedef struct feature_env_t {
     JSRuntime* rt;
@@ -115,9 +113,7 @@ int main(int argc, char** argv)
     registry->init(pkg_name);
 
     g_manager_qjs = new FeatureManagerQjs(registry, js_env.ctx);
-    for (size_t i = 0; i < g_ajs_features_registry_count; i++) {
-        g_ajs_features_registry[i](registry);
-    }
+    FeatureRegisterFeatures(registry, g_ajs_features_registry);
 
     // register global require
     feature_value_t global_obj = feature_global_object(js_env.ctx);
