@@ -500,11 +500,11 @@ if(CONFIG_FEATURE_FRAMEWORK)
 
     nuttx_add_application(
       NAME
-      unit_test
+      feature_unit_test
       PRIORITY
       100
       STACKSIZE
-      4096
+      16384
       DEPENDS
       libfeature
       SRCS
