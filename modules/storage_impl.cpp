@@ -273,6 +273,9 @@ static void storage_cb(int status, const char* key, uv_buf_t value,
         finish_callback(status, handle->feature, handle->success, handle->fail,
             handle->complete, ret, handle);
     } else {
+        if (status == UNQLITE_NOTFOUND && handle->op == STORAGE_OP_DELETE) {
+            status = 200;
+        }
         finish_callback(status, handle->feature, handle->success, handle->fail,
             handle->complete, uv_strerror(status), handle);
     }
@@ -321,19 +324,19 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
     StorageHandle* handle = storage_malloc(feature);
     if (th == NULL || handle == NULL) {
         FEATURE_LOG_ERROR("[STORAGE_SET] FeatureGetObjectData fail");
-        return finish_callback(-1, feature, info->success, info->fail,
+        return finish_callback(202, feature, info->success, info->fail,
             info->complete, "FeatureGetObjectData fail", handle);
     }
 
     if ((info->key == NULL) || strcmp(info->key, "") == 0) {
         FEATURE_LOG_ERROR("[STORAGE_SET]  key is empty");
-        return finish_callback(-1, feature, info->success, info->fail,
+        return finish_callback(202, feature, info->success, info->fail,
             info->complete, "fail", handle);
     }
 
     if (info->value == NULL) {
         FEATURE_LOG_ERROR("[STORAGE_SET]  value is null");
-        return finish_callback(-1, feature, info->success, info->fail,
+        return finish_callback(202, feature, info->success, info->fail,
             info->complete, "fail", handle);
     }
 
@@ -390,12 +393,12 @@ void system_storage_wrap_delete(FeatureInstanceHandle feature, AppendData data,
     StorageHandle* handle = storage_malloc(feature);
     if (th == NULL || handle == NULL) {
         FEATURE_LOG_ERROR("[STORAGE_DELETE] FeatureGetObjectData fail");
-        return finish_callback(-1, feature, info->success, info->fail,
+        return finish_callback(202, feature, info->success, info->fail,
             info->complete, "FeatureGetObjectData fail", handle);
     }
     if ((info->key == NULL) || strcmp(info->key, "") == 0) {
         FEATURE_LOG_ERROR("[STORAGE_DELETE]  key is empty");
-        return finish_callback(-1, feature, info->success, info->fail,
+        return finish_callback(202, feature, info->success, info->fail,
             info->complete, "fail", handle);
     }
 
