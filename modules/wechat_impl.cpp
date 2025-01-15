@@ -48,10 +48,19 @@ struct WechatHandle {
     uv_async_queue_t event_async;
 };
 static WechatHandle* wechat_handle;
-
-void wechat_free(WechatHandle* handle);
+static void wechat_free(WechatHandle* handle);
 static void async_js_task_callback(uv_async_queue_t* async, void* data);
 static void async_js_event_callback(uv_async_queue_t* async, void* data);
+
+static void uv_async_close_cb(uv_handle_t* handle)
+{
+    uv_async_queue_t* async_queue = (uv_async_queue_t*)handle;
+    WechatHandle* wechat = (WechatHandle*)async_queue->data;
+    if (wechat) {
+        free(wechat);
+        wechat = NULL;
+    }
+}
 
 void service_wechat_onRegister(const char* feature_name)
 {
@@ -86,8 +95,8 @@ void service_wechat_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 void service_wechat_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    WechatHandle* handle_ = static_cast<WechatHandle*>(FeatureGetProtoData(handle));
-    wechat_free(handle_);
+    WechatHandle* wechat = static_cast<WechatHandle*>(FeatureGetProtoData(handle));
+    wechat_free(wechat);
 }
 
 void service_wechat_onUnregister(const char* feature_name)
@@ -95,14 +104,11 @@ void service_wechat_onUnregister(const char* feature_name)
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
-void wechat_free(WechatHandle* handle)
+static void wechat_free(WechatHandle* handle)
 {
     if (handle == NULL) {
         return;
     }
-
-    uv_async_queue_close(&handle->task_async, NULL);
-    uv_async_queue_close(&handle->event_async, NULL);
 
     if (handle->feature) {
         FeatureRemoveCallback(handle->feature, handle->event_cb);
@@ -110,8 +116,8 @@ void wechat_free(WechatHandle* handle)
         FeatureFreeInstanceHandle(handle->feature);
     }
 
-    free(handle);
-    handle = NULL;
+    uv_async_queue_close(&handle->task_async, NULL);
+    uv_async_queue_close(&handle->event_async, uv_async_close_cb);
 }
 
 static void OnJsEvent(const char* event, const char* event_body)
