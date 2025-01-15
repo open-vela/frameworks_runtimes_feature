@@ -38,8 +38,8 @@ namespace value_translator {
 // to native values
 bool toNative(JSContext* ctx, const JSValue& target, bool* pnative)
 {
-    int ret = JS_ToBool(ctx, target);
-    if (ret >= 0) {
+    if (JS_IsBool(target)) {
+        int ret = JS_ToBool(ctx, target);
         *pnative = !!ret;
         return true;
     }
