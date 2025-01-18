@@ -11,6 +11,8 @@ tests/*/*.h
 tests/*/*.cpp
 tests/*/*.cc
 tests/*/*.c
+!tests/unit/*.h
+!tests/unit/*.cpp
 tools/jidl/samples/*.h
 tools/jidl/samples/*.cpp
 tools/jidl/samples/*.cc
