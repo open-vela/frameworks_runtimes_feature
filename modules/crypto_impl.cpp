@@ -183,12 +183,13 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
+    const char* algo = options->algo;
     FtString result = NULL;
     // set default value SHA256
-    if (!check_str(options->algo)) {
-        options->algo = hash_types[SHA256];
-    } else if (!has_type(hash_types, arrayof(hash_types), options->algo)) {
-        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, options->algo);
+    if (!check_str(algo)) {
+        algo = hash_types[SHA256];
+    } else if (!has_type(hash_types, arrayof(hash_types), algo)) {
+        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, algo);
     }
 
     if (!(check_any(options->data) || check_str(options->uri))) {
@@ -200,14 +201,14 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
         if (!buff) {
             FEATURE_LOG_ERROR("%s %s", file_tag, "invalid data type!");
         } else {
-            result = digest(options->algo, buff, size, NULL);
+            result = digest(algo, buff, size, NULL);
             if (!result && crypto_err) {
                 FEATURE_LOG_ERROR("%s, native digest error: %s", file_tag, crypto_err);
             }
             FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
         }
     } else if (!check_any(options->data) && check_str(options->uri)) {
-        result = digest_file(options->algo, options->uri, pkg_name);
+        result = digest_file(algo, options->uri, pkg_name);
         if (!result && crypto_err) {
             FEATURE_LOG_ERROR("%s, native digest_file error: %s", file_tag, crypto_err);
         }
@@ -228,18 +229,19 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     const char* msg = "";
     int code = 0;
     char* result = NULL;
+    const char* algo = options->algo;
 
     // set default value SHA256
-    if (!check_str(options->algo)) {
-        options->algo = hash_types[SHA256];
-    } else if (!has_type(hash_types, arrayof(hash_types), options->algo)) {
-        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, options->algo);
+    if (!check_str(algo)) {
+        algo = hash_types[SHA256];
+    } else if (!has_type(hash_types, arrayof(hash_types), algo)) {
+        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, algo);
     }
     if (!(check_str(options->data) && check_str(options->key))) {
         msg = "arguments data and key are needed";
         code = FT_ERR_ARGS;
     } else {
-        result = digest(options->algo, (uint8_t*)(options->data), strlen(options->data), options->key);
+        result = digest(algo, (uint8_t*)(options->data), strlen(options->data), options->key);
         if (!result) {
             msg = crypto_err ? crypto_err : "digest error";
             code = FT_ERR_GENERAL;
