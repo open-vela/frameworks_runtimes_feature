@@ -116,8 +116,8 @@ static void wechat_free(WechatHandle* handle)
         FeatureFreeInstanceHandle(handle->feature);
     }
 
-    uv_async_queue_close(&handle->task_async, NULL);
-    uv_async_queue_close(&handle->event_async, uv_async_close_cb);
+    uv_async_queue_close(&handle->task_async, uv_async_close_cb);
+    uv_async_queue_close(&handle->event_async, NULL);
 }
 
 static void OnJsEvent(const char* event, const char* event_body)
