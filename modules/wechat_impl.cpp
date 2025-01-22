@@ -62,6 +62,13 @@ static void uv_async_close_cb(uv_handle_t* handle)
     }
 }
 
+static void uv_async_queue_close_cb(uv_handle_t* handle)
+{
+    uv_async_queue_t* async_queue = (uv_async_queue_t*)handle;
+    WechatHandle* wechat = (WechatHandle*)async_queue->data;
+    uv_async_queue_close(&wechat->event_async, uv_async_close_cb);
+}
+
 void service_wechat_onRegister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
@@ -116,8 +123,7 @@ static void wechat_free(WechatHandle* handle)
         FeatureFreeInstanceHandle(handle->feature);
     }
 
-    uv_async_queue_close(&handle->task_async, uv_async_close_cb);
-    uv_async_queue_close(&handle->event_async, NULL);
+    uv_async_queue_close(&handle->task_async, uv_async_queue_close_cb);
 }
 
 static void OnJsEvent(const char* event, const char* event_body)
