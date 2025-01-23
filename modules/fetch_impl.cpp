@@ -54,6 +54,7 @@ typedef enum MethodType {
     PUT,
     DELETE,
     TRACE,
+    CONNECT,
 } MethodType;
 
 typedef enum PostDataType {
