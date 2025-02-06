@@ -75,4 +75,11 @@ config FEATURE_TEST_FEATURES
 	bool "enable test features"
 	default n
 
+if FRAMEWORK_ENABLE_LOG
+config FRAMEWORK_LOG_BUFFER_SIZE
+	int "Framework log buffer size, default 1M"
+	default 1048576
+	depends on FRAMEWORK_ENABLE_LOG
+endif
+
 endif
