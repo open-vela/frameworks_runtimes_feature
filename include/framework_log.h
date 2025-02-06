@@ -17,7 +17,11 @@
 #ifndef __FRAMEWORK_LOG_H__
 #define __FRAMEWORK_LOG_H__
 
-#include <cstdint>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
 
 enum QUICK_PROFILE_MOUDLE {
     QUICK_PROFILE_QUICKAPP_FRAMEWORK,
@@ -27,10 +31,21 @@ enum QUICK_PROFILE_MOUDLE {
     QUICK_PROFILE_OTHER,
 };
 
+typedef struct profile_buffer_ {
+    int pos;
+    char* framework_buf;
+} profile_buffer_t;
+
+void QuickProfileLogFlush();
+
 void QuickProfileLogTimeStamp(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);
 void QuickProfileLogBegin(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);
 void QuickProfileLogEnd(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);
 void QuickProfileLogMemory(QUICK_PROFILE_MOUDLE module, const char* name, uint64_t size, uint64_t count, const char* dsc);
 void QuickProfileLogAsyncBegin(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);
 void QuickProfileLogAsyncEnd(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);
+
+#ifdef __cplusplus
+}
+#endif
 #endif // __FRAMEWORK_LOG_H__
