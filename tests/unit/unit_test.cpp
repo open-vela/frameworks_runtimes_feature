@@ -2,6 +2,7 @@
 
 #include "unit_test_context.cpp"
 #include "unit_test_export.cpp"
+#include "unit_test_main_export.cpp"
 
 namespace feature_framework {
 

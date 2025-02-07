@@ -2,7 +2,6 @@
 
 #include "feature.h"
 #include "feature_common.h"
-#include "feature_types.h"
 #include "quickjs/quickjs.h"
 #include "uv.h"
 #include <cstddef>
