@@ -185,7 +185,7 @@ static void sensor_baro_topic_cb(uv_topic_t* topic, int status, void* data, size
     for (int i = 0; i < cnt; i++) {
         sensor_baro* t_r = (sensor_baro*)data + i;
         system_sensor_BaroRet* baroRet = system_sensorMallocBaroRet();
-        baroRet->pressure = t_r->pressure;
+        baroRet->pressure = round(t_r->pressure * PRECISION) / PRECISION;
         INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, baroRet);
         FeatureFreeValue(baroRet);
     }
@@ -202,7 +202,7 @@ static void sensor_temp_topic_cb(uv_topic_t* topic, int status, void* data, size
     for (int i = 0; i < cnt; i++) {
         sensor_temp* t_r = (sensor_temp*)data + i;
         system_sensor_TemperatureRet* tempRet = system_sensorMallocTemperatureRet();
-        tempRet->temperature = t_r->temperature;
+        tempRet->temperature = round(t_r->temperature * 10) / 10;
         INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, tempRet);
         FeatureFreeValue(tempRet);
     }
@@ -219,7 +219,7 @@ static void sensor_humi_topic_cb(uv_topic_t* topic, int status, void* data, size
     for (int i = 0; i < cnt; i++) {
         sensor_humi* t_r = (sensor_humi*)data + i;
         system_sensor_HumidityRet* humiRet = system_sensorMallocHumidityRet();
-        humiRet->humidity = t_r->humidity;
+        humiRet->humidity = round(t_r->humidity);
         INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, humiRet);
         FeatureFreeValue(humiRet);
     }
@@ -631,7 +631,7 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
     }
     case SENSOR_MAGIC_HUMIDITY: {
         sensor_humi* ret_t = static_cast<sensor_humi*>(data);
-        ft_value_t humi = ft_from_int(ft_ctx, round(ret_t->humidity * PRECISION) / PRECISION);
+        ft_value_t humi = ft_from_int(ft_ctx, round(ret_t->humidity));
         ft_obj_set_property(ft_ctx, ret_obj, "humidity", humi);
         ft_obj_set_property(ft_ctx, sensor_obj, "HUMIDITY", ret_obj);
         break;
