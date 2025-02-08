@@ -25,6 +25,7 @@
 extern "C" {
 #endif
 
+#include "feature_permission.h"
 #include "feature_types.h"
 #include "uv.h"
 #include <stdbool.h>
@@ -189,6 +190,40 @@ typedef struct {
  * @param[in] userdata userdata
  */
 void FeatureDumpMemory(FeatureManagerHandle feature_manager, FeatureMemoryDump* dump, void* userdata);
+
+/** FeaturePermissionsHandle */
+typedef void* FeaturePermissionsHandle;
+
+/** FeaturePermissionsInfo */
+typedef struct FeaturePermissionsInfo {
+    const FeaturePermissions* permissions; /**< permissions */
+    const char* api_name; /**< api_name */
+} FeaturePermissionsInfo;
+
+/** FeaturePermissionsCb ptr */
+typedef void (*FeaturePermissionsCb)(FeaturePermissionsHandle handle, const FeaturePermissionsInfo* permissions, void* data);
+
+/**
+ * @brief FeatureSetPermissionsCallback
+ * @param[in] hmanager FeatureManagerHandle
+ * @param[in] cb FeaturePermissionsCb @see FeaturePermissionsCb
+ * @param[in] data data
+ */
+void FeatureSetPermissionsCallback(FeatureManagerHandle hmanager, FeaturePermissionsCb cb, void* data);
+
+/**
+ * @brief FeatureGrantPermission
+ * @param[in] hmanager FeatureManagerHandle
+ * @param[in] handle FeaturePermissionsHandle @see FeaturePermissionsHandle
+ */
+void FeatureGrantPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle);
+
+/**
+ * @brief FeatureRejectPermission
+ * @param[in] hmanager FeatureManagerHandle
+ * @param[in] handle FeaturePermissionsHandle @see FeaturePermissionsHandle
+ */
+void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle);
 
 #ifdef __cplusplus
 }

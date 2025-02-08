@@ -551,3 +551,19 @@ int FeatureGetEventCallbackCount(FeatureInstanceHandle handle, FtEventId eid)
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->getEventCallbackCount(eid);
 }
+
+// permissions related
+void FeatureSetPermissionsCallback(FeatureManagerHandle hmanager, FeaturePermissionsCb cb, void* data)
+{
+    FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
+}
+
+void FeatureGrantPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle)
+{
+    FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
+}
+
+void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle)
+{
+    FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
+}
