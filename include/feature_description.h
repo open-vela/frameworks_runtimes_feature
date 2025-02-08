@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+#include "feature_permission.h"
 #include "feature_types.h"
 #include <inttypes.h>
 #include <stdint.h>
@@ -235,6 +236,21 @@ FeatureRegistryHandle FeatureGetRegistryFromManager(FeatureManagerHandle handle)
  * @return member ptr from vtable
  */
 NativeFunc FeatureGetInterfaceMember(FeatureInstanceHandle handle, size_t index);
+
+typedef void (*FeaturePermissionsRequestCb)(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret);
+
+typedef struct FeaturePermissionsRequestInfo {
+    AppendData adata;
+    const char* api_name;
+    void** argv;
+    int argc;
+    const MemberMethod* method;
+    const FeaturePermissions* permissions;
+    FeaturePermissionsRequestCb cb;
+} FeaturePermissionsRequestInfo;
+
+bool FeatureRequestPermissions(FeatureInstanceHandle handle, FeaturePermissionsRequestInfo* info);
 
 #ifdef __cplusplus
 }

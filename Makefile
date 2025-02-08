@@ -57,6 +57,7 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/promise_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_object_ref.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_permission.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/permissions_manager.cpp
 
 ifeq ($(CONFIG_FEATURE_USE_WAMR),y)
 CXXFLAGS += -DWASM_ENABLE_GC=1

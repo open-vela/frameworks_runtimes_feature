@@ -22,6 +22,7 @@
 #include "feature_list.h"
 #include "feature_main_exports.h"
 #include "feature_registry.h"
+#include "permissions_manager.h"
 #include "thread_checker.h"
 
 #include <queue>
@@ -105,6 +106,8 @@ public:
 
     void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
 
+    PermissionsManager& permissionsManager() { return perms_manager_; }
+
 private:
     FeatureRegistry* registry_;
     ft_context_ref ft_ctx_;
@@ -120,6 +123,7 @@ private:
     ArgsErrorCb args_error_cb_ = nullptr;
     void* args_error_data_ = nullptr;
     ThreadChecker thread_checker_;
+    PermissionsManager perms_manager_;
 };
 
 } // namespace feature_framework

@@ -556,14 +556,56 @@ int FeatureGetEventCallbackCount(FeatureInstanceHandle handle, FtEventId eid)
 void FeatureSetPermissionsCallback(FeatureManagerHandle hmanager, FeaturePermissionsCb cb, void* data)
 {
     FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(hmanager);
+    if (manager) {
+        manager->permissionsManager().SetPermissionsCallback(cb, data);
+    }
+}
+
+static void grant_permisions_task(int mode, void* data)
+{
+    if (mode == FEATURE_TASK_MODE_NORMAL) {
+        PermissionsInfo* info = (PermissionsInfo*)data;
+        FeatureManager* manager = info->Instance()->featureManager();
+        manager->permissionsManager().GrantPermissions(info);
+    }
 }
 
 void FeatureGrantPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle)
 {
     FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(hmanager);
+    PermissionsInfo* info = (PermissionsInfo*)handle;
+    if (manager->permissionsManager().CheckPermissions(info)) {
+        manager->addTask((FeatureInstanceHandle)(info->Instance()), grant_permisions_task, info);
+    }
+}
+
+static void reject_permisions_task(int mode, void* data)
+{
+    if (mode == FEATURE_TASK_MODE_NORMAL) {
+        PermissionsInfo* info = (PermissionsInfo*)data;
+        FeatureManager* manager = info->Instance()->featureManager();
+        manager->permissionsManager().RejectPermissions(info);
+    }
 }
 
 void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle)
 {
     FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(hmanager);
+    PermissionsInfo* info = (PermissionsInfo*)handle;
+    if (manager->permissionsManager().CheckPermissions(info)) {
+        manager->addTask((FeatureInstanceHandle)(info->Instance()), reject_permisions_task, info);
+    }
+}
+
+bool FeatureRequestPermissions(FeatureInstanceHandle handle, FeaturePermissionsRequestInfo* info)
+{
+    FEATURE_INSTANCE_CHECK(handle, false)
+    if (!info)
+        return false;
+
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    return instance->requestPermissions(info);
 }

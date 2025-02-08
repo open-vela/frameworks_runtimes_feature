@@ -89,4 +89,34 @@ void FeatureInstance::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
     dump->count(malloc_size(this), userdata);
 }
 
+void FeatureInstance::onDetached()
+{
+    detached_ = 1;
+    auto manager = featureManager();
+    FEATURE_CHECK_NE(manager, nullptr);
+    manager->permissionsManager().RemoveInstancePermissions(this);
+}
+
+static void permision_request_task(int mode, void* data)
+{
+    if (mode == FEATURE_TASK_MODE_NORMAL) {
+        auto info = (PermissionsInfo*)data;
+        auto manager = info->Instance()->featureManager();
+        manager->permissionsManager().RequestPermissions(info);
+    }
+}
+
+bool FeatureInstance::requestPermissions(FeaturePermissionsRequestInfo* info)
+{
+    auto manager = featureManager();
+    FEATURE_CHECK_NE(manager, nullptr);
+    if (manager->permissionsManager().HasPermissionCb()) {
+        PermissionsInfo* perms_info = new PermissionsInfo(this, info);
+        manager->permissionsManager().AddPermissions(perms_info);
+        manager->addTask((FeatureInstanceHandle)this, permision_request_task, perms_info);
+        return true;
+    }
+    FEATURE_LOG_DEBUG("no permissions cb!");
+    return false;
+}
 } // namespace feature_framework
