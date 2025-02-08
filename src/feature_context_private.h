@@ -30,6 +30,8 @@ void ReleaseFeatureContextWamr(ft_context_ref ft_ctx);
 
 void SetReleaseRawContextCb(ft_context_ref ft_ctx, ReleaseRawContextCb cb);
 
+void ft_dup_value(ft_context_ref ft_ctx, ft_value_t ft_val);
+
 typedef struct FeatureContext {
     void* data;
     ReleaseRawContextCb release_raw_ctx_cb;
@@ -78,6 +80,7 @@ typedef struct FeatureContext {
     ft_value_t (*ft_obj_get_property)(ft_context_ref ft_ctx, ft_value_t ft_val, const char* prop);
     bool (*ft_obj_set_property)(ft_context_ref ft_ctx, ft_value_t obj, const char* prop, ft_value_t val);
     void (*ft_free_value)(ft_context_ref ft_ctx, ft_value_t ft_val);
+    void (*ft_dup_value)(ft_context_ref ft_ctx, ft_value_t ft_val);
     void (*ft_free_string)(ft_context_ref ft_ctx, const char* str);
     ft_value_t (*ft_undefined)(ft_context_ref ft_ctx);
 

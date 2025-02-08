@@ -106,6 +106,11 @@ struct FtValTranslator {
         value_translator::freeValue((TCtx)(ctx_ref->data), value_translator::ftValToTarget(ft_val));
     }
 
+    static void dupValue(ft_context_ref ctx_ref, ft_value_t ft_val)
+    {
+        value_translator::dupValue((TCtx)(ctx_ref->data), value_translator::ftValToTarget(ft_val));
+    }
+
     static void freeCString(ft_context_ref ctx_ref, const char* str)
     {
         value_translator::freeCString((TCtx)(ctx_ref->data), (char*)str);

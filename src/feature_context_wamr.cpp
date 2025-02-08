@@ -218,6 +218,12 @@ static void _ft_free_value(ft_context_ref ft_ctx, ft_value_t f_val)
     // to be implemented
 }
 
+// dup value
+static void _ft_dup_value(ft_context_ref ft_ctx, ft_value_t f_val)
+{
+    // to be implemented
+}
+
 static void _ft_free_string(ft_context_ref ft_ctx, const char* str)
 {
     // to be implemented
@@ -265,6 +271,7 @@ bool InitFeatureContextWamr(ft_context_ref rt_ctx, void* data0, void* data1)
     rt_ctx->ft_obj_set_property = _ft_obj_set_property;
     // free value
     rt_ctx->ft_free_value = _ft_free_value;
+    rt_ctx->ft_dup_value = _ft_dup_value;
     rt_ctx->ft_free_string = _ft_free_string;
     return true;
 }
