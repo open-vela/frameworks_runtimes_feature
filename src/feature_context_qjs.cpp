@@ -407,6 +407,13 @@ static void _ft_free_value(ft_context_ref ft_ctx, ft_value_t f_val)
     JS_FreeValue(js_ctx, q_val.js_val);
 }
 
+static void _ft_dup_value(ft_context_ref ft_ctx, ft_value_t f_val)
+{
+    JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
+    qjs_val_t q_val = FT_VAL_TO_QJS(f_val);
+    JS_DupValue(js_ctx, q_val.js_val);
+}
+
 static void _ft_free_string(ft_context_ref ft_ctx, const char* str)
 {
     JSContext* js_ctx = GET_QJS_CTX(ft_ctx);
@@ -465,6 +472,7 @@ struct InitContext {
         rt_ctx->ft_obj_set_property = TransType<int>::objectSetProperty;
         // free value
         rt_ctx->ft_free_value = TransType<int>::freeValue;
+        rt_ctx->ft_dup_value = TransType<int>::dupValue;
         rt_ctx->ft_free_string = TransType<int>::freeCString;
         rt_ctx->ft_parse_json = TransType<int>::parseJson;
         rt_ctx->ft_undefined = TransType<int>::undefined;
@@ -515,6 +523,7 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
     rt_ctx->ft_obj_set_property = _ft_obj_set_property;
     // free value
     rt_ctx->ft_free_value = _ft_free_value;
+    rt_ctx->ft_dup_value = _ft_dup_value;
     rt_ctx->ft_free_string = _ft_free_string;
     rt_ctx->ft_undefined = _ft_undefined;
 #endif

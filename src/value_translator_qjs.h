@@ -303,7 +303,7 @@ static inline JSValue createArray(JSContext* ctx, FeatureType& type, uint32_t ar
     return JS_NewArray(ctx);
 }
 
-static inline JSValue dupValue(JSContext* ctx, JSValue& value)
+static inline JSValue dupValue(JSContext* ctx, JSValue value)
 {
     return JS_DupValue(ctx, value);
 }

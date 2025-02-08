@@ -287,3 +287,9 @@ ft_value_t ft_undefined(ft_context_ref ft_ctx)
 {
     return ft_ctx->ft_undefined(ft_ctx);
 }
+
+void ft_dup_value(ft_context_ref ft_ctx, ft_value_t ft_val)
+{
+    THREAD_CHECK(ft_ctx->thread_checker);
+    ft_ctx->ft_dup_value(ft_ctx, ft_val);
+}
