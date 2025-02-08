@@ -16,6 +16,7 @@
 
 #include "feature_common.h"
 #include "feature_description.h"
+#include "feature_exports.h"
 #include <cstdint>
 
 int getAlignedCount(const FeatureType param)
@@ -149,4 +150,50 @@ int getValueSize(FeatureType featureType)
         return complexType->size;
     }
     return 0;
+}
+
+bool convertOptional(OptionalType* opt, void* out)
+{
+    FEATURE_CHECK_NE(out, nullptr);
+    FeatureType ftype = opt->type;
+    if (FT_IS_PRIMITIVE(ftype)) {
+        switch (ftype) {
+        case FT_VOID: {
+            FEATURE_LOG_ERROR("void not supported !");
+            return false;
+        } break;
+        case FT_BOOLEAN: {
+            *((bool*)out) = opt->ival;
+        } break;
+        case FT_INT: {
+            *((int32_t*)out) = opt->ival;
+        } break;
+        case FT_INT64: {
+            *((int64_t*)out) = opt->lval;
+        } break;
+        case FT_FLOAT: {
+            *((float*)out) = (float)(opt->fval);
+        } break;
+        case FT_DOUBLE: {
+            *((double*)out) = opt->fval;
+        } break;
+        case FT_STRING: {
+            if (!opt->str)
+                break;
+            char* str = (char*)FeatureMalloc(strlen(opt->str) + 1, FT_STRING);
+            strcpy(str, opt->str);
+            *((const char**)out) = str;
+        } break;
+        case FT_ANY_REF: {
+            *((void**)out) = opt->ptr;
+        } break;
+        default: {
+            FEATURE_LOG_WARN("unsupported type detected !");
+            return false;
+        } break;
+        }
+    } else if (FT_IS_COMPLEX(ftype)) {
+        *((void**)out) = opt->ptr;
+    }
+    return true;
 }

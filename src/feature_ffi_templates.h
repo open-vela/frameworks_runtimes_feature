@@ -152,9 +152,14 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         for (int i = argc; i < fixed_argc; i++) {
             auto param_type = param_types[i];
             FEATURE_CHECK_EQ(FT_IS_COMPLEX(param_type), true);
-            OptionalType* optionalType = (OptionalType*)FT_GET_COMPLEX(param_type);
-            FEATURE_CHECK_EQ(optionalType->header.type, COMPLEX_OPTIONAL);
-            ffi_arg_buf[extra_argc + i] = &optionalType->fval;
+            OptionalType* opt_type = (OptionalType*)FT_GET_COMPLEX(param_type);
+            FEATURE_CHECK_EQ(opt_type->header.type, COMPLEX_OPTIONAL);
+            ffi_arg_buf[extra_argc + i] = ffi_arg_values;
+            if (!convertOptional(opt_type, ffi_arg_buf[extra_argc + i])) {
+                free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
+                return RET_ARGS_TYPE_ERR;
+            }
+            ffi_arg_values += getAlignedCount(param_type);
         }
     }
 
