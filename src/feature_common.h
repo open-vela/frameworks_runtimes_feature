@@ -37,6 +37,8 @@ int getValueSize(FeatureType featureType);
 
 int countMember(ObjectMember* member);
 
+bool convertOptional(OptionalType* opt, void* out);
+
 template <typename TPtr>
 class AutoPtr {
 public:
