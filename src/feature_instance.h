@@ -86,10 +86,7 @@ public:
 
     bool isDetached() { return detached_ == 1; }
 
-    virtual void onDetached()
-    {
-        detached_ = 1;
-    }
+    virtual void onDetached();
 
     const FeatureDescription* description() { return description_; }
 
@@ -99,6 +96,8 @@ public:
     }
 
     virtual void onDumpMemory(FeatureMemoryDump* dump, void* userdata);
+
+    bool requestPermissions(FeaturePermissionsRequestInfo* info);
 
 private:
     int instance_id_ : 29;

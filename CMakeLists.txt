@@ -60,6 +60,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${FEATURE_SRC_DIR}/feature_object_ref.cpp
     ${FEATURE_SRC_DIR}/feature_registry.cpp
     ${FEATURE_SRC_DIR}/feature_permission.cpp
+    ${FEATURE_SRC_DIR}/permissions_manager.cpp
     ${FEATURE_SRC_DIR}/promise_manager.cpp
     ${FEATURE_SRC_DIR}/value_translator_qjs.cpp)
 
