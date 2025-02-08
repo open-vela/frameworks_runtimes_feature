@@ -56,6 +56,7 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_registry.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/promise_manager.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_object_ref.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/feature_permission.cpp
 
 ifeq ($(CONFIG_FEATURE_USE_WAMR),y)
 CXXFLAGS += -DWASM_ENABLE_GC=1
@@ -418,7 +419,7 @@ endif
 
 EXPORT_FILES := include/feature_types.h include/feature_context.h include/feature_description.h \
                 include/feature_exports.h include/feature_main_exports.h include/feature_log.h \
-                include/ajs_features_init.h src/README.md registry/README.md
+                include/feature_permission.h include/ajs_features_init.h src/README.md registry/README.md
 
 clean::
 	rm -rf $(APPDIR)/frameworks/runtimes/feature/src/ajs_features_list.h
