@@ -624,8 +624,28 @@ static const PromiseType ${module_name}_${promise_ft} = {
   ret_ft_expr = render.GenerateFtExpression(ret_ft_info)
   if has_promise:
     GenPromiseFeatureType(ret_type_node, ret_ft_info['type'])
+
+  permissions = None
+  if 'meta' in func_node:
+    meta = func_node['meta']
+    if 'permissions' in meta:
+      permissions = meta['permissions']
+  if permissions:
+    perm_bits = render.GetPermissionIds(permissions)
+    low_bits = perm_bits['low_bits']
+    high_bits = perm_bits['high_bits']
 %>\
 static void ${func_id}_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret);
+
+static const MemberMethod ${func_id}_member_method = {
+    .func_stub = ${func_id}_stub,
+    .parameters = ${func_id}_parameters,
+    .return_type = ${ret_ft_expr},
+};
+
+%if permissions:
+static void ${func_id}_permissions_cb(
     FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
 {
     ${func_call}(handle, adata
@@ -634,12 +654,34 @@ static void ${func_id}_stub(
 %endfor
     );
 }
+%endif
 
-static const MemberMethod ${func_id}_member_method = {
-    .func_stub = ${func_id}_stub,
-    .parameters = ${func_id}_parameters,
-    .return_type = ${ret_ft_expr},
-};
+static void ${func_id}_stub(
+    FeatureInterfaceHandle handle, AppendData adata, void** argv, int argc, void* ret)
+{
+%if permissions:
+    static const FeaturePermissions ${func_id}_permissions = {
+        ${low_bits},
+        ${high_bits},
+    };
+    FeaturePermissionsRequestInfo request_info = {
+      .adata = adata,
+      .api_name = "${identifier}",
+      .argv = argv,
+      .argc = argc,
+      .method = &${func_id}_member_method,
+      .permissions = &${func_id}_permissions,
+      .cb = ${func_id}_permissions_cb,
+    };
+    if (FeatureRequestPermissions(handle, &request_info))
+        return;
+%endif
+    ${func_call}(handle, adata
+%for call_arg in call_args:
+        , ${call_arg}
+%endfor
+    );
+}
 </%def>\
 <%def name="GenInterfaceCtorFunction(func_node, ctor_info)">\
 <%
