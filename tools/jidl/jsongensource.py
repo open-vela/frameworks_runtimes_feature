@@ -259,6 +259,18 @@ class CPPRender(Render):
     'FT_STRING' : 'str',
   }
 
+  low_perms_map = {
+    'hapjs.permission.INTERNET' : 0, # HAPJS_PERMISSION_INTERNET
+    'hapjs.permission.LOCATION' : 1, # HAPJS_PERMISSION_LOCATION
+    'hapjs.permission.RECORD' : 2, # HAPJS_PERMISSION_RECORD
+    'hapjs.permission.DEVICE_INFO' : 3, # HAPJS_PERMISSION_DEVICE_INFO
+    'hapjs.permission.READ_HEALTH_DATA' : 4, # HAPJS_PERMISSION_READ_HEALTH_DATA
+  }
+
+  high_perms_map = {
+    'hapjs.permission.MAX' : 64, # HAPJS_PERMISSION_MAX
+  }
+
   def __init__(self, json_file, header_file, source_file, configs):
     self.header_tmpl = GetTemplate('json_ast_header.mt')
     self.source_tmpl = GetTemplate('json_ast_source.mt')
@@ -831,6 +843,27 @@ class CPPRender(Render):
     else:
       raise Exception('invalid member type: {}'.format(member))
     return member_info
+
+  def mark_permission(self, bits, perm_id):
+    bits |= (1 << (perm_id % 64))
+    return bits
+
+  def GetPermissionIds(self, permissions):
+    perms = permissions.replace(" ", "").split(',')
+    low_bits = 0
+    high_bits = 0
+    for perm in perms:
+      if perm in self.low_perms_map:
+        low_bits = self.mark_permission(low_bits, self.low_perms_map[perm])
+      elif perm in self.high_perms_map:
+        high_bits = self.mark_permission(high_bits, self.high_perms_map[perm])
+
+    perm_bits = {
+        'low_bits': f"{low_bits}",
+        'high_bits': f"{high_bits}"
+    }
+    return perm_bits
+
 
 ### TS Render
 class TSRender(Render):
