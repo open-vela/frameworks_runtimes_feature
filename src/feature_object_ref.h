@@ -35,6 +35,11 @@ public:
         return ++ref_count_;
     }
 
+    int getRefCount() const
+    {
+        return ref_count_.load();
+    }
+
     void release()
     {
         FEATURE_LOG_DEBUG("FeatureObjectRef count:%d, feature:%p", ref_count_.load() - 1, this);
