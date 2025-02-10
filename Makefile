@@ -94,7 +94,7 @@ endif
 ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
 	PROGNAME += feature_unit_test
 	PRIORITY += 100
-	STACKSIZE += 1024
+	STACKSIZE += 16384
 	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test.cpp
 endif
 
