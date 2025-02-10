@@ -277,6 +277,11 @@ JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/event_test.jidl
 OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
 FEATURELIST += event_test
 
+CXXSRCS     += $(APPDIR)/frameworks/runtimes/feature/modules/permissions_test_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/permissions_test.jidl
+OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+FEATURELIST += permissions_test
+
 ifeq ($(CONFIG_FEAT_TEST), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test.cpp

@@ -1,0 +1,18 @@
+module permissions_test@1.0
+
+[permissions="hapjs.permission.INTERNET"]
+int foo(int a, string b, double c=1.0)
+
+[permissions="hapjs.permission.RECORD"]
+void foo2(int a, ...)
+
+[permissions="hapjs.permission.LOCATION, hapjs.permission.RECORD, hapjs.permission.DEVICE_INFO"]
+promise<int> bar(int type)
+
+[permissions="hapjs.permission.READ_HEALTH_DATA, hapjs.permission.DEVICE_INFO"]
+promise<string> bar2(float a=0.3, string b="hello")
+
+callback callback1(int x, string y)
+callback callback2(int a, string b, ...)
+[permissions="hapjs.permission.DEVICE_INFO"]
+void goo(callback1 cb1, callback2 cb2)

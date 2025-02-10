@@ -294,6 +294,11 @@ if(CONFIG_FEATURE_FRAMEWORK)
   list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/promise_callback.jidl)
   list(APPEND FEATURELIST "promise_callback")
 
+  # for the 'permissions_test' feature
+  list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/permissions_test_impl.cpp)
+  list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/permissions_test.jidl)
+  list(APPEND FEATURELIST "permissions_test")
+  
   # for the 'event_test' feature
   list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/event_test_impl.cpp)
   list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/event_test.jidl)
