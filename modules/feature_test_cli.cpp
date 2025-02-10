@@ -25,6 +25,7 @@
 #endif
 #include "feature_log.h"
 #include "feature_manager_qjs.h"
+#include "feature_permission.h"
 #include "feature_qjs_exports.h"
 #include "feature_registry.h"
 
@@ -204,6 +205,25 @@ static void __cli_uv_poll_cb(uv_poll_t* handle, int status, int events)
 }
 #endif
 
+/** FeaturePermissionsCb ptr */
+static void permissions_cb(FeaturePermissionsHandle handle, const FeaturePermissionsInfo* info, void* data)
+{
+    FEATURE_LOG_INFO("wjf: permissions: %p, api_name: %s", handle, info->api_name);
+    static bool granted = false;
+    for (int i = 0; i <= HAPJS_PERMISSION_READ_HEALTH_DATA; ++i) {
+        if (!HAS_PERMISSION(*(info->permissions), i))
+            continue;
+        FEATURE_LOG_INFO("wjf: got permission: %s", FeatureGetPermissionName((FeaturePermissionId)i));
+    }
+
+    if (granted) {
+        FeatureGrantPermissions(g_manager_qjs, handle);
+    } else {
+        FeatureRejectPermissions(g_manager_qjs, handle);
+    }
+    granted = !granted;
+}
+
 // 当test.js使用异步任务, 命令为:./feature_test_cli -m 5 ./test.js
 extern "C" int main(int argc, char** argv)
 {
@@ -298,6 +318,8 @@ extern "C" int main(int argc, char** argv)
 #endif
 
     FeatureSetUVLoop(g_manager_qjs, main_loop);
+    FeatureSetPermissionsCallback(g_manager_qjs, permissions_cb, NULL);
+
     feature_value_t global_obj = feature_global_object(js_env.ctx);
     feature_value_t console = feature_object(js_env.ctx);
     feature_set_object_property(js_env.ctx, global_obj, "console", console);
