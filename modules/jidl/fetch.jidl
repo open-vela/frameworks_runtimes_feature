@@ -48,4 +48,5 @@ struct FetchPara{
   callback complete_cb complete;
 }
 
+[permissions="hapjs.permission.INTERNET"]
 promise<object> fetch(FetchPara obj);

@@ -55,9 +55,14 @@ struct common_params {
     callback complete_cb complete
 }
 
+
 void getInfo(getinfo_params cb)
+
+[permissions="hapjs.permission.DEVICE_INFO"]
 string getDeviceId(common_params cb = null)
 void getId(common_params cb)
+
+[permissions="hapjs.permission.DEVICE_INFO"]
 void getSerial(common_params cb)
 void getTotalStorage(common_params cb)
 void getAvailableStorage(common_params cb)
