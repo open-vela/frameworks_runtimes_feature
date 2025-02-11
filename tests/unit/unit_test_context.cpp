@@ -1,7 +1,4 @@
-#include "gtest/gtest.h"
-
 #include "feature_context_qjs.h"
-#include "unit_util.h"
 
 static inline int get_ref_count(feature_value_t val)
 {

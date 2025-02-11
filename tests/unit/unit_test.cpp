@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
 
+#include "unit_util.h"
+
 #include "unit_test_context.cpp"
 #include "unit_test_export.cpp"
 #include "unit_test_main_export.cpp"

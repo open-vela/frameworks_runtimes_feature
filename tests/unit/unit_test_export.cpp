@@ -1,5 +1,3 @@
-#include "gtest/gtest.h"
-
 #include "feature_context_qjs.h"
 #include "feature_description.h"
 #include "feature_exports.h"
@@ -7,7 +5,6 @@
 #include "feature_main_exports.h"
 #include "feature_manager_qjs.h"
 #include "feature_prototype_qjs.h"
-#include "unit_util.h"
 
 namespace feature_framework {
 typedef struct _UnitEventData {
