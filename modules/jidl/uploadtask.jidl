@@ -37,4 +37,5 @@ struct FileObject {
   callback complete_cb complete;
 }
 
+[permissions="hapjs.permission.INTERNET"]
 UploadTask uploadFile(FileObject obj);

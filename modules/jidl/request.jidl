@@ -41,6 +41,7 @@ struct download_t {
     download_cmpl_cb complete
 }
 
+[permissions="hapjs.permission.INTERNET"]
 void download(download_t param)
 
 struct dl_cmpl_succ_t {
