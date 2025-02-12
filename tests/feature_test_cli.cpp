@@ -367,11 +367,11 @@ extern "C" int main(int argc, char** argv)
 #ifdef CONFIG_SYSTEM_ACTIVITY_SERVICE
     // init binder
     int binderFd = -1;
+    uv_poll_t binder_poll;
     android::IPCThreadState::self()->setupPolling(&binderFd);
     if (binderFd < 0) {
         printf("failed to open binder device:%d", errno);
     } else {
-        uv_poll_t binder_poll;
         uv_poll_init(main_loop, &binder_poll, binderFd);
         uv_poll_start(&binder_poll, UV_READABLE, __cli_uv_poll_cb);
     }
@@ -450,7 +450,9 @@ extern "C" int main(int argc, char** argv)
     uv_close((uv_handle_t*)&prepare, NULL);
     uv_close((uv_handle_t*)&timer, NULL);
 #if defined(CONFIG_SYSTEM_ACTIVITY_SERVICE)
-    uv_close((uv_handle_t*)&binder_poll, NULL);
+    if (binderFd >= 0) {
+        uv_close((uv_handle_t*)&binder_poll, NULL);
+    }
 #endif
     int closed = 0;
     for (int j = 0; j < 200; j++) {
