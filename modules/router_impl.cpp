@@ -235,7 +235,10 @@ void system_router_wrap_push(FeatureInstanceHandle feature, AppendData append_da
 // jump to other app
 #ifdef CONFIG_MIWEAR_APPS
             const std::string target = router_info.package + router_info.pagename;
-            quickapp_navigate_async(target.c_str(), router_info.param.body.c_str());
+            rapidjson::Document userParam;
+            userParam.Parse(router_info.param.body.c_str());
+            jsonToQueryString(userParam, queryString);
+            quickapp_navigate_async(target.c_str(), queryString.c_str());
             return;
 #endif
 #ifdef CONFIG_QUICKAPP_VAPP_XMS
