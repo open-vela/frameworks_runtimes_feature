@@ -410,12 +410,14 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                         if (cmp_type->type == COMPLEX_OPTIONAL) {
                             FEATURE_LOG_DEBUG("field is undefined, we get value with optinalType!");
                             OptionalType* opt_type = (OptionalType*)cmp_type;
-                            ret = convertValueToTarget(opt_type->type, ctx, &opt_type->fval, field);
+                            void* member_ptr = (void*)((char*)ptr + member->offset);
+                            ret = convertOptional(opt_type, member_ptr);
                             if (!ret) {
                                 value_translator::freeValue(ctx, field);
                                 FEATURE_LOG_ERROR("propValue convert optional failed!");
                                 return false;
                             }
+                            continue;
                         }
                     } else {
                         if ((member->type != FT_ANY_REF) && (member->type != FT_STRING) && (member->type != FT_JSON_OBJ)) {

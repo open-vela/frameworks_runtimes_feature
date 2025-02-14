@@ -168,7 +168,9 @@ typedef struct OptionalType {
     FeatureType type; // exact type
     union {
         int32_t ival;
+        uint32_t uval;
         int64_t lval;
+        uint64_t ulval;
         double fval;
         const char* str;
         void* ptr;
