@@ -174,6 +174,12 @@ bool convertOptional(OptionalType* opt, void* out)
         case FT_INT64: {
             *((int64_t*)out) = opt->lval;
         } break;
+        case FT_UINT32: {
+            *((uint32_t*)out) = opt->uval;
+        } break;
+        case FT_UINT64: {
+            *((uint64_t*)out) = opt->ulval;
+        } break;
         case FT_FLOAT: {
             *((float*)out) = (float)(opt->fval);
         } break;

@@ -323,6 +323,8 @@ class CPPRender(Render):
     'FT_FLOAT' : 'fval',
     'FT_DOUBLE' : 'fval',
     'FT_STRING' : 'str',
+    'FT_UINT32' : 'uval',
+    'FT_UINT64' : 'ulval',
   }
 
   append_data_name_map = {
@@ -593,6 +595,15 @@ class CPPRender(Render):
       # print('got a complex opt value, type: {}'.format(feature_type))
       return 'ptr'
     return self._MapType(feature_type, self.opt_val_name_map)
+
+  def GetOptVal(self, feature_type, default_value):
+    if feature_type not in self.opt_val_name_map:
+      return default_value
+    if feature_type == 'FT_UINT64':
+      default_value = '(uint64_t)' + default_value
+    elif feature_type == 'FT_UINT32':
+      default_value = '(uint32_t)' + default_value
+    return default_value
 
   def GetAppendDataName(self, feature_type):
     append_data_type = self._MapType(feature_type, self.append_data_name_map)

@@ -30,6 +30,7 @@
   if value == 'null':
     value = 'NULL'
   val_name = render.GetOptValName(feature_type)
+  value = render.GetOptVal(feature_type, value)
 %>\
 static OptionalType ${module_name}_${name}_opt_type = {
     .header = { .type = COMPLEX_OPTIONAL, .size = sizeof(OptionalType) },
