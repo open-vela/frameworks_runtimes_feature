@@ -111,6 +111,8 @@ bool convertValueToTarget(FeatureType ftype,
             target = value_translator::createStruct(ctx, obj_map_type, member_count);
             void* struct_ptr = *(void**)pnative;
             if (!struct_ptr) {
+                value_translator::freeValue(ctx, target);
+                target = value_translator::nullValue(ctx);
                 FEATURE_LOG_WARN("null struct ptr!");
                 break;
             }
