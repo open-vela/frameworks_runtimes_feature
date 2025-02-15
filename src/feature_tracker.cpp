@@ -32,9 +32,9 @@ Tracker::~Tracker()
 {
 }
 
-void Tracker::begin()
+void Tracker::begin(const char* extra)
 {
-    QuickProfileLogBegin(QUICK_PROFILE_FEATURE_FRAMEWORK, name_.data(), "begin");
+    QuickProfileLogBegin(QUICK_PROFILE_FEATURE_FRAMEWORK, name_.data(), extra ? extra : "");
     if (enable_sched_) {
         FEATURE_NOTE_BEGIN_STR(name_.data());
     }
@@ -42,12 +42,12 @@ void Tracker::begin()
     // FEATURE_LOG_INFO("%s: begin_time: %lld ms", name_.data(), begin_time_);
 }
 
-void Tracker::end()
+void Tracker::end(const char* extra)
 {
     if (begin_time_ == 0) {
         return;
     }
-    QuickProfileLogEnd(QUICK_PROFILE_FEATURE_FRAMEWORK, name_.data(), "end");
+    QuickProfileLogEnd(QUICK_PROFILE_FEATURE_FRAMEWORK, name_.data(), extra ? extra : "");
     if (enable_sched_) {
         FEATURE_NOTE_END_STR(name_.data());
     }
@@ -71,7 +71,7 @@ FeatureTracker::~FeatureTracker()
     printFeatureInfo();
 }
 
-void FeatureTracker::begin(const char* func_name)
+void FeatureTracker::begin(const char* func_name, const char* extra)
 {
     auto it = func_info_map_.find(func_name);
     if (it == func_info_map_.end()) {
@@ -79,17 +79,17 @@ void FeatureTracker::begin(const char* func_name)
         auto ret = func_info_map_.emplace(func_name, full_name.data());
         it = ret.first;
     }
-    it->second.begin();
+    it->second.begin(extra);
 }
 
-void FeatureTracker::end(const char* func_name)
+void FeatureTracker::end(const char* func_name, const char* extra)
 {
     auto it = func_info_map_.find(func_name);
     if (it == func_info_map_.end()) {
         FEATURE_LOG_ERROR("wrong func_name '%s' for feature: %s", func_name, feature_name_.data());
         return;
     }
-    it->second.end();
+    it->second.end(extra);
 }
 
 void FeatureTracker::printFeatureInfo()
