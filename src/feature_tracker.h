@@ -32,9 +32,9 @@ public:
 
     ~Tracker();
 
-    void begin();
+    void begin(const char* extra);
 
-    void end();
+    void end(const char* extra);
 
     long long duration() const
     {
@@ -67,9 +67,9 @@ public:
 
     ~FeatureTracker();
 
-    void begin(const char* func_name);
+    void begin(const char* func_name, const char* extra = "");
 
-    void end(const char* func_name);
+    void end(const char* func_name, const char* extra = "");
 
     void setIsInterface(bool is_interface)
     {

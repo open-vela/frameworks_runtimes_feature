@@ -207,6 +207,21 @@ static void __feature_mark(feature_runtime_ref rt, feature_value_t val, feature_
     instance_qjs->markValues(rt, mark_func);
 }
 
+#ifdef CONFIG_FEATURE_ENABLE_TRACKER
+static const char* stringify_params(feature_context_ref ctx, int argc, feature_value_t* argv)
+{
+    auto args_array = feature_array(ctx);
+    for (int i = 0; i < argc; i++) {
+        feature_set_array_idx(ctx, args_array, i, feature_dup_value(ctx, argv[i]));
+    }
+    auto arg_json_obj = feature_stringify(ctx, args_array);
+    const char* args_str = feature_to_cstring(ctx, arg_json_obj);
+    feature_free_value(ctx, arg_json_obj);
+    feature_free_value(ctx, args_array);
+    return args_str;
+}
+#endif
+
 static feature_value_t method_call(feature_context_ref ctx, feature_value_t this_val,
     int argc, feature_value_t* argv, int magic)
 {
@@ -219,11 +234,13 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
 
 #ifdef CONFIG_FEATURE_ENABLE_TRACKER
     auto& feature_tracker = instance->prototype()->featureTracker();
-    feature_tracker.begin(member->name);
+    const char* args_str = stringify_params(ctx, argc, argv);
+    feature_tracker.begin(member->name, args_str ? args_str : "");
 #endif
     RetCode ret_code = methodCall(instance, ctx, ctx, member, argc, argv, ret_val);
 #ifdef CONFIG_FEATURE_ENABLE_TRACKER
-    feature_tracker.end(member->name);
+    feature_tracker.end(member->name, args_str ? args_str : "");
+    feature_free_cstring(ctx, args_str);
 #endif
     if (ret_code != RET_OK) {
         std::ostringstream oss;
