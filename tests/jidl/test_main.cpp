@@ -117,6 +117,51 @@ typedef struct FeatTestEnv {
     JSContext* ctx;
 } FeatTestEnv;
 
+static bool feat_test_args_error_cb(void* data, ArgsErrorInfo* error_info)
+{
+    if (!data) {
+        FEATURE_LOG_ERROR("%s: runtime context is null!", __func__);
+        return false;
+    }
+    void* qrt_ctx = data;
+    if (!error_info) {
+        FEATURE_LOG_ERROR("%s: error_info is null!", __func__);
+        return false;
+    }
+    for (int i = 0; i < error_info->argc; ++i) {
+        feature_value_t arg = *((feature_value_t*)(error_info->argv) + i);
+        if (feature_is_undefined(arg)) {
+            AIOTJS_LOG_ERROR("%s: arg %d is undefined!", __func__, i);
+            return false;
+        }
+        if (feature_is_object(arg)) {
+            feature_value_t fail_cb = feature_get_object_property(qrt_ctx, arg, "fail");
+            if (feature_is_undefined(fail_cb))
+                continue;
+
+            AIOTJS_LOG_INFO("%s: found fail callback from arg %d!", __func__, i);
+            feature_value_t argv[2];
+            argv[0] = feature_string(qrt_ctx, error_info->error_msg);
+            argv[1] = feature_int(qrt_ctx, error_info->error_code);
+            feature_value_t ret = feature_call(qrt_ctx, fail_cb, FEATURE_UNDEFINED, 2, argv);
+            feature_free_value(qrt_ctx, ret);
+            feature_free_value(qrt_ctx, fail_cb);
+            feature_free_value(qrt_ctx, argv[0]);
+
+            feature_value_t complete_cb = feature_get_object_property(qrt_ctx, arg, "complete");
+            if (feature_is_undefined(complete_cb)) {
+                AIOTJS_LOG_WARN("%s: no complete callback from arg %d!", __func__, i);
+                return true;
+            }
+            ret = feature_call(qrt_ctx, complete_cb, FEATURE_UNDEFINED, 0, NULL);
+            feature_free_value(qrt_ctx, ret);
+            feature_free_value(qrt_ctx, complete_cb);
+            return true;
+        }
+    }
+    return false;
+}
+
 // __require
 JSValue __require(JSContext* ctx, JSValue this_val, int argc, JSValue* argv,
     int magic, JSValue* func_data)
@@ -317,7 +362,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
 
     FeatureSetManagerUserData(manager, "run_loop", &env);
     FeatureSetUVLoop(manager, main_loop);
-
+    FeatureSetArgsErrorCb(manager, feat_test_args_error_cb, env.ctx);
     // register global require
     JSValue global_obj = JS_GetGlobalObject(env.ctx);
     JSValue require = getRequireObject(&env);
