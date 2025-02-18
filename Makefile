@@ -88,6 +88,8 @@ CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/feature_wamr_u
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/src/backend/wamr/value_translator_wamr.cpp
 endif
 
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl
+
 ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 	PROGNAME += feature_test_cli
 	PRIORITY += 100
@@ -96,6 +98,11 @@ ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 endif
 
 ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
+	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.jidl
+	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
+	FEATURELIST += struct_test
+
 	PROGNAME += feature_unit_test
 	PRIORITY += 100
 	STACKSIZE += 16384

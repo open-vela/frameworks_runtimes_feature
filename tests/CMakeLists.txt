@@ -34,4 +34,24 @@ if(CONFIG_FEATURE_UNIT_TEST)
         ${FEATURE_UNIT_TEST_SRCS})
 endif()
 
+list(
+    APPEND
+    FEATURE_INC_DIRS
+    ${FEATURE_TEST_DIR}/unit/jidl)
+
+if(CONFIG_FEATURE_UNIT_TEST)
+    set(FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_struct.cpp)
+    set(JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/struct_test.jidl)
+
+    nuttx_add_jidl(
+        TARGET
+        quickappfeatures
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        struct_test)
+endif()
+
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/jidl/test_features)
