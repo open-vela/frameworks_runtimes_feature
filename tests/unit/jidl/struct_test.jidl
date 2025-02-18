@@ -1,0 +1,57 @@
+module struct_test@1.0
+
+callback fail_cb(object data, int code)
+// Declare a simple struct
+struct Simple {
+    int int_test = 1
+    boolean boolean_test = false
+    uint uint_test = 1
+    long long_test = 10000000000
+    float float_test = 4.3
+    double double_test = 5.2364
+    string title = "hello world"
+    callback fail_cb fail
+}
+struct SimpleReq {
+    int int_test
+    boolean boolean_test
+    uint uint_test
+    long long_test
+    float float_test
+    double double_test
+    string title
+    callback fail_cb fail
+}
+
+// Declare a callback
+callback testCb(boolean succ)
+
+// Declare a complex struct
+struct Complex {
+    string[] string_array // array type member
+    struct Simple simple = null // struct type member
+    callback testCb test_cb // callback type member
+    object object_test1
+    object object_test2
+    double[] double_array
+    callback fail_cb fail
+}
+
+// Declare a Nested struct
+struct Nested {
+    int a = 1
+    Nested[] subs
+    callback fail_cb fail
+}
+
+// 测试struct基础类型
+boolean testSimpleDefault(Simple s) // struct as parameter
+Simple testSimpleDefault1() // struct as return value
+// 测试struct基础类型必填
+boolean testSimpleReq(SimpleReq s)
+// 测试struct复杂类型
+boolean testComplex(Complex c)
+Complex testComplex1()
+// 测试struct嵌套
+boolean testNested(Nested n)
+Nested testNested1()
