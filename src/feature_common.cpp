@@ -137,6 +137,12 @@ int getValueSize(FeatureType featureType)
         case FT_BOOLEAN: {
             return sizeof(bool);
         } break;
+        case FT_STRING: {
+            return sizeof(char*);
+        } break;
+        case FT_ANY_REF: {
+            return sizeof(ft_value_t*);
+        } break;
         default: {
             FEATURE_LOG_WARN("unsupported type detected !");
             return 0;

@@ -190,14 +190,17 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     // process return value, do not handle promise, it is handled before we invoke ffi_call.
     if (!is_promise && ret_type != FT_VOID) {
         // process return value
+        auto ft_ctx = instance->featureManager()->getFeatureContext();
         if (!convertValueToTarget(ret_type, ctx, ffi_ret_value, ret_val)) {
             FEATURE_LOG_ERROR("can not convert return value to guest!");
             free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
-            value_translator::freeValue(ctx, ret_val);
+            freeFtValue(ft_ctx, ret_type, ffi_ret_value);
+            if (ffi_ret_value && FT_NEED_FREE(ret_type)) {
+                FeatureFreeValue(*(void**)ffi_ret_value);
+            }
             return RET_INTERNAL_ERR;
-        } else if (FT_IS_PRIMITIVE(ret_type) && ret_type == FT_ANY_REF) {
-            value_translator::freeValue(ctx, ret_val);
         }
+        freeFtValue(ft_ctx, ret_type, ffi_ret_value);
     } else if (is_promise) {
         if (!has_async_cbs) {
             ret_val = value_translator::toTargetPromise(ctx, js_ctx, promise);
