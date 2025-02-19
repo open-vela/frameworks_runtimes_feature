@@ -449,12 +449,27 @@ extern "C" int main(int argc, char** argv)
     js_env.time_host.timers.clear();
     uv_close((uv_handle_t*)&prepare, NULL);
     uv_close((uv_handle_t*)&timer, NULL);
-    if (uv_loop_alive(main_loop)) {
-        uv_stop(main_loop);
-        uv_loop_close(main_loop);
-        free(main_loop);
-        main_loop = NULL;
+    int closed = 0;
+    for (int j = 0; j < 200; j++) {
+        if (uv_loop_close(main_loop) == 0) {
+            closed = 1;
+            break;
+        }
+        uv_run(main_loop, UV_RUN_NOWAIT);
     }
+
+    if (!closed) {
+        FILE* fp = fopen("/dev/log", "wb");
+        fp = fp ? fp : stderr;
+        uv_print_all_handles(main_loop, fp);
+        if (fp != stderr) {
+            fclose(fp);
+        }
+        // assert directly if we can't stop uv loop successfuly.
+        assert(0);
+    }
+    if (main_loop)
+        free(main_loop);
     // 释放manifast_str
     if (manifast_str != NULL) {
         free(manifast_str);
