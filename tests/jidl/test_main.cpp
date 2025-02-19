@@ -461,14 +461,30 @@ feat_test_done:
     });
 #endif
 
-    if (uv_loop_alive(main_loop)) {
-        uv_loop_close(main_loop);
-        free(main_loop);
-        main_loop = NULL;
+    int closed = 0;
+    for (int i = 0; i < 200; i++) {
+        if (uv_loop_close(main_loop) == 0) {
+            closed = 1;
+            break;
+        }
+        uv_run(main_loop, UV_RUN_NOWAIT);
     }
 
+    if (!closed) {
+        FILE* fp = fopen("/dev/log", "wb");
+        fp = fp ? fp : stderr;
+        uv_print_all_handles(main_loop, fp);
+        if (fp != stderr) {
+            fclose(fp);
+        }
+        // assert directly if we can't stop uv loop successfuly.
+        assert(0);
+    }
+    if (main_loop)
+        free(main_loop);
     JS_FreeContext(env.ctx);
     JS_FreeRuntime(env.rt);
+    delete app;
     return;
 }
 
