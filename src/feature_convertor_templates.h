@@ -172,7 +172,7 @@ bool convertValueToTarget(FeatureType ftype,
                 break;
             }
             auto elem_type = ((ArrayType*)complex_type)->element_type;
-            size_t elem_size = getValueSize(elem_type);
+            size_t elem_size = FT_IS_REFERENCE(elem_type) ? sizeof(uintptr_t) : getValueSize(elem_type);
             target = value_translator::createArray(ctx, elem_type, array->_size);
             if (value_translator::isNull(ctx, target)) {
                 FEATURE_LOG_ERROR("create array failed!");
