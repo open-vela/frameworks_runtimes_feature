@@ -161,7 +161,20 @@ void PermissionsInfo::RejectPermissions()
     FeatureType ret_type = method_->return_type;
     if (FT_IS_PROMISE(ret_type) && pid_ >= 0) {
         FeaturePromiseReject((FeatureInterfaceHandle)instance_, pid_,
-            FT_ERR_PERMISSIONS, "error: permissions rejected!");
+            FT_ERR_PERMISSIONS, "permissions rejected!");
+    } else {
+        auto arg = (void**)argv_[extra_argc_];
+        FtCallbackId fail_id = findCallbackIdByName(method_->parameters[0], arg, "fail");
+        if (FeatureCheckCallbackId((FeatureInterfaceHandle)instance_, fail_id)) {
+            FeatureInvokeCallback((FeatureInterfaceHandle)instance_,
+                fail_id, "permissions rejected!", FT_ERR_PERMISSIONS);
+            FeatureRemoveCallback((FeatureInterfaceHandle)instance_, fail_id);
+        }
+        FtCallbackId complete_id = findCallbackIdByName(method_->parameters[0], arg, "complete");
+        if (FeatureCheckCallbackId((FeatureInterfaceHandle)instance_, complete_id)) {
+            FeatureInvokeCallback((FeatureInterfaceHandle)instance_, complete_id);
+            FeatureRemoveCallback((FeatureInterfaceHandle)instance_, complete_id);
+        }
     }
     releaseArgs();
 }

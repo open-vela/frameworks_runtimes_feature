@@ -39,6 +39,8 @@ int countMember(ObjectMember* member);
 
 bool convertOptional(OptionalType* opt, void* out);
 
+FtCallbackId findCallbackIdByName(FeatureType ftype, void* pnative, const char* name);
+
 template <typename TPtr>
 class AutoPtr {
 public:

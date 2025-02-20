@@ -197,3 +197,44 @@ bool convertOptional(OptionalType* opt, void* out)
     }
     return true;
 }
+
+FtCallbackId findCallbackIdByName(FeatureType ftype, void* pnative, const char* name)
+{
+    FEATURE_CHECK_NE(pnative, 0);
+    if (FT_IS_PRIMITIVE(ftype)) {
+        return 0;
+    }
+
+    ftype = FT_GET_REAL_TYPE(ftype);
+    ComplexTypeHeader* cmplx_header = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+    if (cmplx_header->type != COMPLEX_STRUCT_MAP) {
+        return 0;
+    }
+
+    void* ptr = *(void**)pnative;
+    ObjectMember* members = ((ObjectMapType*)cmplx_header)->members;
+    auto count = countMember(members);
+    for (int i = 0; i < count; i++) {
+        auto member = &members[i];
+        if (FT_IS_PRIMITIVE(member->type))
+            continue;
+        if (strcmp(member->name, name) != 0)
+            continue;
+        void* member_ptr = (void*)((char*)ptr + member->offset);
+        ComplexTypeHeader* header = (ComplexTypeHeader*)FT_GET_COMPLEX(member->type);
+        if (header->type == COMPLEX_OPTIONAL) {
+            FeatureType opt_type = ((OptionalType*)header)->type;
+            if (FT_IS_PRIMITIVE(opt_type)) {
+                return 0;
+            }
+            ComplexTypeHeader* opt_header = (ComplexTypeHeader*)FT_GET_COMPLEX(opt_type);
+            if (opt_header->type != COMPLEX_CALLBACK) {
+                return 0;
+            }
+            return *(FtCallbackId*)member_ptr;
+        } else if (header->type == COMPLEX_CALLBACK) {
+            return *(FtCallbackId*)member_ptr;
+        }
+    }
+    return 0;
+}
