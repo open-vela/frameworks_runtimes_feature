@@ -16,3 +16,15 @@ callback callback1(int x, string y)
 callback callback2(int a, string b, ...)
 [permissions="hapjs.permission.DEVICE_INFO"]
 void goo(callback1 cb1, callback2 cb2)
+
+callback Fail(string msg, int code)
+callback Complete()
+// Declare a complex struct
+struct Book {
+  int page_count = 500
+  string title = "monkey king"
+  Fail fail = null
+  Complete complete
+}
+[permissions="hapjs.permission.LOCATION"]
+void goo2(Book book=null)

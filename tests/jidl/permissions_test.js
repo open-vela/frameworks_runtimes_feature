@@ -44,7 +44,23 @@ test.goo(
   function() {
     show_args('cb2', arguments);
   }
- );
+);
+
+test.goo2({
+  fail: function(msg, code) {
+    console.log("goo2 fail, code: ", code, ", msg: ", msg);
+  },
+  complete: function() {
+    console.log("goo2 complete");
+  }
+});
+
+test.goo2({
+  page_count: 1000,
+  complete: function() {
+    console.log("goo2 complete");
+  }
+});
 
 
 

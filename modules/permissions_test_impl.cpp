@@ -139,3 +139,25 @@ void permissions_test_wrap_goo(FeatureInstanceHandle feature, AppendData append_
     }
     FeatureRemoveCallback(feature, cb2);
 }
+
+void permissions_test_wrap_goo2(FeatureInstanceHandle feature, AppendData append_data, permissions_test_Book* book)
+{
+    FEATURE_LOG_INFO("%s, book: %p", file_tag, book);
+    if (book) {
+        FEATURE_LOG_INFO("%s, fail: %d, complete: %d", file_tag, book->fail, book->complete);
+        if (book->fail) {
+            if (!FeatureInvokeCallback(feature, book->fail, "goo2 failed!", 200)) {
+                FEATURE_LOG_ERROR("invoke fail failed !");
+                return;
+            }
+            FeatureRemoveCallback(feature, book->fail);
+        }
+        if (book->complete) {
+            if (!FeatureInvokeCallback(feature, book->complete)) {
+                FEATURE_LOG_ERROR("invoke complete failed !");
+                return;
+            }
+            FeatureRemoveCallback(feature, book->complete);
+        }
+    }
+}
