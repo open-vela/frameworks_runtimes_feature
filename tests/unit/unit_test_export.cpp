@@ -12,6 +12,11 @@ typedef struct _UnitEventData {
     bool state_changed_added;
 } UnitEventData;
 
+typedef struct _structSimple {
+  FtInt int_test;
+  FtBool boolean_test;
+} structSimple;
+
 FtString test_const = "hello world";
 
 // for event
@@ -92,6 +97,19 @@ static CallbackType variable_callback_type = {
 static const PromiseType promise_type = {
     .header = { .type = COMPLEX_PROMISE, .size = sizeof(FtPromiseId) },
     .resolveType = FT_INT32
+};
+
+// for array
+static const ArrayType simple_array = {
+    .header = { .type = COMPLEX_ARRAY, .size = sizeof(FtArray) },
+    .element_type = FT_INT32
+};
+
+// for struct
+static ObjectMember simple_struct_members[] = {
+    { "int_test", FT_INT, offsetof(structSimple, int_test), sizeof(FtInt) },
+    { "boolean_test", FT_BOOLEAN, offsetof(structSimple, boolean_test), sizeof(FtBool) },
+    { NULL },
 };
 
 static bool test_featureMalloc(size_t size, FeatureType featureType)
@@ -202,7 +220,7 @@ protected:
 // =============================================================================
 // FeatureMalloc Tests
 // =============================================================================
-TEST_F(FeatureExportTestQjs, FeatureMalloc_basetype_test)
+TEST_F(FeatureExportTestQjs, FeatureMalloc_basetypeAlloc)
 {
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_INT8), FT_INT8));
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_INT16), FT_INT16));
@@ -217,6 +235,37 @@ TEST_F(FeatureExportTestQjs, FeatureMalloc_basetype_test)
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_BOOLEAN), FT_BOOLEAN));
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_STRING), FT_STRING));
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_ANY_REF), FT_ANY_REF));
+}
+// TEST_F(FeatureExportTestQjs, FeatureMalloc_failAlloc) {
+//     // 模拟分配失败的情况
+//     size_t largeSize = std::numeric_limits<size_t>::max();
+//     void* ptr = FeatureMalloc(largeSize, FT_STRING);
+//     EXPECT_EQ(ptr, nullptr);
+// }
+TEST_F(FeatureExportTestQjs, FeatureMalloc_structAlloc)
+{
+    const ObjectMapType simple_struct_type = {
+        .header = { .type = COMPLEX_STRUCT_MAP, .size = sizeof(structSimple) },
+        .members = simple_struct_members
+    };
+
+    structSimple* simple_struct = (structSimple*)FeatureMalloc(
+        sizeof(structSimple), FT_MK_COMPLEX(&simple_struct_type));
+
+    auto header = (FTObjHeader*)((char*)simple_struct - FT_OBJ_HEADER_SIZE);
+    // EXPECT_TRUE(FT_IS_COMPLEX(header->featureType));
+    EXPECT_EQ(header->ref_count, 1);
+    // EXPECT_EQ(header->featureType, (uintptr_t)&simple_struct_type);
+    FeatureFreeValue(simple_struct);
+}
+TEST_F(FeatureExportTestQjs, FeatureMalloc_arrayAlloc)
+{
+    FtArray* simple_array_test = (FtArray*)FeatureMalloc(sizeof(FtArray), FT_MK_COMPLEX(&simple_array));
+    auto header = (FTObjHeader*)((char*)simple_array_test - FT_OBJ_HEADER_SIZE);
+    // EXPECT_TRUE(FT_IS_COMPLEX(header->featureType));
+    EXPECT_EQ(header->ref_count, 1);
+    // EXPECT_EQ(header->featureType, (uintptr_t)&simple_array);
+    FeatureFreeValue(simple_array_test);
 }
 
 // =============================================================================
@@ -233,6 +282,13 @@ TEST_F(FeatureExportTestQjs, FeatureDupValue1)
     FeatureFreeValue(dup_data);
     FeatureFreeValue(data);
 }
+TEST_F(FeatureExportTestQjs, FeatureDupValue_dataIsNull)
+{
+    void* data = nullptr;
+    auto dup_data = FeatureDupValue(data);
+    EXPECT_EQ(data, nullptr);
+    EXPECT_EQ(dup_data, nullptr);
+}
 
 // =============================================================================
 // FeatureFreeValue Tests
@@ -246,6 +302,11 @@ TEST_F(FeatureExportTestQjs, FeatureFreeValue1)
     EXPECT_EQ(header->ref_count, (uint32_t)1);
     FeatureFreeValue(data);
 }
+TEST_F(FeatureExportTestQjs, FeatureFreeValue_dataIsNull)
+{
+    void* data = nullptr;
+    FeatureFreeValue(data);
+}
 
 // =============================================================================
 // FeatureGetProtoHandle Tests
@@ -253,8 +314,13 @@ TEST_F(FeatureExportTestQjs, FeatureFreeValue1)
 TEST_F(FeatureExportTestQjs, FeatureGetProtoHandle1)
 {
     //测试是否能正确获取protoHandle
-    auto protoType = FeatureGetProtoHandle(instance_handle);
-    EXPECT_EQ((((FeatureInstance*)instance_handle)->prototype()), protoType);
+    auto proto_type = FeatureGetProtoHandle(instance_handle);
+    EXPECT_EQ((((FeatureInstance*)instance_handle)->prototype()), proto_type);
+}
+TEST_F(FeatureExportTestQjs, FeatureGetProtoHandle_handleIsNull)
+{
+    auto proto_type = FeatureGetProtoHandle(nullptr);
+    EXPECT_EQ(proto_type, nullptr);
 }
 
 // =============================================================================
@@ -265,12 +331,16 @@ TEST_F(FeatureExportTestQjs, FeatureSetProtoData1)
     //测试是否能正确设置protoData
     char* str = (char*)malloc(6);
     strcpy(str, "hello");
-    auto featureProtoTypeHandle = (FeaturePrototype*)(FeatureGetProtoHandle(instance_handle));
-    FeatureSetProtoData(featureProtoTypeHandle, str);
-    EXPECT_EQ(strcmp(str, (char*)featureProtoTypeHandle->native()), 0);
-    FeatureSetProtoData(featureProtoTypeHandle, nullptr);
-    EXPECT_EQ(featureProtoTypeHandle->native(), nullptr);
+    auto feature_proto_type_handle = (FeaturePrototype*)(FeatureGetProtoHandle(instance_handle));
+    FeatureSetProtoData(feature_proto_type_handle, str);
+    EXPECT_EQ(strcmp(str, (char*)feature_proto_type_handle->native()), 0);
+    FeatureSetProtoData(feature_proto_type_handle, nullptr);
+    EXPECT_EQ(feature_proto_type_handle->native(), nullptr);
     free(str);
+}
+TEST_F(FeatureExportTestQjs, FeatureSetProtoData_handleIsNull)
+{
+    FeatureSetProtoData(nullptr, nullptr);
 }
 
 // =============================================================================
@@ -279,16 +349,21 @@ TEST_F(FeatureExportTestQjs, FeatureSetProtoData1)
 TEST_F(FeatureExportTestQjs, FeatureGetProtoData1)
 {
     //测试是否能正确获取protoData
-    auto featureProtoTypeHandle = (FeaturePrototype*)(FeatureGetProtoHandle(instance_handle));
-    auto protoData = FeatureGetProtoData(FeatureGetProtoHandle(instance_handle));
-    EXPECT_EQ(protoData, featureProtoTypeHandle->native());
+    auto feature_proto_type_handle = (FeaturePrototype*)(FeatureGetProtoHandle(instance_handle));
+    auto proto_data = FeatureGetProtoData(FeatureGetProtoHandle(instance_handle));
+    EXPECT_EQ(proto_data, feature_proto_type_handle->native());
     char* str = (char*)malloc(6);
     strcpy(str, "hello");
-    FeatureSetProtoData(featureProtoTypeHandle, str);
-    protoData = FeatureGetProtoData(FeatureGetProtoHandle(instance_handle));
-    EXPECT_EQ(strcmp(str, (char*)protoData), 0);
-    FeatureSetProtoData(featureProtoTypeHandle, nullptr);
+    FeatureSetProtoData(feature_proto_type_handle, str);
+    proto_data = FeatureGetProtoData(FeatureGetProtoHandle(instance_handle));
+    EXPECT_EQ(strcmp(str, (char*)proto_data), 0);
+    FeatureSetProtoData(feature_proto_type_handle, nullptr);
     free(str);
+}
+TEST_F(FeatureExportTestQjs, FeatureGetProtoData_handleIsNull)
+{
+    auto proto_data = FeatureGetProtoData(nullptr);
+    EXPECT_EQ(proto_data, nullptr);
 }
 
 // =============================================================================
@@ -297,8 +372,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetProtoData1)
 TEST_F(FeatureExportTestQjs, FeatureGetPackageName1)
 {
     //测试是否能正确获取包名com.feature.test
-    auto pkgName = FeatureGetPackageName(FeatureGetProtoHandle(instance_handle));
-    EXPECT_STREQ(pkgName, "com.feature.test");
+    auto pkg_name = FeatureGetPackageName(FeatureGetProtoHandle(instance_handle));
+    EXPECT_STREQ(pkg_name, "com.feature.test");
+}
+TEST_F(FeatureExportTestQjs, FeatureGetPackageName_handleIsNull)
+{
+    auto pkg_name = FeatureGetPackageName(nullptr);
+    EXPECT_EQ(pkg_name, nullptr);
 }
 
 // =============================================================================
@@ -308,8 +388,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetPackageVersion1)
 {
     //测试是否能正确获取包版本
     FeatureSetPackageVersion(manager_handle_qjs, "3.14");
-    auto pkgVersion = FeatureGetPackageVersion(FeatureGetProtoHandle(instance_handle));
-    EXPECT_STREQ(pkgVersion, "3.14");
+    auto pkg_version = FeatureGetPackageVersion(FeatureGetProtoHandle(instance_handle));
+    EXPECT_STREQ(pkg_version, "3.14");
+}
+TEST_F(FeatureExportTestQjs, FeatureGetPackageVersion_handleIsNull)
+{
+    auto pkg_version = FeatureGetPackageVersion(nullptr);
+    EXPECT_EQ(pkg_version, nullptr);
 }
 
 // =============================================================================
@@ -325,6 +410,10 @@ TEST_F(FeatureExportTestQjs, FeatureSetObjectData1)
     EXPECT_EQ(((FeatureInstance*)instance_handle)->native(), nullptr);
     free(str);
 }
+TEST_F(FeatureExportTestQjs, FeatureSetObjectData_handleIsNull)
+{
+    FeatureSetObjectData(nullptr, nullptr);
+}
 
 // =============================================================================
 // FeatureGetObjectData Tests
@@ -334,10 +423,15 @@ TEST_F(FeatureExportTestQjs, FeatureGetObjectData1)
     char* str = (char*)malloc(6);
     strcpy(str, "hello");
     FeatureSetObjectData(instance_handle, str);
-    auto objData = FeatureGetObjectData(instance_handle);
-    EXPECT_EQ(strcmp(str, (char*)objData), 0);
+    auto obj_data = FeatureGetObjectData(instance_handle);
+    EXPECT_EQ(strcmp(str, (char*)obj_data), 0);
     FeatureSetObjectData(instance_handle, nullptr);
     free(str);
+}
+TEST_F(FeatureExportTestQjs, FeatureGetObjectData_handleIsNull)
+{
+    auto obj_data = FeatureGetObjectData(nullptr);
+    EXPECT_EQ(obj_data, nullptr);
 }
 
 // =============================================================================
@@ -349,6 +443,11 @@ TEST_F(FeatureExportTestQjs, FeatureGetContext1)
     auto ctx = FeatureGetContext(instance_handle);
     EXPECT_EQ(static_cast<JSContext*>(ctx->data), js_env.ctx);
 }
+TEST_F(FeatureExportTestQjs, FeatureGetContext_handleIsNull)
+{
+    auto ctx = FeatureGetContext(nullptr);
+    EXPECT_EQ(ctx, nullptr);
+}
 
 // =============================================================================
 // FeatureGetBindingObject Tests
@@ -356,8 +455,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetContext1)
 TEST_F(FeatureExportTestQjs, FeatureGetBindingObject1)
 {
     //测试是否能正确获取绑定对象
-    auto bindingObj = FeatureGetBindingObject(instance_handle);
-    EXPECT_EQ(bindingObj, FT_VAL_GET_JS_VAL(param));
+    auto binding_obj = FeatureGetBindingObject(instance_handle);
+    EXPECT_EQ(binding_obj, FT_VAL_GET_JS_VAL(param));
+}
+TEST_F(FeatureExportTestQjs, FeatureGetBindingObject_handleIsNull)
+{
+    auto binding_obj = FeatureGetBindingObject(nullptr);
+    EXPECT_EQ(binding_obj, FEATURE_UNDEFINED);
 }
 
 // =============================================================================
@@ -366,8 +470,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetBindingObject1)
 TEST_F(FeatureExportTestQjs, FeatureGetEnvironmentName1)
 {
     //测试是否能正确获取环境名称
-    auto envName = FeatureGetEnvironmentName(FeatureGetProtoHandle(instance_handle));
-    EXPECT_EQ(strcmp(envName, "quickjs"), 0);
+    auto env_name = FeatureGetEnvironmentName(FeatureGetProtoHandle(instance_handle));
+    EXPECT_EQ(strcmp(env_name, "quickjs"), 0);
+}
+TEST_F(FeatureExportTestQjs, FeatureGetEnvironmentName_handleIsNull)
+{
+    auto env_name = FeatureGetEnvironmentName(nullptr);
+    EXPECT_EQ(env_name, nullptr);
 }
 
 // =============================================================================
@@ -389,6 +498,25 @@ TEST_F(FeatureExportTestQjs, FeatureInvokeCallback1)
     ((FeatureInstanceQjs*)(instance_handle))->eraseCallback(id);
     JS_FreeValue(js_env.ctx, callback);
 }
+TEST_F(FeatureExportTestQjs, FeatureInvokeCallback_handleIsNull)
+{
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t local_var = 0;
+            JS_ToInt32(ctx, &local_var, argv[0]);
+            EXPECT_EQ(local_var, 114513);
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &callback_type);
+    EXPECT_FALSE(FeatureInvokeCallback(nullptr, 1, 114513));
+    ((FeatureInstanceQjs*)(instance_handle))->eraseCallback(id);
+    JS_FreeValue(js_env.ctx, callback);
+}
+TEST_F(FeatureExportTestQjs, FeatureInvokeCallback_callbackIdIsInvalid)
+{
+    EXPECT_FALSE(FeatureInvokeCallback(instance_handle, 0));
+}
 
 // =============================================================================
 // FeatureRemoveCallback Tests
@@ -409,6 +537,26 @@ TEST_F(FeatureExportTestQjs, FeatureRemoveCallback1)
     EXPECT_FALSE(FeatureInvokeCallback(instance_handle, id, 2));
     JS_FreeValue(js_env.ctx, callback);
 }
+TEST_F(FeatureExportTestQjs, FeatureRemoveCallback_handleIsNull)
+{
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t local_var = 0;
+            JS_ToInt32(ctx, &local_var, argv[0]);
+            EXPECT_EQ(local_var, 1);
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &callback_type);
+    EXPECT_FALSE(FeatureRemoveCallback(nullptr, id));
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
+}
+TEST_F(FeatureExportTestQjs, FeatureRemoveCallback_callbackIdIsInvalid)
+{
+    EXPECT_FALSE(FeatureRemoveCallback(instance_handle, 0));
+}
+
 // =============================================================================
 // FeatureInvokeCallbackCount Tests
 // =============================================================================
@@ -549,9 +697,9 @@ TEST_F(FeatureExportTestQjs, FeaturePost1)
 TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromInstance1)
 {
     //测试能否正确地从instanceHandle获取到managerHandle
-    auto managerHandle = FeatureGetManagerHandleFromInstance(instance_handle);
-    EXPECT_EQ(managerHandle, manager_handle_qjs);
-    EXPECT_EQ(managerHandle, ((FeaturePrototype*)(FeatureGetProtoHandle(instance_handle)))->featureManager());
+    auto manager_handle = FeatureGetManagerHandleFromInstance(instance_handle);
+    EXPECT_EQ(manager_handle, manager_handle_qjs);
+    EXPECT_EQ(manager_handle, ((FeaturePrototype*)(FeatureGetProtoHandle(instance_handle)))->featureManager());
 }
 
 // =============================================================================
@@ -560,9 +708,9 @@ TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromInstance1)
 TEST_F(FeatureExportTestQjs, FeatureGetUVLoop1)
 {
     //测试能否正确获取到uvloop
-    auto managerHandle = FeatureGetManagerHandleFromInstance(instance_handle);
-    auto loop1 = FeatureGetUVLoop(managerHandle);
-    EXPECT_EQ(loop1, ((FeatureManagerQjs*)(managerHandle))->getUVLoop());
+    auto manager_handle = FeatureGetManagerHandleFromInstance(instance_handle);
+    auto loop1 = FeatureGetUVLoop(manager_handle);
+    EXPECT_EQ(loop1, ((FeatureManagerQjs*)(manager_handle))->getUVLoop());
     EXPECT_EQ(loop1, loop);
 }
 
@@ -590,9 +738,9 @@ TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromProto1)
 {
     //测试能否正确地从protoHandle获取到managerHandle
     auto protoHandle = FeatureGetProtoHandle(instance_handle);
-    auto managerHandle = FeatureGetManagerHandleFromProto(protoHandle);
-    EXPECT_EQ(managerHandle, manager_handle_qjs);
-    EXPECT_EQ(managerHandle, ((FeaturePrototype*)(FeatureGetProtoHandle(instance_handle)))->featureManager());
+    auto manager_handle = FeatureGetManagerHandleFromProto(protoHandle);
+    EXPECT_EQ(manager_handle, manager_handle_qjs);
+    EXPECT_EQ(manager_handle, ((FeaturePrototype*)(FeatureGetProtoHandle(instance_handle)))->featureManager());
 }
 
 // =============================================================================
