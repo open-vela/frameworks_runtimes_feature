@@ -127,6 +127,7 @@ TEST_F(FeatureMainExportTestQjs, FeatureCreateManager_pinfoIsNull)
     g_manager_qjs_test = FeatureCreateManager(nullptr);
     ASSERT_EQ(g_manager_qjs_test, nullptr);
 }
+
 // =============================================================================
 // FeatureManagerGetContext Tests
 // =============================================================================
@@ -135,6 +136,12 @@ TEST_F(FeatureMainExportTestQjs, FeatureManagerGetContext1)
     auto cxt_ref = FeatureManagerGetContext(manager_handle_qjs);
     EXPECT_EQ(cxt_ref->data, js_env.ctx);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureManagerGetContext_handleIsNull)
+{
+    auto cxt_ref = FeatureManagerGetContext(nullptr);
+    EXPECT_EQ(cxt_ref, nullptr);
+}
+
 // =============================================================================
 // FeatureSetArgsErrorCb Tests
 // =============================================================================
@@ -151,6 +158,13 @@ TEST_F(FeatureMainExportTestQjs, FeatureSetArgsErrorCb1)
     error_info.argv = nullptr;
     EXPECT_TRUE(manager->argsErrorCb()(manager->argsErrorData(), &error_info));
 }
+TEST_F(FeatureMainExportTestQjs, FeatureSetArgsErrorCb_handleIsNull)
+{
+    // FeatureSetArgsErrorCb没有返回值，无法判断是否成功
+    FeatureSetArgsErrorCb(nullptr, test_args_error_cb, js_env.ctx);
+    EXPECT_TRUE(true);
+}
+
 // =============================================================================
 // FeatureSetPackageVersion Tests
 // =============================================================================
@@ -161,9 +175,25 @@ TEST_F(FeatureMainExportTestQjs, FeatureSetPackageVersion1)
     FeatureSetPackageVersion(manager_handle_qjs, "3.14");
     EXPECT_EQ(strcmp(manager->packageVesion(), "3.14"), 0);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureSetPackageVersion_handleIsNull)
+{
+    FeatureSetPackageVersion(nullptr, "3.14");
+}
+
 // =============================================================================
 // FeatureFreeManager Tests
 // =============================================================================
+TEST_F(FeatureMainExportTestQjs, FeatureFreeManager1)
+{
+    FeatureManagerHandle handle = new FeatureManager(nullptr);
+    // 测试无handle泄露
+    FeatureFreeManager(handle);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureFreeManager_handleIsNull)
+{
+    FeatureFreeManager(nullptr);
+}
+
 // =============================================================================
 // FeatureSetUVLoop Tests
 // =============================================================================
@@ -173,6 +203,15 @@ TEST_F(FeatureMainExportTestQjs, FeatureSetUVLoop1)
     FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
     EXPECT_EQ(manager->getUVLoop(), loop);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureSetUVLoop_loopIsNull)
+{
+    FeatureSetUVLoop(manager_handle_qjs, nullptr);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureSetUVLoop_handleIsNull)
+{
+    FeatureSetUVLoop(nullptr, loop);
+}
+
 // =============================================================================
 // FeatureUnsetUVLoop Tests
 // =============================================================================
@@ -184,6 +223,11 @@ TEST_F(FeatureMainExportTestQjs, FeatureUnsetUVLoop1)
     FeatureUnsetUVLoop(manager_handle_qjs);
     EXPECT_EQ(manager->getUVLoop(), nullptr);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureUnsetUVLoop_handleIsNull)
+{
+    FeatureUnsetUVLoop(nullptr);
+}
+
 // =============================================================================
 // FeatureUninit Tests
 // =============================================================================
@@ -194,6 +238,11 @@ TEST_F(FeatureMainExportTestQjs, FeatureUninit1)
     EXPECT_EQ(manager->getFeatureContext(), nullptr);
     EXPECT_TRUE(feature_list_is_empty(manager->getFeatureNodeList()));
 }
+TEST_F(FeatureMainExportTestQjs, FeatureUninit_handleIsNull)
+{
+    FeatureUninit(nullptr);
+}
+
 // =============================================================================
 // FeatureRequire Tests
 // =============================================================================
@@ -209,13 +258,27 @@ TEST_F(FeatureMainExportTestQjs, FeatureRequire1)
     JS_FreeValue(js_env.ctx, unit_test);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), ft_obj);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureRequire_handleIsNull)
+{
+    ft_value_t ft_value;
+    FT_VAL_GET_JS_VAL(ft_value) = JS_UNDEFINED;
+    auto ft_obj = FeatureRequire(nullptr, ft_value, pDesc1.name);
+    ft_value_t zero_value = {}; // 全零的结构体
+    EXPECT_TRUE(memcmp(&ft_obj, &zero_value, sizeof(ft_value_t)) == 0);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureRequire_nameIsNull)
+{
+    ft_value_t ft_value;
+    FT_VAL_GET_JS_VAL(ft_value) = JS_UNDEFINED;
+    auto ft_obj = FeatureRequire(manager_handle_qjs, ft_value, nullptr);
+    ft_value_t zero_value = {}; // 全零的结构体
+    EXPECT_TRUE(memcmp(&ft_obj, &zero_value, sizeof(ft_value_t)) == 0);
+}
 // =============================================================================
 // FeatureFindFeature Tests
 // =============================================================================
 TEST_F(FeatureMainExportTestQjs, FeatureFindFeature1)
 {
-    ft_value_t ft_value;
-    FT_VAL_GET_JS_VAL(ft_value) = JS_UNDEFINED;
     FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
     auto ft_obj = FeatureFindFeature(manager_handle_qjs, pDesc1.name);
     auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
@@ -224,6 +287,19 @@ TEST_F(FeatureMainExportTestQjs, FeatureFindFeature1)
     EXPECT_EQ(pDesc2, &pDesc1);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), ft_obj);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureFindFeature_handleIsNull)
+{
+    auto ft_obj = FeatureFindFeature(nullptr, pDesc1.name);
+    ft_value_t zero_value = {}; // 全零的结构体
+    EXPECT_TRUE(memcmp(&ft_obj, &zero_value, sizeof(ft_value_t)) == 0);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureFindFeature_nameIsNull)
+{
+    auto ft_obj = FeatureFindFeature(manager_handle_qjs, nullptr);
+    ft_value_t zero_value = {}; // 全零的结构体
+    EXPECT_TRUE(memcmp(&ft_obj, &zero_value, sizeof(ft_value_t)) == 0);
+}
+
 // =============================================================================
 // FeatureSetManagerUserData Tests
 // =============================================================================
@@ -243,6 +319,29 @@ TEST_F(FeatureMainExportTestQjs, FeatureSetManagerUserData1)
     free(str);
     free(str1);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureSetManagerUserData_userDataUpdata)
+{
+    char* str = (char*)malloc(6);
+    strcpy(str, "hello");
+    char* str1 = (char*)malloc(6);
+    strcpy(str1, "world");
+    FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
+    FeatureSetManagerUserData(manager_handle_qjs, "data", str);
+    EXPECT_EQ(manager->getUserData("data"), str);
+    FeatureSetManagerUserData(manager_handle_qjs, "data", str1);
+    EXPECT_EQ(manager->getUserData("data"), str1);
+    FeatureSetManagerUserData(manager_handle_qjs, "data", nullptr);
+    free(str);
+    free(str1);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureSetManagerUserData_handleIsNull)
+{
+    char* str = (char*)malloc(6);
+    strcpy(str, "hello");
+    FeatureSetManagerUserData(nullptr, "data", str);
+    free(str);
+}
+
 // =============================================================================
 // FeatureCreateFeature Tests
 // =============================================================================
@@ -261,6 +360,27 @@ TEST_F(FeatureMainExportTestQjs, FeatureCreateFeature1)
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), new_feature);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), js_feature_prototype);
 }
+TEST_F(FeatureMainExportTestQjs, FeatureCreateFeature_handleIsNull)
+{
+    auto js_feature_prototype = FeatureFindFeature(manager_handle_qjs, pDesc1.name);
+    ft_value_t binding_obj;
+    FT_VAL_GET_JS_VAL(binding_obj) = JS_UNDEFINED;
+    auto ft_obj = FeatureCreateFeature(nullptr, js_feature_prototype, binding_obj);
+    ft_value_t zero_value = {}; // 全零的结构体
+    EXPECT_TRUE(memcmp(&ft_obj, &zero_value, sizeof(ft_value_t)) == 0);
+    ft_free_value(FeatureManagerGetContext(manager_handle_qjs), js_feature_prototype);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureCreateFeature_prototypeIsUdefined)
+{
+    ft_value_t js_feature_prototype;
+    FT_VAL_GET_JS_VAL(js_feature_prototype) = JS_UNDEFINED;
+    ft_value_t binding_obj;
+    FT_VAL_GET_JS_VAL(binding_obj) = JS_UNDEFINED;
+    auto ft_obj = FeatureCreateFeature(manager_handle_qjs, js_feature_prototype, binding_obj);
+    auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
+    EXPECT_EQ(js_obj, JS_UNDEFINED);
+}
+
 // =============================================================================
 // FeatureHasFeature Tests
 // =============================================================================
@@ -274,5 +394,16 @@ TEST_F(FeatureMainExportTestQjs, FeatureHasFeature1)
     res = FeatureHasFeature(manager_handle_qjs, name);
     EXPECT_EQ(res, true);
     FeatureFreeValue(name);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureHasFeature_handleIsNull)
+{
+    const char* name = "unit_test";
+    auto res = FeatureHasFeature(nullptr, name);
+    EXPECT_EQ(res, false);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureHasFeature_nameIsNull)
+{
+    auto res = FeatureHasFeature(manager_handle_qjs, nullptr);
+    EXPECT_EQ(res, false);
 }
 } // namespace feature_framework
