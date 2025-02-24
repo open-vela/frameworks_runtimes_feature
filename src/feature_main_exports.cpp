@@ -69,6 +69,7 @@ void FeatureFreeManager(FeatureManagerHandle handle)
 void FeatureSetUVLoop(FeatureManagerHandle handle, uv_loop_t* loop)
 {
     FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FEATURE_CHECK_PTR(loop, ;, "loop is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     manager->setUVLoop(loop);
 }
@@ -91,6 +92,7 @@ ft_value_t FeatureRequire(FeatureManagerHandle handle, ft_value_t binding_obj, c
 {
     ft_value_t ret = { 0 };
     FEATURE_CHECK_PTR(handle, ret, "handle is null !")
+    FEATURE_CHECK_PTR(name, ret, "name is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->featureRequire(binding_obj, name);
 }
@@ -99,6 +101,7 @@ ft_value_t FeatureFindFeature(FeatureManagerHandle handle, const char* name)
 {
     ft_value_t ret = { 0 };
     FEATURE_CHECK_PTR(handle, ret, "handle is null !")
+    FEATURE_CHECK_PTR(name, ret, "name is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->findFeature(name);
 }
@@ -121,6 +124,7 @@ void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, vo
 bool FeatureHasFeature(FeatureManagerHandle handle, FtString feature_method)
 {
     FEATURE_CHECK_PTR(handle, false, "manager handle is null !")
+    FEATURE_CHECK_PTR(feature_method, false, "feature_method is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->hasFeature(feature_method);
 }
