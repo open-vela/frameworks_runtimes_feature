@@ -92,6 +92,7 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/gui
 CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)/include
 
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
@@ -184,6 +185,18 @@ JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/system_app.jidl
 OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/system_app_impl.cpp
 FEATURELIST += system_app
+
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/protobuf-c/protobuf-c
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework/dom-protobuf
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/jse/modules/system
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/jse/quickjs
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/jse
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/graphics/animengine/include
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/media_impl.cpp
+JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/media.jidl
+OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+FEATURELIST += system_media
 endif
 
 ifeq ($(CONFIG_MEDIA_FEATURE),y)
