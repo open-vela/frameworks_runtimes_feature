@@ -738,6 +738,7 @@ bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data)
 {
     FEATURE_INSTANCE_CHECK(handle, false)
+    FEATURE_CHECK_PTR(task_cb, false, "task_cb is null !")
     manager_from_instance(handle)->addTask(handle, task_cb, data);
     return true;
 }
@@ -752,6 +753,7 @@ uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 void* FeatureGetManagerUserData(FeatureManagerHandle handle, const char* name)
 {
     FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")
+    FEATURE_CHECK_PTR(name, nullptr, "name is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(handle);
     return manager->getUserData(name);
 }
@@ -839,6 +841,7 @@ bool FeatureInstanceIsDetached(FeatureInstanceHandle handle)
 FtEventId FeatureGetEventId(FeatureInstanceHandle handle, const char* name)
 {
     FEATURE_INSTANCE_CHECK(handle, 0)
+    FEATURE_CHECK_PTR(name, 0, "name is null !")
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     return instance->getEventId(name);
 }

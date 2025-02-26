@@ -13,8 +13,8 @@ typedef struct _UnitEventData {
 } UnitEventData;
 
 typedef struct _structSimple {
-  FtInt int_test;
-  FtBool boolean_test;
+    FtInt int_test;
+    FtBool boolean_test;
 } structSimple;
 
 FtString test_const = "hello world";
@@ -234,6 +234,7 @@ TEST_F(FeatureExportTestQjs, FeatureMalloc_basetypeAlloc)
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_DOUBLE), FT_DOUBLE));
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_BOOLEAN), FT_BOOLEAN));
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_STRING), FT_STRING));
+    EXPECT_TRUE(test_featureMalloc(getValueSize(FT_CHAR), FT_CHAR));
     EXPECT_TRUE(test_featureMalloc(getValueSize(FT_ANY_REF), FT_ANY_REF));
 }
 // TEST_F(FeatureExportTestQjs, FeatureMalloc_failAlloc) {
@@ -583,6 +584,107 @@ TEST_F(FeatureExportTestQjs, FeatureInvokeCallbackCount1)
     FeatureFreeValue(rest);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureInvokeCallbackCount_InvalidHandle)
+{
+    // 异常情况：测试无效的句柄
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            double d_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            JS_ToFloat64(ctx, &d_var, argv[1]);
+            EXPECT_EQ(i_var, 114513);
+            EXPECT_DOUBLE_EQ(d_var, 3.1415926535);
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &variable_callback_type);
+    auto rest = FeatureMalloc(getValueSize(FT_DOUBLE), FT_DOUBLE);
+    *(double*)rest = 3.1415926535;
+    EXPECT_FALSE(FeatureInvokeCallbackCount(nullptr, id, 2, 114513, rest));
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
+    FeatureFreeValue(rest);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureInvokeCallbackCount_InvalidCallbackId)
+{
+    // 异常情况：测试无效的回调 ID
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            double d_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            JS_ToFloat64(ctx, &d_var, argv[1]);
+            EXPECT_EQ(i_var, 114513);
+            EXPECT_DOUBLE_EQ(d_var, 3.1415926535);
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &variable_callback_type);
+    auto rest = FeatureMalloc(getValueSize(FT_DOUBLE), FT_DOUBLE);
+    *(double*)rest = 3.1415926535;
+    EXPECT_FALSE(FeatureInvokeCallbackCount(instance_handle, -1, 2, 114513, rest));
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
+    FeatureFreeValue(rest);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureInvokeCallbackCount_Mismatch)
+{
+    //异常情况： 测试 count 参数与实际传入的参数数量不匹配的情况
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            double d_var = 0;
+            if (argc >= 1) {
+                JS_ToInt32(ctx, &i_var, argv[0]);
+            }
+            if (argc >= 2) {
+                JS_ToFloat64(ctx, &d_var, argv[1]);
+            }
+            EXPECT_EQ(i_var, 114513);
+            if (argc >= 2) {
+                EXPECT_DOUBLE_EQ(d_var, 3.1415926535);
+            }
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &variable_callback_type);
+    auto rest = FeatureMalloc(getValueSize(FT_DOUBLE), FT_DOUBLE);
+    *(double*)rest = 3.1415926535;
+
+    // 调用时 count 参数设为 1 < 实际传入的参数个数 2  // 预期返回 true
+    EXPECT_TRUE(FeatureInvokeCallbackCount(instance_handle, id, 1, 114513, rest));
+
+    // 清理资源
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
+    FeatureFreeValue(rest);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureInvokeCallbackCount_ZeroCount)
+{
+    // 边界情况：count小于最小入参个数
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            // 验证无参数传入
+            EXPECT_EQ(argc, 0); //参数数量应为0
+            return JS_UNDEFINED;
+        },
+        "test_no_args", 0); // 参数个数设为0
+
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &variable_callback_type);
+
+    // 调用时count参数设为0，不传后续参数
+    EXPECT_FALSE(FeatureInvokeCallbackCount(instance_handle, id, 0));
+
+    // 清理资源
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
+}
+
 // =============================================================================
 // FeaturePromiseResolve Tests
 // =============================================================================
@@ -592,6 +694,20 @@ TEST_F(FeatureExportTestQjs, FeaturePromiseResolve1)
     EXPECT_EQ(FeaturePromiseResolve(instance_handle, pid, 1), true);
     // FeaturePromiseResolve后确认promise已被释放
     EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePromiseResolve_handleIsNull)
+{
+    //异常情况： handle为空
+    FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
+    EXPECT_EQ(FeaturePromiseResolve(nullptr, pid, 1), false);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePromiseResolve_promiseIdIsInvalid)
+{
+    // 异常情况：FtPromiseId无效
+    FtPromiseId pid = -1;
+    EXPECT_EQ(FeaturePromiseResolve(instance_handle, pid, 1), false);
 }
 
 // =============================================================================
@@ -605,6 +721,40 @@ TEST_F(FeatureExportTestQjs, FeaturePromiseReject1)
     EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
 }
 
+TEST_F(FeatureExportTestQjs, FeaturePromiseReject_handleIsNull)
+{
+    //异常情况： handle为空
+    FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
+    EXPECT_EQ(FeaturePromiseReject(nullptr, pid, 400, "reject"), false);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePromiseReject_promiseIdIsInvalid)
+{
+    //异常情况： FtPromiseId无效
+    FtPromiseId pid = -1;
+    EXPECT_EQ(FeaturePromiseReject(instance_handle, pid, 400, "reject"), false);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePromiseReject_EmptyMessage)
+{
+    // 边界情况： message为空
+    FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
+    // 调用 FeaturePromiseReject 函数，传入空的 message
+    EXPECT_TRUE(FeaturePromiseReject(instance_handle, pid, 404, ""));
+    // 清理资源
+    ((FeatureInstanceQjs*)(instance_handle))->removePromise(pid);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePromiseReject_NegativeCode)
+{
+    // 边界情况： code为负
+    FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
+    // 调用 FeaturePromiseReject 函数拒绝 Promise，传入负的拒绝代码
+    EXPECT_TRUE(FeaturePromiseReject(instance_handle, pid, -1, "Error"));
+    // 清理资源
+    ((FeatureInstanceQjs*)(instance_handle))->removePromise(pid);
+}
+
 // =============================================================================
 // FeatureGetPromiseType Tests
 // =============================================================================
@@ -614,6 +764,20 @@ TEST_F(FeatureExportTestQjs, FeatureGetPromiseType1)
     FtPromiseId pid1 = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
     EXPECT_EQ(FeatureGetPromiseType(instance_handle, pid1), FEATURE_PROMISE_TYPE_PROMISE);
     EXPECT_EQ(FeatureGetPromiseType(instance_handle, pid), FEATURE_PROMISE_TYPE_CALLBACKS);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetPromiseType_handleIsNull)
+{
+    //异常情况： handle为空
+    FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addAsyncCallbacks(promise_type.resolveType, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED);
+    EXPECT_EQ(FeatureGetPromiseType(nullptr, pid), FEATURE_PROMISE_TYPE_INVALID);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetPromiseType_ftPromiseIdIsInvalid)
+{
+    //异常情况： FtPromiseId无效
+    FtPromiseId pid = -1;
+    EXPECT_EQ(FeatureGetPromiseType(instance_handle, pid), FEATURE_PROMISE_TYPE_INVALID);
 }
 
 // =============================================================================
@@ -631,6 +795,77 @@ TEST_F(FeatureExportTestQjs, FeatureCreateInterface1)
     };
     FeatureInterfaceHandle interface_handle = FeatureCreateInterface(instance_handle, &uploadtask_vtable);
     EXPECT_NE(interface_handle, nullptr);
+    FeatureInstance* interface_instance = static_cast<FeatureInstance*>(interface_handle);
+    EXPECT_EQ(interface_instance->isInterface(), true);
+    interface_instance->release();
+}
+
+TEST_F(FeatureExportTestQjs, FeatureCreateInterface_handleIsNull)
+{
+    //异常情况： handle为空
+    static NativeFunc test_vtable_members[] = {
+        NativeFunc(nullptr)
+    };
+    static VTable uploadtask_vtable = {
+        .size = 1,
+        .finalizer = NativeFunc(nullptr),
+        .members = test_vtable_members
+    };
+    FeatureInterfaceHandle interface_handle = FeatureCreateInterface(nullptr, &uploadtask_vtable);
+    EXPECT_EQ(interface_handle, nullptr);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureCreateInterface_ValidHandle_InvalidVTable)
+{
+    //  边界情况： 空 VTable
+    VTable* invalid_vtable = nullptr;
+
+    FeatureInterfaceHandle interface_handle = FeatureCreateInterface(instance_handle, invalid_vtable);
+
+    // 验证返回值
+    EXPECT_NE(interface_handle, nullptr);
+
+    FeatureInstance* interface_instance = static_cast<FeatureInstance*>(interface_handle);
+    EXPECT_EQ(interface_instance->isInterface(), false);
+    interface_instance->release();
+}
+
+TEST_F(FeatureExportTestQjs, FeatureCreateInterface_ValidHandle_EmptyVTable)
+{
+    // 边界情况：空 VTable
+    static NativeFunc test_vtable_members[] = {
+        NativeFunc(nullptr)
+    };
+    static VTable empty_vtable = {
+        .size = 0,
+        .finalizer = NativeFunc(nullptr),
+        .members = test_vtable_members
+    };
+
+    FeatureInterfaceHandle interface_handle = FeatureCreateInterface(instance_handle, &empty_vtable);
+
+    // 验证返回值
+    EXPECT_NE(interface_handle, nullptr);
+
+    FeatureInstance* interface_instance = static_cast<FeatureInstance*>(interface_handle);
+    EXPECT_EQ(interface_instance->isInterface(), true);
+    interface_instance->release();
+}
+
+TEST_F(FeatureExportTestQjs, FeatureCreateInterface_ValidHandle_NullVTableMembers)
+{
+    // 边界情况：VTable 成员为 nullptr
+    static VTable null_members_vtable = {
+        .size = 1,
+        .finalizer = NativeFunc(nullptr),
+        .members = nullptr
+    };
+
+    FeatureInterfaceHandle interface_handle = FeatureCreateInterface(instance_handle, &null_members_vtable);
+
+    // 验证返回值
+    EXPECT_NE(interface_handle, nullptr);
+
     FeatureInstance* interface_instance = static_cast<FeatureInstance*>(interface_handle);
     EXPECT_EQ(interface_instance->isInterface(), true);
     interface_instance->release();
@@ -691,6 +926,166 @@ TEST_F(FeatureExportTestQjs, FeaturePost1)
     free(data);
 }
 
+TEST_F(FeatureExportTestQjs, FeaturePost_HandleNullptr)
+{
+    // 异常值： handle 为 nullptr
+    struct dataContext {
+        char* str;
+        uv_loop_t* loop;
+        FeatureInstanceHandle instanceHandle;
+    };
+    auto data = (dataContext*)malloc(sizeof(dataContext));
+    data->str = (char*)malloc(20);
+    data->loop = loop;
+    data->instanceHandle = instance_handle;
+    strcpy(data->str, "hello xiaomi");
+
+    EXPECT_EQ(FeaturePost(
+                  nullptr, [](int mode, void* data1) {
+                      auto str = ((dataContext*)data1)->str;
+                      auto loop1 = ((dataContext*)data1)->loop;
+                      auto instanceHandle = ((dataContext*)data1)->instanceHandle;
+                      if (mode == FEATURE_TASK_MODE_NORMAL) {
+                          FEATURE_LOG_INFO("The outer FeaturePost data is %s", str);
+                          strcpy(str, "xiaomi hello");
+                      }
+                  },
+                  data),
+        false);
+
+    free(data->str);
+    free(data);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePost_TaskCallbackNullptr)
+{
+    // 异常值： task_cb 为 nullptr
+    struct dataContext {
+        char* str;
+        uv_loop_t* loop;
+        FeatureInstanceHandle instanceHandle;
+    };
+    auto data = (dataContext*)malloc(sizeof(dataContext));
+    data->str = (char*)malloc(20);
+    data->loop = loop;
+    data->instanceHandle = instance_handle;
+    strcpy(data->str, "hello xiaomi");
+
+    EXPECT_EQ(FeaturePost(instance_handle, nullptr, data), false);
+
+    free(data->str);
+    free(data);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePost_DataNullptr)
+{
+    // 边界情况： data 为 nullptr
+    EXPECT_EQ(FeaturePost(
+                  instance_handle, [](int mode, void* data) {
+                      if (mode == FEATURE_TASK_MODE_NORMAL) {
+                          FEATURE_LOG_ERROR("The outer FeaturePost data is null");
+                      }
+                  },
+                  nullptr),
+        true);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePost_IllegalMode)
+{
+    // 异常情况： mode 为非法值
+    struct dataContext {
+        char* str;
+    };
+    auto data = (dataContext*)malloc(sizeof(dataContext));
+    data->str = (char*)malloc(20);
+    strcpy(data->str, "hello xiaomi");
+
+    EXPECT_EQ(FeaturePost(
+                  instance_handle, [](int mode, void* data) {
+                      if (mode != FEATURE_TASK_MODE_NORMAL) {
+                          FEATURE_LOG_ERROR("Callback should not be called with illegal mode");
+                      }
+                  },
+                  data),
+        true);
+
+    free(data->str);
+    free(data);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePost_DataMemoryAllocationFailure)
+{
+    // 边界情况： data 内存分配失败
+    struct dataContext {
+        char* str;
+        uv_loop_t* loop;
+        FeatureInstanceHandle instanceHandle;
+    };
+    auto data = (dataContext*)malloc(sizeof(dataContext));
+    data->str = nullptr; // 模拟内存分配失败
+    data->loop = loop;
+    data->instanceHandle = instance_handle;
+
+    EXPECT_EQ(FeaturePost(
+                  instance_handle, [](int mode, void* data) {
+                      // 这个回调不应该被执行
+                      FEATURE_LOG_ERROR("Callback should not be called with nullptr data");
+                  },
+                  data),
+        true);
+
+    free(data);
+}
+
+TEST_F(FeatureExportTestQjs, FeaturePost_MultipleCalls)
+{
+    // 边界情况： FeaturePost 被调用多次
+    struct dataContext {
+        char* str;
+        uv_loop_t* loop;
+        FeatureInstanceHandle instanceHandle;
+    };
+    auto data = (dataContext*)malloc(sizeof(dataContext));
+    data->str = (char*)malloc(20);
+    data->loop = loop;
+    data->instanceHandle = instance_handle;
+    strcpy(data->str, "hello xiaomi");
+
+    EXPECT_EQ(FeaturePost(
+                  instance_handle, [](int mode, void* data1) {
+                      auto str = ((dataContext*)data1)->str;
+                      auto loop1 = ((dataContext*)data1)->loop;
+                      auto instanceHandle = ((dataContext*)data1)->instanceHandle;
+                      if (mode == FEATURE_TASK_MODE_NORMAL) {
+                          FEATURE_LOG_INFO("The outer FeaturePost data is %s", str);
+                          strcpy(str, "xiaomi hello");
+                      }
+                  },
+                  data),
+        true);
+
+    EXPECT_EQ(FeaturePost(
+                  instance_handle, [](int mode, void* data1) {
+                      auto str = ((dataContext*)data1)->str;
+                      auto loop1 = ((dataContext*)data1)->loop;
+                      auto instanceHandle = ((dataContext*)data1)->instanceHandle;
+                      if (mode == FEATURE_TASK_MODE_NORMAL) {
+                          FEATURE_LOG_INFO("The outer FeaturePost data is %s", str);
+                          strcpy(str, "hello again");
+                          // 在第二次回调中停止事件循环
+                          uv_stop(((dataContext*)data1)->loop);
+                      }
+                  },
+                  data),
+        true);
+
+    uv_run(loop, UV_RUN_DEFAULT);
+    EXPECT_STREQ(data->str, "hello again");
+
+    free(data->str);
+    free(data);
+}
+
 // =============================================================================
 // FeatureGetManagerHandleFromInstance Tests
 // =============================================================================
@@ -700,6 +1095,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromInstance1)
     auto manager_handle = FeatureGetManagerHandleFromInstance(instance_handle);
     EXPECT_EQ(manager_handle, manager_handle_qjs);
     EXPECT_EQ(manager_handle, ((FeaturePrototype*)(FeatureGetProtoHandle(instance_handle)))->featureManager());
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromInstance_HandleNullptr)
+{
+    // 异常情况： handle 为 nullptr
+    FeatureManagerHandle manager_handle = FeatureGetManagerHandleFromInstance(nullptr);
+    EXPECT_EQ(manager_handle, nullptr);
 }
 
 // =============================================================================
@@ -712,6 +1114,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetUVLoop1)
     auto loop1 = FeatureGetUVLoop(manager_handle);
     EXPECT_EQ(loop1, ((FeatureManagerQjs*)(manager_handle))->getUVLoop());
     EXPECT_EQ(loop1, loop);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetUVLoop_HandleNullptr)
+{
+    // 异常情况： handle 为 nullptr
+    uv_loop_t* loop = FeatureGetUVLoop(nullptr);
+    EXPECT_EQ(loop, nullptr);
 }
 
 // =============================================================================
@@ -731,6 +1140,39 @@ TEST_F(FeatureExportTestQjs, FeatureGetManagerUserData1)
     free(str);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureGetManagerUserData_HandleNullptr)
+{
+    // 异常情况： handle 为 nullptr
+    char* str = (char*)malloc(20);
+    strcpy(str, "hello");
+    FeatureSetManagerUserData(FeatureGetManagerHandleFromInstance(instance_handle), "xiaomi", str);
+    void* userData = FeatureGetManagerUserData(nullptr, "xiaomi");
+    EXPECT_EQ(userData, nullptr);
+    free(str);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetManagerUserData_NameNullptr)
+{
+    // 异常情况： name 为 nullptr
+    char* str = (char*)malloc(20);
+    strcpy(str, "hello");
+    FeatureSetManagerUserData(FeatureGetManagerHandleFromInstance(instance_handle), "xiaomi", str);
+    void* userData = FeatureGetManagerUserData(FeatureGetManagerHandleFromInstance(instance_handle), nullptr);
+    EXPECT_EQ(userData, nullptr);
+    free(str);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetManagerUserData_NameEmpty)
+{
+    // 异常情况： name 为空字符串
+    char* str = (char*)malloc(20);
+    strcpy(str, "hello");
+    FeatureSetManagerUserData(FeatureGetManagerHandleFromInstance(instance_handle), "xiaomi", str);
+    void* userData = FeatureGetManagerUserData(FeatureGetManagerHandleFromInstance(instance_handle), "");
+    EXPECT_EQ(userData, nullptr);
+    free(str);
+}
+
 // =============================================================================
 // FeatureGetManagerHandleFromProto Tests
 // =============================================================================
@@ -741,6 +1183,12 @@ TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromProto1)
     auto manager_handle = FeatureGetManagerHandleFromProto(protoHandle);
     EXPECT_EQ(manager_handle, manager_handle_qjs);
     EXPECT_EQ(manager_handle, ((FeaturePrototype*)(FeatureGetProtoHandle(instance_handle)))->featureManager());
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetManagerHandleFromProto_HandleNullptr)
+{
+    //异常情况： handle 为 nullptr
+    EXPECT_EQ(FeatureGetManagerHandleFromProto(nullptr), nullptr);
 }
 
 // =============================================================================
@@ -766,6 +1214,42 @@ TEST_F(FeatureExportTestQjs, FeatureCheckCallbackId1)
     JS_FreeValue(js_env.ctx, callback);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureCheckCallbackId_HandleNullptr)
+{
+    //异常情况： handle 为 nullptr
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t a = 0;
+            JS_ToInt32(ctx, &a, argv[0]);
+            FEATURE_LOG_INFO("callback param is %d", ++a);
+            FEATURE_LOG_INFO("hello callback");
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &callback_type);
+    EXPECT_EQ(FeatureCheckCallbackId(nullptr, id), false);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureCheckCallbackId_IllegalCallbackId)
+{
+    // 异常情况： cid 为非法值
+    auto callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t a = 0;
+            JS_ToInt32(ctx, &a, argv[0]);
+            FEATURE_LOG_INFO("callback param is %d", ++a);
+            FEATURE_LOG_INFO("hello callback");
+            return JS_UNDEFINED;
+        },
+        "test", 1);
+
+    FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &callback_type);
+    EXPECT_EQ(FeatureCheckCallbackId(instance_handle, -1), false);
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
+}
+
 // =============================================================================
 // FeatureDupInstanceHandle Tests
 // =============================================================================
@@ -780,6 +1264,12 @@ TEST_F(FeatureExportTestQjs, FeatureDupInstanceHandle1)
     FeatureFreeInstanceHandle(dup_instance);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureDupInstanceHandle_HandleNullptr)
+{
+    //异常情况： handle 为 nullptr
+    EXPECT_EQ(FeatureDupInstanceHandle(nullptr), nullptr);
+}
+
 // =============================================================================
 // FeatureFreeInstanceHandle Tests
 // =============================================================================
@@ -792,12 +1282,25 @@ TEST_F(FeatureExportTestQjs, FeatureFreeInstanceHandle1)
     EXPECT_EQ(instance_qjs->getRefCount(), 1);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureFreeInstanceHandle_HandleNullptr)
+{
+    // 异常情况：handle 为 nullptr
+    FeatureFreeInstanceHandle(nullptr);
+    // 期望不会崩溃或抛出异常
+}
+
 TEST_F(FeatureExportTestQjs, FeatureInstanceIsDetached1)
 {
     //测试能否正确地判断instance是否已经detached
     EXPECT_EQ(FeatureInstanceIsDetached(instance_handle), false);
     ((FeatureInstanceQjs*)(instance_handle))->onDetached();
     EXPECT_EQ(FeatureInstanceIsDetached(instance_handle), true);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureInstanceIs_HandleNullptr)
+{
+    //异常情况：handle 为 nullptr
+    EXPECT_EQ(FeatureInstanceIsDetached(nullptr), false);
 }
 
 // =============================================================================
@@ -810,7 +1313,7 @@ TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener1)
     UnitEventData* data = (UnitEventData*)malloc(sizeof(UnitEventData));
     memset(data, 0, sizeof(UnitEventData));
     data->data_changed_added = false;
-    data->data_changed_added = false;
+    data->state_changed_added = false;
     FeatureSetObjectData(instance_handle, data);
     // MemberEvent* member_event
     feature_value_t undefined = FEATURE_UNDEFINED;
@@ -822,6 +1325,23 @@ TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener1)
     EXPECT_EQ(out_data->state_changed_added, true);
     free(out_data);
     FeatureSetObjectData(instance_handle, nullptr);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_HandleNullptr)
+{
+    //异常情况：handle 为 nullptr
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    UnitEventData* data = (UnitEventData*)malloc(sizeof(UnitEventData));
+    memset(data, 0, sizeof(UnitEventData));
+    data->data_changed_added = false;
+    data->data_changed_added = false;
+    FeatureSetObjectData(nullptr, data);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_DataNullptr)
+{
+    //边界情况：data 为 nullptr
+    FeatureSetEventChangeListener(instance_handle, nullptr);
 }
 
 // =============================================================================
@@ -852,6 +1372,20 @@ TEST_F(FeatureExportTestQjs, FeatureGetEventName1)
     EXPECT_STREQ(FeatureGetEventName(instance_handle, 2), "state_changed");
 }
 
+TEST_F(FeatureExportTestQjs, FeatureGetEventName_HandleNullptr)
+{
+    //异常情况：handle 为 nullptr
+    EXPECT_EQ(FeatureGetEventName(nullptr, 1), nullptr);
+    EXPECT_EQ(FeatureGetEventName(nullptr, 2), nullptr);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetEventName_IllegalEventId)
+{
+    // 异常情况：eid 为非法值
+    EXPECT_EQ(FeatureGetEventName(instance_handle, -1), nullptr);
+    EXPECT_EQ(FeatureGetEventName(instance_handle, 0), nullptr);
+}
+
 // =============================================================================
 // FeatureGetEventCallbackCount Tests
 // =============================================================================
@@ -866,6 +1400,19 @@ TEST_F(FeatureExportTestQjs, FeatureGetEventCallbackCount1)
     EXPECT_EQ(FeatureGetEventCallbackCount(instance_handle, 2), 1);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureGetEventCallbackCount_HandleNullptr)
+{
+    //异常情况：handle 为 nullptr
+    EXPECT_EQ(FeatureGetEventCallbackCount(nullptr, 1), 0);
+    EXPECT_EQ(FeatureGetEventCallbackCount(nullptr, 2), 0);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetEventCallbackCount_IllegalEventId)
+{
+    // 异常情况：eid 为非法值
+    EXPECT_EQ(FeatureGetEventCallbackCount(instance_handle, -1), 0);
+    EXPECT_EQ(FeatureGetEventCallbackCount(instance_handle, 0), 0);
+}
 // =============================================================================
 // FeatureGetEventCallbackCountByName Tests
 // =============================================================================
@@ -878,6 +1425,23 @@ TEST_F(FeatureExportTestQjs, FeatureGetEventCallbackCountByName1)
     instance_qjs->addEventCallback(&state_changed_member_event, undefined);
     EXPECT_EQ(FeatureGetEventCallbackCountByName(instance_handle, "data_changed"), 1);
     EXPECT_EQ(FeatureGetEventCallbackCountByName(instance_handle, "state_changed"), 1);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetEventCallbackCountByName_HandleNullptr)
+{
+    //异常情况：handle 为 nullptr
+    feature_value_t undefined = FEATURE_UNDEFINED;
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    instance_qjs->addEventCallback(&data_changed_member_event, undefined);
+    instance_qjs->addEventCallback(&state_changed_member_event, undefined);
+    EXPECT_EQ(FeatureGetEventCallbackCountByName(nullptr, "data_changed"), 0);
+    EXPECT_EQ(FeatureGetEventCallbackCountByName(nullptr, "state_changed"), 0);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetEventCallbackCountByName_IllegalEventId)
+{
+    // 异常情况：eid 为非法值
+    EXPECT_EQ(FeatureGetEventCallbackCountByName(instance_handle, ""), 0);
 }
 
 // =============================================================================
@@ -911,6 +1475,92 @@ TEST_F(FeatureExportTestQjs, FeatureEmitEventByName1)
     JS_FreeValue(js_env.ctx, state_changed_callback);
 }
 
+TEST_F(FeatureExportTestQjs, FeatureEmitEventByName_HandleNullptr)
+{
+    //异常情况：handle 为 nullptr
+    auto data_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            const char* var = feature_to_cstring(ctx, argv[0]);
+            EXPECT_STREQ(var, "hello");
+            FEATURE_LOG_INFO("data_changed_callback!");
+            feature_free_cstring(ctx, var);
+            return JS_UNDEFINED;
+        },
+        "data_changed_test", 1);
+    auto state_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            EXPECT_EQ(i_var, 77);
+            return JS_UNDEFINED;
+        },
+        "state_changed_test", 1);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    instance_qjs->addEventCallback(&data_changed_member_event, data_changed_callback);
+    instance_qjs->addEventCallback(&state_changed_member_event, state_changed_callback);
+    EXPECT_EQ(FeatureEmitEventByName(nullptr, "data_changed", "hello"), false);
+    EXPECT_EQ(FeatureEmitEventByName(nullptr, "state_changed", 77), false);
+    JS_FreeValue(js_env.ctx, data_changed_callback);
+    JS_FreeValue(js_env.ctx, state_changed_callback);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureEmitEventByName_NameEmpty)
+{
+    //边界情况：name 为 ""
+    auto data_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            const char* var = feature_to_cstring(ctx, argv[0]);
+            EXPECT_STREQ(var, "hello");
+            FEATURE_LOG_INFO("data_changed_callback!");
+            feature_free_cstring(ctx, var);
+            return JS_UNDEFINED;
+        },
+        "data_changed_test", 1);
+    auto state_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            EXPECT_EQ(i_var, 77);
+            return JS_UNDEFINED;
+        },
+        "state_changed_test", 1);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    instance_qjs->addEventCallback(&data_changed_member_event, data_changed_callback);
+    instance_qjs->addEventCallback(&state_changed_member_event, state_changed_callback);
+    EXPECT_EQ(FeatureEmitEventByName(instance_handle, "", "hello"), false);
+    EXPECT_EQ(FeatureEmitEventByName(instance_handle, "", 77), false);
+    JS_FreeValue(js_env.ctx, data_changed_callback);
+    JS_FreeValue(js_env.ctx, state_changed_callback);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureEmitEventByName_NameNullptr)
+{
+    //边界情况：name 为 nullptr
+    auto data_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            const char* var = feature_to_cstring(ctx, argv[0]);
+            EXPECT_STREQ(var, "hello");
+            FEATURE_LOG_INFO("data_changed_callback!");
+            feature_free_cstring(ctx, var);
+            return JS_UNDEFINED;
+        },
+        "data_changed_test", 1);
+    auto state_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            EXPECT_EQ(i_var, 77);
+            return JS_UNDEFINED;
+        },
+        "state_changed_test", 1);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    instance_qjs->addEventCallback(&data_changed_member_event, data_changed_callback);
+    instance_qjs->addEventCallback(&state_changed_member_event, state_changed_callback);
+    EXPECT_EQ(FeatureEmitEventByName(instance_handle, nullptr, "hello"), false);
+    EXPECT_EQ(FeatureEmitEventByName(instance_handle, nullptr, 77), false);
+    JS_FreeValue(js_env.ctx, data_changed_callback);
+    JS_FreeValue(js_env.ctx, state_changed_callback);
+}
 // =============================================================================
 // FeatureEmitEvent Tests
 // =============================================================================
@@ -936,8 +1586,64 @@ TEST_F(FeatureExportTestQjs, FeatureEmitEvent1)
     FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
     instance_qjs->addEventCallback(&data_changed_member_event, data_changed_callback);
     instance_qjs->addEventCallback(&state_changed_member_event, state_changed_callback);
-    FeatureEmitEvent(instance_handle, 1, "hello");
-    FeatureEmitEvent(instance_handle, 2, 77);
+    EXPECT_EQ(FeatureEmitEvent(instance_handle, 1, "hello"), true);
+    EXPECT_EQ(FeatureEmitEvent(instance_handle, 2, 77), true);
+    JS_FreeValue(js_env.ctx, data_changed_callback);
+    JS_FreeValue(js_env.ctx, state_changed_callback);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureEmitEvent_HandleNullptr)
+{
+    auto data_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            const char* var = feature_to_cstring(ctx, argv[0]);
+            EXPECT_STREQ(var, "hello");
+            FEATURE_LOG_INFO("data_changed_callback!");
+            feature_free_cstring(ctx, var);
+            return JS_UNDEFINED;
+        },
+        "data_changed_test", 1);
+    auto state_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            EXPECT_EQ(i_var, 77);
+            return JS_UNDEFINED;
+        },
+        "state_changed_test", 1);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    instance_qjs->addEventCallback(&data_changed_member_event, data_changed_callback);
+    instance_qjs->addEventCallback(&state_changed_member_event, state_changed_callback);
+    EXPECT_EQ(FeatureEmitEvent(nullptr, 1, "hello"), false);
+    EXPECT_EQ(FeatureEmitEvent(nullptr, 2, 77), false);
+    JS_FreeValue(js_env.ctx, data_changed_callback);
+    JS_FreeValue(js_env.ctx, state_changed_callback);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureEmitEvent_IllegalEventId)
+{
+    auto data_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            const char* var = feature_to_cstring(ctx, argv[0]);
+            EXPECT_STREQ(var, "hello");
+            FEATURE_LOG_INFO("data_changed_callback!");
+            feature_free_cstring(ctx, var);
+            return JS_UNDEFINED;
+        },
+        "data_changed_test", 1);
+    auto state_changed_callback = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[0]);
+            EXPECT_EQ(i_var, 77);
+            return JS_UNDEFINED;
+        },
+        "state_changed_test", 1);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    instance_qjs->addEventCallback(&data_changed_member_event, data_changed_callback);
+    instance_qjs->addEventCallback(&state_changed_member_event, state_changed_callback);
+    EXPECT_EQ(FeatureEmitEvent(instance_handle, 7788, "hello"), false);
+    EXPECT_EQ(FeatureEmitEvent(instance_handle, 0, 77), false);
     JS_FreeValue(js_env.ctx, data_changed_callback);
     JS_FreeValue(js_env.ctx, state_changed_callback);
 }
