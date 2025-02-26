@@ -102,14 +102,13 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${FEATURE_MODULES_DIR}
     ${RAPIDJSON_DIR}/include
     ${QUICKJS_DIR}
-    ${QUICKAPP_DIR}/src)
+    ${QUICKAPP_DIR}/src
+    ${QUICKAPP_DIR}/src/gui)
 
   if(CONFIG_QUICKAPP_VAPP_XMS)
-    list(APPEND
-    FEATURE_INC_DIRS
-    ${QUICKAPP_DIR}/src/framework
-    ${QUICKAPP_DIR}/src/jse
-    ${APP_DIR}/frameworks/runtimes/services/am/include)
+    list(APPEND FEATURE_INC_DIRS ${QUICKAPP_DIR}/src/framework
+         ${QUICKAPP_DIR}/src/jse
+         ${APP_DIR}/frameworks/runtimes/services/am/include)
   endif()
 
   list(APPEND FEATURE_OPTIONS -Wno-format)
@@ -198,6 +197,21 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/system_app_impl.cpp)
     list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/system_app.jidl)
     list(APPEND FEATURELIST "system_app")
+
+    # for the 'system_media' feature
+    list(
+      APPEND
+      FEATURE_INC_DIRS
+      ${NUTTX_APPS_DIR}/external/protobuf-c/protobuf-c
+      ${CMAKE_BINARY_DIR}
+      ${QUICKAPP_DIR}/src/jse/modules/system
+      ${QUICKAPP_DIR}/src/jse/quickjs
+      ${QUICKAPP_DIR}/src/framework
+      ${QUICKAPP_DIR}/src/jse
+      ${FRAMEWORKS_DIR}/graphics/animengine/include)
+    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/media_impl.cpp)
+    list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/media.jidl)
+    list(APPEND FEATURELIST "system_media")
   endif()
 
   # for media features
@@ -279,7 +293,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
   # for the 'system_messageChannel' feature
   if(CONFIG_SYSTEM_ACTIVITY_SERVICE)
     list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/message_transport.cpp
-        ${FEATURE_MODULES_DIR}/message_channel_impl.cpp)
+         ${FEATURE_MODULES_DIR}/message_channel_impl.cpp)
     list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/message_channel.jidl)
     list(APPEND FEATURELIST "system_messageChannel")
   endif()
@@ -363,17 +377,21 @@ if(CONFIG_FEATURE_FRAMEWORK)
   # for the 'system_event' feature
   if(CONFIG_UORB)
     list(APPEND FEATURE_INC_DIRS ${SYSTEM_DIR}/topics/include/system)
-    list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/event_impl.cpp
-         ${FEATURE_MODULES_DIR}/event/topic.cpp
-         ${FEATURE_MODULES_DIR}/event/event_context.cpp
-         ${FEATURE_MODULES_DIR}/event/topics/user_topic.cpp
-         ${FEATURE_MODULES_DIR}/event/topics/battery_topic.cpp)
+    list(
+      APPEND
+      FEATURE_SRCS
+      ${FEATURE_MODULES_DIR}/event_impl.cpp
+      ${FEATURE_MODULES_DIR}/event/topic.cpp
+      ${FEATURE_MODULES_DIR}/event/event_context.cpp
+      ${FEATURE_MODULES_DIR}/event/topics/user_topic.cpp
+      ${FEATURE_MODULES_DIR}/event/topics/battery_topic.cpp)
     list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/event.jidl)
     list(APPEND FEATURELIST "system_event")
   endif()
 
   if(CONFIG_MIWEAR_COMMON)
-    list(APPEND FEATURE_INC_DIRS ${CMAKE_SOURCE_DIR}/../vendor/xiaomi/miwear/common/base/include)
+    list(APPEND FEATURE_INC_DIRS
+         ${CMAKE_SOURCE_DIR}/../vendor/xiaomi/miwear/common/base/include)
   endif()
 
   if(CONFIG_LYRA_NEW_FEATURE)
@@ -392,8 +410,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     execute_process(
       COMMAND bash ${CMAKE_CURRENT_LIST_DIR}/service_agent_features.sh
       OUTPUT_VARIABLE service_agent_features
-      WORKING_DIRECTORY ${NUTTX_APPS_DIR}
-    )
+      WORKING_DIRECTORY ${NUTTX_APPS_DIR})
     list(APPEND FEATURELIST ${service_agent_features})
   endif()
 
