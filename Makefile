@@ -102,6 +102,10 @@ ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
 	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.jidl
 	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
 	FEATURELIST += struct_test
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_any.cpp
+	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.jidl
+	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
+	FEATURELIST += any_test
 
 	PROGNAME += feature_unit_test
 	PRIORITY += 100
