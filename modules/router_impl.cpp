@@ -145,6 +145,12 @@ void jsonToQueryString(const rapidjson::Document& doc, std::string& result)
 
 int parse_routerobj(RouteInfo& info, ft_context_ref ft_ctx, system_router_RouteObj* obj, std::string* query_result_ptr = nullptr)
 {
+    /* The quick application standard stipulates that the uri must be filled in, but when using it, the uri may be empty,
+    which will cause a crash */
+    if (obj->uri == nullptr) {
+        FEATURE_LOG_ERROR("router uri is null");
+        return -1;
+    }
     if (Navigator::getRouteInfoFromUri(&info, obj->uri) != 0) {
         FEATURE_LOG_ERROR("router uri format error:%s", obj->uri);
         return -1;
