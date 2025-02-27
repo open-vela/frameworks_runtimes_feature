@@ -1,0 +1,28 @@
+module any_test@1.0
+
+struct Simple {
+    object test
+}
+
+struct Complex {
+    object test_option = null
+    struct Simple simple
+    object[] any_array
+}
+
+// Declare a callback
+callback testCb(Simple simple)
+
+boolean testSimple(Simple s)
+Simple testSimple1()
+boolean testComplex(Complex c)
+Complex testComplex1()
+Complex testComplex2()
+Complex testComplex3()
+Complex testComplex4()
+boolean testCallback(testCb cb)
+boolean testObject(object o)
+object testObject1()
+
+
+
