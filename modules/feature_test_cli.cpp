@@ -210,6 +210,7 @@ static void permissions_cb(FeaturePermissionsHandle handle, const FeaturePermiss
 {
     FEATURE_LOG_INFO("wjf: permissions: %p, api_name: %s", handle, info->api_name);
     static bool granted = false;
+    static FeaturePermsRejectReason reason = FEATURE_PERMS_DENIED;
     for (int i = 0; i <= HAPJS_PERMISSION_READ_HEALTH_DATA; ++i) {
         if (!HAS_PERMISSION(*(info->permissions), i))
             continue;
@@ -219,7 +220,11 @@ static void permissions_cb(FeaturePermissionsHandle handle, const FeaturePermiss
     if (granted) {
         FeatureGrantPermissions(g_manager_qjs, handle);
     } else {
-        FeatureRejectPermissions(g_manager_qjs, handle);
+        FeatureRejectPermissions(g_manager_qjs, handle, reason);
+        reason = (FeaturePermsRejectReason)(reason + 1);
+        if (reason > FEATURE_PERMS_NO_BG) {
+            reason = FEATURE_PERMS_DENIED;
+        }
     }
     granted = !granted;
 }

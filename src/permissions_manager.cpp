@@ -26,6 +26,20 @@
 
 namespace feature_framework {
 
+static const char* get_perms_reject_message(FeaturePermsRejectReason reason)
+{
+    switch (reason) {
+    case FEATURE_PERMS_DENIED:
+        return "permissions denied";
+    case FEATURE_PERMS_ERROR:
+        return "permissions error";
+    case FEATURE_PERMS_NO_BG:
+        return "permissions no background";
+    default:
+        return "unknown reason";
+    }
+}
+
 // PermissionsInfo
 PermissionsInfo::PermissionsInfo(FeatureInstance* instance, FeaturePermissionsRequestInfo* info)
     : instance_(instance)
@@ -40,6 +54,7 @@ PermissionsInfo::PermissionsInfo(FeatureInstance* instance, FeaturePermissionsRe
     , extra_argc_(0)
     , fixed_argc_(0)
     , pid_(-1)
+    , reject_reason_(FEATURE_PERMS_DENIED)
 {
     bool has_rest_params = false;
     int opt_argc = 0;
@@ -161,13 +176,13 @@ void PermissionsInfo::RejectPermissions()
     FeatureType ret_type = method_->return_type;
     if (FT_IS_PROMISE(ret_type) && pid_ >= 0) {
         FeaturePromiseReject((FeatureInterfaceHandle)instance_, pid_,
-            FT_ERR_PERMISSIONS, "permissions rejected!");
+            reject_reason_, get_perms_reject_message(reject_reason_));
     } else if (fixed_argc_ > 0) {
         auto arg = (void**)argv_[extra_argc_];
         FtCallbackId fail_id = findCallbackIdByName(method_->parameters[0], arg, "fail");
         if (FeatureCheckCallbackId((FeatureInterfaceHandle)instance_, fail_id)) {
             FeatureInvokeCallback((FeatureInterfaceHandle)instance_,
-                fail_id, "permissions rejected!", FT_ERR_PERMISSIONS);
+                fail_id, get_perms_reject_message(reject_reason_), reject_reason_);
             FeatureRemoveCallback((FeatureInterfaceHandle)instance_, fail_id);
         }
         FtCallbackId complete_id = findCallbackIdByName(method_->parameters[0], arg, "complete");
