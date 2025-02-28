@@ -37,6 +37,8 @@ public:
     const char* ApiName() { return api_name_; }
     void GrantPermissions();
     void RejectPermissions();
+    void SetRejectReason(FeaturePermsRejectReason reason) { reject_reason_ = reason; }
+    int RejectReason() { return reject_reason_; }
 
 private:
     void releaseArgs();
@@ -54,6 +56,7 @@ private:
     int extra_argc_;
     int fixed_argc_;
     FtPromiseId pid_;
+    FeaturePermsRejectReason reject_reason_;
 };
 
 class PermissionsManager {

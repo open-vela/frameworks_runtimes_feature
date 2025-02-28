@@ -218,12 +218,20 @@ void FeatureSetPermissionsCallback(FeatureManagerHandle hmanager, FeaturePermiss
  */
 void FeatureGrantPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle);
 
+/** FeaturePermsRejectReason */
+typedef enum FeaturePermsRejectReason {
+    FEATURE_PERMS_DENIED = 400, /**< feature permissions denied */
+    FEATURE_PERMS_ERROR, /**< feature permissions error */
+    FEATURE_PERMS_NO_BG, /**< feature permissions no background */
+} FeaturePermsRejectReason;
+
 /**
  * @brief FeatureRejectPermission
  * @param[in] hmanager FeatureManagerHandle
  * @param[in] handle FeaturePermissionsHandle @see FeaturePermissionsHandle
+ * @param[in] reason int
  */
-void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle);
+void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle, FeaturePermsRejectReason reason);
 
 #ifdef __cplusplus
 }

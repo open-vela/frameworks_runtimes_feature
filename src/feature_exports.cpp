@@ -590,12 +590,13 @@ static void reject_permisions_task(int mode, void* data)
     }
 }
 
-void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle)
+void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHandle handle, FeaturePermsRejectReason reason)
 {
     FEATURE_CHECK_PTR(hmanager, ;, "manager handle is null !")
     FeatureManager* manager = static_cast<FeatureManager*>(hmanager);
     PermissionsInfo* info = (PermissionsInfo*)handle;
     if (manager->permissionsManager().CheckPermissions(info)) {
+        info->SetRejectReason(reason);
         manager->addTask((FeatureInstanceHandle)(info->Instance()), reject_permisions_task, info);
     }
 }
