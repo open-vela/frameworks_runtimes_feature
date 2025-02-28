@@ -58,14 +58,9 @@ config FEATURE_UNIT_TEST
 	bool "Enable feature unit test"
 	default n
 
-config FEAT_TEST
+config FEATURE_TEST_JSFILE
 	depends on LIB_GOOGLETEST
-	bool "Enable feat test"
-	default n
-
-config FEATURE_FEAT_TEST
-	depends on LIB_GOOGLETEST
-	bool "Enable feature feat test"
+	bool "Enable feature test using JavaScript file"
 	default n
 
 endif

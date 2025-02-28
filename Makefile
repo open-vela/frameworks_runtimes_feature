@@ -282,7 +282,7 @@ JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/permissions_test
 OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
 FEATURELIST += permissions_test
 
-ifeq ($(CONFIG_FEAT_TEST), y)
+ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test.cpp
 CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test_impl.cpp
