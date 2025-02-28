@@ -212,6 +212,10 @@ FtCallbackId findCallbackIdByName(FeatureType ftype, void* pnative, const char* 
     }
 
     void* ptr = *(void**)pnative;
+    if (!ptr) {
+        return 0;
+    }
+
     ObjectMember* members = ((ObjectMapType*)cmplx_header)->members;
     auto count = countMember(members);
     for (int i = 0; i < count; i++) {

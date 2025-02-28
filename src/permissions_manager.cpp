@@ -162,7 +162,7 @@ void PermissionsInfo::RejectPermissions()
     if (FT_IS_PROMISE(ret_type) && pid_ >= 0) {
         FeaturePromiseReject((FeatureInterfaceHandle)instance_, pid_,
             FT_ERR_PERMISSIONS, "permissions rejected!");
-    } else {
+    } else if (fixed_argc_ > 0) {
         auto arg = (void**)argv_[extra_argc_];
         FtCallbackId fail_id = findCallbackIdByName(method_->parameters[0], arg, "fail");
         if (FeatureCheckCallbackId((FeatureInterfaceHandle)instance_, fail_id)) {
