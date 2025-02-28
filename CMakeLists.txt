@@ -397,7 +397,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     list(APPEND FEATURELIST ${service_agent_features})
   endif()
 
-  if(CONFIG_FEATURE_FEAT_TEST)
+  if(CONFIG_FEATURE_TEST_JSFILE)
     list(APPEND FEATURE_SRCS ${FEATURE_TOP}/tests/jidl/feat_test_impl.cpp)
     list(APPEND JIDL_PATHS ${FEATURE_TOP}/tools/jidl/samples/feat_test.jidl)
     list(APPEND FEATURELIST "feat_test")
@@ -501,7 +501,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     APPEND
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${FEATURE_TOP} ${FEATURE_TOP}/include)
 
-  if(CONFIG_FEAT_TEST)
+  if(CONFIG_FEATURE_TEST_JSFILE)
     list(APPEND FEATURE_TEST_SRCS ${FEATURE_TEST_DIR}/jidl/test_main.cpp ${FEATURE_TEST_DIR}/jidl/builtin/builtin_console.cpp)
     list(APPEND FEATURE_TEST_INC_DIRS ${FEATURE_TOP}/include ${FEATURE_SRC_DIR}
          ${GTEST_DIR}/include
