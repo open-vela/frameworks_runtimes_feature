@@ -160,13 +160,19 @@ int PromiseManager::PromiseData::reject(int code, const char* msg)
     } else {
         reject_func = promise_info.resolve_funcs[1];
     }
+    
+    const char* safe_msg = msg ? msg : "unknown error";
+    if (!msg) {
+        FEATURE_LOG_WARN("promise reject reason is unknown error !");
+    }
+
     if (feature_is_undefined(reject_func)) {
-        FEATURE_LOG_ERROR("reject func undefined!");
+        FEATURE_LOG_ERROR("reject func undefined! code: %d, message: %s", code, safe_msg);
         return -1;
     }
 
     feature_value_t js_code = feature_int(js_ctx, code);
-    feature_value_t js_msg = feature_string(js_ctx, msg);
+    feature_value_t js_msg = feature_string(js_ctx, safe_msg);
     if (promise_type == kPromise) {
         feature_value_t js_data = feature_object(js_ctx);
         feature_set_object_property(js_ctx, js_data, "code", js_code);
