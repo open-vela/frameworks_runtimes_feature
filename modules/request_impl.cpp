@@ -16,10 +16,11 @@
 
 #include "app_path.h"
 #include "feature.h"
-#include "feature_config.h"
 #include "feature_context_qjs.h"
 #include "feature_description.h"
 #include "feature_exports.h"
+#include "feature_types.h"
+#include "net_utils.h"
 #include "request.h"
 #include "uv_ext.h"
 #include <cassert>
@@ -41,30 +42,6 @@
 #define REQUEST_CANCEL 2
 #define DEFAULT_FILE_NAME "download_file"
 #define DEFAULT_FILE_TYPE "txt"
-#define check_any(ptr) ((ptr) && (ft_get_type(ft_ctx, *ptr) >= 0))
-#define INVOKE_SUCCESS_CB(cb, ...)                                 \
-    do {                                                           \
-        if (!FeatureInvokeCallback(feature, cb, ##__VA_ARGS__)) {  \
-            FEATURE_LOG_ERROR("invoke success callback failed !"); \
-        }                                                          \
-        FeatureRemoveCallback(feature, cb);                        \
-    } while (0)
-
-#define INVOKE_FAIL_CB(cb, msg, code)                           \
-    do {                                                        \
-        if (!FeatureInvokeCallback(feature, cb, msg, code)) {   \
-            FEATURE_LOG_ERROR("invoke fail callback failed !"); \
-        }                                                       \
-        FeatureRemoveCallback(feature, cb);                     \
-    } while (0)
-
-#define INVOKE_COMPLET_CB(cb)                                       \
-    do {                                                            \
-        if (!FeatureInvokeCallback(feature, cb)) {                  \
-            FEATURE_LOG_ERROR("invoke complete callback failed !"); \
-        }                                                           \
-        FeatureRemoveCallback(feature, cb);                         \
-    } while (0)
 
 #define REQUEST_DEBUG(fmt, ...) \
     FEATURE_LOG_DEBUG("[feature_request] " fmt, ##__VA_ARGS__)
@@ -154,7 +131,7 @@ void system_request_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
         }
         th->exit = false;
         th->pkg_name = FeatureGetPackageName(handle);
-        if (!th->pkg_name || strlen(th->pkg_name) == 0) {
+        if (!check_str(th->pkg_name)) {
             REQUEST_ERROR("package name is null!");
             th->pkg_name = "request_test";
         }
@@ -274,7 +251,6 @@ static void __request_cb(int state, uv_response_t* response)
             param->uri = value;
             INVOKE_SUCCESS_CB(info->success, param);
             FeatureFreeValue(param);
-            FeatureRemoveCallback(feature, info->fail);
 
             res->success = true;
             res->data = body;
@@ -283,20 +259,19 @@ static void __request_cb(int state, uv_response_t* response)
     } else if (state == UV_REQUEST_ERROR) {
         // body内存的是绝对路径的file位置
         REQUEST_ERROR("request error: %s", response->body);
-        INVOKE_FAIL_CB(info->fail, response->body, TASK_FAILED);
-        FeatureRemoveCallback(feature, info->success);
+        INVOKE_FAIL_CB(info->fail, response->body, FT_ERR_TASK_FAILED);
         res->success = false;
         res->data = strdup(response->body);
-        res->code = TASK_FAILED;
+        res->code = FT_ERR_TASK_FAILED;
     } else if (state == REQUEST_CANCEL) {
         INVOKE_FAIL_CB(info->fail, "user cancel request", state);
-        FeatureRemoveCallback(feature, info->success);
         res->success = false;
         res->data = strdup(response->body);
-        res->code = CANCEL_ERROR_CODE;
+        res->code = FT_ERR_CANCEL_ERROR_CODE;
     }
     addResult(feature, info->uuid, res);
     INVOKE_COMPLET_CB(info->complete);
+    REMOVE_ALL_CALLBACK(info->success, info->fail, info->complete);
 
     weakref_list_delete(&info->node);
     freeRequestInfo(info);
@@ -408,18 +383,17 @@ char* __get_filename_from_url(const char* url)
 void system_request_wrap_download(FeatureInstanceHandle feature, AppendData append_data, system_request_download_t* param)
 {
     const char* msg;
-    char *filename, *token;
-    char kv[1024];
+    char *filename, *token, *header;
     int code;
-    rapidjson::Document doc;
-    rapidjson::ParseResult result;
     system_request_download_succ_t* suc_param;
     RequestContext* th = getRequestContext(feature);
+    ft_context_ref ft_ctx = FeatureGetContext(feature);
+    std::map<std::string, std::string> formdata;
 
     RequestInfo* info = static_cast<RequestInfo*>(malloc(sizeof(RequestInfo)));
     if (!info) {
         REQUEST_ERROR("malloc fail");
-        code = GENERAL;
+        code = FT_ERR_GENERAL;
         msg = "malloc fail";
         goto callFail;
     }
@@ -435,28 +409,16 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
 
     // 参数检查
     // REQUEST_DEBUG("get url = %s", param->url);
-    if (param->url == NULL || strlen(param->url) == 0 || !__is_valid_uri(param->url)) {
-        code = ARGSERROR;
+    if (!check_str(param->url) || !__is_valid_uri(param->url)) {
+        code = FT_ERR_ARGS;
         msg = "invalid url";
         goto callFail;
     }
 
     info->request_type = UV_DOWNLOAD;
     info->feature_handle = feature;
-    // REQUEST_DEBUG("header = %s", param->header);
-    // header format "{"test":"abc","test2":"ddd"}"
 
-    if (param->header != NULL) {
-        result = doc.Parse(param->header);
-        if (result.IsError()) {
-            REQUEST_ERROR("header json parse error");
-            code = ARGSERROR;
-            msg = "invalid header";
-            goto callFail;
-        }
-    }
-
-    if (param->filename != NULL && strlen(param->filename) > 0) {
+    if (check_str(param->filename)) {
         filename = strdup(param->filename);
     } else {
         filename = __get_filename_from_url(param->url);
@@ -475,7 +437,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
 
     if (!check_disk_limit()) {
         REQUEST_ERROR("insufficient memory to download file");
-        code = GENERAL;
+        code = FT_ERR_GENERAL;
         msg = "no space to download file";
         goto callFail;
     }
@@ -488,25 +450,21 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
         info->notify_func = param->onDownLoadNotify;
         uv_request_set_atrribute(info->request, UV_DOWNLOAD_PROGRESS, (void*)__progress_cb);
     }
-    if (!doc.IsNull()) {
-        for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
-            memset(kv, 0, sizeof(kv));
-            sprintf(kv, "%s: ", itr->name.GetString());
-            if (itr->value.IsString()) {
-                sprintf(kv, "%s", itr->value.GetString());
-            } else if (itr->value.IsInt()) {
-                sprintf(kv, "%d", itr->value.GetInt());
-            } else if (itr->value.IsDouble()) {
-                sprintf(kv, "%f", itr->value.GetDouble());
-            } else if (itr->value.IsBool()) {
-                sprintf(kv, "%d", itr->value.GetBool());
-            } else {
-                REQUEST_ERROR("unkown type");
+
+    if (check_str(param->header)) {
+        // header format "{"test":"abc","test2":"ddd"}"
+        header = strdup(param->header);
+        ft_value_t ft_header = ft_form_headers(ft_ctx, header);
+        if (check_header(ft_ctx, &ft_header, formdata)) {
+            for (auto [key, val] : formdata) {
+                REQUEST_DEBUG("formdata: %s", std::string(key + ":" + val).c_str());
+                uv_request_append_header(info->request, std::string(key + ":" + val).c_str());
             }
-            // REQUEST_DEBUG("kv = '%s'", kv);
-            uv_request_append_header(info->request, kv);
         }
+        free(header);
+        ft_free_value(ft_ctx, ft_header);
     }
+
     uv_request_set_userp(info->request, info);
     uv_request_commit(th->handle, info->request, __request_cb);
     weakref_list_initialize(&info->node);
@@ -520,14 +478,14 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     // REQUEST_DEBUG("suc_param._token = %s, info = %p", suc_param->token, info);
     INVOKE_SUCCESS_CB(param->success, suc_param);
     INVOKE_COMPLET_CB(param->complete);
-    FeatureRemoveCallback(feature, param->fail);
+    REMOVE_ALL_CALLBACK(param->success, param->fail, param->complete);
     FeatureFreeValue(suc_param);
     return;
 callFail:
     REQUEST_ERROR("code = %d, msg = %s", code, msg);
     INVOKE_FAIL_CB(param->fail, msg, code);
     INVOKE_COMPLET_CB(param->complete);
-    FeatureRemoveCallback(feature, param->success);
+    REMOVE_ALL_CALLBACK(param->success, param->fail, param->complete);
     if (info) {
         freeRequestInfo(info);
     }
@@ -544,7 +502,7 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
 
     if (param->token == NULL) {
         REQUEST_ERROR("empty token");
-        code = TASK_NOT_EXISTS;
+        code = FT_ERR_TASK_NOT_EXISTS;
         msg = "token is missing";
         goto fail;
     } else {
@@ -571,15 +529,14 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
                     sprintf(value, "%s", it->second->data);
                     succ_param->uri = value;
                     INVOKE_SUCCESS_CB(param->success, succ_param);
-                    FeatureRemoveCallback(feature, param->fail);
                     FeatureFreeValue(succ_param);
                 } else {
                     INVOKE_FAIL_CB(param->fail, it->second->data, it->second->code);
-                    FeatureRemoveCallback(feature, param->success);
                 }
                 INVOKE_COMPLET_CB(param->complete);
+                REMOVE_ALL_CALLBACK(param->success, param->fail, param->complete);
             } else {
-                code = TASK_NOT_EXISTS;
+                code = FT_ERR_TASK_NOT_EXISTS;
                 msg = "task not exist";
                 goto fail;
             }
@@ -588,61 +545,6 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
     }
 fail:
     INVOKE_FAIL_CB(param->fail, msg, code);
-    FeatureRemoveCallback(feature, param->success);
     INVOKE_COMPLET_CB(param->complete);
-}
-
-void system_request_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
-{
-    printf("========== js print ==========> [jidl_feature] ");
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < vari_params.vari_count; i++) {
-        ft_value_t param = vari_params.vari_args[i];
-        ft_type param_type = ft_get_type(ft_ctx, param);
-        if (param_type == FT_TYPE_OBJECT) {
-            const char* param_obj = ft_to_string(ft_ctx, param);
-            printf("%s ", param_obj);
-            ft_free_string(ft_ctx, param_obj);
-        } else if (param_type == FT_TYPE_ARRAY) {
-            uint32_t array_size = ft_array_size(ft_ctx, param);
-            printf("[");
-            for (uint32_t j = 0; j < array_size; ++j) {
-                ft_value_t elem = ft_array_at(ft_ctx, param, j);
-                ft_type elem_type = ft_get_type(ft_ctx, elem);
-                if (elem_type == FT_TYPE_NUMBER) {
-                    double param_num;
-                    if (ft_to_double(ft_ctx, elem, &param_num))
-                        printf("%lf ", param_num);
-                } else if (elem_type == FT_TYPE_STRING) {
-                    const char* param_str = ft_to_string(ft_ctx, elem);
-                    printf("%s ", param_str);
-                    ft_free_string(ft_ctx, param_str);
-                } else if (elem_type == FT_TYPE_BOOL) {
-                    bool param_bool;
-                    ft_to_bool(ft_ctx, param, &param_bool);
-                    printf("%d ", param_bool);
-                } else {
-                    printf("invalid array element type!");
-                    return;
-                }
-            }
-            printf("] ");
-        } else if (param_type == FT_TYPE_STRING) {
-            const char* param_str = ft_to_string(ft_ctx, param);
-            printf("%s ", param_str);
-            ft_free_string(ft_ctx, param_str);
-        } else if (param_type == FT_TYPE_NUMBER) {
-            double param_num;
-            ft_to_double(ft_ctx, param, &param_num);
-            printf("%lf ", param_num);
-        } else if (param_type == FT_TYPE_BOOL) {
-            bool param_bool;
-            ft_to_bool(ft_ctx, param, &param_bool);
-            printf("%d ", param_bool);
-        } else {
-            printf("invalid param type!");
-            return;
-        }
-    }
-    printf("\n");
+    REMOVE_ALL_CALLBACK(param->success, param->fail, param->complete);
 }

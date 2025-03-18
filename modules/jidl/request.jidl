@@ -58,5 +58,3 @@ struct dl_cmpl_t {
     dl_cmpl_cmpl complete
 }
 void onDownloadComplete(dl_cmpl_t param)
-
-void print(...)
