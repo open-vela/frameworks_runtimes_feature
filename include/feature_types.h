@@ -150,6 +150,10 @@ typedef enum FeatureErrorCode {
     FT_ERR_TIMEOUT = 204, /**< timeout */
     FT_ERR_IOERROR = 300, /**< IO error */
     FT_ERR_CUSTOM_BEGIN = 400, /**< custom errors, starting from 400 */
+    FT_ERR_TASK_FAILED = 1000,
+    FT_ERR_TASK_NOT_EXISTS = 1001,
+    FT_ERR_CANCEL_ERROR_CODE = 1002,
+    FT_ERR_PATH_NOT_EXISTS = 301
 } FeatureErrorCode;
 
 /** union for AppendData */
