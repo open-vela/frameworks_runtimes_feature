@@ -31,6 +31,7 @@
 #include "feature_trace.h"
 #include "fetch.h"
 #include "framework/app_interface.h"
+#include "inspector_host_net.h"
 #include "net_utils.h"
 #include "uv_ext.h"
 
@@ -125,21 +126,7 @@ typedef struct fetch_s {
     uv_request_t* request;
     content_t* content;
     const char* url;
-#ifdef CONFIG_INTERPRETERS_QUICKJS_DEBUG
-    struct {
-        const char* method;
-        int64_t reqId;
-        int64_t reqStartTimer;
-    } debugger;
-#endif
 } fetch_t;
-
-// #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-// extern void CDPServer_setLoadingFailed(ferry::IApplication* app, bool ret);
-// extern int64_t CDPServer_getReqID(ferry::IApplication* app);
-// extern void CDPServer_sendCDPNetResponseEvent(ferry::IApplication* app, int64_t reqId, uv_request_t* req, uv_response_t* resp, const char* header);
-// extern void CDPServer_sendCDPNetRequestEvent(ferry::IApplication* app, uv_request_t* req, const char* method, int64_t reqId);
-// #endif
 
 Fetch::ResponseType get_response_tpye(const char* type)
 {
@@ -343,10 +330,6 @@ static void fetch_request_cb(int state, uv_response_t* response)
     FeaturePromiseType ret;
     ASSERT_RET_ECHO(p, "The request has been cancelled");
     FETCH_INFO("");
-#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-    ferry::IApplication* app = static_cast<ferry::IApplication*>(FeatureInstanceGetManagerUserData(p->feature, "app"));
-    assert(app != nullptr);
-#endif
     if (FeatureInstanceIsDetached(p->feature)) {
         FETCH_INFO("");
         goto exit;
@@ -369,9 +352,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
     if (state == UV_REQUEST_DONE) {
-#if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
         std::string header = response->headers;
-#endif
 
         if (response->httpcode >= HTTP_BAD_REQUES) {
             FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
@@ -412,21 +393,16 @@ static void fetch_request_cb(int state, uv_response_t* response)
             FeaturePromiseReject(p->feature, p->pid, ErrorCode::IOERROR, "responseType dosen't match response data");
         }
         ft_free_value(p->ft_ctx, result);
-        // #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-        //         CDPServer_sendCDPNetResponseEvent(app, p->debugger.reqId, p->request, response, header.c_str());
-        // #endif
+        InspectHostNetResponse(p->request, response, InspectHostNetGetCurrentReqId(), header.c_str());
+
     } else if (state == REQUEST_CANCEL) {
         FETCH_INFO(USER_ABORT_MSG);
-        // #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-        //         CDPServer_setLoadingFailed(app, true);
-        // #endif
+        InspectHostNetLoadingFailed(true);
         uv_request_delete(p->request);
     } else {
         FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
             response->body);
-        // #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-        //         CDPServer_setLoadingFailed(app, true);
-        // #endif
+        InspectHostNetLoadingFailed(true);
         FeaturePromiseReject(p->feature, p->pid, response->httpcode, response->body);
     }
 
@@ -466,15 +442,6 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
         uv_request_set_method(fetch->request, Fetch::method_type[method]);
     }
 
-    // #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-    //     FETCH_DEBUG("FEATURE_QUICKJS_DEBUG");
-    //     ferry::IApplication* app = static_cast<ferry::IApplication*>(FeatureInstanceGetManagerUserData(fetch->feature, "app"));
-    //     assert(app != nullptr);
-    //     fetch->debugger.reqId = CDPServer_getReqID(app);
-    //     fetch->debugger.method = Fetch::method_type[method];
-    //     fetch->debugger.reqStartTimer = time(NULL);
-    // #endif
-
     uv_request_set_data(
         fetch->request,
         (fetch->content->data.empty() ? (void*)fetch->content->buf_type_data
@@ -503,9 +470,7 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     uv_request_set_verbose(fetch->request);
 #endif
 
-    // #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
-    //     CDPServer_sendCDPNetRequestEvent(app, fetch->request, fetch->debugger.method, fetch->debugger.reqId);
-    // #endif
+    InspectHostNetRequest(fetch->request, Fetch::method_type[method], InspectHostNetGetReqId());
 
     // start upload
     uv_request_commit(p->handle, fetch->request, fetch_request_cb);

@@ -123,7 +123,8 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${RAPIDJSON_DIR}/include
     ${QUICKJS_DIR}
     ${QUICKAPP_DIR}/src
-    ${EXTERNAL_DIR}/protobuf-c/protobuf-c)
+    ${EXTERNAL_DIR}/protobuf-c/protobuf-c
+    ${QUICKAPP_DIR}/inspector/include)
 
   if(CONFIG_QUICKAPP_VAPP_XMS)
     list(APPEND FEATURE_INC_DIRS ${QUICKAPP_DIR}/src/framework
