@@ -168,7 +168,7 @@ TEST_F(FeatureContextTest, ft_from_bool_1)
     ft_value_t val = ft_from_bool(ft_test_ctx, true);
 
     // 检查值是否正确
-    bool result;
+    bool result = false;
     EXPECT_TRUE(feature_to_boolean(js_env.ctx, &result, FT_VAL_GET_JS_VAL(val)));
     EXPECT_TRUE(result);
 

@@ -943,8 +943,6 @@ TEST_F(FeatureExportTestQjs, FeaturePost_HandleNullptr)
     EXPECT_EQ(FeaturePost(
                   nullptr, [](int mode, void* data1) {
                       auto str = ((dataContext*)data1)->str;
-                      auto loop1 = ((dataContext*)data1)->loop;
-                      auto instanceHandle = ((dataContext*)data1)->instanceHandle;
                       if (mode == FEATURE_TASK_MODE_NORMAL) {
                           FEATURE_LOG_INFO("The outer FeaturePost data is %s", str);
                           strcpy(str, "xiaomi hello");
@@ -990,6 +988,8 @@ TEST_F(FeatureExportTestQjs, FeaturePost_DataNullptr)
         true);
 }
 
+// TODO: 这个用例没有意义，并不能达成测试目的，需要重写
+#if 0
 TEST_F(FeatureExportTestQjs, FeaturePost_IllegalMode)
 {
     // 异常情况： mode 为非法值
@@ -1012,6 +1012,7 @@ TEST_F(FeatureExportTestQjs, FeaturePost_IllegalMode)
     free(data->str);
     free(data);
 }
+#endif
 
 TEST_F(FeatureExportTestQjs, FeaturePost_DataMemoryAllocationFailure)
 {
@@ -1021,20 +1022,20 @@ TEST_F(FeatureExportTestQjs, FeaturePost_DataMemoryAllocationFailure)
         uv_loop_t* loop;
         FeatureInstanceHandle instanceHandle;
     };
-    auto data = (dataContext*)malloc(sizeof(dataContext));
-    data->str = nullptr; // 模拟内存分配失败
-    data->loop = loop;
-    data->instanceHandle = instance_handle;
+    auto dataCtx = (dataContext*)malloc(sizeof(dataContext));
+    dataCtx->str = nullptr; // 模拟内存分配失败
+    dataCtx->loop = loop;
+    dataCtx->instanceHandle = instance_handle;
 
     EXPECT_EQ(FeaturePost(
                   instance_handle, [](int mode, void* data) {
                       // 这个回调不应该被执行
                       FEATURE_LOG_ERROR("Callback should not be called with nullptr data");
                   },
-                  data),
+                  dataCtx),
         true);
 
-    free(data);
+    free(dataCtx);
 }
 
 TEST_F(FeatureExportTestQjs, FeaturePost_MultipleCalls)
@@ -1054,8 +1055,6 @@ TEST_F(FeatureExportTestQjs, FeaturePost_MultipleCalls)
     EXPECT_EQ(FeaturePost(
                   instance_handle, [](int mode, void* data1) {
                       auto str = ((dataContext*)data1)->str;
-                      auto loop1 = ((dataContext*)data1)->loop;
-                      auto instanceHandle = ((dataContext*)data1)->instanceHandle;
                       if (mode == FEATURE_TASK_MODE_NORMAL) {
                           FEATURE_LOG_INFO("The outer FeaturePost data is %s", str);
                           strcpy(str, "xiaomi hello");
@@ -1067,8 +1066,6 @@ TEST_F(FeatureExportTestQjs, FeaturePost_MultipleCalls)
     EXPECT_EQ(FeaturePost(
                   instance_handle, [](int mode, void* data1) {
                       auto str = ((dataContext*)data1)->str;
-                      auto loop1 = ((dataContext*)data1)->loop;
-                      auto instanceHandle = ((dataContext*)data1)->instanceHandle;
                       if (mode == FEATURE_TASK_MODE_NORMAL) {
                           FEATURE_LOG_INFO("The outer FeaturePost data is %s", str);
                           strcpy(str, "hello again");
@@ -1119,8 +1116,8 @@ TEST_F(FeatureExportTestQjs, FeatureGetUVLoop1)
 TEST_F(FeatureExportTestQjs, FeatureGetUVLoop_HandleNullptr)
 {
     // 异常情况： handle 为 nullptr
-    uv_loop_t* loop = FeatureGetUVLoop(nullptr);
-    EXPECT_EQ(loop, nullptr);
+    uv_loop_t* loop1 = FeatureGetUVLoop(nullptr);
+    EXPECT_EQ(loop1, nullptr);
 }
 
 // =============================================================================
@@ -1330,7 +1327,6 @@ TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener1)
 TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_HandleNullptr)
 {
     //异常情况：handle 为 nullptr
-    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
     UnitEventData* data = (UnitEventData*)malloc(sizeof(UnitEventData));
     memset(data, 0, sizeof(UnitEventData));
     data->data_changed_added = false;
