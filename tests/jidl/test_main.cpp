@@ -386,7 +386,13 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
                                "unittest.done(async_id));\n    }, true);\n}\n\nfunction __feat_test_all() { "
                                "// hide to outside\n    unittest.run_all_tests();\n}\n\nfunction "
                                "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
-                               "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n";
+                               "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n"
+                               "function almostEqualFloat(a, b, epsilon) {\n    if (Math.abs(a - b) <= epsilon) {\n"
+                               "    return true;\n}\n   const absA = Math.abs(a);\n     const absB = Math.abs(b);\n"
+                               "    const diff = Math.abs(a - b);\n    return diff <= (Math.max(absA, absB) * epsilon);\n}\n\n"
+                               "function arraysEqual(arr1, arr2) {\n    if (arr1.length !== arr2.length) return false;\n"
+                               "    for (let i = 0; i < arr1.length; i++) {\n        if (arr1[i] !== arr2[i]) return false;\n"
+                               "    }\n    return true;\n}\n";
 
     auto res = JS_Eval(env.ctx, test_content, strlen(test_content), "test-internal.js",
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);

@@ -1,17 +1,5 @@
 let any = require('any_test');
 
-function arraysEqual(arr1, arr2) {
-    // 如果长度不同，直接返回 false
-    if (arr1.length !== arr2.length) return false;
-
-    // 逐个比较元素
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) return false;
-    }
-
-    return true;
-}
-
 feat_test("anyTest", "testSimple", () => {
     feat_expect_true(any.testSimple({test: "hello world"}), "AnyTest-Simple入参测试 case 1 error!");
 });
