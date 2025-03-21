@@ -77,7 +77,7 @@ typedef struct {
     FeatureInstanceHandle feature_handle;
     struct weakref_list_node node;
     off_t pre = -1;
-} RequestInfo;
+} ReqInfo;
 
 typedef struct
 {
@@ -86,7 +86,7 @@ typedef struct
     const char* pkg_name;
     int exit;
     std::map<std::string, DownloadResult*>* download_results;
-    RequestInfo* shareInfo = NULL;
+    ReqInfo* shareInfo = NULL;
 } RequestContext;
 
 RequestContext* getRequestContext(FeatureInstanceHandle handle)
@@ -110,9 +110,9 @@ void addResult(FeatureInstanceHandle handle, char* uuid, DownloadResult* result)
     }
 }
 
-void freeRequestInfo(RequestInfo* info);
+void freeReqInfo(ReqInfo* info);
 
-void __request_cancel(RequestInfo* info);
+void __request_cancel(ReqInfo* info);
 
 void system_request_onRegister(const char* feature_name)
 {
@@ -155,8 +155,8 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
     REQUEST_LIFECYCLE_DEBUG();
     // 退出页面，取消挂载在该instancehandle上的request请求
     RequestContext* th = getRequestContext(handle);
-    RequestInfo *info, *temp;
-    weakref_list_for_every_entry_safe(&th->linklist, info, temp, RequestInfo, node)
+    ReqInfo *info, *temp;
+    weakref_list_for_every_entry_safe(&th->linklist, info, temp, ReqInfo, node)
     {
         // The global task countinue to excute, but js callback function will not be called
         if (info->feature_handle == handle && !info->isGlobal) {
@@ -171,11 +171,11 @@ void system_request_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle hand
     if (!th)
         return;
     // app 退出，cancel掉所有请求
-    RequestInfo *info, *temp;
-    weakref_list_for_every_entry_safe(&th->linklist, info, temp, RequestInfo, node)
+    ReqInfo *info, *temp;
+    weakref_list_for_every_entry_safe(&th->linklist, info, temp, ReqInfo, node)
     {
         uv_request_delete(info->request);
-        freeRequestInfo(info);
+        freeReqInfo(info);
     }
 
     if (th->exit == false) {
@@ -199,9 +199,9 @@ void system_request_onUnregister(const char* feature_name)
     REQUEST_LIFECYCLE_DEBUG();
 }
 
-void freeRequestInfo(RequestInfo* info)
+void freeReqInfo(ReqInfo* info)
 {
-    REQUEST_DEBUG("free RequestInfo %p", info);
+    REQUEST_DEBUG("free ReqInfo %p", info);
     if (info != NULL) {
         if (info->filename)
             free(info->filename);
@@ -230,7 +230,7 @@ char* uuid()
 static void __request_cb(int state, uv_response_t* response)
 {
     REQUEST_DEBUG("in __request_cb, state = %d", state);
-    RequestInfo* info = static_cast<RequestInfo*>(response->userp);
+    ReqInfo* info = static_cast<ReqInfo*>(response->userp);
     if (!info)
         return;
     FeatureInstanceHandle feature = info->feature_handle;
@@ -277,13 +277,13 @@ static void __request_cb(int state, uv_response_t* response)
     }
 
     weakref_list_delete(&info->node);
-    freeRequestInfo(info);
+    freeReqInfo(info);
 }
 
 int __progress_cb(uv_request_t* request, off_t dltotal, off_t dlnow, off_t ultotal, off_t ulnow)
 {
     // REQUEST_DEBUG("=== in __progress_cb, total = %ld, now = %ld", dltotal, dlnow);
-    RequestInfo* info = (RequestInfo*)uv_request_get_userp(request);
+    ReqInfo* info = (ReqInfo*)uv_request_get_userp(request);
     if (FeatureCheckCallbackId(info->feature_handle, info->notify_func)) {
         system_request_notify_data_t* data = system_requestMallocnotify_data_t();
         if (dlnow != 0 && dltotal == 0) {
@@ -302,7 +302,7 @@ int __progress_cb(uv_request_t* request, off_t dltotal, off_t dlnow, off_t ultot
     return 0;
 }
 
-void __request_cancel(RequestInfo* info)
+void __request_cancel(ReqInfo* info)
 {
     REQUEST_INFO("__request_cancel %p", info);
     if (info->request) {
@@ -314,7 +314,7 @@ void __request_cancel(RequestInfo* info)
     }
 }
 
-void initInfo(RequestInfo* info)
+void initInfo(ReqInfo* info)
 {
     info->notify_func = -1;
     info->success = -1;
@@ -394,7 +394,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     std::map<std::string, std::string> formdata;
 
-    RequestInfo* info = static_cast<RequestInfo*>(malloc(sizeof(RequestInfo)));
+    ReqInfo* info = static_cast<ReqInfo*>(malloc(sizeof(ReqInfo)));
     if (!info) {
         REQUEST_ERROR("malloc fail");
         code = FT_ERR_GENERAL;
@@ -491,7 +491,7 @@ callFail:
     INVOKE_COMPLET_CB(param->complete);
     REMOVE_ALL_CALLBACK(param->success, param->fail, param->complete);
     if (info) {
-        freeRequestInfo(info);
+        freeReqInfo(info);
     }
 }
 
@@ -510,8 +510,8 @@ void system_request_wrap_onDownloadComplete(FeatureInstanceHandle feature, Appen
         msg = "token is missing";
         goto fail;
     } else {
-        RequestInfo *info, *temp, *res = NULL;
-        weakref_list_for_every_entry_safe(&th->linklist, info, temp, RequestInfo, node)
+        ReqInfo *info, *temp, *res = NULL;
+        weakref_list_for_every_entry_safe(&th->linklist, info, temp, ReqInfo, node)
         {
             if (strcmp(info->uuid, param->token) == 0) {
                 res = info;
