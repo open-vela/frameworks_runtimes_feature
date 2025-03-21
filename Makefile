@@ -98,6 +98,7 @@ ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 endif
 
 ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_jidl_util.cpp
 	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
 	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.jidl
 	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/

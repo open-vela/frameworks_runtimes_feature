@@ -1,68 +1,6 @@
 #include "struct_test.h"
 
-#include <math.h>
-#include <string>
-
-template <typename T>
-class FTArrayHelper {
-private:
-    FtArray* _data;
-
-public:
-    FTArrayHelper(FtArray* data)
-    {
-        _data = data;
-    }
-
-    ~FTArrayHelper()
-    {
-    }
-
-    T& operator[](int32_t index)
-    {
-        return ((T*)_data->_element)[index];
-    }
-
-    int32_t size() const { return _data->_size; }
-};
-
-// 判断两个 double 是否几乎相等
-static int almostEqualDouble(double a, double b, double epsilon)
-{
-    // 判断绝对误差
-    if (fabs(a - b) <= epsilon)
-        return 1;
-
-    // 判断相对误差
-    double absA = fabs(a);
-    double absB = fabs(b);
-    double diff = fabs(a - b);
-
-    return diff <= ((absA > absB ? absA : absB) * epsilon);
-}
-
-// 判断两个 float 是否几乎相等
-static int almostEqualFloat(float a, float b, float epsilon)
-{
-    // 判断绝对误差
-    if (fabsf(a - b) <= epsilon)
-        return 1;
-
-    // 判断相对误差
-    float absA = fabsf(a);
-    float absB = fabsf(b);
-    float diff = fabsf(a - b);
-
-    return diff <= ((absA > absB ? absA : absB) * epsilon);
-}
-
-static char* stringToFtString(std::string str)
-{
-    int len = str.length();
-    char* ftStr = (char*)FeatureMalloc(len + 1, FT_STRING);
-    strcpy(ftStr, str.c_str());
-    return ftStr;
-}
+#include "unit_jidl_util.h"
 
 void struct_test_onRegister(const char* feature_name)
 {
@@ -104,9 +42,9 @@ FtBool struct_test_wrap_testSimpleDefault(FeatureInstanceHandle feature, AppendD
         return false;
     if (s->long_test != 10000000000)
         return false;
-    if (!almostEqualFloat(s->float_test, 4.3f, 1e-5f))
+    if (!JidlUtils::almostEqualFloat(s->float_test, 4.3f, 1e-5f))
         return false;
-    if (!almostEqualDouble(s->double_test, 5.2364, 1e-5))
+    if (!JidlUtils::almostEqualDouble(s->double_test, 5.2364, 1e-5))
         return false;
     if (strcmp(s->title, "hello world"))
         return false;
@@ -123,7 +61,7 @@ struct_test_Simple* struct_test_wrap_testSimpleDefault1(FeatureInstanceHandle fe
     s->long_test = 20000000000;
     s->float_test = 3.4f;
     s->double_test = 1.234;
-    s->title = stringToFtString("hello world");
+    s->title = JidlUtils::stringToFtString("hello world");
     s->fail = 0;
     return s;
 }
@@ -138,9 +76,9 @@ FtBool struct_test_wrap_testSimpleReq(FeatureInstanceHandle feature, AppendData 
         return false;
     if (s->long_test != 10000000000)
         return false;
-    if (!almostEqualFloat(s->float_test, 4.3f, 1e-5f))
+    if (!JidlUtils::almostEqualFloat(s->float_test, 4.3f, 1e-5f))
         return false;
-    if (!almostEqualDouble(s->double_test, 5.2364, 1e-5))
+    if (!JidlUtils::almostEqualDouble(s->double_test, 5.2364, 1e-5))
         return false;
     if (strcmp(s->title, "hello world"))
         return false;
@@ -158,9 +96,9 @@ FtBool struct_test_wrap_testComplex(FeatureInstanceHandle feature, AppendData ap
             return false;
         if (c->simple->long_test != 10000000000)
             return false;
-        if (!almostEqualFloat(c->simple->float_test, 4.3f, 1e-5f))
+        if (!JidlUtils::almostEqualFloat(c->simple->float_test, 4.3f, 1e-5f))
             return false;
-        if (!almostEqualDouble(c->simple->double_test, 5.2364, 1e-5))
+        if (!JidlUtils::almostEqualDouble(c->simple->double_test, 5.2364, 1e-5))
             return false;
         if (strcmp(c->simple->title, "hello world"))
             return false;
@@ -175,7 +113,7 @@ FtBool struct_test_wrap_testComplex(FeatureInstanceHandle feature, AppendData ap
     if (c->double_array != nullptr) {
         FTArrayHelper<double> arrayHelper(c->double_array);
         for (int i = 0; i < arrayHelper.size(); i++) {
-            if (!almostEqualDouble(arrayHelper[i], 5.2364, 1e-5))
+            if (!JidlUtils::almostEqualDouble(arrayHelper[i], 5.2364, 1e-5))
                 return false;
         }
     }
@@ -216,15 +154,15 @@ struct_test_Complex* struct_test_wrap_testComplex1(FeatureInstanceHandle feature
     s->long_test = 20000000000;
     s->float_test = 3.4f;
     s->double_test = 1.234;
-    s->title = stringToFtString("hello world");
+    s->title = JidlUtils::stringToFtString("hello world");
     s->fail = 0;
     c->simple = s;
     FtArray* array;
     array = struct_test_malloc_string_array();
     array->_size = 2;
     array->_element = malloc(sizeof(const char*) * array->_size);
-    ((const char**)array->_element)[0] = stringToFtString("hello");
-    ((const char**)array->_element)[1] = stringToFtString("world");
+    ((const char**)array->_element)[0] = JidlUtils::stringToFtString("hello");
+    ((const char**)array->_element)[1] = JidlUtils::stringToFtString("world");
     c->string_array = array;
     FtArray* array1;
     array1 = struct_test_malloc_double_array();

@@ -1,32 +1,6 @@
 let struct = require('struct_test');
 let errorFlag = true;
 
-function almostEqualFloat(a, b, epsilon) {
-    // 判断绝对误差
-    if (Math.abs(a - b) <= epsilon) {
-        return true;
-    }
-
-    // 判断相对误差
-    const absA = Math.abs(a);
-    const absB = Math.abs(b);
-    const diff = Math.abs(a - b);
-
-    return diff <= (Math.max(absA, absB) * epsilon);
-}
-
-function arraysEqual(arr1, arr2) {
-    // 如果长度不同，直接返回 false
-    if (arr1.length !== arr2.length) return false;
-
-    // 逐个比较元素
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) return false;
-    }
-
-    return true;
-}
-
 function failCb(msg, code) {
     console.log(msg);
     console.log(code);
