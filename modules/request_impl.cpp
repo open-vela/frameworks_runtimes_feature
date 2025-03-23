@@ -158,13 +158,9 @@ void system_request_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle 
     RequestInfo *info, *temp;
     weakref_list_for_every_entry_safe(&th->linklist, info, temp, RequestInfo, node)
     {
-        if (info->feature_handle == handle) {
-            if (info->isGlobal) {
-                // 阻止__request_cb回调流程
-                uv_request_set_userp(info->request, NULL);
-            } else {
-                __request_cancel(info);
-            }
+        // The global task countinue to excute, but js callback function will not be called
+        if (info->feature_handle == handle && !info->isGlobal) {
+            __request_cancel(info);
         }
     }
 }
@@ -212,6 +208,9 @@ void freeRequestInfo(RequestInfo* info)
         if (info->uuid) {
             free(info->uuid);
         }
+        if (info->feature_handle) {
+            FeatureFreeInstanceHandle(info->feature_handle);
+        }
         free(info);
         info = NULL;
     }
@@ -235,43 +234,47 @@ static void __request_cb(int state, uv_response_t* response)
     if (!info)
         return;
     FeatureInstanceHandle feature = info->feature_handle;
-    RequestContext* th = getRequestContext(feature);
-    if (info->share == false) {
-        th->shareInfo = NULL;
-    }
-
-    DownloadResult* res = static_cast<DownloadResult*>(malloc(sizeof(DownloadResult)));
-    if (state == UV_REQUEST_DONE) {
-        if (info->request_type == UV_DOWNLOAD) {
-            char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
-            // 返回文件绝对地址
-            system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
-            char* value = (char*)FeatureMalloc(strlen(body) + 1, FT_CHAR);
-            sprintf(value, "%s", body);
-            param->uri = value;
-            INVOKE_SUCCESS_CB(info->success, param);
-            FeatureFreeValue(param);
-
-            res->success = true;
-            res->data = body;
-            res->code = UV_REQUEST_DONE;
+    if (!FeatureInstanceIsDetached(feature)) {
+        RequestContext* th = getRequestContext(feature);
+        if (info->share == false) {
+            th->shareInfo = NULL;
         }
-    } else if (state == UV_REQUEST_ERROR) {
-        // body内存的是绝对路径的file位置
-        REQUEST_ERROR("request error: %s", response->body);
-        INVOKE_FAIL_CB(info->fail, response->body, FT_ERR_TASK_FAILED);
-        res->success = false;
-        res->data = strdup(response->body);
-        res->code = FT_ERR_TASK_FAILED;
-    } else if (state == REQUEST_CANCEL) {
-        INVOKE_FAIL_CB(info->fail, "user cancel request", state);
-        res->success = false;
-        res->data = strdup(response->body);
-        res->code = FT_ERR_CANCEL_ERROR_CODE;
+
+        DownloadResult* res = static_cast<DownloadResult*>(malloc(sizeof(DownloadResult)));
+        if (state == UV_REQUEST_DONE) {
+            if (info->request_type == UV_DOWNLOAD) {
+                char* body = app_absolute_to_relative_path(th->pkg_name, response->body);
+                // 返回文件绝对地址
+                system_request_dl_cmpl_succ_t* param = system_requestMallocdl_cmpl_succ_t();
+                char* value = (char*)FeatureMalloc(strlen(body) + 1, FT_CHAR);
+                sprintf(value, "%s", body);
+                param->uri = value;
+                INVOKE_SUCCESS_CB(info->success, param);
+                FeatureFreeValue(param);
+
+                res->success = true;
+                res->data = body;
+                res->code = UV_REQUEST_DONE;
+            }
+        } else if (state == UV_REQUEST_ERROR) {
+            // body内存的是绝对路径的file位置
+            REQUEST_ERROR("request error: %s", response->body);
+            INVOKE_FAIL_CB(info->fail, response->body, FT_ERR_TASK_FAILED);
+            res->success = false;
+            res->data = strdup(response->body);
+            res->code = FT_ERR_TASK_FAILED;
+        } else if (state == REQUEST_CANCEL) {
+            INVOKE_FAIL_CB(info->fail, "user cancel request", state);
+            res->success = false;
+            res->data = strdup(response->body);
+            res->code = FT_ERR_CANCEL_ERROR_CODE;
+        }
+        addResult(feature, info->uuid, res);
+        INVOKE_COMPLET_CB(info->complete);
+        REMOVE_ALL_CALLBACK(info->success, info->fail, info->complete);
+    } else {
+        REQUEST_DEBUG("feature instance is detached");
     }
-    addResult(feature, info->uuid, res);
-    INVOKE_COMPLET_CB(info->complete);
-    REMOVE_ALL_CALLBACK(info->success, info->fail, info->complete);
 
     weakref_list_delete(&info->node);
     freeRequestInfo(info);
@@ -323,6 +326,7 @@ void initInfo(RequestInfo* info)
     info->uuid = NULL;
     info->pre = -1;
     info->request = NULL;
+    info->feature_handle = NULL;
 }
 
 bool __is_valid_uri(const char* uri)
@@ -416,7 +420,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
 
     info->request_type = UV_DOWNLOAD;
-    info->feature_handle = feature;
+    info->feature_handle = FeatureDupInstanceHandle(feature);
 
     if (check_str(param->filename)) {
         filename = strdup(param->filename);
