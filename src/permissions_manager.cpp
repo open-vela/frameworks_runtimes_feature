@@ -127,6 +127,12 @@ PermissionsInfo::PermissionsInfo(FeatureInstance* instance, FeaturePermissionsRe
             dupFtValue(ft_ctx, method_->parameters[i], arg);
         }
     }
+
+    if (instance_->isBlackListed(info)) {
+        int count = getAlignedCount(method_->parameters[0]);
+        void* arg = info->argv[extra_argc_];
+        memset(arg, 0, count * sizeof(uintptr_t));
+    }
 }
 
 void PermissionsInfo::releaseArgs()
@@ -197,6 +203,21 @@ void PermissionsInfo::RejectPermissions()
     releaseArgs();
 }
 
+bool PermissionsInfo::HasAsyncCallbacks()
+{
+    if (argc_ - extra_argc_ <= 0) {
+        return false;
+    }
+    auto arg = (void*)argv_[extra_argc_];
+    if (!arg) {
+        return false;
+    }
+    FtCallbackId success_id = findCallbackIdByName(method_->parameters[0], arg, "success");
+    FtCallbackId fail_id = findCallbackIdByName(method_->parameters[0], arg, "fail");
+    FtCallbackId complete_id = findCallbackIdByName(method_->parameters[0], arg, "complete");
+    return (success_id != 0 || fail_id != 0 || complete_id != 0);
+}
+
 // PermissionsManager
 PermissionsManager::PermissionsManager()
     : p_cb_(nullptr)
@@ -259,6 +280,7 @@ bool PermissionsManager::RequestPermissions(PermissionsInfo* info)
     FeaturePermissionsInfo perms_info;
     perms_info.api_name = info->ApiName();
     perms_info.permissions = info->Permissions();
+    perms_info.has_async_cbs = info->HasAsyncCallbacks();
     p_cb_((FeaturePermissionsHandle)info, &perms_info, p_data_);
     return true;
 }

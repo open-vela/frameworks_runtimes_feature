@@ -99,6 +99,8 @@ public:
 
     bool requestPermissions(FeaturePermissionsRequestInfo* info);
 
+    bool isBlackListed(FeaturePermissionsRequestInfo* info);
+
 private:
     int instance_id_ : 29;
     uint32_t is_interface_ : 1;

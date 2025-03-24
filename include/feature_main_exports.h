@@ -198,6 +198,7 @@ typedef void* FeaturePermissionsHandle;
 typedef struct FeaturePermissionsInfo {
     const FeaturePermissions* permissions; /**< permissions */
     const char* api_name; /**< api_name */
+    bool has_async_cbs; /**< has_async_cbs */
 } FeaturePermissionsInfo;
 
 /** FeaturePermissionsCb ptr */
