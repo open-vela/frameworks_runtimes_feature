@@ -98,6 +98,7 @@ ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 endif
 
 ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
+ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
 	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_jidl_util.cpp
 	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
 	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.jidl
@@ -107,6 +108,7 @@ ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
 	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.jidl
 	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
 	FEATURELIST += any_test
+endif
 
 	PROGNAME += feature_unit_test
 	PRIORITY += 100

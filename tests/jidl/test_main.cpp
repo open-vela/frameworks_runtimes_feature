@@ -336,7 +336,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
     android::IPCThreadState::self()->setupPolling(&binderFd);
     int dupFd = dup(binderFd);
     if (binderFd < 0) {
-        printf("failed to open binder device:%d", errno);
+        FEATURE_LOG_ERROR("failed to open binder device:%d", errno);
     } else {
         uv_poll_init(main_loop, &binder_poll, dupFd);
         binder_poll.data = &dupFd;
@@ -385,8 +385,8 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
                                "unittest.testsuite(suitname, desc, () => {\n        test_cb(() => "
                                "unittest.done(async_id));\n    }, true);\n}\n\nfunction __feat_test_all() { "
                                "// hide to outside\n    unittest.run_all_tests();\n}\n\nfunction "
-                               "feat_expect_true(r, d) {\n    return unittest.expect_true(r, "
-                               "d);\n}\n\nfunction print(a) {\n    unittest.print(a);\n}\n"
+                               "feat_expect_true(r, d) {\n    return unittest.expect_true(r, d);\n}\n\n"
+                               "function init_feat_filter(filter) {\n   unittest.init_suit_filter(filter);\n}\n\n"
                                "function almostEqualFloat(a, b, epsilon) {\n    if (Math.abs(a - b) <= epsilon) {\n"
                                "    return true;\n}\n   const absA = Math.abs(a);\n     const absB = Math.abs(b);\n"
                                "    const diff = Math.abs(a - b);\n    return diff <= (Math.max(absA, absB) * epsilon);\n}\n\n"
@@ -398,7 +398,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
         JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
-        printf("[feat_test]: Exception in initializing test internal interface.: %s\n", str);
+        FEATURE_LOG_ERROR("[feat_test]: Exception in initializing test internal interface.: %s\n", str);
         feature_dump_error(env.ctx);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
@@ -411,7 +411,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
 
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
-        printf("[feat_test]: Exception thrown while executing test file \"%s\": %s\n", js_file, str);
+        FEATURE_LOG_ERROR("[feat_test]: Exception thrown while executing test file \"%s\": %s\n", js_file, str);
         feature_dump_error(env.ctx);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
@@ -423,7 +423,7 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
 
     if (JS_IsException(res)) {
         const char* str = JS_ToCString(env.ctx, res);
-        printf("[feat_test]: Exception thrown while running all test, \"%s\"\n", str);
+        FEATURE_LOG_ERROR("[feat_test]: Exception thrown while running all test, \"%s\"\n", str);
         feature_dump_error(env.ctx);
         JS_FreeValue(env.ctx, res);
         goto feat_test_done;
@@ -476,7 +476,7 @@ feat_test_done:
 extern "C" int main(int argc, char** argv)
 {
     if (argc < 2) {
-        printf("please input js file, like ./test.js \n");
+        FEATURE_LOG_DEBUG("please input js file, like ./test.js \n");
         return 0;
     }
 
@@ -509,18 +509,18 @@ extern "C" int main(int argc, char** argv)
         }
     }
 
-    printf("[feat_test]: Time limit of asynchronous test execution: %d\n", time_limit);
+    FEATURE_LOG_DEBUG("[feat_test]: Time limit of asynchronous test execution: %d\n", time_limit);
 
     // 打开js文件
     load_file(js_file, &js_str);
     if (js_str == NULL) {
-        printf("malloc js file failed!\n");
+        FEATURE_LOG_DEBUG("malloc js file failed!\n");
         return 0;
     }
     // 打开 manifest 文件
 
     for (int i = 0; i < times; i++) {
-        printf("[feat_test]:  the number of times you want to repeat the test is %d, Current number of tests is %d\n", times, i);
+        FEATURE_LOG_DEBUG("[feat_test]:  the number of times you want to repeat the test is %d, Current number of tests is %d\n", times, i);
         feat_test_once(js_file, js_str, test_all, package_name, time_limit);
     }
 
@@ -533,13 +533,13 @@ extern "C" int main(int argc, char** argv)
 bool load_file(const char* file_name, char** file_content)
 {
     if (file_name == NULL || file_content == NULL) {
-        printf("file_name or file_content is NULL!\n");
+        FEATURE_LOG_DEBUG("file_name or file_content is NULL!\n");
         return false;
     }
 
     FILE* fp = fopen(file_name, "r");
     if (fp == NULL) {
-        printf("open file_name is %s failed!\n", file_name);
+        FEATURE_LOG_DEBUG("open file_name is %s failed!\n", file_name);
         return false;
     }
     // 获取文件长度
