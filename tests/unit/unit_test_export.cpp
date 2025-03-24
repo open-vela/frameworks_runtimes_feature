@@ -1226,6 +1226,8 @@ TEST_F(FeatureExportTestQjs, FeatureCheckCallbackId_HandleNullptr)
 
     FtCallbackId id = ((FeatureInstanceQjs*)(instance_handle))->addCallback(callback, &callback_type);
     EXPECT_EQ(FeatureCheckCallbackId(nullptr, id), false);
+    FeatureRemoveCallback(instance_handle, id);
+    JS_FreeValue(js_env.ctx, callback);
 }
 
 TEST_F(FeatureExportTestQjs, FeatureCheckCallbackId_IllegalCallbackId)
@@ -1324,20 +1326,32 @@ TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener1)
     FeatureSetObjectData(instance_handle, nullptr);
 }
 
-TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_HandleNullptr)
+TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_cancelListener)
 {
-    //异常情况：handle 为 nullptr
+    //取消监听：测试能否正确地取消eventChangeListener
+    FeatureSetEventChangeListener(instance_handle, nullptr);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
     UnitEventData* data = (UnitEventData*)malloc(sizeof(UnitEventData));
     memset(data, 0, sizeof(UnitEventData));
     data->data_changed_added = false;
-    data->data_changed_added = false;
-    FeatureSetObjectData(nullptr, data);
+    data->state_changed_added = false;
+    FeatureSetObjectData(instance_handle, data);
+    // MemberEvent* member_event
+    feature_value_t undefined = FEATURE_UNDEFINED;
+    instance_qjs->addEventCallback(&data_changed_member_event, undefined);
+    instance_qjs->addEventCallback(&state_changed_member_event, undefined);
+    UnitEventData* out_data = (UnitEventData*)FeatureGetObjectData(instance_handle);
+    // add event callback 状态未改变
+    EXPECT_EQ(out_data->data_changed_added, false);
+    EXPECT_EQ(out_data->state_changed_added, false);
+    free(out_data);
+    FeatureSetObjectData(instance_handle, nullptr);
 }
 
-TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_DataNullptr)
+TEST_F(FeatureExportTestQjs, FeatureSetEventChangeListener_HandleNullptr)
 {
-    //边界情况：data 为 nullptr
-    FeatureSetEventChangeListener(instance_handle, nullptr);
+    //异常情况：handle 为 nullptr
+    FeatureSetEventChangeListener(nullptr, test_eventChange);
 }
 
 // =============================================================================
