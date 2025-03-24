@@ -1,5 +1,6 @@
 let struct = require('struct_test');
 let errorFlag = true;
+init_feat_filter("structTest.*");
 
 function failCb(msg, code) {
     console.log(msg);

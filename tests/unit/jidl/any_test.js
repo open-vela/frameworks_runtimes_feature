@@ -1,4 +1,5 @@
 let any = require('any_test');
+init_feat_filter("anyTest.*");
 
 feat_test("anyTest", "testSimple", () => {
     feat_expect_true(any.testSimple({test: "hello world"}), "AnyTest-Simple入参测试 case 1 error!");

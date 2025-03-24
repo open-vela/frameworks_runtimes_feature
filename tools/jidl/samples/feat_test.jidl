@@ -10,5 +10,4 @@ void done(int async_id, int err = 0, string err_message = "success");
 void expect_true(boolean result, string message_info = "");
 
 void run_all_tests();
-
-void print(...); // for debug
+void init_suit_filter(string test_suit_filter);

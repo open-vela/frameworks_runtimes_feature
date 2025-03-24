@@ -33,11 +33,13 @@ public:
     {
         if (executed_)
             return -1;
-
+        int argc = 1;
+        const char* argv[] = { "feature google test" };
+        ::testing::InitGoogleTest(&argc, const_cast<char**>(argv));
         int r = RUN_ALL_TESTS();
         executed_ = true;
         if (r) {
-            printf("feat_test: Test failed");
+            FEATURE_LOG_WARN("feat_test: Test failed");
         }
         return r;
     }
@@ -123,23 +125,21 @@ private:
 
 void feat_test_onRegister(const char* module_name)
 {
-    printf("register module %s\n", module_name);
+    FEATURE_LOG_DEBUG("register module %s", module_name);
 }
 
 void feat_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    int argc = 1;
-    const char* argv[] = { "feature google test" };
-    ::testing::InitGoogleTest(&argc, const_cast<char**>(argv));
+    FEATURE_LOG_DEBUG("create module feat_test");
 }
 
 void feat_test_onRequired(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
     static int inited = 0;
-    printf("required module feat_test %p\n", handle);
+    FEATURE_LOG_DEBUG("required module feat_test %p", handle);
     if (inited) {
-        printf("You can't require feat_test twice %p\n", handle);
+        FEATURE_LOG_DEBUG("You can't require feat_test twice %p", handle);
         return;
     }
 
@@ -151,7 +151,7 @@ void feat_test_onRequired(FeatureRuntimeContext ctx,
 void feat_test_onDetached(FeatureRuntimeContext ctx,
     FeatureInstanceHandle handle)
 {
-    printf("detached feat_test %p\n", handle);
+    FEATURE_LOG_DEBUG("detached feat_test %p", handle);
     FeatureUnittest* p = static_cast<FeatureUnittest*>(FeatureGetObjectData(handle));
     FeatureSetObjectData(handle, 0);
     if (p)
@@ -160,25 +160,25 @@ void feat_test_onDetached(FeatureRuntimeContext ctx,
 
 void feat_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
-    printf("destroy feat_test\n");
+    FEATURE_LOG_DEBUG("destroy feat_test");
     testing::UnitTest::ClearTestSuitesAndIndices();
 }
 
 void feat_test_onUnregister(const char* module_name)
 {
-    printf("unregister %s\n", module_name);
+    FEATURE_LOG_DEBUG("unregister %s", module_name);
 }
 
 void feat_test_wrap_done(FeatureInstanceHandle feature, AppendData append_data,
     FtInt async_id, FtInt err, FtString err_message)
 {
     if (FeatureUnittest::currentAsyncId() != async_id) {
-        printf("[feat_test] done(%d) in odd test context: Timeout occurred.",
+        FEATURE_LOG_DEBUG("[feat_test] done(%d) in odd test context: Timeout occurred.",
             async_id);
         return;
     }
 
-    // printf("[feat_test] done stop a async test: id(%d)\n", async_id);
+    // FEATURE_LOG_DEBUG("[feat_test] done stop a async test: id(%d)", async_id);
     FeatTestEnv* pack = (FeatTestEnv*)FeatureInstanceGetManagerUserData(feature, "run_loop");
     LoopFunc stop_loop = pack->stop_loop;
     stop_loop(pack);
@@ -188,7 +188,7 @@ FtInt feat_test_wrap_testsuite(FeatureInstanceHandle feature,
     FtString test_case_name, FtCallbackId body,
     FtBool is_async)
 {
-    printf("[feat_test] add testsuite %p\n", feature);
+    FEATURE_LOG_DEBUG("[feat_test] add testsuite %p", feature);
 
     int async_id = 0;
     if (is_async)
@@ -218,63 +218,13 @@ void feat_test_wrap_expect_true(FeatureInstanceHandle feature, AppendData data,
 void feat_test_wrap_run_all_tests(FeatureInstanceHandle feature,
     AppendData data)
 {
-    printf("feat_test runAllTests %p\n", feature);
+    FEATURE_LOG_DEBUG("feat_test runAllTests %p", feature);
     FeatureUnittest* p = static_cast<FeatureUnittest*>(FeatureGetObjectData(feature));
     p->runAllTests();
 }
 
-void feat_test_wrap_print(FeatureInstanceHandle feature, AppendData append_data,
-    FtVariParams var_params)
+void feat_test_wrap_init_suit_filter(FeatureInstanceHandle feature,
+    AppendData data, FtString test_suit_filter)
 {
-    printf("[feat_test print] ");
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < var_params.vari_count; i++) {
-        ft_value_t param = var_params.vari_args[i];
-        ft_type param_type = ft_get_type(ft_ctx, param);
-        if (param_type == FT_TYPE_OBJECT) {
-            const char* param_obj = ft_to_string(ft_ctx, param);
-            printf("%s ", param_obj);
-            ft_free_string(ft_ctx, param_obj);
-        } else if (param_type == FT_TYPE_ARRAY) {
-            uint32_t array_size = ft_array_size(ft_ctx, param);
-            printf("[");
-            for (uint32_t j = 0; j < array_size; ++j) {
-                ft_value_t elem = ft_array_at(ft_ctx, param, j);
-                ft_type elem_type = ft_get_type(ft_ctx, elem);
-                if (elem_type == FT_TYPE_NUMBER) {
-                    double param_num;
-                    if (ft_to_double(ft_ctx, elem, &param_num))
-                        printf("%lf ", param_num);
-                } else if (elem_type == FT_TYPE_STRING) {
-                    const char* param_str = ft_to_string(ft_ctx, elem);
-                    printf("%s ", param_str);
-                    ft_free_string(ft_ctx, param_str);
-                } else if (elem_type == FT_TYPE_BOOL) {
-                    bool param_bool;
-                    ft_to_bool(ft_ctx, param, &param_bool);
-                    printf("%d ", param_bool);
-                } else {
-                    printf("invalid array element type!");
-                    return;
-                }
-            }
-            printf("] ");
-        } else if (param_type == FT_TYPE_STRING) {
-            const char* param_str = ft_to_string(ft_ctx, param);
-            printf("%s ", param_str);
-            ft_free_string(ft_ctx, param_str);
-        } else if (param_type == FT_TYPE_NUMBER) {
-            double param_num;
-            ft_to_double(ft_ctx, param, &param_num);
-            printf("%lf ", param_num);
-        } else if (param_type == FT_TYPE_BOOL) {
-            bool param_bool;
-            ft_to_bool(ft_ctx, param, &param_bool);
-            printf("%d ", param_bool);
-        } else {
-            printf("invalid param type!");
-            return;
-        }
-    }
-    printf("\n");
+    ::testing::GTEST_FLAG(filter) = test_suit_filter;
 }
