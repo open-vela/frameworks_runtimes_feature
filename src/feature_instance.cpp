@@ -114,9 +114,22 @@ bool FeatureInstance::requestPermissions(FeaturePermissionsRequestInfo* info)
         PermissionsInfo* perms_info = new PermissionsInfo(this, info);
         manager->permissionsManager().AddPermissions(perms_info);
         manager->addTask((FeatureInstanceHandle)this, permision_request_task, perms_info);
+        if (isBlackListed(info)) {
+            return false;
+        }
         return true;
     }
     FEATURE_LOG_DEBUG("no permissions cb!");
+    return false;
+}
+
+bool FeatureInstance::isBlackListed(FeaturePermissionsRequestInfo* info)
+{
+    FEATURE_CHECK_NE(info, nullptr);
+    if (strcmp(description_->name, "system.device") == 0
+        && strcmp(info->api_name, "getDeviceId") == 0) {
+        return true;
+    }
     return false;
 }
 } // namespace feature_framework

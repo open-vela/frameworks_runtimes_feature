@@ -39,6 +39,7 @@ public:
     void RejectPermissions();
     void SetRejectReason(FeaturePermsRejectReason reason) { reject_reason_ = reason; }
     int RejectReason() { return reject_reason_; }
+    bool HasAsyncCallbacks();
 
 private:
     void releaseArgs();
