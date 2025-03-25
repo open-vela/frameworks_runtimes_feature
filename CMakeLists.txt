@@ -180,7 +180,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
       PRIORITY
       100
       STACKSIZE
-      4096
+      131072
       DEPENDS
       libfeature
       SRCS

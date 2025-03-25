@@ -449,6 +449,9 @@ extern "C" int main(int argc, char** argv)
     js_env.time_host.timers.clear();
     uv_close((uv_handle_t*)&prepare, NULL);
     uv_close((uv_handle_t*)&timer, NULL);
+#if defined(CONFIG_SYSTEM_ACTIVITY_SERVICE)
+    uv_close((uv_handle_t*)&binder_poll, NULL);
+#endif
     int closed = 0;
     for (int j = 0; j < 200; j++) {
         if (uv_loop_close(main_loop) == 0) {
