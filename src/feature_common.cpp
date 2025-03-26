@@ -15,6 +15,7 @@
  */
 
 #include "feature_common.h"
+#include "feature_context_private.h"
 #include "feature_description.h"
 #include "feature_exports.h"
 #include <cstdint>
@@ -241,4 +242,94 @@ FtCallbackId findCallbackIdByName(FeatureType ftype, void* pnative, const char* 
         }
     }
     return 0;
+}
+
+void freeFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative)
+{
+    if (!pnative || !(*(void**)pnative)) {
+        return;
+    }
+    if (FT_IS_PRIMITIVE(ftype) && ftype == FT_ANY_REF) {
+        ft_free_value(ft_ctx, *(ft_value_t*)(*(void**)pnative));
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+        switch (complex_type->type) {
+        case COMPLEX_STRUCT_MAP: {
+            ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
+            auto member = obj_map_type.members;
+            auto member_count = countMember(member);
+            void* struct_ptr = *(void**)pnative;
+            for (int i = 0; i < member_count; i++) {
+                FeatureType mtype = FT_GET_REAL_TYPE(member->type);
+                if (FT_NEED_FREE(mtype)) {
+                    void* member_ptr = (void*)((char*)struct_ptr + member->offset);
+                    freeFtValue(ft_ctx, mtype, member_ptr);
+                }
+                member++;
+            }
+        } break;
+        case COMPLEX_OPTIONAL: {
+            FEATURE_LOG_ERROR("unreachable for COMPLEX_OPTIONAL in freeFtValue !");
+        } break;
+        case COMPLEX_ARRAY: {
+            FtArray* array = *(FtArray**)pnative;
+            if (!array) {
+                return;
+            }
+            auto elem_type = ((ArrayType*)complex_type)->element_type;
+            size_t elem_size = FT_IS_REFERENCE(elem_type) ? sizeof(uintptr_t) : getValueSize(elem_type);
+            for (int32_t i = 0; i < array->_size; i++) {
+                void* elem_ptr = ((char*)array->_element + elem_size * i);
+                freeFtValue(ft_ctx, elem_type, elem_ptr);
+            }
+        } break;
+        default:
+            break;
+        }
+    }
+}
+
+void dupFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative)
+{
+    if (!pnative || !(*(void**)pnative)) {
+        return;
+    }
+    if (FT_IS_PRIMITIVE(ftype) && ftype == FT_ANY_REF) {
+        ft_dup_value(ft_ctx, *(ft_value_t*)(*(void**)pnative));
+    } else if (FT_IS_COMPLEX(ftype)) {
+        ComplexTypeHeader* complex_type = (ComplexTypeHeader*)FT_GET_COMPLEX(ftype);
+        switch (complex_type->type) {
+        case COMPLEX_STRUCT_MAP: {
+            ObjectMapType& obj_map_type = *(ObjectMapType*)complex_type;
+            auto member = obj_map_type.members;
+            auto member_count = countMember(member);
+            void* struct_ptr = *(void**)pnative;
+            for (int i = 0; i < member_count; i++) {
+                FeatureType mtype = FT_GET_REAL_TYPE(member->type);
+                if (FT_NEED_FREE(mtype)) {
+                    void* member_ptr = (void*)((char*)struct_ptr + member->offset);
+                    dupFtValue(ft_ctx, mtype, member_ptr);
+                }
+                member++;
+            }
+        } break;
+        case COMPLEX_OPTIONAL: {
+            FEATURE_LOG_ERROR("unreachable for COMPLEX_OPTIONAL in freeFtValue !");
+        } break;
+        case COMPLEX_ARRAY: {
+            FtArray* array = *(FtArray**)pnative;
+            if (!array) {
+                return;
+            }
+            auto elem_type = ((ArrayType*)complex_type)->element_type;
+            size_t elem_size = FT_IS_REFERENCE(elem_type) ? sizeof(uintptr_t) : getValueSize(elem_type);
+            for (int32_t i = 0; i < array->_size; i++) {
+                void* elem_ptr = ((char*)array->_element + elem_size * i);
+                dupFtValue(ft_ctx, elem_type, elem_ptr);
+            }
+        } break;
+        default:
+            break;
+        }
+    }
 }

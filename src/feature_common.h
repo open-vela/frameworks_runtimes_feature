@@ -41,6 +41,10 @@ bool convertOptional(OptionalType* opt, void* out);
 
 FtCallbackId findCallbackIdByName(FeatureType ftype, void* pnative, const char* name);
 
+void freeFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative);
+
+void dupFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative);
+
 template <typename TPtr>
 class AutoPtr {
 public:
