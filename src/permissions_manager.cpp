@@ -95,6 +95,7 @@ PermissionsInfo::PermissionsInfo(FeatureInstance* instance, FeaturePermissionsRe
 
     vari_params_.vari_count = 0;
     vari_params_.vari_args = nullptr;
+    ft_context_ref ft_ctx = instance_->featureManager()->getFeatureContext();
     if (has_rest_params) {
         // copy vari_params struct
         FtVariParams* fp = (FtVariParams*)(info->argv[fixed_argc_ + extra_argc_]);
@@ -103,7 +104,6 @@ PermissionsInfo::PermissionsInfo(FeatureInstance* instance, FeaturePermissionsRe
         vari_params_.vari_args = (ft_value_t*)malloc(vp_size);
         memcpy(vari_params_.vari_args, fp->vari_args, vp_size);
         argv_[fixed_argc_ + extra_argc_] = &vari_params_;
-        ft_context_ref ft_ctx = instance_->featureManager()->getFeatureContext();
         for (int i = 0; i < fp->vari_count; ++i) {
             ft_dup_value(ft_ctx, fp->vari_args[i]);
         }
@@ -124,6 +124,7 @@ PermissionsInfo::PermissionsInfo(FeatureInstance* instance, FeaturePermissionsRe
         auto arg = (void**)(info->argv[extra_argc_ + i]);
         if (arg && *arg && FT_NEED_FREE(method_->parameters[i])) {
             FeatureDupValue(*arg);
+            dupFtValue(ft_ctx, method_->parameters[i], arg);
         }
     }
 }
@@ -133,10 +134,12 @@ void PermissionsInfo::releaseArgs()
     if (!argv_)
         return;
 
+    ft_context_ref ft_ctx = instance_->featureManager()->getFeatureContext();
     for (int i = 0; i < fixed_argc_; i++) {
         auto arg = (void**)argv_[extra_argc_ + i];
         if (arg && *arg && FT_NEED_FREE(method_->parameters[i])) {
             FeatureFreeValue(*arg);
+            freeFtValue(ft_ctx, method_->parameters[i], arg);
         }
     }
 
