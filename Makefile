@@ -108,6 +108,10 @@ ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
 	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.jidl
 	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
 	FEATURELIST += any_test
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_function.cpp
+	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/function_test.jidl
+	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
+	FEATURELIST += function_test
 endif
 
 	PROGNAME += feature_unit_test

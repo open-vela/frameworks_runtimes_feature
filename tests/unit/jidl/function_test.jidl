@@ -1,0 +1,22 @@
+module function_test@1.0
+
+callback testCb(int code)
+
+int intTest(int parame);
+boolean booleanTest(boolean parame);
+uint uintTest(uint parame);
+long longTest(long parame);
+float floatTest(float parame);
+double doubleTest(double parame);
+string strTest(string parame);
+boolean cbTest(testCb cb);
+object objectTest(object obj);
+
+boolean optionTest(int i = 1, boolean b = false, uint u = 77, long l = 10000000000, float f = 1.123, double d = 1.77777, string s = "hello");
+boolean optionTest1(object obj = null);
+boolean optionTest2(int a, uint u = 100);
+// 测试option位置异常
+boolean optionTest3(int a, uint u = 100, float f);
+
+boolean variableTest(...);
+boolean variableTest1(int a, string b, ...);
