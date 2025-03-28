@@ -78,6 +78,7 @@ public:
     void setXmsContext(void* xms_context) { }
     bool route(const char* uri) { return true; }
     void* getDebugHandler() { return nullptr; }
+    void onError(void* param) {};
 
 private:
     std::unique_ptr<TestNavigator> navigator_;
@@ -288,12 +289,14 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
 #if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
     // init binder
     int binderFd = -1;
+    uv_poll_t binder_poll;
     android::IPCThreadState::self()->setupPolling(&binderFd);
+    int dupFd = dup(binderFd);
     if (binderFd < 0) {
         printf("failed to open binder device:%d", errno);
     } else {
-        uv_poll_t binder_poll;
-        uv_poll_init(main_loop, &binder_poll, binderFd);
+        uv_poll_init(main_loop, &binder_poll, dupFd);
+        binder_poll.data = &dupFd;
         uv_poll_start(&binder_poll, UV_READABLE, __uv_poll_cb);
     }
 #endif
@@ -399,6 +402,16 @@ feat_test_done:
 
     uv_close((uv_handle_t*)&prepare, NULL);
     uv_close((uv_handle_t*)&timer, NULL);
+
+#if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
+    uv_close((uv_handle_t*)&binder_poll, [](uv_handle_t* handle) {
+        int* fdPtr = static_cast<int*>(handle->data);
+        if (fdPtr && *fdPtr >= 0) {
+            close(*fdPtr);
+        }
+    });
+#endif
+
     if (uv_loop_alive(main_loop)) {
         uv_loop_close(main_loop);
         free(main_loop);
