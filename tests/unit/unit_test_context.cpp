@@ -92,6 +92,107 @@ TEST_F(FeatureContextTest, ft_get_type_1)
     ft_free_value(ft_test_ctx, val);
 }
 
+TEST_F(FeatureContextTest, ft_get_type_bool)
+{
+    // 获取FT_TYPE_BOOL类型
+    // 创建一个bool类型的值
+    ft_value_t val = ft_from_bool(ft_test_ctx, false);
+
+    // 获取类型
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保类型是bool
+    EXPECT_EQ(type, FT_TYPE_BOOL);
+
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_get_type_string)
+{
+    // 获取FT_TYPE_STRING类型
+    // 创建一个string类型的值
+    ft_value_t val = ft_from_string(ft_test_ctx, "hello");
+
+    // 获取类型
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保类型是string
+    EXPECT_EQ(type, FT_TYPE_STRING);
+
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_get_type_undefined)
+{
+    // 获取 FT_TYPE_UNDEF 类型
+    ft_value_t val = ft_undefined(ft_test_ctx);
+
+    // 获取类型
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保是 undefined 类型
+    EXPECT_EQ(type, FT_TYPE_UNDEF);
+
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_get_type_buffer)
+{
+    // 获取 FT_TYPE_BUFFER 类型
+    size_t buff_size = 16;
+    unsigned char* out_buff = (unsigned char*)alloca(buff_size);
+    memset(out_buff, 0, buff_size);
+    for (size_t i = 0; i < buff_size; ++i) {
+        out_buff[i] = i;
+    }
+    ft_value_t val = ft_from_buffer(ft_test_ctx, out_buff, buff_size);
+
+    // 获取类型
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保是 BUFFER 类型
+    EXPECT_EQ(type, FT_TYPE_BUFFER);
+
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_get_type_object)
+{
+    // 获取 FT_TYPE_OBJECT 类型
+    ft_value_t val = ft_new_object(ft_test_ctx);
+
+    // 获取类型
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保是 OBJECT 类型
+    EXPECT_EQ(type, FT_TYPE_OBJECT);
+
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_get_type_array)
+{
+    //获取 FT_TYPE_ARRAY 类型
+    int32_t arr[] = { 1, 2, 3, 4, 5 };
+    uint32_t size = sizeof(arr) / sizeof(arr[0]);
+
+    ft_value_t val = ft_from_int_array(ft_test_ctx, arr, size);
+
+    // 获取类型
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保是 ARRAY 类型
+    EXPECT_EQ(type, FT_TYPE_ARRAY);
+
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
 // =============================================================================
 // ft_from_int Tests
 // =============================================================================
@@ -194,6 +295,21 @@ TEST_F(FeatureContextTest, ft_from_string_1)
     ft_free_value(ft_test_ctx, val);
 }
 
+TEST_F(FeatureContextTest, ft_from_string_EmptyString)
+{
+    //边界情况：空字符串
+    const char* input = "";
+    ft_value_t val = ft_from_string(ft_test_ctx, input);
+
+    // 检查值是否正确
+    const char* result = feature_to_cstring(js_env.ctx, FT_VAL_GET_JS_VAL(val));
+    EXPECT_STREQ(result, input);
+
+    // 清理
+    feature_free_cstring(js_env.ctx, result);
+    ft_free_value(ft_test_ctx, val);
+}
+
 // =============================================================================
 // ft_from_buffer Tests
 // =============================================================================
@@ -201,6 +317,22 @@ TEST_F(FeatureContextTest, ft_from_buffer_1)
 {
     // 创建一个字节缓冲区
     uint8_t buffer[] = { 1, 2, 3, 4 };
+    ft_value_t val = ft_from_buffer(ft_test_ctx, buffer, sizeof(buffer));
+
+    // 检查是否可以从缓冲区转换
+
+    size_t result_size;
+    uint8_t* result_buffer = feature_to_arraybuffer(js_env.ctx, &result_size, FT_VAL_GET_JS_VAL(val));
+    EXPECT_EQ(result_size, sizeof(buffer));
+    EXPECT_EQ(memcmp(result_buffer, buffer, result_size), 0);
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_from_buffer_null)
+{
+    // 边界情况：缓冲区为空
+    uint8_t buffer[] = {};
     ft_value_t val = ft_from_buffer(ft_test_ctx, buffer, sizeof(buffer));
 
     // 检查是否可以从缓冲区转换
@@ -223,7 +355,35 @@ TEST_F(FeatureContextTest, ft_from_typed_buffer_1)
     ft_value_t val = ft_from_typed_buffer(ft_test_ctx, buffer, sizeof(buffer), FT_Uint8Array);
     ft_type type = ft_get_type(ft_test_ctx, val);
 
-    // 确保类型是number
+    // 确保类型是buffer
+    EXPECT_EQ(type, FT_TYPE_TYPED_BUFFER);
+    size_t offset;
+    size_t length;
+    size_t byte_per_elem;
+    // first get buffer ptr from a typedArray
+    feature_value_t array_buffer = JS_GetTypedArrayBuffer(js_env.ctx, FT_VAL_GET_JS_VAL(val), &offset, &length, &byte_per_elem);
+    EXPECT_TRUE(!feature_is_exception(array_buffer));
+    EXPECT_EQ(byte_per_elem, sizeof(uint8_t));
+    EXPECT_EQ(offset, 0U);
+    EXPECT_EQ(length, sizeof(buffer) / sizeof(buffer[0]));
+
+    size_t result_size;
+    uint8_t* result_buffer = feature_to_arraybuffer(js_env.ctx, &result_size, array_buffer);
+    EXPECT_EQ(result_size, sizeof(buffer));
+    EXPECT_EQ(memcmp(result_buffer, buffer, result_size), 0);
+
+    feature_free_value(js_env.ctx, array_buffer);
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_from_typed_buffer_null)
+{
+    // 边界情况：缓冲区为空
+    uint8_t buffer[] = {};
+    ft_value_t val = ft_from_typed_buffer(ft_test_ctx, buffer, sizeof(buffer), FT_Uint8Array);
+    ft_type type = ft_get_type(ft_test_ctx, val);
+
+    // 确保类型是buffer
     EXPECT_EQ(type, FT_TYPE_TYPED_BUFFER);
     size_t offset;
     size_t length;
@@ -268,6 +428,20 @@ TEST_F(FeatureContextTest, ft_from_int_array_1)
     ft_free_value(ft_test_ctx, result);
 }
 
+TEST_F(FeatureContextTest, ft_from_int_array_null)
+{
+    // 边界情况：整数数组为空
+    int32_t val[] = {};
+    uint32_t size = 0;
+
+    // 调用函数
+    ft_value_t result = ft_from_int_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
+    ft_free_value(ft_test_ctx, result);
+}
+
 // =============================================================================
 // ft_from_uint_array
 // =============================================================================
@@ -291,6 +465,21 @@ TEST_F(FeatureContextTest, ft_from_uint_array_1)
     }
     ft_free_value(ft_test_ctx, result);
 }
+
+TEST_F(FeatureContextTest, ft_from_uint_array_null)
+{
+    // 边界情况：整数数组为空
+    uint32_t val[] = {};
+    uint32_t size = 0;
+
+    // 调用函数
+    ft_value_t result = ft_from_uint_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
+    ft_free_value(ft_test_ctx, result);
+}
+
 // =============================================================================
 // ft_from_int64_array
 // =============================================================================
@@ -314,6 +503,21 @@ TEST_F(FeatureContextTest, ft_from_int64_array_1)
     }
     ft_free_value(ft_test_ctx, result);
 }
+
+TEST_F(FeatureContextTest, ft_from_int64_array_null)
+{
+    // 边界情况：整数数组为空
+    int64_t val[] = {};
+    uint32_t size = 0;
+
+    // 调用函数
+    ft_value_t result = ft_from_int64_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
+    ft_free_value(ft_test_ctx, result);
+}
+
 // =============================================================================
 // ft_from_uint64_array
 // =============================================================================
@@ -360,6 +564,21 @@ TEST_F(FeatureContextTest, ft_from_bool_array_1)
     }
     ft_free_value(ft_test_ctx, result);
 }
+
+TEST_F(FeatureContextTest, ft_from_bool_array_null)
+{
+    //边界情况：数组为空
+    // 输入数据：数组为空
+    bool val[] = {};
+    uint32_t size = 0;
+
+    // 调用函数
+    ft_value_t result = ft_from_bool_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
+    ft_free_value(ft_test_ctx, result);
+}
 // =============================================================================
 // ft_from_double_array
 // =============================================================================
@@ -381,6 +600,20 @@ TEST_F(FeatureContextTest, ft_from_double_array_1)
         feature_free_value(js_env.ctx, tmp);
         EXPECT_EQ(ret, val[i]);
     }
+    ft_free_value(ft_test_ctx, result);
+}
+
+TEST_F(FeatureContextTest, ft_from_double_array_null)
+{
+    // 输入数据：数组为空
+    double val[] = {};
+    uint32_t size = 0;
+
+    // 调用函数
+    ft_value_t result = ft_from_double_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
     ft_free_value(ft_test_ctx, result);
 }
 // =============================================================================
@@ -406,6 +639,44 @@ TEST_F(FeatureContextTest, ft_from_string_array_1)
     }
     ft_free_value(ft_test_ctx, result);
 }
+
+TEST_F(FeatureContextTest, ft_from_string_array_null)
+{
+    //边界情况：字符数组为空
+    // 输入数据：一个字符串数组
+    const char* val[] = {};
+    uint32_t size = 0;
+
+    // 调用函数
+    ft_value_t result = ft_from_string_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
+    ft_free_value(ft_test_ctx, result);
+}
+
+TEST_F(FeatureContextTest, ft_from_string_array_strEmpty)
+{
+    //边界情况：字符数组包含空字符串
+    // 输入数据：一个字符串数组
+    const char* val[] = { "", "World", "Foo", "Bar", "Baz" };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+
+    // 调用函数
+    ft_value_t result = ft_from_string_array(ft_test_ctx, val, size);
+
+    // 验证 result 是否符合预期
+    EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
+    for (uint32_t i = 0; i < size; ++i) {
+        feature_value_t tmp = feature_get_array_idx_safe(js_env.ctx, FT_VAL_GET_JS_VAL(result), i);
+        const char* ret = feature_to_cstring(js_env.ctx, tmp);
+        EXPECT_STREQ(ret, val[i]);
+        feature_free_cstring(js_env.ctx, ret);
+        feature_free_value(js_env.ctx, tmp);
+    }
+    ft_free_value(ft_test_ctx, result);
+}
+
 // ft_parse_json
 // =============================================================================
 // ft_to_int Tests
@@ -512,6 +783,20 @@ TEST_F(FeatureContextTest, ft_to_string_1)
     ft_free_value(ft_test_ctx, val);
 }
 
+TEST_F(FeatureContextTest, ft_to_string_null)
+{
+    //边界情况：空字符串
+    const char* str_val = "";
+    ft_value_t val = ft_from_string(ft_test_ctx, str_val);
+    const char* result_str;
+    result_str = ft_to_string(ft_test_ctx, val);
+    EXPECT_STREQ(result_str, str_val);
+
+    // 清理
+    ft_free_string(ft_test_ctx, result_str);
+    ft_free_value(ft_test_ctx, val);
+}
+
 // =============================================================================
 // ft_to_buffer
 // =============================================================================
@@ -519,6 +804,22 @@ TEST_F(FeatureContextTest, ft_to_buffer_1)
 {
     // 创建一个字节缓冲区
     uint8_t buffer[] = { 1, 2, 3, 4 };
+    ft_value_t val = ft_from_buffer(ft_test_ctx, buffer, sizeof(buffer));
+
+    // 检查是否可以从缓冲区转换
+
+    size_t result_size;
+    uint8_t* result_buffer = ft_to_buffer(ft_test_ctx, &result_size, val);
+    EXPECT_EQ(result_size, sizeof(buffer));
+    EXPECT_EQ(memcmp(result_buffer, buffer, result_size), 0);
+    // 清理
+    ft_free_value(ft_test_ctx, val);
+}
+
+TEST_F(FeatureContextTest, ft_to_buffer_null)
+{
+    // 边界情况：缓冲区为空
+    uint8_t buffer[] = {};
     ft_value_t val = ft_from_buffer(ft_test_ctx, buffer, sizeof(buffer));
 
     // 检查是否可以从缓冲区转换
@@ -547,6 +848,86 @@ TEST_F(FeatureContextTest, ft_array_size_1)
     ft_free_value(ft_test_ctx, array);
 }
 
+TEST_F(FeatureContextTest, ft_array_size_null)
+{
+    // 边界情况：数组为空
+    int32_t val[] = {};
+    uint32_t size = 0;
+    ft_value_t array = ft_from_int_array(ft_test_ctx, val, size);
+
+    // 检查数组大小
+    uint32_t array_size = ft_array_size(ft_test_ctx, array);
+    EXPECT_EQ(array_size, size);
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_size_int64)
+{
+    // int64数组
+    int64_t val[] = { 10000000000, 20000000000, 30000000000, 40000000000, 50000000000 };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+
+    ft_value_t array = ft_from_int64_array(ft_test_ctx, val, size);
+
+    // 检查数组大小
+    uint32_t array_size = ft_array_size(ft_test_ctx, array);
+    EXPECT_EQ(array_size, size);
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_size_uint64)
+{
+    // 无符号整数数组
+    uint32_t val[] = { 1, 2, 3, 4, 5 };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+
+    ft_value_t array = ft_from_uint_array(ft_test_ctx, val, size);
+
+    // 检查数组大小
+    uint32_t array_size = ft_array_size(ft_test_ctx, array);
+    EXPECT_EQ(array_size, size);
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_size_double)
+{
+    // double数组
+    double val[] = { 1.11, 2.22, 3.33, 4.44, 5.55 };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+    ft_value_t array = ft_from_double_array(ft_test_ctx, val, size);
+
+    // 检查数组大小
+    uint32_t array_size = ft_array_size(ft_test_ctx, array);
+    EXPECT_EQ(array_size, size);
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_size_bool)
+{
+    // bool数组
+    bool val[] = { true, false, true, false, true };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+    ft_value_t array = ft_from_bool_array(ft_test_ctx, val, size);
+
+    // 检查数组大小
+    uint32_t array_size = ft_array_size(ft_test_ctx, array);
+    EXPECT_EQ(array_size, size);
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_size_string)
+{
+    // string数组
+    const char* val[] = { "Hello", "World", "Foo", "Bar", "Baz" };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+    ft_value_t array = ft_from_string_array(ft_test_ctx, val, size);
+
+    // 检查数组大小
+    uint32_t array_size = ft_array_size(ft_test_ctx, array);
+    EXPECT_EQ(array_size, size);
+    ft_free_value(ft_test_ctx, array);
+}
+
 // =============================================================================
 // ft_array_at
 // =============================================================================
@@ -563,6 +944,108 @@ TEST_F(FeatureContextTest, ft_array_at_1)
         int32_t element_val;
         EXPECT_TRUE(ft_to_int(ft_test_ctx, element, &element_val));
         EXPECT_EQ(element_val, val[i]);
+        ft_free_value(ft_test_ctx, element);
+    }
+
+    // 清理
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_at_int64)
+{
+    // int64数组
+    int64_t val[] = { 10000000000, 20000000000, 30000000000, 40000000000, 50000000000 };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+
+    ft_value_t array = ft_from_int64_array(ft_test_ctx, val, size);
+
+    // 检查数组元素
+    for (uint32_t i = 0; i < size; i++) {
+        ft_value_t element = ft_array_at(ft_test_ctx, array, i);
+        int64_t element_val;
+        EXPECT_TRUE(ft_to_int64(ft_test_ctx, element, &element_val));
+        EXPECT_EQ(element_val, val[i]);
+        ft_free_value(ft_test_ctx, element);
+    }
+
+    // 清理
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_at_uint64)
+{
+    // 无符号整数数组
+    uint32_t val[] = { 1, 2, 3, 4, 5 };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+
+    ft_value_t array = ft_from_uint_array(ft_test_ctx, val, size);
+
+    // 检查数组元素
+    for (uint32_t i = 0; i < size; i++) {
+        ft_value_t element = ft_array_at(ft_test_ctx, array, i);
+        uint32_t element_val;
+        EXPECT_TRUE(ft_to_uint(ft_test_ctx, element, &element_val));
+        EXPECT_EQ(element_val, val[i]);
+        ft_free_value(ft_test_ctx, element);
+    }
+
+    // 清理
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_at_double)
+{
+    // double数组
+    double val[] = { 1.11, 2.22, 3.33, 4.44, 5.55 };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+    ft_value_t array = ft_from_double_array(ft_test_ctx, val, size);
+
+    // 检查数组元素
+    for (uint32_t i = 0; i < size; i++) {
+        ft_value_t element = ft_array_at(ft_test_ctx, array, i);
+        double element_val;
+        EXPECT_TRUE(ft_to_double(ft_test_ctx, element, &element_val));
+        EXPECT_EQ(element_val, val[i]);
+        ft_free_value(ft_test_ctx, element);
+    }
+
+    // 清理
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_at_bool)
+{
+    // bool数组
+    bool val[] = { true, false, true, false, true };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+    ft_value_t array = ft_from_bool_array(ft_test_ctx, val, size);
+
+    // 检查数组元素
+    for (uint32_t i = 0; i < size; i++) {
+        ft_value_t element = ft_array_at(ft_test_ctx, array, i);
+        bool element_val;
+        EXPECT_TRUE(ft_to_bool(ft_test_ctx, element, &element_val));
+        EXPECT_EQ(element_val, val[i]);
+        ft_free_value(ft_test_ctx, element);
+    }
+
+    // 清理
+    ft_free_value(ft_test_ctx, array);
+}
+
+TEST_F(FeatureContextTest, ft_array_at_string)
+{
+    // string数组
+    const char* val[] = { "Hello", "World", "Foo", "Bar", "Baz" };
+    uint32_t size = sizeof(val) / sizeof(val[0]);
+    ft_value_t array = ft_from_string_array(ft_test_ctx, val, size);
+
+    // 检查数组元素
+    for (uint32_t i = 0; i < size; i++) {
+        const ft_value_t element = ft_array_at(ft_test_ctx, array, i);
+        const char* element_val = ft_to_string(ft_test_ctx, element);
+        EXPECT_STREQ(element_val, val[i]);
+        ft_free_string(ft_test_ctx, element_val);
         ft_free_value(ft_test_ctx, element);
     }
 
@@ -611,6 +1094,28 @@ TEST_F(FeatureContextTest, ft_obj_set_property_1)
 
     // 设置属性
     const char* prop_name = "property1";
+    ft_value_t prop_value = ft_from_int(ft_test_ctx, 123);
+    bool success = ft_obj_set_property(ft_test_ctx, obj, prop_name, prop_value);
+    // 确保属性设置成功
+    EXPECT_TRUE(success);
+    // 获取属性并验证
+    feature_value_t result = feature_get_object_property(js_env.ctx, FT_VAL_GET_JS_VAL(obj), prop_name);
+    int32_t result_value;
+    EXPECT_TRUE(feature_to_int(js_env.ctx, &result_value, result));
+    EXPECT_EQ(result_value, 123);
+
+    // 清理
+    feature_free_value(js_env.ctx, result);
+    ft_free_value(ft_test_ctx, obj);
+}
+
+TEST_F(FeatureContextTest, ft_obj_set_property_null)
+{
+    // 边界情况：空字符串
+    ft_value_t obj = ft_new_object(ft_test_ctx);
+
+    // 设置属性
+    const char* prop_name = "";
     ft_value_t prop_value = ft_from_int(ft_test_ctx, 123);
     bool success = ft_obj_set_property(ft_test_ctx, obj, prop_name, prop_value);
     // 确保属性设置成功
