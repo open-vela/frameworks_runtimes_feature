@@ -220,6 +220,21 @@ if(CONFIG_QUICKAPP_TEST_FRAMEWORK)
         system_internal_test)
 endif()
 
+if(CONFIG_FEATURE_SYSTEM_TEST_INPUT)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/input_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/input.jidl)
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_test_input)
+endif()
+
 if(CONFIG_FEATURE_SYSTEM_INTERNAL_POWER)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/power_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/power.jidl)
