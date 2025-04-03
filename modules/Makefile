@@ -255,6 +255,13 @@ ifeq ($(CONFIG_QUICKAPP_TEST_FRAMEWORK), y)
 	FEATURELIST += system_internal_test
 endif
 
+ifeq ($(CONFIG_GRAPHICS_INPUT_TOOL),y)
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/input_impl.cpp
+	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/input.jidl
+	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+	FEATURELIST += system_test_input
+endif
+
 ifeq ($(CONFIG_FEATURE_SYSTEM_INTERNAL_POWER), y)
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/power_impl.cpp
 	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/power.jidl

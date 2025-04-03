@@ -88,6 +88,13 @@ config FEATURE_SYSTEM_INTERNAL_PACKAGE
     --help--
         enable system.internal.package feature
 
+config FEATURE_SYSTEM_TEST_INPUT
+    bool "system.test.input"
+    default n
+    select GRAPHICS_INPUT_TOOL
+    --help--
+        enable system.test.input feature
+
 config FEATURE_SYSTEM_FETCH
     bool "system.fetch"
     default y

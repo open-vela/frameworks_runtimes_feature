@@ -1,0 +1,42 @@
+module system.test.input@1.0
+
+struct TapParams {
+    int x
+    int y
+}
+
+struct DragParams {
+    int startX
+    int startY
+    int endX
+    int endY
+    int duration = 300
+}
+
+struct SwipeParams {
+    int startX
+    int startY
+    int endX
+    int endY
+    int duration = 300
+}
+
+struct PressButtonParams {
+    string button
+}
+
+struct LongPressButtonParams {
+    string button
+    int duration
+}
+
+struct WheelParams {
+    int value
+}
+
+promise tap(TapParams data)
+promise drag(DragParams data)
+promise swipe(SwipeParams data)
+promise pressSystemButton(PressButtonParams data)
+promise longPressSystemButton(LongPressButtonParams data)
+promise wheel(WheelParams data)
