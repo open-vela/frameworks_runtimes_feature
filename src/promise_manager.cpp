@@ -160,7 +160,7 @@ int PromiseManager::PromiseData::reject(int code, const char* msg)
     } else {
         reject_func = promise_info.resolve_funcs[1];
     }
-    
+
     const char* safe_msg = msg ? msg : "unknown error";
     if (!msg) {
         FEATURE_LOG_WARN("promise reject reason is unknown error !");
@@ -183,7 +183,7 @@ int PromiseManager::PromiseData::reject(int code, const char* msg)
         return ret;
     }
 
-    feature_value_t argv[] = { js_code, js_msg };
+    feature_value_t argv[] = { js_msg, js_code };
     int ret = invoke_js_Callback(js_ctx, reject_func, 2, argv);
     feature_free_value(js_ctx, js_code);
     feature_free_value(js_ctx, js_msg);
