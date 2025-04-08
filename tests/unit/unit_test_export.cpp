@@ -721,6 +721,26 @@ TEST_F(FeatureExportTestQjs, FeaturePromiseReject1)
     EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
 }
 
+TEST_F(FeatureExportTestQjs, FeaturePromiseReject_CompatibleWithFailCb)
+{
+    // 兼容性测试： 测试FtPromiseId替换Failcb的情况
+    auto fail_cb = JS_NewCFunction(
+        js_env.ctx, [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+            int32_t i_var = 0;
+            JS_ToInt32(ctx, &i_var, argv[1]);
+            const char* s_var = JS_ToCString(ctx, argv[0]);
+            EXPECT_EQ(i_var, 400);
+            EXPECT_STREQ(s_var, "reject");
+            JS_FreeCString(ctx, s_var);
+            return JS_UNDEFINED;
+        },
+        "test", 2);
+    FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addAsyncCallbacks(promise_type.resolveType, JS_UNDEFINED, fail_cb, JS_UNDEFINED);
+    EXPECT_EQ(FeaturePromiseReject(instance_handle, pid, 400, "reject"), true);
+    // FeaturePromiseReject
+    EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
+}
+
 TEST_F(FeatureExportTestQjs, FeaturePromiseReject_handleIsNull)
 {
     //异常情况： handle为空
