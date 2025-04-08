@@ -285,9 +285,20 @@ bool PermissionsManager::RequestPermissions(PermissionsInfo* info)
     return true;
 }
 
-void PermissionsManager::AddPermissions(PermissionsInfo* info)
+uint64_t PermissionsManager::AddPermissions(PermissionsInfo* info)
 {
     perms_set_.insert(info);
+    return reinterpret_cast<uint64_t>(info);
+}
+
+PermissionsInfo* PermissionsManager::GetPermissions(uint64_t id)
+{
+    auto info = reinterpret_cast<PermissionsInfo*>(id);
+    if (perms_set_.find(info) != perms_set_.end()) {
+        return info;
+    } else {
+        return nullptr;
+    }
 }
 
 void PermissionsManager::RemovePermissions(PermissionsInfo* info)
