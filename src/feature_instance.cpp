@@ -110,35 +110,18 @@ void FeatureInstance::onDetached()
     manager->permissionsManager().RemoveInstancePermissions(this);
 }
 
-class PermsTaskInfo {
-public:
-    PermsTaskInfo(FeatureInstance* instance, void* data)
-        : instance_(instance)
-        , data_(data)
-    {
-    }
-    ~PermsTaskInfo() { }
-    FeatureInstance* Instance() { return instance_; }
-    void* Data() { return data_; }
-
-private:
-    FeatureInstance* instance_;
-    void* data_;
-};
-
-static void permision_request_task(int mode, void* data)
+static void permision_request_task(int mode, uint64_t data, FeatureInstanceHandle handle)
 {
-    PermsTaskInfo* task_info = (PermsTaskInfo*)data;
-    if (!task_info)
+    auto* instance = (FeatureInstance*)handle;
+    if (!instance)
         return;
 
-    if (mode == FEATURE_TASK_MODE_NORMAL && !task_info->Instance()->isDetached()) {
-        auto info = (PermissionsInfo*)task_info->Data();
-        auto manager = info->Instance()->featureManager();
-        manager->permissionsManager().RequestPermissions(info);
-    }
-    if (mode == FEATURE_TASK_MODE_FREE) {
-        delete task_info;
+    if (mode == FEATURE_TASK_MODE_NORMAL && !instance->isDetached()) {
+        auto manager = instance->featureManager();
+        PermissionsInfo* info = manager->permissionsManager().GetPermissions(data);
+        if (info) {
+            manager->permissionsManager().RequestPermissions(info);
+        }
     }
 }
 
@@ -148,9 +131,8 @@ bool FeatureInstance::requestPermissions(FeaturePermissionsRequestInfo* info)
     FEATURE_CHECK_NE(manager, nullptr);
     if (manager->permissionsManager().HasPermissionCb()) {
         PermissionsInfo* perms_info = new PermissionsInfo(this, info);
-        manager->permissionsManager().AddPermissions(perms_info);
-        PermsTaskInfo* task_info = new PermsTaskInfo(this, perms_info);
-        manager->addTask((FeatureInstanceHandle)this, permision_request_task, task_info);
+        uint64_t pid = manager->permissionsManager().AddPermissions(perms_info);
+        manager->addTaskExt((FeatureInstanceHandle)this, permision_request_task, pid);
         if (isBlackListed(info)) {
             return false;
         }

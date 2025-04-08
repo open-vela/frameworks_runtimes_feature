@@ -71,7 +71,8 @@ public:
     bool CheckPermissions(PermissionsInfo* info);
     bool RequestPermissions(PermissionsInfo* info);
     void RemoveInstancePermissions(FeatureInstance* instance);
-    void AddPermissions(PermissionsInfo* info);
+    uint64_t AddPermissions(PermissionsInfo* info);
+    PermissionsInfo* GetPermissions(uint64_t id);
     void RemovePermissions(PermissionsInfo* info);
 
 private:
