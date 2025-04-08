@@ -97,12 +97,35 @@ void FeatureInstance::onDetached()
     manager->permissionsManager().RemoveInstancePermissions(this);
 }
 
+class PermsTaskInfo {
+public:
+    PermsTaskInfo(FeatureInstance* instance, void* data)
+        : instance_(instance)
+        , data_(data)
+    {
+    }
+    ~PermsTaskInfo() { }
+    FeatureInstance* Instance() { return instance_; }
+    void* Data() { return data_; }
+
+private:
+    FeatureInstance* instance_;
+    void* data_;
+};
+
 static void permision_request_task(int mode, void* data)
 {
-    if (mode == FEATURE_TASK_MODE_NORMAL) {
-        auto info = (PermissionsInfo*)data;
+    PermsTaskInfo* task_info = (PermsTaskInfo*)data;
+    if (!task_info)
+        return;
+
+    if (mode == FEATURE_TASK_MODE_NORMAL && !task_info->Instance()->isDetached()) {
+        auto info = (PermissionsInfo*)task_info->Data();
         auto manager = info->Instance()->featureManager();
         manager->permissionsManager().RequestPermissions(info);
+    }
+    if (mode == FEATURE_TASK_MODE_FREE) {
+        delete task_info;
     }
 }
 
@@ -113,7 +136,8 @@ bool FeatureInstance::requestPermissions(FeaturePermissionsRequestInfo* info)
     if (manager->permissionsManager().HasPermissionCb()) {
         PermissionsInfo* perms_info = new PermissionsInfo(this, info);
         manager->permissionsManager().AddPermissions(perms_info);
-        manager->addTask((FeatureInstanceHandle)this, permision_request_task, perms_info);
+        PermsTaskInfo* task_info = new PermsTaskInfo(this, perms_info);
+        manager->addTask((FeatureInstanceHandle)this, permision_request_task, task_info);
         if (isBlackListed(info)) {
             return false;
         }
