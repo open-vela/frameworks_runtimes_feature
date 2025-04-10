@@ -743,6 +743,14 @@ bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     return true;
 }
 
+bool FeaturePostExt(FeatureInstanceHandle handle, FeatureTaskCallbackExt task_cb_ext,
+    uint64_t data)
+{
+    FEATURE_INSTANCE_CHECK(handle, false)
+    manager_from_instance(handle)->addTaskExt(handle, task_cb_ext, data);
+    return true;
+}
+
 uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle)
 {
     FEATURE_CHECK_PTR(handle, nullptr, "manager handle is null !")

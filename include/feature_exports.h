@@ -407,6 +407,19 @@ bool FeaturePost(FeatureInstanceHandle handle, FeatureTaskCallback task_cb,
     void* data);
 
 /**
+ * @brief post a task with callback to feature instance.
+ * In task_cb_ext, use FeatureInstanceIsDetached function to check if the handle is detached.
+ * After the handle is detached, please do not use it.
+ *
+ * @param[in] handle FeatureInstanceHandle
+ * @param[in] task_cb_ext TaskCallbackExt
+ * @param[in] data userdata
+ * @return bool
+ */
+bool FeaturePostExt(FeatureInstanceHandle handle, FeatureTaskCallbackExt task_cb_ext,
+    uint64_t data);
+
+/**
  * @brief get feature uvloop from FeatureManagerHandle
  *
  * @param[in] handle FeatureManagerHandle
