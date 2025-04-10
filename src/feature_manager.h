@@ -34,8 +34,12 @@ namespace feature_framework {
 
 struct TaskData {
     FeatureInstanceHandle instance;
-    FeatureTaskCallback task_cb;
-    void* data;
+    union {
+        FeatureTaskCallback task_cb;
+        FeatureTaskCallbackExt task_cb_ext;
+    };
+    uint64_t data;
+    bool is_ext;
 };
 
 class FeatureManager {
@@ -94,6 +98,8 @@ public:
 
     void addTask(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data);
 
+    void addTaskExt(FeatureInstanceHandle handle, FeatureTaskCallbackExt task_cb_ext, uint64_t data);
+
     void runAllTasks(int mode);
 
     void detachFeatureInstances();
@@ -119,6 +125,8 @@ public:
     std::map<std::string, FeaturePrototype*>& getFeaturePrototypes() { return prototypes_; }
 
 private:
+    void enqueueTask(TaskData& task_data);
+
     FeatureRegistry* registry_;
     std::map<std::string, FeaturePrototype*> prototypes_;
     ft_context_ref ft_ctx_;

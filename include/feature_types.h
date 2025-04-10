@@ -97,6 +97,9 @@ enum TypeFlags {
 /** FeatureTaskCallback */
 typedef void (*FeatureTaskCallback)(int status, void* data);
 
+/** FeatureTaskCallbackExt */
+typedef void (*FeatureTaskCallbackExt)(int status, uint64_t data, FeatureInstanceHandle feature);
+
 /** FeatureEventStatus */
 typedef enum FeatureEventStatus {
     FEATURE_EVENT_ADDED, /**< add event */

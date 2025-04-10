@@ -117,7 +117,23 @@ void FeatureManager::addTask(FeatureInstanceHandle handle, FeatureTaskCallback t
     TaskData task_data;
     task_data.instance = FeatureDupInstanceHandle(handle);
     task_data.task_cb = task_cb;
+    task_data.data = (uint64_t)data;
+    task_data.is_ext = false;
+    enqueueTask(task_data);
+}
+
+void FeatureManager::addTaskExt(FeatureInstanceHandle handle, FeatureTaskCallbackExt task_cb_ext, uint64_t data)
+{
+    TaskData task_data;
+    task_data.instance = FeatureDupInstanceHandle(handle);
+    task_data.task_cb_ext = task_cb_ext;
     task_data.data = data;
+    task_data.is_ext = true;
+    enqueueTask(task_data);
+}
+
+void FeatureManager::enqueueTask(TaskData& task_data)
+{
     uv_mutex_lock(&mutex_);
     task_queue_.push(task_data);
     uv_mutex_unlock(&mutex_);
@@ -135,7 +151,11 @@ void FeatureManager::runAllTasks(int mode)
     int tasks_size = tasks.size();
     for (int i = 0; i < tasks_size; i++) {
         TaskData task_data = tasks.front();
-        task_data.task_cb(mode, task_data.data);
+        if (task_data.is_ext) {
+            task_data.task_cb_ext(mode, task_data.data, task_data.instance);
+        } else {
+            task_data.task_cb(mode, (void*)(task_data.data));
+        }
         FeatureFreeInstanceHandle(task_data.instance);
         tasks.pop();
     }
