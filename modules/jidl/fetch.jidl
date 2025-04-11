@@ -25,14 +25,7 @@ enum ContentType {
 }
 */
 
-
-struct SuccessRes {
-  int code
-  object data
-  object headers
-}
-
-callback success_cb(SuccessRes res)
+callback success_cb(object res)
 callback fail_cb(string data, int code)
 callback complete_cb()
 

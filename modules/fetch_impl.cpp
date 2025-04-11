@@ -339,9 +339,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
         ft_obj_set_property(p->ft_ctx, result, "headers", ft_header);
         ft_obj_set_property(p->ft_ctx, result, "data", res_data);
 
-        ft_value_t data_ = ft_obj_get_property(p->ft_ctx, result, "data");
-
-        if (ft_get_type(p->ft_ctx, data_) >= 0) {
+        if (ft_get_type(p->ft_ctx, res_data) >= 0) {
             ret = FeatureGetPromiseType(p->feature, p->pid);
             if (ret == FEATURE_PROMISE_TYPE_CALLBACKS) {
                 FeaturePromiseResolve(p->feature, p->pid, &result);
@@ -356,7 +354,6 @@ static void fetch_request_cb(int state, uv_response_t* response)
         } else {
             FeaturePromiseReject(p->feature, p->pid, ErrorCode::IOERROR, "responseType dosen't match response data");
         }
-        ft_free_value(p->ft_ctx, data_);
         ft_free_value(p->ft_ctx, result);
 #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
         CDPServer_sendCDPNetResponseEvent(app, p->debugger.reqId, p->request, response, header.c_str());
