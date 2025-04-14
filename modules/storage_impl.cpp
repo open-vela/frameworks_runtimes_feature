@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "inspector_host_storage.h"
 #include "storage.h"
 #include "unqlite.h"
 #include "uv_ext.h"
@@ -147,6 +148,7 @@ void system_storage_onCreate(FeatureRuntimeContext ctx,
         FEATURE_LOG_ERROR("%s::%s() uv_db_init error:%d\n", file_tag, __FUNCTION__,
             ret);
     }
+    InspectHostStorageInit(th->db);
     FeatureSetProtoData(handle, th);
 }
 
