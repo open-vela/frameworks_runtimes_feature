@@ -422,6 +422,12 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
             CallbackType* callback_type = (CallbackType*)complex_type;
             auto cb_val = value_translator::toCallbackValue(target);
             FtCallbackId id = instance->addCallback(cb_val, callback_type);
+            if (instance->getCallbacks().size() >= 30) {
+                FEATURE_LOG_ERROR("callback count of instance[%p] is %d, which is larger than 30, feature name is[%s]",
+                    instance,
+                    instance->getCallbacks().size(),
+                    instance->description()->name);
+            }
             *(FtCallbackId*)pnative = id; // write callback id to pointer.
         } break;
         case COMPLEX_ARRAY: {
