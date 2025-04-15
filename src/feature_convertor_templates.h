@@ -200,6 +200,11 @@ bool convertValueToTarget(FeatureType ftype,
             FEATURE_CHECK_NE(interface_type->desc, nullptr);
             FEATURE_CHECK_NE(pnative, nullptr);
             auto pinstance = *static_cast<FeatureInstance**>(pnative);
+            if (!pinstance) {
+                FEATURE_LOG_ERROR("null interface instance!");
+                target = value_translator::nullValue(ctx);
+                break;
+            }
             if (!pinstance->isInterface()) {
                 FEATURE_LOG_ERROR("not a native interface!");
                 return false;
