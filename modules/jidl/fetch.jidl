@@ -25,10 +25,6 @@ enum ContentType {
 }
 */
 
-callback success_cb(object res)
-callback fail_cb(string data, int code)
-callback complete_cb()
-
 struct FetchPara{
   string url;
   object data;
@@ -36,9 +32,6 @@ struct FetchPara{
   string method = "";   //MethodType
   string responseType = "";   //ResponseType
   int timeout = 20000;
-  callback success_cb success;
-  callback fail_cb fail;
-  callback complete_cb complete;
 }
 
 [permissions="hapjs.permission.INTERNET"]
