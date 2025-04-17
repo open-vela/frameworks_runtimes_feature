@@ -349,8 +349,10 @@ void system_storage_wrap_set(FeatureInstanceHandle feature, AppendData data,
     handle->fail = info->fail;
     handle->complete = info->complete;
     if (info->value != NULL) {
-        handle->buf.base = strdup(info->value);
         handle->buf.len = strlen(info->value);
+        handle->buf.base = (char*)malloc(handle->buf.len + 1);
+        memcpy(handle->buf.base, info->value, handle->buf.len);
+        handle->buf.base[handle->buf.len] = '\0';
     }
 
     int status = 0;
