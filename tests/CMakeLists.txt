@@ -33,3 +33,5 @@ if(CONFIG_FEATURE_UNIT_TEST)
         INCLUDE_DIRECTORIES
         ${FEATURE_UNIT_TEST_SRCS})
 endif()
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/jidl/test_features)

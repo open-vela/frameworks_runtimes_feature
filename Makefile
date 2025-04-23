@@ -98,6 +98,8 @@ ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
 	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test.cpp
 endif
 
+include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/Makefile
+
 GTEST_DIR = $(APPDIR)/external/googletest/googletest/googletest
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
@@ -105,11 +107,6 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/quickjs
 CXXFLAGS += ${INCDIR_PREFIX}$(GTEST_DIR)/include
-
-CXXSRCS     += $(APPDIR)/frameworks/runtimes/feature/modules/permissions_test_impl.cpp
-JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/permissions_test.jidl
-OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
-FEATURELIST += permissions_test
 
 ASRCS := $(wildcard $(ASRCS))
 CSRCS := $(wildcard $(CSRCS))

@@ -1,0 +1,26 @@
+module interface_test@1.0
+
+interface Animal {
+  property string name;
+  property int legCount readonly;
+  int eatFood(string[] foods);
+  string run(int distance, string destination);
+}
+[ctor="true", target="dog"] Animal createDog(int type);
+
+interface Bird {
+  string[] fly();
+  property string breed;
+}
+[ctor="true", target="pigeon"] Bird createPigeon();
+
+interface Chicken extends Animal, Bird {
+  property int weight;
+  promise<string[]> walk();
+}
+[ctor="true", target="cock"] Chicken createCock();
+
+Animal createCat();
+void setAnimal(Animal animal);
+promise<string[]> flyFar(int distance);
+use flyAway() = flyFar(100);

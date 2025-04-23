@@ -13,6 +13,7 @@ tests/*/*.cc
 tests/*/*.c
 !tests/unit/*.h
 !tests/unit/*.cpp
+!tests/test_features
 tools/jidl/samples/*.h
 tools/jidl/samples/*.cpp
 tools/jidl/samples/*.cc

@@ -126,11 +126,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
   # workaround for gcc-13 warning
   list(APPEND FEATURE_OPTIONS --param=min-pagesize=0)
 
-  # for the 'permissions_test' feature
-  list(APPEND FEATURE_SRCS ${FEATURE_MODULES_DIR}/permissions_test_impl.cpp)
-  list(APPEND JIDL_PATHS ${FEATURE_MODULES_DIR}/jidl/permissions_test.jidl)
-  list(APPEND FEATURELIST "permissions_test")
-
   set(FEATURE_EXPORTS
       ${FEATURE_TOP}/include/feature_types.h
       ${FEATURE_TOP}/include/feature_context.h

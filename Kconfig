@@ -67,4 +67,8 @@ config FEATURE_TEST_JSFILE
 	bool "Enable feature test using JavaScript file"
 	default n
 
+config FEATURE_TEST_FEATURES
+	bool "enable test features"
+	default n
+
 endif
