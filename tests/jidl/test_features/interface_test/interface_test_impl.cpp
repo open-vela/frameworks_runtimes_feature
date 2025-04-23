@@ -394,4 +394,3 @@ void interface_test_wrap_flyFar(FeatureInstanceHandle feature, AppendData data, 
     FeaturePromiseResolve(feature, pid, strArray);
     FeatureFreeValue(strArray);
 }
-

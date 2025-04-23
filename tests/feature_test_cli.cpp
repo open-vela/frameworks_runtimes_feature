@@ -38,8 +38,6 @@ typedef struct feature_env_t {
     JSContext* ctx;
 } feature_env_t;
 
-
-
 static inline void feature_dump_obj(JSContext* ctx, JSValue val)
 {
     const char* str = JS_ToCString(ctx, val);

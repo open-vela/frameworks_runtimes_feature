@@ -52,7 +52,6 @@ IAnimal* Interface::createCat()
     return makeInterface<cat>();
 }
 
-
 void Interface::setAnimal(const IAnimal*& animal)
 {
 }

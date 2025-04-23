@@ -32,7 +32,7 @@ void onUnregister(const char* feature_name)
 }
 
 Protobuf::Protobuf(FeatureInstanceHandle hInstance)
-    :ProtobufBase(hInstance)
+    : ProtobufBase(hInstance)
 {
 }
 

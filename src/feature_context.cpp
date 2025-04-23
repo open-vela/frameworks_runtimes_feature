@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "feature_context_private.h"
 #include "backend/qjs/feature_context_qjs.h"
+#include "feature_context_private.h"
 #ifdef CONFIG_FEATURE_USE_WAMR
 #include "backend/wamr/feature_context_wamr.h"
 #endif

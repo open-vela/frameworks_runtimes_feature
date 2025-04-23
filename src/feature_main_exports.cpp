@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+#include "feature_main_exports.h"
 #include "feature_common.h"
 #include "feature_log.h"
-#include "feature_main_exports.h"
 #include "feature_manager.h"
 
 #define FEATURE_CHECK_PTR(__ptr__, __ret__, __log__) \
