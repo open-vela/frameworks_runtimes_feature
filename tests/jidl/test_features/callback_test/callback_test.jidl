@@ -1,0 +1,13 @@
+module callback_test@1.0
+
+callback cb1(int x, string y, double z)
+callback cb2(int a, string b, ...)
+callback cb3()
+callback cb4(...)
+
+void goo(int a, int b, cb1 cb)
+void goo2(cb2 cb, cb3 cb3, cb4 cb4)
+use goo3(cb1 cb) = goo(100, 200, cb)
+
+void foo2(int x, double y, cb1 cb, cb2 cb2)
+void foo3(int x, double y, cb1 cb)

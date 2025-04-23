@@ -1,0 +1,41 @@
+module const_object_test@1.0
+
+const num_val = 50
+const str_val = "hello world"
+const bool_val = true
+
+const DATA_TYPES = {
+  GPS = 0,
+  COMPASS = 3,
+  PROXIMITY = 4,
+  LIGHT = 5,
+  GRAVITY = 8
+}
+
+const Color = {
+  E_RED = "red",
+  E_BLUE = "blue",
+  E_GREEN = "green"
+}
+
+const mix_const = {
+  num_val = 10,
+  str_val = "hello",
+  bool_val = false
+}
+
+const data = {
+  a = 0,
+  b = 1,
+  c = 2,
+  d = {
+    e = "hello",
+    f = true,
+    g = 3,
+    h = {
+      i = "world",
+      j = 10,
+      k = false
+    }
+  }
+}
