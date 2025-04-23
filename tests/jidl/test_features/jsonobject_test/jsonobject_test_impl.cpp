@@ -105,7 +105,7 @@ FtArray* jsonobject_test_wrap_get_data_array(FeatureInstanceHandle feature, Appe
     json_array->_size = 5;
     json_array->_element = malloc(sizeof(FtJsonObject) * 5);
     for (int i = 0; i < 5; i++) {
-        char json_str[64] = {0};
+        char json_str[64] = { 0 };
         sprintf(json_str, "{\"hello\": %d}", i);
         FtJsonObject json_obj = FeatureNewJSONObject(json_str);
         ((FtJsonObject*)json_array->_element)[i] = json_obj;
@@ -160,7 +160,7 @@ void jsonobject_test_wrap_json_array_promise(FeatureInstanceHandle feature, Appe
         json_array->_size = 3;
         json_array->_element = malloc(sizeof(FtJsonObject) * 3);
         for (int i = 0; i < 3; i++) {
-            char json_str[64] = {0};
+            char json_str[64] = { 0 };
             sprintf(json_str, "{\"hello\": %d}", i);
             FtJsonObject json_obj = FeatureNewJSONObject(json_str);
             ((FtJsonObject*)json_array->_element)[i] = json_obj;

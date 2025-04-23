@@ -19,7 +19,7 @@
 #include "feature_log.h"
 #include "feature_manager_wamr.h"
 #include "feature_prototype.h"
-#include "feature_utils.h" 
+#include "feature_utils.h"
 #include "feature_wamr_utils.h"
 
 #include <alloca.h>

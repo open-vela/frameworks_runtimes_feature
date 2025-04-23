@@ -57,7 +57,6 @@ class cat : public dog {
 public:
     cat(FeatureInstanceHandle hInstance);
     ft_utils::FtStringPtr run(FtInt distance, const ft_utils::FtStringPtr& destination) override;
-
 };
 
 class pigeon : public IBird {
@@ -77,7 +76,6 @@ public:
 
 class Interface : public InterfaceBase {
 private:
-
 public:
     Interface(FeatureInstanceHandle hInstance)
         : InterfaceBase(hInstance)

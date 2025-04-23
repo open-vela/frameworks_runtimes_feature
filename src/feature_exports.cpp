@@ -804,7 +804,7 @@ bool FeatureRegisterFeatures(FeatureRegistryHandle handle, const FeatureRegistry
         return true;
     }
     int16_t i = 0;
-    while(regTable->data[i] != nullptr) {
+    while (regTable->data[i] != nullptr) {
         regTable->data[i++](handle);
     }
     return true;

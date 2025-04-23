@@ -23,7 +23,6 @@ extern "C" {
 
 #include "feature_permission.h"
 #include "feature_types.h"
-#include <stdint.h>
 #include <inttypes.h>
 #include <protobuf-c/protobuf-c.h>
 #include <stdint.h>
