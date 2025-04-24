@@ -22,3 +22,5 @@ CONFIGURED_APPS += $(APPDIR)/frameworks/runtimes/feature
 
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/protobuf-c/protobuf-c
+CFLAGS   += ${INCDIR_PREFIX}$(APPDIR)/external/protobuf-c/protobuf-c

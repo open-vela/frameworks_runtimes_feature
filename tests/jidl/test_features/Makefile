@@ -14,10 +14,10 @@
 # limitations under the License.
 #
 
-TEST_FEATURE_OUT_PATH = $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/generated/
+TEST_FEATURE_OUT_PATH = $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/generated/jidl
 
 ifeq ($(CONFIG_FEATURE_TEST_FEATURES), y)
-	CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/generated/
+	CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/generated/jidl
 endif
 
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/array_null/Makefile
@@ -31,4 +31,4 @@ include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/simple/Ma
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/permissions_test/Makefile
 
 distclean::
-	rm -rf $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/generated/*
+	rm -rf $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/generated/jidl/*

@@ -1,6 +1,6 @@
 ifeq ($(CONFIG_FEATURE_TEST_FEATURES),y)
 	CXXSRCS     := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/promise_callback_impl.cpp
-	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/promise_callback.cpp
+	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/jidl/promise_callback.cpp
 	PROMISE_CALLBACK_JIDL_PATH 	= $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/promise_callback/promise_callback.jidl
 	FEATURELIST += promise_callback
 

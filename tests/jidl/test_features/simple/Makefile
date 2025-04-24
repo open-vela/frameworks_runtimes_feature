@@ -1,6 +1,6 @@
 ifeq ($(CONFIG_FEATURE_TEST_FEATURES), y)
 	CXXSRCS     := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/simple_impl.cpp
-	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/simple.cpp
+	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/jidl/simple.cpp
 	SIMPLE_JIDL_PATH 	= $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/simple/simple.jidl
 	FEATURELIST += simple
 
