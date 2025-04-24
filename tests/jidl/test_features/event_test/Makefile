@@ -1,6 +1,6 @@
 ifeq ($(CONFIG_FEATURE_TEST_FEATURES), y)
 	CXXSRCS     := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/event_test_impl.cpp
-	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/event_test.cpp
+	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/jidl/event_test.cpp
 	EVENT_TEST_JIDL_PATH 	= $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/event_test/event_test.jidl
 	FEATURELIST += event_test
 

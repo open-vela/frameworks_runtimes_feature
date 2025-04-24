@@ -1,6 +1,6 @@
 ifeq ($(CONFIG_FEATURE_TEST_FEATURES), y)
 	CXXSRCS     := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/interface_test_impl.cpp
-	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/interface_test.cpp
+	CXXSRCS	    := $(CXXSRCS) $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/../generated/jidl/interface_test.cpp
 	INTERFACE_TEST_JIDL_PATH 	= $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/interface_test/interface_test.jidl
 	FEATURELIST += interface_test
 
