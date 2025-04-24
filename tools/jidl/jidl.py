@@ -911,6 +911,7 @@ class JIDL(Parser):
   def p_promise_sub_type(self, p):
     """
     promise_sub_type : array_object_type
+                     | id_array_type
                      | primary_type
                      | unique_buffer_type
                      | type_name_id
