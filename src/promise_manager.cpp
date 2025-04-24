@@ -126,8 +126,10 @@ int PromiseManager::PromiseData::resolve(va_list& ap)
         FEATURE_LOG_ERROR("resolve func undefined!");
         return -1;
     }
-    JSValue target;
-    if (!arg_to_target(js_ctx, ap, resolve_type, target)) {
+
+    JSValue target = JS_UNDEFINED;
+    bool is_void = FT_IS_PRIMITIVE(resolve_type) && resolve_type == FT_VOID;
+    if (!is_void && !arg_to_target(js_ctx, ap, resolve_type, target)) {
         FEATURE_LOG_ERROR("convert resolve param failed !");
         return -1;
     }
@@ -170,7 +172,7 @@ int PromiseManager::PromiseData::reject(int code, const char* msg)
     if (promise_type == kPromise) {
         feature_value_t js_data = feature_object(js_ctx);
         feature_set_object_property(js_ctx, js_data, "code", js_code);
-        feature_set_object_property(js_ctx, js_data, "msg", js_msg);
+        feature_set_object_property(js_ctx, js_data, "data", js_msg);
         feature_value_t argv[] = { js_data };
         int ret = invoke_js_Callback(js_ctx, reject_func, 1, argv);
         feature_free_value(js_ctx, js_data);
