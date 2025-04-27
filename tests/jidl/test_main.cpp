@@ -9,10 +9,10 @@
 #include "application.h"
 #include "builtin/builtin_console.h"
 #include "builtin/console.h"
+#include "feature.h"
 #include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_main_exports.h"
-#include "feature_manager_qjs.h"
 #include "feature_qjs_exports.h"
 #include "feature_registry.h"
 #if defined(CONFIG_ANDROID_BINDER) && defined(CONFIG_ANDROID_SERVICEMANAGER)
@@ -109,7 +109,7 @@ typedef struct FeatTestEnv {
     const char* filename;
     LoopFunc run_loop;
     LoopFunc stop_loop;
-    void* manager;
+    FeatureManagerHandle manager;
     TimeoutHost time_host;
     uv_timer_t* async_limiter;
     uint32_t time_limit;
@@ -195,7 +195,7 @@ static void execute_job_cb(uv_prepare_t* handle)
 static void async_limit_cb(uv_timer_t* handle)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(handle->data);
-    uv_loop_t* ploop = static_cast<FeatureManager*>(env->manager)->getUVLoop();
+    uv_loop_t* ploop = FeatureGetUVLoop(env->manager);
     uv_stop(ploop);
 }
 
@@ -206,9 +206,8 @@ static void async_limit_cb(uv_timer_t* handle)
 static int run_loop(void* feat_test_env)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(feat_test_env);
-    FeatureManager* manager = static_cast<FeatureManager*>(env->manager);
     uv_timer_t* async_timer = static_cast<uv_timer_t*>(env->async_limiter);
-    uv_loop_t* ploop = manager->getUVLoop();
+    uv_loop_t* ploop = FeatureGetUVLoop(env->manager);
     uv_timer_start(async_timer, async_limit_cb, env->time_limit, 0);
     uv_run(ploop, UV_RUN_DEFAULT);
 
@@ -231,8 +230,7 @@ static int run_loop(void* feat_test_env)
 static int stop_loop(void* feat_test_env)
 {
     FeatTestEnv* env = static_cast<FeatTestEnv*>(feat_test_env);
-    FeatureManager* manager = static_cast<FeatureManager*>(env->manager);
-    uv_loop_t* ploop = manager->getUVLoop();
+    uv_loop_t* ploop = FeatureGetUVLoop(env->manager);
     uv_stop(ploop);
     return 0;
 }
