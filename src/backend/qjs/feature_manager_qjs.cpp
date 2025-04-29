@@ -425,7 +425,7 @@ static int init_prototype(context_ref ctx, FeaturePrototype* prototype, feature_
         case MEMBER_CONST: {
             // handle member const
             const MemberConst* mconst = member.value;
-            FEATURE_CHECK(FT_IS_COMPLEX(mconst->type), "invalid const value type!");
+            FEATURE_CHECK(!FT_IS_COMPLEX(mconst->type), "invalid const value type!");
             build_const_obj_recursive(ctx, js_proto, &(description->members[i]));
         } break;
         case MEMBER_EVENT: {
