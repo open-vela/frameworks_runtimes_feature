@@ -79,6 +79,13 @@ public:
     void setCLIArgument(AIOTJS::CLIParsedArgument* args) { }
     void* getXmsContext() const { return nullptr; }
     void setXmsContext(void* xms_context) { }
+    std::chrono::steady_clock::time_point getHideTime() { return std::chrono::steady_clock::time_point(); }
+    ProcessStatus getProcessStatus() { return UNKNOWN; };
+    void setThreadMemory(int mem) { }
+    int getThreadMemory() { return 0; }
+    void initMemoryStatusTimer() { }
+    void stopMemoryStatusTimer() { }
+    std::string getAppPriority() { return nullptr; }
     bool route(const char* uri) { return true; }
     void* getDebugHandler() { return nullptr; }
     void onError(void* param) {};

@@ -169,7 +169,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
          ${QUICKAPP_DIR}/src/jse/modules
          ${QUICKAPP_DIR}/src/jse/modules/system
          ${CMAKE_BINARY_DIR}
-         ${CMAKE_BINARY_DIR}/vdom.pb-c.h
          ${NUTTX_APPS_DIR}/external/protobuf-c/protobuf-c/
          ${NUTTX_APPS_DIR}/external/rapidjson/rapidjson/include/)
 
