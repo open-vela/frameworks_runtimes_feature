@@ -98,26 +98,41 @@ ifeq ($(CONFIG_FEATURE_TEST_CLIENT), y)
 endif
 
 ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
-ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_jidl_util.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
-	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.jidl
-	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
-	FEATURELIST += struct_test
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_any.cpp
-	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.jidl
-	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
-	FEATURELIST += any_test
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_function.cpp
-	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/function_test.jidl
-	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/
-	FEATURELIST += function_test
-endif
-
 	PROGNAME += feature_unit_test
 	PRIORITY += 100
 	STACKSIZE += 16384
 	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test.cpp
+
+ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_jidl_util.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_any.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_function.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/function_test.cpp
+
+depend::
+	$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.jidl --out-dir \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl --header struct_test.h --source struct_test.cpp
+	$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.jidl --out-dir \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl --header any_test.h --source any_test.cpp
+	$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/function_test.jidl --out-dir \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl --header function_test.h --source function_test.cpp
+endif
+endif
+
+ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test_impl.cpp
+	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/feat_test.cpp
+
+depend::
+	$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/feat_test.jidl --out-dir \
+		$(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl --header feat_test.h --source feat_test.cpp
 endif
 
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/Makefile

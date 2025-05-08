@@ -41,7 +41,7 @@ FtBool function_test_wrap_booleanTest(FeatureInstanceHandle feature, AppendData 
     return parame;
 }
 
-unsigned int function_test_wrap_uintTest(FeatureInstanceHandle feature, AppendData append_data, unsigned int parame)
+FtUint32 function_test_wrap_uintTest(FeatureInstanceHandle feature, AppendData append_data, FtUint32 parame)
 {
     return parame;
 }
@@ -82,13 +82,13 @@ FtAny function_test_wrap_objectTest(FeatureInstanceHandle feature, AppendData ap
     return obj;
 }
 
-FtBool function_test_wrap_optionTest(FeatureInstanceHandle feature, AppendData append_data, FtInt i, FtBool b, unsigned int u, FtInt64 l, FtFloat f, FtDouble d, FtString s)
+FtBool function_test_wrap_optionTest(FeatureInstanceHandle feature, AppendData append_data, FtInt i, FtBool b, FtUint32 u, FtInt64 l, FtFloat f, FtDouble d, FtString s)
 {
     if (i != 1)
         return false;
     if (b == true)
         return false;
-    if (u != (unsigned int)77)
+    if (u != (FtUint32)77)
         return false;
     if (l != 10000000000)
         return false;
@@ -108,16 +108,16 @@ FtBool function_test_wrap_optionTest1(FeatureInstanceHandle feature, AppendData 
     return true;
 }
 
-FtBool function_test_wrap_optionTest2(FeatureInstanceHandle feature, AppendData append_data, FtInt a, unsigned int u)
+FtBool function_test_wrap_optionTest2(FeatureInstanceHandle feature, AppendData append_data, FtInt a, FtUint32 u)
 {
-    if (u != (unsigned int)100)
+    if (u != (FtUint32)100)
         return false;
     return true;
 }
 
-FtBool function_test_wrap_optionTest3(FeatureInstanceHandle feature, AppendData append_data, FtInt a, unsigned int u, FtFloat f)
+FtBool function_test_wrap_optionTest3(FeatureInstanceHandle feature, AppendData append_data, FtInt a, FtUint32 u, FtFloat f)
 {
-    if (u != (unsigned int)100)
+    if (u != (FtUint32)100)
         return false;
     return true;
 }
