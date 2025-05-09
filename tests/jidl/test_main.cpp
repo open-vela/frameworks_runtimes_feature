@@ -10,6 +10,7 @@
 #include "builtin/builtin_console.h"
 #include "builtin/console.h"
 #include "feature.h"
+#include "feature_description.h"
 #include "feature_exports.h"
 #include "feature_log.h"
 #include "feature_main_exports.h"
@@ -20,6 +21,8 @@
 #endif
 
 using namespace feature_framework;
+
+extern FeatureRegistryTableHandle g_ajs_features_registry;
 
 namespace {
 class TestNavigator : public Navigator {
@@ -352,6 +355,8 @@ void feat_test_once(char* js_file, char* js_str, const char* test_all, char* pac
     ft_info.manager_type = FEATURE_MANAGER_JS;
     ft_info.package_name = package_name;
     FeatureManagerHandle manager = FeatureCreateManager(&ft_info);
+    FeatureRegistryHandle hRegistry = FeatureGetRegistryFromManager(manager);
+    FeatureRegisterFeatures(hRegistry, g_ajs_features_registry);
 
     env.manager = manager;
     env.run_loop = run_loop;
