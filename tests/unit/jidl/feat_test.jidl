@@ -1,0 +1,13 @@
+module feat_test@1.0;
+
+callback test_body();
+
+int testsuite(string test_suit_name, string test_case_name, test_body body, boolean is_async = false);
+
+// used for async test
+void done(int async_id, int err = 0, string err_message = "success");
+
+void expect_true(boolean result, string message_info = "");
+
+void run_all_tests();
+void init_suit_filter(string test_suit_filter);
