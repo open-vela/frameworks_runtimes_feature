@@ -2,6 +2,9 @@ module promise_callback@1.0
 
 promise<int> foo_cb(int a, string b)
 promise<string> bar_cb(int a)
+promise<void> void_cb()
+promise<int[]> goo_cb()
+promise<string[]> moo_cb()
 
 struct Chapter {
   int page_count = 10
@@ -10,6 +13,7 @@ struct Chapter {
 }
 promise<object> obj_cb(Chapter chap)
 
-void print(...)
+promise<Chapter> struct_cb()
+promise<Chapter[]> struct_array_cb()
 
 object loadLibrary(string name)

@@ -5,6 +5,29 @@
 
 static const char* file_tag = "[jidl_feature] promise_callback_impl";
 
+template <typename T>
+class FTArrayHelper {
+private:
+    FtArray* _data;
+
+public:
+    FTArrayHelper(FtArray* data)
+    {
+        _data = data;
+    }
+
+    ~FTArrayHelper()
+    {
+    }
+
+    T& operator[](int32_t index)
+    {
+        return ((T*)_data->_element)[index];
+    }
+
+    int32_t size() const { return _data->_size; }
+};
+
 // FeatureCallbacks to be implemented
 void promise_callback_onRegister(const char* feature_name)
 {
@@ -44,19 +67,71 @@ void promise_callback_wrap_foo_cb(FeatureInstanceHandle feature, AppendData appe
     if (resolve) {
         FeaturePromiseResolve(feature, pid, a);
     } else {
-        FeaturePromiseReject(feature, pid, 202, b);
+        FeaturePromiseReject(feature, pid, 202, "foo rejected");
     }
 }
 
 void promise_callback_wrap_bar_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtInt a)
 {
-    printf("%s::%s()\n", file_tag, __FUNCTION__);
     bool resolve = a > 0;
     printf("%s::%s(), a: %d, resolve: %d\n", file_tag, __FUNCTION__, a, resolve);
     if (resolve) {
-        FeaturePromiseResolve(feature, pid, "world resolve");
+        FeaturePromiseResolve(feature, pid, "bar resolved");
     } else {
-        FeaturePromiseReject(feature, pid, 202, "world reject");
+        FeaturePromiseReject(feature, pid, 202, "bar rejected");
+    }
+}
+
+void promise_callback_wrap_void_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+{
+    int resolve = pid % 2;
+    printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
+    if (resolve) {
+        FeaturePromiseResolve(feature, pid);
+    } else {
+        FeaturePromiseReject(feature, pid, 200, "void_cb rejected");
+    }
+}
+
+void promise_callback_wrap_goo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+{
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
+    int resolve = pid % 2;
+    printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
+    if (resolve) {
+        FtArray* array = promise_callback_malloc_int_array();
+        array->_size = 3;
+        array->_element = malloc(sizeof(int) * array->_size);
+        FTArrayHelper<int> int_array(array);
+        for (int32_t i = 0; i < int_array.size(); i++) {
+            int_array[i] = i;
+        }
+        FeaturePromiseResolve(feature, pid, array);
+        FeatureFreeValue(array);
+    } else {
+        FeaturePromiseReject(feature, pid, 201, "goo_cb rejected");
+    }
+}
+
+void promise_callback_wrap_moo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+{
+    printf("%s::%s()\n", file_tag, __FUNCTION__);
+    int resolve = pid % 2;
+    printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
+    if (resolve) {
+        FtArray* array = promise_callback_malloc_string_array();
+        array->_size = 3;
+        array->_element = malloc(sizeof(char*) * array->_size);
+        FTArrayHelper<char*> str_array(array);
+        for (int32_t i = 0; i < str_array.size(); i++) {
+            char* str = (char*)FeatureMalloc(8, FT_STRING);
+            sprintf(str, "str_%" PRIi32, i);
+            str_array[i] = str;
+        }
+        FeaturePromiseResolve(feature, pid, array);
+        FeatureFreeValue(array);
+    } else {
+        FeaturePromiseReject(feature, pid, 201, "moo_cb rejected");
     }
 }
 
@@ -71,12 +146,63 @@ void promise_callback_wrap_obj_cb(FeatureInstanceHandle feature, AppendData appe
     if (resolve) {
         ft_value_t page_count = ft_from_int(ft_ctx, 50);
         ft_value_t title = ft_from_string(ft_ctx, "hello");
+        ft_value_t is_end = ft_from_bool(ft_ctx, false);
         ft_value_t chap_obj = ft_new_object(ft_ctx);
         ft_obj_set_property(ft_ctx, chap_obj, "page_count", page_count);
         ft_obj_set_property(ft_ctx, chap_obj, "title", title);
+        ft_obj_set_property(ft_ctx, chap_obj, "is_end", is_end);
         FeaturePromiseResolve(feature, pid, &chap_obj);
+        ft_free_value(ft_ctx, chap_obj);
     } else {
-        FeaturePromiseReject(feature, pid, 202, "world");
+        FeaturePromiseReject(feature, pid, 202, "obj_cb rejected");
+    }
+}
+
+void promise_callback_wrap_struct_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+{
+    int resolve = pid % 2;
+    printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
+    if (resolve) {
+        promise_callback_Chapter* chap = promise_callbackMallocChapter();
+        chap->page_count = 150;
+        char* title = (char*)FeatureMalloc(8, FT_STRING);
+        sprintf(title, "%s", "world");
+        chap->title = title;
+        chap->is_end = true;
+        FeaturePromiseResolve(feature, pid, chap);
+        FeatureFreeValue(chap);
+    } else {
+        FeaturePromiseReject(feature, pid, 202, "struct_cb rejected");
+    }
+}
+
+static promise_callback_Chapter* make_chapter(int idx)
+{
+    promise_callback_Chapter* chap = promise_callbackMallocChapter();
+    chap->page_count = (idx + 1) * 100;
+    char* title = (char*)FeatureMalloc(8, FT_STRING);
+    sprintf(title, "chap_%d", idx);
+    chap->title = title;
+    chap->is_end = idx % 2;
+    return chap;
+}
+
+void promise_callback_wrap_struct_array_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+{
+    int resolve = pid % 2;
+    printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
+    if (resolve) {
+        FtArray* array = promise_callback_malloc_Chapter_struct_type_array();
+        array->_size = 4;
+        array->_element = malloc(sizeof(promise_callback_Chapter*) * array->_size);
+        FTArrayHelper<promise_callback_Chapter*> chap_array(array);
+        for (int32_t i = 0; i < chap_array.size(); i++) {
+            chap_array[i] = make_chapter(i);
+        }
+        FeaturePromiseResolve(feature, pid, array);
+        FeatureFreeValue(array);
+    } else {
+        FeaturePromiseReject(feature, pid, 202, "struct_array_cb rejected");
     }
 }
 
@@ -93,59 +219,4 @@ FtAny promise_callback_wrap_loadLibrary(FeatureInstanceHandle feature, AppendDat
     }
     *ft_lib = FeatureRequire(hmanager, ft_undef, name);
     return ft_lib;
-}
-
-void promise_callback_wrap_print(FeatureInstanceHandle feature, AppendData append_data, FtVariParams vari_params)
-{
-    printf("[jidl_feature] ");
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
-    for (int i = 0; i < vari_params.vari_count; i++) {
-        ft_value_t param = vari_params.vari_args[i];
-        ft_type param_type = ft_get_type(ft_ctx, param);
-        if (param_type == FT_TYPE_OBJECT) {
-            const char* param_obj = ft_to_string(ft_ctx, param);
-            printf("%s ", param_obj);
-            ft_free_string(ft_ctx, param_obj);
-        } else if (param_type == FT_TYPE_ARRAY) {
-            uint32_t array_size = ft_array_size(ft_ctx, param);
-            printf("[");
-            for (uint32_t j = 0; j < array_size; ++j) {
-                ft_value_t elem = ft_array_at(ft_ctx, param, j);
-                ft_type elem_type = ft_get_type(ft_ctx, elem);
-                if (elem_type == FT_TYPE_NUMBER) {
-                    double param_num;
-                    if (ft_to_double(ft_ctx, elem, &param_num))
-                        printf("%lf ", param_num);
-                } else if (elem_type == FT_TYPE_STRING) {
-                    const char* param_str = ft_to_string(ft_ctx, elem);
-                    printf("%s ", param_str);
-                    ft_free_string(ft_ctx, param_str);
-                } else if (elem_type == FT_TYPE_BOOL) {
-                    bool param_bool;
-                    ft_to_bool(ft_ctx, param, &param_bool);
-                    printf("%d ", param_bool);
-                } else {
-                    printf("invalid array element type!");
-                    return;
-                }
-            }
-            printf("] ");
-        } else if (param_type == FT_TYPE_STRING) {
-            const char* param_str = ft_to_string(ft_ctx, param);
-            printf("%s ", param_str);
-            ft_free_string(ft_ctx, param_str);
-        } else if (param_type == FT_TYPE_NUMBER) {
-            double param_num;
-            ft_to_double(ft_ctx, param, &param_num);
-            printf("%lf ", param_num);
-        } else if (param_type == FT_TYPE_BOOL) {
-            bool param_bool;
-            ft_to_bool(ft_ctx, param, &param_bool);
-            printf("%d ", param_bool);
-        } else {
-            printf("invalid param type!");
-            return;
-        }
-    }
-    printf("\n");
 }
