@@ -1,109 +1,259 @@
 let test = require('promise_callback');
 
-test.print("will call foo_cb() as promise");
+console.log("will call foo_cb() as promise");
 test.foo_cb(-2,  'hello').then(a => {
-    test.print("foo_cb promise resolve, a:", a);
+    console.log("foo_cb promise resolve, a:", a);
 }).catch((data) => {
-    test.print("foo_cb promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("foo_cb promise reject, code:", data.code, ", data:", data.data);
 }).finally(() => {
-    test.print("foo_cb promise finally");
+    console.log("foo_cb promise finally");
 })
 test.foo_cb(2,  'hello').then(a => {
-    test.print("foo_cb promise resolve, a:", a);
+    console.log("foo_cb promise resolve, a:", a);
 }).catch((data) => {
-    test.print("foo_cb promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("foo_cb promise reject, code:", data.code, ", data:", data.data);
 }).finally(() => {
-    test.print("foo_cb promise finally");
+    console.log("foo_cb promise finally");
 })
-test.print("did call foo_cb() as promise\n");
+console.log("did call foo_cb() as promise\n");
 
-test.print("will call foo_cb() as callbacks");
+console.log("will call foo_cb() as callbacks");
 test.foo_cb(-3,  'hello', {
-    success: (a) => { test.print("foo_cb callback success, a:", a); },
-    fail: (code, msg) => { test.print("foo_cb callback fail, code:", code, ", msg:", msg); },
-    complete: () => { test.print("foo_cb callback complete"); }
+    success: (a) => { console.log("foo_cb callback success, a:", a); },
+    fail: (msg, code) => { console.log("foo_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("foo_cb callback complete"); }
   })
 test.foo_cb(3,  'hello', {
-    success: (a) => { test.print("foo_cb callback success, a:", a); },
-    fail: (code, msg) => { test.print("foo_cb callback fail, code:", code, ", msg:", msg); },
-    complete: () => { test.print("foo_cb callback complete"); }
+    success: (a) => { console.log("foo_cb callback success, a:", a); },
+    fail: (msg, code) => { console.log("foo_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("foo_cb callback complete"); }
   })
-test.print("did call foo_cb() as callbacks\n\n");
+console.log("did call foo_cb() as callbacks\n\n");
 
-test.print("will call bar_cb() as promise");
+console.log("will call bar_cb() as promise");
 test.bar_cb(-2).then(a => {
-    test.print("bar_cb promise resolve, a:", a);
+    console.log("bar_cb promise resolve, a:", a);
 }).catch((data) => {
-    test.print("bar_cb promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("bar_cb promise reject, code:", data.code, ", data:", data.data);
 }).finally(() => {
-    test.print("bar_cb promise finally");
+    console.log("bar_cb promise finally");
 })
 test.bar_cb(2).then(a => {
-    test.print("bar_cb promise resolve, a:", a);
+    console.log("bar_cb promise resolve, a:", a);
 }).catch((data) => {
-    test.print("bar_cb promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("bar_cb promise reject, code:", data.code, ", data:", data.data);
 }).finally(() => {
-    test.print("bar_cb promise finally");
+    console.log("bar_cb promise finally");
 })
-test.print("did call foo_cb() as promise\n");
+console.log("did call foo_cb() as promise\n");
 
-test.print("will call bar_cb() as callbacks");
+console.log("will call bar_cb() as callbacks");
 test.bar_cb(-3, {
-    success: (a) => { test.print("bar_cb callback success, a:", a); },
-    fail: (code, msg) => { test.print("bar_cb callback fail, code:", code, ", msg:", msg); },
-    complete: () => { test.print("bar_cb callback complete"); }
+    success: (a) => { console.log("bar_cb callback success, a:", a); },
+    fail: (msg, code) => { console.log("bar_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("bar_cb callback complete"); }
   })
 test.bar_cb(3, {
-    success: (a) => { test.print("bar_cb callback success, a:", a); },
-    fail: (code, msg) => { test.print("bar_cb callback fail, code:", code, ", msg:", msg); },
-    complete: () => { test.print("bar_cb callback complete"); }
+    success: (a) => { console.log("bar_cb callback success, a:", a); },
+    fail: (msg, code) => { console.log("bar_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("bar_cb callback complete"); }
   })
-test.print("did call bar_cb() as callbacks\n");
+console.log("did call bar_cb() as callbacks\n");
 
-test.print("will call obj_cb() as promise");
+console.log("will call void_cb() as promise");
+test.void_cb().then(() => {
+    console.log("void_cb promise resolve");
+}).catch((data) => {
+    console.log("void_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("void_cb promise finally");
+})
+test.void_cb().then(a => {
+    console.log("void_cb promise resolve");
+}).catch((data) => {
+    console.log("void_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("void_cb promise finally");
+})
+console.log("did call void_cb() as promise\n");
+
+console.log("will call void_cb() as callbacks");
+test.void_cb({
+    success: () => { console.log("void_cb callback success"); },
+    fail: (msg, code) => { console.log("void_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("void_cb callback complete"); }
+  })
+test.void_cb({
+    success: () => { console.log("void_cb callback success"); },
+    fail: (msg, code) => { console.log("void_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("void_cb callback complete"); }
+  })
+console.log("did call void_cb() as callbacks\n");
+
+console.log("will call goo_cb() as promise");
+test.goo_cb().then(a => {
+    console.log("goo_cb promise resolve a: ", JSON.stringify(a));
+}).catch((data) => {
+    console.log("goo_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("goo_cb promise finally");
+})
+test.goo_cb().then(a => {
+    console.log("goo_cb promise resolve a: ", JSON.stringify(a));
+}).catch((data) => {
+    console.log("goo_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("goo_cb promise finally");
+})
+console.log("did call goo_cb() as promise\n");
+
+console.log("will call goo_cb() as callbacks");
+test.goo_cb({
+    success: (a) => { console.log("goo_cb callback success, a:", JSON.stringify(a)); },
+    fail: (msg, code) => { console.log("goo_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("goo_cb callback complete"); }
+  })
+test.goo_cb({
+    success: (a) => { console.log("goo_cb callback success, a:", JSON.stringify(a)); },
+    fail: (msg, code) => { console.log("goo_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("goo_cb callback complete"); }
+  })
+console.log("did call goo_cb() as callbacks\n");
+
+console.log("will call moo_cb() as promise");
+test.moo_cb().then(a => {
+    console.log("moo_cb promise resolve a: ", JSON.stringify(a));
+}).catch((data) => {
+    console.log("moo_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("moo_cb promise finally");
+})
+test.moo_cb().then(a => {
+    console.log("moo_cb promise resolve a: ", JSON.stringify(a));
+}).catch((data) => {
+    console.log("moo_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("moo_cb promise finally");
+})
+console.log("did call moo_cb() as promise\n");
+
+console.log("will call moo_cb() as callbacks");
+test.moo_cb({
+    success: (a) => { console.log("moo_cb callback success, a:", JSON.stringify(a)); },
+    fail: (msg, code) => { console.log("moo_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("moo_cb callback complete"); }
+  })
+test.moo_cb({
+    success: (a) => { console.log("moo_cb callback success, a:", JSON.stringify(a)); },
+    fail: (msg, code) => { console.log("moo_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("moo_cb callback complete"); }
+  })
+console.log("did call moo_cb() as callbacks\n");
+
+console.log("will call obj_cb() as promise");
 test.obj_cb({
 	page_count: 30,
 	title: "nice to",
 	is_end: false,
   }).then(a => {
-    test.print("obj_cb promise resolve, page_count:", a.page_count, ", title:", a.title);
+    console.log("obj_cb promise resolve, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end);
 }).catch((data) => {
-    test.print("obj_cb promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("obj_cb promise reject, code:", data.code, ", data:", data.data);
 }).finally(() => {
-    test.print("obj_cb promise finally");
+    console.log("obj_cb promise finally");
 })
 test.obj_cb({
 	page_count: 30,
 	title: "meet you",
 	is_end: true,
   }).then(a => {
-    test.print("obj_cb promise resolve, page_count:", a.page_count, ", title:", a.title);
+    console.log("obj_cb promise resolve, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end);
 }).catch((data) => {
-    test.print("obj_cb promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("obj_cb promise reject, code:", data.code, ", data:", data.data);
 }).finally(() => {
-    test.print("obj_cb promise finally");
+    console.log("obj_cb promise finally");
 })
-test.print("did call obj_cb() as promise\n");
+console.log("did call obj_cb() as promise\n");
 
-test.print("will call obj_cb() as callbacks");
+console.log("will call obj_cb() as callbacks");
 test.obj_cb({
-	page_count: 20,
-	title: "hello",
-	is_end: false,
-    success: (a) => { test.print("obj_cb callback success, page_count:", a.page_count, ", title:", a.title); },
-    fail: (code, msg) => { test.print("obj_cb callback fail, code:", code, ", msg:", msg); },
-    complete: () => { test.print("obj_cb callback complete"); }
+    page_count: 20,
+    title: "hello",
+    is_end: false,
+    success: (a) => { console.log("obj_cb callback success, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end); },
+    fail: (msg, code) => { console.log("obj_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("obj_cb callback complete"); }
   })
 test.obj_cb({
-	page_count: 20,
-	title: "world",
-	is_end: true,
-    success: (a) => { test.print("obj_cb callback success, page_count:", a.page_count, ", title:", a.title); },
-    fail: (code, msg) => { test.print("obj_cb callback fail, code:", code, ", msg:", msg); },
-    complete: () => { test.print("obj_cb callback complete"); }
+    page_count: 20,
+    title: "world",
+    is_end: true,
+    success: (a) => { console.log("obj_cb callback success, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end); },
+    fail: (msg, code) => { console.log("obj_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("obj_cb callback complete"); }
   })
-test.print("did call bar_cb() as callbacks\n");
+console.log("did call obj_cb() as callbacks\n");
 
-test.print("test loadLibrary function\n");
+console.log("will call struct_cb() as promise");
+test.struct_cb().then(a => {
+    console.log("struct_cb promise resolve, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end);
+}).catch((data) => {
+    console.log("struct_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("struct_cb promise finally");
+})
+test.struct_cb().then(a => {
+    console.log("struct_cb promise resolve, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end);
+}).catch((data) => {
+    console.log("struct_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("struct_cb promise finally");
+})
+console.log("did call struct_cb() as promise\n");
+
+console.log("will call struct_cb() as callbacks");
+test.struct_cb({
+    success: (a) => { console.log("struct_cb callback success, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end); },
+    fail: (msg, code) => { console.log("struct_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("struct_cb callback complete"); }
+  })
+test.struct_cb({
+    success: (a) => { console.log("struct_cb callback success, page_count:", a.page_count, ", title:", a.title, ", is_end:", a.is_end); },
+    fail: (msg, code) => { console.log("struct_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("struct_cb callback complete"); }
+  })
+console.log("did call struct_cb() as callbacks\n");
+
+console.log("will call struct_array_cb() as promise");
+test.struct_array_cb().then(a => {
+    console.log("struct_array_cb promise resolve, chap_array:", JSON.stringify(a));
+}).catch((data) => {
+    console.log("struct_array_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("struct_array_cb promise finally");
+})
+test.struct_array_cb().then(a => {
+    console.log("struct_array_cb promise resolve, chap_array:", JSON.stringify(a));
+}).catch((data) => {
+    console.log("struct_array_cb promise reject, code:", data.code, ", data:", data.data);
+}).finally(() => {
+    console.log("struct_array_cb promise finally");
+})
+console.log("did call struct_cb() as promise\n");
+
+console.log("will call struct_array_cb() as callbacks");
+test.struct_array_cb({
+    success: (a) => { console.log("struct_array_cb callback success, chap_array:", JSON.stringify(a)); },
+    fail: (msg, code) => { console.log("struct_array_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("struct_array_cb callback complete"); }
+  })
+test.struct_array_cb({
+    success: (a) => { console.log("struct_array_cb callback success, chap_array:", JSON.stringify(a)); },
+    fail: (msg, code) => { console.log("struct_array_cb callback fail, code:", code, ", msg:", msg); },
+    complete: () => { console.log("struct_array_cb callback complete"); }
+  })
+console.log("did call struct_array_cb() as callbacks\n");
+
+console.log("test loadLibrary function\n");
 let err = test.loadLibrary("Error")
-test.print("erro mse for code 100:", err.strerror(100));
+console.log("erro msg for code 100:", err.strerror(100));
