@@ -115,7 +115,6 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${FEATURE_TOP}/include
     ${FEATURE_SRC_DIR}
     ${FEATURE_MODULES_DIR}
-    ${FEATURE_SRC_DIR}/utils
     ${RAPIDJSON_DIR}/include
     ${QUICKJS_DIR}
     ${QUICKAPP_DIR}/src

@@ -255,7 +255,7 @@ TEST_F(FeatureExportTestQjs, FeatureMalloc_structAlloc)
 
     auto header = (FTObjHeader*)((char*)simple_struct - FT_OBJ_HEADER_SIZE);
     // EXPECT_TRUE(FT_IS_COMPLEX(header->featureType));
-    EXPECT_EQ(header->ref_count, 1);
+    EXPECT_EQ(header->ref_count, (uint32_t)1);
     // EXPECT_EQ(header->featureType, (uintptr_t)&simple_struct_type);
     FeatureFreeValue(simple_struct);
 }
@@ -264,7 +264,7 @@ TEST_F(FeatureExportTestQjs, FeatureMalloc_arrayAlloc)
     FtArray* simple_array_test = (FtArray*)FeatureMalloc(sizeof(FtArray), FT_MK_COMPLEX(&simple_array));
     auto header = (FTObjHeader*)((char*)simple_array_test - FT_OBJ_HEADER_SIZE);
     // EXPECT_TRUE(FT_IS_COMPLEX(header->featureType));
-    EXPECT_EQ(header->ref_count, 1);
+    EXPECT_EQ(header->ref_count, (uint32_t)1);
     // EXPECT_EQ(header->featureType, (uintptr_t)&simple_array);
     FeatureFreeValue(simple_array_test);
 }
