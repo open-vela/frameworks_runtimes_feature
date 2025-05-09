@@ -17,8 +17,8 @@ if(CONFIG_FEATURE_TEST_CLIENT)
 endif()
 
 if(CONFIG_FEATURE_UNIT_TEST)
-    list(APPEND UNIT_TEST_SRCS ${FEATURE_TOP}/tests/unit/unit_test.cpp)
-    list(APPEND FEATURE_UNIT_TEST_SRCS ${FEATURE_INC_DIRS})
+    list(APPEND FEATURE_UNIT_TEST_SRCS ${FEATURE_TOP}/tests/unit/unit_test.cpp)
+    list(APPEND FEATURE_UNIT_TEST_INCLUDE ${FEATURE_INC_DIRS})
     nuttx_add_application(
         NAME
         feature_unit_test
@@ -31,7 +31,7 @@ if(CONFIG_FEATURE_UNIT_TEST)
         SRCS
         ${FEATURE_UNIT_TEST_SRCS}
         INCLUDE_DIRECTORIES
-        ${FEATURE_UNIT_TEST_SRCS})
+        ${FEATURE_UNIT_TEST_INCLUDE})
 endif()
 
 list(

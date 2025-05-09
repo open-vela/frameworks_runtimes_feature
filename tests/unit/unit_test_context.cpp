@@ -557,7 +557,7 @@ TEST_F(FeatureContextTest, ft_from_bool_array_1)
     EXPECT_EQ(feature_get_array_length(js_env.ctx, FT_VAL_GET_JS_VAL(result)), size);
     for (uint32_t i = 0; i < size; ++i) {
         feature_value_t tmp = feature_get_array_idx_safe(js_env.ctx, FT_VAL_GET_JS_VAL(result), i);
-        bool ret;
+        bool ret = false;
         EXPECT_TRUE(feature_to_boolean(js_env.ctx, &ret, tmp));
         feature_free_value(js_env.ctx, tmp);
         EXPECT_EQ(ret, val[i]);
