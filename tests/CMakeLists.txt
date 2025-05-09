@@ -37,13 +37,22 @@ endif()
 if(CONFIG_FEATURE_TEST_JSFILE)
     list(APPEND FEATURE_INC_DIRS ${FEATURE_TEST_DIR}/unit/jidl)
     nuttx_add_library(feature_test_jsfile STATIC)
-    # set feature impl
-    list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_jidl_util.cpp)
     list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/jidl/feat_test_impl.cpp)
-    # set featuree jidl path
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/feat_test.jidl)
-    # set feature name
     list(APPEND FEATURE_NAMES feat_test)
+
+if(CONFIG_FEATURE_UNIT_TEST)
+    list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_jidl_util.cpp)
+    list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_struct.cpp)
+    list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_any.cpp)
+    list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_function.cpp)
+    # set featuree jidl path
+    list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/struct_test.jidl)
+    list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/any_test.jidl)
+    list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/function_test.jidl)
+    # set feature name
+    list(APPEND FEATURE_NAMES struct_test any_test function_test)
+endif()
 
     nuttx_add_jidl(
         TARGET
