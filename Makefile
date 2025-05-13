@@ -104,13 +104,13 @@ ifeq ($(CONFIG_FEATURE_UNIT_TEST), y)
 	MAINSRC += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test.cpp
 
 ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_jidl_util.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_any.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_function.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/function_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_jidl_util.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_struct.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/struct_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_any.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/any_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/unit_test_jidl_function.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/function_test.cpp
 
 depend::
 	$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp \
@@ -126,8 +126,8 @@ endif
 endif
 
 ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test_impl.cpp
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/feat_test.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/jidl/feat_test_impl.cpp
+CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/tests/unit/jidl/feat_test.cpp
 
 depend::
 	$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp \
