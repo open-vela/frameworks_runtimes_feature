@@ -85,7 +85,7 @@ public:
     int getThreadMemory() { return 0; }
     void initMemoryStatusTimer() { }
     void stopMemoryStatusTimer() { }
-    std::string getAppPriority() { return nullptr; }
+    std::string getAppPriority() { return ""; }
     bool route(const char* uri) { return true; }
     void* getDebugHandler() { return nullptr; }
     void onError(void* param) {};
