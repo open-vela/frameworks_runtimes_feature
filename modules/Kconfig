@@ -192,3 +192,10 @@ config FEATURE_SYSTEM_INTERCONNECT
     depends on UV_MIWEAR
     --help--
         enable system.interconnect feature
+
+config FEATURE_SYSTEM_ZLIB
+    bool "system.zlib"
+    default y
+    depends on LIB_ZLIB
+    --help--
+        enable system.zlib feature

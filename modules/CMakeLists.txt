@@ -130,6 +130,20 @@ if(CONFIG_FEATURE_SYSTEM_ZIP)
         system_zip)
 endif()
 
+if (CONFIG_FEATURE_SYSTEM_ZLIB)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/system_zlib_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/system_zlib.jidl)
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_zlib)
+endif()
+
 if(CONFIG_FEATURE_SYSTEM_CRYPTO)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/crypto_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/crypto.jidl)
