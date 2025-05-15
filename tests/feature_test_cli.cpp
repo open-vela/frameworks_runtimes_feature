@@ -154,7 +154,7 @@ JSValue __cliExit(JSContext* ctx, JSValue this_val, int argc, JSValue* argv)
     return JS_UNDEFINED;
 }
 
-bool cli_load_file(char* file_name, char** file_content)
+bool cli_load_file(const char* file_name, char** file_content)
 {
     if (file_name == NULL || file_content == NULL) {
         FEATURE_LOG_ERROR("file_name or file_content is NULL!\n");
@@ -178,6 +178,25 @@ bool cli_load_file(char* file_name, char** file_content)
     fclose(fp);
 
     return true;
+}
+
+static JSModuleDef* js_module_loader(JSContext* ctx, const char* name, void* opaque)
+{
+    char* js_str = NULL;
+    cli_load_file(name, &js_str);
+    if (!js_str) {
+        JS_ThrowReferenceError(ctx, "read module file failed, name: '%s'", name);
+        return NULL;
+    }
+
+    JSValue val = JS_Eval(ctx, js_str, strlen(js_str),
+        name, JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+    free(js_str);
+    if (JS_IsException(val)) {
+        JS_ThrowReferenceError(ctx, "Eval module failed,  name: '%s'", name);
+        return NULL;
+    }
+    return (JSModuleDef*)JS_VALUE_GET_PTR(val);
 }
 
 static void cli_execute_job_cb(uv_prepare_t* handle)
@@ -337,6 +356,7 @@ extern "C" int main(int argc, char** argv)
     js_env.rt = JS_NewRuntime();
     js_env.ctx = JS_NewContext(js_env.rt);
     JS_SetRuntimeOpaque(js_env.rt, js_env.ctx);
+    JS_SetModuleLoaderFunc(js_env.rt, NULL, js_module_loader, NULL);
 
     FeatureManagerCreateInfo ft_info;
     ft_info.raw_ctx = (FeatureRawContextHandle)(js_env.ctx);
@@ -407,7 +427,7 @@ extern "C" int main(int argc, char** argv)
     setScriptArgs(js_env.ctx, global_obj, argc, argv, scriptArgs_beg);
 
     feature_free_value(js_env.ctx, global_obj);
-    auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_GLOBAL);
+    auto result = feature_eval(js_env.ctx, js_str, strlen(js_str), "<eval>", JS_EVAL_TYPE_MODULE);
     if (use_uvloop_async) {
         uv_timer_t* async_timer = static_cast<uv_timer_t*>(js_env.async_limiter);
         uv_timer_start(async_timer, cli_async_limit_cb, js_env.time_limit, 0);
