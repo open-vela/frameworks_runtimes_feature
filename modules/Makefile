@@ -209,6 +209,14 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_ZIP),y)
 	FEATURELIST += system_zip
 endif
 
+ifeq ($(CONFIG_FEATURE_SYSTEM_ZLIB),y)
+	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/system_zlib.jidl
+	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/system_zlib_impl.cpp
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+	FEATURELIST += system_zlib
+endif
+
+
 ifeq ($(CONFIG_FEATURE_SYSTEM_CRYPTO),y)
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/crypto_impl.cpp
 	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/crypto.jidl
