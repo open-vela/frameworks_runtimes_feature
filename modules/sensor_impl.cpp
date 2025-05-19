@@ -19,6 +19,7 @@
 #include <nuttx/nuttx.h>
 #include <sensor/accel.h>
 #include <sensor/baro.h>
+#include <sensor/compass.h>
 #include <sensor/gnss.h>
 #include <sensor/humi.h>
 #include <sensor/light.h>
@@ -170,7 +171,30 @@ static void sensor_light_topic_cb(uv_topic_t* topic, int status, void* data, siz
     }
 }
 
-static void sensor_compa_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
+static void sensor_compass_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
+{
+    sensor_event_t* event = container_of(topic, sensor_event_t, topic);
+    int cnt = datalen / sizeof(sensor_compass);
+    system_sensor_CompassRet* compassRet = system_sensorMallocCompassRet();
+
+    if (!topic || !data) {
+        FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
+        return;
+    }
+
+    for (int i = 0; i < cnt; i++) {
+        sensor_compass* t_r = (sensor_compass*)data + i;
+        double degree = (t_r->direction * acos(-1.0)) / 180.0;
+        if (degree > acos(-1.0)) {
+            degree -= 2 * acos(-1.0);
+        }
+
+        compassRet->direction = degree;
+        compassRet->accuracy = t_r->cal_status;
+        INVOKE_SUCCESS_CB(event->meta.instance, event->meta.callback, compassRet);
+    }
+    FeatureFreeValue(compassRet);
+}
 
 static void sensor_step_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen) { }
 
@@ -238,7 +262,7 @@ const static sensor_orb_t sensor_orb_table[SENSOR_MAGIC_NUM] = {
         .meta = ORB_ID(sensor_accel),
         .topic_cb = sensor_accel_topic_cb,
     },
-    [SENSOR_MAGIC_COMPA] = { .index = 3, .sensor_name = "COMPASS", .meta = NULL, .topic_cb = sensor_compa_topic_cb },
+    [SENSOR_MAGIC_COMPA] = { .index = 3, .sensor_name = "COMPASS", .meta = ORB_ID(sensor_compass), .topic_cb = sensor_compass_topic_cb },
     [SENSOR_MAGIC_PROX] = { .index = 4, .sensor_name = "PROXIMITY", .meta = ORB_ID(sensor_prox), .topic_cb = sensor_prox_topic_cb },
     [SENSOR_MAGIC_LIGHT] = { .index = 5, .sensor_name = "LIGHT", .meta = ORB_ID(sensor_light), .topic_cb = sensor_light_topic_cb },
     [SENSOR_MAGIC_STEP] = { .index = 6, .sensor_name = "STEP_COUNTER", .meta = NULL, .topic_cb = sensor_step_topic_cb },
@@ -291,28 +315,51 @@ exit:
         return;
     }
 
-    REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
+    if (FeatureCheckCallbackId(feature, event->meta.callback)) {
+        FeatureRemoveCallback(feature, event->meta.callback);
+    }
+
+    if (FeatureCheckCallbackId(feature, event->meta.fail)) {
+        FeatureRemoveCallback(feature, event->meta.fail);
+    }
 }
 
 static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_magic_e magic, MetaData* meta)
 {
-    FEATURE_LOG_INFO("%s::%s() magic:%d subscribe\n", file_tag, __FUNCTION__, magic);
+    int ret;
     int code;
     const char* msg = "";
-    FtCallbackId temp;
     sensor_event_t* event = th->events[magic];
-    if (event) {
-        temp = event->meta.callback;
-        if (FeatureCheckCallbackId(feature, temp)) {
-            REMOVE_ALL_CALLBACK(meta->callback, meta->fail);
-            return true;
-        }
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
+
+    if (!FeatureCheckCallbackId(feature, meta->callback)) {
+        code = GENERAL;
+        msg = "callback id is invalid";
+        goto errout;
     }
+
+    if (event && event->meta.subscribed) {
+        if (magic == SENSOR_MAGIC_COMPA) {
+            FeatureRemoveCallback(feature, event->meta.callback);
+        } else {
+            REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
+            event->meta.fail = meta->fail;
+        }
+
+        event->meta.callback = meta->callback;
+        return true;
+    }
+
     event = static_cast<sensor_event_t*>(malloc(sizeof(sensor_event_t)));
+    if (event == NULL) {
+        code = GENERAL;
+        msg = "malloc error";
+        goto errout;
+    }
+
     event->meta = *meta;
     th->events[magic] = event;
-    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
-    int ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[magic]->topic,
+    ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &th->events[magic]->topic,
         sensor_orb_table[magic].meta,
         sensor_orb_table[magic].topic_cb);
     if (ret < 0) {
@@ -376,7 +423,24 @@ void system_sensor_wrap_unsubscribeAccelerometer(FeatureInstanceHandle feature, 
 }
 
 void system_sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendData data,
-    system_sensor_Compass* param) { }
+    system_sensor_Compass* param)
+{
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    MetaData meta;
+    SensorContext* th = static_cast<SensorContext*>(FeatureGetProtoData(proto_handle));
+    if (th == NULL) {
+        FEATURE_LOG_ERROR("%s::%s() sensor context is NULL\n", file_tag, __FUNCTION__);
+        return;
+    }
+
+    meta.instance = feature;
+    meta.reserved = param->reserved;
+    meta.callback = param->callback;
+
+    if (!subscribe(feature, th, SENSOR_MAGIC_COMPA, &meta)) {
+        FEATURE_LOG_ERROR("%s::%s() proximity subscibe fail:%s\n", file_tag, __FUNCTION__);
+    }
+}
 
 void system_sensor_wrap_unsubscribeCompass(FeatureInstanceHandle feature, AppendData data)
 {
@@ -634,6 +698,20 @@ static void sensor_topic_cb(uv_topic_t* topic, int status, void* data, size_t da
         ft_value_t humi = ft_from_int(ft_ctx, round(ret_t->humidity));
         ft_obj_set_property(ft_ctx, ret_obj, "humidity", humi);
         ft_obj_set_property(ft_ctx, sensor_obj, "HUMIDITY", ret_obj);
+        break;
+    }
+    case SENSOR_MAGIC_COMPA: {
+        sensor_compass* ret_t = static_cast<sensor_compass*>(data);
+        double direction = (ret_t->direction * acos(-1.0)) / 180.0;
+        if (direction > acos(-1.0)) {
+            direction -= 2 * acos(-1.0);
+        }
+
+        ft_value_t degree = ft_from_double(ft_ctx, direction);
+        ft_value_t accuracy = ft_from_int(ft_ctx, ret_t->cal_status);
+        ft_obj_set_property(ft_ctx, ret_obj, "direction", degree);
+        ft_obj_set_property(ft_ctx, ret_obj, "accuracy", accuracy);
+        ft_obj_set_property(ft_ctx, sensor_obj, "COMPASS", ret_obj);
         break;
     }
 #ifdef CONFIG_MIWEAR_COMMON
