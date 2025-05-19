@@ -72,6 +72,7 @@ public:
     void clearRuntime() { }
     void postAppNotify(ApplicationNotifyType type) { }
     bool isExitRequest() { return true; }
+    const char* appName() { return "testApp"; }
     void setExitRequested() { }
     bool isAsyncMode() { return true; }
     void notifyEvent(int evt) { }
