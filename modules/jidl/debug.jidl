@@ -16,6 +16,6 @@
 
 module system.debug@1.0
 
-promise<string> enable()
-promise<string> disable()
-promise<string> getStatus()
+promise<int> enable()
+promise<int> disable()
+promise<int> getStatus()
