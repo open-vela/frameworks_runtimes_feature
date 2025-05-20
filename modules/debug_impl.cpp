@@ -24,6 +24,8 @@
 
 #define APPDEBUGKEY "persist.quickapp.debug"
 
+const char* const DEFAULT_CODE = "0";
+
 void system_debug_onRegister(const char* feature_name)
 {
     SYSTEMDEBUG_LIFECYCLE_DEBUG();
@@ -55,30 +57,37 @@ void system_debug_onUnregister(const char* feature_name)
 void system_debug_wrap_enable(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
 {
     FEATURE_LOG_INFO("[jump native] system_debug_wrap_enable");
-    int ret = property_set_int32(APPDEBUGKEY, 1);
+    int enable = 1;
+    int ret = property_set_int32(APPDEBUGKEY, enable);
     if (ret != 0) {
-        FEATURE_LOG_ERROR("[jump native] system_debug_wrap_enable property_set_bool error");
-        FeaturePromiseReject(feature, pid, ret, "property_set_key error");
+        FEATURE_LOG_ERROR("[jump native] system_debug_wrap_enable property_set_int error");
+        FeaturePromiseReject(feature, pid, ret, DEFAULT_CODE);
         return;
     }
-    FeaturePromiseResolve(feature, pid, ret, "success");
+    FeaturePromiseResolve(feature, pid, enable);
 }
 
 void system_debug_wrap_disable(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
 {
     FEATURE_LOG_INFO("[jump native] system_debug_wrap_disable");
-    int ret = property_set_int32(APPDEBUGKEY, 0);
+    int disable = 0;
+    int ret = property_set_int32(APPDEBUGKEY, disable);
     if (ret != 0) {
-        FEATURE_LOG_ERROR("[jump native] system_debug_wrap_disable property_set_bool error");
-        FeaturePromiseReject(feature, pid, ret, "property_set_key error");
+        FEATURE_LOG_ERROR("[jump native] system_debug_wrap_disable property_set_int error");
+        FeaturePromiseReject(feature, pid, ret, DEFAULT_CODE);
         return;
     }
-    FeaturePromiseResolve(feature, pid, ret, "success");
+    FeaturePromiseResolve(feature, pid, disable);
 }
 
 void system_debug_wrap_getStatus(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
 {
-    FEATURE_LOG_INFO("[jump native] system_debug_wrap_finish");
+    FEATURE_LOG_INFO("[jump native] system_debug_wrap_getStatus");
     int ret = property_get_int32(APPDEBUGKEY, -1);
-    FeaturePromiseResolve(feature, pid, ret, "success");
+    if (ret == -1) {
+        FEATURE_LOG_ERROR("[jump native] system_debug_wrap_getStatus error");
+        FeaturePromiseReject(feature, pid, ret, DEFAULT_CODE);
+        return;
+    }
+    FeaturePromiseResolve(feature, pid, ret);
 }
