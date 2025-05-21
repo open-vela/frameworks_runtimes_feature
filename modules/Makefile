@@ -224,6 +224,14 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_CRYPTO),y)
 	FEATURELIST += system_crypto
 endif
 
+ifeq ($(CONFIG_FEATURE_SYSTEM_MQTTMESSAGE),y)
+	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/mqttmessage_impl.cpp
+	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/mqtt_message.pb-c.c
+	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/mqttmessage.jidl
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+	FEATURELIST += system_mqttmessage
+endif
+
 ifeq ($(CONFIG_FEATURE_SYSTEM_CIPHER),y)
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/cipher_impl.cpp
 	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/cipher.jidl

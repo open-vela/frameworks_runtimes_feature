@@ -159,6 +159,22 @@ if(CONFIG_FEATURE_SYSTEM_CRYPTO)
         system_crypto)
 endif()
 
+if(CONFIG_FEATURE_SYSTEM_MQTTMESSAGE)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/mqttmessage_impl.cpp)
+    list(APPEND FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/mqtt_message.pb-c.c)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/mqttmessage.jidl)
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_mqttmessage)
+endif()
+
 if(CONFIG_FEATURE_SYSTEM_CIPHER)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/cipher_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/cipher.jidl)
