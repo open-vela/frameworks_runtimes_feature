@@ -17,6 +17,7 @@
 #define __FEATURE_REGISTRY_H__
 
 #include "feature_main_exports.h"
+#include <functional>
 #include <map>
 #include <string>
 #include <uv.h>
@@ -59,6 +60,7 @@ public:
      * @return false
      */
     bool registerFeature(const FeatureDescription* description);
+    void setOnFeatureRegisteredCB(std::function<bool(const FeatureDescription* description)>&& onFeatureRegistered);
     void unregisterAllFeatures();
     const FeatureDescription* findFeature(const char* name);
     const char* getFeaturePackageName() const { return package_name_.data(); }
@@ -72,6 +74,7 @@ public:
 private:
     std::map<std::string, const FeatureDescription*> registeredFeatures_; // 已注册features
     std::string package_name_;
+    std::function<bool(const FeatureDescription* description)> onFeatureRegistered_;
 
 }; // class FeatureRegistry
 

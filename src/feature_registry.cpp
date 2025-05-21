@@ -27,6 +27,11 @@
 
 namespace feature_framework {
 
+void FeatureRegistry::setOnFeatureRegisteredCB(std::function<bool(const FeatureDescription* description)>&& onFeatureRegistered)
+{
+    onFeatureRegistered_ = std::move(onFeatureRegistered);
+}
+
 FeatureRegistry::~FeatureRegistry()
 {
     unregisterAllFeatures();
@@ -61,6 +66,10 @@ bool FeatureRegistry::registerFeature(const FeatureDescription* description)
             FEATURE_LOG_DEBUG("invoke onRegister callback...");
             description->native_callbacks->onRegister(description->name);
         }
+        // register for wamr
+        if (onFeatureRegistered_)
+            if (!onFeatureRegistered_(description))
+                return false;
         return true;
     }
     return false;
