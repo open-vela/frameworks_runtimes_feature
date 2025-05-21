@@ -44,7 +44,7 @@ public:
     void* wamrEnv() { return wamr_env_; }
 
 private:
-    int registerFeature(const FeatureDescription* description);
+    bool registerFeature(const FeatureDescription* description);
 
     bool registerSymbol(void* func, const char* name, const char* sig, void* attach);
 

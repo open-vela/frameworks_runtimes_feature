@@ -286,24 +286,8 @@ bool FeatureManagerWamr::init()
         return false;
     }
 
-    if (!getFeatureRegistry()) {
-        FEATURE_LOG_ERROR("feature register not exists!");
-        return false;
-    }
+    registrySetFeatureRegisteredCB([this](const FeatureDescription* description) { return registerFeature(description); });
 
-    for (const auto& pair : getFeatureRegistry()->getRegisteredFeatures()) {
-        auto name = pair.first;
-        auto description = pair.second;
-        FEATURE_CHECK_NE(description, nullptr);
-
-        if (strcmp(name.data(), "ATest") != 0 && strcmp(name.data(), "Simple") != 0 && strcmp(name.data(), "struct_test") != 0 && strcmp(name.data(), "promise_test") != 0 && strcmp(name.data(), "interface_test") != 0 && strcmp(name.data(), "system.messageChannel") != 0) {
-            FEATURE_LOG_WARN("Feature '%s' is not for wamr!", name.data());
-            continue;
-        }
-
-        FEATURE_LOG_WARN("register feature: '%s'", name.data());
-        registerFeature(description);
-    }
     return true;
 }
 
@@ -465,8 +449,15 @@ static char getFeatureSignature(FeatureType ftype)
     return 0;
 }
 
-int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
+bool FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 {
+    FEATURE_CHECK_NE(description, nullptr);
+    auto name = description->name;
+    /* only several specific features can be registered into wamr*/
+    if (strcmp(name, "ATest") != 0 && strcmp(name, "Simple") != 0 && strcmp(name, "struct_test") != 0 && strcmp(name, "promise_test") != 0 && strcmp(name, "interface_test") != 0 && strcmp(name, "system.messageChannel") != 0) {
+        FEATURE_LOG_WARN("Feature '%s' is not for wamr!", name);
+        return true;
+    }
     /* register interface api */
     if (!description->dynamic && description->member_count > 0) {
         for (int i = 0; i < description->member_count; i++) {
@@ -630,6 +621,6 @@ int FeatureManagerWamr::registerFeature(const FeatureDescription* description)
         } break;
         }
     }
-    return 0;
+    return true;
 }
 }

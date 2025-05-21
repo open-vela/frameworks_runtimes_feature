@@ -53,6 +53,11 @@ public:
 
     virtual bool init() { return true; }
 
+    void registrySetFeatureRegisteredCB(std::function<bool(const FeatureDescription* description)>&& onFeatureRegistered)
+    {
+        registry_->setOnFeatureRegisteredCB(std::move(onFeatureRegistered));
+    }
+
     virtual void uninit() { }
 
     FeatureRegistry* getFeatureRegistry() { return registry_; }
