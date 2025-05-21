@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message MqttMessage {
+  int64 ts = 1;
+  string id = 2;
+  string carId = 3;
+  string packageName = 4;
+  string action = 5;
+  bytes data = 6;
+}
