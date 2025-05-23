@@ -452,12 +452,6 @@ static char getFeatureSignature(FeatureType ftype)
 bool FeatureManagerWamr::registerFeature(const FeatureDescription* description)
 {
     FEATURE_CHECK_NE(description, nullptr);
-    auto name = description->name;
-    /* only several specific features can be registered into wamr*/
-    if (strcmp(name, "ATest") != 0 && strcmp(name, "Simple") != 0 && strcmp(name, "struct_test") != 0 && strcmp(name, "promise_test") != 0 && strcmp(name, "interface_test") != 0 && strcmp(name, "system.messageChannel") != 0) {
-        FEATURE_LOG_WARN("Feature '%s' is not for wamr!", name);
-        return true;
-    }
     /* register interface api */
     if (!description->dynamic && description->member_count > 0) {
         for (int i = 0; i < description->member_count; i++) {
