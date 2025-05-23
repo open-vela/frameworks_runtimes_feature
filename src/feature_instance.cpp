@@ -20,6 +20,8 @@
 #include "feature_manager.h"
 #include "feature_utils.h"
 #include "utils/feature_utils.h"
+
+#include <malloc.h>
 #include <string.h>
 
 #ifndef __NuttX__
