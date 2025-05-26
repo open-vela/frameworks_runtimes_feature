@@ -332,7 +332,6 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_EVENT_TEST),y)
 	CXXSRCS     := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/event_test_impl.cpp
 	JIDL_PATH   := $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/event_test.jidl
 	OUT_PATH 	+= $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
-
 	CXXFLAGS := $(CXXFLAGS) ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/modules
 	CFLAGS := $(CFLAGS) ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/modules
 	FEATURELIST += system_event_test
