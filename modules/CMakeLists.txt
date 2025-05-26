@@ -262,36 +262,39 @@ if(CONFIG_FEATURE_SYSTEM_PROMPT)
         system_prompt)
 endif()
 
-# if(CONFIG_FEATURE_SYSTEM_MESSAGECHANNEL)
-#     nuttx_add_aidl(
-#         TARGET
-#         feature_impls
-#         AIDL_BASE_DIR
-#         ${CMAKE_CURRENT_LIST_DIR}/aidl
-#         AIDL_INCLUDE_DIR
-#         ${CMAKE_CURRENT_LIST_DIR}/aidl
-#         AIDL_HEADER_DIR
-#         ${CMAKE_CURRENT_BINARY_DIR}/aidl
-#         AIDL_OUT_DIR
-#         ${CMAKE_CURRENT_BINARY_DIR}/aidl
-#         AIDL_FLAGS
-#         --lang=cpp
-#         AIDLS
-#         ${AIDL_PATHS})
+if(CONFIG_FEATURE_SYSTEM_MESSAGECHANNEL)
+    set(AIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/aidl/message_transport/IMessageTransport.aidl
+        ${CMAKE_CURRENT_LIST_DIR}/aidl/message_transport/IReply.aidl)
+    nuttx_add_aidl(
+        TARGET
+        feature_impls
+        AIDL_BASE_DIR
+        ${CMAKE_CURRENT_LIST_DIR}/aidl
+        AIDL_INCLUDE_DIR
+        ${CMAKE_CURRENT_LIST_DIR}/aidl
+        AIDL_HEADER_DIR
+        ${CMAKE_CURRENT_BINARY_DIR}/aidl
+        AIDL_OUT_DIR
+        ${CMAKE_CURRENT_BINARY_DIR}/aidl
+        AIDL_FLAGS
+        --lang=cpp
+        AIDLS
+        ${AIDL_PATHS})
 
-#     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/message_channel_impl.cpp)
-#     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/message_channel.jidl)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/message_channel_impl.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/message_transport.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/message_channel.jidl)
 
-#     nuttx_add_quickapp_jidl(
-#         TARGET
-#         feature_impls
-#         FEATURE_SRCS
-#         ${FEATURE_SRCS}
-#         JIDLS
-#         ${JIDL_PATHS}
-#         FEATURE_NAMES
-#         system_messageChannel)
-# endif()
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_messageChannel)
+endif()
 
 if(CONFIG_FEATURE_SYSTEM_EXCHANGE)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/exchange_impl.cpp)
