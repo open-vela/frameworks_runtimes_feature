@@ -263,7 +263,7 @@ static FtAny get_response_data(fetch_t* fetch, uv_response_t* response,
     switch (fetch->response_type) {
     case Fetch::ResponseType::JSON:
         *out = ft_parse_json(fetch->ft_ctx, response->body,
-            strlen(response->body), NULL);
+            response->size, NULL);
         break;
     default:
         if (fetch->type == UV_DOWNLOAD) {
@@ -275,7 +275,19 @@ static FtAny get_response_data(fetch_t* fetch, uv_response_t* response,
             free(response->body);
             response->body = path;
         }
-        *out = ft_from_string(fetch->ft_ctx, response->body);
+
+        if (response->body[response->size - 1] == '\0') {
+            *out = ft_from_string(fetch->ft_ctx, response->body);
+        } else {
+            char* buf = static_cast<char*>(malloc(response->size + 1));
+            if (!buf)
+                break;
+
+            memcpy(buf, response->body, response->size);
+            buf[response->size] = '\0';
+            *out = ft_from_string(fetch->ft_ctx, buf);
+            free(buf);
+        }
         break;
     }
     return out;
@@ -315,6 +327,20 @@ static void fetch_request_cb(int state, uv_response_t* response)
         FETCH_INFO("");
         goto exit;
     }
+
+    if (response->headers) {
+        const char* content_length = strstr(response->headers, "Content-Length: ");
+        if (content_length) {
+            content_length += 16;
+            long len = strtol(content_length, NULL, 10);
+            if (len != LONG_MIN && len != LONG_MAX) {
+                response->size = (size_t)len;
+            }
+        } else {
+            response->size = response->body ? strlen(response->body) : 0;
+        }
+    }
+
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
     if (state == UV_REQUEST_DONE && response->httpcode < HTTP_BAD_REQUES) {
@@ -324,7 +350,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
         ft_value_t ft_header = ft_form_headers(p->ft_ctx, response->headers);
         ft_value_t result = ft_new_object(p->ft_ctx);
         ft_value_t res_code = ft_from_int(p->ft_ctx, (int)response->httpcode);
-        ft_value_t res_data;
+        ft_value_t res_data = ft_undefined(p->ft_ctx);
 
         if (p->response_type == Fetch::ResponseType::NONE) {
             std::map<std::string, std::string> headers;
