@@ -309,6 +309,14 @@ ifneq ($(CONFIG_FEATURE_SYSTEM_BRIGHTNESS), )
 	JIDL_PATH   := $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/brightness.jidl
 	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
 	FEATURELIST += system_brightness
+
+	CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/android/system/core/libutils/include
+
+    # 如果CONFIG_SYSTEM_BRIGHTNESS_SERVICE宏开启,则添加binder相关的头文件路径
+	ifneq ($(CONFIG_SYSTEM_BRIGHTNESS_SERVICE),)
+        CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/services/brightness/include
+        CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/android/frameworks/native/libs/binder/include
+    endif
 endif
 
 ifeq ($(CONFIG_FEATURE_SYSTEM_EVENT),y)
