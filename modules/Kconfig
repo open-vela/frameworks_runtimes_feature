@@ -130,7 +130,7 @@ config FEATURE_SYSTEM_DEVICE
 config FEATURE_SYSTEM_BRIGHTNESS
     bool "system.brightness"
     default y
-    depends on SYSTEM_BRIGHTNESS_SERVICE
+    depends on SYSTEM_BRIGHTNESS_SERVICE || MIWEAR_ALGORITHM
     --help--
         enable system.brightness feature
 

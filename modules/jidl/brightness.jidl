@@ -46,33 +46,21 @@ struct SetValueParam {
 
 void setValue(SetValueParam param)
 ////////////////////////////////////////////////////
-callback getMode_succ_cb(GetValueModeSuccCBParam cb)
-callback getMode_fail_cb(string msg, int code)
-callback getMode_comp_cb()
-
 struct GetModeParam {
-    getMode_succ_cb success
-    getMode_fail_cb fail
-    getMode_comp_cb complete
+    getValue_succ_cb success
+    getValue_fail_cb fail
+    getValue_comp_cb complete
 }
 void getMode(GetModeParam param)
 ////////////////////////////////////////////////////
-callback setMode_succ_cb()
-callback setMode_fail_cb(string msg, int code)
-callback setMode_comp_cb()
-
 struct SetModeParam {
     int mode
-    setMode_succ_cb success
-    setMode_fail_cb fail
-    setMode_comp_cb complete
+    setValue_succ_cb success
+    setValue_fail_cb fail
+    setValue_comp_cb complete
 }
 void setMode(SetModeParam param);
 ////////////////////////////////////////////////////
-callback SetKeepScreenOn_succ_cb()
-callback SetKeepScreenOn_fail_cb(string msg, int code)
-callback SetKeepScreenOn_comp_cb()
-
 struct SetKeepScreenOnParam {
     boolean keepScreenOn
     setValue_succ_cb success
@@ -81,6 +69,7 @@ struct SetKeepScreenOnParam {
 }
 
 void setKeepScreenOn(SetKeepScreenOnParam param);
+////////////////////////////////////////////////////
 
 callback on_data(object data);
 property on_data onbrightnesschanged writeonly;
