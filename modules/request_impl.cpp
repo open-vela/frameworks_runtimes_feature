@@ -20,6 +20,7 @@
 #include "feature_description.h"
 #include "feature_exports.h"
 #include "feature_types.h"
+#include "inspector_host_net.h"
 #include "net_utils.h"
 #include "request.h"
 #include "uv_ext.h"
@@ -256,6 +257,8 @@ static void __request_cb(int state, uv_response_t* response)
                 res->data = body;
                 res->code = UV_REQUEST_DONE;
             }
+            InspectHostNetResponse(info->request, response, InspectHostNetGetCurrentReqId(), response->headers);
+
         } else if (state == UV_REQUEST_ERROR) {
             // body内存的是绝对路径的file位置
             REQUEST_ERROR("request error: %s", response->body);
@@ -470,6 +473,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     }
 
     uv_request_set_userp(info->request, info);
+    InspectHostNetRequest(info->request, "GET", InspectHostNetGetReqId());
     uv_request_commit(th->handle, info->request, __request_cb);
     weakref_list_initialize(&info->node);
     weakref_list_add_tail(&th->linklist, &info->node);
@@ -486,6 +490,7 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     FeatureFreeValue(suc_param);
     return;
 callFail:
+    InspectHostNetLoadingFailed(true);
     REQUEST_ERROR("code = %d, msg = %s", code, msg);
     INVOKE_FAIL_CB(param->fail, msg, code);
     INVOKE_COMPLET_CB(param->complete);

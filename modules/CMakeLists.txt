@@ -22,7 +22,8 @@ target_include_directories(
     feature_impls
     PRIVATE
     ${FEATURE_INCDIR}
-    ${NUTTX_APPS_DIR}/frameworks/runtimes/ash/include)
+    ${NUTTX_APPS_DIR}/frameworks/runtimes/ash/include
+    ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/inspector/include)
 
 # add some common srcs
 target_sources(feature_impls PRIVATE ${CMAKE_CURRENT_LIST_DIR}/app_path.cpp)
