@@ -38,9 +38,11 @@ if(CONFIG_FEATURE_FRAMEWORK)
     include/feature_exports.h
     include/feature_main_exports.h
     include/feature_log.h
+    include/feature_permission.h
     include/ajs_features_init.h
     src/README.md
-    registry/README.md)
+    registry/README.md
+    tools/jidl)
 
   if(CONFIG_FEATURE_LOG_LEVEL)
     list(APPEND FEATURE_DEFS -DFEATURE_LOG_LEVEL=${CONFIG_FEATURE_LOG_LEVEL})
