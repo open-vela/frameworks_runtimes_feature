@@ -108,7 +108,7 @@ void MediaDsc::uninit(void)
     IApplication* app = getApplication();
     if (app) {
         if (media_) {
-            media_->bindDom(nullptr);
+            media_->bindUserData(nullptr);
             media_->destroy(true);
             media_ = nullptr;
             gui_flush(app->widgetContext());
@@ -239,7 +239,7 @@ static void create_media_widget_previewImage(MediaPreviewImageParams* params)
     }
     dsc->media_ = w;
     w->init();
-    w->bindDom((ferry::DomEntity*)dsc, app->page()->uid());
+    w->bindUserData((ferry::DomEntity*)dsc, app->page()->uid());
 
     if (params->current != nullptr) {
         int type = 0;
@@ -353,7 +353,7 @@ static void mediaEventCallback(Widget* w, const ANY* info)
 
     AIOTJS_LOG_DEBUG("Process event callback - %d", info->eventType);
 
-    MediaDsc* dsc = (MediaDsc*)w->getDom();
+    MediaDsc* dsc = (MediaDsc*)w->getUserData();
     if (!dsc) {
         AIOTJS_LOG_INFO("media may destroyed, skip event processing...");
         return;
