@@ -35,6 +35,9 @@ struct Device {
     string deviceType
     string screenShape
     double screenDensity
+    string miProductId
+    string deviceModel
+    string miDeviceAlias
 }
 
 callback getinfo_success_cb(Device device)
