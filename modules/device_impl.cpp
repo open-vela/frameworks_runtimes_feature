@@ -139,6 +139,18 @@ void system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append
     STRCPY(device->deviceType, devinfo.devicetype);
     STRCPY(device->screenShape, devinfo.screenshape);
 
+#ifdef CONFIG_MIWEAR_DEVICE_PID
+    STRCPY(device->miProductId, CONFIG_MIWEAR_DEVICE_PID);
+#endif
+
+#ifdef CONFIG_DEVICE_MODEL
+    STRCPY(device->deviceModel, CONFIG_DEVICE_MODEL);
+#endif
+
+#ifdef CONFIG_MIWEAR_DEVICE_ALIAS
+    STRCPY(device->miDeviceAlias, CONFIG_MIWEAR_DEVICE_ALIAS);
+#endif
+
     device->osVersionCode = devinfo.osversioncode;
     device->screenWidth = devinfo.screenwidth;
     device->screenHeight = devinfo.screenheight;
