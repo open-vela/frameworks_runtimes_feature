@@ -440,14 +440,14 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     Fetch::MethodType method,
     std::map<std::string, std::string>& headers)
 {
-    FEATURE_NOTE_BEGIN_STR("request_create");
+    FEATURE_NOTE_BEGIN_STR("fetch_request_create");
     request_context_t* p = get_request_context(fetch->feature);
     // create reques
     ASSERT_RET_NULL(0 == uv_request_create(&fetch->request));
     FETCH_DEBUG("request:%p", fetch->request);
 
     // encode url
-    FEATURE_NOTE_BEGIN_STR("request_decode");
+    FEATURE_NOTE_BEGIN_STR("fetch_request_decode");
     const char* decode = url_decode(obj->url);
     if (strcmp(decode, obj->url) == 0) {
         fetch->url = url_encode(decode);
@@ -456,7 +456,7 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     }
 
     free((void*)decode);
-    FEATURE_NOTE_END_STR("request_decode");
+    FEATURE_NOTE_END_STR("fetch_request_decode");
 
     // set url
     uv_request_set_url(fetch->request, fetch->url);
@@ -510,7 +510,7 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
     // start upload
     uv_request_commit(p->handle, fetch->request, fetch_request_cb);
 
-    FEATURE_NOTE_END_STR("request_create");
+    FEATURE_NOTE_END_STR("fetch_request_create");
     return true;
 }
 
@@ -658,7 +658,7 @@ Fetch::ContentType get_cy_from_header(
 
 void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, system_fetch_FetchPara* obj)
 {
-    FEATURE_NOTE_BEGIN_STR("WrapFetch");
+    FEATURE_NOTE_BEGIN_STR("wrap_fetch");
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     assert(ft_ctx);
     const char* msg = "";
@@ -705,10 +705,10 @@ void system_fetch_wrap_fetch(FeatureInstanceHandle feature, AppendData append_da
     weakref_list_initialize(&fetch->node);
     weakref_list_add_tail(&p->linklist, &fetch->node);
 
-    FEATURE_NOTE_END_STR("WrapFetch");
+    FEATURE_NOTE_END_STR("wrap_fetch");
     return;
 err:
     FETCH_DEBUG("msg:%s,code:%d", msg, code);
     FeaturePromiseReject(feature, pid, code, msg);
-    FEATURE_NOTE_END_STR("WrapFetch");
+    FEATURE_NOTE_END_STR("wrap_fetch");
 }
