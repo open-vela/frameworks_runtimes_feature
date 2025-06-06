@@ -1,19 +1,18 @@
 module promise_callback@1.0
 
-promise<int> foo_cb(int a, string b)
-promise<string> bar_cb(int a)
-promise<void> void_cb()
-promise<int[]> goo_cb()
-promise<string[]> moo_cb()
+promise<int> foo_cb(boolean a)
+promise<string> bar_cb(boolean a)
+promise<void> void_cb(boolean a)
+promise<int[]> goo_cb(boolean a)
+promise<string[]> moo_cb(boolean a)
 
 struct Chapter {
   int page_count = 10
   string title = "hello world"
   boolean is_end = false
 }
-promise<object> obj_cb(Chapter chap)
+promise<object> obj_cb(boolean a, Chapter chap)
 
-promise<Chapter> struct_cb()
-promise<Chapter[]> struct_array_cb()
+promise<Chapter> struct_cb(boolean a)
+promise<Chapter[]> struct_array_cb(boolean a)
 
-object loadLibrary(string name)

@@ -60,10 +60,10 @@ void promise_callback_onUnregister(const char* feature_name)
 }
 
 // Function wrappers to be implemented
-void promise_callback_wrap_foo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtInt a, FtString b)
+void promise_callback_wrap_foo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    bool resolve = a > 0;
-    printf("%s::%s(), a: %d, b: %s, resolve: %d\n", file_tag, __FUNCTION__, a, b, resolve);
+    bool resolve = a;
+    printf("%s::%s(), a: %d, resolve: %d\n", file_tag, __FUNCTION__, a, resolve);
     if (resolve) {
         FeaturePromiseResolve(feature, pid, a);
     } else {
@@ -71,9 +71,9 @@ void promise_callback_wrap_foo_cb(FeatureInstanceHandle feature, AppendData appe
     }
 }
 
-void promise_callback_wrap_bar_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtInt a)
+void promise_callback_wrap_bar_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    bool resolve = a > 0;
+    bool resolve = a;
     printf("%s::%s(), a: %d, resolve: %d\n", file_tag, __FUNCTION__, a, resolve);
     if (resolve) {
         FeaturePromiseResolve(feature, pid, "bar resolved");
@@ -82,9 +82,9 @@ void promise_callback_wrap_bar_cb(FeatureInstanceHandle feature, AppendData appe
     }
 }
 
-void promise_callback_wrap_void_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+void promise_callback_wrap_void_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    int resolve = pid % 2;
+    bool resolve = a;
     printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
     if (resolve) {
         FeaturePromiseResolve(feature, pid);
@@ -93,10 +93,9 @@ void promise_callback_wrap_void_cb(FeatureInstanceHandle feature, AppendData app
     }
 }
 
-void promise_callback_wrap_goo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+void promise_callback_wrap_goo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    printf("%s::%s()\n", file_tag, __FUNCTION__);
-    int resolve = pid % 2;
+    bool resolve = a;
     printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
     if (resolve) {
         FtArray* array = promise_callback_malloc_int_array();
@@ -113,10 +112,9 @@ void promise_callback_wrap_goo_cb(FeatureInstanceHandle feature, AppendData appe
     }
 }
 
-void promise_callback_wrap_moo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+void promise_callback_wrap_moo_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    printf("%s::%s()\n", file_tag, __FUNCTION__);
-    int resolve = pid % 2;
+    bool resolve = a;
     printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
     if (resolve) {
         FtArray* array = promise_callback_malloc_string_array();
@@ -135,13 +133,15 @@ void promise_callback_wrap_moo_cb(FeatureInstanceHandle feature, AppendData appe
     }
 }
 
-void promise_callback_wrap_obj_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, promise_callback_Chapter* chap)
+void promise_callback_wrap_obj_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a, promise_callback_Chapter* chap)
 {
-    int resolve = pid % 2;
-    printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
-    if (chap) {
-        printf("%s::%s(), page_count: %d, title: %s, is_end: %d\n", file_tag, __FUNCTION__, chap->page_count, chap->title, chap->is_end);
+    bool resolve = a;
+    printf("%s::%s(), chap: %p, resolve: %d\n", file_tag, __FUNCTION__, chap, resolve);
+    if (!chap) {
+        FeaturePromiseReject(feature, pid, 202, "obj_cb rejected");
+        return;
     }
+    printf("%s::%s(), page_count: %d, title: %s, is_end: %d\n", file_tag, __FUNCTION__, chap->page_count, chap->title, chap->is_end);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     if (resolve) {
         ft_value_t page_count = ft_from_int(ft_ctx, 50);
@@ -158,9 +158,9 @@ void promise_callback_wrap_obj_cb(FeatureInstanceHandle feature, AppendData appe
     }
 }
 
-void promise_callback_wrap_struct_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+void promise_callback_wrap_struct_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    int resolve = pid % 2;
+    bool resolve = a;
     printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
     if (resolve) {
         promise_callback_Chapter* chap = promise_callbackMallocChapter();
@@ -187,9 +187,9 @@ static promise_callback_Chapter* make_chapter(int idx)
     return chap;
 }
 
-void promise_callback_wrap_struct_array_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid)
+void promise_callback_wrap_struct_array_cb(FeatureInstanceHandle feature, AppendData append_data, FtPromiseId pid, FtBool a)
 {
-    int resolve = pid % 2;
+    bool resolve = a;
     printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
     if (resolve) {
         FtArray* array = promise_callback_malloc_Chapter_struct_type_array();
@@ -204,19 +204,4 @@ void promise_callback_wrap_struct_array_cb(FeatureInstanceHandle feature, Append
     } else {
         FeaturePromiseReject(feature, pid, 202, "struct_array_cb rejected");
     }
-}
-
-FtAny promise_callback_wrap_loadLibrary(FeatureInstanceHandle feature, AppendData append_data, FtString name)
-{
-    printf("%s::%s(), name: %s\n", file_tag, __FUNCTION__, name);
-    ft_context_ref ft_ctx = FeatureGetContext(feature);
-    ft_value_t ft_undef = ft_undefined(ft_ctx);
-    FtAny ft_lib = (FtAny)FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF);
-    *ft_lib = ft_undef;
-    FeatureManagerHandle hmanager = FeatureGetManagerHandleFromInstance(feature);
-    if (!hmanager) {
-        return ft_lib;
-    }
-    *ft_lib = FeatureRequire(hmanager, ft_undef, name);
-    return ft_lib;
 }
