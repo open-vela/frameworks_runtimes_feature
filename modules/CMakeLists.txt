@@ -415,6 +415,30 @@ if (CONFIG_FEATURE_SYSTEM_INTERCONNECT)
         system_interconnect)
 endif()
 
+if ((CONFIG_APP_CAR_CONTROL AND CONFIG_CAR_APP_SETTINGS) OR CONFIG_APP_CAR_SETTINGS_MOCK)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/system_settings_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/system_settings.jidl)
+    if (CONFIG_APP_CAR_CONTROL AND CONFIG_CAR_APP_SETTINGS)
+        target_include_directories(
+            feature_impls
+            PRIVATE
+            ${NUTTX_APPS_DIR}/vendor/xiaomi/miwear/apps/applications/car_control/car_app_settings/
+        )
+    else() # CONFIG_APP_CAR_SETTINGS_MOCK
+        list(APPEND FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/miwear_settings_mock.cpp)
+    endif()
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_settings
+    )
+endif()
+
 if(CONFIG_FEATURE_SYSTEM_BRIGHTNESS)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/brightness_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/brightness.jidl)
