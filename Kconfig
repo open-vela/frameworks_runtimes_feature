@@ -57,6 +57,10 @@ config FEATURE_ENABLE_THREAD_CHECKER
 	bool "Enable thread checker"
 	default n
 
+config APP_CAR_SETTINGS_MOCK
+	bool "Enable system.settings mock"
+	default n
+
 config FEATURE_UNIT_TEST
 	depends on LIB_GOOGLETEST
 	bool "Enable feature unit test"
