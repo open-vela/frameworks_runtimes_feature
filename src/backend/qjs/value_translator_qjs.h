@@ -244,7 +244,7 @@ JSValue parseJson(JSContext* ctx, const char* buf, size_t buf_len, const char* f
 
 static inline ft_value_t targetToFtVal(JSValue& target)
 {
-    ft_value_t ft_val;
+    ft_value_t ft_val {};
     qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
     qjs_val->js_val = target;
     return ft_val;
@@ -257,7 +257,7 @@ static inline JSValue ftValToTarget(ft_value_t& ft_val)
 
 static inline ft_value_t nullFtVal()
 {
-    ft_value_t ft_val;
+    ft_value_t ft_val {};
     qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
     qjs_val->js_val = JS_NULL;
     return ft_val;
@@ -265,7 +265,7 @@ static inline ft_value_t nullFtVal()
 
 static inline ft_value_t undefinedFtVal()
 {
-    ft_value_t ft_val;
+    ft_value_t ft_val {};
     qjs_val_t* qjs_val = FT_VAL_TO_QJS_PTR(ft_val);
     qjs_val->js_val = JS_UNDEFINED;
     return ft_val;
