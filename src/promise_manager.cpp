@@ -33,7 +33,9 @@ static int invoke_js_Callback(JSContext* ctx, feature_value_t cb, int argc, feat
     }
 
     // create argv list and initialize to undefined
+    feature_dup_value(ctx, cb);
     feature_value_t ret = feature_call(ctx, cb, FEATURE_VALUE_UNDEFINED, argc, argv);
+    feature_free_value(ctx, cb);
     feature_free_value(ctx, ret);
     return 0;
 }
