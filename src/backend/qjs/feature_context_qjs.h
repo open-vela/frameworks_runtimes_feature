@@ -16,22 +16,38 @@
 #ifndef __FEATURE_CONTEXT_QJS_H__
 #define __FEATURE_CONTEXT_QJS_H__
 
+#include "feature_context.h"
 #include "feature_context_private.h"
 #include "quickjs/quickjs.h"
 
 #define GET_QJS_CTX(ft_ctx) static_cast<JSContext*>(ft_ctx->data)
 
-#define FT_VAL_TO_QJS(ft_val) (*((qjs_val_t*)(&(ft_val))))
-#define FT_VAL_TO_QJS_PTR(ft_val) ((qjs_val_t*)(&(ft_val)))
-#define FT_VAL_GET_JS_VAL(ft_val) (((qjs_val_t*)(&(ft_val)))->js_val)
-#define FT_VAL_GET_JS_VAL_PTR(ft_val) (&(((qjs_val_t*)(&(ft_val)))->js_val))
-
-#define QJS_VAL_TO_FT(qjs_val) (*((ft_value_t*)(&(qjs_val))))
-#define QJS_VAL_TO_FT_PTR(qjs_val) ((ft_value_t*)(&(qjs_val)))
-
 typedef struct qjs_val_t {
     JSValue js_val;
 } qjs_val_t;
+
+typedef union {
+    ft_value_t ft_val;
+    qjs_val_t qjs_val;
+} ft_qjs_union_t;
+
+#define FT_VAL_TO_QJS(ft_val) \
+    (((ft_qjs_union_t*)(void*)&(ft_val))->qjs_val)
+
+#define FT_VAL_TO_QJS_PTR(ft_val) \
+    ((qjs_val_t*)(void*)&(ft_val))
+
+#define FT_VAL_GET_JS_VAL(ft_val) \
+    (((ft_qjs_union_t*)(void*)&(ft_val))->qjs_val.js_val)
+
+#define FT_VAL_GET_JS_VAL_PTR(ft_val) \
+    (&(((ft_qjs_union_t*)(void*)&(ft_val))->qjs_val.js_val))
+
+#define QJS_VAL_TO_FT(qjs_val) \
+    (((ft_qjs_union_t*)(void*)&(qjs_val))->ft_val)
+
+#define QJS_VAL_TO_FT_PTR(qjs_val) \
+    ((ft_value_t*)(void*)&(qjs_val))
 
 bool InitFeatureContextQjs(ft_context_ref ft_ctx, void* data);
 
