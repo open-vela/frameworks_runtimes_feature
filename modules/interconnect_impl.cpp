@@ -28,9 +28,8 @@
 #define TAG "[interconnect_impl]"
 
 #define INTERCONNECT_DEBUG(fmt, ...) FEATURE_LOG_DEBUG(TAG fmt, ##__VA_ARGS__)
-
 #define INTERCONNECT_INFO(fmt, ...) FEATURE_LOG_INFO(TAG fmt, ##__VA_ARGS__)
-
+#define INTERCONNECT_WARN(fmt, ...) FEATURE_LOG_WARN(TAG fmt, ##__VA_ARGS__)
 #define INTERCONNECT_ERROR(fmt, ...) FEATURE_LOG_ERROR(TAG fmt, ##__VA_ARGS__)
 
 #define CHECK_LOG_RETURN(ptr, info)   \
@@ -271,9 +270,7 @@ public:
             uv_close(reinterpret_cast<uv_handle_t*>(diagnosis_timer_),
                 __mm_free_handle);
             if (diagnosis_promise_id_ != kInvalidPromiseId) {
-                FeaturePromiseReject(handle_, diagnosis_promise_id_,
-                    static_cast<int>(StatusCode::kUnknown),
-                    "app stop");
+                INTERCONNECT_WARN("unrejected diagnosis call");
                 diagnosis_promise_id_ = kInvalidPromiseId;
             }
         }
@@ -282,8 +279,7 @@ public:
         for (const auto& [_, task] : send_tasks_) {
             task->timer->data = nullptr; // remove ref to task
             uv_close(reinterpret_cast<uv_handle_t*>(task->timer), __mm_free_handle);
-            FeaturePromiseReject(task->conn->handle_, task->pid,
-                static_cast<int>(StatusCode::kUnknown), "app stop");
+            INTERCONNECT_WARN("unrejected send task");
             delete task;
         }
 
@@ -580,6 +576,7 @@ public:
             return StatusCode::kInvalidArgs;
         }
         *value = std::string(buffer);
+        ft_free_string(ctx, buffer);
         if (value->length() == 0) {
             return StatusCode::kInvalidArgs;
         }
