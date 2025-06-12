@@ -28,6 +28,16 @@
 #include <cstdarg>
 #include <stdalign.h>
 
+#define HANDLE_ERROR_AND_RETURN(ret_code)                              \
+    {                                                                  \
+        if (use_promise) {                                             \
+            auto err_msg = get_error_msg(ret_code, mthd_msg);          \
+            instance->rejectPromise(pid, FT_ERR_ARGS, err_msg.data()); \
+            return RET_OK;                                             \
+        }                                                              \
+        return ret_code;                                               \
+    }
+
 namespace feature_framework {
 
 typedef enum RetCode {
@@ -46,6 +56,23 @@ static inline void free_method_args(int fixed_argc, int extra_argc,
             FeatureFreeValue(*arg);
         }
     }
+}
+
+static std::string get_error_msg(RetCode ret_code, std::string& mthd_msg)
+{
+    std::string err_msg;
+    if (ret_code == RET_OK) {
+        err_msg = "no error";
+    } else if (ret_code == RET_ARGS_COUNT_ERR) {
+        err_msg = "args count error";
+    } else if (ret_code == RET_ARGS_TYPE_ERR) {
+        err_msg = "args type error";
+    } else {
+        err_msg = "internal error";
+    }
+    err_msg += ", ";
+    err_msg += mthd_msg;
+    return err_msg;
 }
 
 template <typename TInstance, typename TCtx, typename TTarget>
@@ -68,38 +95,60 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     // optional and rest parameters must not set together.
     FEATURE_CHECK_NE(has_rest_params && opt_argc, true);
 
+    // special handle for promise
     bool is_promise = FT_IS_PROMISE(ret_type);
-    bool has_async_cbs = false;
-    if (is_promise && argc > 0) {
-        has_async_cbs = value_translator::hasAsyncCallbacks(ctx, argv[argc - 1]);
+    bool use_promise = is_promise;
+    if (is_promise) {
+        PromiseType* promise_type = (PromiseType*)FT_GET_COMPLEX(ret_type);
+        if (argc > 0) {
+            use_promise = !value_translator::hasAsyncCallbacks(ctx, argv[argc - 1]);
+        }
+        // create promise
+        if (!use_promise) {
+            pid = value_translator::addAsyncCallbacks(ctx, instance, promise_type->resolveType, argv[argc - 1]);
+        } else {
+            // create promise and add to instance
+            pid = instance->addPromise(promise_type->resolveType);
+            feature_value_t promise = feature_dup_value(js_ctx, instance->getPromise(pid));
+            ret_val = value_translator::toTargetPromise(ctx, js_ctx, promise);
+        }
+        size_t pcount = instance->promiseCount();
+        if (pcount >= CONFIG_FEATURE_MAX_PROMISE_COUNT) {
+            FEATURE_LOG_WARN("promise count of instance[%p]: %d, which is larger than %d, feature: %s, method: %s",
+                instance, pcount, CONFIG_FEATURE_MAX_PROMISE_COUNT, description->name, member->name);
+        }
     }
 
+    std::string mthd_msg("feature:");
+    mthd_msg += description->name;
+    mthd_msg += ", method:";
+    mthd_msg += member->name;
     // variadic parameters
     FtVariParams vari_params;
     memset(&vari_params, 0, sizeof(vari_params));
-    FEATURE_LOG_DEBUG("feature: %s, method: %s, has_rest_params: %d, argc: %d, fixed_argc: %d, opt_argc: %d",
-        description->name, member->name, has_rest_params, argc, fixed_argc, opt_argc);
+    FEATURE_LOG_DEBUG("%s, has_rest_params: %d, argc: %d, fixed_argc: %d, opt_argc: %d",
+        mthd_msg.data(), has_rest_params, argc, fixed_argc, opt_argc);
     // beacuse we support rest parameters, so argc is greater or equal to fixed_argc.
     if (has_rest_params) {
         if (argc < fixed_argc) {
-            FEATURE_LOG_ERROR("feature:%s method:%s, rest args error, fixed: %d, total: %d!",
-                description->name, member->name, fixed_argc, argc);
-            return RET_ARGS_COUNT_ERR;
+            FEATURE_LOG_ERROR("%s, rest args error, fixed: %d, total: %d!",
+                mthd_msg.data(), fixed_argc, argc);
+            HANDLE_ERROR_AND_RETURN(RET_ARGS_COUNT_ERR)
         }
         vari_params.vari_count = argc - fixed_argc;
     } else if (opt_argc > 0) {
         // for optional parameters, argc + optional must grater or equal to fixed_argc
         if (argc + opt_argc < fixed_argc) {
-            FEATURE_LOG_ERROR("feature:%s method:%s, optional args error, optional: %d, fixed: %d, total: %d!",
-                description->name, member->name, opt_argc, fixed_argc, argc);
-            return RET_ARGS_COUNT_ERR;
+            FEATURE_LOG_ERROR("%s, optional args error, optional: %d, fixed: %d, total: %d!",
+                mthd_msg.data(), opt_argc, fixed_argc, argc);
+            HANDLE_ERROR_AND_RETURN(RET_ARGS_COUNT_ERR)
         }
     } else {
         // for method which do not have rest or optional parameters, argc equals to fixed_argc.
-        if (argc != fixed_argc && !has_async_cbs) {
-            FEATURE_LOG_ERROR("feature:%s method:%s, fixed args error, fixed: %d, total: %d!",
-                description->name, member->name, fixed_argc, argc);
-            return RET_ARGS_COUNT_ERR;
+        if (argc != fixed_argc && (!is_promise || use_promise)) {
+            FEATURE_LOG_ERROR("%s, fixed args error, fixed: %d, total: %d!",
+                mthd_msg.data(), fixed_argc, argc);
+            HANDLE_ERROR_AND_RETURN(RET_ARGS_COUNT_ERR)
         }
     }
 
@@ -112,6 +161,9 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     if (total_argc > 0) {
         ffi_arg_buf = (void**)alloca(sizeof(void*) * total_argc);
         memset(ffi_arg_buf, 0, sizeof(void*) * total_argc);
+        if (is_promise) {
+            ffi_arg_buf[0] = &pid;
+        }
     }
     // malloc ffi arg values, only contains packed param, optional args use &
     int ffi_arg_values_len = sizeof(uintptr_t) * int32_count;
@@ -128,12 +180,12 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         if (FT_IS_PROMISE(param_type)) {
             FEATURE_LOG_ERROR("do not support promise as input param!");
             free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
-            return RET_ARGS_TYPE_ERR;
+            HANDLE_ERROR_AND_RETURN(RET_ARGS_TYPE_ERR)
         }
         if (!convertValueToNative(instance, param_type, ctx, curr_arg, ffi_arg_buf[extra_argc + i])) {
             FEATURE_LOG_ERROR("convert argument %d failed!", i);
             free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
-            return RET_ARGS_TYPE_ERR;
+            HANDLE_ERROR_AND_RETURN(RET_ARGS_TYPE_ERR)
         }
     }
 
@@ -156,7 +208,7 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
             ffi_arg_buf[extra_argc + i] = ffi_arg_values;
             if (!convertOptional(opt_type, ffi_arg_buf[extra_argc + i])) {
                 free_method_args(fixed_argc, extra_argc, param_types, ffi_arg_buf);
-                return RET_ARGS_TYPE_ERR;
+                HANDLE_ERROR_AND_RETURN(RET_ARGS_TYPE_ERR)
             }
             ffi_arg_values += getAlignedCount(param_type);
         }
@@ -165,27 +217,6 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     // create return value pointer inneed.
     if (!is_promise && ret_type != FT_VOID) {
         ALLOCA_PARAM_PTR(ret_type, ffi_ret_value);
-    }
-
-    // special handle for promise
-    feature_value_t promise = FEATURE_VALUE_UNDEFINED;
-    if (is_promise) {
-        PromiseType* promise_type = (PromiseType*)FT_GET_COMPLEX(ret_type);
-        // create promise
-        if (has_async_cbs) {
-            pid = value_translator::addAsyncCallbacks(ctx, instance, promise_type->resolveType, argv[argc - 1]);
-        } else {
-            // create promise and add to instance
-            pid = instance->addPromise(promise_type->resolveType);
-            promise = feature_dup_value(js_ctx, instance->getPromise(pid));
-        }
-        size_t pcount = instance->promiseCount();
-        if (pcount >= CONFIG_FEATURE_MAX_PROMISE_COUNT) {
-            FEATURE_LOG_WARN("promise count of instance[%p]: %d, which is larger than %d, feature: %s, method: %s",
-                instance, pcount, CONFIG_FEATURE_MAX_PROMISE_COUNT, description->name, member->name);
-        }
-        // pass pid to native function
-        ffi_arg_buf[0] = &pid;
     }
 
     // invoke method
@@ -204,11 +235,8 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
                 FeatureFreeValue(*(void**)ffi_ret_value);
             }
             return RET_INTERNAL_ERR;
-        }
-        freeFtValue(ft_ctx, ret_type, ffi_ret_value);
-    } else if (is_promise) {
-        if (!has_async_cbs) {
-            ret_val = value_translator::toTargetPromise(ctx, js_ctx, promise);
+        } else if (FT_IS_PRIMITIVE(ret_type) && ret_type == FT_ANY_REF) {
+            value_translator::freeValue(ctx, ret_val);
         }
     }
 
