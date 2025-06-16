@@ -50,6 +50,8 @@ public:
     };
     ~TestApplication() {};
     bool init(AIOTJS::CLIParsedArgument* args, uv_loop_t* loop) { return true; }
+    void initOnUI(lv_obj_t* root_widget, uv_loop_t* main_loop) { }
+    void destroyOnUI() { }
     void thread_memory_status() { }
     void run() { }
     void stop() { }
