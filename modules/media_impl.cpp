@@ -16,8 +16,8 @@
  */
 
 #include "media_impl.h"
+#include "ash/device_info/device_info.h"
 #include "framework/application.h"
-#include "framework/base/device_info.h"
 #include "framework/utils.h"
 #include "gui/gui_wrapper.h"
 #include "gui/lvgl/string_to_kid.h"
@@ -148,7 +148,7 @@ void system_media_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
     IApplication* app = static_cast<IApplication*>(FeatureGetManagerUserData(manager_handler, "app"));
     AIOTJS_CHECK_NE(app, nullptr);
 
-    MediaDsc* dsc = new MediaDsc(app, (char*)DeviceInfo::screenShape().c_str());
+    MediaDsc* dsc = new MediaDsc(app, (char*)ash::DeviceInfo::screenShape().c_str());
     FeatureSetProtoData(handle, dsc);
 }
 
