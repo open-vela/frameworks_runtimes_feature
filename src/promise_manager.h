@@ -43,6 +43,8 @@ public:
 
     void markPromises(feature_runtime_ref rt, feature_mark_func mark_func);
 
+    size_t promiseCount() { return promises_.size(); }
+
 protected:
     int doResolvePromise(FtPromiseId pid, va_list& ap);
 
