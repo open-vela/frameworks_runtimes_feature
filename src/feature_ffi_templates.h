@@ -177,6 +177,11 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         } else {
             // create promise and add to instance
             pid = instance->addPromise(promise_type->resolveType);
+            size_t pcount = instance->promiseCount();
+            if (pcount >= 30) {
+                FEATURE_LOG_WARN("promise count of instance[%p]: %d, which is larger than 30, feature: %s, method: %s",
+                    instance, pcount, description->name, member->name);
+            }
             promise = feature_dup_value(js_ctx, instance->getPromise(pid));
         }
         // pass pid to native function
