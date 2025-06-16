@@ -90,7 +90,7 @@ struct FtValTranslator {
 
     static ft_value_t objectGetProperty(ft_context_ref ctx_ref, ft_value_t ft_val, const char* name)
     {
-        TTarget target;
+        TTarget target = value_translator::undefined((TCtx)(ctx_ref->data));
         value_translator::getObjectField((TCtx)(ctx_ref->data), value_translator::ftValToTarget(ft_val), name, &target);
         return value_translator::targetToFtVal(target);
     }

@@ -231,7 +231,12 @@ JSValue arrayGet(JSContext* ctx, const JSValue& array, uint32_t idx)
     if (!JS_IsArray(ctx, array))
         return ret;
 
-    return JS_GetPropertyUint32(ctx, array, idx);
+    ret = JS_GetPropertyUint32(ctx, array, idx);
+    if (JS_IsException(ret)) {
+        JS_FreeValue(ctx, ret);
+        return JS_UNDEFINED;
+    }
+    return ret;
 }
 
 bool arraySet(JSContext* ctx, const JSValue& array, int32_t idx, JSValue val)
