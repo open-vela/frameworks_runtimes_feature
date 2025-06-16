@@ -171,7 +171,8 @@ if(CONFIG_FEATURE_FRAMEWORK)
          ${QUICKAPP_DIR}/src/jse/modules/system
          ${CMAKE_BINARY_DIR}
          ${NUTTX_APPS_DIR}/external/protobuf-c/protobuf-c/
-         ${NUTTX_APPS_DIR}/external/rapidjson/rapidjson/include/)
+         ${NUTTX_APPS_DIR}/external/rapidjson/rapidjson/include/
+         ${NUTTX_APPS_DIR}/frameworks/runtimes/ash/include)
 
     nuttx_add_application(
       NAME

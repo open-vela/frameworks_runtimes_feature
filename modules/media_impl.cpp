@@ -73,7 +73,7 @@ public:
 };
 class MediaDsc {
 public:
-    MediaDsc(IApplication* app, char* shape);
+    MediaDsc(Application* app, char* shape);
     virtual ~MediaDsc();
 
     void setEventCallbackId(uint64_t type, int32_t cb);
@@ -81,7 +81,7 @@ public:
     void uninit(void);
     IApplication* getApplication();
 
-    IApplication* app_;
+    Application* app_;
     Widget* media_;
     std::string screenShape_;
     std::map<uint64_t, int32_t> event_;
@@ -89,7 +89,7 @@ public:
     mediaFinishCallback finishCallback_;
 };
 
-MediaDsc::MediaDsc(IApplication* app, char* shape)
+MediaDsc::MediaDsc(Application* app, char* shape)
     : app_(app)
     , media_(nullptr)
     , screenShape_(shape)
@@ -145,7 +145,7 @@ void system_media_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     FeatureManagerHandle manager_handler = FeatureGetManagerHandleFromProto(handle);
-    IApplication* app = static_cast<IApplication*>(FeatureGetManagerUserData(manager_handler, "app"));
+    Application* app = static_cast<Application*>(FeatureGetManagerUserData(manager_handler, "app"));
     AIOTJS_CHECK_NE(app, nullptr);
 
     MediaDsc* dsc = new MediaDsc(app, (char*)ash::DeviceInfo::screenShape().c_str());
@@ -219,50 +219,43 @@ static void create_media_widget_previewImage(MediaPreviewImageParams* params)
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     MediaDsc* dsc = (MediaDsc*)FeatureGetProtoData(FeatureGetProtoHandle(params->handle));
 
-    IApplication* app = dsc->app_;
-    AIOTJS_CHECK_NE(app, nullptr);
-    if (((Application*)app)->stopped()) {
-        AIOTJS_LOG_WARN("app state is not running, can't previewImage");
-        return;
-    }
-    if (!app->page()) {
-        AIOTJS_LOG_WARN("app->page() is nullptr !");
-        return;
-    }
+    Application* app = dsc->app_;
 
-    Widget* w = gui_create_widget(app->widgetContext(), "media");
-    if (!w) {
-        return;
-    }
-    if (dsc->media_ != nullptr) {
-        dsc->uninit();
-    }
-    dsc->media_ = w;
-    w->init();
-    w->bindUserData((ferry::DomEntity*)dsc, app->page()->uid());
+    app->runOnUIThread([=]() -> GUI_STATUS {
+        Widget* w = gui_create_widget(app->widgetContext(), "media");
+        if (!w) {
+            return GUI_STATUS_ERR_NOTEXIST;
+        }
+        if (dsc->media_ != nullptr) {
+            dsc->uninit();
+        }
+        dsc->media_ = w;
+        w->init();
+        w->bindUserData((ferry::DomEntity*)dsc, app->page()->uid());
 
-    if (params->current != nullptr) {
-        int type = 0;
-        char* path = ferry::transformUrlPathHelper(app->packageName(), app->packagePath(), static_cast<const char*>(params->current), &type);
-        w->setAttr(ATTR_MEDIA_PREVIEW_CURRENT, path);
-        free(path);
-    }
+        if (params->current != nullptr) {
+            int type = 0;
+            char* path = ferry::transformUrlPathHelper(app->packageName(), app->packagePath(), static_cast<const char*>(params->current), &type);
+            w->setAttr(ATTR_MEDIA_PREVIEW_CURRENT, path);
+            free(path);
+        }
 
-    std::string shape = dsc->screenShape_;
-    w->setAttr(ATTR_MEDIA_PREVIEW_SCREENSHAPE, shape.c_str());
+        std::string shape = dsc->screenShape_;
+        w->setAttr(ATTR_MEDIA_PREVIEW_SCREENSHAPE, shape.c_str());
 
-    w->setEvent(ferry::EVENT_BIT_MEDIA_SUCCESS, mediaEventCallback);
-    dsc->setEventCallbackId(ferry::EVENT_BIT_MEDIA_SUCCESS, params->success);
-    w->setEvent(ferry::EVENT_BIT_MEDIA_FAIL, mediaEventCallback);
-    dsc->setEventCallbackId(ferry::EVENT_BIT_MEDIA_FAIL, params->fail);
-    w->setEvent(ferry::EVENT_BIT_MEDIA_COMPLETE, mediaEventCallback);
-    dsc->handle_ = params->handle;
-    dsc->finishCallback_ = params->finish_callback;
+        w->setEvent(ferry::EVENT_BIT_MEDIA_SUCCESS, mediaEventCallback);
+        dsc->setEventCallbackId(ferry::EVENT_BIT_MEDIA_SUCCESS, params->success);
+        w->setEvent(ferry::EVENT_BIT_MEDIA_FAIL, mediaEventCallback);
+        dsc->setEventCallbackId(ferry::EVENT_BIT_MEDIA_FAIL, params->fail);
+        w->setEvent(ferry::EVENT_BIT_MEDIA_COMPLETE, mediaEventCallback);
+        dsc->handle_ = params->handle;
+        dsc->finishCallback_ = params->finish_callback;
 
-    w->execFunc("show");
-    gui_flush(app->widgetContext());
-    dsc->finishCallback_(dsc->handle_, -1, -1, params->complete, "PreviewImage complete", 1);
-    media_previewImage_free(params);
+        w->execFunc("show");
+        dsc->finishCallback_(dsc->handle_, -1, -1, params->complete, "PreviewImage complete", 1);
+        media_previewImage_free(params);
+        return GUI_STATUS_OK;
+    });
 }
 
 void system_media_wrap_previewImage(FeatureInstanceHandle feature, AppendData append_data, system_media_PreviewImageInfo* info)
@@ -365,16 +358,18 @@ static void mediaEventCallback(Widget* w, const ANY* info)
 
     uint64_t event_type = info->eventType;
     int32_t cb = dsc->getEventCallbackId(event_type);
-    if (event_type == ferry::EVENT_BIT_MEDIA_SUCCESS) {
-        dsc->finishCallback_(dsc->handle_, cb, -1, -1, "PreviewImage succcess", 1);
-    } else if (event_type == ferry::EVENT_BIT_MEDIA_FAIL) {
-        dsc->finishCallback_(dsc->handle_, -1, cb, -1, "PreviewImage failed", 202);
-    }
-
-    // quit
-    if (event_type == EVENT_BIT_MEDIA_COMPLETE) {
-        if (dsc->media_ != nullptr) {
-            dsc->uninit();
+    app->postTask([dsc, event_type, cb]() {
+        if (event_type == ferry::EVENT_BIT_MEDIA_SUCCESS) {
+            dsc->finishCallback_(dsc->handle_, cb, -1, -1, "PreviewImage succcess", 1);
+        } else if (event_type == ferry::EVENT_BIT_MEDIA_FAIL) {
+            dsc->finishCallback_(dsc->handle_, -1, cb, -1, "PreviewImage failed", 202);
         }
-    }
+
+        // quit
+        if (event_type == EVENT_BIT_MEDIA_COMPLETE) {
+            if (dsc->media_ != nullptr) {
+                dsc->uninit();
+            }
+        }
+    });
 }
