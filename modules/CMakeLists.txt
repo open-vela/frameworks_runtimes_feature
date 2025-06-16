@@ -18,7 +18,11 @@
 nuttx_add_library(feature_impls STATIC)
 set(FEATURE_TOP ${NUTTX_APPS_DIR}/frameworks/runtimes/feature)
 list(APPEND FEATURE_INCDIR ${FEATURE_TOP}/src ${FEATURE_TOP}/src/backend/qjs)
-target_include_directories(feature_impls PRIVATE ${FEATURE_INCDIR})
+target_include_directories(
+    feature_impls
+    PRIVATE
+    ${FEATURE_INCDIR}
+    ${NUTTX_APPS_DIR}/frameworks/runtimes/ash/include)
 
 # add some common srcs
 target_sources(feature_impls PRIVATE ${CMAKE_CURRENT_LIST_DIR}/app_path.cpp)
