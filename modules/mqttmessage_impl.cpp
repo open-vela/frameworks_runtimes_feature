@@ -170,6 +170,7 @@ FtAny system_mqttmessage_wrap_decode(FeatureInstanceHandle feature,
         }
         ft_obj_set_property(ctx, obj, fields[i].name, value);
     }
+    mqtt_message__free_unpacked(mqtt_msg, nullptr);
 
     *out = obj;
     return out;
