@@ -28,6 +28,8 @@ ft_value_t ft_from_jsvalue(ft_context_ref rt_ctx, JSValue val);
 
 JSValue ft_to_jsvalue(ft_context_ref rt_ctx, ft_value_t val);
 
+JSContext* ft_ctx_to_js_ctx(ft_context_ref rt_ctx);
+
 #ifdef __cplusplus
 }
 #endif
