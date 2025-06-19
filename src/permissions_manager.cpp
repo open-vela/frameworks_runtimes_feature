@@ -144,8 +144,8 @@ void PermissionsInfo::releaseArgs()
     for (int i = 0; i < fixed_argc_; i++) {
         auto arg = (void**)argv_[extra_argc_ + i];
         if (arg && *arg && FT_NEED_FREE(method_->parameters[i])) {
-            FeatureFreeValue(*arg);
             freeFtValue(ft_ctx, method_->parameters[i], arg);
+            FeatureFreeValue(*arg);
         }
     }
 
