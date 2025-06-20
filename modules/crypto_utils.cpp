@@ -44,10 +44,11 @@ char** split_str(const char* input, const char* delimiter, int* count)
     memset(result, 0, (*count) * sizeof(char*));
 
     int index = 0;
-    char* token = strtok(in_cpy, delimiter);
+    char* savedptr = NULL;
+    char* token = strtok_r(in_cpy, delimiter, &savedptr);
     while (token != NULL) {
         result[index] = strdup(token);
-        token = strtok(NULL, delimiter);
+        token = strtok_r(NULL, delimiter, &savedptr);
         index++;
     }
 

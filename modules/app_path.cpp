@@ -195,9 +195,10 @@ int app_check_path(const char* path)
     }
     *ret++ = 0;
 
-    token = strtok(data, s);
+    char* savedptr = NULL;
+    token = strtok_r(data, s, &savedptr);
     while (token != NULL) {
-        token = strtok(NULL, s);
+        token = strtok_r(NULL, s, &savedptr);
         if (token != NULL) {
             *(token - 1) = '/';
         }
