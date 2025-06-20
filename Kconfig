@@ -87,6 +87,14 @@ config FEATURE_ENABLE_TRACKER
 	default y
 	depends on FRAMEWORK_ENABLE_LOG
 
+config FEATURE_MAX_CALLBACK_COUNT
+	int "Framework max callback count for memory warning, default 30"
+	default 30
+
+config FEATURE_MAX_PROMISE_COUNT
+	int "Framework max promise count for memory warning, default 30"
+	default 30
+
 menu "feature modules"
 source "$APPSDIR/frameworks/runtimes/feature/modules/Kconfig"
 endmenu
