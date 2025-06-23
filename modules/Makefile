@@ -95,6 +95,13 @@ ifeq ($(CONFIG_BLUETOOTH_FEATURE), y)
 	ifeq ($(CONFIG_BLUETOOTH_AVRCP_CONTROL), y)
 		CFEATURELIST += system_bluetooth_bt_avrcpcontrol
 	endif
+else ifeq ($(CONFIG_BLUETOOTH_FEATURE_ASYNC), y)
+	CFEATURELIST += system_bluetooth
+
+	ifeq ($(CONFIG_BLUETOOTH_BLE_ADV), y)
+		CFEATURELIST += system_bluetooth_ble
+	endif
+else
 endif
 
 ifeq ($(CONFIG_FEATURE_SYSTEM_APP), y)
