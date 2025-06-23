@@ -11,6 +11,7 @@
 #define FEATURE_NOTE_END()                   sched_note_end(NOTE_TAG_ALWAYS)
 #define FEATURE_NOTE_BEGIN_STR(str)          sched_note_beginex(NOTE_TAG_ALWAYS, str)
 #define FEATURE_NOTE_END_STR(str)            sched_note_endex(NOTE_TAG_ALWAYS, str)
+#define FEATURE_NOTE_MARK(str)            sched_note_mark(NOTE_TAG_ALWAYS, str)
 #define FEATURE_NOTE_BEGIN_LOCAL(str)     \
     do {                                 \
         const char* note_temp_str = str; \
@@ -26,6 +27,7 @@
 #define FEATURE_NOTE_END()
 #define FEATURE_NOTE_BEGIN_STR(str)
 #define FEATURE_NOTE_END_STR(str)
+#define FEATURE_NOTE_MARK(str)
 #define FEATURE_NOTE_BEGIN_LOCAL(str)
 #define FEATURE_NOTE_END_LOCAL()
 #endif /* CONFIG_JS_USE_SCHED_NOTE */
