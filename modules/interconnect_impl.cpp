@@ -20,6 +20,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "include/feature_trace.h"
 #include "uv_ext.h"
 
 #define likely(x) __builtin_expect(!!(x), 1)
@@ -144,6 +145,8 @@ public:
             INTERCONNECT_INFO("recv status %s", conn->status_name());
             switch (conn->status()) {
             case MIWEAR_STATUS_CONNECT_FAILED: {
+                // 连接失败
+                FEATURE_NOTE_MARK("interconnect_failed");
                 conn->InvokeError("connect to app failed",
                     static_cast<int>(StatusCode::kUnknown));
                 conn->ProcessPendingDiagnosis(false);
@@ -151,10 +154,14 @@ public:
             }
             case MIWEAR_STATUS_CONNECTION_CLOSED: {
                 // no one should be holding 'conn', just destroy it
+                // 连接关闭
+                FEATURE_NOTE_MARK("interconnect_closed");
                 conn->destroy();
                 break;
             }
             case MIWEAR_STATUS_PHONE_CONNECTED: {
+                // 连接成功
+                FEATURE_NOTE_MARK("interconnect_success");
                 conn->ProcessPendingDiagnosis(false);
                 conn->ProcessPendingSendTasks();
                 if (__IsConnecting(old_status)) {
@@ -165,6 +172,8 @@ public:
                 break;
             }
             case MIWEAR_STATUS_PHONE_DISCONNECTED: {
+                // 连接断开
+                FEATURE_NOTE_MARK("interconnect_disconnected");
                 conn->ProcessPendingDiagnosis(false); // 处理诊断 pending
                 if (__IsConnecting(old_status)) { // 连接失败
                     conn->InvokeError("connect to miwear server failed",
@@ -177,6 +186,8 @@ public:
                 break;
             }
             case MIWEAR_STATUS_PHONE_UNINSTALLED: {
+                // 应用未安装
+                FEATURE_NOTE_MARK("interconnect_app_uninstalled");
                 conn->ProcessPendingDiagnosis(false);
                 break;
             }
@@ -186,6 +197,8 @@ public:
             }
             }
         } else if (msg->header.type == MIWEAR_MESSAGE_TYPE_DATA) {
+            // 收到来自手机的消息
+            FEATURE_NOTE_MARK("interconnect_recv_from_phone");
             conn->InvokeRecv(static_cast<const char*>(msg->data), msg->header.len);
         }
     }
@@ -231,7 +244,8 @@ public:
             INTERCONNECT_INFO("package_name is empty");
             return ConnectResult::kEmptyPackageName;
         }
-
+        // 开始连接
+        FEATURE_NOTE_MARK("interconnect_start");
         int res = 0;
         INTERCONNECT_INFO("connect to %s", package_name_.c_str());
         res = uv_miwear_connect(loop_, &miwear_, package_name_.c_str(),
@@ -255,6 +269,8 @@ public:
      */
     static void __timer_diagnosis_cb(uv_timer_t* handle)
     {
+        // diagnosis 超时
+        FEATURE_NOTE_MARK("interconnect_diagnosis_timeout");
         auto conn = static_cast<system_interconnect::InterconnectContext*>(handle->data);
         conn->ProcessPendingDiagnosis(true);
     }
@@ -384,6 +400,8 @@ public:
             }
             }
         }
+        // diagnosis 成功
+        FEATURE_NOTE_MARK("interconnect_diagnosis_success");
         ft_context_ref ctx = FeatureGetContext(handle_);
         ft_value_t obj = ft_new_object(ctx);
         ft_obj_set_property(ctx, obj, "status", ft_from_int(ctx, status));
@@ -412,6 +430,8 @@ public:
         uv_miwear_message_t* msg,
         void* cb_para)
     {
+        // send 成功
+        FEATURE_NOTE_MARK("interconnect_send_success");
         auto conn = static_cast<system_interconnect::InterconnectContext*>(miwear->data);
         SendTask* task = static_cast<SendTask*>(cb_para);
         conn->ProcessSendResult(
@@ -891,6 +911,8 @@ void system_interconnect_InterConn_interface_MiwearConnect_getReadyState(
     FtPromiseId pid,
     system_interconnect_ReadystateParams* parms)
 {
+    // get ReadyState 开始
+    FEATURE_NOTE_MARK("interconnect_get_ReadyState_start");
     auto conn = static_cast<system_interconnect::InterconnectContext*>(
         FeatureGetObjectData(handle));
 
@@ -941,7 +963,8 @@ void system_interconnect_InterConn_interface_MiwearConnect_send(
 {
     auto conn = static_cast<system_interconnect::InterconnectContext*>(
         FeatureGetObjectData(handle));
-
+    // send
+    FEATURE_NOTE_MARK("interconnect_send_msg");
     if (!conn) {
         INTERCONNECT_ERROR("conn is null");
         FeaturePromiseReject(
@@ -997,7 +1020,7 @@ void system_interconnect_InterConn_interface_MiwearConnect_diagnosis(
 {
     auto conn = static_cast<system_interconnect::InterconnectContext*>(
         FeatureGetObjectData(handle));
-
+    FEATURE_NOTE_MARK("interconnect_diagnosis_start");
     int timeout = system_interconnect::InterconnectContext::kDiagnosisTimeout;
     if (param) {
         timeout = param->timeout;
