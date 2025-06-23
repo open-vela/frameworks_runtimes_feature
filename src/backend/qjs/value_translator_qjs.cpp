@@ -270,17 +270,34 @@ JSValue targetFromInterface(JSContext* ctx, void* instance)
     return ((FeatureInstanceQjs*)instance)->dupTarget();
 }
 
-bool hasAsyncCallbacks(JSContext* ctx, JSValue arg)
+int checkAsyncCallbacks(JSContext* ctx, JSValue arg)
 {
     if (JS_IsUndefined(arg) || !JS_IsObject(arg)) {
-        return false;
+        return 0;
     }
+
+    int result = 0;
+
     JSValue success_cb = JS_GetPropertyStr(ctx, arg, "success");
     JSValue fail_cb = JS_GetPropertyStr(ctx, arg, "fail");
-    bool ret = (JS_IsFunction(ctx, success_cb) || JS_IsFunction(ctx, fail_cb));
+
+    bool success_valid = JS_IsFunction(ctx, success_cb);
+    bool fail_valid = JS_IsFunction(ctx, fail_cb);
+
+    if ((!JS_IsUndefined(success_cb) && !JS_IsNull(success_cb) && !success_valid)
+        || (!JS_IsUndefined(fail_cb) && !JS_IsNull(fail_cb) && !fail_valid)) {
+        result = -1;
+        goto cleanup;
+    }
+
+    if (success_valid || fail_valid) {
+        result = 1;
+    }
+
+cleanup:
     feature_free_value(ctx, success_cb);
     feature_free_value(ctx, fail_cb);
-    return ret;
+    return result;
 }
 
 int addAsyncCallbacks(JSContext* ctx, void* instance, FeatureType ftype, JSValue arg)

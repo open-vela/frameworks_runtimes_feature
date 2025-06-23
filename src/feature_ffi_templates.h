@@ -101,7 +101,13 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     if (is_promise) {
         PromiseType* promise_type = (PromiseType*)FT_GET_COMPLEX(ret_type);
         if (argc > 0) {
-            use_promise = !value_translator::hasAsyncCallbacks(ctx, argv[argc - 1]);
+            int flag = value_translator::checkAsyncCallbacks(ctx, argv[argc - 1]);
+            if (flag == -1) {
+                FEATURE_LOG_ERROR("feature: %s, method: %s, checkAsyncCallbacks failed!",
+                    description->name, member->name);
+                return RET_ARGS_TYPE_ERR;
+            }
+            use_promise = flag ? false : true;
         }
         // create promise
         if (!use_promise) {
@@ -118,7 +124,6 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
                 instance, pcount, CONFIG_FEATURE_MAX_PROMISE_COUNT, description->name, member->name);
         }
     }
-
     std::string mthd_msg("feature:");
     mthd_msg += description->name;
     mthd_msg += ", method:";

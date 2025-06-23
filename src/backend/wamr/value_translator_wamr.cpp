@@ -386,9 +386,9 @@ uint64_t targetFromInterface(wasm_exec_env_t exec_env, void* interf)
     return (uint64_t)interf;
 }
 
-bool hasAsyncCallbacks(wasm_exec_env_t exec_env, uint64_t arg)
+int checkAsyncCallbacks(wasm_exec_env_t exec_env, uint64_t arg)
 {
-    return false;
+    return 0;
 }
 
 int addAsyncCallbacks(wasm_exec_env_t exec_env, void* instance, FeatureType ftype, uint64_t arg)
