@@ -82,7 +82,7 @@ JSValue getVariArg(wasm_exec_env_t exec_env, uint64_t* argv, uint32_t index);
 uint64_t toTargetPromise(wasm_exec_env_t exec_env, JSContext* js_ctx, const JSValue& promise);
 void* interfaceFromTarget(wasm_exec_env_t exec_env, uint64_t& target);
 uint64_t targetFromInterface(wasm_exec_env_t exec_env, void* interf);
-bool hasAsyncCallbacks(wasm_exec_env_t exec_env, uint64_t arg);
+int checkAsyncCallbacks(wasm_exec_env_t exec_env, uint64_t arg);
 int addAsyncCallbacks(wasm_exec_env_t exec_env, void* instance, FeatureType ftype, uint64_t arg);
 
 static inline wasm_obj_t toCallbackValue(uint64_t& target)

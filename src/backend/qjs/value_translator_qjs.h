@@ -285,7 +285,7 @@ void* interfaceFromTarget(JSContext* ctx, JSValue& target);
 
 JSValue targetFromInterface(JSContext* ctx, void* instance);
 
-bool hasAsyncCallbacks(JSContext* ctx, JSValue arg);
+int checkAsyncCallbacks(JSContext* ctx, JSValue arg);
 
 int addAsyncCallbacks(JSContext* ctx, void* instance, FeatureType ftype, JSValue arg);
 
