@@ -110,7 +110,7 @@ void FeatureInstance::onDetached()
     manager->permissionsManager().RemoveInstancePermissions(this);
 }
 
-static void permision_request_task(int mode, uint64_t data, FeatureInstanceHandle handle)
+static void permission_request_task(int mode, uint64_t data, FeatureInstanceHandle handle)
 {
     auto* instance = (FeatureInstance*)handle;
     if (!instance)
@@ -132,7 +132,7 @@ bool FeatureInstance::requestPermissions(FeaturePermissionsRequestInfo* info)
     if (manager->permissionsManager().HasPermissionCb()) {
         PermissionsInfo* perms_info = new PermissionsInfo(this, info);
         uint64_t pid = manager->permissionsManager().AddPermissions(perms_info);
-        manager->addTaskExt((FeatureInstanceHandle)this, permision_request_task, pid);
+        manager->addTaskExt((FeatureInstanceHandle)this, permission_request_task, pid);
         if (isBlackListed(info)) {
             return false;
         }

@@ -912,9 +912,12 @@ void FeatureSetPermissionsCallback(FeatureManagerHandle hmanager, FeaturePermiss
     }
 }
 
-static void grant_permisions_task(int mode, void* data)
+static void grant_permissions_task(int mode, uint64_t data, FeatureInstanceHandle handle)
 {
-    if (mode == FEATURE_TASK_MODE_NORMAL) {
+    auto* instance = (FeatureInstance*)handle;
+    if (!instance)
+        return;
+    if (mode == FEATURE_TASK_MODE_NORMAL && !instance->isDetached()) {
         PermissionsInfo* info = (PermissionsInfo*)data;
         FeatureManager* manager = info->Instance()->featureManager();
         manager->permissionsManager().GrantPermissions(info);
@@ -927,13 +930,16 @@ void FeatureGrantPermissions(FeatureManagerHandle hmanager, FeaturePermissionsHa
     FeatureManager* manager = static_cast<FeatureManager*>(hmanager);
     PermissionsInfo* info = (PermissionsInfo*)handle;
     if (manager->permissionsManager().CheckPermissions(info)) {
-        manager->addTask((FeatureInstanceHandle)(info->Instance()), grant_permisions_task, info);
+        manager->addTaskExt((FeatureInstanceHandle)(info->Instance()), grant_permissions_task, (uint64_t)info);
     }
 }
 
-static void reject_permisions_task(int mode, void* data)
+static void reject_permissions_task(int mode, uint64_t data, FeatureInstanceHandle handle)
 {
-    if (mode == FEATURE_TASK_MODE_NORMAL) {
+    auto* instance = (FeatureInstance*)handle;
+    if (!instance)
+        return;
+    if (mode == FEATURE_TASK_MODE_NORMAL && !instance->isDetached()) {
         PermissionsInfo* info = (PermissionsInfo*)data;
         FeatureManager* manager = info->Instance()->featureManager();
         manager->permissionsManager().RejectPermissions(info);
@@ -947,7 +953,7 @@ void FeatureRejectPermissions(FeatureManagerHandle hmanager, FeaturePermissionsH
     PermissionsInfo* info = (PermissionsInfo*)handle;
     if (manager->permissionsManager().CheckPermissions(info)) {
         info->SetRejectReason(reason);
-        manager->addTask((FeatureInstanceHandle)(info->Instance()), reject_permisions_task, info);
+        manager->addTaskExt((FeatureInstanceHandle)(info->Instance()), reject_permissions_task, (uint64_t)info);
     }
 }
 
