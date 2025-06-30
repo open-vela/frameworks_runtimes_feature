@@ -25,7 +25,7 @@ if(CONFIG_FEATURE_UNIT_TEST)
         PRIORITY
         100
         STACKSIZE
-        16384
+        131072
         DEPENDS
         libfeature
         SRCS
