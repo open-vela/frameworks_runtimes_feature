@@ -1680,4 +1680,53 @@ TEST_F(FeatureExportTestQjs, FeatureEmitEvent_IllegalEventId)
 }
 // Worker相关
 
+// JsonObject相关
+// =============================================================================
+// FeatureAllocJSONObject Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureAllocJSONObject1)
+{
+    FtJsonObject json_str_data = FeatureAllocJSONObject(10);
+    EXPECT_NE(json_str_data, nullptr);
+    FeatureFreeValue(json_str_data);
+}
+
+// =============================================================================
+// FeatureGetJSONString Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureGetJSONString1)
+{
+    const char* str = "{\"a\":1,\"b\":2}";
+    FtJsonObject json_str_data = FeatureAllocJSONObject(14);
+    EXPECT_NE(json_str_data, nullptr);
+    memcpy(json_str_data->str, str, 14);
+    const char* out_str = FeatureGetJSONString(json_str_data);
+    EXPECT_STREQ(out_str, str);
+    FeatureFreeValue(json_str_data);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetJSONString_dataNullptr)
+{
+    const char* str = FeatureGetJSONString(nullptr);
+    EXPECT_EQ(str, nullptr);
+}
+
+// =============================================================================
+// FeatureNewJSONObject Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureNewJSONObject1)
+{
+    const char* str = "{\"a\":1,\"b\":2}";
+    FtJsonObject json_str_data = FeatureNewJSONObject(str);
+    EXPECT_NE(json_str_data, nullptr);
+    EXPECT_STREQ(json_str_data->str, str);
+    FeatureFreeValue(json_str_data);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureNewJSONObject_strNullptr)
+{
+    FtJsonObject json_str_data = FeatureNewJSONObject(nullptr);
+    EXPECT_EQ(json_str_data, nullptr);
+}
+
 } // namespace feature_framework_test
