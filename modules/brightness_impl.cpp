@@ -264,8 +264,6 @@ void detach(FeatureInstanceHandle handle)
                 FEATURE_LOG_INFO("[brightness] is_close");
                 continue;
             }
-            system_brightness_GetValueParam* pGetValueParam = (system_brightness_GetValueParam*)th_->param;
-            do_callback(th_->handle, -1, -1, pGetValueParam->success, pGetValueParam->fail, pGetValueParam->complete);
             if (th_->param) {
                 FeatureFreeValue(th_->param);
             }
@@ -295,7 +293,6 @@ void system_brightness_onDetached(FeatureRuntimeContext ctx,
 void system_brightness_onDestroy(FeatureRuntimeContext ctx,
     FeatureProtoHandle handle)
 {
-    detach(handle);
 }
 
 void system_brightness_onUnregister(const char* feature_name) { }
