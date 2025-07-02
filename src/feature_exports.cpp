@@ -1028,6 +1028,7 @@ FtJsonObject FeatureAllocJSONObject(size_t str_len)
 
 FtJsonObject FeatureNewJSONObject(const char* str)
 {
+    FEATURE_CHECK_PTR(str, nullptr, "str is null !")
     FtJsonObject json_obj = FeatureAllocJSONObject(strlen(str) + 1);
     sprintf(json_obj->str, "%s", str);
     return json_obj;
