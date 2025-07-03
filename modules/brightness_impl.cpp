@@ -140,6 +140,9 @@ static void brightness_cb(int status, int val, void* data)
 
     if (th->is_close == true) {
         FEATURE_LOG_INFO("[brightness] is_close");
+        if (th->param) {
+            FeatureFreeValue(th->param);
+        }
         list_delete(&th->node);
         free(th);
         return;
@@ -317,7 +320,9 @@ void system_brightness_wrap_getValue(FeatureInstanceHandle feature,
     th->type = BRIGHTNESS_GETVALUE;
     th->param = FeatureDupValue(param);
     FEATURE_LOG_INFO("[brightness] __brightness_getval");
-    if (uv_brightness_getval(th->brightness, brightness_cb, th) != 0) {
+    int status = uv_brightness_getval(th->brightness, brightness_cb, th);
+    if (status != 0) {
+        do_callback(feature, status, FT_ERR_GENERAL, param->success, param->fail, param->complete);
         FeatureFreeValue(th->param);
         list_delete(&th->node);
         free(th);
@@ -352,7 +357,9 @@ void system_brightness_wrap_setValue(FeatureInstanceHandle feature,
     th->type = BRIGHTNESS_SETVALUE;
     th->param = FeatureDupValue(param);
     FEATURE_LOG_INFO("[brightness] __brightness_setval :%d", param->value);
-    if (uv_brightness_setval(th->brightness, param->value, brightness_cb, th) != 0) {
+    int status = uv_brightness_setval(th->brightness, param->value, brightness_cb, th);
+    if (status != 0) {
+        do_callback(feature, status, FT_ERR_GENERAL, param->success, param->fail, param->complete);
         FeatureFreeValue(th->param);
         list_delete(&th->node);
         free(th);
@@ -381,7 +388,9 @@ void system_brightness_wrap_getMode(FeatureInstanceHandle feature,
     th->type = BRIGHTNESS_GETMODE;
     th->param = FeatureDupValue(param);
     FEATURE_LOG_INFO("[brightness] __brightness_getmode");
-    if (uv_brightness_getmode(th->brightness, brightness_cb, th) != 0) {
+    int status = uv_brightness_getmode(th->brightness, brightness_cb, th);
+    if (status != 0) {
+        do_callback(feature, status, FT_ERR_GENERAL, param->success, param->fail, param->complete);
         FeatureFreeValue(th->param);
         list_delete(&th->node);
         free(th);
@@ -411,7 +420,9 @@ void system_brightness_wrap_setMode(FeatureInstanceHandle feature,
     th->type = BRIGHTNESS_SETMODE;
     th->param = FeatureDupValue(param);
     FEATURE_LOG_INFO("[brightness] __brightness_setmode: %d", param->mode);
-    if (uv_brightness_setmode(th->brightness, param->mode, brightness_cb, th) != 0) {
+    int status = uv_brightness_setmode(th->brightness, param->mode, brightness_cb, th);
+    if (status != 0) {
+        do_callback(feature, status, FT_ERR_GENERAL, param->success, param->fail, param->complete);
         FeatureFreeValue(th->param);
         list_delete(&th->node);
         free(th);
@@ -442,8 +453,10 @@ void system_brightness_wrap_setKeepScreenOn(
         }
     }
 
-    if (uv_brightness_setkeepon(th->brightness, param->keepScreenOn, brightness_cb, th) != 0) {
+    int status = uv_brightness_setkeepon(th->brightness, param->keepScreenOn, brightness_cb, th);
+    if (status != 0) {
         FEATURE_LOG_ERROR("brightness uv_brightness_setkeepon failed");
+        do_callback(feature, status, FT_ERR_GENERAL, param->success, param->fail, param->complete);
         FeatureFreeValue(th->param);
         return;
     }
