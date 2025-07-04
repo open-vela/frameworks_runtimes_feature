@@ -84,6 +84,13 @@ typedef enum ErrorCode {
         }                   \
     } while (0)
 
+#define ASSERT_RET_ZERO(x) \
+    do {                   \
+        if (!(x)) {        \
+            return 0;      \
+        }                  \
+    } while (0)
+
 #define REQUEST_LIST_FOR_EVERY(head, _type) \
     _type *req, *_temp;                     \
     weakref_list_for_every_entry_safe(head, req, _temp, _type, node)
