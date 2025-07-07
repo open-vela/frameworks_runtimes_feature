@@ -39,7 +39,7 @@ if(CONFIG_FEATURE_TEST_JSFILE)
     nuttx_add_library(feature_test_jsfile STATIC)
     list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/jidl/feat_test_impl.cpp)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/feat_test.jidl)
-    list(APPEND FEATURE_NAMES feat_test)
+    list(APPEND TEST_FEATURE_NAMES feat_test)
 
 if(CONFIG_FEATURE_UNIT_TEST)
     list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_jidl_util.cpp)
@@ -51,7 +51,7 @@ if(CONFIG_FEATURE_UNIT_TEST)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/any_test.jidl)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/function_test.jidl)
     # set feature name
-    list(APPEND FEATURE_NAMES struct_test any_test function_test)
+    list(APPEND TEST_FEATURE_NAMES struct_test any_test function_test)
 endif()
 
     nuttx_add_jidl(
@@ -62,7 +62,7 @@ endif()
         JIDLS
         ${FEAT_TEST_JIDL_PATHS}
         FEATURE_NAMES
-        feat_test)
+        ${TEST_FEATURE_NAMES})
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/jidl/test_features)
