@@ -365,7 +365,7 @@ static void build_const_obj_recursive(context_ref ctx, feature_value_t parent, c
     FEATURE_CHECK_EQ(member->type, MEMBER_CONST);
     const MemberConst* mconst = member->value;
     FEATURE_CHECK_NE(mconst, nullptr);
-    FEATURE_CHECK_EQ(FT_IS_PRIMITIVE(mconst->type), true);
+    FEATURE_CHECK_EQ(FT_IS_PRIMITIVE(mconst->type) || mconst->type == FT_ANY_REF, true);
     if (mconst->type == FT_ANY_REF) {
         feature_value_t const_obj = feature_object(ctx);
         feature_define_object_property(ctx, parent, member->name, const_obj, 0);
