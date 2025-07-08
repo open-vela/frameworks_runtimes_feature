@@ -1,0 +1,28 @@
+module unit_interface_test@1.0
+
+interface Animal {
+  property string name;
+  property int legCount readonly;
+  boolean eatFood(string[] foods);
+  boolean run(int distance, string destination);
+}
+[ctor="true", target="dog"] Animal createDog(int type);
+
+interface Bird {
+  string[] fly();
+  property int breed;
+}
+[ctor="true", target="pigeon"] Bird createPigeon();
+
+// test multiple inheritance
+interface Chicken extends Animal, Bird {
+  property int weight;
+  promise<string[]> walk();
+}
+[ctor="true", target="cock"] Chicken createCock();
+
+// test no ctor
+Animal createCat();
+// test interface as parameter
+void setAnimal(Animal animal);
+boolean testAnimal(string name);
