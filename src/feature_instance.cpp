@@ -25,7 +25,6 @@
 #include <string.h>
 
 #ifndef __NuttX__
-#include <malloc.h>
 #define malloc_size malloc_usable_size
 #endif
 
