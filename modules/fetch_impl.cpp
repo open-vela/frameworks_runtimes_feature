@@ -300,7 +300,6 @@ static FtAny get_response_data(fetch_t* fetch, uv_response_t* response,
             free(response->body);
             response->body = path;
         }
-
         if (response->body[response->size - 1] == '\0') {
             *out = ft_from_string(fetch->ft_ctx, response->body);
         } else {
