@@ -226,7 +226,7 @@ endif
 
 ifeq ($(CONFIG_FEATURE_SYSTEM_MQTTMESSAGE),y)
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/mqttmessage_impl.cpp
-	CSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/mqtt_message.pb-c.c
+	CSRCS 	:= $(CSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/mqtt_message.pb-c.c
 	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/mqttmessage.jidl
 	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
 	FEATURELIST += system_mqttmessage
