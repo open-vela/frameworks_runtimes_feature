@@ -20,7 +20,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "include/feature_trace.h"
+#include "feature_trace.h"
 #include "uv_ext.h"
 
 #define likely(x) __builtin_expect(!!(x), 1)

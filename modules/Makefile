@@ -39,6 +39,8 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/modules/genera
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/modules/generated/aidl
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/framework
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rapidjson/rapidjson/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/src
@@ -364,8 +366,8 @@ endif
 
 ifeq ($(CONFIG_FEATURE_SYSTEM_INTERCONNECT),y)
 	CXXSRCS     += $(APPDIR)/frameworks/runtimes/feature/modules/interconnect_impl.cpp
-	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/interconnect.jidl
-	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+	JIDL_PATH   += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/interconnect.jidl
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
 	FEATURELIST += system_interconnect
 endif
 
