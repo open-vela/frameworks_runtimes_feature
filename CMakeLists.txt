@@ -23,6 +23,10 @@ set(BINARY_MODULES_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules)
 set(BINARY_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 if(CONFIG_FEATURE_FRAMEWORK)
+  if(CONFIG_FEATURE_RUST_MODULES)
+    # include rust subdirectories
+    add_subdirectory(rust)
+  endif(CONFIG_FEATURE_RUST_MODULES)
 
   nuttx_add_prebuilt(
     BIN_TARGETS

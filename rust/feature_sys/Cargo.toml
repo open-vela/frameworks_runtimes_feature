@@ -1,0 +1,10 @@
+[package]
+name = "feature_sys"
+version.workspace = true
+edition.workspace = true
+
+[build-dependencies]
+bindgen = "0.72"
+
+[dependencies]
+

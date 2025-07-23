@@ -95,6 +95,10 @@ config FEATURE_MAX_PROMISE_COUNT
 	int "Framework max promise count for memory warning, default 30"
 	default 30
 
+config FEATURE_RUST_MODULES
+	bool "Enable Feature Framework Rust modules support"
+	default n
+
 menu "feature modules"
 source "$APPSDIR/frameworks/runtimes/feature/modules/Kconfig"
 endmenu
