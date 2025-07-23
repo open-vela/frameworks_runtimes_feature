@@ -1,0 +1,11 @@
+[package]
+name = "feature_frm"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "feature_frm"
+
+[dependencies]
+libc = { workspace = true }
+feature_sys = { workspace = true }

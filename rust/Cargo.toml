@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "feature_sys",
+    "feature_frm",
 ]
 
 [workspace.package]
@@ -19,6 +20,7 @@ opt-level = 'z'
 
 [workspace.dependencies]
 feature_sys = { path = "feature_sys" }
+feature_frm = { path = "feature_frm" }
 libc = "0.2"
 proc-macro-error = "1.0"
 proc-macro2 = "1.0"
