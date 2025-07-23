@@ -1,0 +1,32 @@
+// only for glue code, user code is forbiden
+use crate::feature_instance::*;
+use feature_sys::*;
+
+// create interface instance and bind user data
+pub fn create_interface<T>(
+    handle: FeatureInstanceHandle,
+    vtable: *mut VTable,
+    instance: Box<T>,
+) -> FeatureInterfaceHandle
+where
+    T: FeatureInstanceTrait + ?Sized,
+{
+    let handle = unsafe { FeatureCreateInterface(handle, vtable) };
+    FeatureInstance::attach(handle as FeatureInstanceHandle, instance);
+    handle
+}
+
+// get user data that was bound to the instance, only for glue code
+pub fn get_instance_data<T>(handle: FeatureInstanceHandle) -> Option<*mut T>
+where
+    T: FeatureInstanceTrait + ?Sized,
+{
+    let raw_ptr = unsafe { FeatureGetObjectData(handle) };
+
+    if raw_ptr.is_null() {
+        None
+    } else {
+        let boxed = unsafe { *(raw_ptr as *mut *mut T) };
+        Some(boxed)
+    }
+}
