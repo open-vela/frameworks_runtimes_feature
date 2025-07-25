@@ -129,6 +129,7 @@ PromptDialogParams* prompt_dialog_malloc(FeatureInstanceHandle feature)
     params->handle = feature;
     params->msg = NULL;
     params->title = NULL;
+    params->buttons = NULL;
     params->autocancel = true;
     params->success = -1;
     params->cancel = -1;
@@ -212,6 +213,5 @@ void system_prompt_wrap_showDialog(FeatureInstanceHandle feature, AppendData app
     if (show_dialog) {
         show_dialog(params);
     }
-    // show_dialog 是异步执行的, 需要交给 show_dialog 来释放内存.
-    // prompt_dialog_free(params);
+    prompt_dialog_free(params);
 }
