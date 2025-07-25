@@ -396,7 +396,7 @@ class JIDL(Parser):
   def p_struct_member_define(self, p):
     """
     struct_member_define : value_type member_name
-                      | value_type ID EQUALS literal_value
+                      | value_type member_name EQUALS literal_value
     """
     count = len(p)
     CreateASTNode(p, ast.StructMemberBase, p[1], p[2])
