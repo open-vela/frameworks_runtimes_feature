@@ -87,4 +87,8 @@ config FEATURE_ENABLE_TRACKER
 	default y
 	depends on FRAMEWORK_ENABLE_LOG
 
+menu "feature modules"
+source "$APPSDIR/frameworks/runtimes/feature/modules/Kconfig"
+endmenu
+
 endif

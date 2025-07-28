@@ -1,0 +1,87 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+module system.brightness @1.0
+
+struct GetValueModeSuccCBParam {
+    int value
+    int mode
+}
+
+callback getValue_succ_cb(GetValueModeSuccCBParam cb)
+callback getValue_fail_cb(string msg, int code)
+callback getValue_comp_cb()
+
+struct GetValueParam {
+    getValue_succ_cb success
+    getValue_fail_cb fail
+    getValue_comp_cb complete
+}
+
+void getValue(GetValueParam param)
+////////////////////////////////////////////////////
+callback setValue_succ_cb()
+callback setValue_fail_cb(string msg, int code)
+callback setValue_comp_cb()
+
+struct SetValueParam {
+    int value
+    setValue_succ_cb success
+    setValue_fail_cb fail
+    setValue_comp_cb complete
+}
+
+void setValue(SetValueParam param)
+////////////////////////////////////////////////////
+callback getMode_succ_cb(GetValueModeSuccCBParam cb)
+callback getMode_fail_cb(string msg, int code)
+callback getMode_comp_cb()
+
+struct GetModeParam {
+    getMode_succ_cb success
+    getMode_fail_cb fail
+    getMode_comp_cb complete
+}
+void getMode(GetModeParam param)
+////////////////////////////////////////////////////
+callback setMode_succ_cb()
+callback setMode_fail_cb(string msg, int code)
+callback setMode_comp_cb()
+
+struct SetModeParam {
+    int mode
+    setMode_succ_cb success
+    setMode_fail_cb fail
+    setMode_comp_cb complete
+}
+void setMode(SetModeParam param);
+////////////////////////////////////////////////////
+callback SetKeepScreenOn_succ_cb()
+callback SetKeepScreenOn_fail_cb(string msg, int code)
+callback SetKeepScreenOn_comp_cb()
+
+struct SetKeepScreenOnParam {
+    boolean keepScreenOn
+    setValue_succ_cb success
+    setValue_fail_cb fail
+    setValue_comp_cb complete
+}
+
+void setKeepScreenOn(SetKeepScreenOnParam param);
+
+callback on_data(object data);
+property on_data onbrightnesschanged writeonly;
+property on_data onmodechanged writeonly;

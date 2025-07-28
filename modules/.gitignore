@@ -1,0 +1,7 @@
+.depend
+.built
+Make.dep
+*.json
+cfeatures_registry_list.h
+features_registry_list.h
+features_registry_table.h

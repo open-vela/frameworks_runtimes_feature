@@ -53,7 +53,7 @@ typedef enum ErrorCode {
     TIMEOUT = 204
 } ErrorCode;
 
-struct MetaData {
+struct GeoMetaData {
     FeatureInstanceHandle instance;
     FtCallbackId callback;
     FtCallbackId fail;
@@ -65,7 +65,7 @@ struct MetaData {
 
 struct gnss_event_t {
     uv_topic_t topic;
-    MetaData meta;
+    GeoMetaData meta;
     uv_timer_t timer;
     bool isTimeout;
 };
@@ -259,7 +259,7 @@ errout:
 void system_geolocation_wrap_subscribe(FeatureInstanceHandle feature, AppendData append_data, system_geolocation_subscribeParam* param)
 {
     int ret;
-    MetaData meta;
+    GeoMetaData meta;
 
     meta.instance = feature;
     meta.callback = param->callback;

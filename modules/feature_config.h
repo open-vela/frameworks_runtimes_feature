@@ -1,0 +1,10 @@
+enum ErrorCode {
+    GENERAL = 200,
+    ARGSERROR = 202,
+    IOERROR = 300,
+    TIMEOUT = 204,
+    TASK_FAILED = 1000,
+    TASK_NOT_EXISTS = 1001,
+    CANCEL_ERROR_CODE = 1002,
+    PATH_NOT_EXISTS = 301
+};

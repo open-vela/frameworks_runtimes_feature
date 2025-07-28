@@ -32,7 +32,6 @@ Make.dep
 src/ajs_cfeatures_init.h
 src/ajs_features_init.h
 src/ajs_features_list.h
-modules/aidl/message_transport
 modules/src
 modules/jidl/*.json
 src/ajs_features_registry.cpp
