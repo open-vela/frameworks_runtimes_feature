@@ -1,0 +1,60 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+module system.request@1.0
+
+struct notify_data_t {
+    int result
+    int percent
+}
+
+struct download_succ_t {
+    string token
+}
+
+callback download_notify_cb(notify_data_t data)
+callback download_succ_cb(download_succ_t data)
+callback download_fail_cb(string data, int code)
+callback download_cmpl_cb()
+
+struct download_t {
+    string url
+    string header
+    string filename
+    boolean share = true
+    download_notify_cb onDownLoadNotify
+    download_succ_cb success
+    download_fail_cb fail
+    download_cmpl_cb complete
+}
+
+[permissions="hapjs.permission.INTERNET"]
+void download(download_t param)
+
+struct dl_cmpl_succ_t {
+    string uri
+}
+callback dl_cmpl_succ_cb(dl_cmpl_succ_t data)
+callback dl_cmpl_fail_cb(string data, int code)
+callback dl_cmpl_cmpl()
+
+struct dl_cmpl_t {
+    string token
+    dl_cmpl_succ_cb success
+    dl_cmpl_fail_cb fail
+    dl_cmpl_cmpl complete
+}
+void onDownloadComplete(dl_cmpl_t param)

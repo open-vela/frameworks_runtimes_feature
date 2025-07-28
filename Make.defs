@@ -24,3 +24,6 @@ CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/feature/include
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/protobuf-c/protobuf-c
 CFLAGS   += ${INCDIR_PREFIX}$(APPDIR)/external/protobuf-c/protobuf-c
+ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
+include $(APPDIR)/frameworks/runtimes/feature/modules/Make.defs
+endif

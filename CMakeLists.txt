@@ -193,5 +193,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
     APPEND
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${EXTERNAL_DIR}/protobuf-c/protobuf-c)
 
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules)
+
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests)
 endif()

@@ -1,0 +1,38 @@
+module system.fetch@1.0
+
+/*
+enum MethodType {
+  GET = 'get',
+  OPTIONS = 'options',
+  HEAD = 'head',
+  POST = 'post',
+  PUT = 'put',
+  DELETE = 'delete',
+  TRACE = 'trace',
+  CONNECT = 'connect'
+}
+enum ResponseType {
+  TXT = 'text',
+  JSON = 'json',
+  FILE = 'file',
+  ARRAYBUFFER = 'arraybuffer'
+}
+
+enum ContentType {
+  TEXT = 'text/plain',
+  URLENCODED = 'application/x-www-form-urlencoded',
+  STREAM = 'application/octet-stream'
+}
+*/
+
+struct FetchPara{
+  string url;
+  object data;
+  object header;
+  string method = "";   //MethodType
+  string responseType = "";   //ResponseType
+  int timeout = 20000;
+}
+
+[permissions="hapjs.permission.INTERNET"]
+promise<object> fetch(FetchPara obj);

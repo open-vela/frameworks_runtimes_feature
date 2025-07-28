@@ -1,0 +1,45 @@
+module system.messageChannel@1.0
+
+// Message模式
+promise<string> sendMessage(string target, string body);
+void reply(int reply_id, string reply);
+
+// event ReciveRequest(string target, int reply, string message); //接收来自sendMessage消息
+// =>event不支持，callback代替。 setReceiveRequestCallback, callback ReceiveRequestCallback
+callback cb_receive_request(int reply_id, string message) //处理接收的请求，回复的通过reply
+void setReceiveRequestCallback(string service_name, cb_receive_request cb)
+
+// Notify模式
+void notifyMessage(string target, string body);
+
+// 接收来自任意模块定向发给自己的消息, target为自己的包名, 这个不需要特殊实现，直接利用onTopicMessage即可
+// event ReciveNotify(string target, string body);
+
+// 接收来来自特定topic的消息
+callback onTopicMessage(string topic, string body);
+void setTopicListener(string topic, onTopicMessage cb);
+
+// 移除对应的topic所有的callback
+void unsetTopicListener(string topic);
+
+// 移除对应的topic指定的callback
+void unsetTopicListenerCb(string topic, onTopicMessage cb);
+
+// messageChannel模式
+callback cb_ondata(string data)
+callback cb_onclose(int code)
+callback cb_onerror(int code, string data)
+callback cb_onreceive(int session_id, string message)
+
+promise<int> createSession(string target); // return sessionId
+void sessionSend(int session_id, string message); // 通过session发送消息
+void sessionClose(int session_id); // 主动关闭session
+void acceptSession(int session_id); // no use now
+void sessionOnData(int session_id, cb_ondata cb); // 从session接收到信息时的回调函数,服务端回消息
+const SESSION_REASON_CLOSE = 0; // closed by self
+const SESSION_REASON_CLOSE_PEER = 1; // closed by peer
+const SESSION_REASON_PEER_SHUTDOWN = 2; // peer shutdown
+void sessionOnClose(int session_id, cb_onclose cb);  // 监听session关闭
+void sessionOnReceive(string service_name, cb_onreceive cb); // 服务端接受消息
+
+void print(string message); // for debug,need to delete
