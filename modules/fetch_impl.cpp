@@ -328,7 +328,6 @@ static void fetch_request_cb(int state, uv_response_t* response)
 {
     FEATURE_NOTE_BEGIN_STR("fetch_request_cb");
     fetch_t* p = static_cast<fetch_t*>(response->userp);
-    FeaturePromiseType ret;
     ASSERT_RET_ECHO(p, "The request has been cancelled");
     FETCH_INFO("");
     if (FeatureInstanceIsDetached(p->feature)) {
@@ -379,17 +378,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
         ft_obj_set_property(p->ft_ctx, result, "data", res_data);
 
         if (ft_get_type(p->ft_ctx, res_data) >= 0) {
-            ret = FeatureGetPromiseType(p->feature, p->pid);
-            if (ret == FEATURE_PROMISE_TYPE_CALLBACKS) {
-                FeaturePromiseResolve(p->feature, p->pid, &result);
-            } else if (ret == FEATURE_PROMISE_TYPE_PROMISE) {
-                ft_value_t res = ft_new_object(p->ft_ctx);
-                ft_obj_set_property(p->ft_ctx, res, "data", result);
-                FeaturePromiseResolve(p->feature, p->pid, &res);
-                result = res;
-            } else {
-                FETCH_ERROR("invalid type of callback!");
-            }
+            FeaturePromiseResolve(p->feature, p->pid, &result);
         } else {
             FeaturePromiseReject(p->feature, p->pid, ErrorCode::IOERROR, "responseType dosen't match response data");
         }
