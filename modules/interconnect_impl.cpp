@@ -527,6 +527,7 @@ public:
         conn_func_ = func;
         if (is_pending_connect_) {
             InvokeConnect(true);
+            is_pending_connect_ = false;
         }
         return;
     }
