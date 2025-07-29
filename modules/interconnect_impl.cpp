@@ -987,13 +987,17 @@ void system_interconnect_InterConn_interface_MiwearConnect_send(
             goto error;
         }
         conn->SendMsg(conn->CreateSendTask(std::move(buffer), pid, false));
-    } else {
-        INTERCONNECT_INFO("status is not connected, pending %ds", parms->timeout);
+    } else if (conn->IsConnecting()) {
+        INTERCONNECT_INFO("status is connecting, pending %ds", parms->timeout);
 
         s = conn->PendingSendTask(parms, pid);
         if (s != system_interconnect::StatusCode::kOk) {
             goto error;
         }
+    } else { // status is disconnected, send failed
+        FeaturePromiseReject(handle, pid,
+            static_cast<int>(system_interconnect::StatusCode::kDisconnect),
+            "disconnect");
     }
 
     return;

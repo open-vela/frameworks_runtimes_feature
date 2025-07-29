@@ -57,7 +57,7 @@ callback SendFailCB(FailInfo data)
 
 struct SendParams {
     object data = null
-    int timeout = 5000
+    int timeout = 1000
 }
 
 struct DiagnosisParams {
