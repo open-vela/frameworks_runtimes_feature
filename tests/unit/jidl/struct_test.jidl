@@ -55,3 +55,12 @@ Complex testComplex1()
 // 测试struct嵌套
 boolean testNested(Nested n)
 Nested testNested1()
+
+// 测试关键字
+struct keyWords {
+    int callback = 1
+    int type = 1
+    int event = 1
+    int property = 1
+    int module = 1
+}
