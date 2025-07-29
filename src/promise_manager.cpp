@@ -130,6 +130,15 @@ int PromiseManager::PromiseData::resolve(va_list& ap)
             FEATURE_LOG_ERROR("convert resolve param failed !");
             return ret;
         }
+        if (promise_type == kPromise) {
+            feature_value_t js_data = feature_object(js_ctx);
+            feature_set_object_property(js_ctx, js_data, "data", target);
+            feature_value_t argv[] = { js_data };
+            ret = invoke_js_Callback(js_ctx, resolve_func, 1, argv);
+            feature_free_value(js_ctx, js_data);
+            return ret;
+        }
+
         feature_value_t argv[] = { target };
         ret = invoke_js_Callback(js_ctx, resolve_func, 1, argv);
         feature_free_value(js_ctx, target);
