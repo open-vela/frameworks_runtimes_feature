@@ -369,10 +369,16 @@ static void fetch_request_cb(int state, uv_response_t* response)
 
     FETCH_DEBUG("state:%d \nbody:%s ;\nheaders:%s", state, response->body,
         response->headers);
-    if (state == UV_REQUEST_DONE && response->httpcode < HTTP_BAD_REQUES) {
+    if (state == UV_REQUEST_DONE) {
 #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
         std::string header = response->headers;
 #endif
+
+        if (response->httpcode >= HTTP_BAD_REQUES) {
+            FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
+                response->body);
+        }
+
         ft_value_t ft_header = ft_form_headers(p->ft_ctx, response->headers);
         ft_value_t result = ft_new_object(p->ft_ctx);
         ft_value_t res_code = ft_from_int(p->ft_ctx, (int)response->httpcode);
@@ -417,11 +423,10 @@ static void fetch_request_cb(int state, uv_response_t* response)
 #endif
         uv_request_delete(p->request);
     } else {
-        FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
-            response->body);
 #if defined(CONFIG_INTERPRETERS_QUICKJS_DEBUG)
         CDPServer_setLoadingFailed(app, true);
 #endif
+        FETCH_ERROR("UV_REQUEST ERROR: request failed, state=%d, response code=%d, body=%s", state, response ? response->httpcode : -1, response && response->body ? response->body : "null");
         FeaturePromiseReject(p->feature, p->pid, response->httpcode, response->body);
     }
 
