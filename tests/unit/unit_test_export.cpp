@@ -149,6 +149,11 @@ static void test_eventChange(FeatureInstanceHandle handle, FtEventId eid, Featur
     }
 }
 
+static void test_userdata_free(void* data)
+{
+    free(data);
+}
+
 class FeatureExportTestQjs : public ::testing::Test {
 protected:
     FeatureInstanceHandle instance_handle;
@@ -1727,6 +1732,28 @@ TEST_F(FeatureExportTestQjs, FeatureNewJsonObject_strNullptr)
 {
     FtJsonObject json_str_data = FeatureNewJsonObject(nullptr);
     EXPECT_EQ(json_str_data, nullptr);
+}
+
+// =============================================================================
+// FeatureManagerHasUserData Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureManagerHasUserData1)
+{
+    char* str = (char*)malloc(6);
+    FeatureSetManagerUserData(manager_handle_qjs, "test", str);
+    EXPECT_TRUE(FeatureManagerHasUserData(manager_handle_qjs, "test"));
+    free(str);
+}
+
+// =============================================================================
+// FeatureSetManagerUserDataWithFreeCallback Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureSetManagerUserDataWithFree1)
+{
+    char* str = (char*)malloc(6);
+    ManagerUserdataFreeCallback cb = test_userdata_free;
+    FeatureSetManagerUserDataWithFreeCallback(manager_handle_qjs, "test", str, cb);
+    EXPECT_TRUE(FeatureManagerHasUserData(manager_handle_qjs, "test"));
 }
 
 } // namespace feature_framework_test
