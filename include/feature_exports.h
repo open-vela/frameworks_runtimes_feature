@@ -445,6 +445,26 @@ uv_loop_t* FeatureGetUVLoop(FeatureManagerHandle handle);
 void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data);
 
 /**
+ * @brief set feature userdata to FeatureManagerHandle with free callback
+ *
+ * @param[in] handle FeatureManagerHandle
+ * @param[in] name userdata name
+ * @param[in] data userdata
+ * @param[in] free_cb free callback
+ */
+void* FeatureSetManagerUserDataWithFreeCallback(FeatureManagerHandle handle,
+    const char* name, void* data, ManagerUserdataFreeCallback free_cb);
+
+/**
+ * @brief check if userdata is exist in FeatureManagerHandle
+ *
+ * @param[in] handle FeatureManagerHandle
+ * @param[in] name userdata name
+ * @return bool
+ */
+bool FeatureManagerHasUserData(FeatureManagerHandle handle, const char* name);
+
+/**
  * @brief get feature userdata from FeatureManagerHandle
  *
  * @param[in] handle FeatureManagerHandle

@@ -112,6 +112,9 @@ typedef enum FeatureEventStatus {
 /** FeatureEventChangeListener ptr */
 typedef void (*FeatureEventChangeListener)(FeatureInstanceHandle data, FtEventId eid, FeatureEventStatus status);
 
+/** FeatureEventCallback */
+typedef void (*ManagerUserdataFreeCallback)(void* data);
+
 /** VTable: used for create feature interface */
 typedef struct VTable {
     int size; /**< VTable member counts */

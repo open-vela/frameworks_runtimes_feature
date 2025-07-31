@@ -42,6 +42,11 @@ struct TaskData {
     bool is_ext;
 };
 
+struct UserDataEntry {
+    void* data;
+    ManagerUserdataFreeCallback free_cb;
+};
+
 class FeatureManager {
 public:
     FeatureManager(FeatureRegistry* registry);
@@ -88,12 +93,21 @@ public:
 
     const char* packageVesion() const { return pkg_version_; };
 
-    void setUserData(const char* name, void* data) { user_data_[name] = data; }
+    void setUserData(const char* name, void* data, ManagerUserdataFreeCallback free_cb = nullptr)
+    {
+        user_data_[name] = UserDataEntry { data, free_cb };
+    }
 
     void* getUserData(const char* name)
     {
         auto it = user_data_.find(name);
-        return it != user_data_.end() ? it->second : nullptr;
+        return it != user_data_.end() ? it->second.data : nullptr;
+    }
+
+    bool hasUserData(const char* name)
+    {
+        auto it = user_data_.find(name);
+        return it != user_data_.end();
     }
 
     void addTask(FeatureInstanceHandle handle, FeatureTaskCallback task_cb, void* data);
@@ -126,6 +140,7 @@ public:
 
 private:
     void enqueueTask(TaskData& task_data);
+    void clearUserData();
 
     FeatureRegistry* registry_;
     std::map<std::string, FeaturePrototype*> prototypes_;
@@ -137,7 +152,7 @@ private:
     uv_mutex_t mutex_;
     uv_async_t* async_ = nullptr;
     uv_loop_t* loop_ = nullptr;
-    std::map<std::string, void*> user_data_;
+    std::map<std::string, UserDataEntry> user_data_;
     std::queue<TaskData> task_queue_;
     ArgsErrorCb args_error_cb_ = nullptr;
     void* args_error_data_ = nullptr;
