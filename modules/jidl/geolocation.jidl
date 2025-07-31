@@ -30,15 +30,7 @@ struct getParam {
 }
 promise<getLocationRet> getLocation(getParam param)
 
-struct subscribeRet {
-    double longitude
-    double latitude
-    double altitude
-    double speed
-    int accuracy
-}
-
-callback subscribe_cb(subscribeRet ret)
+callback subscribe_cb(getLocationRet ret)
 callback geolocation_fail_cb(string data, int code)
 struct subscribeParam {
     callback subscribe_cb callback

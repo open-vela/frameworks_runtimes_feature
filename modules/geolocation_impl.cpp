@@ -68,6 +68,7 @@ struct location_context {
     uv_timer_t timer;
     std::queue<GnssMetaData> getQueue;
     std::list<GnssMetaData> subList;
+    ft_context_ref ft_ctx;
     int ref_count;
 };
 
@@ -107,56 +108,45 @@ static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t data
         return;
     }
 
-    if (!context->getQueue.empty()) {
-        sensor_gnss* ret_t = (sensor_gnss*)data;
-        GnssMetaData meta = context->getQueue.front();
-        ft_context_ref ft_ctx = FeatureGetContext(meta.instance);
-        system_geolocation_getLocationRet ret;
+    system_geolocation_getLocationRet ret;
+    ft_context_ref ft_ctx = context->ft_ctx;
+    size_t cnt = datalen / sizeof(sensor_gnss);
 
+    for (size_t i = 0; i < cnt; i++) {
+        sensor_gnss* ret_t = (sensor_gnss*)data + i;
         if (!isnormal(ret_t->altitude) || !isnormal(ret_t->latitude) || !isnormal(ret_t->longitude) || !isnormal(ret_t->ground_speed) || !isnormal(ret_t->eph) || !isnormal(ret_t->epv)) {
-            FeaturePromiseReject(meta.instance, meta.pid, GENERAL, "getLocation data invalid");
+            for (auto it = context->subList.begin(); it != context->subList.end(); it++) {
+                INVOKE_FAIL_CB(it->instance, it->fail, "subscribe data invalid", GENERAL);
+            }
+            if (i == cnt - 1 && !context->getQueue.empty()) {
+                GnssMetaData get_meta = context->getQueue.front();
+                FeaturePromiseReject(get_meta.instance, get_meta.pid, GENERAL, "getLocation data invalid");
+                FeatureFreeInstanceHandle(get_meta.instance);
+                context->getQueue.pop();
+            }
         } else {
-            ft_value_t* accuracyInfo = static_cast<ft_value_t*>(FeatureMalloc(sizeof(ft_value_t), FT_ANY_REF));
-            *accuracyInfo = ft_new_object(ft_ctx);
+            ft_value_t accuracyInfo = ft_new_object(ft_ctx);
             ft_value_t horizontal = ft_from_double(ft_ctx, round(ret_t->hdop * PRECISION) / PRECISION);
             ft_value_t vertical = ft_from_double(ft_ctx, round(ret_t->vdop * PRECISION) / PRECISION);
-            ft_obj_set_property(ft_ctx, *accuracyInfo, "horizontal", horizontal);
-            ft_obj_set_property(ft_ctx, *accuracyInfo, "vertical", vertical);
+            ft_obj_set_property(ft_ctx, accuracyInfo, "horizontal", horizontal);
+            ft_obj_set_property(ft_ctx, accuracyInfo, "vertical", vertical);
             ret.latitude = round(ret_t->latitude * PRECISION) / PRECISION;
             ret.longitude = round(ret_t->longitude * PRECISION) / PRECISION;
             ret.altitude = round(ret_t->altitude * PRECISION) / PRECISION;
             ret.accuracy = int(ret_t->eph);
             ret.speed = round(ret_t->ground_speed * PRECISION) / PRECISION;
-            ret.accuracyInfo = accuracyInfo;
-            FeaturePromiseResolve(meta.instance, meta.pid, &ret);
-            ft_free_value(ft_ctx, *accuracyInfo);
-            FeatureFreeValue(accuracyInfo);
-        }
-        context->getQueue.pop();
-        FeatureFreeInstanceHandle(meta.instance);
-    }
-
-    if (!context->subList.empty()) {
-        system_geolocation_subscribeRet ret;
-        int cnt = datalen / sizeof(sensor_gnss);
-
-        for (int i = 0; i < cnt; i++) {
-            sensor_gnss* ret_t = (sensor_gnss*)data + i;
-            if (!isnormal(ret_t->altitude) || !isnormal(ret_t->latitude) || !isnormal(ret_t->longitude) || !isnormal(ret_t->ground_speed) || !isnormal(ret_t->eph) || !isnormal(ret_t->epv)) {
-                for (auto it = context->subList.begin(); it != context->subList.end(); it++) {
-                    INVOKE_FAIL_CB(it->instance, it->fail, "subscribe data invalid", GENERAL);
-                }
-                return;
+            ret.accuracyInfo = &accuracyInfo;
+            if (i == cnt - 1 && !context->getQueue.empty()) {
+                GnssMetaData get_meta = context->getQueue.front();
+                FeaturePromiseResolve(get_meta.instance, get_meta.pid, &ret);
+                FeatureFreeInstanceHandle(get_meta.instance);
+                context->getQueue.pop();
             }
 
-            ret.latitude = round(ret_t->latitude * PRECISION) / PRECISION;
-            ret.longitude = round(ret_t->longitude * PRECISION) / PRECISION;
-            ret.altitude = round(ret_t->altitude * PRECISION) / PRECISION;
-            ret.accuracy = int(ret_t->eph);
-            ret.speed = round(ret_t->ground_speed * PRECISION) / PRECISION;
             for (auto it = context->subList.begin(); it != context->subList.end(); it++) {
                 INVOKE_SUCCESS_CB(it->instance, it->callback, &ret);
             }
+            ft_free_value(ft_ctx, accuracyInfo);
         }
     }
 
@@ -338,7 +328,6 @@ void system_geolocation_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle h
         FEATURE_LOG_ERROR("%s::%s() malloc error", file_tag, __FUNCTION__);
         return;
     }
-
     uv_timer_init(FeatureGetUVLoop(manger), &context->timer);
     uv_timer_start(&context->timer, geolocation_timer_handler, 0, 1000);
     context->ref_count++;
@@ -347,6 +336,12 @@ void system_geolocation_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle h
 
 void system_geolocation_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
+    FeatureProtoHandle protohandle = FeatureGetProtoHandle(handle);
+    location_context* context = static_cast<location_context*>(FeatureGetProtoData(protohandle));
+    if (!context->ft_ctx) {
+        context->ft_ctx = FeatureGetContext(handle);
+    }
+
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 }
 
