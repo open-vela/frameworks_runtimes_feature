@@ -259,9 +259,9 @@ void geolocation_timer_handler(uv_timer_t* timer)
         GnssMetaData meta = context->getQueue.front();
         timeval current;
         gettimeofday(&current, NULL);
-        if (current.tv_sec - meta.time.tv_sec > meta.timeout) {
+        if (current.tv_sec - meta.time.tv_sec > meta.timeout / 1000) {
             FEATURE_LOG_ERROR("%s::%s() time out", file_tag, __FUNCTION__);
-            FeaturePromiseReject(meta.instance, meta.pid, TIMEOUT, "getLocation data invalid");
+            FeaturePromiseReject(meta.instance, meta.pid, TIMEOUT, "getLocation time out");
             context->getQueue.pop();
             continue;
         }
