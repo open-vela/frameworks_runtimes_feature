@@ -633,6 +633,23 @@ void FeatureSetProtoData(FeatureProtoHandle handle, void* data)
     proto->setNative(data);
 }
 
+void* FeatureSetManagerUserDataWithFreeCallback(FeatureManagerHandle handle,
+    const char* name, void* data, ManagerUserdataFreeCallback free_cb)
+{
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    void* ret = manager->getUserData(name);
+    manager->setUserData(name, data, free_cb);
+    return ret;
+}
+
+bool FeatureManagerHasUserData(FeatureManagerHandle handle, const char* name)
+{
+    FEATURE_CHECK_PTR(handle, false, "handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    return manager->hasUserData(name);
+}
+
 void* FeatureGetObjectData(FeatureInstanceHandle handle)
 {
     FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")

@@ -76,6 +76,7 @@ FeatureManager::~FeatureManager()
     runAllTasks(FEATURE_TASK_MODE_FREE);
     checkFeatureInstances();
     feature_list_delete(&feature_node_list_);
+    clearUserData();
 }
 
 void FeatureManager::setFeatureContext(ft_context_ref ft_ctx)
@@ -139,6 +140,15 @@ void FeatureManager::enqueueTask(TaskData& task_data)
     uv_mutex_unlock(&mutex_);
     if (async_)
         uv_async_send(async_);
+}
+
+void FeatureManager::clearUserData()
+{
+    for (auto& it : user_data_) {
+        if (it.second.free_cb) {
+            it.second.free_cb(it.second.data);
+        }
+    }
 }
 
 void FeatureManager::runAllTasks(int mode)
