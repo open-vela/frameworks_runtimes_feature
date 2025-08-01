@@ -480,6 +480,7 @@ extern "C" int main(int argc, char** argv)
             closed = 1;
             break;
         }
+        usleep(20000);
         uv_run(main_loop, UV_RUN_NOWAIT);
     }
 
