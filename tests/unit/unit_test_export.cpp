@@ -457,12 +457,13 @@ TEST_F(FeatureExportTestQjs, FeatureGetBindingObject1)
 {
     //测试是否能正确获取绑定对象
     auto binding_obj = FeatureGetBindingObject(instance_handle);
-    EXPECT_EQ(binding_obj, FT_VAL_GET_JS_VAL(param));
+    EXPECT_EQ(JS_VALUE_GET_TAG(binding_obj), JS_VALUE_GET_TAG(FT_VAL_GET_JS_VAL(param)));
+    EXPECT_EQ(JS_VALUE_GET_PTR(binding_obj), JS_VALUE_GET_PTR(FT_VAL_GET_JS_VAL(param)));
 }
 TEST_F(FeatureExportTestQjs, FeatureGetBindingObject_handleIsNull)
 {
     auto binding_obj = FeatureGetBindingObject(nullptr);
-    EXPECT_EQ(binding_obj, FEATURE_UNDEFINED);
+    EXPECT_EQ(JS_IsUndefined(binding_obj), true);
 }
 
 // =============================================================================
@@ -693,7 +694,7 @@ TEST_F(FeatureExportTestQjs, FeaturePromiseResolve1)
     FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
     EXPECT_EQ(FeaturePromiseResolve(instance_handle, pid, 1), true);
     // FeaturePromiseResolve后确认promise已被释放
-    EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
+    EXPECT_EQ(JS_IsUndefined(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid)), true);
 }
 
 TEST_F(FeatureExportTestQjs, FeaturePromiseResolve_handleIsNull)
@@ -718,7 +719,7 @@ TEST_F(FeatureExportTestQjs, FeaturePromiseReject1)
     FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addPromise(promise_type.resolveType);
     EXPECT_EQ(FeaturePromiseReject(instance_handle, pid, 400, "reject"), true);
     // FeaturePromiseReject
-    EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
+    EXPECT_EQ(JS_IsUndefined(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid)), true);
 }
 
 TEST_F(FeatureExportTestQjs, FeaturePromiseReject_CompatibleWithFailCb)
@@ -738,7 +739,7 @@ TEST_F(FeatureExportTestQjs, FeaturePromiseReject_CompatibleWithFailCb)
     FtPromiseId pid = ((FeatureInstanceQjs*)(instance_handle))->addAsyncCallbacks(promise_type.resolveType, JS_UNDEFINED, fail_cb, JS_UNDEFINED);
     EXPECT_EQ(FeaturePromiseReject(instance_handle, pid, 400, "reject"), true);
     // FeaturePromiseReject
-    EXPECT_EQ(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid), FEATURE_VALUE_UNDEFINED);
+    EXPECT_EQ(JS_IsUndefined(((FeatureInstanceQjs*)(instance_handle))->getPromise(pid)), true);
 }
 
 TEST_F(FeatureExportTestQjs, FeaturePromiseReject_handleIsNull)

@@ -54,7 +54,7 @@ TEST_F(FeatureContextTest, ft_undefined_1)
     ft_value_t undefined_val = ft_undefined(ft_test_ctx);
 
     // 确保返回的值不为 nullptr，且是 undefined 类型
-    EXPECT_EQ(FT_VAL_GET_JS_VAL(undefined_val), FEATURE_UNDEFINED);
+    EXPECT_EQ(JS_IsUndefined(FT_VAL_GET_JS_VAL(undefined_val)), true);
 
     // 清理
     ft_free_value(ft_test_ctx, undefined_val);
@@ -1146,7 +1146,7 @@ TEST_F(FeatureContextTest, ft_obj_get_property_1)
     ft_value_t result = ft_obj_get_property(ft_test_ctx, obj, prop_name);
 
     // 确保获取到的属性值等于设置的值
-    EXPECT_NE(FT_VAL_GET_JS_VAL(result), FEATURE_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(FT_VAL_GET_JS_VAL(result)), true);
     const char* result_str = ft_to_string(ft_test_ctx, result);
     EXPECT_STREQ(result_str, "test_value");
 
