@@ -252,9 +252,9 @@ TEST_F(FeatureMainExportTestQjs, FeatureRequire1)
     FT_VAL_GET_JS_VAL(ft_value) = JS_UNDEFINED;
     auto ft_obj = FeatureRequire(manager_handle_qjs, ft_value, pDesc1.name);
     auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
-    EXPECT_NE(js_obj, JS_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(js_obj), true);
     JSValue unit_test = JS_GetPropertyStr(js_env.ctx, js_obj, "unitTest");
-    EXPECT_NE(unit_test, JS_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(unit_test), true);
     JS_FreeValue(js_env.ctx, unit_test);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), ft_obj);
 }
@@ -282,7 +282,7 @@ TEST_F(FeatureMainExportTestQjs, FeatureFindFeature1)
     FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
     auto ft_obj = FeatureFindFeature(manager_handle_qjs, pDesc1.name);
     auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
-    EXPECT_NE(js_obj, JS_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(js_obj), true);
     auto pDesc2 = manager->getFeatureRegistry()->findFeature(pDesc1.name);
     EXPECT_EQ(pDesc2, &pDesc1);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), ft_obj);
@@ -353,9 +353,9 @@ TEST_F(FeatureMainExportTestQjs, FeatureCreateFeature1)
     FT_VAL_GET_JS_VAL(binding_obj) = JS_UNDEFINED;
     auto new_feature = FeatureCreateFeature(manager_handle_qjs, js_feature_prototype, binding_obj);
     auto js_obj = FT_VAL_GET_JS_VAL(new_feature);
-    EXPECT_NE(js_obj, JS_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(js_obj), true);
     JSValue unit_test = JS_GetPropertyStr(js_env.ctx, js_obj, "unitTest");
-    EXPECT_NE(unit_test, JS_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(unit_test), true);
     JS_FreeValue(js_env.ctx, unit_test);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), new_feature);
     ft_free_value(FeatureManagerGetContext(manager_handle_qjs), js_feature_prototype);
@@ -378,7 +378,7 @@ TEST_F(FeatureMainExportTestQjs, FeatureCreateFeature_prototypeIsUdefined)
     FT_VAL_GET_JS_VAL(binding_obj) = JS_UNDEFINED;
     auto ft_obj = FeatureCreateFeature(manager_handle_qjs, js_feature_prototype, binding_obj);
     auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
-    EXPECT_EQ(js_obj, JS_UNDEFINED);
+    EXPECT_NE(JS_IsUndefined(js_obj), true);
 }
 
 // =============================================================================
