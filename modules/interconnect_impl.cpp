@@ -17,8 +17,8 @@
 
 #include "interconnect.h"
 
+#include <set>
 #include <string>
-#include <unordered_map>
 
 #include "feature_trace.h"
 #include "uv_ext.h"
@@ -100,17 +100,14 @@ enum MiwearStatus {
 
 /**
  * @brief 代表与手机的一个连接上下文。生命周期跟随
- * featureProto。在快应用线程内是一个单例。 该单例有两种销毁路径。
- *      1. shutDown() 时，如果还没有创建连接，则直接调用 destroy()。
- *      2. shutDown() 时，如果已经创建连接，则由 uv_miwear_t 的 close 回调执行
- * destroy()
+ * featureProto。在快应用线程内是一个单例。 该单例将在 shutDown 时，调用 destroy() 销毁
  */
 class InterconnectContext {
 public:
     struct SendTask {
         std::string msg;
         InterconnectContext* conn { nullptr };
-        uv_timer_t* timer { nullptr };
+        uv_timer_t* timer { nullptr }; // for pending send task
         FtPromiseId pid;
     };
 
@@ -132,13 +129,25 @@ public:
     {
         INTERCONNECT_INFO("connect callback %s", client ? client : "nothing");
         auto* conn = static_cast<InterconnectContext*>(miwear->data);
+        assert(msg);
+        if (!conn) {
+            INTERCONNECT_INFO("conn is null, miwear connection has closed");
+            if (msg->header.type == MIWEAR_MESSAGE_TYPE_STATUS) {
+                auto miwear_status = static_cast<const uv_miwear_status_t*>(msg->data);
+                if (miwear_status->status == MIWEAR_STATUS_CONNECTION_CLOSED) {
+                    free(miwear);
+                }
+            }
+
+            return;
+        }
+
         if (unlikely(status != 0)) {
             INTERCONNECT_ERROR("connect failed, status: %d", status);
             conn->ProcessPendingDiagnosis(false);
             return;
         }
 
-        assert(msg);
         if (msg->header.type == MIWEAR_MESSAGE_TYPE_STATUS) {
             auto miwear_status = static_cast<const uv_miwear_status_t*>(msg->data);
             auto old_status = conn->set_status(miwear_status->status);
@@ -150,13 +159,6 @@ public:
                 conn->InvokeError("connect to app failed",
                     static_cast<int>(StatusCode::kUnknown));
                 conn->ProcessPendingDiagnosis(false);
-                break;
-            }
-            case MIWEAR_STATUS_CONNECTION_CLOSED: {
-                // no one should be holding 'conn', just destroy it
-                // 连接关闭
-                FEATURE_NOTE_MARK("interconnect_closed");
-                conn->destroy();
                 break;
             }
             case MIWEAR_STATUS_PHONE_CONNECTED: {
@@ -207,7 +209,8 @@ public:
         : loop_(loop)
         , status_(0) // 0 -> connecting
     {
-        miwear_.data = this;
+        miwear_ = static_cast<uv_miwear_t*>(malloc(sizeof(uv_miwear_t)));
+        miwear_->data = this;
     }
 
     InterconnectContext(const InterconnectContext&) = delete;
@@ -248,7 +251,7 @@ public:
         FEATURE_NOTE_MARK("interconnect_start");
         int res = 0;
         INTERCONNECT_INFO("connect to %s", package_name_.c_str());
-        res = uv_miwear_connect(loop_, &miwear_, package_name_.c_str(),
+        res = uv_miwear_connect(loop_, miwear_, package_name_.c_str(),
             __miwear_connect_cb);
         if (res != 0) {
             INTERCONNECT_ERROR("connect failed");
@@ -272,6 +275,10 @@ public:
         // diagnosis 超时
         FEATURE_NOTE_MARK("interconnect_diagnosis_timeout");
         auto conn = static_cast<system_interconnect::InterconnectContext*>(handle->data);
+        if (!conn) {
+            INTERCONNECT_INFO("conn is null");
+            return;
+        }
         conn->ProcessPendingDiagnosis(true);
     }
 
@@ -285,6 +292,7 @@ public:
             uv_timer_stop(diagnosis_timer_);
             uv_close(reinterpret_cast<uv_handle_t*>(diagnosis_timer_),
                 __mm_free_handle);
+            diagnosis_timer_ = nullptr;
             if (diagnosis_promise_id_ != kInvalidPromiseId) {
                 INTERCONNECT_WARN("unrejected diagnosis call");
                 diagnosis_promise_id_ = kInvalidPromiseId;
@@ -292,9 +300,12 @@ public:
         }
 
         // 处理 pending send tasks
-        for (const auto& [_, task] : send_tasks_) {
-            task->timer->data = nullptr; // remove ref to task
-            uv_close(reinterpret_cast<uv_handle_t*>(task->timer), __mm_free_handle);
+        for (const auto task : send_tasks_) {
+            if (task->timer) { // 清除 pending send task
+                task->timer->data = nullptr; // remove ref to task
+                uv_close(reinterpret_cast<uv_handle_t*>(task->timer), __mm_free_handle);
+            }
+
             INTERCONNECT_WARN("unrejected send task");
             delete task;
         }
@@ -321,6 +332,7 @@ public:
             INTERCONNECT_ERROR("timeout should be positive");
             return StatusCode::kInvalidArgs;
         }
+
         if (diagnosis_promise_id_ != kInvalidPromiseId) {
             INTERCONNECT_INFO("pending diagnosis call already exists");
             return StatusCode::kUnsupported;
@@ -344,14 +356,15 @@ public:
      */
     void ProcessPendingSendTasks()
     {
-        for (const auto& [_, task] : send_tasks_) {
-            assert(task->timer);
+        for (const auto task : send_tasks_) {
+            if (!task->timer) { // no timer means send task has been sent
+                continue;
+            }
             uv_timer_stop(task->timer);
             uv_close(reinterpret_cast<uv_handle_t*>(task->timer), __mm_free_handle);
             task->timer = nullptr;
             SendMsg(task);
         }
-        send_tasks_.clear();
     }
 
     /**
@@ -434,6 +447,10 @@ public:
         FEATURE_NOTE_MARK("interconnect_send_success");
         auto conn = static_cast<system_interconnect::InterconnectContext*>(miwear->data);
         SendTask* task = static_cast<SendTask*>(cb_para);
+        if (!conn) {
+            INTERCONNECT_INFO("conn is closed");
+            return;
+        }
         conn->ProcessSendResult(
             task, status == 0 ? SendResult::kOk : SendResult::kFailed);
     }
@@ -451,15 +468,17 @@ public:
      */
     void ProcessSendResult(SendTask* task, SendResult result)
     {
+        if (!send_tasks_.count(task)) {
+            return;
+        }
+
+        send_tasks_.erase(task);
         switch (result) {
         case SendResult::kOk: {
             FeaturePromiseResolve(handle_, task->pid);
             break;
         }
         case SendResult::kTimeout: {
-            uintptr_t task_id = reinterpret_cast<uintptr_t>(task);
-            assert(send_tasks_.count(task_id));
-            send_tasks_.erase(task_id);
             FeaturePromiseReject(handle_, task->pid,
                 static_cast<int>(StatusCode::kTimeout),
                 "send timeout");
@@ -498,11 +517,11 @@ public:
      */
     void shutdown()
     {
-        if (connect_send_) { // 已经开始连接了，所有权归 miwear_
-            uv_miwear_close(&miwear_);
-        } else { // 没有开始连接，直接执行 destroy()
-            destroy();
+        if (connect_send_) { // 已经开始连接了
+            miwear_->data = nullptr; // 清空 conn 指针
+            uv_miwear_close(miwear_);
         }
+        destroy();
     }
 
     void set_package_name(const char* package_name)
@@ -621,29 +640,24 @@ public:
         msg.header.len = task->msg.size();
         msg.header.type = MIWEAR_MESSAGE_TYPE_DATA;
 
-        uv_miwear_send(&miwear_, NULL, &msg, __miwear_send_cb,
+        uv_miwear_send(miwear_, NULL, &msg, __miwear_send_cb,
             static_cast<void*>(task));
         return;
     }
 
-    // TODO 将这个接口拆出去，不要做成类函数
     /**
      * @brief 创建一个 send 任务
      *
      * @param parms 发送参数
      * @param is_pending 是否是 pending 任务
      */
-    SendTask* CreateSendTask(std::string msg, FtPromiseId pid, bool is_pending)
+    SendTask* CreateSendTask(std::string msg, FtPromiseId pid)
     {
         SendTask* task = new SendTask();
         task->msg = std::move(msg);
         task->pid = pid;
         task->conn = this;
-
-        if (is_pending) { // pending 任务，需要缓存
-            assert(send_tasks_.count((uintptr_t)(task)) == 0);
-            send_tasks_[(uintptr_t)(task)] = task;
-        }
+        send_tasks_.insert(task);
         return task;
     }
 
@@ -663,7 +677,7 @@ public:
             return s;
         }
 
-        SendTask* task = CreateSendTask(std::move(buffer), pid, true);
+        SendTask* task = CreateSendTask(std::move(buffer), pid);
         uv_timer_t* timer = static_cast<uv_timer_t*>(calloc(1, sizeof(uv_timer_t)));
         INTERCONNECT_INFO("pending send task %p, %dms", task, parms->timeout);
 
@@ -764,10 +778,10 @@ private:
     bool is_pending_connect_ { false };
 
     /// @brief miwear 连接实例
-    uv_miwear_t miwear_ {};
+    uv_miwear_t* miwear_ { nullptr };
 
     /// @brief 发送的数据的缓存，主要用于网络断开连接时，缓存数据。
-    std::unordered_map<uintptr_t, SendTask*> send_tasks_;
+    std::set<SendTask*> send_tasks_;
 
     /// @brief dignosis 定时器，
     // 如果连接正在建立，PendingDiagnosis 会创建该 timer，用于等待连接结果返回
@@ -775,14 +789,14 @@ private:
     uv_timer_t* diagnosis_timer_ { nullptr };
     FtPromiseId diagnosis_promise_id_ { kInvalidPromiseId };
 
-    /// @brief feature 句柄
+    /// @brief interface create by interconnect.instance()，only one per feature
     FeatureInterfaceHandle handle_ { 0 };
 
     /// @brief 用户注册的回调函数
     FtCallbackId recv_func_ { 0 }; // onmessage
     FtCallbackId conn_func_ { 0 }; // onopen
     FtCallbackId error_func_ { 0 }; // onerror
-    system_interconnect_ErrorInfo* err_info_ { nullptr };
+    system_interconnect_ErrorInfo* err_info_ { nullptr }; // cache error info for onerror
     FtCallbackId disconn_func_ { 0 }; // onclose
 };
 
@@ -987,7 +1001,7 @@ void system_interconnect_InterConn_interface_MiwearConnect_send(
         if (s != system_interconnect::StatusCode::kOk) {
             goto error;
         }
-        conn->SendMsg(conn->CreateSendTask(std::move(buffer), pid, false));
+        conn->SendMsg(conn->CreateSendTask(std::move(buffer), pid));
     } else if (conn->IsConnecting()) {
         INTERCONNECT_INFO("status is connecting, pending %ds", parms->timeout);
 
