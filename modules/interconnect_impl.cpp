@@ -1202,7 +1202,8 @@ FtString system_interconnect_InterConn_interface_MiwearConnect_getApkStatus(
         ret_str = "DISCONNECTED";
         break;
     default:
-        ret_str = "CONNECTING";
+        INTERCONNECT_INFO("status %s", conn->status_name());
+        ret_str = "DISCONNECTED";
         break;
     }
     INTERCONNECT_INFO("get apkstatus %s", ret_str);
