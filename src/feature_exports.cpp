@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <mutex>
 #include <protobuf-c/protobuf-c.h>
 #include <string.h>
 
@@ -62,8 +63,6 @@ using namespace feature_framework;
         }                                            \
     } while (0);
 
-static void* FeatureInstanceAllocTypeInternal(FeatureInstanceHandle handle, size_t size, FeatureType type, bool freeType);
-
 // memory utils functions
 char* FeatureStrCopy(FeatureInstanceHandle handle, const char* str)
 {
@@ -72,15 +71,26 @@ char* FeatureStrCopy(FeatureInstanceHandle handle, const char* str)
     return buf;
 }
 
+static FeatureType getArrayFeatureType(FeatureType element_type)
+{
+    static std::map<FeatureType, ArrayType*> g_array_type_map;
+    static std::mutex g_array_type_map_mutex;
+    std::lock_guard<std::mutex> lock(g_array_type_map_mutex);
+
+    auto [it, inserted] = g_array_type_map.emplace(element_type, nullptr);
+    if (inserted) {
+        ArrayType* new_array_type = static_cast<ArrayType*>(malloc(sizeof(ArrayType)));
+        new_array_type->header.type = COMPLEX_ARRAY;
+        new_array_type->header.size = sizeof(FtArray);
+        new_array_type->element_type = element_type;
+        it->second = new_array_type;
+    }
+    return FT_MK_COMPLEX(it->second);
+}
+
 FtArray* FeatureCreateArray(FeatureInstanceHandle handle, size_t capacity, FeatureType element_type)
 {
-
-    ArrayType* array_type = static_cast<ArrayType*>(malloc(sizeof(ArrayType)));
-    array_type->header.type = COMPLEX_ARRAY;
-    array_type->header.size = sizeof(FtArray);
-    array_type->element_type = element_type;
-
-    FtArray* pArray = static_cast<FtArray*>(FeatureInstanceAllocTypeInternal(handle, sizeof(FtArray), FT_MK_COMPLEX(array_type), true));
+    FtArray* pArray = static_cast<FtArray*>(FeatureInstanceAllocType(handle, sizeof(FtArray), getArrayFeatureType(element_type)));
     pArray->_capacity = capacity;
     pArray->_size = 0;
     pArray->_element = malloc(capacity * getValueSize(element_type));
@@ -476,9 +486,6 @@ void FeatureFreeValue(void* ptr)
                 FEATURE_LOG_ERROR("unsupported type !");
             } break;
             }
-            if (header->complex_free) {
-                free(complexType1);
-            }
         } else if (featureType == FT_JSON_OBJ) {
             FtJSONObject* json_obj = (FtJSONObject*)ptr;
             if (json_obj->str) {
@@ -536,7 +543,7 @@ void* FeatureInstanceAllocProtobuf(FeatureInstanceHandle handle, const ProtobufC
     return p;
 }
 
-static void* FeatureInstanceAllocTypeInternal(FeatureInstanceHandle handle, size_t size, FeatureType type, bool freeType)
+void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, FeatureType type)
 {
     size += sizeof(FTObjHeader) + sizeof(FeatureType);
     void* p = malloc(size);
@@ -548,15 +555,9 @@ static void* FeatureInstanceAllocTypeInternal(FeatureInstanceHandle handle, size
     *(FeatureType*)p = type;
     FTObjHeader* header = (FTObjHeader*)((uintptr_t)p + sizeof(FeatureType));
     header->ref_count = 1;
-    header->complex_free = freeType;
     header->type = MEMORY_FEATURE_TYPE;
     FeatureRecordMemoryUsage(handle, header);
     return (void*)((uintptr_t)p + sizeof(FeatureType) + sizeof(FTObjHeader));
-}
-
-void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, FeatureType type)
-{
-    return FeatureInstanceAllocTypeInternal(handle, size, type, false);
 }
 
 void* FeatureInstanceDupValue(void* ptr)
@@ -569,6 +570,13 @@ void* FeatureInstanceDupValue(void* ptr)
 void FeatureInstanceFreeValue(void* ptr)
 {
     FeatureFreeValue(ptr);
+}
+
+int32_t FeatureGetValueRefCount(void* ptr)
+{
+    void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
+    FTObjHeader* header = (FTObjHeader*)header_ptr;
+    return header->ref_count;
 }
 
 static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle)
@@ -1032,4 +1040,103 @@ FtJsonObject FeatureNewJSONObject(const char* str)
     FtJsonObject json_obj = FeatureAllocJSONObject(strlen(str) + 1);
     sprintf(json_obj->str, "%s", str);
     return json_obj;
+}
+
+// some promise resolve functions
+FtBool FeatureFtStringPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtString val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtIntPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtInt val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtUint32PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtUint32 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtInt8PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtInt8 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtUint8PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtUint8 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtInt16PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtInt16 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtUint16PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtUint16 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtInt64PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtInt64 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtUint64PromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtUint64 val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtFloatPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtFloat val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtDoublePromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtDouble val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtBoolPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtBool val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtAnyPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtAny val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
+}
+
+FtBool FeatureFtArrayPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid, FtArray* val)
+{
+    return FeaturePromiseResolve(hInstance, pid, val);
 }

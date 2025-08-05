@@ -230,6 +230,14 @@ void* FeatureDupValue(void* ptr);
 void FeatureFreeValue(void* ptr);
 
 /**
+ * @brief get feature value reference count
+ *
+ * @param[in] ptr the pointer created by FeatureMalloc
+ * @return int32_t reference count
+ */
+int32_t FeatureGetValueRefCount(void* ptr);
+
+/**
  * @brief get feature proto handle from feature instance
  *
  * @param[in] handle FeatureInstanceHandle
@@ -666,6 +674,35 @@ FtJsonObject FeatureAllocJSONObject(size_t str_len);
  * @return FtJsonObject
  */
 FtJsonObject FeatureNewJSONObject(const char* str);
+
+// basic promise resolve functions
+FtBool FeatureFtStringPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtString val);
+
+FtBool FeatureFtIntPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtInt val);
+
+FtBool FeatureFtUint32PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtUint32 val);
+
+FtBool FeatureFtInt8PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtInt8 val);
+
+FtBool FeatureFtUint8PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtUint8 val);
+
+FtBool FeatureFtInt16PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtInt16 val);
+
+FtBool FeatureFtUint16PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtUint16 val);
+
+FtBool FeatureFtInt64PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtInt64 val);
+
+FtBool FeatureFtUint64PromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtUint64 val);
+
+FtBool FeatureFtFloatPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtFloat val);
+
+FtBool FeatureFtDoublePromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtDouble val);
+
+FtBool FeatureFtBoolPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtBool val);
+
+FtBool FeatureFtAnyPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtAny val);
+
+FtBool FeatureFtArrayPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtArray* val);
 
 #ifdef __cplusplus
 }

@@ -61,11 +61,11 @@ typedef void (*StubFunc)(FeatureInterfaceHandle handle, AppendData adata, void**
 #define MEMORY_REF_COUNT_ONLY 0
 #define MEMORY_FEATURE_TYPE 1
 #define MEMORY_PROTOBUF 1 << 1
+int FeatureTypeGetValueSize(FeatureType ft);
 
 typedef struct FTObjHeader {
     uint32_t type : 2;
-    uint32_t complex_free : 1;
-    uint32_t ref_count : 29;
+    uint32_t ref_count : 30;
 #ifdef ENABLE_FEATURE_MEM_TRACE
     const FeatureDescription* desc; // 只能记录desc, 保证指针一直有效
 #endif

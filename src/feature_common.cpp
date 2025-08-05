@@ -161,6 +161,11 @@ int getValueSize(FeatureType featureType)
     return 0;
 }
 
+int FeatureTypeGetValueSize(FeatureType ft)
+{
+    return FT_IS_REFERENCE(ft) ? sizeof(uintptr_t) : getValueSize(ft);
+}
+
 bool convertOptional(OptionalType* opt, void* out)
 {
     FEATURE_CHECK_NE(out, nullptr);
