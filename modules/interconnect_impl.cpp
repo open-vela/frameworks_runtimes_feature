@@ -722,11 +722,11 @@ public:
     void InvokeDisconnect(std::string msg, int code)
     {
         INTERCONNECT_INFO("InvokeDisconnect");
-        system_interconnect_CloseInfo* close_info = system_interconnectMallocCloseInfo();
+        system_interconnect_CloseInfo close_info = { 0 };
 
-        close_info->data = createString(msg.c_str(), msg.size());
-        close_info->code = code;
-        FeatureInvokeCallback(handle_, disconn_func_, close_info);
+        close_info.data = msg.c_str();
+        close_info.code = code;
+        FeatureInvokeCallback(handle_, disconn_func_, &close_info);
     }
 
     ///@brief 设置接口句柄,只允许设置一次,
@@ -747,12 +747,12 @@ public:
             INTERCONNECT_DEBUG("recv_func_ is null");
             return;
         }
-        system_interconnect_Message* msg = system_interconnectMallocMessage();
-        msg->data = createString(data, len);
+        system_interconnect_Message msg = { 0 };
+        msg.data = std::string(data, len).c_str();
 
         // don't output string data in release mode
-        INTERCONNECT_INFO("recv data len %d: %s", len, msg->data);
-        FeatureInvokeCallback(handle_, recv_func_, msg);
+        INTERCONNECT_INFO("recv data len %d: %s", len, msg.data);
+        FeatureInvokeCallback(handle_, recv_func_, &msg);
     }
 
 private:
