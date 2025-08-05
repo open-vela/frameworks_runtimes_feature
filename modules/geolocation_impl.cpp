@@ -15,6 +15,7 @@
  */
 
 #include <list>
+#include <math.h>
 #include <nuttx/nuttx.h>
 #include <queue>
 #include <sensor/gnss.h>
@@ -114,15 +115,10 @@ static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t data
 
     for (size_t i = 0; i < cnt; i++) {
         sensor_gnss* ret_t = (sensor_gnss*)data + i;
-        if (!isnormal(ret_t->altitude) || !isnormal(ret_t->latitude) || !isnormal(ret_t->longitude) || !isnormal(ret_t->ground_speed) || !isnormal(ret_t->eph) || !isnormal(ret_t->epv)) {
+        if (isnan(ret_t->altitude) || isnan(ret_t->latitude) || isnan(ret_t->longitude)) {
             for (auto it = context->subList.begin(); it != context->subList.end(); it++) {
-                INVOKE_FAIL_CB(it->instance, it->fail, "subscribe data invalid", GENERAL);
-            }
-            if (i == cnt - 1 && !context->getQueue.empty()) {
-                GnssMetaData get_meta = context->getQueue.front();
-                FeaturePromiseReject(get_meta.instance, get_meta.pid, GENERAL, "getLocation data invalid");
-                FeatureFreeInstanceHandle(get_meta.instance);
-                context->getQueue.pop();
+                FEATURE_LOG_ERROR("%s::%s() data is invalid", file_tag, __FUNCTION__);
+                break;
             }
         } else {
             ft_value_t accuracyInfo = ft_new_object(ft_ctx);
@@ -148,21 +144,21 @@ static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t data
             }
             ft_free_value(ft_ctx, accuracyInfo);
         }
-    }
 
-    if (!geolocation_is_active(context) && uv_is_active((uv_handle_t*)&context->topic)) {
-        FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
-        res = uv_topic_unsubscribe(topic);
-        if (res < 0) {
-            FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe fail", file_tag, __FUNCTION__);
+        if (!geolocation_is_active(context) && uv_is_active((uv_handle_t*)&context->topic)) {
+            FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
+            res = uv_topic_unsubscribe(topic);
+            if (res < 0) {
+                FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe fail", file_tag, __FUNCTION__);
+            }
+
+            res = uv_topic_close(topic, geolocation_topic_close_cb);
+            if (res < 0) {
+                FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
+            }
+
+            return;
         }
-
-        res = uv_topic_close(topic, geolocation_topic_close_cb);
-        if (res < 0) {
-            FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
-        }
-
-        return;
     }
 }
 
