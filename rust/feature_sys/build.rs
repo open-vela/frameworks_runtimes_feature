@@ -19,6 +19,7 @@ fn main() {
     let uv_include = vela_root.join("apps/system/libuv/libuv/include");
     let uv_dir = vela_root.join("apps/system/libuv/libuv");
     let protobuf_dir = vela_root.join("external/protobuf-c/protobuf-c/");
+    let nuttx_lib_include = vela_root.join("nuttx/include/nuttx/lib");
 
     let header_files = [
         feature_include.join("feature_context.h"),
@@ -43,6 +44,7 @@ fn main() {
         .size_t_is_usize(true) // use usize for size_t
         .layout_tests(false)
         .clang_arg("D__cplusplus")
+        .clang_arg("std=c11")
         .clang_args(nuttx_inc_dirs.iter().map(|d| format!("-I{}", d.display())))
         .clang_arg(format!("-I{}", feature_include.display()))
         .clang_arg(format!("-I{}", feature_include.parent().unwrap().display()))
@@ -50,6 +52,7 @@ fn main() {
         .clang_arg(format!("-I{}", uv_include.display()))
         .clang_arg(format!("-I{}", uv_dir.display()))
         .clang_arg(format!("-I{}", protobuf_dir.display()))
+        .clang_arg(format!("-I{}", nuttx_lib_include.display()))
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate bindings");
