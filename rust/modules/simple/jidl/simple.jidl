@@ -1,0 +1,54 @@
+module simple@1.0
+
+string foo()
+int bar(int a, float b = 5.0)
+double goo(double a=3.0)
+void doo()
+void hoo(string a)
+
+struct Chapter {
+    int page_count;
+    string title;
+    boolean is_end;
+}
+
+void set_chapter(Chapter chap);
+Chapter get_chapter();
+void set_chapter_array(Chapter[] chap);
+Chapter[] get_chapter_array();
+
+struct Book {
+    string book_name;
+    Chapter chap_1;
+}
+void set_book(Book book);
+Book get_book();
+
+callback moo_cb(int x, string y, double z)
+void moo(int a, moo_cb cb)
+
+promise<int> noo(boolean resolve)
+promise<string> poo(boolean resolve)
+
+interface Animal {
+  property string name;
+  property int legCount readonly;
+  int eatFood(string[] foods);
+  string run(int distance, string destination);
+}
+[ctor="true", target="dog"] Animal createDog(int type);
+
+interface Flyable {
+  string[] fly();
+  property string breed;
+}
+[ctor="true", target="airplane"] Flyable createAirplane();
+
+interface Bird extends Animal, Flyable {
+  property int weight;
+  promise<string[]> walk();
+}
+[ctor="true", target="pigeon"] Bird createPigeon();
+
+Animal createCat();
+void setAnimal(Animal animal);
