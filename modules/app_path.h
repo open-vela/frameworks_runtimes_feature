@@ -23,6 +23,8 @@
 
 #include <limits.h>
 
+#include "feature_types.h"
+
 #ifndef CONFIG_PATH_MAX
 #define CONFIG_PATH_MAX PATH_MAX
 #endif
@@ -33,6 +35,7 @@ char* app_relative_path_generator(const char* pkg, const char* type, const char*
 char* app_absolute_to_relative_path(const char* pkg, const char* absolute_path);
 char* app_absolute_path_generator(const char* pkg, const char* type, const char* filename);
 bool check_disk_limit();
+void notify_disk_space_insufficient(FeatureInstanceHandle feature, const char* pkg);
 bool is_path_in_tmp(const char* path);
 
 #endif
