@@ -73,11 +73,11 @@ char* FeatureStrCopy(FeatureInstanceHandle handle, const char* str)
 
 static FeatureType getArrayFeatureType(FeatureType element_type)
 {
-    static std::map<FeatureType, ArrayType*> g_array_type_map;
-    static std::mutex g_array_type_map_mutex;
-    std::lock_guard<std::mutex> lock(g_array_type_map_mutex);
+    static auto* g_array_type_map = new std::map<FeatureType, ArrayType*>;
+    static auto* g_array_type_map_mutex = new std::mutex;
+    std::lock_guard<std::mutex> lock(*g_array_type_map_mutex);
 
-    auto [it, inserted] = g_array_type_map.emplace(element_type, nullptr);
+    auto [it, inserted] = g_array_type_map->emplace(element_type, nullptr);
     if (inserted) {
         ArrayType* new_array_type = static_cast<ArrayType*>(malloc(sizeof(ArrayType)));
         new_array_type->header.type = COMPLEX_ARRAY;
