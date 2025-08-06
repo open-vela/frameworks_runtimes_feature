@@ -25,6 +25,7 @@ extern "C" {
 #include "feature_types.h"
 #include <inttypes.h>
 #include <protobuf-c/protobuf-c.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -64,8 +65,8 @@ typedef void (*StubFunc)(FeatureInterfaceHandle handle, AppendData adata, void**
 int FeatureTypeGetValueSize(FeatureType ft);
 
 typedef struct FTObjHeader {
-    uint32_t type : 2;
-    uint32_t ref_count : 30;
+    uint8_t type;
+    atomic_uint ref_count;
 #ifdef ENABLE_FEATURE_MEM_TRACE
     const FeatureDescription* desc; // 只能记录desc, 保证指针一直有效
 #endif

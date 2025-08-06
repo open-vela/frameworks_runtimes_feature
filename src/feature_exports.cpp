@@ -411,7 +411,15 @@ void* FeatureDupValue(void* ptr)
 {
     FEATURE_CHECK_PTR(ptr, nullptr, "ptr is null !")
     FTObjHeader* header = (FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
-    header->ref_count++;
+    unsigned int expected, desired;
+    do {
+        expected = atomic_load(&header->ref_count);
+        if (expected == 0) {
+            return NULL;
+        }
+        desired = expected + 1;
+        // use CAS to ensure refcount not changed during the check-and-change operation
+    } while (!atomic_compare_exchange_weak(&header->ref_count, &expected, desired));
     return ptr;
 }
 
@@ -423,7 +431,12 @@ void FeatureFreeValue(void* ptr)
     }
     void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
     FTObjHeader* header = (FTObjHeader*)header_ptr;
-    if (--header->ref_count > 0) {
+    unsigned int expected, desired;
+    do {
+        expected = atomic_load(&header->ref_count);
+        desired = expected - 1;
+    } while (!atomic_compare_exchange_weak(&header->ref_count, &expected, desired));
+    if (desired > 0) {
         return;
     }
 
@@ -528,7 +541,7 @@ void* FeatureInstanceAlloc(FeatureInstanceHandle handle, size_t size)
     }
     memset(p, 0, len);
     FTObjHeader* header = (FTObjHeader*)p;
-    header->ref_count = 1;
+    atomic_init(&(header->ref_count), 1);
     header->type = MEMORY_REF_COUNT_ONLY;
     FeatureRecordMemoryUsage(handle, header);
     return (void*)((uintptr_t)p + sizeof(FTObjHeader));
@@ -538,7 +551,7 @@ void* FeatureInstanceAllocProtobuf(FeatureInstanceHandle handle, const ProtobufC
 {
     void* p = FeatureInstanceAlloc(handle, desc->sizeof_message);
     FTObjHeader* header = (FTObjHeader*)(uintptr_t(p) - sizeof(FTObjHeader));
-    header->ref_count = 1;
+    atomic_init(&(header->ref_count), 1);
     header->type = MEMORY_PROTOBUF;
     return p;
 }
@@ -554,7 +567,7 @@ void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, Featur
     memset(p, 0, size);
     *(FeatureType*)p = type;
     FTObjHeader* header = (FTObjHeader*)((uintptr_t)p + sizeof(FeatureType));
-    header->ref_count = 1;
+    atomic_init(&(header->ref_count), 1);
     header->type = MEMORY_FEATURE_TYPE;
     FeatureRecordMemoryUsage(handle, header);
     return (void*)((uintptr_t)p + sizeof(FeatureType) + sizeof(FTObjHeader));
@@ -563,7 +576,7 @@ void* FeatureInstanceAllocType(FeatureInstanceHandle handle, size_t size, Featur
 void* FeatureInstanceDupValue(void* ptr)
 {
     FTObjHeader* header = (FTObjHeader*)((uintptr_t)ptr - sizeof(FTObjHeader));
-    header->ref_count++;
+    atomic_fetch_add(&(header->ref_count), 1);
     return ptr;
 }
 
@@ -576,7 +589,8 @@ int32_t FeatureGetValueRefCount(void* ptr)
 {
     void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
     FTObjHeader* header = (FTObjHeader*)header_ptr;
-    return header->ref_count;
+    unsigned int ret = atomic_load(&(header->ref_count));
+    return ret;
 }
 
 static inline FeatureManager* manager_from_instance(FeatureInstanceHandle handle)
