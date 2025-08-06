@@ -6,6 +6,7 @@ use syn::{
     parse::{Parse, ParseStream, Parser},
     parse_macro_input,
     punctuated::Punctuated,
+    token::Comma,
     Attribute, DeriveInput, FnArg, Ident, ItemFn, LitStr, Pat, ReturnType, Token, Type,
 };
 
@@ -98,49 +99,24 @@ pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
         syn::Ident::new(&proto_name, st_name.span())
     };
 
-    // 添加 instance 字段
-    match &mut input.fields {
-        syn::Fields::Named(fields) => {
-            fields.named.push(
-                syn::Field::parse_named
-                    .parse2(quote! {
-                        pub(crate) instance: FeatureInstance
-                    })
-                    .expect("Failed to parse new field"),
-            );
-        }
-        _ => panic!("FeatureInstance can only be used on structs with named fields"),
-    }
-
     let expanded = quote! {
         #input
 
         impl #st_name {
-
             pub fn get_handle(&self) -> FeatureInstanceHandle {
                 unsafe { self.instance.as_handle() }
             }
+        }
 
-            pub fn get_manager(&self) -> FeatureManager {
-                self.instance.get_manager()
-            }
+        impl std::ops::Deref for #st_name {
+            type Target = FeatureInstance;
 
-            pub fn is_detached(&self) -> bool {
-                self.instance.is_detached()
-            }
-
-            pub fn get_event_id(&self, name: &str) -> Option<FtEventId> {
-                self.instance.get_event_id(name)
-            }
-
-            pub fn get_event_name(&self, id: FtEventId) -> Option<String> {
-                self.instance.get_event_name(id)
-            }
-
-            pub fn get_event_callback_count(&self, id: FtEventId) -> i32 {
-                self.instance.get_event_callback_count(id)
+            fn deref(&self) -> &Self::Target {
+                &self.instance
             }
         }
+
+        impl FeatureInstanceTrait for #st_name {}
     };
 
     TokenStream::from(expanded)

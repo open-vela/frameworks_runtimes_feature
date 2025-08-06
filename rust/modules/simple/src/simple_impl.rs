@@ -50,11 +50,10 @@ impl SimplePrototype {
 
 #[feature_instance(name = "Simple")]
 pub struct SimpleImpl {
+    instance: FeatureInstance,
     chapter: Option<simple_Chapter>,
     book: Option<simple_Book>,
 }
-
-impl FeatureInstanceTrait for SimpleImpl {}
 
 // function implementation
 impl SimpleImpl {
@@ -231,7 +230,9 @@ impl Drop for SimpleImpl {
 }
 
 #[feature_instance(name = "Animal")]
-pub struct Dog {}
+pub struct Dog {
+    instance: FeatureInstance,
+}
 
 // function implementation
 impl Dog {
@@ -239,8 +240,6 @@ impl Dog {
         Dog { instance }
     }
 }
-
-impl FeatureInstanceTrait for Dog {}
 
 impl Animal for Dog {
     fn get_name(&self) -> FeatureString {
@@ -279,7 +278,9 @@ impl Drop for Dog {
 }
 
 #[feature_instance(name = "Flyable")]
-pub struct Airplane {}
+pub struct Airplane {
+    instance: FeatureInstance,
+}
 
 // function implementation
 impl Airplane {
@@ -287,8 +288,6 @@ impl Airplane {
         Airplane { instance }
     }
 }
-
-impl FeatureInstanceTrait for Airplane {}
 
 impl Flyable for Airplane {
     fn fly(&self) -> FeaturePrimitiveArray<FeatureString> {
@@ -318,7 +317,9 @@ impl Drop for Airplane {
 }
 
 #[feature_instance(name = "Bird")]
-pub struct Pigeon {}
+pub struct Pigeon {
+    instance: FeatureInstance,
+}
 
 // function implementation
 impl Pigeon {
@@ -326,8 +327,6 @@ impl Pigeon {
         Pigeon { instance }
     }
 }
-
-impl FeatureInstanceTrait for Pigeon {}
 
 impl Animal for Pigeon {
     fn get_name(&self) -> FeatureString {

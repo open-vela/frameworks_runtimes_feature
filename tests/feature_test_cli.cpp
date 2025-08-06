@@ -474,6 +474,12 @@ extern "C" int main(int argc, char** argv)
         uv_close((uv_handle_t*)&binder_poll, NULL);
     }
 #endif
+
+    // free g_manager
+    FeatureFreeManager(g_manager);
+    JS_FreeContext(js_env.ctx);
+    JS_FreeRuntime(js_env.rt);
+
     int closed = 0;
     for (int j = 0; j < 200; j++) {
         if (uv_loop_close(main_loop) == 0) {
@@ -506,9 +512,5 @@ extern "C" int main(int argc, char** argv)
         free(js_str);
         js_str = NULL;
     }
-    // free g_manager
-    FeatureFreeManager(g_manager);
-    JS_FreeContext(js_env.ctx);
-    JS_FreeRuntime(js_env.rt);
     return 0;
 }
