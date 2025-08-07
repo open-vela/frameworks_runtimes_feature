@@ -1,10 +1,12 @@
 use crate::simple_impl::*;
+use async_trait::async_trait;
 use feature_frm::*;
 use feature_sys::*;
 use std::ffi::c_int;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::sync::Arc;
+use vdk::async_runtime::runtime;
 
 unsafe extern "C" {
     pub fn simple_Chapter_struct_get_type() -> FeatureType;
@@ -56,6 +58,9 @@ impl FeatureTypeDescription for simple_Chapter_for_c {
 #[allow(non_camel_case_types)]
 #[derive(Clone)]
 pub struct simple_Chapter(FeaturePtr<simple_Chapter_for_c>);
+
+unsafe impl Send for simple_Chapter {}
+unsafe impl Sync for simple_Chapter {}
 
 impl simple_Chapter {
     pub fn new() -> Self {
@@ -134,6 +139,9 @@ pub struct simple_Book_for_c {
 #[allow(non_camel_case_types)]
 #[derive(Clone)]
 pub struct simple_Book(FeaturePtr<simple_Book_for_c>);
+
+unsafe impl Send for simple_Book {}
+unsafe impl Sync for simple_Book {}
 
 impl simple_Book {
     pub fn new() -> Self {
@@ -228,20 +236,23 @@ impl Promise for FtIntPromise {
 }
 
 #[derive(Default)]
-pub struct FtStringPromise;
+pub struct FeatureStringPromise;
 
-impl Promise for FtStringPromise {
-    type Output = FtString;
+impl Promise for FeatureStringPromise {
+    type Output = FeatureString;
 
     fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
+        println!("Resolved with: {}", value.as_str());
+        let ptr = value.as_ptr();
         unsafe {
-            FeatureFtStringPromiseResolve(instance.as_handle(), id, value);
+            FeatureFtStringPromiseResolve(instance.as_handle(), id, ptr);
         }
     }
 }
 
 // Simple trait for FeatureInstance
-pub trait Simple: FeatureInstanceTrait {
+#[async_trait]
+pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn foo(&mut self) -> FeatureString;
     fn bar(&mut self, a: FtInt, b: FtFloat) -> FtInt;
     fn goo(&mut self, a: FtDouble) -> FtDouble;
@@ -254,8 +265,8 @@ pub trait Simple: FeatureInstanceTrait {
     fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<simple_Chapter>);
     fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<simple_Chapter>>;
     fn moo(&mut self, a: i32, cb: moo_cb);
-    fn noo(&mut self, resolve: FtBool, pr: FeaturePromise<FtIntPromise>);
-    fn poo(&mut self, resolve: FtBool, pr: FeaturePromise<FtStringPromise>);
+    async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError>;
+    async fn poo(&mut self, resolve: FtBool) -> Result<FeatureString, PromiseError>;
     fn create_dog(&self) -> FeatureInterfaceHandle;
     fn create_airplane(&self) -> FeatureInterfaceHandle;
     fn create_pigeon(&self) -> FeatureInterfaceHandle;
@@ -306,8 +317,8 @@ pub extern "C" fn simple_onRegister(feature_name: FtString) {
 
 #[no_mangle]
 pub extern "C" fn simple_onCreate(ctx: FeatureRuntimeContext, proto_handle: FeatureProtoHandle) {
-    // 保存ctx和handle供后续使用
     println!("wjf on_create Called from C");
+
     simple_on_create(ctx, proto_handle);
 }
 
@@ -316,8 +327,15 @@ pub extern "C" fn simple_onRequired(
     ctx: FeatureRuntimeContext,
     instance_handle: FeatureInstanceHandle,
 ) {
-    // 处理required事件
     println!("wjf on_required Called from C");
+
+    let instance = FeatureInstance::new(instance_handle);
+    let manager = instance.get_manager();
+    let libuv_handle = manager.get_loop().expect("FeatureGetUVLoop failed");
+    // libuv definition is different between vdk_rs and rust framework, so we need to use unsafe to transmute it.
+    // TODO: make them compatible.
+    runtime::init_from_uv_loop(unsafe { std::mem::transmute(libuv_handle) });
+
     simple_on_required(ctx, instance_handle);
 }
 
@@ -500,8 +518,14 @@ pub extern "C" fn simple_wrap_noo(
     id: FtPromiseId,
 ) {
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
-    let cb = FeaturePromise::<FtIntPromise>::new(id, feature);
-    unsafe { (*simple).noo(resolve, cb) }
+    let simple = unsafe { &mut *simple };
+    let promise = FeaturePromise::<FtIntPromise>::new(id, feature);
+    runtime::spawn(async move {
+        match simple.noo(resolve).await {
+            Ok(v) => promise.resolve(v),
+            Err(e) => promise.reject(e),
+        }
+    });
 }
 
 #[no_mangle]
@@ -512,8 +536,14 @@ pub extern "C" fn simple_wrap_poo(
     id: FtPromiseId,
 ) {
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
-    let cb = FeaturePromise::<FtStringPromise>::new(id, feature);
-    unsafe { (*simple).poo(resolve, cb) }
+    let simple = unsafe { &mut *simple };
+    let promise = FeaturePromise::<FeatureStringPromise>::new(id, feature);
+    runtime::spawn(async move {
+        match simple.poo(resolve).await {
+            Ok(v) => promise.resolve(v),
+            Err(e) => promise.reject(e),
+        }
+    });
 }
 
 // interface related

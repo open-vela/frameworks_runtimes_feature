@@ -32,30 +32,19 @@ pub struct FeaturePromise<T: Promise> {
 impl<T: Promise + Default> FeaturePromise<T> {
     pub fn new(id: FtPromiseId, handle: FeatureInstanceHandle) -> Self {
         Self {
-            id: id,
+            id,
             instance: FeatureInstance::new(handle),
             promise: T::default(),
             _marker: PhantomData,
         }
     }
 
-    pub fn resolve(&self, data: T::Output) {
+    pub fn resolve(self, data: T::Output) {
         self.promise.resolve(self.id, &self.instance, data)
     }
 
-    pub fn reject(&self, promise_error: PromiseError) {
-        self.instance.promise_reject(
-            self.id,
-            promise_error.code,
-            promise_error.message.into_raw(),
-        );
+    pub fn reject(self, promise_error: PromiseError) {
+        self.instance
+            .promise_reject(self.id, promise_error.code, promise_error.message.as_ptr());
     }
-
-    pub fn set_timeout(&self, _tm: u64) {
-        // support the timeout of a promise
-    }
-}
-
-impl<T: Promise> Drop for FeaturePromise<T> {
-    fn drop(&mut self) {}
 }
