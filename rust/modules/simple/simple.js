@@ -63,14 +63,14 @@ console.log("will call noo() as promise");
 test.noo(true).then(a => {
     console.log("noo promise resolve, a:", a);
 }).catch((data) => {
-    console.log("noo promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("noo promise reject, code:", data.code, ", msg:", data.data);
 }).finally(() => {
     console.log("noo promise finally");
 })
 test.noo(false).then(a => {
     console.log("noo promise resolve, a:", a);
 }).catch((data) => {
-    console.log("noo promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("noo promise reject, code:", data.code, ", msg:", data.data);
 }).finally(() => {
     console.log("noo promise finally");
 })
@@ -93,7 +93,7 @@ console.log("will call poo() as promise");
 test.poo(true).then(a => {
     console.log("poo promise resolve, a:", a);
 }).catch((data) => {
-    console.log("poo promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("poo promise reject, code:", data.code, ", msg:", data.data);
 }).finally(() => {
     console.log("poo promise finally");
 })
@@ -101,7 +101,7 @@ test.poo(true).then(a => {
 test.poo(false).then(a => {
     console.log("poo promise resolve, a:", a);
 }).catch((data) => {
-    console.log("poo promise reject, code:", data.code, ", msg:", data.msg);
+    console.log("poo promise reject, code:", data.code, ", msg:", data.data);
 }).finally(() => {
     console.log("poo promise finally");
 })

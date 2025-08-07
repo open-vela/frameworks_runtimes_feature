@@ -1,7 +1,10 @@
 use crate::simple::*;
+use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
 use feature_sys::*;
+use std::time::Duration;
+use vdk::async_runtime::time;
 
 pub fn simple_on_register(name: &FeatureString) {
     println!("SimpleImpl on_register: {}", name.as_str())
@@ -71,6 +74,7 @@ impl SimpleImpl {
     }
 }
 
+#[async_trait]
 impl Simple for SimpleImpl {
     fn foo(&mut self) -> FeatureString {
         println!("wjf foo Called from C");
@@ -163,22 +167,25 @@ impl Simple for SimpleImpl {
         cb.invoke(a, &bs, 1.34);
     }
 
-    fn noo(&mut self, resolve: FtBool, pr: FeaturePromise<FtIntPromise>) {
+    async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError> {
         println!("wjf noo Called from C, resolve: {}", resolve);
+
+        time::sleep(Duration::from_millis(100)).await; // simulate async delay
         if resolve {
-            pr.resolve(5)
+            Ok(5)
         } else {
-            pr.reject(PromiseError::new(200, "noo rejected"))
+            Err(PromiseError::new(400, "noo rejected"))
         }
     }
 
-    fn poo(&mut self, resolve: FtBool, pr: FeaturePromise<FtStringPromise>) {
+    async fn poo(&mut self, resolve: FtBool) -> Result<FeatureString, PromiseError> {
         println!("wjf poo Called from C, resolve: {}", resolve);
+
+        time::sleep(Duration::from_millis(100)).await; // simulate async delay
         if resolve {
-            let restr = FeatureString::new("poo resolved!");
-            pr.resolve(restr.as_ptr())
+            Ok(FeatureString::new("poo resolved!"))
         } else {
-            pr.reject(PromiseError::new(200, "poo rejected"))
+            Err(PromiseError::new(500, "poo rejected"))
         }
     }
 

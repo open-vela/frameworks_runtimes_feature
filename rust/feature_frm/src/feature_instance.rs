@@ -63,6 +63,9 @@ pub struct FeatureInstance {
     handle: FeatureInstanceHandle,
 }
 
+unsafe impl Send for FeatureInstance {}
+unsafe impl Sync for FeatureInstance {}
+
 impl FeatureInstance {
     pub fn attach<T>(handle: FeatureInstanceHandle, instance: Box<T>)
     where
