@@ -219,3 +219,10 @@ config FEATURE_SYSTEM_MQTTMESSAGE
     depends on PROTOBUF_C
     --help--
         enable system.mqttmessage feature
+
+config FEATURE_INPUT_METHOD_CONTROLLER
+    bool "system.imc"
+    depends on QUICKAPP_INPUT_METHOD
+    default y
+    --help--
+        enable system.imc feature

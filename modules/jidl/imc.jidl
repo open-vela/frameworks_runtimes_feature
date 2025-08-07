@@ -1,0 +1,9 @@
+module system.imc@1.0
+
+void updateInputText(string text);
+
+callback ExtractedTextChangedCB(string text);
+
+void setOnExtractedTextChanged(ExtractedTextChangedCB cb);
+
+void close();

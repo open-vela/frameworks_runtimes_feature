@@ -435,6 +435,13 @@ ifeq ($(CONFIG_FEATURE_SERVICE_HEALTH),y)
 	FEATURELIST += service_health
 endif
 
+ifeq ($(CONFIG_FEATURE_INPUT_METHOD_CONTROLLER),y)
+        CXXSRCS         := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/imc_impl.cpp
+        JIDL_PATH       := $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/imc.jidl
+        OUT_PATH        += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+        FEATURELIST += system_imc
+endif
+
 
 # for feature registry
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
