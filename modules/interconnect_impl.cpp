@@ -634,7 +634,7 @@ public:
         assert(IsConnected());
         uv_miwear_message_t msg;
 
-        INTERCONNECT_INFO("send data len: %d, %s,", task->msg.size(),
+        INTERCONNECT_INFO("send data len: %d, %.128s,", task->msg.size(),
             task->msg.c_str());
         msg.data = (void*)task->msg.c_str();
         msg.header.len = task->msg.size();
@@ -748,10 +748,11 @@ public:
             return;
         }
         system_interconnect_Message msg = { 0 };
-        msg.data = std::string(data, len).c_str();
+        std::string data_str(data, len);
+        msg.data = data_str.c_str();
 
         // don't output string data in release mode
-        INTERCONNECT_INFO("recv data len %d: %s", len, msg.data);
+        INTERCONNECT_INFO("recv data len %d: %.128s", len, msg.data);
         FeatureInvokeCallback(handle_, recv_func_, &msg);
     }
 
