@@ -133,11 +133,13 @@ ${member_def};
     if render.IsStruct(member['type']):
       GenStructDefine(member['type'])
 %>\
-typedef struct _${module_name}_${struct_name} {
+typedef struct _${module_name}_${struct_name} ${module_name}_${struct_name};
+
+struct _${module_name}_${struct_name} {
 %for member in struct_node['members']:
   ${GenStructMember(member)}\
 %endfor
-} ${module_name}_${struct_name};
+};
 
 ${module_name}_${struct_name}* ${module_name}Malloc${struct_name}(void);
 
