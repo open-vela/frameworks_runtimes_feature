@@ -13,3 +13,18 @@ void set_book(Book book = null)
 
 void set_books(Book[] books = null)
 Book[] get_books()
+
+struct Nested {
+    int a = 1
+    struct Nested sub
+    Nested[] subs
+}
+void set_nested(Nested nested)
+Nested get_nested()
+
+struct Nested2 {
+    int a = 1
+    struct Nested2 sub
+}
+void set_nested2(Nested2 nested)
+Nested2 get_nested2()

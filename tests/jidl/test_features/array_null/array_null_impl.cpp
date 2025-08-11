@@ -194,3 +194,111 @@ FtArray* array_null_wrap_get_books(FeatureInstanceHandle feature, AppendData app
     }
     return array;
 }
+
+static void print_nested(array_null_Nested* nested)
+{
+    printf("{\na: %d,\n", nested->a);
+    if (!nested->sub) {
+        printf("sub: null,\n");
+    } else {
+        printf("sub: ");
+        print_nested(nested->sub);
+        printf(",\n");
+    }
+    if (!nested->subs) {
+        printf("subs: null \n}\n");
+        return;
+    }
+    FTArrayHelper<array_null_Nested*> subs_array(nested->subs);
+    if (subs_array.size() <= 0) {
+        printf("subs: null \n}\n");
+        return;
+    }
+    printf("subs: [\n");
+    for (int32_t i = 0; i < subs_array.size(); i++) {
+        array_null_Nested* sub = subs_array[i];
+        if (sub)
+            print_nested(sub);
+    }
+    printf("]\n}\n");
+}
+
+void array_null_wrap_set_nested(FeatureInstanceHandle feature, AppendData append_data, array_null_Nested* nested)
+{
+    if (!nested) {
+        FEATURE_LOG_ERROR("%s, nested ptr is null", file_tag);
+        return;
+    }
+    print_nested(nested);
+}
+
+static FtArray* make_nested_array(size_t size);
+
+static array_null_Nested* make_nested(int depth)
+{
+    if (depth == 0)
+        return nullptr;
+
+    array_null_Nested* nested = array_nullMallocNested();
+    nested->a = depth;
+    nested->sub = make_nested(depth - 1);
+    nested->subs = make_nested_array(depth);
+    return nested;
+}
+
+static FtArray* make_nested_array(size_t size)
+{
+    if (size == 0)
+        return nullptr;
+
+    FtArray* array = array_null_malloc_string_array();
+    array->_size = size;
+    array->_element = malloc(sizeof(array_null_Nested*) * array->_size);
+    FTArrayHelper<array_null_Nested*> nested_array(array);
+    for (int32_t i = 0; i < nested_array.size(); i++) {
+        nested_array[i] = make_nested(i);
+    }
+    return array;
+}
+
+array_null_Nested* array_null_wrap_get_nested(FeatureInstanceHandle feature, AppendData append_data)
+{
+    return make_nested(3);
+}
+
+static void print_nested2(array_null_Nested2* nested)
+{
+    printf("{\n a: %d,\n", nested->a);
+    if (!nested->sub) {
+        printf("sub: null \n}\n");
+        return;
+    }
+    printf("sub: ");
+    print_nested2(nested->sub);
+    printf("}\n");
+}
+
+void array_null_wrap_set_nested2(FeatureInstanceHandle feature, AppendData append_data, array_null_Nested2* nested)
+{
+    if (!nested) {
+        FEATURE_LOG_ERROR("%s, nested ptr is null", file_tag);
+        return;
+    }
+    print_nested2(nested);
+}
+
+static array_null_Nested2* make_nested2(int depth)
+{
+    if (depth == 0)
+        return nullptr;
+
+    array_null_Nested2* nested = array_nullMallocNested2();
+    nested->a = depth;
+    nested->sub = make_nested2(depth - 1);
+    return nested;
+}
+
+array_null_Nested2* array_null_wrap_get_nested2(FeatureInstanceHandle feature, AppendData append_data)
+{
+    return make_nested2(3);
+}
