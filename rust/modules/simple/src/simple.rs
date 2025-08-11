@@ -98,6 +98,7 @@ impl simple_Chapter {
     pub fn get_page_count(&self) -> c_int {
         self.page_count
     }
+
     pub fn set_page_count(&mut self, count: c_int) {
         self.page_count = count;
     }
@@ -106,16 +107,15 @@ impl simple_Chapter {
         if self.title.is_null() {
             return None;
         }
-        Some(FeatureString::dup_raw(self.title))
+        Some(FeatureString::from_raw(self.title))
     }
 
     pub fn set_title(&mut self, title: FeatureString) {
         if self.title != std::ptr::null() {
-            // free
+            // free old title
             unsafe {
                 FeatureFreeValue(self.title as *mut c_void);
             }
-            self.title = std::ptr::null();
         }
         self.title = FeatureString::into_raw(title);
     }
@@ -123,6 +123,7 @@ impl simple_Chapter {
     pub fn get_is_end(&self) -> FtBool {
         self.is_end
     }
+
     pub fn set_is_end(&mut self, is_end: FtBool) {
         self.is_end = is_end;
     }
@@ -173,11 +174,12 @@ impl FeatureTypeDescription for simple_Book_for_c {
 
 impl simple_Book {
     pub fn get_book_name(&self) -> FeatureString {
-        FeatureString::dup_raw(self.book_name)
+        FeatureString::from_raw(self.book_name)
     }
 
     pub fn set_book_name(&mut self, name: FeatureString) {
         if self.book_name != std::ptr::null() {
+            //  free old data
             unsafe {
                 FeatureFreeValue(self.book_name as *mut c_void);
             }
@@ -190,8 +192,12 @@ impl simple_Book {
     }
 
     pub fn set_chap_1(&mut self, chap_1: simple_Chapter) {
-        // TODO: free old chapter
-        // drop(FeaturePtr::from_raw(self.chap_1, true));
+        if self.chap_1 != std::ptr::null_mut() {
+            //  free old data
+            unsafe {
+                FeatureFreeValue(self.chap_1 as *mut c_void);
+            }
+        }
         self.chap_1 = chap_1.0.into_raw()
     }
 }
@@ -406,7 +412,7 @@ pub extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendData, a: F
         return;
     }
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
-    let fs = FeatureString::dup_raw(a);
+    let fs = FeatureString::from_raw(a);
     unsafe {
         (*simple).hoo(&fs);
     }
@@ -615,7 +621,7 @@ pub extern "C" fn simple_Animal_interface_dog_set_name(
     name: FtString,
 ) {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
-    let fname = FeatureString::dup_raw(name);
+    let fname = FeatureString::from_raw(name);
     dog.set_name(&fname);
 }
 
@@ -647,7 +653,7 @@ pub extern "C" fn simple_Animal_interface_dog_run(
     destination: FtString,
 ) -> FtString {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
-    let destination = FeatureString::dup_raw(destination);
+    let destination = FeatureString::from_raw(destination);
     let ret = dog.run(distance, &destination);
     FeatureString::into_raw(ret)
 }
@@ -683,7 +689,7 @@ pub extern "C" fn simple_Flyable_interface_airplane_set_breed(
     breed: FtString,
 ) {
     let airplane = unsafe { &*feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
-    let fbreed = FeatureString::dup_raw(breed);
+    let fbreed = FeatureString::from_raw(breed);
     airplane.set_breed(&fbreed);
 }
 
@@ -708,7 +714,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_set_name(
     name: FtString,
 ) {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    let fname = FeatureString::dup_raw(name);
+    let fname = FeatureString::from_raw(name);
     pigeon.set_name(&fname);
 }
 
@@ -740,7 +746,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_run(
     destination: FtString,
 ) -> FtString {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    let fdestination = FeatureString::dup_raw(destination);
+    let fdestination = FeatureString::from_raw(destination);
     let ret = pigeon.run(distance, &fdestination);
     FeatureString::into_raw(ret)
 }
@@ -772,7 +778,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_set_breed(
     breed: FtString,
 ) {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    let fbreed = FeatureString::dup_raw(breed);
+    let fbreed = FeatureString::from_raw(breed);
     pigeon.set_breed(&fbreed);
 }
 

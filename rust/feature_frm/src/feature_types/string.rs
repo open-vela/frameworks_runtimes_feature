@@ -1,24 +1,22 @@
-use crate::{FeatureManagedType, FeatureTypeDescription, FeatureValueType};
-use feature_sys::{
-    FeatureDupValue, FeatureFreeValue, FeatureMalloc, FeaturePrimitiveType, FeatureType, FtString,
-};
+use crate::{FeatureManagedType, FeaturePtr, FeatureTypeDescription, FeatureValueType};
+use feature_sys::{FeatureFreeValue, FeatureMalloc, FeaturePrimitiveType, FeatureType, FtString};
 use libc::strlen;
 use std::{
     ffi::{c_void, CStr, CString},
+    hash::{Hash, Hasher},
     ops::Deref,
+    os::raw::c_char,
 };
 
-impl FeatureManagedType for FtString {}
+impl FeatureManagedType for c_char {}
 impl FeatureTypeDescription for FtString {
     fn get_type() -> FeatureType {
         FeaturePrimitiveType::FT_STRING as FeatureType
     }
 }
 
-// TODO: Add length info
-// Could FtString be wrapped in FeaturePtr?
-#[repr(transparent)]
-pub struct FeatureString(FtString);
+#[derive(Clone)]
+pub struct FeatureString(FeaturePtr<c_char>, usize);
 
 impl FeatureTypeDescription for FeatureString {
     fn get_type() -> FeatureType {
@@ -30,108 +28,62 @@ impl FeatureValueType for FeatureString {}
 
 impl FeatureString {
     pub fn new<T: AsRef<str>>(s: T) -> Self {
-        Self(Self::create_ft_string(s.as_ref()))
+        let str = s.as_ref();
+        let ft_str = Self::create_ft_string(str);
+        let feature_string = Self::from_raw_with_len(ft_str, str.len());
+        unsafe {
+            FeatureFreeValue(ft_str as *mut c_void);
+        }
+        feature_string
     }
 
     fn create_ft_string(s: &str) -> FtString {
-        unsafe {
-            let raw_ptr =
-                FeatureMalloc(s.len() + 1, FeaturePrimitiveType::FT_STRING as FeatureType);
+        let slice = unsafe {
+            let ptr = FeatureMalloc(s.len() + 1, FeaturePrimitiveType::FT_STRING as FeatureType);
+            assert!(!ptr.is_null(), "out of memory when create string");
+            std::slice::from_raw_parts_mut(ptr as *mut u8, s.len() + 1)
+        };
 
-            // TODO: Return error
-            assert!(!raw_ptr.is_null(), "out of memory when create string");
-
-            std::ptr::copy_nonoverlapping(s.as_ptr(), raw_ptr as *mut u8, s.len());
-            *((raw_ptr as *mut u8).add(s.len())) = 0;
-
-            raw_ptr as FtString
-        }
+        // TODO: check if there are nul-byte in original string
+        slice[..s.len()].copy_from_slice(s.as_bytes());
+        slice[s.len()] = 0;
+        slice.as_mut_ptr() as FtString
     }
 
+    /// Creates a `FeatureString` from a raw pointer.
+    /// It will increment the reference count of the underlying FtString.
     pub fn from_raw(ptr: FtString) -> Self {
         assert!(!ptr.is_null());
-        Self(ptr)
+        let length = unsafe { strlen(ptr) };
+        Self::from_raw_with_len(ptr, length as usize)
     }
 
-    pub fn dup_raw(ptr: FtString) -> Self {
-        unsafe { FeatureDupValue(ptr as *mut c_void) };
-        Self::from_raw(ptr)
+    /// Creates a `FeatureString` from a raw pointer.
+    /// It will increment the reference count of the underlying FtString.
+    pub fn from_raw_with_len(ptr: FtString, len: usize) -> Self {
+        assert!(!ptr.is_null());
+        let ptr = unsafe { FeaturePtr::from_raw(ptr as *mut _) };
+        Self(ptr, len)
     }
 
     pub fn into_raw(self) -> FtString {
-        self.0
+        self.0.into_raw()
     }
 
-    fn as_ptr(&self) -> FtString {
-        self.0
+    pub fn as_ptr(&self) -> FtString {
+        self.0.as_ptr()
     }
 
-    // no allocation of memory
+    /// Returns a &str, will panic if the string is not utf8 encoded
+    // No memory allocation
     pub fn as_str(&self) -> &str {
-        assert!(!self.0.is_null());
-        let c_str = unsafe { CStr::from_ptr(self.0) };
+        let c_str = unsafe { CStr::from_ptr(self.0.as_ptr()) };
         c_str.to_str().expect("not utf8 encoded")
     }
 
-    // will copy memory，use FeatureMalloc to allocate memory
-    pub fn from_cstring(cstring: CString) -> Self {
-        let bytes = cstring.as_bytes_with_nul();
-        let ptr = unsafe {
-            let raw_ptr =
-                FeatureMalloc(bytes.len(), FeaturePrimitiveType::FT_STRING as FeatureType);
-            assert!(!raw_ptr.is_null());
-            std::ptr::copy_nonoverlapping(bytes.as_ptr(), raw_ptr as *mut u8, bytes.len());
-            raw_ptr as FtString
-        };
-        Self::from_raw(ptr)
-    }
-
-    // will copy memory，using Rust allocator to allocate memory
-    pub fn to_cstring(&self) -> CString {
-        unsafe {
-            let len = libc::strlen(self.as_ptr());
-            let slice = std::slice::from_raw_parts(self.as_ptr() as *const u8, len + 1);
-            CString::from_vec_unchecked(slice.to_vec())
-        }
-    }
-
-    // will allocate memory
-    pub fn to_string(&self) -> String {
-        self.as_str().to_owned()
-    }
-
-    pub fn is_null(&self) -> bool {
-        self.0.is_null()
-    }
-
+    /// Length of the string, excluding the null terminator.
     pub fn len(&self) -> usize {
-        unsafe { strlen(self.as_ptr()) }
-    }
-
-    pub fn empty() -> Self {
-        Self(std::ptr::null())
-    }
-}
-
-impl Clone for FeatureString {
-    fn clone(&self) -> Self {
-        if !self.0.is_null() {
-            unsafe {
-                FeatureDupValue(self.0 as *mut c_void);
-            }
-        }
-        Self(self.0)
-    }
-}
-
-impl Drop for FeatureString {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.0.is_null() {
-                FeatureFreeValue(self.0 as *mut c_void);
-                self.0 = std::ptr::null_mut();
-            }
-        }
+        self.1
     }
 }
 
@@ -161,7 +113,23 @@ impl From<String> for FeatureString {
 
 impl From<CString> for FeatureString {
     fn from(cstring: CString) -> Self {
-        FeatureString::from_cstring(cstring)
+        let bytes = cstring.as_bytes_with_nul();
+
+        let slice = unsafe {
+            let raw_ptr =
+                FeatureMalloc(bytes.len(), FeaturePrimitiveType::FT_STRING as FeatureType);
+            assert!(!raw_ptr.is_null());
+            std::slice::from_raw_parts_mut(raw_ptr as *mut u8, bytes.len())
+        };
+        slice.copy_from_slice(bytes);
+        let feature_string =
+            Self::from_raw_with_len(slice.as_mut_ptr() as FtString, bytes.len() - 1);
+
+        unsafe {
+            FeatureFreeValue(slice.as_mut_ptr() as *mut c_void);
+        }
+
+        feature_string
     }
 }
 
@@ -178,5 +146,17 @@ impl Deref for FeatureString {
 
     fn deref(&self) -> &Self::Target {
         self.as_str()
+    }
+}
+
+impl Hash for FeatureString {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_str().hash(state);
+    }
+}
+
+impl PartialEq for FeatureString {
+    fn eq(&self, other: &Self) -> bool {
+        self.len() == other.len() && self.as_str() == other.as_str()
     }
 }
