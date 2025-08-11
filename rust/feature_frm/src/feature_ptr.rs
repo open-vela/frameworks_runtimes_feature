@@ -32,6 +32,7 @@ impl<T: FeatureManagedType> FeaturePtr<T> {
     }
 
     /// Creates a `FeaturePtr` from an existing raw pointer.
+    /// It will increment the reference count of the underlying feature type.
     pub unsafe fn from_raw(ptr: *mut T) -> Self {
         assert!(!ptr.is_null());
         FeatureDupValue(ptr as *mut c_void);
