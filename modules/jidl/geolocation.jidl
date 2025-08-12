@@ -28,6 +28,8 @@ struct getLocationRet {
 struct getParam {
     int timeout = 30000
 }
+
+[permissions="hapjs.permission.LOCATION"]
 promise<getLocationRet> getLocation(getParam param)
 
 callback subscribe_cb(getLocationRet ret)
@@ -36,6 +38,9 @@ struct subscribeParam {
     callback subscribe_cb callback
     callback geolocation_fail_cb fail = null
 }
+
+[permissions="hapjs.permission.LOCATION"]
 void subscribe(subscribeParam param)
 
+[permissions="hapjs.permission.LOCATION"]
 void unsubscribe()
