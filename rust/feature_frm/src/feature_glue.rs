@@ -6,13 +6,15 @@ use feature_sys::*;
 pub fn create_interface<T>(
     handle: FeatureInstanceHandle,
     vtable: *mut VTable,
-    instance: Box<T>,
+    user_data: Box<T>,
 ) -> FeatureInterfaceHandle
 where
     T: FeatureInstanceTrait + ?Sized,
 {
     let handle = unsafe { FeatureCreateInterface(handle, vtable) };
-    FeatureInstance::attach(handle as FeatureInstanceHandle, instance);
+    let instance = FeatureInstance::new(handle);
+    instance.attach(user_data);
+
     handle
 }
 

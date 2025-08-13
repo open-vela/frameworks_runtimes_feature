@@ -13,6 +13,5 @@ tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 once_cell = { workspace = true }
 feature_macros = { workspace = true }
 feature_frm = { workspace = true }
-feature_sys = { workspace = true }
 async-trait = { workspace = true }
 vdk = { workspace = true }
