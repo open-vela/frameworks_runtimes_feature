@@ -12,6 +12,7 @@ use std::{
 ///
 /// It will increment the reference count of the underlying feature type when create,
 /// and will decrement the reference count when dropped.
+#[repr(transparent)]
 pub struct FeaturePtr<T: FeatureManagedType> {
     ptr: NonNull<T>,
 }

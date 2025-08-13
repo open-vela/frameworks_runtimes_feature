@@ -2,7 +2,6 @@ use crate::simple::*;
 use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
-use feature_sys::*;
 use std::time::Duration;
 use vdk::async_runtime::time;
 
@@ -10,26 +9,25 @@ pub fn simple_on_register(name: &FeatureString) {
     println!("SimpleImpl on_register: {}", name.as_str())
 }
 
-pub fn simple_on_create(_ctx: FeatureRuntimeContext, proto_handle: FeatureProtoHandle) {
+pub fn simple_on_create(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
     println!("SimpleImpl on_create");
-    unsafe { std::env::set_var("RUST_BACKTRACE", "full") };
-    FeaturePrototype::attach(proto_handle, Box::new(SimplePrototype::new(proto_handle)))
+    proto.attach(Box::new(SimplePrototype::new(proto.clone())))
 }
 
-pub fn simple_on_required(_ctx: FeatureRuntimeContext, instance_handle: FeatureInstanceHandle) {
+pub fn simple_on_required(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
     println!("SimpleImpl on_required");
-    let boxed = Box::new(SimpleImpl::new(instance_handle)) as Box<dyn Simple>;
-    FeatureInstance::attach(instance_handle, boxed);
+    let boxed = Box::new(SimpleImpl::new(instance.clone())) as Box<dyn Simple>;
+    instance.attach(boxed);
 }
 
-pub fn simple_on_detached(_ctx: FeatureRuntimeContext, instance_handle: FeatureInstanceHandle) {
+pub fn simple_on_detached(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
     println!("SimpleImpl on_detached");
-    let _ = FeatureInstance::detach::<SimpleImpl>(instance_handle);
+    let _: Option<Box<dyn Simple>> = instance.detach();
 }
 
-pub fn simple_on_destroy(_ctx: FeatureRuntimeContext, proto_handle: FeatureProtoHandle) {
+pub fn simple_on_destroy(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
     println!("SimpleImpl on_destroy");
-    let _ = FeaturePrototype::detach::<SimplePrototype>(proto_handle);
+    let _: Option<Box<SimplePrototype>> = proto.detach();
 }
 
 pub fn simple_on_unregister(name: &FeatureString) {
@@ -42,9 +40,9 @@ pub struct SimplePrototype {
 }
 
 impl SimplePrototype {
-    fn new(handle: FeatureProtoHandle) -> Self {
+    fn new(proto: FeaturePrototype) -> Self {
         SimplePrototype {
-            proto: FeaturePrototype::new(handle),
+            proto,
             str: String::from("SimpleImpl"),
         }
     }
@@ -60,16 +58,15 @@ impl FeatureInstanceTrait for SimpleImpl {}
 
 // function implementation
 impl SimpleImpl {
-    fn new(handle: FeatureInstanceHandle) -> Self {
-        let instance = FeatureInstance::new(handle);
+    fn new(instance: FeatureInstance) -> Self {
         SimpleImpl {
-            instance: instance.clone(),
+            instance,
             chapter: None,
             book: None,
         }
     }
 
-    pub fn get_prototype(&self) -> Option<*mut SimplePrototype> {
+    pub fn get_prototype(&self) -> Option<&SimplePrototype> {
         self.instance.get_prototype::<SimplePrototype>()
     }
 }
@@ -97,7 +94,7 @@ impl Simple for SimpleImpl {
 
     fn hoo(&mut self, a: &FeatureString) {
         println!("wjf hoo Called from C, a: \"{}\"", a.as_str());
-        let proto = unsafe { &*self.get_prototype().unwrap() };
+        let proto = self.get_prototype().unwrap();
         println!("proto.str: {}", proto.str);
         let _mgr = self.instance.get_manager();
 
@@ -192,24 +189,28 @@ impl Simple for SimpleImpl {
     fn create_dog(&self) -> FeatureInterfaceHandle {
         println!("wjf create_dog Called from C");
         let handle = createDog_instance(&self.instance);
-        let boxed: Box<dyn Animal> = Box::new(Dog::new(handle));
-        FeatureInstance::attach(handle, boxed);
+        let instance = FeatureInstance::new(handle);
+        let boxed: Box<dyn Animal> = Box::new(Dog::new(instance.clone()));
+        instance.attach(boxed);
+
         handle
     }
 
     fn create_airplane(&self) -> FeatureInterfaceHandle {
         println!("wjf create_airplane Called from C");
         let handle = createAirplane_instance(&self.instance);
-        let boxed: Box<dyn Flyable> = Box::new(Airplane::new(handle));
-        FeatureInstance::attach(handle, boxed);
+        let instance = FeatureInstance::new(handle);
+        let boxed: Box<dyn Flyable> = Box::new(Airplane::new(instance.clone()));
+        instance.attach(boxed);
         handle
     }
 
     fn create_pigeon(&self) -> FeatureInterfaceHandle {
         println!("wjf create_pigeon Called from C");
         let handle = createPigeon_instance(&self.instance);
-        let boxed: Box<dyn Bird> = Box::new(Pigeon::new(handle));
-        FeatureInstance::attach(handle, boxed);
+        let instance = FeatureInstance::new(handle);
+        let boxed: Box<dyn Bird> = Box::new(Pigeon::new(instance.clone()));
+        instance.attach(boxed);
         handle
     }
 
@@ -234,10 +235,8 @@ pub struct Dog {}
 
 // function implementation
 impl Dog {
-    fn new(handle: FeatureInstanceHandle) -> Self {
-        Dog {
-            instance: FeatureInstance::new(handle),
-        }
+    fn new(instance: FeatureInstance) -> Self {
+        Dog { instance }
     }
 }
 
@@ -284,10 +283,8 @@ pub struct Airplane {}
 
 // function implementation
 impl Airplane {
-    fn new(handle: FeatureInstanceHandle) -> Self {
-        Airplane {
-            instance: FeatureInstance::new(handle),
-        }
+    fn new(instance: FeatureInstance) -> Self {
+        Airplane { instance }
     }
 }
 
@@ -325,10 +322,8 @@ pub struct Pigeon {}
 
 // function implementation
 impl Pigeon {
-    fn new(handle: FeatureInstanceHandle) -> Self {
-        Pigeon {
-            instance: FeatureInstance::new(handle),
-        }
+    fn new(instance: FeatureInstance) -> Self {
+        Pigeon { instance }
     }
 }
 

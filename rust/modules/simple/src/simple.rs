@@ -1,12 +1,15 @@
-use crate::simple_impl::*;
 use async_trait::async_trait;
 use feature_frm::*;
-use feature_sys::*;
 use std::ffi::c_int;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::sync::Arc;
 use vdk::async_runtime::runtime;
+
+use crate::simple_impl::{
+    simple_on_create, simple_on_destroy, simple_on_detached, simple_on_register,
+    simple_on_required, simple_on_unregister,
+};
 
 unsafe extern "C" {
     pub fn simple_Chapter_struct_get_type() -> FeatureType;
@@ -322,44 +325,55 @@ pub extern "C" fn simple_onRegister(feature_name: FtString) {
 }
 
 #[no_mangle]
-pub extern "C" fn simple_onCreate(ctx: FeatureRuntimeContext, proto_handle: FeatureProtoHandle) {
+pub extern "C" fn simple_onCreate(
+    ctx: FeatureRuntimeContextHandle,
+    proto_handle: FeatureProtoHandle,
+) {
     println!("wjf on_create Called from C");
-
-    simple_on_create(ctx, proto_handle);
+    let ctx = FeatureRuntimeContext::new(ctx);
+    simple_on_create(ctx, FeaturePrototype::new(proto_handle));
 }
 
 #[no_mangle]
 pub extern "C" fn simple_onRequired(
-    ctx: FeatureRuntimeContext,
+    ctx: FeatureRuntimeContextHandle,
     instance_handle: FeatureInstanceHandle,
 ) {
     println!("wjf on_required Called from C");
 
     let instance = FeatureInstance::new(instance_handle);
+    let ctx = FeatureRuntimeContext::new(ctx);
     let manager = instance.get_manager();
     let libuv_handle = manager.get_loop().expect("FeatureGetUVLoop failed");
     // libuv definition is different between vdk_rs and rust framework, so we need to use unsafe to transmute it.
     // TODO: make them compatible.
     runtime::init_from_uv_loop(unsafe { std::mem::transmute(libuv_handle) });
 
-    simple_on_required(ctx, instance_handle);
+    simple_on_required(ctx, instance);
 }
 
 #[no_mangle]
 pub extern "C" fn simple_onDetached(
-    ctx: FeatureRuntimeContext,
+    ctx: FeatureRuntimeContextHandle,
     instance_handle: FeatureInstanceHandle,
 ) {
     // 处理detached事件
     println!("wjf on_detached Called from C");
-    simple_on_detached(ctx, instance_handle);
+    let instance = FeatureInstance::new(instance_handle);
+    let ctx = FeatureRuntimeContext::new(ctx);
+    simple_on_detached(ctx, instance);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_onDestroy(ctx: FeatureRuntimeContext, proto_handle: FeatureProtoHandle) {
+pub extern "C" fn simple_onDestroy(
+    ctx: FeatureRuntimeContextHandle,
+    proto_handle: FeatureProtoHandle,
+) {
     // 清理资源
     println!("wjf on_destroy Called from C");
-    simple_on_destroy(ctx, proto_handle);
+    let proto = FeaturePrototype::new(proto_handle);
+    let ctx = FeatureRuntimeContext::new(ctx);
+    simple_on_destroy(ctx, proto);
 }
 
 #[no_mangle]
