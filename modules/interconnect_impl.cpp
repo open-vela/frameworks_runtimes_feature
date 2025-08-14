@@ -177,6 +177,7 @@ public:
                 // 连接断开
                 FEATURE_NOTE_MARK("interconnect_disconnected");
                 conn->ProcessPendingDiagnosis(false); // 处理诊断 pending
+                conn->ClearPendingConnect();
                 if (__IsConnecting(old_status)) { // 连接失败
                     conn->InvokeError("connect to miwear server failed",
                         static_cast<int>(StatusCode::kDisconnect));
@@ -550,6 +551,8 @@ public:
         }
         return;
     }
+
+    void ClearPendingConnect() { is_pending_connect_ = false; }
 
     FtCallbackId get_error_func() { return error_func_; }
 
