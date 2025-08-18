@@ -1,10 +1,13 @@
+use alloc::boxed::Box;
+use alloc::sync::Arc;
 use async_trait::async_trait;
+use core::ffi::{c_int, c_void};
+use core::ops::Deref;
+use core::ops::DerefMut;
+use core::{ffi::CStr, ptr};
 use feature_frm::*;
-use std::ffi::c_int;
-use std::ops::{Deref, DerefMut};
-use std::os::raw::c_void;
-use std::sync::Arc;
 use vdk::async_runtime::runtime;
+use vdk::syslog::info;
 
 use crate::simple_impl::{
     simple_on_create, simple_on_destroy, simple_on_detached, simple_on_register,
@@ -114,7 +117,7 @@ impl simple_Chapter {
     }
 
     pub fn set_title(&mut self, title: FeatureString) {
-        if self.title != std::ptr::null() {
+        if self.title != ptr::null() {
             // free old title
             unsafe {
                 FeatureFreeValue(self.title as *mut c_void);
@@ -181,7 +184,7 @@ impl simple_Book {
     }
 
     pub fn set_book_name(&mut self, name: FeatureString) {
-        if self.book_name != std::ptr::null() {
+        if self.book_name != ptr::null() {
             //  free old data
             unsafe {
                 FeatureFreeValue(self.book_name as *mut c_void);
@@ -195,7 +198,7 @@ impl simple_Book {
     }
 
     pub fn set_chap_1(&mut self, chap_1: simple_Chapter) {
-        if self.chap_1 != std::ptr::null_mut() {
+        if self.chap_1 != ptr::null_mut() {
             //  free old data
             unsafe {
                 FeatureFreeValue(self.chap_1 as *mut c_void);
@@ -237,7 +240,7 @@ impl Promise for FtIntPromise {
     type Output = FtInt; // 指定关联类型
 
     fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
-        println!("Resolved with: {}", value);
+        info!("Resolved with: {}", value);
         unsafe {
             FeatureFtIntPromiseResolve(instance.as_handle(), id, value);
         }
@@ -251,7 +254,7 @@ impl Promise for FeatureStringPromise {
     type Output = FeatureString;
 
     fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
-        println!("Resolved with: {}", value.as_str());
+        info!("Resolved with: {}", value.as_str());
         let ptr = value.as_ptr();
         unsafe {
             FeatureFtStringPromiseResolve(instance.as_handle(), id, ptr);
@@ -317,10 +320,11 @@ pub trait Bird: Animal + Flyable + FeatureInstanceTrait {
 
 #[no_mangle]
 pub extern "C" fn simple_onRegister(feature_name: FtString) {
+    // init_logger(log::LevelFilter::Info);
     // 可以在这里处理feature_name
-    let name = unsafe { std::ffi::CStr::from_ptr(feature_name) };
+    let name = unsafe { CStr::from_ptr(feature_name) };
     let fname = FeatureString::new(name.to_str().unwrap());
-    println!("wjf on_register Called from C, name: {}", fname.as_str());
+    info!("wjf on_register Called from C, name: {}", fname.as_str());
     simple_on_register(&fname);
 }
 
@@ -329,7 +333,7 @@ pub extern "C" fn simple_onCreate(
     ctx: FeatureRuntimeContextHandle,
     proto_handle: FeatureProtoHandle,
 ) {
-    println!("wjf on_create Called from C");
+    info!("wjf on_create Called from C");
     let ctx = FeatureRuntimeContext::new(ctx);
     simple_on_create(ctx, FeaturePrototype::new(proto_handle));
 }
@@ -339,7 +343,7 @@ pub extern "C" fn simple_onRequired(
     ctx: FeatureRuntimeContextHandle,
     instance_handle: FeatureInstanceHandle,
 ) {
-    println!("wjf on_required Called from C");
+    info!("wjf on_required Called from C");
 
     let instance = FeatureInstance::new(instance_handle);
     let ctx = FeatureRuntimeContext::new(ctx);
@@ -347,7 +351,7 @@ pub extern "C" fn simple_onRequired(
     let libuv_handle = manager.get_loop().expect("FeatureGetUVLoop failed");
     // libuv definition is different between vdk_rs and rust framework, so we need to use unsafe to transmute it.
     // TODO: make them compatible.
-    runtime::init_from_uv_loop(unsafe { std::mem::transmute(libuv_handle) });
+    runtime::init_from_uv_loop(unsafe { core::mem::transmute(libuv_handle) });
 
     simple_on_required(ctx, instance);
 }
@@ -358,7 +362,7 @@ pub extern "C" fn simple_onDetached(
     instance_handle: FeatureInstanceHandle,
 ) {
     // 处理detached事件
-    println!("wjf on_detached Called from C");
+    info!("wjf on_detached Called from C");
     let instance = FeatureInstance::new(instance_handle);
     let ctx = FeatureRuntimeContext::new(ctx);
     simple_on_detached(ctx, instance);
@@ -370,7 +374,7 @@ pub extern "C" fn simple_onDestroy(
     proto_handle: FeatureProtoHandle,
 ) {
     // 清理资源
-    println!("wjf on_destroy Called from C");
+    info!("wjf on_destroy Called from C");
     let proto = FeaturePrototype::new(proto_handle);
     let ctx = FeatureRuntimeContext::new(ctx);
     simple_on_destroy(ctx, proto);
@@ -379,9 +383,9 @@ pub extern "C" fn simple_onDestroy(
 #[no_mangle]
 pub extern "C" fn simple_onUnregister(feature_name: FtString) {
     // 可以在这里处理feature_name
-    let name = unsafe { std::ffi::CStr::from_ptr(feature_name) };
+    let name = unsafe { CStr::from_ptr(feature_name) };
     let fname = FeatureString::new(name.to_str().unwrap());
-    println!("wjf on_unregister Called from C, name: {}", fname.as_str());
+    info!("wjf on_unregister Called from C, name: {}", fname.as_str());
     simple_on_unregister(&fname);
 }
 
@@ -422,7 +426,7 @@ pub extern "C" fn simple_wrap_doo(feature: *mut c_void, _adata: AppendData) {
 #[no_mangle]
 pub extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendData, a: FtString) {
     if a.is_null() {
-        eprintln!("Error: Received null pointer!");
+        info!("Error: Received null pointer!");
         return;
     }
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
@@ -439,7 +443,7 @@ pub extern "C" fn simple_wrap_set_chapter(
     chap: *mut simple_Chapter_for_c,
 ) {
     if chap.is_null() {
-        println!("wjf set_chapter() Received null pointer!");
+        info!("wjf set_chapter() Received null pointer!");
     }
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
     unsafe {
@@ -456,7 +460,7 @@ pub extern "C" fn simple_wrap_get_chapter(
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
     let simple = unsafe { &*simple };
     let chap = simple.get_chapter();
-    chap.map_or(std::ptr::null::<simple_Chapter_for_c>() as *mut _, |v| {
+    chap.map_or(ptr::null::<simple_Chapter_for_c>() as *mut _, |v| {
         v.0.clone().into_raw()
     })
 }
@@ -468,7 +472,7 @@ pub extern "C" fn simple_wrap_set_chapter_array(
     chap_array: *mut FtArray,
 ) {
     if chap_array.is_null() {
-        println!("wjf set_chapter_array() Received null pointer!");
+        info!("wjf set_chapter_array() Received null pointer!");
     }
 
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
@@ -486,7 +490,7 @@ pub extern "C" fn simple_wrap_get_chapter_array(
 ) -> *mut FtArray {
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
     let chaps = unsafe { (*simple).get_chapter_array() };
-    chaps.map_or(std::ptr::null::<FtArray>() as *mut _, |b| b.into_raw())
+    chaps.map_or(ptr::null::<FtArray>() as *mut _, |b| b.into_raw())
 }
 
 #[no_mangle]
@@ -496,7 +500,7 @@ pub extern "C" fn simple_wrap_set_book(
     book: *mut simple_Book_for_c,
 ) {
     if book.is_null() {
-        println!("wjf set_book() Received null pointer!");
+        info!("wjf set_book() Received null pointer!");
     } else {
         let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
         unsafe {
@@ -513,7 +517,7 @@ pub extern "C" fn simple_wrap_get_book(
 ) -> *mut simple_Book_for_c {
     let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
     let book = unsafe { (*simple).get_book() };
-    book.map_or(std::ptr::null::<simple_Book_for_c>() as *mut _, |b| {
+    book.map_or(ptr::null::<simple_Book_for_c>() as *mut _, |b| {
         b.0.clone().into_raw()
     })
 }

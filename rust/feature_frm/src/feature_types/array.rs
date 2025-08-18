@@ -3,12 +3,13 @@ use crate::feature_types::{
     FeatureManagedType, FeatureReferenceType, FeatureString, FeatureTypeDescription,
     FeatureValueType,
 };
+use core::marker::PhantomData;
+use core::{mem, ptr, slice};
 use feature_sys::{
     FeatureArrayResize, FeatureCreateArray, FeaturePrimitiveType, FeatureType,
     FeatureTypeGetValueSize, FtArray, FtString,
 };
 use libc::{c_void, memcpy};
-use std::marker::PhantomData;
 
 impl FeatureManagedType for FtArray {}
 impl FeatureTypeDescription for FtArray {
@@ -25,7 +26,7 @@ pub(crate) struct FeatureRawArray(FeaturePtr<FtArray>);
 impl FeatureRawArray {
     fn new(capacity: usize, elem_type: FeatureType) -> Self {
         let array = unsafe {
-            let raw_ptr = FeatureCreateArray(std::ptr::null_mut(), capacity, elem_type);
+            let raw_ptr = FeatureCreateArray(ptr::null_mut(), capacity, elem_type);
             assert!(!raw_ptr.is_null());
             FeaturePtr::<FtArray>::from_raw(raw_ptr as *mut FtArray)
         };
@@ -59,7 +60,7 @@ impl FeatureRawArray {
             memcpy(
                 dest,
                 &item as *const T as *const c_void,
-                std::mem::size_of::<T>(),
+                mem::size_of::<T>(),
             );
         }
         self.0._size += 1;
@@ -152,7 +153,7 @@ impl<T: FeatureValueType> FeaturePrimitiveArray<T> {
 
         unsafe {
             let ptr = self.inner.buf() as *const T;
-            std::slice::from_raw_parts(ptr.add(start), end - start)
+            slice::from_raw_parts(ptr.add(start), end - start)
         }
     }
 
@@ -162,7 +163,7 @@ impl<T: FeatureValueType> FeaturePrimitiveArray<T> {
 
         unsafe {
             let ptr = self.inner.buf() as *mut T;
-            std::slice::from_raw_parts_mut(ptr.add(start), end - start)
+            slice::from_raw_parts_mut(ptr.add(start), end - start)
         }
     }
 

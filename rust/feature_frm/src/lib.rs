@@ -1,3 +1,7 @@
+#![no_std]
+
+extern crate alloc;
+
 mod feature_instance;
 pub use feature_instance::*;
 

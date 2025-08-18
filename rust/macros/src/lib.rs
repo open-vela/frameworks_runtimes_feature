@@ -3,10 +3,9 @@ use proc_macro2::Span;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use syn::{
-    parse::{Parse, ParseStream, Parser},
+    parse::{Parse, ParseStream},
     parse_macro_input,
     punctuated::Punctuated,
-    token::Comma,
     Attribute, DeriveInput, FnArg, Ident, ItemFn, LitStr, Pat, ReturnType, Token, Type,
 };
 
@@ -89,7 +88,7 @@ fn parse_feature_name(attr: TokenStream) -> Option<String> {
 
 #[proc_macro_attribute]
 pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut input = parse_macro_input!(item as syn::ItemStruct);
+    let input = parse_macro_input!(item as syn::ItemStruct);
     let st_name = &input.ident;
 
     let ft_name = parse_feature_name(attr).unwrap();
@@ -108,7 +107,7 @@ pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
             }
         }
 
-        impl std::ops::Deref for #st_name {
+        impl core::ops::Deref for #st_name {
             type Target = FeatureInstance;
 
             fn deref(&self) -> &Self::Target {
@@ -228,6 +227,7 @@ fn extract_fn_info(func: &ItemFn) -> (Vec<Type>, Vec<Ident>, Option<Type>) {
     (arg_types, arg_names, return_type)
 }
 
+#[allow(dead_code)]
 fn is_c_void_ptr(ty: &Type) -> bool {
     if let Type::Ptr(ptr) = ty {
         if let Type::Path(path) = &*ptr.elem {
@@ -241,6 +241,7 @@ fn is_c_void_ptr(ty: &Type) -> bool {
     false
 }
 
+#[allow(dead_code)]
 fn is_append_data(ty: &Type) -> bool {
     if let Type::Path(path) = ty {
         if let Some(seg) = path.path.segments.last() {

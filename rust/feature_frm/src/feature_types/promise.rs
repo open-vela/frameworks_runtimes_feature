@@ -1,6 +1,6 @@
 use crate::{FeatureInstance, FeatureString};
+use core::marker::PhantomData;
 use feature_sys::{FeatureInstanceHandle, FtPromiseId};
-use std::marker::PhantomData;
 
 pub trait Promise {
     type Output;
