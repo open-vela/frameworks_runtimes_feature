@@ -4,6 +4,11 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
+    // Used for local development
+    if std::env::var("FEATURE_STATIC_BINDING").is_ok() {
+        println!("cargo:rustc-cfg=static_binding");
+        return;
+    }
     let apps_dir = PathBuf::from(env::var("NUTTX_APPS_DIR").unwrap());
     // pass apps dir and vela dir from env
     let vela_root = apps_dir.parent().unwrap();
@@ -43,6 +48,8 @@ fn main() {
         .rustified_enum(".*") // rustify all enums
         .size_t_is_usize(true) // use usize for size_t
         .layout_tests(false)
+        .use_core()
+        .ctypes_prefix("cty")
         .clang_arg("D__cplusplus")
         .clang_arg("std=c11")
         .clang_args(nuttx_inc_dirs.iter().map(|d| format!("-I{}", d.display())))

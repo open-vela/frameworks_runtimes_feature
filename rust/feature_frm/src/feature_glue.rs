@@ -1,5 +1,6 @@
 // only for glue code, user code is forbiden
 use crate::feature_instance::*;
+use alloc::boxed::Box;
 use feature_sys::*;
 
 // create interface instance and bind user data

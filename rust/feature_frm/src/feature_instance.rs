@@ -1,4 +1,11 @@
 use crate::FeatureProtoHandle;
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::ffi::CString;
+use alloc::string::{String, ToString};
+use core::ffi::CStr;
+use core::ptr::{self, NonNull};
+use core::str::FromStr;
 use feature_sys::{
     uv_loop_t, FeatureDupInstanceHandle, FeatureFreeInstanceHandle, FeatureGetEnvironmentName,
     FeatureGetEventCallbackCount, FeatureGetEventId, FeatureGetEventName,
@@ -9,9 +16,6 @@ use feature_sys::{
     FtString,
 };
 use libc::c_void;
-use std::ffi::{CStr, CString};
-use std::ptr::{self, NonNull};
-use std::str::FromStr;
 
 // common trait for all FeatureInstances
 pub trait FeatureInstanceTrait {}
@@ -168,7 +172,7 @@ impl FeatureInstance {
 
     pub fn get_event_name(&self, id: FtEventId) -> Option<String> {
         let ret = unsafe { FeatureGetEventName(self.as_ptr(), id) };
-        if ret != std::ptr::null_mut() {
+        if ret != ptr::null_mut() {
             Some(String::from(
                 unsafe { CStr::from_ptr(ret) }.to_str().expect(""),
             ))

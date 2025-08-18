@@ -1,4 +1,5 @@
 use crate::FeatureInstance;
+use alloc::boxed::Box;
 use feature_sys::{FeatureInstanceHandle, FeaturePostExt, FeatureRemoveCallback, FtCallbackId};
 
 pub struct FeatureCallback {

@@ -1,10 +1,11 @@
 use crate::feature_types::{FeatureManagedType, FeatureTypeDescription};
-use feature_sys::*;
-use libc::c_void;
-use std::{
+use core::{
+    mem,
     ops::{Deref, DerefMut},
     ptr::NonNull,
 };
+use feature_sys::*;
+use libc::c_void;
 
 /// A smart pointer for managing types created by `FeatureMalloc` in a safe manner.
 /// It ensures that the memory is properly allocated and deallocated. It's designed
@@ -27,7 +28,7 @@ impl<T: FeatureManagedType> FeaturePtr<T> {
     /// Creates a new `FeaturePtr` by allocating memory for the type `T`.
     pub fn new() -> Self {
         let ft = T::get_type();
-        let ptr = unsafe { FeatureMalloc(std::mem::size_of::<T>(), ft) };
+        let ptr = unsafe { FeatureMalloc(mem::size_of::<T>(), ft) };
         let ptr = NonNull::new(ptr as *mut T).expect("Failed to allocate memory for FeaturePtr");
         Self { ptr }
     }
@@ -45,7 +46,7 @@ impl<T: FeatureManagedType> FeaturePtr<T> {
     /// The caller is responsible for managing the memory afterwards.
     pub fn into_raw(self) -> *mut T {
         let ptr = self.ptr.as_ptr();
-        std::mem::forget(self);
+        mem::forget(self);
         ptr
     }
 

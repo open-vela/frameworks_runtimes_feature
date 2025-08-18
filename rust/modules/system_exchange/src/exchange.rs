@@ -1,8 +1,10 @@
-use feature_frm::*;
-use std::ops::{Deref, DerefMut};
-use std::os::raw::c_void;
-
+use alloc::boxed::Box;
 use async_trait::async_trait;
+use core::ffi::CStr;
+use core::ops::{Deref, DerefMut};
+use core::ptr;
+use feature_frm::*;
+use libc::c_void;
 use vdk::async_runtime::runtime;
 
 use crate::exchange_impl::{
@@ -86,11 +88,11 @@ impl ClearInfo {
     }
 
     pub(crate) fn set_scope(&mut self, scope: FeatureString) {
-        if self.scope != std::ptr::null() {
+        if self.scope != ptr::null() {
             unsafe {
                 FeatureFreeValue(self.scope as *mut c_void);
             }
-            self.scope = std::ptr::null();
+            self.scope = ptr::null();
         }
         self.scope = FeatureString::into_raw(scope);
     }
@@ -163,7 +165,7 @@ impl GetRet {
             unsafe {
                 FeatureFreeValue(self.value as *mut c_void);
             }
-            self.value = std::ptr::null();
+            self.value = ptr::null();
         }
         self.value = FeatureString::into_raw(value);
     }
@@ -236,7 +238,7 @@ impl RemoveInfo {
             unsafe {
                 FeatureFreeValue(self.key as *mut c_void);
             }
-            self.key = std::ptr::null();
+            self.key = ptr::null();
         }
         self.key = FeatureString::into_raw(key);
     }
@@ -253,7 +255,7 @@ impl RemoveInfo {
             unsafe {
                 FeatureFreeValue(self.scope as *mut c_void);
             }
-            self.scope = std::ptr::null();
+            self.scope = ptr::null();
         }
         self.scope = FeatureString::into_raw(scope);
     }
@@ -327,7 +329,7 @@ impl SetInfo {
             unsafe {
                 FeatureFreeValue(self.key as *mut c_void);
             }
-            self.key = std::ptr::null();
+            self.key = ptr::null();
         }
         self.key = FeatureString::into_raw(key);
     }
@@ -344,7 +346,7 @@ impl SetInfo {
             unsafe {
                 FeatureFreeValue(self.value as *mut c_void);
             }
-            self.value = std::ptr::null();
+            self.value = ptr::null();
         }
         self.value = FeatureString::into_raw(value);
     }
@@ -361,7 +363,7 @@ impl SetInfo {
             unsafe {
                 FeatureFreeValue(self.scope as *mut c_void);
             }
-            self.scope = std::ptr::null();
+            self.scope = ptr::null();
         }
         self.scope = FeatureString::into_raw(scope);
     }
@@ -434,7 +436,7 @@ impl GetInfo {
             unsafe {
                 FeatureFreeValue(self.key as *mut c_void);
             }
-            self.key = std::ptr::null();
+            self.key = ptr::null();
         }
         self.key = FeatureString::into_raw(key);
     }
@@ -451,7 +453,7 @@ impl GetInfo {
             unsafe {
                 FeatureFreeValue(self.scope as *mut c_void);
             }
-            self.scope = std::ptr::null();
+            self.scope = ptr::null();
         }
         self.scope = FeatureString::into_raw(scope);
     }
@@ -499,7 +501,7 @@ pub(crate) trait Exchange: FeatureInstanceTrait + Send + Sync {
 
 #[no_mangle]
 pub(crate) extern "C" fn system_exchange_onRegister(feature_name: FtString) {
-    let name = unsafe { std::ffi::CStr::from_ptr(feature_name) };
+    let name = unsafe { CStr::from_ptr(feature_name) };
     let fname = FeatureString::new(name.to_str().unwrap());
     system_exchange_on_register(&fname);
 }
@@ -512,7 +514,7 @@ pub(crate) extern "C" fn system_exchange_onCreate(
     let proto = FeaturePrototype::new(handle);
     let manager = proto.get_manager();
     let uv_loop = manager.get_loop().expect("FeatureGetUVLoop failed");
-    runtime::init_from_uv_loop(unsafe { std::mem::transmute(uv_loop) });
+    runtime::init_from_uv_loop(unsafe { core::mem::transmute(uv_loop) });
 
     let ctx = FeatureRuntimeContext::new(ctx);
     let boxed = Box::new(ExchangePrototype::new(proto.clone()));
@@ -556,7 +558,7 @@ pub(crate) extern "C" fn system_exchange_onDestroy(
 
 #[no_mangle]
 pub(crate) extern "C" fn system_exchange_onUnregister(feature_name: FtString) {
-    let name = unsafe { std::ffi::CStr::from_ptr(feature_name) };
+    let name = unsafe { CStr::from_ptr(feature_name) };
     let fname = FeatureString::new(name.to_str().unwrap());
     system_exchange_on_unregister(&fname);
 }

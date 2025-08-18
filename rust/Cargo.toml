@@ -26,11 +26,9 @@ feature_sys = { path = "feature_sys" }
 feature_macros = { path = "macros" }
 feature_frm = { path = "feature_frm" }
 vdk = { path = "../../rust/vdk-rs/vdk" }
-libc = "0.2"
+libc = {version = "0.2", default-features = false}
 proc-macro-error = "1.0"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = "2.0"
-tokio = "1"
-once_cell = "1.18"
 async-trait = "0.1"

@@ -1,12 +1,15 @@
 use crate::{FeatureManagedType, FeaturePtr, FeatureTypeDescription, FeatureValueType};
-use feature_sys::{FeatureFreeValue, FeatureMalloc, FeaturePrimitiveType, FeatureType, FtString};
-use libc::strlen;
-use std::{
-    ffi::{c_void, CStr, CString},
+use alloc::ffi::CString;
+use alloc::string::{String, ToString};
+use core::{
+    ffi::{c_void, CStr},
+    fmt,
     hash::{Hash, Hasher},
     ops::Deref,
-    os::raw::c_char,
+    slice,
 };
+use feature_sys::{FeatureFreeValue, FeatureMalloc, FeaturePrimitiveType, FeatureType, FtString};
+use libc::{c_char, strlen};
 
 impl FeatureManagedType for c_char {}
 impl FeatureTypeDescription for FtString {
@@ -41,7 +44,7 @@ impl FeatureString {
         let slice = unsafe {
             let ptr = FeatureMalloc(s.len() + 1, FeaturePrimitiveType::FT_STRING as FeatureType);
             assert!(!ptr.is_null(), "out of memory when create string");
-            std::slice::from_raw_parts_mut(ptr as *mut u8, s.len() + 1)
+            slice::from_raw_parts_mut(ptr as *mut u8, s.len() + 1)
         };
 
         // TODO: check if there are nul-byte in original string
@@ -87,14 +90,14 @@ impl FeatureString {
     }
 }
 
-impl std::fmt::Display for FeatureString {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for FeatureString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
 
-impl std::fmt::Debug for FeatureString {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Debug for FeatureString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "FeatureString({})", self.as_str())
     }
 }
@@ -119,7 +122,7 @@ impl From<CString> for FeatureString {
             let raw_ptr =
                 FeatureMalloc(bytes.len(), FeaturePrimitiveType::FT_STRING as FeatureType);
             assert!(!raw_ptr.is_null());
-            std::slice::from_raw_parts_mut(raw_ptr as *mut u8, bytes.len())
+            slice::from_raw_parts_mut(raw_ptr as *mut u8, bytes.len())
         };
         slice.copy_from_slice(bytes);
         let feature_string =
@@ -134,7 +137,7 @@ impl From<CString> for FeatureString {
 }
 
 impl TryFrom<FeatureString> for String {
-    type Error = std::str::Utf8Error;
+    type Error = core::str::Utf8Error;
 
     fn try_from(value: FeatureString) -> Result<Self, Self::Error> {
         Ok(value.to_string())

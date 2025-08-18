@@ -1,8 +1,12 @@
+use crate::alloc::string::ToString;
 use crate::exchange::*;
+use alloc::format;
+use alloc::{boxed::Box, string::String};
 use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
 use vdk::property::Property;
+use vdk::syslog::info;
 
 const FILE_TAG: &str = "[jidl_feature] exchange_impl";
 const EXCHANGE_PERSIST: &str = "persist.";
@@ -11,27 +15,27 @@ const PROP_KEY_MAX: usize = 127;
 const PROP_VALUE_MAX: usize = 255;
 
 pub(crate) fn system_exchange_on_register(name: &FeatureString) {
-    println!("ExchangeImpl on_register: {}", name.as_str())
+    info!("ExchangeImpl on_register: {}", name.as_str())
 }
 
 pub(crate) fn system_exchange_on_create(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
-    println!("ExchangeImpl on_create");
+    info!("ExchangeImpl on_create");
 }
 
 pub(crate) fn system_exchange_on_required(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
-    println!("ExchangeImpl on_required");
+    info!("ExchangeImpl on_required");
 }
 
 pub(crate) fn system_exchange_on_detached(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
-    println!("ExchangeImpl on_detached");
+    info!("ExchangeImpl on_detached");
 }
 
 pub(crate) fn system_exchange_on_destroy(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
-    println!("ExchangeImpl on_destroy");
+    info!("ExchangeImpl on_destroy");
 }
 
 pub(crate) fn system_exchange_on_unregister(name: &FeatureString) {
-    println!("ExchangeImpl on_unregister: {}", name.as_str());
+    info!("ExchangeImpl on_unregister: {}", name.as_str());
 }
 
 pub(crate) struct ExchangePrototype {
@@ -123,7 +127,7 @@ pub(crate) fn process_properties(
 #[async_trait]
 impl Exchange for ExchangeImpl {
     async fn set(&mut self, info: SetInfo) -> Result<FeatureString, PromiseError> {
-        println!("{} exchange.set called", FILE_TAG);
+        info!("{} exchange.set called", FILE_TAG);
 
         let key = process_properties(
             ExchangeOp::Set,
@@ -140,7 +144,7 @@ impl Exchange for ExchangeImpl {
     }
 
     async fn get(&mut self, info: GetInfo) -> Result<GetRet, PromiseError> {
-        println!("{} exchange.get called", FILE_TAG);
+        info!("{} exchange.get called", FILE_TAG);
 
         let key = process_properties(ExchangeOp::Get, &info.get_key(), &None, &info.get_scope())?;
 
@@ -159,7 +163,7 @@ impl Exchange for ExchangeImpl {
     }
 
     async fn remove(&mut self, info: RemoveInfo) -> Result<FeatureString, PromiseError> {
-        println!("{} exchange.remove called", FILE_TAG);
+        info!("{} exchange.remove called", FILE_TAG);
 
         let key = process_properties(
             ExchangeOp::Remove,
@@ -175,7 +179,7 @@ impl Exchange for ExchangeImpl {
     }
 
     async fn clear(&mut self, info: ClearInfo) -> Result<FeatureString, PromiseError> {
-        println!("{} exchange.clear called", FILE_TAG);
+        info!("{} exchange.clear called", FILE_TAG);
 
         Ok(FeatureString::from("clear success"))
     }
@@ -183,6 +187,6 @@ impl Exchange for ExchangeImpl {
 
 impl Drop for ExchangeImpl {
     fn drop(&mut self) {
-        println!("ExchangeImpl droped");
+        info!("ExchangeImpl droped");
     }
 }
