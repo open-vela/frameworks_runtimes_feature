@@ -25,8 +25,6 @@ foreach(MODULE ${MODULES})
     nuttx_add_jidl_rust(
         TARGET
         rust_features_impl
-        JIDL_OUT_DIR
-        ${CMAKE_BINARY_DIR}
         JIDLS
         ${JIDL_PATH}
         FEATURE_CRATE
