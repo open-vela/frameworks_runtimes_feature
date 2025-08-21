@@ -6,6 +6,8 @@ import ply.yacc as yacc
 import jidlast as ast
 import logging
 import os
+import random
+import time
 
 def CreateASTNode(p, t, *args):
   n = t(*args)
@@ -26,6 +28,19 @@ def CreateASTNode(p, t, *args):
       n.lexpos = p.lexpos(i)
       return
 
+def handleAbsPath(path):
+  if not path:
+    return None
+  if not os.path.isabs(path):
+    path = os.path.abspath(path)
+  if not os.path.exists(path):
+    print(f"Error: Directory doesn't exist: {path}")
+    return None
+  elif not os.access(path, os.W_OK):
+    print(f"Error: Directory is not writable: {path}")
+    return None
+  return path
+
 ########################################################
 class Parser:
   """
@@ -38,6 +53,7 @@ class Parser:
     self.debug = kw.get('debug', False)
     self.reporter = kw.get('errorReporter', None)
     self.jidl_file_name = kw.get('jidlFileName', "")
+    self.out_dir = handleAbsPath(kw.get('outDir', None))
     self.names = {}
     try:
       modname = os.path.split(os.path.splitext(__file__)[0])[
@@ -45,7 +61,10 @@ class Parser:
     except:
       modname = "parser" + "_" + self.__class__.__name__
     self.debugfile = modname + ".dbg"
-    self.tabmodule = modname + "_" + "parsetab" + "_" + self.jidl_file_name
+    timestamp = int(time.time() * 1000)
+    random_field = random.randint(0, 9999)
+    self.tabmodule = f"{modname}_parsetab_{self.jidl_file_name}_{timestamp}_{random_field}"
+
     #print(self.debugfile, self.tabmodule)
     logging.basicConfig(
         level = logging.ERROR,
@@ -56,10 +75,15 @@ class Parser:
 
     # Build the lexer and parser
     lex.lex(module=self, debug=self.debug)
-    yacc.yacc(module=self,
-          debug=self.debug,
-          debugfile=self.debugfile,
-          tabmodule=self.tabmodule)
+    yacc_args = {
+        'module': self,
+        'debug': self.debug,
+        'debugfile': self.debugfile,
+        'tabmodule': self.tabmodule
+    }
+    if self.out_dir:
+      yacc_args['outputdir'] = self.out_dir
+    yacc.yacc(**yacc_args)
 
   def parse(self, s):
     yacc.parse(s) #, debug=logging.getLogger())
@@ -69,8 +93,12 @@ class Parser:
       print(args)
 
   def clean(self):
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    tabmodule_file = dir_path + "/" + self.tabmodule + ".py"
+    if self.out_dir:
+      out_path = os.path.join(self.out_dir, self.tabmodule)
+      tabmodule_file = f"{out_path}.py"
+    else:
+      dir_path = os.path.dirname(os.path.abspath(__file__))
+      tabmodule_file = f"{dir_path}/{self.tabmodule}.py"
     if os.path.exists(tabmodule_file):
       os.remove(tabmodule_file)
 
