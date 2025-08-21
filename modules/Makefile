@@ -66,7 +66,7 @@ endif
 
 # collect external features
 ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
-	FEATURELIST += service_internal_account
+	FEATURELIST += service_miaccount
 endif
 
 ifeq ($(CONFIG_MIJIA_CAMERA_CLIENT),y)
