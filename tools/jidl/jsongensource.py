@@ -1432,7 +1432,7 @@ if __name__ == '__main__':
     # print("generating json ast file: '%s' ..." % (json_file))
     jidl_file = open(input_file)
     jidl_file_name = os.path.splitext(os.path.basename(input_file))[0]
-    jidl = JIDL(errorReporter = jidl_error.Reporter(input_file), jidlFileName = jidl_file_name)
+    jidl = JIDL(errorReporter = jidl_error.Reporter(input_file), jidlFileName = jidl_file_name, outDir = configs['out-dir'])
     jidl.parse(jidl_file.read())
     jidl.clean()
     jidl_file.close()
