@@ -267,8 +267,8 @@ if(CONFIG_FEATURE_SYSTEM_INTERNAL_ACTIVITY)
 endif()
 
 if(CONFIG_FEATURE_SYSTEM_INTERNAL_PACKAGE)
-    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/package_impl.cpp)
-    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/package.jidl)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/packagemanager_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/packagemanager.jidl)
 
     nuttx_add_jidl(
         TARGET
@@ -278,7 +278,7 @@ if(CONFIG_FEATURE_SYSTEM_INTERNAL_PACKAGE)
         JIDLS
         ${JIDL_PATHS}
         FEATURE_NAMES
-        system_internal_package)
+        system_packagemanager)
 endif()
 
 if(CONFIG_FEATURE_SYSTEM_FETCH)

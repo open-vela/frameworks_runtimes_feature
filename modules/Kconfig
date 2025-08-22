@@ -81,12 +81,12 @@ config FEATURE_SYSTEM_INTERNAL_ACTIVITY
     --help--
         enable system.internal.activity feature
 
-config FEATURE_SYSTEM_INTERNAL_PACKAGE
-    bool "system.internal.package"
+config FEATURE_SYSTEM_PACKAGEMANAGER
+    bool "system.packagemanager"
     default y
     depends on SYSTEM_PACKAGE_SERVICE
     --help--
-        enable system.internal.package feature
+        enable system.packagemanager feature
 
 config FEATURE_SYSTEM_TEST_INPUT
     bool "system.test.input"

@@ -281,11 +281,11 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_INTERNAL_ACTIVITY), y)
 	FEATURELIST += system_internal_activity
 endif
 
-ifeq ($(CONFIG_FEATURE_SYSTEM_INTERNAL_PACKAGE), y)
-	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/package_impl.cpp
-	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/package.jidl
+ifeq ($(CONFIG_FEATURE_SYSTEM_PACKAGEMANAGER), y)
+	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/packagemanager_impl.cpp
+	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/packagemanager.jidl
 	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
-	FEATURELIST += system_internal_package
+	FEATURELIST += system_packagemanager
 endif
 
 ifeq ($(CONFIG_FEATURE_SYSTEM_FETCH),y)
