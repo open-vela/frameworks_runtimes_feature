@@ -122,26 +122,26 @@ int PromiseManager::PromiseData::resolve(va_list& ap)
     } else {
         resolve_func = promise_info.resolve_funcs[0];
     }
-    if (feature_is_undefined(resolve_func)) {
+    int ret = -1;
+    if (!feature_is_undefined(resolve_func)) {
+        JSValue target = JS_UNDEFINED;
+        bool is_void = FT_IS_PRIMITIVE(resolve_type) && resolve_type == FT_VOID;
+        if (!is_void && !arg_to_target(js_ctx, ap, resolve_type, target)) {
+            FEATURE_LOG_ERROR("convert resolve param failed !");
+            return ret;
+        }
+        feature_value_t argv[] = { target };
+        ret = invoke_js_Callback(js_ctx, resolve_func, 1, argv);
+        feature_free_value(js_ctx, target);
+    } else {
         FEATURE_LOG_ERROR("resolve func undefined!");
-        return -1;
     }
-
-    JSValue target = JS_UNDEFINED;
-    bool is_void = FT_IS_PRIMITIVE(resolve_type) && resolve_type == FT_VOID;
-    if (!is_void && !arg_to_target(js_ctx, ap, resolve_type, target)) {
-        FEATURE_LOG_ERROR("convert resolve param failed !");
-        return -1;
-    }
-    feature_value_t argv[] = { target };
-    int ret = invoke_js_Callback(js_ctx, resolve_func, 1, argv);
-    feature_free_value(js_ctx, target);
 
     if (promise_type == kCallbacks) {
         feature_value_t complete_func = callbacks.complete;
         if (feature_is_undefined(complete_func)) {
             FEATURE_LOG_DEBUG("complete func undefined!");
-            return 0;
+            return ret;
         }
         invoke_js_Callback(js_ctx, complete_func, 0, nullptr);
     }
@@ -161,35 +161,36 @@ int PromiseManager::PromiseData::reject(int code, const char* msg)
     if (!msg) {
         FEATURE_LOG_WARN("promise reject reason is unknown error !");
     }
+    int ret = -1;
+    if (!feature_is_undefined(reject_func)) {
+        feature_value_t js_code = feature_int(js_ctx, code);
+        feature_value_t js_msg = feature_string(js_ctx, safe_msg);
+        if (promise_type == kPromise) {
+            feature_value_t js_data = feature_object(js_ctx);
+            feature_set_object_property(js_ctx, js_data, "code", js_code);
+            feature_set_object_property(js_ctx, js_data, "msg", js_msg);
+            feature_value_t argv[] = { js_data };
+            ret = invoke_js_Callback(js_ctx, reject_func, 1, argv);
+            feature_free_value(js_ctx, js_data);
+            return ret;
+        }
 
-    if (feature_is_undefined(reject_func)) {
-        FEATURE_LOG_ERROR("reject func undefined! code: %d, message: %s", code, safe_msg);
-        return -1;
+        feature_value_t argv[] = { js_msg, js_code };
+        ret = invoke_js_Callback(js_ctx, reject_func, 2, argv);
+        feature_free_value(js_ctx, js_code);
+        feature_free_value(js_ctx, js_msg);
+    } else {
+        FEATURE_LOG_ERROR("reject func undefined!");
     }
 
-    feature_value_t js_code = feature_int(js_ctx, code);
-    feature_value_t js_msg = feature_string(js_ctx, safe_msg);
-    if (promise_type == kPromise) {
-        feature_value_t js_data = feature_object(js_ctx);
-        feature_set_object_property(js_ctx, js_data, "code", js_code);
-        feature_set_object_property(js_ctx, js_data, "data", js_msg);
-        feature_value_t argv[] = { js_data };
-        int ret = invoke_js_Callback(js_ctx, reject_func, 1, argv);
-        feature_free_value(js_ctx, js_data);
-        return ret;
+    if (promise_type == kCallbacks) {
+        feature_value_t complete_func = callbacks.complete;
+        if (feature_is_undefined(complete_func)) {
+            FEATURE_LOG_DEBUG("complete func undefined!");
+            return ret;
+        }
+        invoke_js_Callback(js_ctx, complete_func, 0, nullptr);
     }
-
-    feature_value_t argv[] = { js_msg, js_code };
-    int ret = invoke_js_Callback(js_ctx, reject_func, 2, argv);
-    feature_free_value(js_ctx, js_code);
-    feature_free_value(js_ctx, js_msg);
-
-    feature_value_t complete_func = callbacks.complete;
-    if (feature_is_undefined(complete_func)) {
-        FEATURE_LOG_DEBUG("complete func undefined!");
-        return 0;
-    }
-    invoke_js_Callback(js_ctx, complete_func, 0, nullptr);
     return ret;
 }
 
