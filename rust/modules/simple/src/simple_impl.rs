@@ -5,36 +5,19 @@ use core::{ptr, time::Duration};
 use feature_frm::*;
 use feature_macros::feature_instance;
 use vdk::async_runtime::time;
-use vdk::syslog::info;
+use vdk::log::info;
 
-pub fn simple_on_register(name: &FeatureString) {
-    info!("SimpleImpl on_register: {}", name.as_str())
-}
+pub fn simple_on_register(_name: &FeatureString) {}
 
-pub fn simple_on_create(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
-    info!("SimpleImpl on_create");
-    proto.attach(Box::new(SimplePrototype::new(proto.clone())))
-}
+pub fn simple_on_create(_ctx: FeatureRuntimeContext, _proto: FeaturePrototype) {}
 
-pub fn simple_on_required(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
-    info!("SimpleImpl on_required");
-    let boxed = Box::new(SimpleImpl::new(instance.clone())) as Box<dyn Simple>;
-    instance.attach(boxed);
-}
+pub fn simple_on_required(_ctx: FeatureRuntimeContext, _instance: FeatureInstance) {}
 
-pub fn simple_on_detached(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
-    info!("SimpleImpl on_detached");
-    let _: Option<Box<dyn Simple>> = instance.detach();
-}
+pub fn simple_on_detached(_ctx: FeatureRuntimeContext, _instance: FeatureInstance) {}
 
-pub fn simple_on_destroy(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
-    info!("SimpleImpl on_destroy");
-    let _: Option<Box<SimplePrototype>> = proto.detach();
-}
+pub fn simple_on_destroy(_ctx: FeatureRuntimeContext, _proto: FeaturePrototype) {}
 
-pub fn simple_on_unregister(name: &FeatureString) {
-    info!("SimpleImpl on_unregister: {}", name.as_str());
-}
+pub fn simple_on_unregister(_name: &FeatureString) {}
 
 pub struct SimplePrototype {
     pub proto: FeaturePrototype,
@@ -42,7 +25,7 @@ pub struct SimplePrototype {
 }
 
 impl SimplePrototype {
-    fn new(proto: FeaturePrototype) -> Self {
+    pub(crate) fn new(proto: FeaturePrototype) -> Self {
         SimplePrototype {
             proto,
             str: String::from("SimpleImpl"),
@@ -59,7 +42,7 @@ pub struct SimpleImpl {
 
 // function implementation
 impl SimpleImpl {
-    fn new(instance: FeatureInstance) -> Self {
+    pub(crate) fn new(instance: FeatureInstance) -> Self {
         SimpleImpl {
             instance,
             chapter: None,

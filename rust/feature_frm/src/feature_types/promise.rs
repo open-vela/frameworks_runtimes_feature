@@ -30,7 +30,7 @@ pub struct FeaturePromise<T: Promise> {
 }
 
 impl<T: Promise + Default> FeaturePromise<T> {
-    pub fn new(id: FtPromiseId, handle: FeatureInstanceHandle) -> Self {
+    pub unsafe fn new(id: FtPromiseId, handle: FeatureInstanceHandle) -> Self {
         Self {
             id,
             instance: FeatureInstance::new(handle),

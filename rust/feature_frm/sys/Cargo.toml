@@ -3,6 +3,9 @@ name = "feature_sys"
 version.workspace = true
 edition.workspace = true
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(static_binding)'] }
+
 [build-dependencies]
 bindgen = "0.72"
 

@@ -52,7 +52,7 @@ fn get_package_version(handle: FeatureProtoHandle) -> Option<String> {
     Some(version)
 }
 
-pub fn get_environment_name(handle: FeatureProtoHandle) -> Option<String> {
+pub(crate) fn get_environment_name(handle: FeatureProtoHandle) -> Option<String> {
     let ret = unsafe { FeatureGetEnvironmentName(handle) };
     if ret.is_null() {
         return None;
@@ -98,6 +98,7 @@ impl Clone for FeatureInstance {
 }
 
 impl FeatureInstance {
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn new(handle: FeatureInstanceHandle) -> Self {
         let v = Self(NonNull::new(handle).expect("FeatureInstanceHandle is null"));
         unsafe { FeatureDupInstanceHandle(handle) };
@@ -150,7 +151,7 @@ impl FeatureInstance {
     }
 
     pub unsafe fn as_handle(&self) -> FeatureInstanceHandle {
-        return self.as_ptr();
+        self.as_ptr()
     }
 
     pub fn get_prototype<T>(&self) -> Option<&T> {
@@ -172,7 +173,7 @@ impl FeatureInstance {
 
     pub fn get_event_name(&self, id: FtEventId) -> Option<String> {
         let ret = unsafe { FeatureGetEventName(self.as_ptr(), id) };
-        if ret != ptr::null_mut() {
+        if !ret.is_null() {
             Some(String::from(
                 unsafe { CStr::from_ptr(ret) }.to_str().expect(""),
             ))
@@ -185,7 +186,7 @@ impl FeatureInstance {
         unsafe { FeatureGetEventCallbackCount(self.as_ptr(), id) }
     }
 
-    pub fn promise_reject(&self, id: FtPromiseId, code: FtInt, msg: FtString) -> bool {
+    pub(crate) fn promise_reject(&self, id: FtPromiseId, code: FtInt, msg: FtString) -> bool {
         unsafe { FeaturePromiseReject(self.as_ptr(), id, code, msg) }
     }
 

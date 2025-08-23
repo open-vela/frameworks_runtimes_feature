@@ -2,8 +2,8 @@
 resolver = "2"
 members = [
     "macros",
-    "feature_sys",
     "feature_frm",
+    "feature_frm/sys",
     "modules/simple",
     "modules/system_exchange",
 ]
@@ -22,7 +22,7 @@ codegen-units = 1
 opt-level = 'z'
 
 [workspace.dependencies]
-feature_sys = { path = "feature_sys" }
+feature_sys = { path = "feature_frm/sys" }
 feature_macros = { path = "macros" }
 feature_frm = { path = "feature_frm" }
 vdk = { path = "../../rust/vdk-rs/vdk" }

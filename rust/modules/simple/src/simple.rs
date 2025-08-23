@@ -7,11 +7,11 @@ use core::ops::DerefMut;
 use core::{ffi::CStr, ptr};
 use feature_frm::*;
 use vdk::async_runtime::runtime;
-use vdk::syslog::info;
+use vdk::log::info;
 
 use crate::simple_impl::{
     simple_on_create, simple_on_destroy, simple_on_detached, simple_on_register,
-    simple_on_required, simple_on_unregister,
+    simple_on_required, simple_on_unregister, SimpleImpl, SimplePrototype,
 };
 
 unsafe extern "C" {
@@ -68,6 +68,12 @@ pub struct simple_Chapter(FeaturePtr<simple_Chapter_for_c>);
 unsafe impl Send for simple_Chapter {}
 unsafe impl Sync for simple_Chapter {}
 
+impl Default for simple_Chapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl simple_Chapter {
     pub fn new() -> Self {
         Self(FeaturePtr::new())
@@ -113,11 +119,11 @@ impl simple_Chapter {
         if self.title.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.title))
+        Some(unsafe { FeatureString::from_raw(self.title) })
     }
 
     pub fn set_title(&mut self, title: FeatureString) {
-        if self.title != ptr::null() {
+        if !self.title.is_null() {
             // free old title
             unsafe {
                 FeatureFreeValue(self.title as *mut c_void);
@@ -150,6 +156,12 @@ pub struct simple_Book(FeaturePtr<simple_Book_for_c>);
 unsafe impl Send for simple_Book {}
 unsafe impl Sync for simple_Book {}
 
+impl Default for simple_Book {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl simple_Book {
     pub fn new() -> Self {
         Self(FeaturePtr::new())
@@ -180,11 +192,11 @@ impl FeatureTypeDescription for simple_Book_for_c {
 
 impl simple_Book {
     pub fn get_book_name(&self) -> FeatureString {
-        FeatureString::from_raw(self.book_name)
+        unsafe { FeatureString::from_raw(self.book_name) }
     }
 
     pub fn set_book_name(&mut self, name: FeatureString) {
-        if self.book_name != ptr::null() {
+        if !self.book_name.is_null() {
             //  free old data
             unsafe {
                 FeatureFreeValue(self.book_name as *mut c_void);
@@ -198,7 +210,7 @@ impl simple_Book {
     }
 
     pub fn set_chap_1(&mut self, chap_1: simple_Chapter) {
-        if self.chap_1 != ptr::null_mut() {
+        if !self.chap_1.is_null() {
             //  free old data
             unsafe {
                 FeatureFreeValue(self.chap_1 as *mut c_void);
@@ -216,7 +228,7 @@ pub struct moo_cb {
 impl moo_cb {
     pub(crate) fn new(id: FtCallbackId, handle: FeatureInstanceHandle) -> Self {
         Self {
-            cb: Arc::new(FeatureCallback::new(id, handle)),
+            cb: Arc::new(unsafe { FeatureCallback::new(id, handle) }),
         }
     }
 
@@ -319,12 +331,9 @@ pub trait Bird: Animal + Flyable + FeatureInstanceTrait {
 }
 
 #[no_mangle]
-pub extern "C" fn simple_onRegister(feature_name: FtString) {
-    // init_logger(log::LevelFilter::Info);
-    // 可以在这里处理feature_name
+pub unsafe extern "C" fn simple_onRegister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
     let fname = FeatureString::new(name.to_str().unwrap());
-    info!("wjf on_register Called from C, name: {}", fname.as_str());
     simple_on_register(&fname);
 }
 
@@ -333,39 +342,41 @@ pub extern "C" fn simple_onCreate(
     ctx: FeatureRuntimeContextHandle,
     proto_handle: FeatureProtoHandle,
 ) {
-    info!("wjf on_create Called from C");
+    let proto = FeaturePrototype::new(proto_handle);
+    let manager = proto.get_manager();
+    let uv_loop = manager.get_loop().expect("FeatureGetUVLoop failed");
+    // libuv definition is different between vdk_rs and rust framework, so we need to use unsafe to transmute it.
+    // TODO: make them compatible.
+    #[allow(clippy::missing_transmute_annotations)]
+    runtime::init_from_uv_loop(unsafe { core::mem::transmute(uv_loop) });
+
     let ctx = FeatureRuntimeContext::new(ctx);
-    simple_on_create(ctx, FeaturePrototype::new(proto_handle));
+    let boxed = Box::new(SimplePrototype::new(proto.clone()));
+    proto.attach(boxed);
+    simple_on_create(ctx, proto);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_onRequired(
+pub unsafe extern "C" fn simple_onRequired(
     ctx: FeatureRuntimeContextHandle,
     instance_handle: FeatureInstanceHandle,
 ) {
-    info!("wjf on_required Called from C");
-
     let instance = FeatureInstance::new(instance_handle);
     let ctx = FeatureRuntimeContext::new(ctx);
-    let manager = instance.get_manager();
-    let libuv_handle = manager.get_loop().expect("FeatureGetUVLoop failed");
-    // libuv definition is different between vdk_rs and rust framework, so we need to use unsafe to transmute it.
-    // TODO: make them compatible.
-    runtime::init_from_uv_loop(unsafe { core::mem::transmute(libuv_handle) });
-
+    let boxed = Box::new(SimpleImpl::new(instance.clone())) as Box<dyn Simple>;
+    instance.attach(boxed);
     simple_on_required(ctx, instance);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_onDetached(
+pub unsafe extern "C" fn simple_onDetached(
     ctx: FeatureRuntimeContextHandle,
     instance_handle: FeatureInstanceHandle,
 ) {
-    // 处理detached事件
-    info!("wjf on_detached Called from C");
     let instance = FeatureInstance::new(instance_handle);
     let ctx = FeatureRuntimeContext::new(ctx);
-    simple_on_detached(ctx, instance);
+    simple_on_detached(ctx, instance.clone());
+    let _: Option<Box<dyn Simple>> = instance.detach();
 }
 
 #[no_mangle]
@@ -373,71 +384,68 @@ pub extern "C" fn simple_onDestroy(
     ctx: FeatureRuntimeContextHandle,
     proto_handle: FeatureProtoHandle,
 ) {
-    // 清理资源
-    info!("wjf on_destroy Called from C");
     let proto = FeaturePrototype::new(proto_handle);
     let ctx = FeatureRuntimeContext::new(ctx);
-    simple_on_destroy(ctx, proto);
+    simple_on_destroy(ctx, proto.clone());
+    let _: Option<Box<SimplePrototype>> = proto.detach();
 }
 
 #[no_mangle]
-pub extern "C" fn simple_onUnregister(feature_name: FtString) {
-    // 可以在这里处理feature_name
+pub unsafe extern "C" fn simple_onUnregister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
     let fname = FeatureString::new(name.to_str().unwrap());
-    info!("wjf on_unregister Called from C, name: {}", fname.as_str());
     simple_on_unregister(&fname);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_foo(feature: *mut c_void, _adata: AppendData) -> FtString {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+pub unsafe extern "C" fn simple_wrap_foo(feature: *mut c_void, _adata: AppendData) -> FtString {
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let ret = unsafe { (*simple).foo() };
     FeatureString::into_raw(ret)
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_bar(
+pub unsafe extern "C" fn simple_wrap_bar(
     feature: *mut c_void,
     _adata: AppendData,
     a: FtInt,
     b: FtFloat,
 ) -> FtInt {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     unsafe { (*simple).bar(a, b) }
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_goo(
+pub unsafe extern "C" fn simple_wrap_goo(
     feature: *mut c_void,
     _adata: AppendData,
     a: FtDouble,
 ) -> FtDouble {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     unsafe { (*simple).goo(a) }
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_doo(feature: *mut c_void, _adata: AppendData) {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+pub unsafe extern "C" fn simple_wrap_doo(feature: *mut c_void, _adata: AppendData) {
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     unsafe { (*simple).doo() }
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendData, a: FtString) {
+pub unsafe extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendData, a: FtString) {
     if a.is_null() {
         info!("Error: Received null pointer!");
         return;
     }
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
-    let fs = FeatureString::from_raw(a);
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let fs = unsafe { FeatureString::from_raw(a) };
     unsafe {
         (*simple).hoo(&fs);
     }
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_set_chapter(
+pub unsafe extern "C" fn simple_wrap_set_chapter(
     feature: *mut c_void,
     _adata: AppendData,
     chap: *mut simple_Chapter_for_c,
@@ -445,7 +453,7 @@ pub extern "C" fn simple_wrap_set_chapter(
     if chap.is_null() {
         info!("wjf set_chapter() Received null pointer!");
     }
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     unsafe {
         let ptr = FeaturePtr::<simple_Chapter_for_c>::from_raw(chap);
         (*simple).set_chapter(simple_Chapter(ptr))
@@ -453,11 +461,11 @@ pub extern "C" fn simple_wrap_set_chapter(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_chapter(
+pub unsafe extern "C" fn simple_wrap_get_chapter(
     feature: *mut c_void,
     _adata: AppendData,
 ) -> *mut simple_Chapter_for_c {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &*simple };
     let chap = simple.get_chapter();
     chap.map_or(ptr::null::<simple_Chapter_for_c>() as *mut _, |v| {
@@ -466,7 +474,7 @@ pub extern "C" fn simple_wrap_get_chapter(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_set_chapter_array(
+pub unsafe extern "C" fn simple_wrap_set_chapter_array(
     feature: *mut c_void,
     _adata: AppendData,
     chap_array: *mut FtArray,
@@ -475,7 +483,7 @@ pub extern "C" fn simple_wrap_set_chapter_array(
         info!("wjf set_chapter_array() Received null pointer!");
     }
 
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &mut *simple };
     unsafe {
         let chaps = FeatureReferenceArray::<simple_Chapter>::from_raw(chap_array);
@@ -484,17 +492,17 @@ pub extern "C" fn simple_wrap_set_chapter_array(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_chapter_array(
+pub unsafe extern "C" fn simple_wrap_get_chapter_array(
     feature: *mut c_void,
     _adata: AppendData,
 ) -> *mut FtArray {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let chaps = unsafe { (*simple).get_chapter_array() };
     chaps.map_or(ptr::null::<FtArray>() as *mut _, |b| b.into_raw())
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_set_book(
+pub unsafe extern "C" fn simple_wrap_set_book(
     feature: *mut c_void,
     _adata: AppendData,
     book: *mut simple_Book_for_c,
@@ -502,7 +510,7 @@ pub extern "C" fn simple_wrap_set_book(
     if book.is_null() {
         info!("wjf set_book() Received null pointer!");
     } else {
-        let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+        let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
         unsafe {
             let book_ptr = simple_Book(FeaturePtr::from_raw(book));
             (*simple).set_book(book_ptr)
@@ -511,11 +519,11 @@ pub extern "C" fn simple_wrap_set_book(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_book(
+pub unsafe extern "C" fn simple_wrap_get_book(
     feature: *mut c_void,
     _adata: AppendData,
 ) -> *mut simple_Book_for_c {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let book = unsafe { (*simple).get_book() };
     book.map_or(ptr::null::<simple_Book_for_c>() as *mut _, |b| {
         b.0.clone().into_raw()
@@ -523,27 +531,27 @@ pub extern "C" fn simple_wrap_get_book(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_moo(
+pub unsafe extern "C" fn simple_wrap_moo(
     feature: *mut c_void,
     _adata: AppendData,
     a: FtInt,
     id: FtCallbackId,
 ) {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let cb = moo_cb::new(id, feature);
     unsafe { (*simple).moo(a, cb) }
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_noo(
+pub unsafe extern "C" fn simple_wrap_noo(
     feature: *mut c_void,
     _adata: AppendData,
     resolve: FtBool,
     id: FtPromiseId,
 ) {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &mut *simple };
-    let promise = FeaturePromise::<FtIntPromise>::new(id, feature);
+    let promise = unsafe { FeaturePromise::<FtIntPromise>::new(id, feature) };
     runtime::spawn(async move {
         match simple.noo(resolve).await {
             Ok(v) => promise.resolve(v),
@@ -553,15 +561,15 @@ pub extern "C" fn simple_wrap_noo(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_poo(
+pub unsafe extern "C" fn simple_wrap_poo(
     feature: *mut c_void,
     _adata: AppendData,
     resolve: FtBool,
     id: FtPromiseId,
 ) {
-    let simple = feature_glue::get_instance_data::<dyn Simple>(feature).unwrap();
+    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &mut *simple };
-    let promise = FeaturePromise::<FeatureStringPromise>::new(id, feature);
+    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(id, feature) };
     runtime::spawn(async move {
         match simple.poo(resolve).await {
             Ok(v) => promise.resolve(v),
@@ -572,7 +580,7 @@ pub extern "C" fn simple_wrap_poo(
 
 // interface related
 #[no_mangle]
-pub extern "C" fn simple_wrap_createDog(
+pub unsafe extern "C" fn simple_wrap_createDog(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     _type: FtInt,
@@ -582,7 +590,7 @@ pub extern "C" fn simple_wrap_createDog(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_createAirplane(
+pub unsafe extern "C" fn simple_wrap_createAirplane(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
@@ -591,7 +599,7 @@ pub extern "C" fn simple_wrap_createAirplane(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_createPigeon(
+pub unsafe extern "C" fn simple_wrap_createPigeon(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
@@ -600,7 +608,7 @@ pub extern "C" fn simple_wrap_createPigeon(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_createCat(
+pub unsafe extern "C" fn simple_wrap_createCat(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
@@ -609,7 +617,7 @@ pub extern "C" fn simple_wrap_createCat(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_setAnimal(
+pub unsafe extern "C" fn simple_wrap_setAnimal(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     animal: FeatureInterfaceHandle,
@@ -623,7 +631,7 @@ pub extern "C" fn simple_wrap_setAnimal(
 pub extern "C" fn simple_Animal_interface_dog_finalize(_feature: FeatureInstanceHandle) {}
 
 #[no_mangle]
-pub extern "C" fn simple_Animal_interface_dog_get_name(
+pub unsafe extern "C" fn simple_Animal_interface_dog_get_name(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
@@ -633,18 +641,18 @@ pub extern "C" fn simple_Animal_interface_dog_get_name(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Animal_interface_dog_set_name(
+pub unsafe extern "C" fn simple_Animal_interface_dog_set_name(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     name: FtString,
 ) {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
-    let fname = FeatureString::from_raw(name);
+    let fname = unsafe { FeatureString::from_raw(name) };
     dog.set_name(&fname);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Animal_interface_dog_get_legCount(
+pub unsafe extern "C" fn simple_Animal_interface_dog_get_legCount(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtInt {
@@ -653,7 +661,7 @@ pub extern "C" fn simple_Animal_interface_dog_get_legCount(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Animal_interface_dog_eatFood(
+pub unsafe extern "C" fn simple_Animal_interface_dog_eatFood(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     foods: *mut FtArray,
@@ -664,14 +672,14 @@ pub extern "C" fn simple_Animal_interface_dog_eatFood(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Animal_interface_dog_run(
+pub unsafe extern "C" fn simple_Animal_interface_dog_run(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     distance: FtInt,
     destination: FtString,
 ) -> FtString {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
-    let destination = FeatureString::from_raw(destination);
+    let destination = unsafe { FeatureString::from_raw(destination) };
     let ret = dog.run(distance, &destination);
     FeatureString::into_raw(ret)
 }
@@ -681,7 +689,7 @@ pub extern "C" fn simple_Animal_interface_dog_run(
 pub extern "C" fn simple_Flyable_interface_airplane_finalize(_feature: FeatureInstanceHandle) {}
 
 #[no_mangle]
-pub extern "C" fn simple_Flyable_interface_airplane_fly(
+pub unsafe extern "C" fn simple_Flyable_interface_airplane_fly(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
@@ -691,7 +699,7 @@ pub extern "C" fn simple_Flyable_interface_airplane_fly(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Flyable_interface_airplane_get_breed(
+pub unsafe extern "C" fn simple_Flyable_interface_airplane_get_breed(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
@@ -701,13 +709,13 @@ pub extern "C" fn simple_Flyable_interface_airplane_get_breed(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Flyable_interface_airplane_set_breed(
+pub unsafe extern "C" fn simple_Flyable_interface_airplane_set_breed(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     breed: FtString,
 ) {
     let airplane = unsafe { &*feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
-    let fbreed = FeatureString::from_raw(breed);
+    let fbreed = unsafe { FeatureString::from_raw(breed) };
     airplane.set_breed(&fbreed);
 }
 
@@ -716,7 +724,7 @@ pub extern "C" fn simple_Flyable_interface_airplane_set_breed(
 pub extern "C" fn simple_Bird_interface_pigeon_finalize(_feature: FeatureInstanceHandle) {}
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_get_name(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_name(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
@@ -726,18 +734,18 @@ pub extern "C" fn simple_Bird_interface_pigeon_get_name(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_set_name(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_name(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     name: FtString,
 ) {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    let fname = FeatureString::from_raw(name);
+    let fname = unsafe { FeatureString::from_raw(name) };
     pigeon.set_name(&fname);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_get_legCount(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_legCount(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtInt {
@@ -746,7 +754,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_get_legCount(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_eatFood(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_eatFood(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     foods: *mut FtArray,
@@ -757,20 +765,20 @@ pub extern "C" fn simple_Bird_interface_pigeon_eatFood(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_run(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_run(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     distance: FtInt,
     destination: FtString,
 ) -> FtString {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    let fdestination = FeatureString::from_raw(destination);
+    let fdestination = unsafe { FeatureString::from_raw(destination) };
     let ret = pigeon.run(distance, &fdestination);
     FeatureString::into_raw(ret)
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_fly(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_fly(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
@@ -780,7 +788,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_fly(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_get_breed(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_breed(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
@@ -790,18 +798,18 @@ pub extern "C" fn simple_Bird_interface_pigeon_get_breed(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_set_breed(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_breed(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     breed: FtString,
 ) {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    let fbreed = FeatureString::from_raw(breed);
+    let fbreed = unsafe { FeatureString::from_raw(breed) };
     pigeon.set_breed(&fbreed);
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_get_weight(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_weight(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtInt {
@@ -810,7 +818,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_get_weight(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_set_weight(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_weight(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     weight: FtInt,
@@ -820,7 +828,7 @@ pub extern "C" fn simple_Bird_interface_pigeon_set_weight(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_walk(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_walk(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     pid: FtPromiseId,

@@ -55,7 +55,7 @@ impl FeatureString {
 
     /// Creates a `FeatureString` from a raw pointer.
     /// It will increment the reference count of the underlying FtString.
-    pub fn from_raw(ptr: FtString) -> Self {
+    pub unsafe fn from_raw(ptr: FtString) -> Self {
         assert!(!ptr.is_null());
         let length = unsafe { strlen(ptr) };
         Self::from_raw_with_len(ptr, length as usize)
@@ -87,6 +87,10 @@ impl FeatureString {
     /// Length of the string, excluding the null terminator.
     pub fn len(&self) -> usize {
         self.1
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 

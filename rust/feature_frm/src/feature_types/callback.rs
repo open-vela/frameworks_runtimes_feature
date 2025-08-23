@@ -8,7 +8,7 @@ pub struct FeatureCallback {
 }
 
 impl FeatureCallback {
-    pub fn new(id: FtCallbackId, handle: FeatureInstanceHandle) -> Self {
+    pub unsafe fn new(id: FtCallbackId, handle: FeatureInstanceHandle) -> Self {
         Self {
             id,
             instance: FeatureInstance::new(handle),
