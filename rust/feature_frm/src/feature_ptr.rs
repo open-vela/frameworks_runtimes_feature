@@ -57,7 +57,7 @@ impl<T: FeatureManagedType> FeaturePtr<T> {
 
     /// Returns a reference count to the underlying pointer.
     pub fn strong_count(&self) -> i32 {
-        unsafe { FeatureGetValueRefCount(self.ptr.as_ptr() as *mut T as *mut c_void) as i32 }
+        unsafe { FeatureGetValueRefCount(self.ptr.as_ptr() as *mut c_void) as i32 }
     }
 
     pub fn ptr_eq(a: &Self, b: &Self) -> bool {
@@ -77,7 +77,7 @@ impl<T: FeatureManagedType> Clone for FeaturePtr<T> {
 impl<T: FeatureManagedType> Drop for FeaturePtr<T> {
     fn drop(&mut self) {
         unsafe {
-            FeatureFreeValue(self.ptr.as_ptr() as *mut T as *mut c_void);
+            FeatureFreeValue(self.ptr.as_ptr() as *mut c_void);
         }
     }
 }

@@ -5,8 +5,8 @@ use alloc::{boxed::Box, string::String};
 use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
+use vdk::log::info;
 use vdk::property::Property;
-use vdk::syslog::info;
 
 const FILE_TAG: &str = "[jidl_feature] exchange_impl";
 const EXCHANGE_PERSIST: &str = "persist.";
@@ -14,31 +14,22 @@ const EXCHANGE_PERSIST_LEN: usize = EXCHANGE_PERSIST.len();
 const PROP_KEY_MAX: usize = 127;
 const PROP_VALUE_MAX: usize = 255;
 
-pub(crate) fn system_exchange_on_register(name: &FeatureString) {
-    info!("ExchangeImpl on_register: {}", name.as_str())
+pub(crate) fn system_exchange_on_register(_name: &FeatureString) {}
+
+pub(crate) fn system_exchange_on_create(_ctx: FeatureRuntimeContext, _proto: FeaturePrototype) {}
+
+pub(crate) fn system_exchange_on_required(_ctx: FeatureRuntimeContext, _instance: FeatureInstance) {
 }
 
-pub(crate) fn system_exchange_on_create(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
-    info!("ExchangeImpl on_create");
+pub(crate) fn system_exchange_on_detached(_ctx: FeatureRuntimeContext, _instance: FeatureInstance) {
 }
 
-pub(crate) fn system_exchange_on_required(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
-    info!("ExchangeImpl on_required");
-}
+pub(crate) fn system_exchange_on_destroy(_ctx: FeatureRuntimeContext, _proto: FeaturePrototype) {}
 
-pub(crate) fn system_exchange_on_detached(_ctx: FeatureRuntimeContext, instance: FeatureInstance) {
-    info!("ExchangeImpl on_detached");
-}
-
-pub(crate) fn system_exchange_on_destroy(_ctx: FeatureRuntimeContext, proto: FeaturePrototype) {
-    info!("ExchangeImpl on_destroy");
-}
-
-pub(crate) fn system_exchange_on_unregister(name: &FeatureString) {
-    info!("ExchangeImpl on_unregister: {}", name.as_str());
-}
+pub(crate) fn system_exchange_on_unregister(_name: &FeatureString) {}
 
 pub(crate) struct ExchangePrototype {
+    #[allow(dead_code)]
     pub(crate) proto: FeaturePrototype,
 }
 
@@ -58,7 +49,7 @@ impl ExchangeImpl {
     pub(crate) fn new(instance: FeatureInstance) -> Self {
         ExchangeImpl {
             instance,
-            prop: Property::default(),
+            prop: Property,
         }
     }
 }
@@ -69,8 +60,6 @@ pub(crate) enum ExchangeOp {
     Get,
     Set,
     Remove,
-    Clear,
-    None,
 }
 
 pub(crate) fn process_properties(
@@ -91,13 +80,12 @@ pub(crate) fn process_properties(
         return Err(PromiseError::new(-1, "scope is null"));
     }
 
-    if op == ExchangeOp::Set {
-        if value.as_ref().is_none()
+    if op == ExchangeOp::Set
+        && (value.as_ref().is_none()
             || value.as_ref().unwrap().is_empty()
-            || value.as_ref().unwrap().len() > PROP_VALUE_MAX
-        {
-            return Err(PromiseError::new(-1, "invalid value"));
-        }
+            || value.as_ref().unwrap().len() > PROP_VALUE_MAX)
+    {
+        return Err(PromiseError::new(-1, "invalid value"));
     }
 
     let scope = scope.unwrap();
@@ -114,14 +102,11 @@ pub(crate) fn process_properties(
     if key_len > PROP_KEY_MAX {
         return Err(PromiseError::new(
             -1,
-            format!(
-                "key length too long, max:{}, current:{}",
-                PROP_KEY_MAX, key_len
-            ),
+            format!("key length too long, max:{PROP_KEY_MAX}, current:{key_len}"),
         ));
     }
 
-    Ok(format!("{}{}.{}", EXCHANGE_PERSIST, scope, key))
+    Ok(format!("{EXCHANGE_PERSIST}{scope}.{key}"))
 }
 
 #[async_trait]
@@ -139,7 +124,7 @@ impl Exchange for ExchangeImpl {
 
         match self.prop.set(&key, &value).await {
             Ok(_) => Ok(FeatureString::from("set success")),
-            Err(e) => Err(PromiseError::new(-1, format!("set failed: {}", e))),
+            Err(e) => Err(PromiseError::new(-1, format!("set failed: {e}"))),
         }
     }
 
@@ -158,7 +143,7 @@ impl Exchange for ExchangeImpl {
                     return Err(PromiseError::new(-1, "property not found"));
                 }
             }
-            Err(e) => Err(PromiseError::new(-1, format!("get failed: {}", e))),
+            Err(e) => Err(PromiseError::new(-1, format!("get failed: {e}"))),
         }
     }
 
@@ -174,11 +159,11 @@ impl Exchange for ExchangeImpl {
 
         match self.prop.delete(&key).await {
             Ok(_) => Ok(FeatureString::from("remove success")),
-            Err(e) => Err(PromiseError::new(-1, format!("remove failed: {}", e))),
+            Err(e) => Err(PromiseError::new(-1, format!("remove failed: {e}"))),
         }
     }
 
-    async fn clear(&mut self, info: ClearInfo) -> Result<FeatureString, PromiseError> {
+    async fn clear(&mut self, _info: ClearInfo) -> Result<FeatureString, PromiseError> {
         info!("{} exchange.clear called", FILE_TAG);
 
         Ok(FeatureString::from("clear success"))

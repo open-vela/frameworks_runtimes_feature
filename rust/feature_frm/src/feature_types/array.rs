@@ -28,7 +28,7 @@ impl FeatureRawArray {
         let array = unsafe {
             let raw_ptr = FeatureCreateArray(ptr::null_mut(), capacity, elem_type);
             assert!(!raw_ptr.is_null());
-            FeaturePtr::<FtArray>::from_raw(raw_ptr as *mut FtArray)
+            FeaturePtr::<FtArray>::from_raw(raw_ptr)
         };
         Self(array)
     }
@@ -66,7 +66,7 @@ impl FeatureRawArray {
         self.0._size += 1;
     }
 
-    pub fn enlarge<T>(&mut self, new_size: usize) -> bool {
+    pub fn enlarge(&mut self, new_size: usize) -> bool {
         if new_size <= self.capacity() {
             false
         } else {
@@ -80,7 +80,7 @@ impl FeatureRawArray {
     pub fn append<T>(&mut self, item: T) {
         if self.len() >= self.capacity() {
             // TODO: enlarge by twice?
-            self.enlarge::<T>(self.capacity() + 1);
+            self.enlarge(self.capacity() + 1);
         }
         self._add_item(item);
     }
@@ -121,6 +121,10 @@ impl<T: FeatureValueType> FeaturePrimitiveArray<T> {
 
     pub fn len(&self) -> usize {
         self.inner.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn capacity(&self) -> usize {
@@ -176,7 +180,7 @@ impl<T: FeatureValueType> FeaturePrimitiveArray<T> {
     }
 
     pub fn enlarge(&mut self, new_size: usize) -> bool {
-        self.inner.enlarge::<T>(new_size)
+        self.inner.enlarge(new_size)
     }
 
     pub fn append(&mut self, item: T) {
@@ -219,6 +223,10 @@ impl<T: FeatureReferenceType> FeatureReferenceArray<T> {
         self.inner.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn capacity(&self) -> usize {
         self.inner.capacity()
     }
@@ -238,7 +246,7 @@ impl<T: FeatureReferenceType> FeatureReferenceArray<T> {
     }
 
     pub fn enlarge(&mut self, new_size: usize) -> bool {
-        self.inner.enlarge::<*mut T::Target>(new_size)
+        self.inner.enlarge(new_size)
     }
 
     pub fn append(&mut self, item: T) {

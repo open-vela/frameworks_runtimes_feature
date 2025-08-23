@@ -47,12 +47,6 @@ pub(crate) struct ClearInfo(FeaturePtr<system_exchange_ClearInfo>);
 unsafe impl Send for ClearInfo {}
 unsafe impl Sync for ClearInfo {}
 
-impl ClearInfo {
-    pub(crate) fn new() -> Self {
-        Self(FeaturePtr::new())
-    }
-}
-
 impl Deref for ClearInfo {
     type Target = system_exchange_ClearInfo;
 
@@ -76,25 +70,6 @@ impl FeatureReferenceType for ClearInfo {
 
     fn into_raw(self) -> *mut Self::Target {
         self.0.into_raw()
-    }
-}
-
-impl ClearInfo {
-    pub(crate) fn get_scope(&self) -> Option<FeatureString> {
-        if self.scope.is_null() {
-            return None;
-        }
-        Some(FeatureString::from_raw(self.scope))
-    }
-
-    pub(crate) fn set_scope(&mut self, scope: FeatureString) {
-        if self.scope != ptr::null() {
-            unsafe {
-                FeatureFreeValue(self.scope as *mut c_void);
-            }
-            self.scope = ptr::null();
-        }
-        self.scope = FeatureString::into_raw(scope);
     }
 }
 
@@ -153,13 +128,6 @@ impl FeatureReferenceType for GetRet {
 }
 
 impl GetRet {
-    pub(crate) fn get_value(&self) -> Option<FeatureString> {
-        if self.value.is_null() {
-            return None;
-        }
-        Some(FeatureString::from_raw(self.value))
-    }
-
     pub(crate) fn set_value(&mut self, value: FeatureString) {
         if !self.value.is_null() {
             unsafe {
@@ -193,12 +161,6 @@ pub(crate) struct RemoveInfo(FeaturePtr<system_exchange_RemoveInfo>);
 unsafe impl Send for RemoveInfo {}
 unsafe impl Sync for RemoveInfo {}
 
-impl RemoveInfo {
-    pub(crate) fn new() -> Self {
-        Self(FeaturePtr::new())
-    }
-}
-
 impl Deref for RemoveInfo {
     type Target = system_exchange_RemoveInfo;
 
@@ -230,34 +192,14 @@ impl RemoveInfo {
         if self.key.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.key))
-    }
-
-    pub(crate) fn set_key(&mut self, key: FeatureString) {
-        if !self.key.is_null() {
-            unsafe {
-                FeatureFreeValue(self.key as *mut c_void);
-            }
-            self.key = ptr::null();
-        }
-        self.key = FeatureString::into_raw(key);
+        Some(unsafe { FeatureString::from_raw(self.key) })
     }
 
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
         if self.scope.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.scope))
-    }
-
-    pub(crate) fn set_scope(&mut self, scope: FeatureString) {
-        if !self.scope.is_null() {
-            unsafe {
-                FeatureFreeValue(self.scope as *mut c_void);
-            }
-            self.scope = ptr::null();
-        }
-        self.scope = FeatureString::into_raw(scope);
+        Some(unsafe { FeatureString::from_raw(self.scope) })
     }
 }
 
@@ -283,12 +225,6 @@ pub(crate) struct SetInfo(FeaturePtr<system_exchange_SetInfo>);
 
 unsafe impl Send for SetInfo {}
 unsafe impl Sync for SetInfo {}
-
-impl SetInfo {
-    pub(crate) fn new() -> Self {
-        Self(FeaturePtr::new())
-    }
-}
 
 impl Deref for SetInfo {
     type Target = system_exchange_SetInfo;
@@ -321,51 +257,21 @@ impl SetInfo {
         if self.key.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.key))
-    }
-
-    pub(crate) fn set_key(&mut self, key: FeatureString) {
-        if !self.key.is_null() {
-            unsafe {
-                FeatureFreeValue(self.key as *mut c_void);
-            }
-            self.key = ptr::null();
-        }
-        self.key = FeatureString::into_raw(key);
+        Some(unsafe { FeatureString::from_raw(self.key) })
     }
 
     pub(crate) fn get_value(&self) -> Option<FeatureString> {
         if self.value.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.value))
-    }
-
-    pub(crate) fn set_value(&mut self, value: FeatureString) {
-        if !self.value.is_null() {
-            unsafe {
-                FeatureFreeValue(self.value as *mut c_void);
-            }
-            self.value = ptr::null();
-        }
-        self.value = FeatureString::into_raw(value);
+        Some(unsafe { FeatureString::from_raw(self.value) })
     }
 
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
         if self.scope.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.scope))
-    }
-
-    pub(crate) fn set_scope(&mut self, scope: FeatureString) {
-        if !self.scope.is_null() {
-            unsafe {
-                FeatureFreeValue(self.scope as *mut c_void);
-            }
-            self.scope = ptr::null();
-        }
-        self.scope = FeatureString::into_raw(scope);
+        Some(unsafe { FeatureString::from_raw(self.scope) })
     }
 }
 
@@ -390,12 +296,6 @@ pub(crate) struct GetInfo(FeaturePtr<system_exchange_GetInfo>);
 
 unsafe impl Send for GetInfo {}
 unsafe impl Sync for GetInfo {}
-
-impl GetInfo {
-    pub(crate) fn new() -> Self {
-        Self(FeaturePtr::new())
-    }
-}
 
 impl Deref for GetInfo {
     type Target = system_exchange_GetInfo;
@@ -428,34 +328,14 @@ impl GetInfo {
         if self.key.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.key))
-    }
-
-    pub(crate) fn set_key(&mut self, key: FeatureString) {
-        if !self.key.is_null() {
-            unsafe {
-                FeatureFreeValue(self.key as *mut c_void);
-            }
-            self.key = ptr::null();
-        }
-        self.key = FeatureString::into_raw(key);
+        Some(unsafe { FeatureString::from_raw(self.key) })
     }
 
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
         if self.scope.is_null() {
             return None;
         }
-        Some(FeatureString::from_raw(self.scope))
-    }
-
-    pub(crate) fn set_scope(&mut self, scope: FeatureString) {
-        if !self.scope.is_null() {
-            unsafe {
-                FeatureFreeValue(self.scope as *mut c_void);
-            }
-            self.scope = ptr::null();
-        }
-        self.scope = FeatureString::into_raw(scope);
+        Some(unsafe { FeatureString::from_raw(self.scope) })
     }
 }
 
@@ -514,6 +394,7 @@ pub(crate) extern "C" fn system_exchange_onCreate(
     let proto = FeaturePrototype::new(handle);
     let manager = proto.get_manager();
     let uv_loop = manager.get_loop().expect("FeatureGetUVLoop failed");
+    #[allow(clippy::missing_transmute_annotations)]
     runtime::init_from_uv_loop(unsafe { core::mem::transmute(uv_loop) });
 
     let ctx = FeatureRuntimeContext::new(ctx);
@@ -569,10 +450,11 @@ pub(crate) extern "C" fn system_exchange_wrap_set(
     _adata: AppendData,
     pid: FtPromiseId,
     info: *mut system_exchange_SetInfo,
-) -> () {
-    let system_exchange = feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap();
+) {
+    let system_exchange =
+        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = FeaturePromise::<FeatureStringPromise>::new(pid, handle);
+    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
     let info = unsafe { SetInfo(FeaturePtr::from_raw(info)) };
     runtime::spawn(async move {
         match system_exchange.set(info).await {
@@ -588,10 +470,11 @@ pub(crate) extern "C" fn system_exchange_wrap_get(
     _adata: AppendData,
     pid: FtPromiseId,
     info: *mut system_exchange_GetInfo,
-) -> () {
-    let system_exchange = feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap();
+) {
+    let system_exchange =
+        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = FeaturePromise::<GetRetPromise>::new(pid, handle);
+    let promise = unsafe { FeaturePromise::<GetRetPromise>::new(pid, handle) };
     let info = unsafe { GetInfo(FeaturePtr::from_raw(info)) };
     runtime::spawn(async move {
         match system_exchange.get(info).await {
@@ -607,10 +490,11 @@ pub(crate) extern "C" fn system_exchange_wrap_remove(
     _adata: AppendData,
     pid: FtPromiseId,
     info: *mut system_exchange_RemoveInfo,
-) -> () {
-    let system_exchange = feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap();
+) {
+    let system_exchange =
+        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = FeaturePromise::<FeatureStringPromise>::new(pid, handle);
+    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
     let info = unsafe { RemoveInfo(FeaturePtr::from_raw(info)) };
     runtime::spawn(async move {
         match system_exchange.remove(info).await {
@@ -626,10 +510,11 @@ pub(crate) extern "C" fn system_exchange_wrap_clear(
     _adata: AppendData,
     pid: FtPromiseId,
     info: *mut system_exchange_ClearInfo,
-) -> () {
-    let system_exchange = feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap();
+) {
+    let system_exchange =
+        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = FeaturePromise::<FeatureStringPromise>::new(pid, handle);
+    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
     let info = unsafe { ClearInfo(FeaturePtr::from_raw(info)) };
     runtime::spawn(async move {
         match system_exchange.clear(info).await {

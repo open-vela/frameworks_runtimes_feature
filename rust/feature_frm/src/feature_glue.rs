@@ -4,7 +4,8 @@ use alloc::boxed::Box;
 use feature_sys::*;
 
 // create interface instance and bind user data
-pub fn create_interface<T>(
+#[allow(dead_code)]
+pub(crate) fn create_interface<T>(
     handle: FeatureInstanceHandle,
     vtable: *mut VTable,
     user_data: Box<T>,
@@ -20,7 +21,7 @@ where
 }
 
 // get user data that was bound to the instance, only for glue code
-pub fn get_instance_data<T>(handle: FeatureInstanceHandle) -> Option<*mut T>
+pub unsafe fn get_instance_data<T>(handle: FeatureInstanceHandle) -> Option<*mut T>
 where
     T: FeatureInstanceTrait + ?Sized,
 {
