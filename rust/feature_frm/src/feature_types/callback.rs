@@ -2,17 +2,16 @@ use crate::FeatureInstance;
 use alloc::boxed::Box;
 use feature_sys::{FeatureInstanceHandle, FeaturePostExt, FeatureRemoveCallback, FtCallbackId};
 
+const INVALID_CALLBACK_ID: FtCallbackId = 0;
+
 pub struct FeatureCallback {
     id: FtCallbackId,
     instance: FeatureInstance,
 }
 
 impl FeatureCallback {
-    pub unsafe fn new(id: FtCallbackId, handle: FeatureInstanceHandle) -> Self {
-        Self {
-            id,
-            instance: FeatureInstance::new(handle),
-        }
+    pub fn new(id: FtCallbackId, instance: FeatureInstance) -> Self {
+        Self { id, instance }
     }
 
     pub fn post<T: FnOnce() + 'static>(&self, func: T) {
@@ -32,6 +31,14 @@ impl FeatureCallback {
 
     pub fn id(&self) -> FtCallbackId {
         self.id
+    }
+
+    pub fn invalid_id() -> FtCallbackId {
+        INVALID_CALLBACK_ID
+    }
+
+    pub fn is_valid_id(id: FtCallbackId) -> bool {
+        id > INVALID_CALLBACK_ID
     }
 }
 

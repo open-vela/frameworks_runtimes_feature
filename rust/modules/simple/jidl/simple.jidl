@@ -17,9 +17,11 @@ Chapter get_chapter();
 void set_chapter_array(Chapter[] chap);
 Chapter[] get_chapter_array();
 
+callback chapter_changed(int index, string title)
 struct Book {
     string book_name;
     Chapter chap_1;
+    chapter_changed chap_changed;
 }
 void set_book(Book book);
 Book get_book();

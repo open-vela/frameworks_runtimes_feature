@@ -38,6 +38,7 @@ pub struct SimpleImpl {
     instance: FeatureInstance,
     chapter: Option<simple_Chapter>,
     book: Option<simple_Book>,
+    chap_changed: Option<ChapterChangedCb>,
 }
 
 // function implementation
@@ -47,6 +48,7 @@ impl SimpleImpl {
             instance,
             chapter: None,
             book: None,
+            chap_changed: None,
         }
     }
 
@@ -95,16 +97,33 @@ impl Simple for SimpleImpl {
         }
     }
 
-    fn set_book(&mut self, book: simple_Book) {
+    fn set_book(&mut self, mut book: simple_Book) {
+        let chap_title = book.get_chap_1().get_title().unwrap();
+        info!(
+            "set_book called from C, book_name: {}, chap_title: {}",
+            book.get_book_name(),
+            chap_title
+        );
+        self.chap_changed = book.take_chap_changed();
         self.book = Some(book);
     }
 
     fn get_book(&mut self) -> Option<simple_Book> {
+        info!("wjf get_book Called from C");
         self.book.clone()
     }
 
     fn set_chapter(&mut self, chap: simple_Chapter) {
-        info!("set_chapter called from C, title:{}", chap.get_page_count());
+        info!(
+            "set_chapter called from C, page_count:{}",
+            chap.get_page_count()
+        );
+        if let Some(cb) = &self.chap_changed {
+            let chap_title = chap.get_title().unwrap();
+            cb.invoke(1, chap_title);
+        } else {
+            info!("No chap_changed callback available");
+        }
         self.chapter = Some(chap);
     }
 
@@ -142,10 +161,10 @@ impl Simple for SimpleImpl {
         Some(ret)
     }
 
-    fn moo(&mut self, a: i32, cb: moo_cb) {
+    fn moo(&mut self, a: i32, cb: MooCb) {
         info!("wjf moo Called from C, a: {}", a);
         let bs = FeatureString::new("moo called");
-        cb.invoke(a, &bs, 1.34);
+        cb.invoke(a, bs, 1.34);
     }
 
     async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError> {
