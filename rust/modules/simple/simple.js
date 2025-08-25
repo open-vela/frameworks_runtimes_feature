@@ -16,22 +16,6 @@ test.doo();
 
 test.hoo("hello world");
 
-test.set_chapter({
-    page_count: 10,
-    title: "chap 1",
-    is_end: false
-});
-let chap_ret = test.get_chapter();
-console.log(`got chapter 1: ${JSON.stringify(chap_ret)}`);
-
-test.set_chapter({
-    page_count: 50,
-    title: "chap 100",
-    is_end: true
-});
-let chap_ret_2 = test.get_chapter();
-console.log(`got chapter 100: ${JSON.stringify(chap_ret_2)}`);
-
 let chap_array = [
     { page_count: 5, title: "chap 1", is_end: false },
     { page_count: 10, title: "chap 2", is_end: false },
@@ -48,12 +32,31 @@ test.set_book({
         page_count: 10,
         title: "chap 1",
         is_end: false
+    },
+    chap_changed: function(index, title) {
+        console.log('chap_changed, index=', index, ', title=', title, '\n');
     }
 });
 let book_ret = test.get_book();
 console.log(`got book 1: ${JSON.stringify(book_ret)}`);
 let book_ret_2 = test.get_book();
 console.log(`got book 2: ${JSON.stringify(book_ret_2)}`);
+
+test.set_chapter({
+    page_count: 10,
+    title: "chap 1",
+    is_end: false
+});
+let chap_ret = test.get_chapter();
+console.log(`got chapter 1: ${JSON.stringify(chap_ret)}`);
+
+test.set_chapter({
+    page_count: 50,
+    title: "chap 100",
+    is_end: true
+});
+let chap_ret_2 = test.get_chapter();
+console.log(`got chapter 100: ${JSON.stringify(chap_ret_2)}`);
 
 test.moo(5, function(x, y, z) {
     console.log('moo:x=', x, ', y=', y, ',z=', z, '\n');

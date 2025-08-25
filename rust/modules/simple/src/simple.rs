@@ -24,6 +24,12 @@ unsafe extern "C" {
         y: FtString,
         z: FtDouble,
     ) -> FtInt;
+    pub fn simple_chapter_changed_invoke(
+        handle: FeatureInstanceHandle,
+        cb: FtCallbackId,
+        x: FtInt,
+        y: FtString,
+    ) -> FtInt;
     // Interface constructors
     pub fn simple_createDog_instance(handle: FeatureInstanceHandle) -> FeatureInterfaceHandle;
     pub fn simple_createAirplane_instance(handle: FeatureInstanceHandle) -> FeatureInterfaceHandle;
@@ -141,44 +147,66 @@ impl simple_Chapter {
     }
 }
 
+pub struct ChapterChangedCb {
+    cb: Arc<FeatureCallback>,
+}
+
+impl ChapterChangedCb {
+    pub(crate) fn new(id: FtCallbackId, instance: FeatureInstance) -> Self {
+        Self {
+            cb: Arc::new(FeatureCallback::new(id, instance)),
+        }
+    }
+
+    pub fn invoke(&self, index: FtInt, title: FeatureString) {
+        unsafe {
+            // must clone the Arc<FeatureCallback> and move it to the closure
+            // to prevent the FeatureCallback from being dropped before the closure is called.
+            let cb = self.cb.clone();
+            self.cb.post(move || {
+                let _ = simple_chapter_changed_invoke(cb.handle(), cb.id(), index, title.as_ptr());
+            });
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Clone)]
 pub struct simple_Book_for_c {
     book_name: FtString,
     chap_1: *mut simple_Chapter_for_c,
+    chap_changed: FtCallbackId,
 }
 
-#[repr(transparent)]
 #[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub struct simple_Book(FeaturePtr<simple_Book_for_c>);
+pub struct simple_Book {
+    book: FeaturePtr<simple_Book_for_c>,
+    instance: FeatureInstance,
+}
 
 unsafe impl Send for simple_Book {}
 unsafe impl Sync for simple_Book {}
-
-impl Default for simple_Book {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl simple_Book {
-    pub fn new() -> Self {
-        Self(FeaturePtr::new())
-    }
-}
 
 impl Deref for simple_Book {
     type Target = simple_Book_for_c;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.book
     }
 }
 
 impl DerefMut for simple_Book {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.book
+    }
+}
+
+impl Clone for simple_Book {
+    fn clone(&self) -> Self {
+        Self {
+            book: self.book.clone(),
+            instance: self.instance.clone(),
+        }
     }
 }
 
@@ -191,6 +219,10 @@ impl FeatureTypeDescription for simple_Book_for_c {
 }
 
 impl simple_Book {
+    pub fn new(book: FeaturePtr<simple_Book_for_c>, instance: FeatureInstance) -> Self {
+        Self { book, instance }
+    }
+
     pub fn get_book_name(&self) -> FeatureString {
         unsafe { FeatureString::from_raw(self.book_name) }
     }
@@ -218,28 +250,44 @@ impl simple_Book {
         }
         self.chap_1 = chap_1.0.into_raw()
     }
+
+    // once the callback is taken out, the callback id will be invalid.
+    pub fn take_chap_changed(&mut self) -> Option<ChapterChangedCb> {
+        if FeatureCallback::is_valid_id(self.chap_changed) {
+            let ret = ChapterChangedCb::new(self.chap_changed, self.instance.clone());
+            self.chap_changed = FeatureCallback::invalid_id();
+            Some(ret)
+        } else {
+            None
+        }
+    }
 }
 
-#[allow(non_camel_case_types)]
-pub struct moo_cb {
+impl Drop for simple_Book {
+    // remove the callback on drop time.
+    fn drop(&mut self) {
+        let _ = self.take_chap_changed();
+    }
+}
+
+pub struct MooCb {
     cb: Arc<FeatureCallback>,
 }
 
-impl moo_cb {
-    pub(crate) fn new(id: FtCallbackId, handle: FeatureInstanceHandle) -> Self {
+impl MooCb {
+    pub(crate) fn new(id: FtCallbackId, instance: FeatureInstance) -> Self {
         Self {
-            cb: Arc::new(unsafe { FeatureCallback::new(id, handle) }),
+            cb: Arc::new(FeatureCallback::new(id, instance)),
         }
     }
 
-    pub fn invoke(&self, a: FtInt, b: &FeatureString, c: FtDouble) {
+    pub fn invoke(&self, a: FtInt, b: FeatureString, c: FtDouble) {
         unsafe {
-            let handle = self.cb.handle();
-            let id = self.cb.id();
-            let b = b.clone();
-            // 强制通过post延迟调用
+            // must clone the Arc<FeatureCallback> and move it to the closure
+            // to prevent the FeatureCallback from being dropped before the closure is called.
+            let cb = self.cb.clone();
             self.cb.post(move || {
-                let _ = simple_moo_cb_invoke(handle, id, a, b.as_ptr(), c);
+                let _ = simple_moo_cb_invoke(cb.handle(), cb.id(), a, b.as_ptr(), c);
             });
         }
     }
@@ -288,7 +336,7 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn get_chapter(&self) -> Option<simple_Chapter>;
     fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<simple_Chapter>);
     fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<simple_Chapter>>;
-    fn moo(&mut self, a: i32, cb: moo_cb);
+    fn moo(&mut self, a: i32, cb: MooCb);
     async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError>;
     async fn poo(&mut self, resolve: FtBool) -> Result<FeatureString, PromiseError>;
     fn create_dog(&self) -> FeatureInterfaceHandle;
@@ -512,8 +560,8 @@ pub unsafe extern "C" fn simple_wrap_set_book(
     } else {
         let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
         unsafe {
-            let book_ptr = simple_Book(FeaturePtr::from_raw(book));
-            (*simple).set_book(book_ptr)
+            let book = simple_Book::new(FeaturePtr::from_raw(book), FeatureInstance::new(feature));
+            (*simple).set_book(book);
         };
     }
 }
@@ -526,7 +574,7 @@ pub unsafe extern "C" fn simple_wrap_get_book(
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let book = unsafe { (*simple).get_book() };
     book.map_or(ptr::null::<simple_Book_for_c>() as *mut _, |b| {
-        b.0.clone().into_raw()
+        b.book.clone().into_raw()
     })
 }
 
@@ -538,7 +586,7 @@ pub unsafe extern "C" fn simple_wrap_moo(
     id: FtCallbackId,
 ) {
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    let cb = moo_cb::new(id, feature);
+    let cb = MooCb::new(id, FeatureInstance::new(feature));
     unsafe { (*simple).moo(a, cb) }
 }
 
