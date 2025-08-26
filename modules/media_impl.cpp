@@ -24,31 +24,13 @@
 #include "gui/gui_wrapper.h"
 #include "gui/lvgl/string_to_kid.h"
 #include "jidl/media.h"
+#include "modules/modules_utils.h"
 
 #include <map>
 #include <string>
 #include <unistd.h>
 
 static const char* file_tag = "[jidl_feature] Media_impl";
-
-template <typename T>
-class FTArrayHelper {
-public:
-    FTArrayHelper(FtArray* data)
-    {
-        _data = data;
-    }
-
-    T& operator[](int32_t index)
-    {
-        return ((T*)_data->_element)[index];
-    }
-
-    int32_t size() const { return _data->_size; }
-
-private:
-    FtArray* _data;
-};
 
 struct WidgetDeleter {
     void operator()(ferry::Widget* widget) { widget->destroy(true); }

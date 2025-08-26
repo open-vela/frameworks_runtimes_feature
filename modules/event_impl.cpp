@@ -17,6 +17,7 @@
 #include "event.h"
 #include "event/event_context.h"
 #include "event/topics/user_topic.h"
+#include "modules/modules_utils.h"
 #include "uv_ext.h"
 #include <cstdio>
 #include <cstdlib>
@@ -24,28 +25,6 @@
 #include <uv.h>
 
 using namespace ft_system_event;
-template <typename T>
-class FTArrayHelper {
-private:
-    FtArray* _data;
-
-public:
-    FTArrayHelper(FtArray* data)
-    {
-        _data = data;
-    }
-
-    ~FTArrayHelper()
-    {
-    }
-
-    T& operator[](int32_t index)
-    {
-        return ((T*)_data->_element)[index];
-    }
-
-    int32_t size() const { return _data->_size; }
-};
 
 #define EVENT_DEBUG(fmt, ...) \
     FEATURE_LOG_DEBUG(fmt, ##__VA_ARGS__)
