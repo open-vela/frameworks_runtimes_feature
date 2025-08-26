@@ -65,13 +65,13 @@ fn get_feature_name(attrs: &[FeatureAttr]) -> Option<String> {
     })
 }
 
-fn parse_feature_name(attr: TokenStream) -> Option<String> {
+fn parse_proc_macro_param(attr: TokenStream, key: &str) -> Option<String> {
     let attr: proc_macro2::TokenStream = attr.into();
     let mut iter = attr.into_iter();
 
     while let Some(token) = iter.next() {
         if let proc_macro2::TokenTree::Ident(ident) = token {
-            if ident == "name" {
+            if ident == key {
                 if let Some(proc_macro2::TokenTree::Punct(punct)) = iter.next() {
                     if punct.as_char() == '=' {
                         if let Some(proc_macro2::TokenTree::Literal(lit)) = iter.next() {
@@ -91,7 +91,7 @@ pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as syn::ItemStruct);
     let st_name = &input.ident;
 
-    let ft_name = parse_feature_name(attr).unwrap();
+    let ft_name = parse_proc_macro_param(attr, "name").unwrap();
     let _prototype_name = {
         let name_str = ft_name.to_string();
         let proto_name = format!("{name_str}Prototype");
@@ -116,6 +116,165 @@ pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         impl FeatureInstanceTrait for #st_name {}
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Defines a feature struct and generates a wrapper struct for safe FFI interaction.
+///
+/// This attribute macro generates a wrapper struct that provides a safe, idiomatic Rust interface
+/// for interacting with a corresponding C structure. The wrapper handles memory safety, lifetime
+/// management, and FFI conversions automatically.
+///
+/// # Parameters
+///
+/// - `wrapper_struct`: Specifies the name of the generated wrapper struct. This parameter is required.
+/// - `with_instance`: Optional parameter that determines whether the wrapper includes a `FeatureInstance`.
+///   - `true`: Generates a wrapper with both `inner` and `instance` fields, suitable for stateful operations.
+///   - `false` or omitted: Generates a wrapper with only the inner field, suitable for simple data types.
+///
+/// # Usage Examples
+///
+/// ## Basic usage (without instance):
+/// ```rust
+/// #[feature_struct(wrapper_struct = "Chapter")]
+/// pub struct simple_Chapter {
+///     page_count: FtInt,
+///     title: FtString,
+/// }
+/// ```
+///
+/// ## With instance support:
+/// ```rust
+/// #[feature_struct(wrapper_struct = "Book", with_instance = true)]
+/// pub struct simple_Book {
+///     book_name: FtString,
+///     chap_1: *mut simple_Chapter,
+/// }
+/// ```
+///
+/// # Generated Code
+///
+/// - Implements the `FeatureManagedType` and `FeatureTypeDescription` traits for the original struct
+///
+/// if `with_instance = false` (default):
+/// - Creates a  wrapper struct with only the `inner` field
+/// - Provides `Default` constructors
+/// - Implements `FeatureReferenceType` for raw pointer conversions
+/// else:
+/// - Creates a wrapper struct with both `inner` and `instance` fields
+/// - Implements manual `Clone` to properly clone both fields
+///
+/// - Implements `Send`/`Sync` for thread safety
+/// - Implements `Deref`/`DerefMut` for direct access to the underlying data
+///
+/// The macro also automatically implements `FeatureManagedType` and `FeatureTypeDescription`
+/// for the original struct, providing type information for the feature system.
+#[proc_macro_attribute]
+pub fn feature_struct(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as syn::ItemStruct);
+    let st_name = &input.ident;
+    let get_type_fn_name = Ident::new(&format!("{}_struct_get_type", st_name), st_name.span());
+
+    let wrapper_struct = parse_proc_macro_param(attr.clone(), "wrapper_struct").unwrap();
+    if wrapper_struct.is_empty() {
+        abort!(st_name.span(), "wrapper_struct is empty");
+    }
+    let wrapper_struct: Type = syn::parse_str(&wrapper_struct).unwrap_or_else(|_| {
+        abort!(
+            st_name.span(),
+            format!("Invalid wrapper struct: {}", wrapper_struct)
+        );
+    });
+
+    let with_instance = parse_proc_macro_param(attr.clone(), "with_instance").unwrap_or_default();
+    let with_instance = match with_instance.as_str() {
+        "true" => true,
+        "false" | "" => false,
+        _ => abort!(st_name.span(), "with_instance must be 'true' or 'false'"),
+    };
+
+    let trait_impls = quote! {
+        impl FeatureManagedType for #st_name {}
+        impl FeatureTypeDescription for #st_name {
+            fn get_type() -> FeatureType {
+                unsafe { #get_type_fn_name() }
+            }
+        }
+    };
+
+    let wrapper_impls = quote! {
+        unsafe impl Send for #wrapper_struct {}
+        unsafe impl Sync for #wrapper_struct {}
+
+        impl core::ops::Deref for #wrapper_struct {
+            type Target = #st_name;
+
+            fn deref(&self) -> &Self::Target {
+                &self.inner
+            }
+        }
+
+        impl core::ops::DerefMut for #wrapper_struct {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.inner
+            }
+        }
+    };
+
+    let expanded = if with_instance {
+        quote! {
+            #input
+            #trait_impls
+
+            pub struct #wrapper_struct {
+                inner: FeaturePtr<#st_name>,
+                instance: FeatureInstance,
+            }
+
+            #wrapper_impls
+
+            impl Clone for #wrapper_struct {
+                fn clone(&self) -> Self {
+                    Self {
+                        inner: self.inner.clone(),
+                        instance: self.instance.clone(),
+                    }
+                }
+            }
+        }
+    } else {
+        quote! {
+            #input
+            #trait_impls
+
+            #[repr(transparent)]
+            #[derive(Clone)]
+            pub struct #wrapper_struct {
+                inner: FeaturePtr<#st_name>,
+            }
+
+            #wrapper_impls
+
+            impl FeatureReferenceType for #wrapper_struct {
+                type Target = #st_name;
+
+                unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
+                    Self { inner: FeaturePtr::from_raw(raw_ptr) }
+                }
+
+                fn into_raw(self) -> *mut Self::Target {
+                    self.inner.into_raw()
+                }
+            }
+
+            impl Default for #wrapper_struct {
+                fn default() -> Self {
+                    Self::new()
+                }
+            }
+        }
     };
 
     TokenStream::from(expanded)

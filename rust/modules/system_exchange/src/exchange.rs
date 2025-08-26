@@ -1,9 +1,9 @@
 use alloc::boxed::Box;
 use async_trait::async_trait;
 use core::ffi::CStr;
-use core::ops::{Deref, DerefMut};
 use core::ptr;
 use feature_frm::*;
+use feature_macros::feature_struct;
 use libc::c_void;
 use vdk::async_runtime::runtime;
 
@@ -28,106 +28,45 @@ unsafe extern "C" {
 
 #[repr(C)]
 #[derive(Clone)]
-pub(crate) struct system_exchange_ClearInfo {
+#[feature_struct(wrapper_struct = "ClearInfo")]
+pub struct system_exchange_ClearInfo {
     scope: FtString,
 }
 
-impl FeatureManagedType for system_exchange_ClearInfo {}
-impl FeatureTypeDescription for system_exchange_ClearInfo {
-    fn get_type() -> FeatureType {
-        unsafe { system_exchange_ClearInfo_struct_get_type() }
-    }
-}
-
-#[repr(transparent)]
-#[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub(crate) struct ClearInfo(FeaturePtr<system_exchange_ClearInfo>);
-
-unsafe impl Send for ClearInfo {}
-unsafe impl Sync for ClearInfo {}
-
-impl Deref for ClearInfo {
-    type Target = system_exchange_ClearInfo;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for ClearInfo {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FeatureReferenceType for ClearInfo {
-    type Target = system_exchange_ClearInfo;
-
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-        Self(FeaturePtr::from_raw(raw_ptr))
+impl ClearInfo {
+    pub(crate) fn new() -> Self {
+        Self {
+            inner: FeaturePtr::new(),
+        }
     }
 
-    fn into_raw(self) -> *mut Self::Target {
-        self.0.into_raw()
+    #[allow(dead_code)]
+    pub(crate) fn get_scope(&self) -> Option<FeatureString> {
+        if self.scope.is_null() {
+            return None;
+        }
+        Some(unsafe { FeatureString::from_raw(self.scope) })
     }
 }
 
 #[repr(C)]
 #[derive(Clone)]
-pub(crate) struct system_exchange_GetRet {
+#[feature_struct(wrapper_struct = "GetRet")]
+pub struct system_exchange_GetRet {
     value: FtString,
 }
 
-impl FeatureManagedType for system_exchange_GetRet {}
-impl FeatureTypeDescription for system_exchange_GetRet {
-    fn get_type() -> FeatureType {
-        unsafe { system_exchange_GetRet_struct_get_type() }
-    }
-}
-
-#[repr(transparent)]
-#[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub(crate) struct GetRet(FeaturePtr<system_exchange_GetRet>);
-
 impl GetRet {
     pub(crate) fn new() -> Self {
-        Self(FeaturePtr::new())
+        Self {
+            inner: FeaturePtr::new(),
+        }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut system_exchange_GetRet {
-        self.0.as_ptr()
-    }
-}
-
-impl Deref for GetRet {
-    type Target = system_exchange_GetRet;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for GetRet {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FeatureReferenceType for GetRet {
-    type Target = system_exchange_GetRet;
-
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-        Self(FeaturePtr::from_raw(raw_ptr))
+        self.inner.as_ptr()
     }
 
-    fn into_raw(self) -> *mut Self::Target {
-        self.0.into_raw()
-    }
-}
-
-impl GetRet {
     pub(crate) fn set_value(&mut self, value: FeatureString) {
         if !self.value.is_null() {
             unsafe {
@@ -141,53 +80,19 @@ impl GetRet {
 
 #[repr(C)]
 #[derive(Clone)]
-pub(crate) struct system_exchange_RemoveInfo {
+#[feature_struct(wrapper_struct = "RemoveInfo")]
+pub struct system_exchange_RemoveInfo {
     key: FtString,
     scope: FtString,
 }
 
-impl FeatureManagedType for system_exchange_RemoveInfo {}
-impl FeatureTypeDescription for system_exchange_RemoveInfo {
-    fn get_type() -> FeatureType {
-        unsafe { system_exchange_RemoveInfo_struct_get_type() }
-    }
-}
-
-#[repr(transparent)]
-#[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub(crate) struct RemoveInfo(FeaturePtr<system_exchange_RemoveInfo>);
-
-unsafe impl Send for RemoveInfo {}
-unsafe impl Sync for RemoveInfo {}
-
-impl Deref for RemoveInfo {
-    type Target = system_exchange_RemoveInfo;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for RemoveInfo {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FeatureReferenceType for RemoveInfo {
-    type Target = system_exchange_RemoveInfo;
-
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-        Self(FeaturePtr::from_raw(raw_ptr))
-    }
-
-    fn into_raw(self) -> *mut Self::Target {
-        self.0.into_raw()
-    }
-}
-
 impl RemoveInfo {
+    pub(crate) fn new() -> Self {
+        Self {
+            inner: FeaturePtr::new(),
+        }
+    }
+
     pub(crate) fn get_key(&self) -> Option<FeatureString> {
         if self.key.is_null() {
             return None;
@@ -205,54 +110,20 @@ impl RemoveInfo {
 
 #[repr(C)]
 #[derive(Clone)]
-pub(crate) struct system_exchange_SetInfo {
+#[feature_struct(wrapper_struct = "SetInfo")]
+pub struct system_exchange_SetInfo {
     key: FtString,
     value: FtString,
     scope: FtString,
 }
 
-impl FeatureManagedType for system_exchange_SetInfo {}
-impl FeatureTypeDescription for system_exchange_SetInfo {
-    fn get_type() -> FeatureType {
-        unsafe { system_exchange_SetInfo_struct_get_type() }
-    }
-}
-
-#[repr(transparent)]
-#[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub(crate) struct SetInfo(FeaturePtr<system_exchange_SetInfo>);
-
-unsafe impl Send for SetInfo {}
-unsafe impl Sync for SetInfo {}
-
-impl Deref for SetInfo {
-    type Target = system_exchange_SetInfo;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for SetInfo {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FeatureReferenceType for SetInfo {
-    type Target = system_exchange_SetInfo;
-
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-        Self(FeaturePtr::from_raw(raw_ptr))
-    }
-
-    fn into_raw(self) -> *mut Self::Target {
-        self.0.into_raw()
-    }
-}
-
 impl SetInfo {
+    pub(crate) fn new() -> Self {
+        Self {
+            inner: FeaturePtr::new(),
+        }
+    }
+
     pub(crate) fn get_key(&self) -> Option<FeatureString> {
         if self.key.is_null() {
             return None;
@@ -277,53 +148,19 @@ impl SetInfo {
 
 #[repr(C)]
 #[derive(Clone)]
-pub(crate) struct system_exchange_GetInfo {
+#[feature_struct(wrapper_struct = "GetInfo")]
+pub struct system_exchange_GetInfo {
     key: FtString,
     scope: FtString,
 }
 
-impl FeatureManagedType for system_exchange_GetInfo {}
-impl FeatureTypeDescription for system_exchange_GetInfo {
-    fn get_type() -> FeatureType {
-        unsafe { system_exchange_GetInfo_struct_get_type() }
-    }
-}
-
-#[repr(transparent)]
-#[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub(crate) struct GetInfo(FeaturePtr<system_exchange_GetInfo>);
-
-unsafe impl Send for GetInfo {}
-unsafe impl Sync for GetInfo {}
-
-impl Deref for GetInfo {
-    type Target = system_exchange_GetInfo;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for GetInfo {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FeatureReferenceType for GetInfo {
-    type Target = system_exchange_GetInfo;
-
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-        Self(FeaturePtr::from_raw(raw_ptr))
-    }
-
-    fn into_raw(self) -> *mut Self::Target {
-        self.0.into_raw()
-    }
-}
-
 impl GetInfo {
+    pub(crate) fn new() -> Self {
+        Self {
+            inner: FeaturePtr::new(),
+        }
+    }
+
     pub(crate) fn get_key(&self) -> Option<FeatureString> {
         if self.key.is_null() {
             return None;
@@ -455,7 +292,7 @@ pub(crate) extern "C" fn system_exchange_wrap_set(
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
-    let info = unsafe { SetInfo(FeaturePtr::from_raw(info)) };
+    let info = unsafe { SetInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.set(info).await {
             Ok(v) => promise.resolve(v),
@@ -475,7 +312,7 @@ pub(crate) extern "C" fn system_exchange_wrap_get(
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<GetRetPromise>::new(pid, handle) };
-    let info = unsafe { GetInfo(FeaturePtr::from_raw(info)) };
+    let info = unsafe { GetInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.get(info).await {
             Ok(v) => promise.resolve(v),
@@ -495,7 +332,7 @@ pub(crate) extern "C" fn system_exchange_wrap_remove(
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
-    let info = unsafe { RemoveInfo(FeaturePtr::from_raw(info)) };
+    let info = unsafe { RemoveInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.remove(info).await {
             Ok(v) => promise.resolve(v),
@@ -515,7 +352,7 @@ pub(crate) extern "C" fn system_exchange_wrap_clear(
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
-    let info = unsafe { ClearInfo(FeaturePtr::from_raw(info)) };
+    let info = unsafe { ClearInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.clear(info).await {
             Ok(v) => promise.resolve(v),

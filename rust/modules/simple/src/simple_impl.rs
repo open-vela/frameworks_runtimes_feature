@@ -36,8 +36,8 @@ impl SimplePrototype {
 #[feature_instance(name = "Simple")]
 pub struct SimpleImpl {
     instance: FeatureInstance,
-    chapter: Option<simple_Chapter>,
-    book: Option<simple_Book>,
+    chapter: Option<Chapter>,
+    book: Option<Book>,
     chap_changed: Option<ChapterChangedCb>,
 }
 
@@ -97,7 +97,7 @@ impl Simple for SimpleImpl {
         }
     }
 
-    fn set_book(&mut self, mut book: simple_Book) {
+    fn set_book(&mut self, mut book: Book) {
         let chap_title = book.get_chap_1().get_title().unwrap();
         info!(
             "set_book called from C, book_name: {}, chap_title: {}",
@@ -108,12 +108,12 @@ impl Simple for SimpleImpl {
         self.book = Some(book);
     }
 
-    fn get_book(&mut self) -> Option<simple_Book> {
+    fn get_book(&mut self) -> Option<Book> {
         info!("wjf get_book Called from C");
         self.book.clone()
     }
 
-    fn set_chapter(&mut self, chap: simple_Chapter) {
+    fn set_chapter(&mut self, chap: Chapter) {
         info!(
             "set_chapter called from C, page_count:{}",
             chap.get_page_count()
@@ -127,14 +127,14 @@ impl Simple for SimpleImpl {
         self.chapter = Some(chap);
     }
 
-    fn get_chapter(&self) -> Option<simple_Chapter> {
+    fn get_chapter(&self) -> Option<Chapter> {
         self.chapter.clone()
     }
 
-    fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<simple_Chapter>) {
+    fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<Chapter>) {
         info!("wjf set_chapter_array Called from C");
         for i in 0..chap_array.len() {
-            let item: simple_Chapter = chap_array.get(i).unwrap();
+            let item: Chapter = chap_array.get(i).unwrap();
             info!(
                 "wjf i: {}, chap.page_count: {}, chap.title: {}, chap.is_end: {}",
                 i,
@@ -145,14 +145,14 @@ impl Simple for SimpleImpl {
         }
     }
 
-    fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<simple_Chapter>> {
+    fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<Chapter>> {
         info!("wjf get_chapter_array Called from C");
-        let mut ret = FeatureReferenceArray::<simple_Chapter>::new(2);
-        let mut chap1 = simple_Chapter::new();
+        let mut ret = FeatureReferenceArray::<Chapter>::new(2);
+        let mut chap1 = Chapter::new();
         chap1.set_title(FeatureString::new("chapter 1"));
         chap1.set_is_end(false);
         chap1.set_page_count(100);
-        let mut chap2 = simple_Chapter::new();
+        let mut chap2 = Chapter::new();
         chap2.set_title(FeatureString::new("chapter 2"));
         chap2.set_is_end(true);
         chap2.set_page_count(300);
