@@ -23,6 +23,7 @@
 #include "feature_utils.h"
 #include "file.h"
 #include "net_utils.h"
+#include "trace_utils.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -567,6 +568,33 @@ static void __load_file_work_cb(uv_work_t* wk)
     fr->r = r;
 }
 
+
+#ifdef CONFIG_QUICKAPP_QUALITY_PROFILER
+static const char* get_type_name(int type)
+{
+    const char* op_type;
+    switch (type)
+    {
+    case FILE_READTEXT:
+        op_type = "File::readText";
+        break;
+    case FILE_READARRBUF:
+        op_type = "File::readArrayBuffer";
+        break;
+    case FILE_WRITETEXT:
+        op_type = "File::writeText";
+        break;
+    case FILE_WRITEARRBUF:
+        op_type = "File::writeArrayBuffer";
+        break;
+    default:
+        op_type = "File::unknown";
+        break;
+    }
+    return op_type;
+}
+#endif
+
 /**
  * @brief uv_work 处理完成回调，返回执行结果，释放内存
  */
@@ -575,7 +603,9 @@ static void __load_after_work_cb(uv_work_t* req, int status)
     FileReq* fr = static_cast<FileReq*>(req->data);
     if (!fr)
         return;
-
+    #ifdef CONFIG_QUICKAPP_QUALITY_PROFILER
+    PROFILE_FEATURE_MODULE_LOG_END(get_type_name(fr->type), fr->filename);
+    #endif
     // 0 表示成功完成
     if (status != 0) {
         __invoke_fr_cb(fr, __error_code_map(status), uv_strerror(status), NULL);
@@ -702,6 +732,9 @@ void __file_load(FeatureInstanceHandle feature, T* param, int type)
             return __invoke_fr_cb(fr, __error_code_map(-EINVAL), uv_strerror(-EINVAL), NULL);
         }
     }
+    #ifdef CONFIG_QUICKAPP_QUALITY_PROFILER
+    PROFILE_FEATURE_MODULE_LOG_BEGIN(get_type_name(fr->type), fr->filename);
+    #endif
     // 使用 libuv 线程池，处理需要多次回调的接口
     fr->req.data = fr;
     r = uv_queue_work(fc->loop, &fr->req, __load_file_work_cb,

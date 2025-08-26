@@ -34,6 +34,7 @@
 #include "inspector_host_net.h"
 #include "net_utils.h"
 #include "uv_ext.h"
+#include "trace_utils.h"
 
 namespace Fetch {
 
@@ -408,6 +409,7 @@ static void fetch_request_cb(int state, uv_response_t* response)
 
 exit:
     // request done,uv_request  has been released
+    PROFILE_FEATURE_MODULE_LOG_END("Fetch::fetch", p->url ? p->url : "");
     fetch_free(p);
     FEATURE_NOTE_END_STR("fetch_request_cb");
 }
@@ -433,6 +435,8 @@ static bool request_create(fetch_t* fetch, system_fetch_FetchPara* obj,
 
     free((void*)decode);
     FEATURE_NOTE_END_STR("fetch_request_decode");
+
+    PROFILE_FEATURE_MODULE_LOG_BEGIN("Fetch::fetch", fetch->url);
 
     // set url
     uv_request_set_url(fetch->request, fetch->url);

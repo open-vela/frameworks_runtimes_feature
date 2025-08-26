@@ -21,6 +21,7 @@
 
 #include "crypto_native.h"
 #include "crypto_utils.h"
+#include "trace_utils.h"
 
 #include <alloca.h>
 #include <stdarg.h>
@@ -459,7 +460,9 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
             code = FT_ERR_ARGS;
         } else {
             if (strcmp(algo, "RSA") == 0) {
+                PROFILE_FEATURE_MODULE_LOG_BEGIN("Crypto::encrypt", options->key);
                 result = rsa_encrypt(options->key, buff, &size, &is_text);
+                PROFILE_FEATURE_MODULE_LOG_END("Crypto::encrypt", options->key);
                 if (!result) {
                     msg = crypto_err ? crypto_err : "rsa encrypt error";
                     code = FT_ERR_GENERAL;
