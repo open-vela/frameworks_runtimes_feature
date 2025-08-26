@@ -2,10 +2,9 @@ use alloc::boxed::Box;
 use alloc::sync::Arc;
 use async_trait::async_trait;
 use core::ffi::{c_int, c_void};
-use core::ops::Deref;
-use core::ops::DerefMut;
 use core::{ffi::CStr, ptr};
 use feature_frm::*;
+use feature_macros::feature_struct;
 use vdk::async_runtime::runtime;
 use vdk::log::info;
 
@@ -53,66 +52,20 @@ pub fn createPigeon_instance(instance: &FeatureInstance) -> FeatureInterfaceHand
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct simple_Chapter_for_c {
+#[feature_struct(wrapper_struct = "Chapter")]
+pub struct simple_Chapter {
     page_count: FtInt,
     title: FtString,
     is_end: FtBool,
 }
 
-impl FeatureManagedType for simple_Chapter_for_c {}
-impl FeatureTypeDescription for simple_Chapter_for_c {
-    fn get_type() -> FeatureType {
-        unsafe { simple_Chapter_struct_get_type() }
-    }
-}
-
-#[repr(transparent)]
-#[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub struct simple_Chapter(FeaturePtr<simple_Chapter_for_c>);
-
-unsafe impl Send for simple_Chapter {}
-unsafe impl Sync for simple_Chapter {}
-
-impl Default for simple_Chapter {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl simple_Chapter {
+impl Chapter {
     pub fn new() -> Self {
-        Self(FeaturePtr::new())
-    }
-}
-
-impl Deref for simple_Chapter {
-    type Target = simple_Chapter_for_c;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for simple_Chapter {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FeatureReferenceType for simple_Chapter {
-    type Target = simple_Chapter_for_c;
-
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-        Self(FeaturePtr::from_raw(raw_ptr))
+        Self {
+            inner: FeaturePtr::new(),
+        }
     }
 
-    fn into_raw(self) -> *mut Self::Target {
-        self.0.into_raw()
-    }
-}
-
-impl simple_Chapter {
     pub fn get_page_count(&self) -> c_int {
         self.page_count
     }
@@ -172,55 +125,16 @@ impl ChapterChangedCb {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct simple_Book_for_c {
+#[feature_struct(wrapper_struct = "Book", with_instance = "true")]
+pub struct simple_Book {
     book_name: FtString,
-    chap_1: *mut simple_Chapter_for_c,
+    chap_1: *mut simple_Chapter,
     chap_changed: FtCallbackId,
 }
 
-#[allow(non_camel_case_types)]
-pub struct simple_Book {
-    book: FeaturePtr<simple_Book_for_c>,
-    instance: FeatureInstance,
-}
-
-unsafe impl Send for simple_Book {}
-unsafe impl Sync for simple_Book {}
-
-impl Deref for simple_Book {
-    type Target = simple_Book_for_c;
-
-    fn deref(&self) -> &Self::Target {
-        &self.book
-    }
-}
-
-impl DerefMut for simple_Book {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.book
-    }
-}
-
-impl Clone for simple_Book {
-    fn clone(&self) -> Self {
-        Self {
-            book: self.book.clone(),
-            instance: self.instance.clone(),
-        }
-    }
-}
-
-impl FeatureManagedType for simple_Book_for_c {}
-
-impl FeatureTypeDescription for simple_Book_for_c {
-    fn get_type() -> FeatureType {
-        unsafe { simple_Book_struct_get_type() }
-    }
-}
-
-impl simple_Book {
-    pub fn new(book: FeaturePtr<simple_Book_for_c>, instance: FeatureInstance) -> Self {
-        Self { book, instance }
+impl Book {
+    pub fn new(inner: FeaturePtr<simple_Book>, instance: FeatureInstance) -> Self {
+        Self { inner, instance }
     }
 
     pub fn get_book_name(&self) -> FeatureString {
@@ -237,18 +151,18 @@ impl simple_Book {
         self.book_name = FeatureString::into_raw(name);
     }
 
-    pub fn get_chap_1(&self) -> simple_Chapter {
-        simple_Chapter(unsafe { FeaturePtr::from_raw(self.chap_1) })
+    pub fn get_chap_1(&self) -> Chapter {
+        unsafe { Chapter::from_raw(self.chap_1) }
     }
 
-    pub fn set_chap_1(&mut self, chap_1: simple_Chapter) {
+    pub fn set_chap_1(&mut self, chap_1: Chapter) {
         if !self.chap_1.is_null() {
             //  free old data
             unsafe {
                 FeatureFreeValue(self.chap_1 as *mut c_void);
             }
         }
-        self.chap_1 = chap_1.0.into_raw()
+        self.chap_1 = chap_1.into_raw()
     }
 
     // once the callback is taken out, the callback id will be invalid.
@@ -263,7 +177,7 @@ impl simple_Book {
     }
 }
 
-impl Drop for simple_Book {
+impl Drop for Book {
     // remove the callback on drop time.
     fn drop(&mut self) {
         let _ = self.take_chap_changed();
@@ -330,12 +244,12 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn goo(&mut self, a: FtDouble) -> FtDouble;
     fn doo(&mut self);
     fn hoo(&mut self, a: &FeatureString);
-    fn set_book(&mut self, book: simple_Book);
-    fn get_book(&mut self) -> Option<simple_Book>;
-    fn set_chapter(&mut self, chap: simple_Chapter);
-    fn get_chapter(&self) -> Option<simple_Chapter>;
-    fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<simple_Chapter>);
-    fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<simple_Chapter>>;
+    fn set_book(&mut self, book: Book);
+    fn get_book(&mut self) -> Option<Book>;
+    fn set_chapter(&mut self, chap: Chapter);
+    fn get_chapter(&self) -> Option<Chapter>;
+    fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<Chapter>);
+    fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<Chapter>>;
     fn moo(&mut self, a: i32, cb: MooCb);
     async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError>;
     async fn poo(&mut self, resolve: FtBool) -> Result<FeatureString, PromiseError>;
@@ -496,28 +410,25 @@ pub unsafe extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendDat
 pub unsafe extern "C" fn simple_wrap_set_chapter(
     feature: *mut c_void,
     _adata: AppendData,
-    chap: *mut simple_Chapter_for_c,
+    chap: *mut simple_Chapter,
 ) {
     if chap.is_null() {
         info!("wjf set_chapter() Received null pointer!");
     }
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    unsafe {
-        let ptr = FeaturePtr::<simple_Chapter_for_c>::from_raw(chap);
-        (*simple).set_chapter(simple_Chapter(ptr))
-    }
+    unsafe { (*simple).set_chapter(Chapter::from_raw(chap)) }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_wrap_get_chapter(
     feature: *mut c_void,
     _adata: AppendData,
-) -> *mut simple_Chapter_for_c {
+) -> *mut simple_Chapter {
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &*simple };
     let chap = simple.get_chapter();
-    chap.map_or(ptr::null::<simple_Chapter_for_c>() as *mut _, |v| {
-        v.0.clone().into_raw()
+    chap.map_or(ptr::null::<simple_Chapter>() as *mut _, |v| {
+        v.inner.clone().into_raw()
     })
 }
 
@@ -534,7 +445,7 @@ pub unsafe extern "C" fn simple_wrap_set_chapter_array(
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &mut *simple };
     unsafe {
-        let chaps = FeatureReferenceArray::<simple_Chapter>::from_raw(chap_array);
+        let chaps = FeatureReferenceArray::<Chapter>::from_raw(chap_array);
         simple.set_chapter_array(chaps);
     }
 }
@@ -553,14 +464,14 @@ pub unsafe extern "C" fn simple_wrap_get_chapter_array(
 pub unsafe extern "C" fn simple_wrap_set_book(
     feature: *mut c_void,
     _adata: AppendData,
-    book: *mut simple_Book_for_c,
+    book: *mut simple_Book,
 ) {
     if book.is_null() {
         info!("wjf set_book() Received null pointer!");
     } else {
         let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
         unsafe {
-            let book = simple_Book::new(FeaturePtr::from_raw(book), FeatureInstance::new(feature));
+            let book = Book::new(FeaturePtr::from_raw(book), FeatureInstance::new(feature));
             (*simple).set_book(book);
         };
     }
@@ -570,11 +481,11 @@ pub unsafe extern "C" fn simple_wrap_set_book(
 pub unsafe extern "C" fn simple_wrap_get_book(
     feature: *mut c_void,
     _adata: AppendData,
-) -> *mut simple_Book_for_c {
+) -> *mut simple_Book {
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let book = unsafe { (*simple).get_book() };
-    book.map_or(ptr::null::<simple_Book_for_c>() as *mut _, |b| {
-        b.book.clone().into_raw()
+    book.map_or(ptr::null::<Book>() as *mut _, |b| {
+        b.inner.clone().into_raw()
     })
 }
 
