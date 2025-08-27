@@ -65,7 +65,7 @@ struct GnssMetaData {
 };
 
 struct location_context {
-    uv_topic_t topic;
+    std::queue<uv_topic_t*> topic_list;
     uv_timer_t timer;
     std::queue<GnssMetaData> getQueue;
     std::list<GnssMetaData> subList;
@@ -82,7 +82,8 @@ static void geolocation_topic_close_cb(uv_handle_t* handle)
 {
     FEATURE_LOG_ERROR("%s::%s() topic close", file_tag, __FUNCTION__);
     uv_topic_t* topic = (uv_topic_t*)handle;
-    location_context* context = container_of(topic, location_context, topic);
+    location_context* context = static_cast<location_context*>(topic->user_data);
+    delete (topic);
     if (--context->ref_count == 0) {
         FEATURE_LOG_ERROR("%s::%s() delete context", file_tag, __FUNCTION__);
         delete context;
@@ -102,7 +103,7 @@ static std::list<GnssMetaData>::iterator geolocation_find_meta(location_context*
 static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t datalen)
 {
     int res;
-    location_context* context = container_of(topic, location_context, topic);
+    location_context* context = static_cast<location_context*>(topic->user_data);
 
     if (!topic || !data) {
         FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
@@ -145,18 +146,19 @@ static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t data
             ft_free_value(ft_ctx, accuracyInfo);
         }
 
-        if (!geolocation_is_active(context) && uv_is_active((uv_handle_t*)&context->topic)) {
+        if (!geolocation_is_active(context) && !context->topic_list.empty()) {
             FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
-            res = uv_topic_unsubscribe(topic);
+            uv_topic_t* free_topic = context->topic_list.front();
+            context->topic_list.pop();
+            res = uv_topic_unsubscribe(free_topic);
             if (res < 0) {
                 FEATURE_LOG_ERROR("%s::%s() uv_topic_unsubscribe fail", file_tag, __FUNCTION__);
             }
 
-            res = uv_topic_close(topic, geolocation_topic_close_cb);
+            res = uv_topic_close(free_topic, geolocation_topic_close_cb);
             if (res < 0) {
                 FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
             }
-
             return;
         }
     }
@@ -177,19 +179,23 @@ void system_geolocation_wrap_getLocation(FeatureInstanceHandle feature, AppendDa
     if (context->getQueue.size() > 100) {
         code = GENERAL;
         msg = "Reject: too many requests";
-        FeaturePromiseReject(feature, pid, code, msg);
+        goto errout;
     }
 
-    if (!geolocation_is_active(context) && !uv_is_active((uv_handle_t*)&context->topic)) {
+    if (!geolocation_is_active(context)) {
         FEATURE_LOG_ERROR("%s::%s() get sub", file_tag, __FUNCTION__);
-        ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &context->topic,
+        uv_topic_t* topic = new uv_topic_t();
+        ret = uv_topic_subscribe(FeatureGetUVLoop(manager), topic,
             ORB_ID(sensor_gnss),
             gnss_topic_cb);
         if (ret < 0) {
             code = GENERAL;
             msg = "subscribe error";
+            delete (topic);
             goto errout;
         }
+        topic->user_data = (void*)context;
+        context->topic_list.push(topic);
         context->ref_count++;
     }
 
@@ -223,15 +229,19 @@ void system_geolocation_wrap_subscribe(FeatureInstanceHandle feature, AppendData
         return;
     }
 
-    if (!geolocation_is_active(context) && !uv_is_active((uv_handle_t*)&context->topic)) {
+    if (!geolocation_is_active(context)) {
+        uv_topic_t* topic = new uv_topic_t();
         FEATURE_LOG_ERROR("%s::%s() sub sub\n", file_tag, __FUNCTION__);
-        ret = uv_topic_subscribe(FeatureGetUVLoop(manager), &context->topic,
+        ret = uv_topic_subscribe(FeatureGetUVLoop(manager), topic,
             ORB_ID(sensor_gnss),
             gnss_topic_cb);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() subscribe error:%d\n", file_tag, __FUNCTION__, ret);
+            delete (topic);
             goto errout;
         }
+        topic->user_data = (void*)context;
+        context->topic_list.push(topic);
         context->ref_count++;
     }
 
@@ -265,14 +275,16 @@ void geolocation_timer_handler(uv_timer_t* timer)
         break;
     }
 
-    if (!geolocation_is_active(context) && uv_is_active((uv_handle_t*)&context->topic)) {
+    if (!geolocation_is_active(context) && !context->topic_list.empty()) {
         FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
-        ret = uv_topic_unsubscribe(&context->topic);
+        uv_topic_t* free_topic = context->topic_list.front();
+        context->topic_list.pop();
+        ret = uv_topic_unsubscribe(free_topic);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s topic unsubscribe failed", __FUNCTION__);
         }
 
-        ret = uv_topic_close(&context->topic, geolocation_topic_close_cb);
+        ret = uv_topic_close(free_topic, geolocation_topic_close_cb);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
         }
@@ -293,14 +305,16 @@ static void unsubscribe(FeatureInstanceHandle feature)
     REMOVE_ALL_CALLBACK(it->callback, it->fail);
     FeatureFreeInstanceHandle(it->instance);
     context->subList.erase(it);
-    if (!geolocation_is_active(context) && uv_is_active((uv_handle_t*)&context->topic)) {
+    if (!geolocation_is_active(context) && !context->topic_list.empty()) {
         FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
-        ret = uv_topic_unsubscribe(&context->topic);
+        uv_topic_t* free_topic = context->topic_list.front();
+        context->topic_list.pop();
+        ret = uv_topic_unsubscribe(free_topic);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s topic unsubscribe failed", __FUNCTION__);
         }
 
-        ret = uv_topic_close(&context->topic, geolocation_topic_close_cb);
+        ret = uv_topic_close(free_topic, geolocation_topic_close_cb);
         if (ret < 0) {
             FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
         }
@@ -361,11 +375,11 @@ void system_geolocation_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle 
 {
     int ret;
     location_context* context = static_cast<location_context*>(FeatureGetProtoData(handle));
-    bool is_active = geolocation_is_active(context);
-
-    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     uv_timer_stop(&context->timer);
     uv_close((uv_handle_t*)&context->timer, geolocation_timer_close_cb);
+
+    FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+
     while (!context->getQueue.empty()) {
         GnssMetaData meta = context->getQueue.front();
         FeatureFreeInstanceHandle(meta.instance);
@@ -378,16 +392,17 @@ void system_geolocation_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle 
         FeatureFreeInstanceHandle(it->instance);
     }
 
-    if (is_active && uv_is_active((uv_handle_t*)&context->topic)) {
-        FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
-        ret = uv_topic_unsubscribe(&context->topic);
+    while (!context->topic_list.empty()) {
+        uv_topic_t* topic = context->topic_list.front();
+        context->topic_list.pop();
+        ret = uv_topic_unsubscribe(topic);
         if (ret < 0) {
-            FEATURE_LOG_ERROR("%s topic unsubscribe failed", __FUNCTION__);
+            FEATURE_LOG_ERROR("Failed to unsubscribe topic\n");
         }
 
-        ret = uv_topic_close(&context->topic, geolocation_topic_close_cb);
+        ret = uv_topic_close(topic, geolocation_topic_close_cb);
         if (ret < 0) {
-            FEATURE_LOG_ERROR("%s::%s() uv_topic_close fail", file_tag, __FUNCTION__);
+            FEATURE_LOG_ERROR("Failed to close topic\n");
         }
     }
 }
