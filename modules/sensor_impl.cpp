@@ -333,19 +333,14 @@ static bool subscribe(FeatureInstanceHandle feature, SensorContext* th, sensor_m
     FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(feature);
 
     if (!FeatureCheckCallbackId(feature, meta->callback)) {
-        code = GENERAL;
+        code = ARGSERROR;
         msg = "callback id is invalid";
         goto errout;
     }
 
     if (event && event->meta.subscribed) {
-        if (magic == SENSOR_MAGIC_COMPA) {
-            FeatureRemoveCallback(feature, event->meta.callback);
-        } else {
-            REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
-            event->meta.fail = meta->fail;
-        }
-
+        REMOVE_ALL_CALLBACK(event->meta.callback, event->meta.fail);
+        event->meta.fail = meta->fail;
         event->meta.callback = meta->callback;
         return true;
     }
@@ -436,6 +431,7 @@ void system_sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendDa
     meta.instance = feature;
     meta.reserved = param->reserved;
     meta.callback = param->callback;
+    meta.fail = param->fail;
 
     if (!subscribe(feature, th, SENSOR_MAGIC_COMPA, &meta)) {
         FEATURE_LOG_ERROR("%s::%s() proximity subscibe fail:%s\n", file_tag, __FUNCTION__);

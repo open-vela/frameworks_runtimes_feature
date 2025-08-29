@@ -41,6 +41,7 @@ callback compass_cb(CompassRet ret)
 struct Compass {
     boolean reserved = false
     callback compass_cb callback
+    callback fail_cb fail
 }
 void subscribeCompass(Compass param)
 void unsubscribeCompass()
