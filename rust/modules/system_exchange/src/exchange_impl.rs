@@ -134,14 +134,10 @@ impl Exchange for ExchangeImpl {
         let key = process_properties(ExchangeOp::Get, &info.get_key(), &None, &info.get_scope())?;
 
         match self.prop.get(&key).await {
-            Ok(v) => {
-                if let Some(value) = v {
-                    let mut get_ret = GetRet::new();
-                    get_ret.set_value(FeatureString::new(String::from_utf8_lossy(&value)));
-                    return Ok(get_ret);
-                } else {
-                    return Err(PromiseError::new(-1, "property not found"));
-                }
+            Ok(value) => {
+                let mut get_ret = GetRet::new();
+                get_ret.set_value(FeatureString::new(String::from_utf8_lossy(&value)));
+                Ok(get_ret)
             }
             Err(e) => Err(PromiseError::new(-1, format!("get failed: {e}"))),
         }
