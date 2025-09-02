@@ -22,6 +22,8 @@ struct Book {
     string book_name;
     Chapter chap_1;
     chapter_changed chap_changed;
+    jsonobject book_info = null;
+    jsonobject[] chaps_info = null;
 }
 void set_book(Book book);
 Book get_book();
