@@ -265,7 +265,7 @@ bool get_method(FtString method, Fetch::MethodType* out)
 
     *out = (Fetch::MethodType)type_contain(
         Fetch::method_type, arrayof(Fetch::method_type), method, true);
-    if (out) {
+    if (*out) {
         return true;
     }
     return false;
