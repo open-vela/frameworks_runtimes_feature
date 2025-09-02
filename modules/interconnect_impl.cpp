@@ -192,6 +192,8 @@ public:
                 // 应用未安装
                 FEATURE_NOTE_MARK("interconnect_app_uninstalled");
                 conn->ProcessPendingDiagnosis(false);
+                conn->InvokeDisconnect("phone app uninstalled",
+                    static_cast<int>(StatusCode::kAppUninstall));
                 break;
             }
             default: {
