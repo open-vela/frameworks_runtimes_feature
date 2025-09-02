@@ -68,6 +68,7 @@ void freeCString(wasm_exec_env_t exec_env, char* str);
 void freeValue(wasm_exec_env_t exec_env, uint64_t& target);
 bool isArray(wasm_exec_env_t exec_env, uint64_t& target);
 bool isObject(wasm_exec_env_t exec_env, uint64_t& target);
+bool isPlainObject(wasm_exec_env_t exec_env, uint64_t& target);
 bool isFunction(wasm_exec_env_t exec_env, uint64_t& target);
 uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array);
 uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx);

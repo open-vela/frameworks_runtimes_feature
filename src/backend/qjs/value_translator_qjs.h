@@ -224,6 +224,31 @@ static inline bool isObject(JSContext* ctx, const JSValue& target)
     return !!JS_IsObject(target);
 }
 
+static inline bool isPlainObject(JSContext* ctx, const JSValue& target)
+{
+    if (!JS_IsObject(target))
+        return false;
+
+    if (JS_IsArray(ctx, target))
+        return false;
+
+    if (JS_IsFunction(ctx, target))
+        return false;
+
+    size_t size;
+    if (JS_GetArrayBuffer(ctx, &size, target))
+        return false;
+    size_t offset;
+    size_t length;
+    size_t byte_per_elem;
+    JSValue buffer = JS_GetTypedArrayBuffer(ctx, target, &offset, &length, &byte_per_elem);
+    if (!JS_IsException(buffer)) {
+        JS_FreeValue(ctx, buffer);
+        return false;
+    }
+    return true;
+}
+
 static inline bool isFunction(JSContext* ctx, const JSValue& target)
 {
     return !!JS_IsFunction(ctx, target);

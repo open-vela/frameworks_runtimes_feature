@@ -391,7 +391,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                 break;
             }
             // check js argv is object or not.
-            if (!value_translator::isObject(ctx, target)) {
+            if (!value_translator::isPlainObject(ctx, target)) {
                 FEATURE_LOG_ERROR("arg type mismatch, need struct!");
                 return false;
             }

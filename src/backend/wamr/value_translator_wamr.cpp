@@ -279,6 +279,14 @@ bool isObject(wasm_exec_env_t exec_env, uint64_t& target)
     return false;
 }
 
+bool isPlainObject(wasm_exec_env_t exec_env, uint64_t& target)
+{
+    wasm_obj_t obj = get_wasm_args_by_type(wasm_obj_t, target);
+    if (!wasm_obj_is_struct_obj(obj))
+        return false;
+    return true;
+}
+
 bool isFunction(wasm_exec_env_t exec_env, uint64_t& target)
 {
     wasm_obj_t obj = get_wasm_args_by_type(wasm_obj_t, target);
