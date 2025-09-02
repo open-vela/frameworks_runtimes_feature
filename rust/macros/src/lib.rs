@@ -162,7 +162,7 @@ pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// - Creates a  wrapper struct with only the `inner` field
 /// - Provides `Default` constructors
 /// - Implements `FeatureReferenceType` for raw pointer conversions
-/// else:
+///   else:
 /// - Creates a wrapper struct with both `inner` and `instance` fields
 /// - Implements manual `Clone` to properly clone both fields
 ///
@@ -175,7 +175,7 @@ pub fn feature_instance(attr: TokenStream, item: TokenStream) -> TokenStream {
 pub fn feature_struct(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as syn::ItemStruct);
     let st_name = &input.ident;
-    let get_type_fn_name = Ident::new(&format!("{}_struct_get_type", st_name), st_name.span());
+    let get_type_fn_name = Ident::new(&format!("{st_name}_struct_get_type"), st_name.span());
 
     let wrapper_struct = parse_proc_macro_param(attr.clone(), "wrapper_struct").unwrap();
     if wrapper_struct.is_empty() {

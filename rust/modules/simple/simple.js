@@ -30,12 +30,27 @@ test.set_book({
     book_name: "monkey king",
     chap_1: {
         page_count: 10,
-        title: "chap 1",
+        title: "chap one",
         is_end: false
     },
     chap_changed: function(index, title) {
         console.log('chap_changed, index=', index, ', title=', title, '\n');
-    }
+    },
+    book_info: {
+        author: "wuchengen",
+        dynasty: "Qing dynasty",
+        class: "literature"
+    },
+    chaps_info: [
+        {
+            title: "chap one",
+            page_count: 10,
+        },
+        {
+            title: "chap two",
+            page_count: 50,
+        },
+    ]
 });
 let book_ret = test.get_book();
 console.log(`got book 1: ${JSON.stringify(book_ret)}`);

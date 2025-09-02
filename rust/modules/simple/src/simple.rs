@@ -130,6 +130,8 @@ pub struct simple_Book {
     book_name: FtString,
     chap_1: *mut simple_Chapter,
     chap_changed: FtCallbackId,
+    book_info: FtJsonObject,
+    chaps_info: *mut FtArray,
 }
 
 impl Book {
@@ -174,6 +176,34 @@ impl Book {
         } else {
             None
         }
+    }
+
+    pub fn get_book_info(&self) -> FeatureJsonObject {
+        unsafe { FeatureJsonObject::from_raw(self.book_info) }
+    }
+
+    pub fn set_book_info(&mut self, book_info: FeatureJsonObject) {
+        if !self.book_info.is_null() {
+            //  free old data
+            unsafe {
+                FeatureFreeValue(self.book_info as *mut c_void);
+            }
+        }
+        self.book_info = FeatureJsonObject::into_raw(book_info);
+    }
+
+    pub fn get_chaps_info(&self) -> FeatureReferenceArray<FeatureJsonObject> {
+        unsafe { FeatureReferenceArray::<FeatureJsonObject>::from_raw(self.chaps_info) }
+    }
+
+    pub fn set_chaps_info(&mut self, chaps_info: FeatureReferenceArray<FeatureJsonObject>) {
+        if !self.chaps_info.is_null() {
+            //  free old data
+            unsafe {
+                FeatureFreeValue(self.chaps_info as *mut c_void);
+            }
+        }
+        self.chaps_info = chaps_info.into_raw();
     }
 }
 

@@ -98,12 +98,48 @@ impl Simple for SimpleImpl {
     }
 
     fn set_book(&mut self, mut book: Book) {
-        let chap_title = book.get_chap_1().get_title().unwrap();
         info!(
-            "set_book called from C, book_name: {}, chap_title: {}",
-            book.get_book_name(),
-            chap_title
+            "set_book called from C, book_name: {}",
+            book.get_book_name()
         );
+
+        // get and set book_info
+        let book_info = book.get_book_info();
+        info!("wjf book_info: {}", book_info.as_str());
+        let new_book_info = FeatureJsonObject::new("{\"author\": \"caoxueqin\", \"dynasty\": \"Tang dynasty\", \"class\": \"political novel\"}");
+        book.set_book_info(new_book_info);
+
+        // get and set chaps_1
+        let chap1 = book.get_chap_1();
+        let chap1_title = chap1.get_title().unwrap();
+        info!(
+            "wjf chap1 title: {}, page_count: {}, is_end: {}",
+            chap1_title,
+            chap1.get_page_count(),
+            chap1.get_is_end()
+        );
+        let mut new_chap1 = Chapter::new();
+        new_chap1.set_title(FeatureString::new("chap ten"));
+        new_chap1.set_page_count(150);
+        new_chap1.set_is_end(true);
+        book.set_chap_1(new_chap1);
+
+        // get and set chaps_info
+        let chaps_info = book.get_chaps_info();
+        for i in 0..chaps_info.len() {
+            let chap_info = chaps_info.get(i).unwrap();
+            info!("wjf chap_info[{}]: {}", i, chap_info.as_str());
+        }
+        let mut new_chaps_info = FeatureReferenceArray::<FeatureJsonObject>::new(2);
+        let chap1_info =
+            FeatureJsonObject::new("{\"chap1\": {\"title\": \"chap one\", \"page_count\": 50}}");
+        let chap2_info =
+            FeatureJsonObject::new("{\"chap2\": {\"title\": \"chap two\", \"page_count\": 80}}");
+        new_chaps_info.append(chap1_info);
+        new_chaps_info.append(chap2_info);
+        book.set_chaps_info(new_chaps_info);
+
+        // take callback for future invoke
         self.chap_changed = book.take_chap_changed();
         self.book = Some(book);
     }
@@ -120,6 +156,7 @@ impl Simple for SimpleImpl {
         );
         if let Some(cb) = &self.chap_changed {
             let chap_title = chap.get_title().unwrap();
+            // invoke callback
             cb.invoke(1, chap_title);
         } else {
             info!("No chap_changed callback available");

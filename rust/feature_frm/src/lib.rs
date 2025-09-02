@@ -33,6 +33,7 @@ pub use feature_sys::FtInt16;
 pub use feature_sys::FtInt32;
 pub use feature_sys::FtInt64;
 pub use feature_sys::FtInt8;
+pub use feature_sys::FtJsonObject;
 pub use feature_sys::FtPromiseId;
 pub use feature_sys::FtString;
 pub use feature_sys::FtUint16;

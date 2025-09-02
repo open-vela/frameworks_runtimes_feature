@@ -21,3 +21,6 @@ pub use type_trait::*;
 pub mod primitives;
 #[allow(unused_imports)]
 pub use primitives::*;
+
+pub mod jsonobject;
+pub use jsonobject::*;
