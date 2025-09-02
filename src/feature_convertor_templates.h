@@ -508,7 +508,7 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     if (!convertValueToNative(instance, elem_type, ctx, elem_val, elem_ptr)) {
                         FEATURE_LOG_ERROR("convert array element failed ");
                         value_translator::freeValue(ctx, elem_val);
-                        break;
+                        return false;
                     }
                     value_translator::freeValue(ctx, elem_val);
                 }
