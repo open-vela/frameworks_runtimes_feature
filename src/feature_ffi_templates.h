@@ -30,7 +30,7 @@
 
 #define HANDLE_ERROR_AND_RETURN(ret_code)                              \
     {                                                                  \
-        if (use_promise) {                                             \
+        if (is_promise) {                                              \
             auto err_msg = get_error_msg(ret_code, mthd_msg);          \
             instance->rejectPromise(pid, FT_ERR_ARGS, err_msg.data()); \
             return RET_OK;                                             \
