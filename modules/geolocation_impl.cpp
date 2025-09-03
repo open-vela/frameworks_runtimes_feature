@@ -123,8 +123,8 @@ static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t data
             }
         } else {
             ft_value_t accuracyInfo = ft_new_object(ft_ctx);
-            ft_value_t horizontal = ft_from_double(ft_ctx, round(ret_t->hdop * PRECISION) / PRECISION);
-            ft_value_t vertical = ft_from_double(ft_ctx, round(ret_t->vdop * PRECISION) / PRECISION);
+            ft_value_t horizontal = ft_from_double(ft_ctx, round(ret_t->eph * PRECISION) / PRECISION);
+            ft_value_t vertical = ft_from_double(ft_ctx, round(ret_t->epv * PRECISION) / PRECISION);
             ft_obj_set_property(ft_ctx, accuracyInfo, "horizontal", horizontal);
             ft_obj_set_property(ft_ctx, accuracyInfo, "vertical", vertical);
             ret.latitude = round(ret_t->latitude * PRECISION) / PRECISION;
