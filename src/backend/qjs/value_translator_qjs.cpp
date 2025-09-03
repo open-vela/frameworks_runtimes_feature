@@ -280,23 +280,28 @@ int checkAsyncCallbacks(JSContext* ctx, JSValue arg)
 
     JSValue success_cb = JS_GetPropertyStr(ctx, arg, "success");
     JSValue fail_cb = JS_GetPropertyStr(ctx, arg, "fail");
+    JSValue complete_cb = JS_GetPropertyStr(ctx, arg, "complete");
 
     bool success_valid = JS_IsFunction(ctx, success_cb);
     bool fail_valid = JS_IsFunction(ctx, fail_cb);
+    bool complete_valid = JS_IsFunction(ctx, complete_cb);
 
     if ((!JS_IsUndefined(success_cb) && !JS_IsNull(success_cb) && !success_valid)
-        || (!JS_IsUndefined(fail_cb) && !JS_IsNull(fail_cb) && !fail_valid)) {
+        || (!JS_IsUndefined(fail_cb) && !JS_IsNull(fail_cb) && !fail_valid)
+        || (!JS_IsUndefined(complete_cb) && !JS_IsNull(complete_cb) && !complete_valid)) {
+        FEATURE_LOG_ERROR("invalid callbacks!");
         result = -1;
         goto cleanup;
     }
 
-    if (success_valid || fail_valid) {
+    if (success_valid || fail_valid || complete_valid) {
         result = 1;
     }
 
 cleanup:
     feature_free_value(ctx, success_cb);
     feature_free_value(ctx, fail_cb);
+    feature_free_value(ctx, complete_cb);
     return result;
 }
 
