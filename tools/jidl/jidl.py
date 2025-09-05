@@ -779,6 +779,7 @@ class JIDL(Parser):
                 | CONST
                 | ASYNC
                 | MESSAGE
+                | FROM
     """
     p[0] = p[1]
 
