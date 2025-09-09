@@ -465,6 +465,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, AppendData append
 
     zr->src_path = NULL;
     zr->dst_path = NULL;
+    zr->handle = NULL;
 
     if (!zc->loop) {
         FEATURE_LOG_ERROR("uvloop is null");
