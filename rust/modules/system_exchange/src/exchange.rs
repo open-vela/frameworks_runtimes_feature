@@ -19,7 +19,7 @@ unsafe extern "C" {
     pub(crate) fn system_exchange_RemoveInfo_struct_get_type() -> FeatureType;
     pub(crate) fn system_exchange_SetInfo_struct_get_type() -> FeatureType;
     pub(crate) fn system_exchange_GetInfo_struct_get_type() -> FeatureType;
-    pub(crate) fn system_exchange_system_exchange_GetRet_ptr_promise_resolve(
+    pub(crate) fn system_exchange_GetRet_ptr_promise_resolve(
         handle: FeatureInstanceHandle,
         id: FtPromiseId,
         val: *mut system_exchange_GetRet,
@@ -185,11 +185,7 @@ impl Promise for GetRetPromise {
     fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
         let ptr = value.as_ptr();
         unsafe {
-            system_exchange_system_exchange_GetRet_ptr_promise_resolve(
-                instance.as_handle(),
-                id,
-                ptr,
-            );
+            system_exchange_GetRet_ptr_promise_resolve(instance.as_handle(), id, ptr);
         }
     }
 }
