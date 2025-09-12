@@ -1,7 +1,7 @@
 use crate::simple::*;
 use alloc::{boxed::Box, string::String};
 use async_trait::async_trait;
-use core::{ptr, time::Duration};
+use core::time::Duration;
 use feature_frm::*;
 use feature_macros::feature_instance;
 use vdk::async_runtime::time;
@@ -226,41 +226,35 @@ impl Simple for SimpleImpl {
         }
     }
 
-    fn create_dog(&self) -> FeatureInterfaceHandle {
+    fn create_dog(&self) -> Option<FeatureInstance> {
         info!("wjf create_dog Called from C");
-
-        let handle = createDog_instance(&self.instance);
-        let instance = FeatureInstance::new(handle);
-        let boxed: Box<dyn Animal> = Box::new(Dog::new(instance.clone()));
-        instance.attach(boxed);
-
-        handle
+        let instance = create_dog_instance(&self.instance);
+        let dog = Dog::new(instance.clone());
+        instance.attach(Box::new(dog) as Box<dyn Animal>);
+        Some(instance)
     }
 
-    fn create_airplane(&self) -> FeatureInterfaceHandle {
+    fn create_airplane(&self) -> Option<FeatureInstance> {
         info!("wjf create_airplane Called from C");
-        let handle = createAirplane_instance(&self.instance);
-        let instance = FeatureInstance::new(handle);
-        let boxed: Box<dyn Flyable> = Box::new(Airplane::new(instance.clone()));
-        instance.attach(boxed);
-        handle
+        let instance = create_airplane_instance(&self.instance);
+        instance.attach(Box::new(Airplane::new(instance.clone())) as Box<dyn Flyable>);
+        Some(instance)
     }
 
-    fn create_pigeon(&self) -> FeatureInterfaceHandle {
+    fn create_pigeon(&self) -> Option<FeatureInstance> {
         info!("wjf create_pigeon Called from C");
-        let handle = createPigeon_instance(&self.instance);
-        let instance = FeatureInstance::new(handle);
-        let boxed: Box<dyn Bird> = Box::new(Pigeon::new(instance.clone()));
-        instance.attach(boxed);
-        handle
+        let instance = create_pigeon_instance(&self.instance);
+        let bird: Box<dyn Bird> = Box::new(Pigeon::new(instance.clone()));
+        instance.attach(bird);
+        Some(instance)
     }
 
-    fn create_cat(&self) -> FeatureInterfaceHandle {
+    fn create_cat(&self) -> Option<FeatureInstance> {
         info!("wjf create_cat Called from C");
-        ptr::null_mut() as FeatureInterfaceHandle
+        None
     }
 
-    fn set_animal(&self, _animal: FeatureInterfaceHandle) {
+    fn set_animal(&self, _animal: FeatureInstance) {
         info!("wjf set_animal Called from C");
     }
 }
@@ -274,32 +268,39 @@ impl Drop for SimpleImpl {
 #[feature_instance(name = "Animal")]
 pub struct Dog {
     instance: FeatureInstance,
+    name: FeatureString,
+    leg_count: FtInt,
 }
 
 // function implementation
 impl Dog {
     fn new(instance: FeatureInstance) -> Self {
-        Dog { instance }
+        Dog {
+            instance,
+            name: FeatureString::new("Puppy"),
+            leg_count: 4,
+        }
     }
 }
 
 impl Animal for Dog {
     fn get_name(&self) -> FeatureString {
         info!("wjf dog get_name Called from C");
-        FeatureString::new("Puppy")
+        self.name.clone()
     }
 
-    fn set_name(&self, _name: &FeatureString) {
-        info!("wjf dog set_name Called from C");
+    fn set_name(&mut self, name: FeatureString) {
+        info!("wjf dog set_name Called from C, name: {}", name);
+        self.name = name;
     }
 
-    fn get_legCount(&self) -> FtInt {
-        info!("wjf dog get_legCount Called from C");
-        4
+    fn get_leg_count(&self) -> FtInt {
+        info!("wjf dog get_leg_count Called from C");
+        self.leg_count
     }
 
-    fn eatFood(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
-        info!("wjf dog eatFood Called from C");
+    fn eat_food(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
+        info!("wjf dog eat_food Called from C");
         for i in 0..foods.len() {
             let item = foods.get(i).unwrap();
             info!("{} dog food: {}", i, *item);
@@ -322,12 +323,16 @@ impl Drop for Dog {
 #[feature_instance(name = "Flyable")]
 pub struct Airplane {
     instance: FeatureInstance,
+    breed: FeatureString,
 }
 
 // function implementation
 impl Airplane {
     fn new(instance: FeatureInstance) -> Self {
-        Airplane { instance }
+        Airplane {
+            instance,
+            breed: FeatureString::new("Airbus"),
+        }
     }
 }
 
@@ -344,11 +349,12 @@ impl Flyable for Airplane {
 
     fn get_breed(&self) -> FeatureString {
         info!("wjf airplane get_breed Called from C");
-        FeatureString::new("airplane_get_breed")
+        self.breed.clone()
     }
 
-    fn set_breed(&self, _breed: &FeatureString) {
-        info!("wjf airplane set_breed Called from C");
+    fn set_breed(&mut self, breed: FeatureString) {
+        info!("wjf airplane set_breed Called from C, breed: {}", breed);
+        self.breed = breed;
     }
 }
 
@@ -361,32 +367,43 @@ impl Drop for Airplane {
 #[feature_instance(name = "Bird")]
 pub struct Pigeon {
     instance: FeatureInstance,
+    name: FeatureString,
+    breed: FeatureString,
+    leg_count: FtInt,
+    weight: FtInt,
 }
 
 // function implementation
 impl Pigeon {
     fn new(instance: FeatureInstance) -> Self {
-        Pigeon { instance }
+        Pigeon {
+            instance,
+            name: FeatureString::new("Googoo"),
+            breed: FeatureString::new("Chinese pigeon"),
+            leg_count: 2,
+            weight: 10,
+        }
     }
 }
 
 impl Animal for Pigeon {
     fn get_name(&self) -> FeatureString {
         info!("wjf pigeon get_name Called from C");
-        FeatureString::new("pigeon_get_name")
+        self.name.clone()
     }
 
-    fn set_name(&self, _name: &FeatureString) {
-        info!("wjf pigeon set_name Called from C");
+    fn set_name(&mut self, name: FeatureString) {
+        info!("wjf pigeon set_name Called from C, _name: {}", name);
+        self.name = name;
     }
 
-    fn get_legCount(&self) -> FtInt {
-        info!("wjf pigeon get_legCount Called from C");
-        5
+    fn get_leg_count(&self) -> FtInt {
+        info!("wjf pigeon get_leg_count Called from C");
+        self.leg_count
     }
 
-    fn eatFood(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
-        info!("wjf pigeon eatFood Called from C");
+    fn eat_food(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
+        info!("wjf pigeon eat_food Called from C");
         for i in 0..foods.len() {
             let item = foods.get(i).unwrap();
             info!("{} pigeon food: {}", i, *item);
@@ -412,22 +429,24 @@ impl Flyable for Pigeon {
 
     fn get_breed(&self) -> FeatureString {
         info!("wjf pigeon get_breed Called from C");
-        FeatureString::new("pigeon_get_breed")
+        self.breed.clone()
     }
 
-    fn set_breed(&self, _breed: &FeatureString) {
-        info!("wjf pigeon set_breed Called from C");
+    fn set_breed(&mut self, breed: FeatureString) {
+        info!("wjf pigeon set_breed Called from C, breed: {}", breed);
+        self.breed = breed;
     }
 }
 
 impl Bird for Pigeon {
     fn get_weight(&self) -> FtInt {
         info!("wjf pigeon get_weight Called from C");
-        7
+        self.weight
     }
 
-    fn set_weight(&self, _weight: FtInt) {
-        info!("wjf pigeon set_weight Called from C");
+    fn set_weight(&mut self, weight: FtInt) {
+        info!("wjf pigeon set_weight Called from C, weight: {}", weight);
+        self.weight = weight;
     }
 
     fn walk(&self, _pid: FtPromiseId) {

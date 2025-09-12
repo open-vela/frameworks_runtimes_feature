@@ -138,7 +138,7 @@ dog.run(100, "xiaomi")
 dog.eatFood([
     "meet",
     "bone",
-    "dog food"
+    "fish"
 ])
 
 let airplane = test.createAirplane();

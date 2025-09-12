@@ -35,19 +35,25 @@ unsafe extern "C" {
     pub fn simple_createPigeon_instance(handle: FeatureInstanceHandle) -> FeatureInterfaceHandle;
 }
 
-#[allow(non_snake_case)]
-pub fn createDog_instance(instance: &FeatureInstance) -> FeatureInterfaceHandle {
-    unsafe { simple_createDog_instance(instance.as_handle()) }
+pub fn create_dog_instance(instance: &FeatureInstance) -> FeatureInstance {
+    let dog = unsafe { simple_createDog_instance(instance.as_handle()) };
+    let ret = FeatureInstance::new(dog);
+    unsafe { FeatureInstanceFreeValue(dog) };
+    ret
 }
 
-#[allow(non_snake_case)]
-pub fn createAirplane_instance(instance: &FeatureInstance) -> FeatureInterfaceHandle {
-    unsafe { simple_createAirplane_instance(instance.as_handle()) }
+pub fn create_airplane_instance(instance: &FeatureInstance) -> FeatureInstance {
+    let airplane = unsafe { simple_createAirplane_instance(instance.as_handle()) };
+    let ret = FeatureInstance::new(airplane);
+    unsafe { FeatureInstanceFreeValue(airplane) };
+    ret
 }
 
-#[allow(non_snake_case)]
-pub fn createPigeon_instance(instance: &FeatureInstance) -> FeatureInterfaceHandle {
-    unsafe { simple_createPigeon_instance(instance.as_handle()) }
+pub fn create_pigeon_instance(instance: &FeatureInstance) -> FeatureInstance {
+    let pigeon = unsafe { simple_createPigeon_instance(instance.as_handle()) };
+    let ret = FeatureInstance::new(pigeon);
+    unsafe { FeatureInstanceFreeValue(pigeon) };
+    ret
 }
 
 #[repr(C)]
@@ -283,42 +289,31 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn moo(&mut self, a: i32, cb: MooCb);
     async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError>;
     async fn poo(&mut self, resolve: FtBool) -> Result<FeatureString, PromiseError>;
-    fn create_dog(&self) -> FeatureInterfaceHandle;
-    fn create_airplane(&self) -> FeatureInterfaceHandle;
-    fn create_pigeon(&self) -> FeatureInterfaceHandle;
-    fn create_cat(&self) -> FeatureInterfaceHandle;
-    fn set_animal(&self, animal: FeatureInterfaceHandle);
+    fn create_dog(&self) -> Option<FeatureInstance>;
+    fn create_airplane(&self) -> Option<FeatureInstance>;
+    fn create_pigeon(&self) -> Option<FeatureInstance>;
+    fn create_cat(&self) -> Option<FeatureInstance>;
+    fn set_animal(&self, animal: FeatureInstance);
 }
 
 // Interface trait
 pub trait Animal: FeatureInstanceTrait {
-    #[allow(non_snake_case)]
     fn get_name(&self) -> FeatureString;
-    #[allow(non_snake_case)]
-    fn set_name(&self, name: &FeatureString);
-    #[allow(non_snake_case)]
-    fn get_legCount(&self) -> FtInt;
-    #[allow(non_snake_case)]
-    fn eatFood(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt;
-    #[allow(non_snake_case)]
+    fn set_name(&mut self, name: FeatureString);
+    fn get_leg_count(&self) -> FtInt;
+    fn eat_food(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt;
     fn run(&self, distance: FtInt, destination: &FeatureString) -> FeatureString;
 }
 
 pub trait Flyable: FeatureInstanceTrait {
-    #[allow(non_snake_case)]
     fn fly(&self) -> FeaturePrimitiveArray<FeatureString>;
-    #[allow(non_snake_case)]
     fn get_breed(&self) -> FeatureString;
-    #[allow(non_snake_case)]
-    fn set_breed(&self, breed: &FeatureString);
+    fn set_breed(&mut self, breed: FeatureString);
 }
 
 pub trait Bird: Animal + Flyable + FeatureInstanceTrait {
-    #[allow(non_snake_case)]
     fn get_weight(&self) -> FtInt;
-    #[allow(non_snake_case)]
-    fn set_weight(&self, weight: FtInt);
-    #[allow(non_snake_case)]
+    fn set_weight(&mut self, weight: FtInt);
     fn walk(&self, pid: FtPromiseId);
 }
 
@@ -575,7 +570,11 @@ pub unsafe extern "C" fn simple_wrap_createDog(
     _type: FtInt,
 ) -> FeatureInterfaceHandle {
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    simple.create_dog()
+    if let Some(dog) = simple.create_dog() {
+        dog.as_handle()
+    } else {
+        ptr::null_mut()
+    }
 }
 
 #[no_mangle]
@@ -584,7 +583,11 @@ pub unsafe extern "C" fn simple_wrap_createAirplane(
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    simple.create_airplane()
+    if let Some(airplane) = simple.create_airplane() {
+        airplane.as_handle()
+    } else {
+        ptr::null_mut()
+    }
 }
 
 #[no_mangle]
@@ -593,7 +596,11 @@ pub unsafe extern "C" fn simple_wrap_createPigeon(
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    simple.create_pigeon()
+    if let Some(pigeon) = simple.create_pigeon() {
+        pigeon.as_handle()
+    } else {
+        ptr::null_mut()
+    }
 }
 
 #[no_mangle]
@@ -602,7 +609,11 @@ pub unsafe extern "C" fn simple_wrap_createCat(
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    simple.create_cat()
+    if let Some(cat) = simple.create_cat() {
+        cat.as_handle()
+    } else {
+        ptr::null_mut()
+    }
 }
 
 #[no_mangle]
@@ -612,7 +623,7 @@ pub unsafe extern "C" fn simple_wrap_setAnimal(
     animal: FeatureInterfaceHandle,
 ) {
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
-    simple.set_animal(animal)
+    simple.set_animal(FeatureInstance::new(animal))
 }
 
 // Animal interface dog vtable functions
@@ -635,9 +646,9 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_set_name(
     _adata: AppendData,
     name: FtString,
 ) {
-    let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
+    let dog = unsafe { feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
     let fname = unsafe { FeatureString::from_raw(name) };
-    dog.set_name(&fname);
+    (*dog).set_name(fname);
 }
 
 #[no_mangle]
@@ -646,7 +657,7 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_get_legCount(
     _adata: AppendData,
 ) -> FtInt {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
-    dog.get_legCount()
+    dog.get_leg_count()
 }
 
 #[no_mangle]
@@ -657,7 +668,7 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_eatFood(
 ) -> FtInt {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
     let foods = unsafe { FeaturePrimitiveArray::<FeatureString>::from_raw(foods) };
-    dog.eatFood(&foods)
+    dog.eat_food(&foods)
 }
 
 #[no_mangle]
@@ -703,9 +714,9 @@ pub unsafe extern "C" fn simple_Flyable_interface_airplane_set_breed(
     _adata: AppendData,
     breed: FtString,
 ) {
-    let airplane = unsafe { &*feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
+    let airplane = unsafe { feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
     let fbreed = unsafe { FeatureString::from_raw(breed) };
-    airplane.set_breed(&fbreed);
+    (*airplane).set_breed(fbreed);
 }
 
 // Bird interface pigeon vtable functions
@@ -728,9 +739,9 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_name(
     _adata: AppendData,
     name: FtString,
 ) {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe { feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
     let fname = unsafe { FeatureString::from_raw(name) };
-    pigeon.set_name(&fname);
+    (*pigeon).set_name(fname);
 }
 
 #[no_mangle]
@@ -739,7 +750,7 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_legCount(
     _adata: AppendData,
 ) -> FtInt {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    pigeon.get_legCount()
+    pigeon.get_leg_count()
 }
 
 #[no_mangle]
@@ -750,7 +761,7 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_eatFood(
 ) -> FtInt {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
     let foods = unsafe { FeaturePrimitiveArray::<FeatureString>::from_raw(foods) };
-    pigeon.eatFood(&foods)
+    pigeon.eat_food(&foods)
 }
 
 #[no_mangle]
@@ -792,9 +803,9 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_breed(
     _adata: AppendData,
     breed: FtString,
 ) {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe { feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
     let fbreed = unsafe { FeatureString::from_raw(breed) };
-    pigeon.set_breed(&fbreed);
+    (*pigeon).set_breed(fbreed);
 }
 
 #[no_mangle]
@@ -812,8 +823,8 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_weight(
     _adata: AppendData,
     weight: FtInt,
 ) {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
-    pigeon.set_weight(weight)
+    let pigeon = unsafe { feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    (*pigeon).set_weight(weight);
 }
 
 #[no_mangle]
