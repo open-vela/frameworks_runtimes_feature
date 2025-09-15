@@ -6,6 +6,7 @@ members = [
     "feature_frm/sys",
     "modules/simple",
     "modules/system_exchange",
+    "modules/system_schedule",
 ]
 
 [workspace.package]
