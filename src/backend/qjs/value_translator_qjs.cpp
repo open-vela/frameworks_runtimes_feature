@@ -67,7 +67,7 @@ bool toNative(JSContext* ctx, const JSValue& target, char** pnative)
     return true;
 }
 
-bool toNative(JSContext* ctx, const JSValue& target, FtJSONObject** pnative)
+bool toNative(JSContext* ctx, const JSValue& target, FtJsonObject* pnative)
 {
     if (!JS_IsObject(target) || !pnative) {
         return false;
@@ -75,7 +75,7 @@ bool toNative(JSContext* ctx, const JSValue& target, FtJSONObject** pnative)
 
     JSValue json = JS_JSONStringify(ctx, target, JS_UNDEFINED, JS_UNDEFINED);
     const char* cstr = JS_ToCString(ctx, json);
-    FtJSONObject* json_obj = FeatureNewJSONObject(cstr);
+    FtJsonObject json_obj = FeatureNewJsonObject(cstr);
     JS_FreeCString(ctx, cstr);
     JS_FreeValue(ctx, json);
     *pnative = json_obj;
@@ -174,9 +174,9 @@ bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* pta
     return !JS_IsUndefined(*ptarget);
 }
 
-bool toTargetJson(JSContext* ctx, FtJSONObject* native, JSValue* ptarget)
+bool toTargetJson(JSContext* ctx, FtJsonObject native, JSValue* ptarget)
 {
-    if (!native || !native->str) {
+    if (!native) {
         *ptarget = JS_NULL;
         return true;
     }

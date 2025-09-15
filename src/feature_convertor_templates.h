@@ -100,11 +100,11 @@ bool convertValueToTarget(FeatureType ftype,
             }
         } break;
         case FT_JSON_OBJ: {
-            if (!(*(FtJSONObject**)pnative)) {
+            if (!(*(FtJsonObject*)pnative)) {
                 value_translator::toTargetJson(ctx, nullptr, &target);
             } else {
-                if (!value_translator::toTargetJson(ctx, *(FtJSONObject**)pnative, &target)) {
-                    FEATURE_LOG_WARN("toTargetJson failed, json string: %s", (*(FtJSONObject**)pnative)->str);
+                if (!value_translator::toTargetJson(ctx, *(FtJsonObject*)pnative, &target)) {
+                    FEATURE_LOG_WARN("toTargetJson failed, json string: %s", (*(FtJsonObject*)pnative)->str);
                 }
             }
         } break;
@@ -362,12 +362,12 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
         case FT_JSON_OBJ:
             if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
                 FEATURE_LOG_ERROR("jsonobject arg is null or undefined!");
-                *(FtJSONObject**)pnative = NULL;
+                *(FtJsonObject*)pnative = NULL;
             } else if (!value_translator::isObject(ctx, target)) {
                 FEATURE_LOG_ERROR("arg type mismatch, need object !");
                 return false;
             } else {
-                if (!argToNativePtr<FtJSONObject*>(ctx, target, (void*)(pnative))) {
+                if (!argToNativePtr<FtJsonObject>(ctx, target, (void*)(pnative))) {
                     FEATURE_LOG_ERROR("convert to FtJSONValue* failed !");
                     return false;
                 }

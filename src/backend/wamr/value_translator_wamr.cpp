@@ -102,7 +102,7 @@ bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, char** pnative)
     return true;
 }
 
-bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, FtJSONObject** pnative)
+bool toNative(wasm_exec_env_t exec_env, const uint64_t& val, FtJsonObject* pnative)
 {
     return false;
 }

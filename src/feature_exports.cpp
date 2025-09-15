@@ -500,10 +500,8 @@ void FeatureFreeValue(void* ptr)
             } break;
             }
         } else if (featureType == FT_JSON_OBJ) {
-            FtJSONObject* json_obj = (FtJSONObject*)ptr;
-            if (json_obj->str) {
-                FeatureFreeValue(json_obj->str);
-            }
+            FtJsonObject json_obj = (FtJsonObject)ptr;
+            FeatureFreeValue(json_obj);
         }
 
         // finally, free header
@@ -1036,22 +1034,20 @@ int FeatureWorkerCancel(FeatureInstanceHandle handle, FeatureWorkerHandle hworke
     return 0;
 }
 
-const char* FeatureGetJSONString(const FtJsonObject json_obj)
+const char* FeatureGetJsonString(const FtJsonObject json_obj)
 {
     return json_obj ? json_obj->str : NULL;
 }
 
-FtJsonObject FeatureAllocJSONObject(size_t str_len)
+FtJsonObject FeatureAllocJsonObject(size_t str_len)
 {
-    FtJSONObject* json_obj = (FtJSONObject*)FeatureMalloc(sizeof(FtJSONObject), FT_JSON_OBJ);
-    json_obj->str = (char*)FeatureMalloc(str_len, FT_STRING);
-    return json_obj;
+    return (FtJsonObject)FeatureMalloc(str_len, FT_JSON_OBJ);
 }
 
-FtJsonObject FeatureNewJSONObject(const char* str)
+FtJsonObject FeatureNewJsonObject(const char* str)
 {
     FEATURE_CHECK_PTR(str, nullptr, "str is null !")
-    FtJsonObject json_obj = FeatureAllocJSONObject(strlen(str) + 1);
+    FtJsonObject json_obj = FeatureAllocJsonObject(strlen(str) + 1);
     sprintf(json_obj->str, "%s", str);
     return json_obj;
 }

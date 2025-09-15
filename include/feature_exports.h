@@ -657,7 +657,7 @@ int FeatureWorkerCancel(FeatureInstanceHandle handle, FeatureWorkerHandle hworke
  * @param json_obj
  * @return char*
  */
-const char* FeatureGetJSONString(const FtJsonObject json_obj);
+const char* FeatureGetJsonString(const FtJsonObject json_obj);
 
 /**
  * @brief alloc a json object with string length
@@ -665,7 +665,7 @@ const char* FeatureGetJSONString(const FtJsonObject json_obj);
  * @param json_str
  * @return FtJsonObject
  */
-FtJsonObject FeatureAllocJSONObject(size_t str_len);
+FtJsonObject FeatureAllocJsonObject(size_t str_len);
 
 /**
  * @brief create a json object with a string
@@ -673,7 +673,7 @@ FtJsonObject FeatureAllocJSONObject(size_t str_len);
  * @param json_str
  * @return FtJsonObject
  */
-FtJsonObject FeatureNewJSONObject(const char* str);
+FtJsonObject FeatureNewJsonObject(const char* str);
 
 // basic promise resolve functions
 FtBool FeatureFtStringPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtString val);
