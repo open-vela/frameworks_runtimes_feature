@@ -18,7 +18,6 @@
 #define __VALUE_TRANSLATOR_QJS_H__
 
 #include "feature.h"
-#include "feature_common.h"
 #include "feature_context_qjs.h"
 #include "feature_description.h"
 #include "feature_log.h"
@@ -79,7 +78,7 @@ bool toNative(JSContext* ctx, const JSValue& target, bool* pnative);
 
 bool toNative(JSContext* ctx, const JSValue& target, char** pnative);
 
-bool toNative(JSContext* ctx, const JSValue& target, FtJSONObject** pnative);
+bool toNative(JSContext* ctx, const JSValue& target, FtJsonObject* pnative);
 
 static inline bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative)
 {
@@ -166,7 +165,7 @@ bool toTargetArray(JSContext* ctx, bool* val, uint32_t size, JSValue* ptarget);
 
 bool toTargetArray(JSContext* ctx, const char** val, uint32_t size, JSValue* ptarget);
 
-bool toTargetJson(JSContext* ctx, FtJSONObject* native, JSValue* ptarget);
+bool toTargetJson(JSContext* ctx, FtJsonObject native, JSValue* ptarget);
 
 // object
 static inline JSValue newObject(JSContext* ctx)

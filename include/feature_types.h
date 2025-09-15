@@ -68,7 +68,10 @@ typedef void (*NativeFunc)(void); /**< native func ptr */
 
 typedef struct _FeatureWorker* FeatureWorkerHandle; // feature worker handle.
 
-typedef struct FtJSONObject* FtJsonObject;
+/** FtJsonObject */
+typedef struct _FtJsonObject {
+    char str[0]; /**< inner string */
+} * FtJsonObject;
 
 /** FeatureTaskMode */
 enum FeatureTaskMode {

@@ -65,7 +65,7 @@ void jsonobject_test_wrap_set_data(FeatureInstanceHandle feature, AppendData app
         printf("%s::%s(), jsonobject data is null\n", file_tag, __FUNCTION__);
         return;
     }
-    const char* str = FeatureGetJSONString(data);
+    const char* str = FeatureGetJsonString(data);
     printf("%s::%s(), jsonobject string: %s\n", file_tag, __FUNCTION__, str ? str : "null");
 }
 
@@ -75,7 +75,7 @@ static const char g_book_json[] = "{\"book\": {\"name\": \"monkey king\", \"chap
 FtJsonObject jsonobject_test_wrap_get_data(FeatureInstanceHandle feature, AppendData append_data)
 {
     printf("%s::%s()\n", file_tag, __FUNCTION__);
-    FtJsonObject json_obj = FeatureNewJSONObject(g_book_json);
+    FtJsonObject json_obj = FeatureNewJsonObject(g_book_json);
     return json_obj;
 }
 
@@ -92,7 +92,7 @@ void jsonobject_test_wrap_set_data_array(FeatureInstanceHandle feature, AppendDa
     }
     printf("darray = [\n");
     for (int32_t i = 0; i < darray.size(); i++) {
-        const char* str = FeatureGetJSONString(darray[i]);
+        const char* str = FeatureGetJsonString(darray[i]);
         printf("  index %" PRIi32 ": %s\n", i, str ? str : "null");
     }
     printf("]\n");
@@ -107,7 +107,7 @@ FtArray* jsonobject_test_wrap_get_data_array(FeatureInstanceHandle feature, Appe
     for (int i = 0; i < 5; i++) {
         char json_str[64] = { 0 };
         sprintf(json_str, "{\"hello\": %d}", i);
-        FtJsonObject json_obj = FeatureNewJSONObject(json_str);
+        FtJsonObject json_obj = FeatureNewJsonObject(json_str);
         ((FtJsonObject*)json_array->_element)[i] = json_obj;
     }
     return json_array;
@@ -119,7 +119,7 @@ void jsonobject_test_wrap_set_book(FeatureInstanceHandle feature, AppendData app
         printf("%s::%s(), book ptr is null\n", file_tag, __FUNCTION__);
         return;
     }
-    const char* meta_str = FeatureGetJSONString(book->meta);
+    const char* meta_str = FeatureGetJsonString(book->meta);
     printf("%s::%s(), meta: %s, title: %s, chapters: %p\n",
         file_tag, __FUNCTION__, meta_str ? meta_str : "null", book->title, book->chapters);
     if (!book->chapters) {
@@ -132,7 +132,7 @@ void jsonobject_test_wrap_set_book(FeatureInstanceHandle feature, AppendData app
     }
     printf("chap_array = [\n");
     for (int32_t i = 0; i < chap_array.size(); i++) {
-        const char* json_str = FeatureGetJSONString(chap_array[i]);
+        const char* json_str = FeatureGetJsonString(chap_array[i]);
         printf("  index %" PRIi32 ": %s\n", i, json_str ? json_str : "null");
     }
     printf("]\n");
@@ -143,7 +143,7 @@ void jsonobject_test_wrap_json_promise(FeatureInstanceHandle feature, AppendData
     int resolve = val % 2;
     printf("%s::%s(), resolve: %d\n", file_tag, __FUNCTION__, resolve);
     if (resolve) {
-        FtJsonObject json_obj = FeatureNewJSONObject(g_chapter_json);
+        FtJsonObject json_obj = FeatureNewJsonObject(g_chapter_json);
         FeaturePromiseResolve(feature, pid, json_obj);
         FeatureFreeValue(json_obj);
     } else {
@@ -162,7 +162,7 @@ void jsonobject_test_wrap_json_array_promise(FeatureInstanceHandle feature, Appe
         for (int i = 0; i < 3; i++) {
             char json_str[64] = { 0 };
             sprintf(json_str, "{\"hello\": %d}", i);
-            FtJsonObject json_obj = FeatureNewJSONObject(json_str);
+            FtJsonObject json_obj = FeatureNewJsonObject(json_str);
             ((FtJsonObject*)json_array->_element)[i] = json_obj;
         }
         FeaturePromiseResolve(feature, pid, json_array);

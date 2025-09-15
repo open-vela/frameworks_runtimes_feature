@@ -1682,50 +1682,50 @@ TEST_F(FeatureExportTestQjs, FeatureEmitEvent_IllegalEventId)
 
 // JsonObject相关
 // =============================================================================
-// FeatureAllocJSONObject Tests
+// FeatureAllocJsonObject Tests
 // =============================================================================
-TEST_F(FeatureExportTestQjs, FeatureAllocJSONObject1)
+TEST_F(FeatureExportTestQjs, FeatureAllocJsonObject1)
 {
-    FtJsonObject json_str_data = FeatureAllocJSONObject(10);
+    FtJsonObject json_str_data = FeatureAllocJsonObject(10);
     EXPECT_NE(json_str_data, nullptr);
     FeatureFreeValue(json_str_data);
 }
 
 // =============================================================================
-// FeatureGetJSONString Tests
+// FeatureGetJsonString Tests
 // =============================================================================
-TEST_F(FeatureExportTestQjs, FeatureGetJSONString1)
+TEST_F(FeatureExportTestQjs, FeatureGetJsonString1)
 {
     const char* str = "{\"a\":1,\"b\":2}";
-    FtJsonObject json_str_data = FeatureAllocJSONObject(14);
+    FtJsonObject json_str_data = FeatureAllocJsonObject(14);
     EXPECT_NE(json_str_data, nullptr);
     memcpy(json_str_data->str, str, 14);
-    const char* out_str = FeatureGetJSONString(json_str_data);
+    const char* out_str = FeatureGetJsonString(json_str_data);
     EXPECT_STREQ(out_str, str);
     FeatureFreeValue(json_str_data);
 }
 
-TEST_F(FeatureExportTestQjs, FeatureGetJSONString_dataNullptr)
+TEST_F(FeatureExportTestQjs, FeatureGetJsonString_dataNullptr)
 {
-    const char* str = FeatureGetJSONString(nullptr);
+    const char* str = FeatureGetJsonString(nullptr);
     EXPECT_EQ(str, nullptr);
 }
 
 // =============================================================================
-// FeatureNewJSONObject Tests
+// FeatureNewJsonObject Tests
 // =============================================================================
-TEST_F(FeatureExportTestQjs, FeatureNewJSONObject1)
+TEST_F(FeatureExportTestQjs, FeatureNewJsonObject1)
 {
     const char* str = "{\"a\":1,\"b\":2}";
-    FtJsonObject json_str_data = FeatureNewJSONObject(str);
+    FtJsonObject json_str_data = FeatureNewJsonObject(str);
     EXPECT_NE(json_str_data, nullptr);
     EXPECT_STREQ(json_str_data->str, str);
     FeatureFreeValue(json_str_data);
 }
 
-TEST_F(FeatureExportTestQjs, FeatureNewJSONObject_strNullptr)
+TEST_F(FeatureExportTestQjs, FeatureNewJsonObject_strNullptr)
 {
-    FtJsonObject json_str_data = FeatureNewJSONObject(nullptr);
+    FtJsonObject json_str_data = FeatureNewJsonObject(nullptr);
     EXPECT_EQ(json_str_data, nullptr);
 }
 

@@ -45,10 +45,6 @@ void freeFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative);
 
 void dupFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative);
 
-typedef struct FtJSONObject {
-    char* str;
-} FtJObject;
-
 template <typename TPtr>
 class AutoPtr {
 public:
