@@ -67,7 +67,7 @@ struct GnssMetaData {
 struct location_context {
     std::queue<uv_topic_t*> topic_list;
     uv_timer_t timer;
-    std::queue<GnssMetaData> getQueue;
+    std::list<GnssMetaData> getList;
     std::list<GnssMetaData> subList;
     ft_context_ref ft_ctx;
     int ref_count;
@@ -75,7 +75,7 @@ struct location_context {
 
 static bool geolocation_is_active(location_context* context)
 {
-    return !context->getQueue.empty() || !context->subList.empty();
+    return !context->getList.empty() || !context->subList.empty();
 }
 
 static void geolocation_topic_close_cb(uv_handle_t* handle)
@@ -133,11 +133,10 @@ static void gnss_topic_cb(uv_topic_t* topic, int status, void* data, size_t data
             ret.accuracy = int(ret_t->eph);
             ret.speed = round(ret_t->ground_speed * PRECISION) / PRECISION;
             ret.accuracyInfo = &accuracyInfo;
-            if (i == cnt - 1 && !context->getQueue.empty()) {
-                GnssMetaData get_meta = context->getQueue.front();
+            if (i == cnt - 1 && !context->getList.empty()) {
+                GnssMetaData get_meta = context->getList.front();
                 FeaturePromiseResolve(get_meta.instance, get_meta.pid, &ret);
-                FeatureFreeInstanceHandle(get_meta.instance);
-                context->getQueue.pop();
+                context->getList.pop_front();
             }
 
             for (auto it = context->subList.begin(); it != context->subList.end(); it++) {
@@ -176,7 +175,7 @@ void system_geolocation_wrap_getLocation(FeatureInstanceHandle feature, AppendDa
 
     FEATURE_LOG_ERROR("%s::%s() get location", file_tag, __FUNCTION__);
 
-    if (context->getQueue.size() > 100) {
+    if (context->getList.size() > 100) {
         code = GENERAL;
         msg = "Reject: too many requests";
         goto errout;
@@ -199,11 +198,11 @@ void system_geolocation_wrap_getLocation(FeatureInstanceHandle feature, AppendDa
         context->ref_count++;
     }
 
-    getMeta.instance = FeatureDupInstanceHandle(feature);
+    getMeta.instance = feature;
     getMeta.pid = pid;
     gettimeofday(&getMeta.time, NULL);
     getMeta.timeout = param->timeout;
-    context->getQueue.push(getMeta);
+    context->getList.push_back(getMeta);
     return;
 errout:
     FeaturePromiseReject(feature, pid, code, msg);
@@ -245,7 +244,7 @@ void system_geolocation_wrap_subscribe(FeatureInstanceHandle feature, AppendData
         context->ref_count++;
     }
 
-    meta.instance = FeatureDupInstanceHandle(feature);
+    meta.instance = feature;
     meta.callback = param->callback;
     meta.fail = param->fail;
     context->subList.push_back(meta);
@@ -261,14 +260,14 @@ void geolocation_timer_handler(uv_timer_t* timer)
 {
     int ret;
     location_context* context = container_of(timer, location_context, timer);
-    while (!context->getQueue.empty()) {
-        GnssMetaData meta = context->getQueue.front();
+    while (!context->getList.empty()) {
+        GnssMetaData meta = context->getList.front();
         timeval current;
         gettimeofday(&current, NULL);
         if (current.tv_sec - meta.time.tv_sec > meta.timeout / 1000) {
             FEATURE_LOG_ERROR("%s::%s() time out", file_tag, __FUNCTION__);
             FeaturePromiseReject(meta.instance, meta.pid, TIMEOUT, "getLocation time out");
-            context->getQueue.pop();
+            context->getList.pop_front();
             continue;
         }
 
@@ -303,7 +302,6 @@ static void unsubscribe(FeatureInstanceHandle feature)
 
     FEATURE_LOG_ERROR("%s::%s() ", file_tag, __FUNCTION__);
     REMOVE_ALL_CALLBACK(it->callback, it->fail);
-    FeatureFreeInstanceHandle(it->instance);
     context->subList.erase(it);
     if (!geolocation_is_active(context) && !context->topic_list.empty()) {
         FEATURE_LOG_ERROR("%s::%s() close sub topic", file_tag, __FUNCTION__);
@@ -357,6 +355,12 @@ void system_geolocation_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHan
 
 void system_geolocation_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(handle);
+    location_context* context = static_cast<location_context*>(FeatureGetProtoData(proto_handle));
+    context->getList.remove_if([&](const auto& elem) {
+        return elem.instance == handle;
+    });
+
     unsubscribe(handle);
 }
 
@@ -380,18 +384,7 @@ void system_geolocation_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle 
 
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
 
-    while (!context->getQueue.empty()) {
-        GnssMetaData meta = context->getQueue.front();
-        FeatureFreeInstanceHandle(meta.instance);
-        context->getQueue.pop();
-    }
-
-    for (auto it = context->subList.begin(); it != context->subList.end(); it++) {
-        FeatureInstanceHandle feature = it->instance;
-        REMOVE_ALL_CALLBACK(it->callback, it->fail);
-        FeatureFreeInstanceHandle(it->instance);
-    }
-
+    context->getList.clear();
     while (!context->topic_list.empty()) {
         uv_topic_t* topic = context->topic_list.front();
         context->topic_list.pop();
