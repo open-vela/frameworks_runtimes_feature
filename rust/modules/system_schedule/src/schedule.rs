@@ -133,10 +133,24 @@ impl Promise for SuccessInfoPromise {
     }
 }
 
+// for JIDL promise 'void'
+#[derive(Clone, Default)]
+pub(crate) struct FtVoidPromise;
+
+impl Promise for FtVoidPromise {
+    type Output = ();
+
+    fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, _value: Self::Output) {
+        unsafe {
+            FeatureFtVoidPromiseResolve(instance.as_handle(), id);
+        }
+    }
+}
+
 #[async_trait]
 pub(crate) trait Schedule: FeatureInstanceTrait + Send + Sync {
     async fn schedule_job(&mut self, info: Job) -> Result<SuccessInfo, PromiseError>;
-    fn cancel(&mut self, id: FtInt) -> FtBool;
+    async fn cancel(&mut self, id: FtInt) -> Result<(), PromiseError>;
 }
 
 #[no_mangle]
@@ -195,6 +209,7 @@ pub(crate) extern "C" fn system_schedule_onDestroy(
     let ctx = FeatureRuntimeContext::new(ctx);
     system_schedule_on_destroy(ctx, proto.clone());
     let _: Option<Box<SchedulePrototype>> = proto.detach();
+    runtime::close();
 }
 
 #[no_mangle]
@@ -227,9 +242,16 @@ pub(crate) extern "C" fn system_schedule_wrap_scheduleJob(
 pub(crate) extern "C" fn system_schedule_wrap_cancel(
     handle: FeatureInstanceHandle,
     _adata: AppendData,
+    pid: FtPromiseId,
     id: FtInt,
-) -> FtBool {
+) {
     let schedule = unsafe { feature_glue::get_instance_data::<dyn Schedule>(handle).unwrap() };
     let schedule = unsafe { &mut *schedule };
-    schedule.cancel(id)
+    let promise = unsafe { FeaturePromise::<FtVoidPromise>::new(pid, handle) };
+    runtime::spawn(async move {
+        match schedule.cancel(id).await {
+            Ok(_) => promise.resolve(()),
+            Err(e) => promise.reject(e),
+        }
+    });
 }

@@ -1079,6 +1079,13 @@ FtJsonObject FeatureNewJsonObject(const char* str)
 }
 
 // some promise resolve functions
+FtBool FeatureFtVoidPromiseResolve(
+    FeatureInstanceHandle hInstance,
+    FtPromiseId pid)
+{
+    return FeaturePromiseResolve(hInstance, pid);
+}
+
 FtBool FeatureFtStringPromiseResolve(
     FeatureInstanceHandle hInstance,
     FtPromiseId pid, FtString val)

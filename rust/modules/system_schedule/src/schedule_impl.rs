@@ -1,9 +1,12 @@
 use crate::schedule::*;
+use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
-use vdk::log::info;
+use vdk::log::{error, info};
+use vdk::qapp_rpc;
+use vdk::qapp_rpc::schedule;
 
 const FILE_TAG: &str = "[jidl_feature] schedule_impl";
 
@@ -28,18 +31,22 @@ pub(crate) struct SchedulePrototype {
 
 impl SchedulePrototype {
     pub(crate) fn new(proto: FeaturePrototype) -> Self {
-        SchedulePrototype { proto }
+        Self { proto }
     }
 }
 
 #[feature_instance(name = "Schedule")]
 pub(crate) struct ScheduleImpl {
     pub(crate) instance: FeatureInstance,
+    pub(crate) sc: schedule::ScheduleClient,
 }
 
 impl ScheduleImpl {
     pub(crate) fn new(instance: FeatureInstance) -> Self {
-        ScheduleImpl { instance }
+        let dc =
+            qapp_rpc::client::Client::try_new_blocking().expect("new SchedulePrototype failed");
+        let sc = schedule::ScheduleClient::new(dc);
+        Self { instance, sc }
     }
 }
 
@@ -47,31 +54,46 @@ impl ScheduleImpl {
 impl Schedule for ScheduleImpl {
     async fn schedule_job(&mut self, job: Job) -> Result<SuccessInfo, PromiseError> {
         info!(
-            "{} schedule.schedule_job, type: {}, timeout: {}, interval: {}, triggerMethod: {}, params: {}",
+            "{} schedule.schedule_job, type: {}, timeout: {}, pkgname: {}, interval: {}, triggerMethod: {}, params: {}",
             FILE_TAG,
             job.get_type(),
             job.get_timeout(),
+            self.get_package_name().unwrap(),
             job.get_interval(),
             job.get_trigger_method(),
             job.get_params().as_str()
         );
-        if job.get_type() > 2 {
-            Err(PromiseError::new(-27, "schedule_job failed!"))
-        } else {
-            let mut info = SuccessInfo::new();
-            info.set_id(1);
-            Ok(info)
+        let task = schedule::AddRequest::new(
+            job.get_type().into(),
+            job.get_timeout(),
+            self.get_package_name().unwrap(),
+            job.get_trigger_method().as_str().to_owned(),
+            job.get_interval().into(),
+            job.get_params().as_str().to_owned(),
+        );
+        match self.sc.add_task(task).await {
+            Ok(id) => {
+                info!("add task success, get id: {id}");
+                let mut info = SuccessInfo::new();
+                info.set_id(id as i32);
+                Ok(info)
+            }
+            Err(e) => {
+                error!("schedule.schedule_job failed: {e:?}");
+                return Err(PromiseError::new(-27, "schedule_job failed!"));
+            }
         }
     }
 
-    fn cancel(&mut self, id: FtInt) -> FtBool {
+    async fn cancel(&mut self, id: FtInt) -> Result<(), PromiseError> {
         info!("{} schedule.cancel, id: {}", FILE_TAG, id);
-        true
-    }
-}
-
-impl Drop for ScheduleImpl {
-    fn drop(&mut self) {
-        info!("ScheduleImpl droped");
+        let dr = schedule::DeleteRequest::new(id as u64);
+        match self.sc.delete_task(dr).await {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("schedule.cancel failed: {e:?}");
+                return Err(PromiseError::new(-26, "cancel failed!"));
+            }
+        }
     }
 }

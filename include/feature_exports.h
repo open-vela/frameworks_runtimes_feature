@@ -687,6 +687,8 @@ FtJsonObject FeatureAllocJsonObject(size_t str_len);
 FtJsonObject FeatureNewJsonObject(const char* str);
 
 // basic promise resolve functions
+FtBool FeatureFtVoidPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid);
+
 FtBool FeatureFtStringPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtString val);
 
 FtBool FeatureFtIntPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid, FtInt val);

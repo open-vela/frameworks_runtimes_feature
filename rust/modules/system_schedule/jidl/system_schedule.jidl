@@ -30,4 +30,4 @@ struct SuccessInfo {
 
 promise<SuccessInfo> scheduleJob(Job job)
 
-boolean cancel(int id)
+promise<void> cancel(int id)

@@ -1,27 +1,38 @@
-const test = require('system.schedule');
+const schedule = require('system.schedule');
 
-console.log('system.schedule test begin ========================================');
+(async () => {
+    console.log('system.schedule test begin ========================================');
 
-let job = {
-    type: 1,
-    timeout: 60000, // 60s
-    interval: 10000, // 10s
-    triggerMethod: "start",
-    params: { key: "key", value: "value" }
-}
+    let job = {
+        type: 1,
+        timeout: 1000,
+        interval: 500,
+        triggerMethod: "start",
+        params: { key: "xiaomi", value: "vela" }
+    };
 
-test.scheduleJob(job).then(info => {
-    console.log(`scheduled job, job_id: ${info.id}`);
-    setTimeout(() => {
-      console.log(`cancel job, job_id: ${info.id}`);
-      const ret = test.cancel(info.id);
-      console.log(`canceled Job, ret: ${ret}`);
-    }, 3000);
-}).catch(err => {
-    console.log(`schedule job error: ${err}`);
-}).finally(() => {
-    console.log(`schedule job completed`);
-});
+    try {
+        const info = await schedule.scheduleJob(job);
+        console.log(`scheduled job successlly, job_id: ${info.id}`);
 
+        await new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                try {
+                    console.log(`cancel job_id: ${info.id} 3s later`);
+                    await schedule.cancel(info.id);
+                    console.log(`Job canceled successfully`);
+                    resolve();
+                } catch (error) {
+                    console.error(`Failed to cancel job: ${info.id}`, error);
+                    reject(error);
+                }
+            }, 3000);
+        });
 
-console.log('system.schedule test end =========================================\n');
+        console.log(`Job canceled successfully`);
+    } catch (err) {
+        console.log(`schedule job error: ${err}`);
+    }
+
+    console.log('system.schedule test end =========================================\n');
+})();
