@@ -77,7 +77,7 @@ void service_wechat_onRegister(const char* feature_name)
 void service_wechat_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
-    WechatHandle* wechat = static_cast<WechatHandle*>(malloc(sizeof(WechatHandle)));
+    WechatHandle* wechat = static_cast<WechatHandle*>(calloc(1, sizeof(WechatHandle)));
     wechat->task_async.data = wechat;
     wechat->event_async.data = wechat;
     wechat->event_cb = -1;
@@ -92,17 +92,25 @@ void service_wechat_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handl
 void service_wechat_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(handle);
+    WechatHandle* wechat = static_cast<WechatHandle*>(FeatureGetProtoData(proto_handle));
+    if (wechat->feature) {
+        FEATURE_LOG_ERROR("[Regist Event] wechat feature already exist");
+    }
+    wechat->feature = handle;
 }
 
 void service_wechat_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    wechat_handle = NULL; // clear global pointer
 }
 
 void service_wechat_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
     WechatHandle* wechat = static_cast<WechatHandle*>(FeatureGetProtoData(handle));
+    FeatureSetProtoData(handle, NULL);
     wechat_free(wechat);
 }
 
@@ -120,7 +128,6 @@ static void wechat_free(WechatHandle* handle)
     if (handle->feature) {
         FeatureRemoveCallback(handle->feature, handle->event_cb);
         FeatureRemoveCallback(handle->feature, handle->task_cb);
-        FeatureFreeInstanceHandle(handle->feature);
     }
 
     uv_async_queue_close(&handle->task_async, uv_async_queue_close_cb);
@@ -130,6 +137,11 @@ static void OnJsEvent(const char* event, const char* event_body)
 {
     if (!event || !event_body) {
         FEATURE_LOG_ERROR("%s Invalid arguments", __FUNCTION__);
+        return;
+    }
+
+    if (wechat_handle == NULL) {
+        FEATURE_LOG_INFO("%s wechat handle is null", __FUNCTION__);
         return;
     }
 
@@ -164,6 +176,11 @@ static void OnJsTask(double task_id, double error_code, const char* resp_body)
         return;
     }
 
+    if (wechat_handle == NULL) {
+        FEATURE_LOG_INFO("%s wechat handle is null", __FUNCTION__);
+        return;
+    }
+
     struct WechatTask* wechat_task = (struct WechatTask*)malloc(sizeof(*wechat_task));
     wechat_task->task_id = task_id;
     wechat_task->error_code = error_code;
@@ -190,6 +207,7 @@ static void async_js_task_callback(uv_async_queue_t* async, void* data)
 
     FeatureInvokeCallback(wechat_handle->feature, wechat_handle->task_cb, task_data);
     FEATURE_LOG_INFO("[wechat] OnJsTask exit");
+    free(wechat_task->resp_body);
     free(wechat_task);
     FeatureFreeValue(task_data);
 }
@@ -231,12 +249,12 @@ void service_wechat_wrap_js_regist_task_callback(FeatureInstanceHandle feature, 
     FEATURE_LOG_INFO("%s::%s()", file_tag, __FUNCTION__);
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     WechatHandle* wechat = static_cast<WechatHandle*>(FeatureGetProtoData(proto_handle));
-    if (wechat == NULL) {
+    if (wechat == NULL || task_cb == 0) {
         FEATURE_LOG_ERROR("[Regist Task] wechat handle malloc failed");
         return;
     }
 
-    wechat->feature = FeatureDupInstanceHandle(feature);
+    FeatureRemoveCallback(wechat->feature, wechat->task_cb);
     wechat->task_cb = task_cb;
     FEATURE_LOG_INFO("[wechat] regist task callback");
     adam::js_regist_task_callback(OnJsTask);
@@ -247,12 +265,12 @@ void service_wechat_wrap_js_regist_event_callback(FeatureInstanceHandle feature,
     FEATURE_LOG_INFO("%s::%s()", file_tag, __FUNCTION__);
     FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
     WechatHandle* wechat = static_cast<WechatHandle*>(FeatureGetProtoData(proto_handle));
-    if (wechat == NULL) {
+    if (wechat == NULL || event_cb == 0) {
         FEATURE_LOG_ERROR("[Regist Event] wechat handle malloc failed");
         return;
     }
 
-    wechat->feature = FeatureDupInstanceHandle(feature);
+    FeatureRemoveCallback(wechat->feature, wechat->event_cb);
     wechat->event_cb = event_cb;
     FEATURE_LOG_INFO("[wechat] regist event callback");
     adam::js_regist_event_callback(OnJsEvent);
@@ -269,6 +287,8 @@ void service_wechat_wrap_js_unregist_task_callback(FeatureInstanceHandle feature
     }
 
     FEATURE_LOG_INFO("[wechat] unregist event callback");
+    FeatureRemoveCallback(wechat->feature, wechat->task_cb);
+    wechat->task_cb = 0;
     adam::js_unregist_task_callback();
 }
 
@@ -282,6 +302,8 @@ void service_wechat_wrap_js_unregist_event_callback(FeatureInstanceHandle featur
         return;
     }
 
+    FeatureRemoveCallback(wechat->feature, wechat->event_cb);
+    wechat->event_cb = 0;
     FEATURE_LOG_INFO("[wechat] unregist event callback");
     adam::js_unregist_event_callback();
 }
