@@ -165,6 +165,8 @@ static void async_js_event_callback(uv_async_queue_t* async, void* data)
 
     FeatureInvokeCallback(wechat_handle->feature, wechat_handle->event_cb, event_data);
     FEATURE_LOG_INFO("[wechat] OnJsEvent exit");
+    free(wechat_event->event);
+    free(wechat_event->event_body);
     free(wechat_event);
     FeatureFreeValue(event_data);
 }
