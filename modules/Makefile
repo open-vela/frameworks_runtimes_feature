@@ -456,6 +456,17 @@ ifeq ($(CONFIG_FEATURE_INPUT_METHOD_CONTROLLER),y)
 endif
 
 
+ifeq ($(CONFIG_AI_MODULE),y)
+	CXXFLAGS 	+= ${INCDIR_PREFIX}$(APPDIR)/netutils/cjson/cJSON
+	CXXFLAGS 	+= ${INCDIR_PREFIX}$(APPDIR)/frameworks/ai/src/asr
+	CXXFLAGS 	+= ${INCDIR_PREFIX}$(APPDIR)/frameworks/ai/include
+	CXXSRCS     := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/ai/src/ai_speech_impl.cpp
+	CXXSRCS     := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/ai/src/asr_impl.cpp
+	JIDL_PATH   := $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/ai/jidl/system_ai_speech.jidl
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+	FEATURELIST += system_ai_speech
+endif
+
 # for feature registry
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 

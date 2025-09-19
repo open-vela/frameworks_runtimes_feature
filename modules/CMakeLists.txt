@@ -615,7 +615,6 @@ if(CONFIG_FEATURE_SERVICE_HEALTH)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/health_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/health.jidl)
     target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/netutils/cjson/cJSON)
-
     nuttx_add_jidl(
         TARGET
         feature_impls
@@ -642,6 +641,29 @@ if(CONFIG_FEATURE_INPUT_METHOD_CONTROLLER)
         system_imc)
 endif()
 
+if(CONFIG_AI_MODULE)
+    set(FEATURE_SRCS
+        ${CMAKE_CURRENT_LIST_DIR}/ai/src/ai_speech_impl.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/ai/src/asr_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/ai/jidl/system_ai_speech.jidl)
+
+    target_include_directories(
+        feature_impls
+        PRIVATE
+        ${NUTTX_APPS_DIR}/netutils/cjson/cJSON
+        ${NUTTX_APPS_DIR}/frameworks/ai/src/asr
+        ${NUTTX_APPS_DIR}/frameworks/ai/include)
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_ai_speech)
+endif()
 
 # for feature registry
 target_sources(feature_impls PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ajs_features_registry.cpp)

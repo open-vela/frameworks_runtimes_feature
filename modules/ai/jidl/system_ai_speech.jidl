@@ -1,0 +1,38 @@
+module system.ai.speech@1.0
+
+struct Auth {
+    string type = "volcengine"
+    jsonobject config
+}
+
+struct AsrConfig {
+    int endVadTime = 1000
+    string lang = "auto"
+    string[] translations = null
+}
+
+struct AsrParams {
+    Auth auth
+    AsrConfig config = null
+}
+
+struct AsrTranslationResult {
+    string text
+    string lang
+}
+
+struct AsrResult {
+    string text
+    int reformation
+    AsrTranslationResult [] translations
+}
+
+interface SpeechRecognition {
+  void start()
+  void cancel()
+  void finish()
+  event onMessage(AsrResult res)
+  event onError(string data, int code)
+  event onFinished()
+}
+[ctor="true", target="Asr"] SpeechRecognition createAsr(AsrParams para);
