@@ -499,9 +499,6 @@ void FeatureFreeValue(void* ptr)
                 FEATURE_LOG_ERROR("unsupported type !");
             } break;
             }
-        } else if (featureType == FT_JSON_OBJ) {
-            FtJsonObject json_obj = (FtJsonObject)ptr;
-            FeatureFreeValue(json_obj);
         }
 
         // finally, free header
