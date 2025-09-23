@@ -257,6 +257,21 @@ impl Simple for SimpleImpl {
     fn set_animal(&self, _animal: FeatureInstance) {
         info!("wjf set_animal Called from C");
     }
+
+    fn invoke_event(&self, name: &FeatureString) {
+        info!("wjf invoke_event Called from C, event_name: {}", name);
+        if let Some(eid) = self.get_event_id(name.as_str()) {
+            let cb_count = self.get_event_callback_count(eid);
+            info!("wjf event_id: {}, cb_count: {}", eid, cb_count);
+            if name.as_str() == "data_changed" {
+                let event = DataChangedEvent::new(eid, self.instance.clone());
+                event.emit(FeatureString::new("hello world"));
+            } else if name.as_str() == "state_changed" {
+                let event = StateChangedEvent::new(eid, self.instance.clone());
+                event.emit(50);
+            }
+        }
+    }
 }
 
 impl Drop for SimpleImpl {

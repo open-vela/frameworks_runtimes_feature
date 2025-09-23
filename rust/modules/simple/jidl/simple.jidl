@@ -56,3 +56,7 @@ interface Bird extends Animal, Flyable {
 
 Animal createCat();
 void setAnimal(Animal animal);
+
+event data_changed(string data);
+event state_changed(int status);
+void invoke_event(string event_name);

@@ -1,6 +1,6 @@
 let test = require('simple');
 
-console.log('rust_simple test begin ====================');
+console.log('simple test begin ====================');
 let foo_ret = test.foo();
 console.log('foo_ret:', foo_ret);
 
@@ -124,7 +124,147 @@ test.poo(false).then(a => {
     console.log("poo promise finally");
 })
 console.log("did call poo() as promise\n");
-console.log('rust_simple test end =====================\n');
+console.log('simple test end =====================\n');
+
+
+console.log('test events begin ====================');
+function on_data_changed_1(data) {
+    console.log("on data changed 1, data:", data);
+};
+
+function on_data_changed_2(data) {
+    console.log("on data changed 2, data:", data);
+};
+
+function on_data_changed_3(data) {
+    console.log("on data changed 3, data:", data);
+};
+
+function on_data_changed_4(data) {
+    console.log("on data changed 4, data:", data);
+};
+
+let data_changed_array_1 = [
+   on_data_changed_2,
+   on_data_changed_3
+]
+
+let data_changed_array_2 = [
+   on_data_changed_1,
+   on_data_changed_4
+]
+
+console.log("testing event data_changed = on_data_changed_1")
+test.data_changed = on_data_changed_1
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+console.log("testing event data_changed = data_changed_array_1")
+test.data_changed = data_changed_array_1
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+console.log("testing event data_changed on 'on_data_changed_4'")
+test.on('data_changed', on_data_changed_4)
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+console.log("testing event data_changed off 'on_data_changed_4'")
+test.off('data_changed', on_data_changed_4)
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+console.log("testing event data_changed on 'data_changed_array_2'")
+test.on('data_changed', data_changed_array_2)
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+console.log("testing event data_changed off 'data_changed_array_2'")
+test.off('data_changed', data_changed_array_2)
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+console.log("testing event array data_changed = data_changed_array_2")
+test.data_changed = data_changed_array_2
+test.invoke_event('data_changed')
+console.log('\n\n')
+
+function on_state_changed_1(state) {
+    console.log("on state changed 1, state:", state);
+};
+
+function on_state_changed_2(state) {
+    console.log("on state changed 2, state:", state);
+};
+
+function on_state_changed_3(state) {
+    console.log("on state changed 3, state:", state);
+};
+
+function on_state_changed_4(state) {
+    console.log("on state changed 4, state:", state);
+};
+
+let state_changed_array_1 = [
+   on_state_changed_2,
+   on_state_changed_3
+]
+
+let state_changed_array_2 = [
+   on_state_changed_1,
+   on_state_changed_4
+]
+
+console.log("testing event state_changed = on_state_changed_1")
+test.state_changed = on_state_changed_1
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed = state_changed_array_1")
+test.state_changed = state_changed_array_1
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed on 'on_state_changed_4'")
+test.on('state_changed', on_state_changed_4)
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed off 'on_state_changed_4'")
+test.off('state_changed', on_state_changed_4)
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed on 'state_changed_array_2'")
+test.on('state_changed', state_changed_array_2)
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed off 'state_changed_array_2'")
+test.off('state_changed', state_changed_array_2)
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed = state_changed_array_2")
+test.state_changed = state_changed_array_2
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event state_changed = null")
+test.state_changed = null
+test.invoke_event('state_changed')
+console.log('\n\n')
+
+console.log("testing event getter")
+test.state_changed = state_changed_array_2
+let state_changed_handlers = test.state_changed
+console.log('state_changed_handlers:\n', state_changed_handlers)
+console.log('\n\n')
+
+console.log("testing invalid events")
+test.invoke_event('invalid_event')
+console.log('\n\n')
+console.log('test events end ====================');
 
 // Interface has bugs, disable for now
 /*

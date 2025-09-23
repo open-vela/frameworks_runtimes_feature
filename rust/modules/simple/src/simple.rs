@@ -29,6 +29,8 @@ unsafe extern "C" {
         x: FtInt,
         y: FtString,
     ) -> FtInt;
+    pub fn simple_emit_data_changed(handle: FeatureInstanceHandle, data: FtString);
+    pub fn simple_emit_state_changed(handle: FeatureInstanceHandle, data: FtInt);
     // Interface constructors
     pub fn simple_createDog_instance(handle: FeatureInstanceHandle) -> FeatureInterfaceHandle;
     pub fn simple_createAirplane_instance(handle: FeatureInstanceHandle) -> FeatureInterfaceHandle;
@@ -243,6 +245,50 @@ impl MooCb {
     }
 }
 
+pub struct DataChangedEvent {
+    ev: Arc<FeatureEvent>,
+}
+
+impl DataChangedEvent {
+    pub(crate) fn new(id: FtEventId, instance: FeatureInstance) -> Self {
+        Self {
+            ev: Arc::new(FeatureEvent::new(id, instance)),
+        }
+    }
+
+    pub fn emit(&self, data: FeatureString) {
+        unsafe {
+            // must clone the Arc<FeatureEvent> and move it to the closure
+            // to prevent the FeatureEvent from being dropped before the closure is called.
+            let ev = self.ev.clone();
+            self.ev.post(move || {
+                simple_emit_data_changed(ev.handle(), data.as_ptr());
+            });
+        }
+    }
+}
+
+pub struct StateChangedEvent {
+    ev: Arc<FeatureEvent>,
+}
+
+impl StateChangedEvent {
+    pub(crate) fn new(id: FtEventId, instance: FeatureInstance) -> Self {
+        Self {
+            ev: Arc::new(FeatureEvent::new(id, instance)),
+        }
+    }
+
+    pub fn emit(&self, state: FtInt) {
+        unsafe {
+            let ev = self.ev.clone();
+            self.ev.post(move || {
+                simple_emit_state_changed(ev.handle(), state);
+            });
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct FtIntPromise;
 
@@ -294,6 +340,7 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn create_pigeon(&self) -> Option<FeatureInstance>;
     fn create_cat(&self) -> Option<FeatureInstance>;
     fn set_animal(&self, animal: FeatureInstance);
+    fn invoke_event(&self, event_name: &FeatureString);
 }
 
 // Interface trait
@@ -624,6 +671,17 @@ pub unsafe extern "C" fn simple_wrap_setAnimal(
 ) {
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     simple.set_animal(FeatureInstance::new(animal))
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_invoke_event(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+    event_name: FtString,
+) {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let name = unsafe { FeatureString::from_raw(event_name) };
+    simple.invoke_event(&name);
 }
 
 // Animal interface dog vtable functions

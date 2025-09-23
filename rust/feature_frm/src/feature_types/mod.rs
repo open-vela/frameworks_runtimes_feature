@@ -9,6 +9,9 @@ pub use array::*;
 pub mod callback;
 pub use callback::*;
 
+pub mod event;
+pub use event::*;
+
 pub mod promise;
 pub use promise::*;
 
