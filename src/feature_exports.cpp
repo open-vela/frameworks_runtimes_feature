@@ -412,6 +412,16 @@ void* FeatureDupValue(void* ptr)
     FEATURE_CHECK_PTR(ptr, nullptr, "ptr is null !")
     FTObjHeader* header = (FTObjHeader*)((char*)ptr - FT_OBJ_HEADER_SIZE);
     unsigned int expected, desired;
+#ifdef __cplusplus
+    do {
+        expected = header->ref_count.load(std::memory_order_relaxed);
+        if (expected == 0) {
+            return nullptr;
+        }
+        desired = expected + 1;
+    } while (!header->ref_count.compare_exchange_weak(expected, desired,
+        std::memory_order_relaxed, std::memory_order_relaxed));
+#else
     do {
         expected = atomic_load(&header->ref_count);
         if (expected == 0) {
@@ -420,6 +430,7 @@ void* FeatureDupValue(void* ptr)
         desired = expected + 1;
         // use CAS to ensure refcount not changed during the check-and-change operation
     } while (!atomic_compare_exchange_weak(&header->ref_count, &expected, desired));
+#endif
     return ptr;
 }
 
@@ -432,10 +443,18 @@ void FeatureFreeValue(void* ptr)
     void* header_ptr = ((char*)ptr - FT_OBJ_HEADER_SIZE);
     FTObjHeader* header = (FTObjHeader*)header_ptr;
     unsigned int expected, desired;
+#ifdef __cplusplus
+    do {
+        expected = header->ref_count.load(std::memory_order_relaxed);
+        desired = expected - 1;
+    } while (!header->ref_count.compare_exchange_weak(expected, desired,
+        std::memory_order_relaxed, std::memory_order_relaxed));
+#else
     do {
         expected = atomic_load(&header->ref_count);
         desired = expected - 1;
     } while (!atomic_compare_exchange_weak(&header->ref_count, &expected, desired));
+#endif
     if (desired > 0) {
         return;
     }

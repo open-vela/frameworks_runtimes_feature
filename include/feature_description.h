@@ -25,7 +25,11 @@ extern "C" {
 #include "feature_types.h"
 #include <inttypes.h>
 #include <protobuf-c/protobuf-c.h>
+#ifdef __cplusplus
+#include <atomic>
+#else
 #include <stdatomic.h>
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -66,7 +70,11 @@ int FeatureTypeGetValueSize(FeatureType ft);
 
 typedef struct FTObjHeader {
     uint8_t type;
+#ifdef __cplusplus
+    std::atomic_uint ref_count;
+#else
     atomic_uint ref_count;
+#endif
 #ifdef ENABLE_FEATURE_MEM_TRACE
     const FeatureDescription* desc; // 只能记录desc, 保证指针一直有效
 #endif
