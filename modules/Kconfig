@@ -193,6 +193,12 @@ config FEATURE_SYSTEM_GEOLOCATION
     --help--
         enable system.geolocation feature
 
+config FEATURE_SERVICE_HEALTH
+    bool "service.health"
+    default n
+    --help--
+        enable service.health feature
+
 config FEATURE_SYSTEM_INTERCONNECT
     bool "system.interconnect"
     default y

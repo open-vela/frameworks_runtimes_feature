@@ -596,5 +596,21 @@ if(CONFIG_FEATURE_SYSTEM_GEOLOCATION)
         system_geolocation)
 endif()
 
+if(CONFIG_FEATURE_SERVICE_HEALTH)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/health_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/health.jidl)
+    target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/netutils/cjson/cJSON)
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        service_health)
+endif()
+
 # for feature registry
 target_sources(feature_impls PRIVATE ${CMAKE_CURRENT_LIST_DIR}/ajs_features_registry.cpp)

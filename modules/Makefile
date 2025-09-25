@@ -426,6 +426,14 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_GEOLOCATION),y)
 	FEATURELIST += system_geolocation
 endif
 
+ifeq ($(CONFIG_FEATURE_SERVICE_HEALTH),y)
+	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/health_impl.cpp
+	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/health.jidl
+	OUT_PATH 	+= $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+	FEATURELIST += service_health
+endif
+
+
 # for feature registry
 PDATLIST = $(strip $(call RWILDCARD, registry, *.pdat))
 
