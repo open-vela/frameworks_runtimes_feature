@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xiaomi Corporation
+ * Copyright (C) 2025 Xiaomi Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FEATURE_QJS_EXPORTS_H__
-#define __FEATURE_QJS_EXPORTS_H__
 
-#include "feature_context.h"
-#include "quickjs/quickjs.h"
+#include "feature_qjs_exports.h"
+#include "feature_manager_qjs.h"
+#include "feature_context_qjs.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+using namespace feature_framework;
 
-// only for quickjs runtime
-ft_value_t ft_from_jsvalue(ft_context_ref rt_ctx, JSValue val);
-
-JSValue ft_to_jsvalue(ft_context_ref rt_ctx, ft_value_t val);
-
-JSContext* ft_ctx_to_js_ctx(ft_context_ref rt_ctx);
-JSClassID get_feature_classid();
-
-#ifdef __cplusplus
+ft_value_t ft_from_jsvalue(ft_context_ref rt_ctx, JSValue val)
+{
+    ft_value_t ft_val {};
+    auto js_val_ptr = FT_VAL_GET_JS_VAL_PTR(ft_val);
+    *js_val_ptr = val;
+    return ft_val;
 }
-#endif
 
-#endif // __FEATURE_QJS_EXPORTS_H__
+JSValue ft_to_jsvalue(ft_context_ref rt_ctx, ft_value_t ft_val)
+{
+    return FT_VAL_GET_JS_VAL(ft_val);
+}
+
+JSClassID get_feature_classid()
+{
+    return FeatureManagerQjs::jsClassId();
+}
