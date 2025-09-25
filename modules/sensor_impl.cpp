@@ -433,8 +433,13 @@ void system_sensor_wrap_subscribeCompass(FeatureInstanceHandle feature, AppendDa
     meta.callback = param->callback;
     meta.fail = param->fail;
 
-    if (!subscribe(feature, th, SENSOR_MAGIC_COMPA, &meta)) {
-        FEATURE_LOG_ERROR("%s::%s() proximity subscibe fail:%s\n", file_tag, __FUNCTION__);
+    if (subscribe(feature, th, SENSOR_MAGIC_COMPA, &meta)) {
+        int ret = uv_topic_set_interval(&th->events[SENSOR_MAGIC_COMPA]->topic, 100000);
+        if (ret < 0) {
+            FEATURE_LOG_ERROR("%s::%s() set interval error:%d\n", file_tag, __FUNCTION__, ret);
+        }
+    } else {
+        FEATURE_LOG_ERROR("%s::%s() compass subscibe fail:%s\n", file_tag, __FUNCTION__);
     }
 }
 
