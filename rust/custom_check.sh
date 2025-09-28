@@ -1,4 +1,3 @@
-exit 0
 #!/bin/bash
 set -euxo pipefail
 
@@ -15,6 +14,22 @@ replace-with = 'aliyun'
 
 [source.aliyun]
 registry = \"sparse+https://mirrors.aliyun.com/crates.io-index/\"" | sudo tee $HOME/.cargo/config.toml
+
+echo "Setting up vela-nightly Rust toolchain..."
+
+RUST_TOOLCHAIN_PATH=$WORKSPACE/prebuilts/rust/linux/nightly/rustc
+if [ -d "${RUST_TOOLCHAIN_PATH}" ]; then
+    # Create vela-nightly toolchain link if it doesn't exist
+    if ! rustup toolchain list | grep -q "vela-nightly"; then
+        echo "Setting up vela-nightly Rust toolchain..."
+        rustup toolchain link vela-nightly ${RUST_TOOLCHAIN_PATH}
+    fi
+    # Set vela-nightly as toolchain via RUSTUP_TOOLCHAIN environment variable
+    export RUSTUP_TOOLCHAIN=vela-nightly
+    echo "Rust toolchain set to vela-nightly via RUSTUP_TOOLCHAIN"
+else
+    echo "Warning: Rust prebuilt toolchain not found at ${RUST_TOOLCHAIN_PATH}"
+fi
 
 echo "Begin rustfmt check..."
 cargo fmt --check
