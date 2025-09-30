@@ -97,10 +97,7 @@ ifeq ($(CONFIG_BLUETOOTH_FEATURE), y)
 	endif
 else ifeq ($(CONFIG_BLUETOOTH_FEATURE_ASYNC), y)
 	CFEATURELIST += system_bluetooth
-
-	ifeq ($(CONFIG_BLUETOOTH_BLE_ADV), y)
-		CFEATURELIST += system_bluetooth_ble
-	endif
+	CFEATURELIST += system_bluetooth_ble
 else
 endif
 
