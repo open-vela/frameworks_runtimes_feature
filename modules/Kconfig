@@ -14,72 +14,72 @@
 # limitations under the License.
 #
 config FEATURE_SYSTEM_SENSOR
-    bool "system.sensor"
-    default y
-    depends on UORB
-    --help--
-        enable system.sensor feature
+	bool "system.sensor"
+	default y
+	depends on UORB
+	---help---
+		enable system.sensor feature
 
 config FEATURE_SYSTEM_FILE
-    bool "system.file"
-    default y
-    --help--
-        enable system.file feature
+	bool "system.file"
+	default y
+	---help---
+		enable system.file feature
 
 config FEATURE_SYSTEM_MEDIA
-    bool "system.media"
-    default y
-    --help--
-        enable system.media feature
+	bool "system.media"
+	default y
+	---help---
+		enable system.media feature
 
 config FEATURE_SYSTEM_REQUEST
-    bool "system.request"
-    default y
-    depends on UTILS_CURL
-    --help--
-        enable system.request feature
+	bool "system.request"
+	default y
+	depends on UTILS_CURL
+	---help---
+		enable system.request feature
 
 config FEATURE_SYSTEM_ZIP
-    bool "system.zip"
-    default y
-    depends on LIB_ZLIB
-    --help--
-        enable system.zip feature
+	bool "system.zip"
+	default y
+	depends on LIB_ZLIB
+	---help---
+		enable system.zip feature
 
 config FEATURE_SYSTEM_CRYPTO
-    bool "system.crypto"
-    default y
-    depends on LIBUV_EXTENSION && CRYPTO_MBEDTLS
-    --help--
-        enable system.crypto feature
+	bool "system.crypto"
+	default y
+	depends on LIBUV_EXTENSION && CRYPTO_MBEDTLS
+	---help---
+		enable system.crypto feature
 
 config FEATURE_SYSTEM_CIPHER
-    bool "system.cipher"
-    default y
-    depends on LIBUV_EXTENSION && CRYPTO_MBEDTLS
-    --help--
-        enable system.cipher feature
+	bool "system.cipher"
+	default y
+	depends on LIBUV_EXTENSION && CRYPTO_MBEDTLS
+	---help---
+		enable system.cipher feature
 
 config FEATURE_SYSTEM_VIBRATOR
-    bool "system.vibrator"
-    default y
-    depends on VIBRATOR
-    --help--
-        enable system.vibrator feature
+	bool "system.vibrator"
+	default y
+	depends on VIBRATOR
+	---help---
+		enable system.vibrator feature
 
 config FEATURE_SYSTEM_INTERNAL_POWER
-    bool "system.internal.power"
-    default y
-    depends on BOARDCTL
-    --help--
-        enable system.internal.power feature
+	bool "system.internal.power"
+	default y
+	depends on BOARDCTL
+	---help---
+		enable system.internal.power feature
 
 config FEATURE_SYSTEM_INTERNAL_ACTIVITY
-    bool "system.internal.activity"
-    default y
-    depends on SYSTEM_ACTIVITY_SERVICE
-    --help--
-        enable system.internal.activity feature
+	bool "system.internal.activity"
+	default y
+	depends on SYSTEM_ACTIVITY_SERVICE
+	---help---
+		enable system.internal.activity feature
 
 config FEATURE_SYSTEM_PACKAGEMANAGER
     bool "system.packagemanager"
@@ -89,30 +89,30 @@ config FEATURE_SYSTEM_PACKAGEMANAGER
         enable system.packagemanager feature
 
 config FEATURE_SYSTEM_TEST_INPUT
-    bool "system.test.input"
-    default n
-    select GRAPHICS_INPUT_TOOL
-    --help--
-        enable system.test.input feature
+	bool "system.test.input"
+	default n
+	select GRAPHICS_INPUT_TOOL
+	---help---
+		enable system.test.input feature
 
 config FEATURE_SYSTEM_FETCH
-    bool "system.fetch"
-    default y
-    --help--
-        enable system.fetch feature
+	bool "system.fetch"
+	default y
+	---help---
+		enable system.fetch feature
 
 config FEATURE_SYSTEM_PROMPT
-    bool "system.prompt"
-    default y
-    --help--
-        enable system.prompt feature
+	bool "system.prompt"
+	default y
+	---help---
+		enable system.prompt feature
 
 config FEATURE_SYSTEM_MESSAGECHANNEL
-    bool "system.messageChannel"
-    default y
-    depends on SYSTEM_ACTIVITY_SERVICE
-    --help--
-        enable system.messageChannel feature
+	bool "system.messageChannel"
+	default y
+	depends on SYSTEM_ACTIVITY_SERVICE
+	---help---
+		enable system.messageChannel feature
 
 choice
 prompt "select the implementation of system.exchange"
@@ -139,96 +139,96 @@ config RUST_FEATURE_SYSTEM_NETWORK
         enable system.network rust feature
 
 config FEATURE_SYSTEM_CONFIGURATION
-    bool "system.configuration"
-    default y
-    depends on LIBUV_EXTENSION
-    --help--
-        enable system.configuration feature
+	bool "system.configuration"
+	default y
+	depends on LIBUV_EXTENSION
+	---help---
+		enable system.configuration feature
 
 config FEATURE_SYSTEM_DEVICE
-    bool "system.device"
-    default y
-    --help--
-        enable system.device feature
+	bool "system.device"
+	default y
+	---help---
+		enable system.device feature
 
 config FEATURE_SYSTEM_BRIGHTNESS
-    bool "system.brightness"
-    default y
-    depends on SYSTEM_BRIGHTNESS_SERVICE || MIWEAR_ALGORITHM
-    --help--
-        enable system.brightness feature
+	bool "system.brightness"
+	default y
+	depends on SYSTEM_BRIGHTNESS_SERVICE || MIWEAR_ALGORITHM
+	---help---
+		enable system.brightness feature
 
 config FEATURE_SYSTEM_EVENT
-    bool "system.event"
-    default y
-    depends on UORB
-    --help--
-        enable system.event feature
+	bool "system.event"
+	default y
+	depends on UORB
+	---help---
+		enable system.event feature
 
 config FEATURE_SYSTEM_EVENT_TEST
-    bool "system.event.test"
-    default n
-    depends on FEATURE_SYSTEM_EVENT
-    --help--
-        enable system.event.test feature
+	bool "system.event.test"
+	default n
+	depends on FEATURE_SYSTEM_EVENT
+	---help---
+		enable system.event.test feature
 
 config FEATURE_SYSTEM_STORAGE
-    bool "system.storage"
-    default y
-    depends on LIBUV_EXTENSION && UNQLITE
-    --help--
-        enable system.storage feature
+	bool "system.storage"
+	default y
+	depends on LIBUV_EXTENSION && UNQLITE
+	---help---
+		enable system.storage feature
 
 config FEATURE_SERVICE_WECHAT
-    bool "service.wechat"
-    default y
-    depends on APP_WECHAT
-    --help--
-        enable service.wechat feature
+	bool "service.wechat"
+	default y
+	depends on APP_WECHAT
+	---help---
+		enable service.wechat feature
 
 config FEATURE_LOCALE
-    bool "locale"
-    default y
-    --help--
-        enable locale feature
+	bool "locale"
+	default y
+	---help---
+		enable locale feature
 
 config FEATURE_ERROR
-    bool "Error"
-    default y
-    --help--
-        enable Error feature
+	bool "Error"
+	default y
+	---help---
+		enable Error feature
 
 config FEATURE_SYSTEM_BATTERY
-    bool "system.battery"
-    default y
-    --help--
-        enable system.battery feature
+	bool "system.battery"
+	default y
+	---help---
+		enable system.battery feature
 
 config FEATURE_SYSTEM_GEOLOCATION
-    bool "system.geolocation"
-    default y
-    --help--
-        enable system.geolocation feature
+	bool "system.geolocation"
+	default y
+	---help---
+		enable system.geolocation feature
 
 config FEATURE_SERVICE_HEALTH
-    bool "service.health"
-    default n
-    --help--
-        enable service.health feature
+	bool "service.health"
+	default n
+	---help---
+		enable service.health feature
 
 config FEATURE_SYSTEM_INTERCONNECT
-    bool "system.interconnect"
-    default y
-    depends on UV_MIWEAR
-    --help--
-        enable system.interconnect feature
+	bool "system.interconnect"
+	default y
+	depends on UV_MIWEAR
+	---help---
+		enable system.interconnect feature
 
 config FEATURE_SYSTEM_ZLIB
-    bool "system.zlib"
-    default y
-    depends on LIB_ZLIB
-    --help--
-        enable system.zlib feature
+	bool "system.zlib"
+	default y
+	depends on LIB_ZLIB
+	---help---
+		enable system.zlib feature
 
 config FEATURE_SYSTEM_MQTTMESSAGE
     bool "system.mqttmessage"
