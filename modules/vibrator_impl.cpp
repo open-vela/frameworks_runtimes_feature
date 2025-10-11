@@ -17,6 +17,7 @@
 
 #include "uv_ext.h"
 #include "vibrator.h"
+#include <math.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <vibrator_api.h>

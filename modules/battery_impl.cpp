@@ -1,3 +1,4 @@
+#include <math.h>
 #include <nuttx/nuttx.h>
 #include <system/state.h>
 
