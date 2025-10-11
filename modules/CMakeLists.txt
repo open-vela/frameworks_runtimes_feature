@@ -77,6 +77,8 @@ if(CONFIG_FEATURE_SYSTEM_MEDIA)
         PRIVATE 
         ${NUTTX_APPS_DIR}/frameworks/graphics/animengine/include
         ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/include
+        ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/shell/miwear
+        ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/shell/vapp
         ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/src
         ${CMAKE_BINARY_DIR}
         ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/src/gui
