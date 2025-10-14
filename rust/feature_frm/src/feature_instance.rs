@@ -1,4 +1,3 @@
-use crate::FeatureProtoHandle;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::ffi::CString;
@@ -12,8 +11,8 @@ use feature_sys::{
     FeatureGetManagerHandleFromInstance, FeatureGetManagerHandleFromProto, FeatureGetObjectData,
     FeatureGetPackageName, FeatureGetPackageVersion, FeatureGetProtoData, FeatureGetProtoHandle,
     FeatureGetUVLoop, FeatureInstanceHandle, FeatureInstanceIsDetached, FeatureManagerHandle,
-    FeaturePromiseReject, FeatureSetObjectData, FeatureSetProtoData, FtEventId, FtInt, FtPromiseId,
-    FtString,
+    FeaturePromiseReject, FeatureProtoHandle, FeatureSetObjectData, FeatureSetProtoData, FtEventId,
+    FtInt, FtPromiseId, FtString,
 };
 use libc::c_void;
 

@@ -27,3 +27,6 @@ pub use primitives::*;
 
 pub mod jsonobject;
 pub use jsonobject::*;
+
+pub mod arraybuffer;
+pub use arraybuffer::*;

@@ -269,7 +269,7 @@ pub const _POSIX_AIO_MAX: u32 = 1;
 pub const _POSIX_MQ_OPEN_MAX: u32 = 8;
 pub const _POSIX_MQ_PRIO_MAX: u32 = 255;
 pub const _POSIX_SEM_NSEMS_MAX: u32 = 2147483647;
-pub const _POSIX_SEM_VALUE_MAX: u32 = 32767;
+pub const _POSIX_SEM_VALUE_MAX: u32 = 2147483647;
 pub const ARG_MAX: u32 = 4096;
 pub const CHILD_MAX: u32 = 6;
 pub const LINE_MAX: u32 = 80;
@@ -307,7 +307,7 @@ pub const AIO_MAX: u32 = 1;
 pub const MQ_OPEN_MAX: u32 = 8;
 pub const MQ_PRIO_MAX: u32 = 255;
 pub const SEM_NSEMS_MAX: u32 = 2147483647;
-pub const SEM_VALUE_MAX: u32 = 32767;
+pub const SEM_VALUE_MAX: u32 = 2147483647;
 pub const IOV_MAX: u32 = 2147483647;
 pub const HOST_NAME_MAX: u32 = 32;
 pub const PTRDIFF_MAX: u32 = 2147483647;
@@ -376,8 +376,7 @@ pub const _FBIOCBASE: u32 = 10240;
 pub const _NXTERMBASE: u32 = 10496;
 pub const _RFIOCBASE: u32 = 10752;
 pub const _RPMSGBASE: u32 = 11008;
-pub const _NOTECTLBASE: u32 = 11264;
-pub const _NOTERAMBASE: u32 = 11520;
+pub const _NOTEBASE: u32 = 11264;
 pub const _RCIOCBASE: u32 = 11776;
 pub const _HIMEMBASE: u32 = 12032;
 pub const _EFUSEBASE: u32 = 12288;
@@ -399,9 +398,11 @@ pub const _FFIOCBASE: u32 = 16128;
 pub const _PINCTRLBASE: u32 = 16384;
 pub const _PCIBASE: u32 = 16640;
 pub const _I3CBASE: u32 = 16896;
-pub const _MSIOCBASE: u32 = 17152;
-pub const _PERFBASE: u32 = 17408;
+pub const _PERFBASE: u32 = 17152;
+pub const _MSIOCBASE: u32 = 17408;
+pub const _PTPBASE: u32 = 17664;
 pub const _WLIOCBASE: u32 = 35584;
+pub const _SAFETYBASE: u32 = 35840;
 pub const _BOARDBASE: u32 = 65280;
 pub const _IOC_MASK: u32 = 255;
 pub const TIOCPKT_FLUSHREAD: u32 = 1;
@@ -459,297 +460,315 @@ pub const DTYPE_FILE: u32 = 8;
 pub const DTYPE_MTD: u32 = 9;
 pub const DTYPE_LINK: u32 = 10;
 pub const DTYPE_SOCK: u32 = 12;
-pub const __ATOMIC_CONSUME: u32 = 1;
-pub const __ATOMIC_ACQUIRE: u32 = 2;
-pub const __ATOMIC_RELEASE: u32 = 3;
-pub const __ATOMIC_SEQ_CST: u32 = 5;
-pub const ATOMIC_FLAG_INIT: u32 = 0;
+pub const _DEFAULT_SOURCE: u32 = 1;
+pub const _POSIX_SOURCE: u32 = 1;
+pub const _POSIX_C_SOURCE: u32 = 200809;
+pub const _ATFILE_SOURCE: u32 = 1;
+pub const __ATFILE_VISIBLE: u32 = 1;
+pub const __BSD_VISIBLE: u32 = 1;
+pub const __GNU_VISIBLE: u32 = 0;
+pub const __ISO_C_VISIBLE: u32 = 2011;
+pub const __LARGEFILE_VISIBLE: u32 = 0;
+pub const __MISC_VISIBLE: u32 = 1;
+pub const __POSIX_VISIBLE: u32 = 200809;
+pub const __SVID_VISIBLE: u32 = 1;
+pub const __XSI_VISIBLE: u32 = 0;
+pub const __SSP_FORTIFY_LEVEL: u32 = 0;
+pub const __have_longlong64: u32 = 1;
+pub const __have_long32: u32 = 1;
+pub const ___int8_t_defined: u32 = 1;
+pub const ___int16_t_defined: u32 = 1;
+pub const ___int32_t_defined: u32 = 1;
+pub const ___int64_t_defined: u32 = 1;
+pub const ___int_least8_t_defined: u32 = 1;
+pub const ___int_least16_t_defined: u32 = 1;
+pub const ___int_least32_t_defined: u32 = 1;
+pub const ___int_least64_t_defined: u32 = 1;
+pub const __GNUCLIKE_ASM: u32 = 3;
+pub const __GNUCLIKE___TYPEOF: u32 = 1;
+pub const __GNUCLIKE___SECTION: u32 = 1;
+pub const __GNUCLIKE_CTOR_SECTION_HANDLING: u32 = 1;
+pub const __GNUCLIKE_BUILTIN_CONSTANT_P: u32 = 1;
+pub const __GNUCLIKE_BUILTIN_VARARGS: u32 = 1;
+pub const __GNUCLIKE_BUILTIN_STDARG: u32 = 1;
+pub const __GNUCLIKE_BUILTIN_VAALIST: u32 = 1;
+pub const __GNUC_VA_LIST_COMPATIBILITY: u32 = 1;
+pub const __GNUCLIKE_BUILTIN_NEXT_ARG: u32 = 1;
+pub const __GNUCLIKE_BUILTIN_MEMCPY: u32 = 1;
+pub const __CC_SUPPORTS_INLINE: u32 = 1;
+pub const __CC_SUPPORTS___INLINE: u32 = 1;
+pub const __CC_SUPPORTS___INLINE__: u32 = 1;
+pub const __CC_SUPPORTS___FUNC__: u32 = 1;
+pub const __CC_SUPPORTS_WARNING: u32 = 1;
+pub const __CC_SUPPORTS_VARADIC_XXX: u32 = 1;
+pub const __CC_SUPPORTS_DYNAMIC_ARRAY_INIT: u32 = 1;
+pub const __OBSOLETE_MATH_DEFAULT: u32 = 0;
+pub const __OBSOLETE_MATH: u32 = 0;
+pub const __RAND_MAX: u32 = 2147483647;
 pub const EPERM: u32 = 1;
-pub const EPERM_STR: &[u8; 24] = b"Operation not permitted\0";
 pub const ENOENT: u32 = 2;
-pub const ENOENT_STR: &[u8; 26] = b"No such file or directory\0";
 pub const ESRCH: u32 = 3;
-pub const ESRCH_STR: &[u8; 16] = b"No such process\0";
 pub const EINTR: u32 = 4;
-pub const EINTR_STR: &[u8; 24] = b"Interrupted system call\0";
 pub const EIO: u32 = 5;
-pub const EIO_STR: &[u8; 10] = b"I/O error\0";
 pub const ENXIO: u32 = 6;
-pub const ENXIO_STR: &[u8; 26] = b"No such device or address\0";
 pub const E2BIG: u32 = 7;
-pub const E2BIG_STR: &[u8; 18] = b"Arg list too long\0";
 pub const ENOEXEC: u32 = 8;
-pub const ENOEXEC_STR: &[u8; 18] = b"Exec format error\0";
 pub const EBADF: u32 = 9;
-pub const EBADF_STR: &[u8; 16] = b"Bad file number\0";
 pub const ECHILD: u32 = 10;
-pub const ECHILD_STR: &[u8; 19] = b"No child processes\0";
 pub const EAGAIN: u32 = 11;
-pub const EAGAIN_STR: &[u8; 10] = b"Try again\0";
 pub const ENOMEM: u32 = 12;
-pub const ENOMEM_STR: &[u8; 14] = b"Out of memory\0";
 pub const EACCES: u32 = 13;
-pub const EACCES_STR: &[u8; 18] = b"Permission denied\0";
 pub const EFAULT: u32 = 14;
-pub const EFAULT_STR: &[u8; 12] = b"Bad address\0";
 pub const ENOTBLK: u32 = 15;
-pub const ENOTBLK_STR: &[u8; 22] = b"Block device required\0";
 pub const EBUSY: u32 = 16;
-pub const EBUSY_STR: &[u8; 24] = b"Device or resource busy\0";
 pub const EEXIST: u32 = 17;
-pub const EEXIST_STR: &[u8; 12] = b"File exists\0";
 pub const EXDEV: u32 = 18;
-pub const EXDEV_STR: &[u8; 18] = b"Cross-device link\0";
 pub const ENODEV: u32 = 19;
-pub const ENODEV_STR: &[u8; 15] = b"No such device\0";
 pub const ENOTDIR: u32 = 20;
-pub const ENOTDIR_STR: &[u8; 16] = b"Not a directory\0";
 pub const EISDIR: u32 = 21;
-pub const EISDIR_STR: &[u8; 15] = b"Is a directory\0";
 pub const EINVAL: u32 = 22;
-pub const EINVAL_STR: &[u8; 17] = b"Invalid argument\0";
 pub const ENFILE: u32 = 23;
-pub const ENFILE_STR: &[u8; 20] = b"File table overflow\0";
 pub const EMFILE: u32 = 24;
-pub const EMFILE_STR: &[u8; 20] = b"Too many open files\0";
 pub const ENOTTY: u32 = 25;
-pub const ENOTTY_STR: &[u8; 17] = b"Not a typewriter\0";
 pub const ETXTBSY: u32 = 26;
-pub const ETXTBSY_STR: &[u8; 15] = b"Text file busy\0";
 pub const EFBIG: u32 = 27;
-pub const EFBIG_STR: &[u8; 15] = b"File too large\0";
 pub const ENOSPC: u32 = 28;
-pub const ENOSPC_STR: &[u8; 24] = b"No space left on device\0";
 pub const ESPIPE: u32 = 29;
-pub const ESPIPE_STR: &[u8; 13] = b"Illegal seek\0";
 pub const EROFS: u32 = 30;
-pub const EROFS_STR: &[u8; 22] = b"Read-only file system\0";
 pub const EMLINK: u32 = 31;
-pub const EMLINK_STR: &[u8; 15] = b"Too many links\0";
 pub const EPIPE: u32 = 32;
-pub const EPIPE_STR: &[u8; 12] = b"Broken pipe\0";
 pub const EDOM: u32 = 33;
-pub const EDOM_STR: &[u8; 36] = b"Math argument out of domain of func\0";
 pub const ERANGE: u32 = 34;
-pub const ERANGE_STR: &[u8; 30] = b"Math result not representable\0";
 pub const EDEADLK: u32 = 35;
-pub const EDEADLK_STR: &[u8; 30] = b"Resource deadlock would occur\0";
 pub const ENAMETOOLONG: u32 = 36;
-pub const ENAMETOOLONG_STR: &[u8; 19] = b"File name too long\0";
 pub const ENOLCK: u32 = 37;
-pub const ENOLCK_STR: &[u8; 26] = b"No record locks available\0";
 pub const ENOSYS: u32 = 38;
-pub const ENOSYS_STR: &[u8; 27] = b"Invalid system call number\0";
 pub const ENOTEMPTY: u32 = 39;
-pub const ENOTEMPTY_STR: &[u8; 20] = b"Directory not empty\0";
 pub const ELOOP: u32 = 40;
-pub const ELOOP_STR: &[u8; 36] = b"Too many symbolic links encountered\0";
 pub const EWOULDBLOCK: u32 = 11;
-pub const EWOULDBLOCK_STR: &[u8; 22] = b"Operation would block\0";
 pub const ENOMSG: u32 = 42;
-pub const ENOMSG_STR: &[u8; 27] = b"No message of desired type\0";
 pub const EIDRM: u32 = 43;
-pub const EIDRM_STR: &[u8; 19] = b"Identifier removed\0";
 pub const ECHRNG: u32 = 44;
-pub const ECHRNG_STR: &[u8; 28] = b"Channel number out of range\0";
 pub const EL2NSYNC: u32 = 45;
-pub const EL2NSYNC_STR: &[u8; 25] = b"Level 2 not synchronized\0";
 pub const EL3HLT: u32 = 46;
-pub const EL3HLT_STR: &[u8; 15] = b"Level 3 halted\0";
 pub const EL3RST: u32 = 47;
-pub const EL3RST_STR: &[u8; 14] = b"Level 3 reset\0";
 pub const ELNRNG: u32 = 48;
-pub const ELNRNG_STR: &[u8; 25] = b"Link number out of range\0";
 pub const EUNATCH: u32 = 49;
-pub const EUNATCH_STR: &[u8; 29] = b"Protocol driver not attached\0";
 pub const ENOCSI: u32 = 50;
-pub const ENOCSI_STR: &[u8; 27] = b"No CSI structure available\0";
 pub const EL2HLT: u32 = 51;
-pub const EL2HLT_STR: &[u8; 15] = b"Level 2 halted\0";
 pub const EBADE: u32 = 52;
-pub const EBADE_STR: &[u8; 17] = b"Invalid exchange\0";
 pub const EBADR: u32 = 53;
-pub const EBADR_STR: &[u8; 27] = b"Invalid request descriptor\0";
 pub const EXFULL: u32 = 54;
-pub const EXFULL_STR: &[u8; 14] = b"Exchange full\0";
 pub const ENOANO: u32 = 55;
-pub const ENOANO_STR: &[u8; 9] = b"No anode\0";
 pub const EBADRQC: u32 = 56;
-pub const EBADRQC_STR: &[u8; 21] = b"Invalid request code\0";
 pub const EBADSLT: u32 = 57;
-pub const EBADSLT_STR: &[u8; 13] = b"Invalid slot\0";
 pub const EDEADLOCK: u32 = 35;
-pub const EDEADLOCK_STR: &[u8; 28] = b"File locking deadlock error\0";
 pub const EBFONT: u32 = 59;
-pub const EBFONT_STR: &[u8; 21] = b"Bad font file format\0";
 pub const ENOSTR: u32 = 60;
-pub const ENOSTR_STR: &[u8; 20] = b"Device not a stream\0";
 pub const ENODATA: u32 = 61;
-pub const ENODATA_STR: &[u8; 18] = b"No data available\0";
 pub const ETIME: u32 = 62;
-pub const ETIME_STR: &[u8; 14] = b"Timer expired\0";
 pub const ENOSR: u32 = 63;
-pub const ENOSR_STR: &[u8; 25] = b"Out of streams resources\0";
 pub const ENONET: u32 = 64;
-pub const ENONET_STR: &[u8; 30] = b"Machine is not on the network\0";
 pub const ENOPKG: u32 = 65;
-pub const ENOPKG_STR: &[u8; 22] = b"Package not installed\0";
 pub const EREMOTE: u32 = 66;
-pub const EREMOTE_STR: &[u8; 17] = b"Object is remote\0";
 pub const ENOLINK: u32 = 67;
-pub const ENOLINK_STR: &[u8; 22] = b"Link has been severed\0";
 pub const EADV: u32 = 68;
-pub const EADV_STR: &[u8; 16] = b"Advertise error\0";
 pub const ESRMNT: u32 = 69;
-pub const ESRMNT_STR: &[u8; 14] = b"Srmount error\0";
 pub const ECOMM: u32 = 70;
-pub const ECOMM_STR: &[u8; 28] = b"Communication error on send\0";
 pub const EPROTO: u32 = 71;
-pub const EPROTO_STR: &[u8; 15] = b"Protocol error\0";
 pub const EMULTIHOP: u32 = 72;
-pub const EMULTIHOP_STR: &[u8; 19] = b"Multihop attempted\0";
 pub const EDOTDOT: u32 = 73;
-pub const EDOTDOT_STR: &[u8; 19] = b"RFS specific error\0";
 pub const EBADMSG: u32 = 74;
-pub const EBADMSG_STR: &[u8; 19] = b"Not a data message\0";
 pub const EOVERFLOW: u32 = 75;
-pub const EOVERFLOW_STR: &[u8; 38] = b"Value too large for defined data type\0";
 pub const ENOTUNIQ: u32 = 76;
-pub const ENOTUNIQ_STR: &[u8; 27] = b"Name not unique on network\0";
 pub const EBADFD: u32 = 77;
-pub const EBADFD_STR: &[u8; 29] = b"File descriptor in bad state\0";
 pub const EREMCHG: u32 = 78;
-pub const EREMCHG_STR: &[u8; 23] = b"Remote address changed\0";
 pub const ELIBACC: u32 = 79;
-pub const ELIBACC_STR: &[u8; 39] = b"Can not access a needed shared library\0";
 pub const ELIBBAD: u32 = 80;
-pub const ELIBBAD_STR: &[u8; 37] = b"Accessing a corrupted shared library\0";
 pub const ELIBSCN: u32 = 81;
-pub const ELIBSCN_STR: &[u8; 32] = b".lib section in a.out corrupted\0";
 pub const ELIBMAX: u32 = 82;
-pub const ELIBMAX_STR: &[u8; 48] = b"Attempting to link in too many shared libraries\0";
 pub const ELIBEXEC: u32 = 83;
-pub const ELIBEXEC_STR: &[u8; 38] = b"Cannot exec a shared library directly\0";
 pub const EILSEQ: u32 = 84;
-pub const EILSEQ_STR: &[u8; 22] = b"Illegal byte sequence\0";
 pub const ERESTART: u32 = 85;
-pub const ERESTART_STR: &[u8; 44] = b"Interrupted system call should be restarted\0";
 pub const ESTRPIPE: u32 = 86;
-pub const ESTRPIPE_STR: &[u8; 19] = b"Streams pipe error\0";
 pub const EUSERS: u32 = 87;
-pub const EUSERS_STR: &[u8; 15] = b"Too many users\0";
 pub const ENOTSOCK: u32 = 88;
-pub const ENOTSOCK_STR: &[u8; 31] = b"Socket operation on non-socket\0";
 pub const EDESTADDRREQ: u32 = 89;
-pub const EDESTADDRREQ_STR: &[u8; 29] = b"Destination address required\0";
 pub const EMSGSIZE: u32 = 90;
-pub const EMSGSIZE_STR: &[u8; 17] = b"Message too long\0";
 pub const EPROTOTYPE: u32 = 91;
-pub const EPROTOTYPE_STR: &[u8; 31] = b"Protocol wrong type for socket\0";
 pub const ENOPROTOOPT: u32 = 92;
-pub const ENOPROTOOPT_STR: &[u8; 23] = b"Protocol not available\0";
 pub const EPROTONOSUPPORT: u32 = 93;
-pub const EPROTONOSUPPORT_STR: &[u8; 23] = b"Protocol not supported\0";
 pub const ESOCKTNOSUPPORT: u32 = 94;
-pub const ESOCKTNOSUPPORT_STR: &[u8; 26] = b"Socket type not supported\0";
 pub const EOPNOTSUPP: u32 = 95;
-pub const EOPNOTSUPP_STR: &[u8; 46] = b"Operation not supported on transport endpoint\0";
 pub const EPFNOSUPPORT: u32 = 96;
-pub const EPFNOSUPPORT_STR: &[u8; 30] = b"Protocol family not supported\0";
 pub const EAFNOSUPPORT: u32 = 97;
-pub const EAFNOSUPPORT_STR: &[u8; 41] = b"Address family not supported by protocol\0";
 pub const EADDRINUSE: u32 = 98;
-pub const EADDRINUSE_STR: &[u8; 23] = b"Address already in use\0";
 pub const EADDRNOTAVAIL: u32 = 99;
-pub const EADDRNOTAVAIL_STR: &[u8; 32] = b"Cannot assign requested address\0";
 pub const ENETDOWN: u32 = 100;
-pub const ENETDOWN_STR: &[u8; 16] = b"Network is down\0";
 pub const ENETUNREACH: u32 = 101;
-pub const ENETUNREACH_STR: &[u8; 23] = b"Network is unreachable\0";
 pub const ENETRESET: u32 = 102;
-pub const ENETRESET_STR: &[u8; 44] = b"Network dropped connection because of reset\0";
 pub const ECONNABORTED: u32 = 103;
-pub const ECONNABORTED_STR: &[u8; 33] = b"Software caused connection abort\0";
 pub const ECONNRESET: u32 = 104;
-pub const ECONNRESET_STR: &[u8; 25] = b"Connection reset by peer\0";
 pub const ENOBUFS: u32 = 105;
-pub const ENOBUFS_STR: &[u8; 26] = b"No buffer space available\0";
 pub const EISCONN: u32 = 106;
-pub const EISCONN_STR: &[u8; 40] = b"Transport endpoint is already connected\0";
 pub const ENOTCONN: u32 = 107;
-pub const ENOTCONN_STR: &[u8; 36] = b"Transport endpoint is not connected\0";
 pub const ESHUTDOWN: u32 = 108;
-pub const ESHUTDOWN_STR: &[u8; 46] = b"Cannot send after transport endpoint shutdown\0";
 pub const ETOOMANYREFS: u32 = 109;
-pub const ETOOMANYREFS_STR: &[u8; 35] = b"Too many references: cannot splice\0";
 pub const ETIMEDOUT: u32 = 110;
-pub const ETIMEDOUT_STR: &[u8; 21] = b"Connection timed out\0";
 pub const ECONNREFUSED: u32 = 111;
-pub const ECONNREFUSED_STR: &[u8; 19] = b"Connection refused\0";
 pub const EHOSTDOWN: u32 = 112;
-pub const EHOSTDOWN_STR: &[u8; 13] = b"Host is down\0";
 pub const EHOSTUNREACH: u32 = 113;
-pub const EHOSTUNREACH_STR: &[u8; 17] = b"No route to host\0";
 pub const EALREADY: u32 = 114;
-pub const EALREADY_STR: &[u8; 30] = b"Operation already in progress\0";
 pub const EINPROGRESS: u32 = 115;
-pub const EINPROGRESS_STR: &[u8; 26] = b"Operation now in progress\0";
 pub const ESTALE: u32 = 116;
-pub const ESTALE_STR: &[u8; 18] = b"Stale file handle\0";
 pub const EUCLEAN: u32 = 117;
-pub const EUCLEAN_STR: &[u8; 25] = b"Structure needs cleaning\0";
 pub const ENOTNAM: u32 = 118;
-pub const ENOTNAM_STR: &[u8; 28] = b"Not a XENIX named type file\0";
 pub const ENAVAIL: u32 = 119;
-pub const ENAVAIL_STR: &[u8; 30] = b"No XENIX semaphores available\0";
 pub const EISNAM: u32 = 120;
-pub const EISNAM_STR: &[u8; 21] = b"Is a named type file\0";
 pub const EREMOTEIO: u32 = 121;
-pub const EREMOTEIO_STR: &[u8; 17] = b"Remote I/O error\0";
 pub const EDQUOT: u32 = 122;
-pub const EDQUOT_STR: &[u8; 15] = b"Quota exceeded\0";
 pub const ENOMEDIUM: u32 = 123;
-pub const ENOMEDIUM_STR: &[u8; 16] = b"No medium found\0";
 pub const EMEDIUMTYPE: u32 = 124;
-pub const EMEDIUMTYPE_STR: &[u8; 18] = b"Wrong medium type\0";
 pub const ECANCELED: u32 = 125;
-pub const ECANCELED_STR: &[u8; 20] = b"Operation cancelled\0";
 pub const ENOKEY: u32 = 126;
-pub const ENOKEY_STR: &[u8; 27] = b"Required key not available\0";
 pub const EKEYEXPIRED: u32 = 127;
-pub const EKEYEXPIRED_STR: &[u8; 16] = b"Key has expired\0";
 pub const EKEYREVOKED: u32 = 128;
-pub const EKEYREVOKED_STR: &[u8; 21] = b"Key has been revoked\0";
 pub const EKEYREJECTED: u32 = 129;
-pub const EKEYREJECTED_STR: &[u8; 28] = b"Key was rejected by service\0";
 pub const EOWNERDEAD: u32 = 130;
-pub const EOWNERDEAD_STR: &[u8; 20] = b"Previous owner died\0";
 pub const ENOTRECOVERABLE: u32 = 131;
-pub const ENOTRECOVERABLE_STR: &[u8; 22] = b"State not recoverable\0";
 pub const ERFKILL: u32 = 132;
-pub const ERFKILL_STR: &[u8; 38] = b"Operation not possible due to RF-kill\0";
 pub const EHWPOISON: u32 = 133;
-pub const EHWPOISON_STR: &[u8; 31] = b"Memory page has hardware error\0";
 pub const ELBIN: u32 = 134;
-pub const ELBIN_STR: &[u8; 16] = b"Inode is remote\0";
 pub const EFTYPE: u32 = 135;
-pub const EFTYPE_STR: &[u8; 34] = b"Inappropriate file type or format\0";
 pub const ENMFILE: u32 = 136;
-pub const ENMFILE_STR: &[u8; 14] = b"No more files\0";
 pub const EPROCLIM: u32 = 137;
-pub const EPROCLIM_STR: &[u8; 42] = b"Limit would be exceeded by attempted fork\0";
 pub const ENOTSUP: u32 = 138;
-pub const ENOTSUP_STR: &[u8; 14] = b"Not supported\0";
 pub const ENOSHARE: u32 = 139;
-pub const ENOSHARE_STR: &[u8; 29] = b"No such host or network path\0";
 pub const ECASECLASH: u32 = 140;
-pub const ECASECLASH_STR: &[u8; 36] = b"Filename exists with different case\0";
 pub const __ELASTERROR: u32 = 2000;
 pub const SEM_PRIO_NONE: u32 = 0;
 pub const SEM_PRIO_INHERIT: u32 = 1;
 pub const SEM_PRIO_PROTECT: u32 = 2;
 pub const SEM_PRIO_MASK: u32 = 3;
 pub const SEM_TYPE_MUTEX: u32 = 4;
+pub const MIN_SIGNO: u32 = 1;
+pub const MAX_SIGNO: u32 = 63;
+pub const SIGSTDMIN: u32 = 1;
+pub const SIGSTDMAX: u32 = 31;
+pub const SIGRTMIN: u32 = 32;
+pub const SIGRTMAX: u32 = 63;
+pub const _NSIG: u32 = 64;
+pub const NSIG: u32 = 64;
+pub const _SIGSET_NELEM: u32 = 2;
+pub const SIGHUP: u32 = 1;
+pub const SIGINT: u32 = 2;
+pub const SIGQUIT: u32 = 3;
+pub const SIGILL: u32 = 4;
+pub const SIGTRAP: u32 = 5;
+pub const SIGABRT: u32 = 6;
+pub const SIGBUS: u32 = 7;
+pub const SIGFPE: u32 = 8;
+pub const SIGKILL: u32 = 9;
+pub const SIGUSR1: u32 = 10;
+pub const SIGSEGV: u32 = 11;
+pub const SIGUSR2: u32 = 12;
+pub const SIGPIPE: u32 = 13;
+pub const SIGALRM: u32 = 14;
+pub const SIGTERM: u32 = 15;
+pub const SIGCHLD: u32 = 17;
+pub const SIGCONT: u32 = 18;
+pub const SIGSTOP: u32 = 19;
+pub const SIGTSTP: u32 = 20;
+pub const SIGTTIN: u32 = 21;
+pub const SIGTTOU: u32 = 22;
+pub const SIGURG: u32 = 23;
+pub const SIGXCPU: u32 = 24;
+pub const SIGXFSZ: u32 = 25;
+pub const SIGVTALRM: u32 = 26;
+pub const SIGPROF: u32 = 27;
+pub const SIGWINCH: u32 = 28;
+pub const SIGPOLL: u32 = 29;
+pub const SIGIO: u32 = 29;
+pub const SIGSYS: u32 = 31;
+pub const SIGIOT: u32 = 6;
+pub const SIG_BLOCK: u32 = 1;
+pub const SIG_UNBLOCK: u32 = 2;
+pub const SIG_SETMASK: u32 = 3;
+pub const SA_NOCLDSTOP: u32 = 1;
+pub const SA_SIGINFO: u32 = 2;
+pub const SA_NOCLDWAIT: u32 = 4;
+pub const SA_ONSTACK: u32 = 8;
+pub const SA_RESTART: u32 = 16;
+pub const SA_NODEFER: u32 = 32;
+pub const SA_RESETHAND: u32 = 64;
+pub const SA_KERNELHAND: u32 = 128;
+pub const SA_NOMASK: u32 = 32;
+pub const SI_USER: u32 = 0;
+pub const SI_QUEUE: u32 = 1;
+pub const SI_TIMER: u32 = 2;
+pub const SI_ASYNCIO: u32 = 3;
+pub const SI_MESGQ: u32 = 4;
+pub const CLD_EXITED: u32 = 5;
+pub const CLD_KILLED: u32 = 6;
+pub const CLD_DUMPED: u32 = 7;
+pub const CLD_TRAPPED: u32 = 8;
+pub const CLD_STOPPED: u32 = 9;
+pub const CLD_CONTINUED: u32 = 10;
+pub const ILL_ILLOPC: u32 = 1;
+pub const ILL_ILLOPN: u32 = 2;
+pub const ILL_ILLADR: u32 = 3;
+pub const ILL_ILLTRP: u32 = 4;
+pub const ILL_PRVOPC: u32 = 5;
+pub const ILL_PRVREG: u32 = 6;
+pub const ILL_COPROC: u32 = 7;
+pub const ILL_BADSTK: u32 = 8;
+pub const FPE_INTDIV: u32 = 1;
+pub const FPE_INTOVF: u32 = 2;
+pub const FPE_FLTDIV: u32 = 3;
+pub const FPE_FLTOVF: u32 = 4;
+pub const FPE_FLTUND: u32 = 5;
+pub const FPE_FLTRES: u32 = 6;
+pub const FPE_FLTINV: u32 = 7;
+pub const FPE_FLTSUB: u32 = 8;
+pub const SEGV_MAPERR: u32 = 1;
+pub const SEGV_ACCERR: u32 = 2;
+pub const BUS_ADRALN: u32 = 1;
+pub const BUS_ADRERR: u32 = 2;
+pub const BUS_OBJERR: u32 = 3;
+pub const TRAP_BRKPT: u32 = 1;
+pub const TRAP_TRACE: u32 = 2;
+pub const POLL_IN: u32 = 1;
+pub const POLL_OUT: u32 = 2;
+pub const POLL_MSG: u32 = 3;
+pub const POLL_ERR: u32 = 4;
+pub const POLL_PRI: u32 = 5;
+pub const POLL_HUP: u32 = 6;
+pub const SIGEV_NONE: u32 = 0;
+pub const SIGEV_SIGNAL: u32 = 1;
+pub const SIGEV_THREAD: u32 = 2;
+pub const SIGEV_THREAD_ID: u32 = 4;
+pub const MINSIGSTKSZ: u32 = 256;
+pub const SIGSTKSZ: u32 = 4096;
+pub const SS_ONSTACK: u32 = 1;
+pub const SS_DISABLE: u32 = 2;
+pub const FD_SETSIZE: u32 = 256;
+pub const __SELECT_NUINT32: u32 = 8;
+pub const ITIMER_REAL: u32 = 0;
+pub const ITIMER_VIRTUAL: u32 = 1;
+pub const ITIMER_PROF: u32 = 2;
+pub const ADJ_OFFSET: u32 = 1;
+pub const ADJ_FREQUENCY: u32 = 2;
+pub const ADJ_MAXERROR: u32 = 4;
+pub const ADJ_ESTERROR: u32 = 8;
+pub const ADJ_STATUS: u32 = 16;
+pub const ADJ_TIMECONST: u32 = 32;
+pub const ADJ_TAI: u32 = 128;
+pub const ADJ_SETOFFSET: u32 = 256;
+pub const ADJ_MICRO: u32 = 4096;
+pub const ADJ_NANO: u32 = 8192;
+pub const ADJ_TICK: u32 = 16384;
+pub const ADJ_OFFSET_SINGLESHOT: u32 = 32769;
+pub const ADJ_OFFSET_SS_READ: u32 = 40961;
 pub const PRIdLEAST8: &[u8; 2] = b"d\0";
 pub const PRIdLEAST16: &[u8; 2] = b"d\0";
 pub const PRIdLEAST32: &[u8; 2] = b"d\0";
@@ -860,6 +879,18 @@ pub const SCNiOFF: &[u8; 4] = b"lli\0";
 pub const SCNoOFF: &[u8; 4] = b"llo\0";
 pub const SCNuOFF: &[u8; 4] = b"llu\0";
 pub const SCNxOFF: &[u8; 4] = b"llx\0";
+pub const PRIdTM: &[u8; 4] = b"lld\0";
+pub const PRIiTM: &[u8; 4] = b"lli\0";
+pub const PRIoTM: &[u8; 4] = b"llo\0";
+pub const PRIuTM: &[u8; 4] = b"llu\0";
+pub const PRIxTM: &[u8; 4] = b"llx\0";
+pub const PRIXTM: &[u8; 4] = b"llX\0";
+pub const SCNdTM: &[u8; 4] = b"lld\0";
+pub const SCNiTM: &[u8; 4] = b"lli\0";
+pub const SCNoTM: &[u8; 4] = b"llo\0";
+pub const SCNuTM: &[u8; 4] = b"llu\0";
+pub const SCNxTM: &[u8; 4] = b"llx\0";
+pub const CLOCK_FD: u32 = 5;
 pub const CLOCK_MASK: u32 = 7;
 pub const CLOCK_SHIFT: u32 = 3;
 pub const NSEC_PER_SEC: u32 = 1000000000;
@@ -945,106 +976,6 @@ pub const TASK_CANCEL_DEFERRED: u32 = 0;
 pub const TASK_CANCEL_ASYNCHRONOUS: u32 = 1;
 pub const PTHREAD_KEYS_MAX: u32 = 16;
 pub const CPU_SETSIZE: u32 = 1;
-pub const MIN_SIGNO: u32 = 1;
-pub const MAX_SIGNO: u32 = 63;
-pub const SIGSTDMIN: u32 = 1;
-pub const SIGSTDMAX: u32 = 31;
-pub const SIGRTMIN: u32 = 32;
-pub const SIGRTMAX: u32 = 63;
-pub const _NSIG: u32 = 64;
-pub const NSIG: u32 = 64;
-pub const _SIGSET_NELEM: u32 = 2;
-pub const SIGHUP: u32 = 1;
-pub const SIGINT: u32 = 2;
-pub const SIGQUIT: u32 = 3;
-pub const SIGILL: u32 = 4;
-pub const SIGTRAP: u32 = 5;
-pub const SIGABRT: u32 = 6;
-pub const SIGBUS: u32 = 7;
-pub const SIGFPE: u32 = 8;
-pub const SIGKILL: u32 = 9;
-pub const SIGUSR1: u32 = 10;
-pub const SIGSEGV: u32 = 11;
-pub const SIGUSR2: u32 = 12;
-pub const SIGPIPE: u32 = 13;
-pub const SIGALRM: u32 = 14;
-pub const SIGTERM: u32 = 15;
-pub const SIGCHLD: u32 = 17;
-pub const SIGCONT: u32 = 18;
-pub const SIGSTOP: u32 = 19;
-pub const SIGTSTP: u32 = 20;
-pub const SIGTTIN: u32 = 21;
-pub const SIGTTOU: u32 = 22;
-pub const SIGURG: u32 = 23;
-pub const SIGXCPU: u32 = 24;
-pub const SIGXFSZ: u32 = 25;
-pub const SIGVTALRM: u32 = 26;
-pub const SIGPROF: u32 = 27;
-pub const SIGWINCH: u32 = 28;
-pub const SIGPOLL: u32 = 29;
-pub const SIGIO: u32 = 29;
-pub const SIGSYS: u32 = 31;
-pub const SIGIOT: u32 = 6;
-pub const SIG_BLOCK: u32 = 1;
-pub const SIG_UNBLOCK: u32 = 2;
-pub const SIG_SETMASK: u32 = 3;
-pub const SA_NOCLDSTOP: u32 = 1;
-pub const SA_SIGINFO: u32 = 2;
-pub const SA_NOCLDWAIT: u32 = 4;
-pub const SA_ONSTACK: u32 = 8;
-pub const SA_RESTART: u32 = 16;
-pub const SA_NODEFER: u32 = 32;
-pub const SA_RESETHAND: u32 = 64;
-pub const SA_KERNELHAND: u32 = 128;
-pub const SA_NOMASK: u32 = 32;
-pub const SI_USER: u32 = 0;
-pub const SI_QUEUE: u32 = 1;
-pub const SI_TIMER: u32 = 2;
-pub const SI_ASYNCIO: u32 = 3;
-pub const SI_MESGQ: u32 = 4;
-pub const CLD_EXITED: u32 = 5;
-pub const CLD_KILLED: u32 = 6;
-pub const CLD_DUMPED: u32 = 7;
-pub const CLD_TRAPPED: u32 = 8;
-pub const CLD_STOPPED: u32 = 9;
-pub const CLD_CONTINUED: u32 = 10;
-pub const ILL_ILLOPC: u32 = 1;
-pub const ILL_ILLOPN: u32 = 2;
-pub const ILL_ILLADR: u32 = 3;
-pub const ILL_ILLTRP: u32 = 4;
-pub const ILL_PRVOPC: u32 = 5;
-pub const ILL_PRVREG: u32 = 6;
-pub const ILL_COPROC: u32 = 7;
-pub const ILL_BADSTK: u32 = 8;
-pub const FPE_INTDIV: u32 = 1;
-pub const FPE_INTOVF: u32 = 2;
-pub const FPE_FLTDIV: u32 = 3;
-pub const FPE_FLTOVF: u32 = 4;
-pub const FPE_FLTUND: u32 = 5;
-pub const FPE_FLTRES: u32 = 6;
-pub const FPE_FLTINV: u32 = 7;
-pub const FPE_FLTSUB: u32 = 8;
-pub const SEGV_MAPERR: u32 = 1;
-pub const SEGV_ACCERR: u32 = 2;
-pub const BUS_ADRALN: u32 = 1;
-pub const BUS_ADRERR: u32 = 2;
-pub const BUS_OBJERR: u32 = 3;
-pub const TRAP_BRKPT: u32 = 1;
-pub const TRAP_TRACE: u32 = 2;
-pub const POLL_IN: u32 = 1;
-pub const POLL_OUT: u32 = 2;
-pub const POLL_MSG: u32 = 3;
-pub const POLL_ERR: u32 = 4;
-pub const POLL_PRI: u32 = 5;
-pub const POLL_HUP: u32 = 6;
-pub const SIGEV_NONE: u32 = 0;
-pub const SIGEV_SIGNAL: u32 = 1;
-pub const SIGEV_THREAD: u32 = 2;
-pub const SIGEV_THREAD_ID: u32 = 4;
-pub const MINSIGSTKSZ: u32 = 256;
-pub const SIGSTKSZ: u32 = 4096;
-pub const SS_ONSTACK: u32 = 1;
-pub const SS_DISABLE: u32 = 2;
 pub const POSIX_SPAWN_RESETIDS: u32 = 1;
 pub const POSIX_SPAWN_SETPGROUP: u32 = 2;
 pub const POSIX_SPAWN_SETSCHEDPARAM: u32 = 4;
@@ -1056,7 +987,13 @@ pub const SYS_syscall: u32 = 0;
 pub const SYS_smhcall: u32 = 1193046;
 pub const SYS_restore_context: u32 = 1;
 pub const SYS_switch_context: u32 = 2;
+pub const SYS_assert_handler: u32 = 4;
 pub const NR_IRQS: u32 = 220;
+pub const MPIDR_AFFLVL_MASK: u32 = 255;
+pub const MPIDR_ID_MASK: u32 = 16777215;
+pub const MPIDR_AFF0_SHIFT: u32 = 0;
+pub const MPIDR_AFF1_SHIFT: u32 = 8;
+pub const MPIDR_AFF2_SHIFT: u32 = 16;
 pub const REG_D0: u32 = 0;
 pub const REG_S0: u32 = 0;
 pub const REG_S1: u32 = 1;
@@ -1171,8 +1108,15 @@ pub const MPIDR_CPUID_CPU3: u32 = 3;
 pub const MPIDR_CLUSTID_SHIFT: u32 = 8;
 pub const MPIDR_CLUSTID_MASK: u32 = 3840;
 pub const MPIDR_U: u32 = 1073741824;
+pub const STACKFRAME_ALIGN: u32 = 8;
+pub const STACK_ALIGNMENT: u32 = 8;
+pub const STACK_ALIGN_MASK: u32 = 7;
+pub const STACKFRAME_ALIGN_MASK: u32 = 7;
 pub const IRQ_HANDLED: u32 = 0;
 pub const IRQ_WAKE_THREAD: u32 = 1;
+pub const SP_UNLOCKED: u32 = 0;
+pub const SP_LOCKED: u32 = 1;
+pub const RSPINLOCK_CPU_INVALID: i32 = -1;
 pub const __FS_FLAG_EOF: u32 = 1;
 pub const __FS_FLAG_ERROR: u32 = 2;
 pub const __FS_FLAG_LBF: u32 = 4;
@@ -1200,6 +1144,573 @@ pub const EXIT_SUCCESS: u32 = 0;
 pub const EXIT_FAILURE: u32 = 1;
 pub const RAND_MAX: u32 = 2147483647;
 pub const MB_CUR_MAX: u32 = 4;
+pub const FILENAME_MAX: u32 = 96;
+pub const FOPEN_MAX: u32 = 16;
+pub const BUFSIZ: u32 = 128;
+pub const _IOFBF: u32 = 0;
+pub const _IOLBF: u32 = 1;
+pub const _IONBF: u32 = 2;
+pub const EOF: i32 = -1;
+pub const P_tmpdir: &[u8; 5] = b"/tmp\0";
+pub const L_tmpnam: u32 = 32;
+pub const TMP_MAX: u32 = 308915776;
+pub const PERMISSION_BITMAP_SIZE: u32 = 2;
+pub const PROTOBUF_C__SERVICE_DESCRIPTOR_MAGIC: u32 = 336960451;
+pub const PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC: u32 = 682290937;
+pub const PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC: u32 = 289609135;
+pub const PROTOBUF_C_VERSION: &[u8; 6] = b"1.4.1\0";
+pub const PROTOBUF_C_VERSION_NUMBER: u32 = 1004001;
+pub const PROTOBUF_C_MIN_COMPILER_VERSION: u32 = 1000000;
+pub const FT_PARAM_END: u32 = 0;
+pub const MEMORY_REF_COUNT_ONLY: u32 = 0;
+pub const MEMORY_FEATURE_TYPE: u32 = 1;
+pub const MEMORY_PROTOBUF: u32 = 2;
+pub const JS_PROP_CONFIGURABLE: u32 = 1;
+pub const JS_PROP_WRITABLE: u32 = 2;
+pub const JS_PROP_ENUMERABLE: u32 = 4;
+pub const JS_PROP_C_W_E: u32 = 7;
+pub const JS_PROP_LENGTH: u32 = 8;
+pub const JS_PROP_TMASK: u32 = 48;
+pub const JS_PROP_NORMAL: u32 = 0;
+pub const JS_PROP_GETSET: u32 = 16;
+pub const JS_PROP_VARREF: u32 = 32;
+pub const JS_PROP_AUTOINIT: u32 = 48;
+pub const JS_PROP_HAS_SHIFT: u32 = 8;
+pub const JS_PROP_HAS_CONFIGURABLE: u32 = 256;
+pub const JS_PROP_HAS_WRITABLE: u32 = 512;
+pub const JS_PROP_HAS_ENUMERABLE: u32 = 1024;
+pub const JS_PROP_HAS_GET: u32 = 2048;
+pub const JS_PROP_HAS_SET: u32 = 4096;
+pub const JS_PROP_HAS_VALUE: u32 = 8192;
+pub const JS_PROP_THROW: u32 = 16384;
+pub const JS_PROP_THROW_STRICT: u32 = 32768;
+pub const JS_PROP_NO_ADD: u32 = 65536;
+pub const JS_PROP_NO_EXOTIC: u32 = 131072;
+pub const JS_DEFAULT_STACK_SIZE: u32 = 262144;
+pub const JS_EVAL_TYPE_GLOBAL: u32 = 0;
+pub const JS_EVAL_TYPE_MODULE: u32 = 1;
+pub const JS_EVAL_TYPE_DIRECT: u32 = 2;
+pub const JS_EVAL_TYPE_INDIRECT: u32 = 3;
+pub const JS_EVAL_TYPE_MASK: u32 = 3;
+pub const JS_EVAL_FLAG_STRICT: u32 = 8;
+pub const JS_EVAL_FLAG_STRIP: u32 = 16;
+pub const JS_EVAL_FLAG_COMPILE_ONLY: u32 = 32;
+pub const JS_EVAL_FLAG_BACKTRACE_BARRIER: u32 = 64;
+pub const JS_ATOM_NULL: u32 = 0;
+pub const JS_CALL_FLAG_CONSTRUCTOR: u32 = 1;
+pub const JS_GPN_STRING_MASK: u32 = 1;
+pub const JS_GPN_SYMBOL_MASK: u32 = 2;
+pub const JS_GPN_PRIVATE_MASK: u32 = 4;
+pub const JS_GPN_ENUM_ONLY: u32 = 16;
+pub const JS_GPN_SET_ENUM: u32 = 32;
+pub const JS_PARSE_JSON_EXT: u32 = 1;
+pub const JS_WRITE_OBJ_BYTECODE: u32 = 1;
+pub const JS_WRITE_OBJ_BSWAP: u32 = 2;
+pub const JS_WRITE_OBJ_SAB: u32 = 4;
+pub const JS_WRITE_OBJ_REFERENCE: u32 = 8;
+pub const JS_WRITE_OBJ_BYTECODE_OPTIMIZED: u32 = 16;
+pub const JS_READ_OBJ_BYTECODE: u32 = 1;
+pub const JS_READ_OBJ_ROM_DATA: u32 = 2;
+pub const JS_READ_OBJ_SAB: u32 = 4;
+pub const JS_READ_OBJ_REFERENCE: u32 = 8;
+pub const JS_READ_OBJ_BYTECODE_OPTIMIZED: u32 = 16;
+pub const JS_DEF_CFUNC: u32 = 0;
+pub const JS_DEF_CGETSET: u32 = 1;
+pub const JS_DEF_CGETSET_MAGIC: u32 = 2;
+pub const JS_DEF_PROP_STRING: u32 = 3;
+pub const JS_DEF_PROP_INT32: u32 = 4;
+pub const JS_DEF_PROP_INT64: u32 = 5;
+pub const JS_DEF_PROP_DOUBLE: u32 = 6;
+pub const JS_DEF_PROP_UNDEFINED: u32 = 7;
+pub const JS_DEF_OBJECT: u32 = 8;
+pub const JS_DEF_ALIAS: u32 = 9;
+pub const UV__EOF: i32 = -4095;
+pub const UV__UNKNOWN: i32 = -4094;
+pub const UV__EAI_ADDRFAMILY: i32 = -3000;
+pub const UV__EAI_AGAIN: i32 = -3001;
+pub const UV__EAI_BADFLAGS: i32 = -3002;
+pub const UV__EAI_CANCELED: i32 = -3003;
+pub const UV__EAI_FAIL: i32 = -3004;
+pub const UV__EAI_FAMILY: i32 = -3005;
+pub const UV__EAI_MEMORY: i32 = -3006;
+pub const UV__EAI_NODATA: i32 = -3007;
+pub const UV__EAI_NONAME: i32 = -3008;
+pub const UV__EAI_OVERFLOW: i32 = -3009;
+pub const UV__EAI_SERVICE: i32 = -3010;
+pub const UV__EAI_SOCKTYPE: i32 = -3011;
+pub const UV__EAI_BADHINTS: i32 = -3013;
+pub const UV__EAI_PROTOCOL: i32 = -3014;
+pub const UV__ECHARSET: i32 = -4080;
+pub const UV_VERSION_MAJOR: u32 = 1;
+pub const UV_VERSION_MINOR: u32 = 46;
+pub const UV_VERSION_PATCH: u32 = 0;
+pub const UV_VERSION_IS_RELEASE: u32 = 1;
+pub const UV_VERSION_SUFFIX: &[u8; 1] = b"\0";
+pub const UV_VERSION_HEX: u32 = 77312;
+pub const S_IXOTH: u32 = 1;
+pub const S_IWOTH: u32 = 2;
+pub const S_IROTH: u32 = 4;
+pub const S_IRWXO: u32 = 7;
+pub const S_IXGRP: u32 = 8;
+pub const S_IWGRP: u32 = 16;
+pub const S_IRGRP: u32 = 32;
+pub const S_IRWXG: u32 = 56;
+pub const S_IXUSR: u32 = 64;
+pub const S_IWUSR: u32 = 128;
+pub const S_IRUSR: u32 = 256;
+pub const S_IRWXU: u32 = 448;
+pub const S_IREAD: u32 = 256;
+pub const S_IWRITE: u32 = 128;
+pub const S_IEXEC: u32 = 64;
+pub const S_ISVTX: u32 = 512;
+pub const S_ISGID: u32 = 1024;
+pub const S_ISUID: u32 = 2048;
+pub const S_IFIFO: u32 = 4096;
+pub const S_IFCHR: u32 = 8192;
+pub const S_IFSEM: u32 = 12288;
+pub const S_IFDIR: u32 = 16384;
+pub const S_IFMQ: u32 = 20480;
+pub const S_IFBLK: u32 = 24576;
+pub const S_IFSHM: u32 = 28672;
+pub const S_IFREG: u32 = 32768;
+pub const S_IFMTD: u32 = 36864;
+pub const S_IFLNK: u32 = 40960;
+pub const S_IFSOCK: u32 = 49152;
+pub const S_IFMT: u32 = 61440;
+pub const UTIME_NOW: u32 = 1073741823;
+pub const UTIME_OMIT: u32 = 1073741822;
+pub const O_RDONLY: u32 = 1;
+pub const O_RDOK: u32 = 1;
+pub const O_WRONLY: u32 = 2;
+pub const O_WROK: u32 = 2;
+pub const O_RDWR: u32 = 3;
+pub const O_CREAT: u32 = 4;
+pub const O_EXCL: u32 = 8;
+pub const O_APPEND: u32 = 16;
+pub const O_TRUNC: u32 = 32;
+pub const O_NONBLOCK: u32 = 64;
+pub const O_NDELAY: u32 = 64;
+pub const O_SYNC: u32 = 128;
+pub const O_DSYNC: u32 = 128;
+pub const O_TEXT: u32 = 256;
+pub const O_DIRECT: u32 = 512;
+pub const O_CLOEXEC: u32 = 1024;
+pub const O_DIRECTORY: u32 = 2048;
+pub const O_NOFOLLOW: u32 = 4096;
+pub const O_LARGEFILE: u32 = 8192;
+pub const O_RESERVE14: u32 = 16384;
+pub const O_RESERVE15: u32 = 32768;
+pub const O_RESERVE16: u32 = 65536;
+pub const O_RESERVE17: u32 = 131072;
+pub const O_NOATIME: u32 = 262144;
+pub const O_RESERVE19: u32 = 524288;
+pub const O_RESERVE20: u32 = 1048576;
+pub const O_RSYNC: u32 = 0;
+pub const O_ACCMODE: u32 = 3;
+pub const O_NOCTTY: u32 = 0;
+pub const O_BINARY: u32 = 0;
+pub const _O_MAXBIT: u32 = 8;
+pub const FNDELAY: u32 = 64;
+pub const FNONBLOCK: u32 = 64;
+pub const FAPPEND: u32 = 16;
+pub const FSYNC: u32 = 128;
+pub const FASYNC: u32 = 0;
+pub const FFCNTL: u32 = 208;
+pub const F_DUPFD: u32 = 0;
+pub const F_GETFD: u32 = 1;
+pub const F_GETFL: u32 = 2;
+pub const F_GETLEASE: u32 = 3;
+pub const F_GETLK: u32 = 4;
+pub const F_GETOWN: u32 = 5;
+pub const F_GETSIG: u32 = 6;
+pub const F_NOTIFY: u32 = 7;
+pub const F_SETFD: u32 = 8;
+pub const F_SETFL: u32 = 9;
+pub const F_SETLEASE: u32 = 10;
+pub const F_SETLK: u32 = 11;
+pub const F_SETLKW: u32 = 12;
+pub const F_SETOWN: u32 = 13;
+pub const F_SETSIG: u32 = 14;
+pub const F_GETPATH: u32 = 15;
+pub const F_ADD_SEALS: u32 = 16;
+pub const F_GET_SEALS: u32 = 17;
+pub const F_DUPFD_CLOEXEC: u32 = 18;
+pub const F_SETPIPE_SZ: u32 = 19;
+pub const F_GETPIPE_SZ: u32 = 20;
+pub const F_RDLCK: u32 = 0;
+pub const F_WRLCK: u32 = 1;
+pub const F_UNLCK: u32 = 2;
+pub const LOCK_SH: u32 = 1;
+pub const LOCK_EX: u32 = 2;
+pub const LOCK_NB: u32 = 4;
+pub const LOCK_UN: u32 = 8;
+pub const FD_CLOEXEC: u32 = 1;
+pub const AT_FDCWD: i32 = -100;
+pub const AT_SYMLINK_NOFOLLOW: u32 = 256;
+pub const AT_EACCESS: u32 = 512;
+pub const AT_REMOVEDIR: u32 = 512;
+pub const AT_SYMLINK_FOLLOW: u32 = 1024;
+pub const AT_NO_AUTOMOUNT: u32 = 2048;
+pub const AT_EMPTY_PATH: u32 = 4096;
+pub const DN_ACCESS: u32 = 0;
+pub const DN_MODIFY: u32 = 1;
+pub const DN_CREATE: u32 = 2;
+pub const DN_DELETE: u32 = 3;
+pub const DN_RENAME: u32 = 4;
+pub const DN_ATTRIB: u32 = 5;
+pub const F_SEAL_SEAL: u32 = 1;
+pub const F_SEAL_SHRINK: u32 = 2;
+pub const F_SEAL_GROW: u32 = 4;
+pub const F_SEAL_WRITE: u32 = 8;
+pub const F_SEAL_FUTURE_WRITE: u32 = 16;
+pub const F_GETLK64: u32 = 4;
+pub const F_SETLK64: u32 = 11;
+pub const F_SETLKW64: u32 = 12;
+pub const PF_UNSPEC: u32 = 0;
+pub const PF_UNIX: u32 = 1;
+pub const PF_LOCAL: u32 = 1;
+pub const PF_INET: u32 = 2;
+pub const PF_INET6: u32 = 10;
+pub const PF_NETLINK: u32 = 16;
+pub const PF_ROUTE: u32 = 16;
+pub const PF_PACKET: u32 = 17;
+pub const PF_CAN: u32 = 29;
+pub const PF_BLUETOOTH: u32 = 31;
+pub const PF_IEEE802154: u32 = 36;
+pub const PF_VSOCK: u32 = 40;
+pub const PF_PKTRADIO: u32 = 64;
+pub const PF_RPMSG: u32 = 65;
+pub const AF_UNSPEC: u32 = 0;
+pub const AF_UNIX: u32 = 1;
+pub const AF_LOCAL: u32 = 1;
+pub const AF_INET: u32 = 2;
+pub const AF_INET6: u32 = 10;
+pub const AF_NETLINK: u32 = 16;
+pub const AF_ROUTE: u32 = 16;
+pub const AF_PACKET: u32 = 17;
+pub const AF_CAN: u32 = 29;
+pub const AF_BLUETOOTH: u32 = 31;
+pub const AF_IEEE802154: u32 = 36;
+pub const AF_VSOCK: u32 = 40;
+pub const AF_PKTRADIO: u32 = 64;
+pub const AF_RPMSG: u32 = 65;
+pub const SOCK_UNSPEC: u32 = 0;
+pub const SOCK_STREAM: u32 = 1;
+pub const SOCK_DGRAM: u32 = 2;
+pub const SOCK_RAW: u32 = 3;
+pub const SOCK_RDM: u32 = 4;
+pub const SOCK_SEQPACKET: u32 = 5;
+pub const SOCK_CTRL: u32 = 6;
+pub const SOCK_SMS: u32 = 7;
+pub const SOCK_PACKET: u32 = 10;
+pub const SOCK_CLOEXEC: u32 = 524288;
+pub const SOCK_NONBLOCK: u32 = 2048;
+pub const SOCK_MAX: u32 = 11;
+pub const SOCK_TYPE_MASK: u32 = 15;
+pub const MSG_OOB: u32 = 1;
+pub const MSG_PEEK: u32 = 2;
+pub const MSG_DONTROUTE: u32 = 4;
+pub const MSG_CTRUNC: u32 = 8;
+pub const MSG_PROXY: u32 = 16;
+pub const MSG_TRUNC: u32 = 32;
+pub const MSG_DONTWAIT: u32 = 64;
+pub const MSG_EOR: u32 = 128;
+pub const MSG_WAITALL: u32 = 256;
+pub const MSG_FIN: u32 = 512;
+pub const MSG_SYN: u32 = 1024;
+pub const MSG_CONFIRM: u32 = 2048;
+pub const MSG_RST: u32 = 4096;
+pub const MSG_ERRQUEUE: u32 = 8192;
+pub const MSG_NOSIGNAL: u32 = 16384;
+pub const MSG_MORE: u32 = 32768;
+pub const MSG_CMSG_CLOEXEC: u32 = 1048576;
+pub const SOL_SOCKET: u32 = 1;
+pub const SO_ACCEPTCONN: u32 = 0;
+pub const SO_BROADCAST: u32 = 1;
+pub const SO_DEBUG: u32 = 2;
+pub const SO_DONTROUTE: u32 = 3;
+pub const SO_ERROR: u32 = 4;
+pub const SO_KEEPALIVE: u32 = 5;
+pub const SO_LINGER: u32 = 6;
+pub const SO_OOBINLINE: u32 = 7;
+pub const SO_RCVBUF: u32 = 8;
+pub const SO_RCVLOWAT: u32 = 9;
+pub const SO_RCVTIMEO: u32 = 10;
+pub const SO_REUSEADDR: u32 = 11;
+pub const SO_SNDBUF: u32 = 12;
+pub const SO_SNDLOWAT: u32 = 13;
+pub const SO_SNDTIMEO: u32 = 14;
+pub const SO_TYPE: u32 = 15;
+pub const SO_TIMESTAMP: u32 = 16;
+pub const SO_BINDTODEVICE: u32 = 17;
+pub const SO_PEERCRED: u32 = 18;
+pub const SO_PRIORITY: u32 = 19;
+pub const SO_TIMESTAMPNS: u32 = 20;
+pub const SO_SNDBUFFORCE: u32 = 32;
+pub const SO_RCVBUFFORCE: u32 = 33;
+pub const SO_RXQ_OVFL: u32 = 40;
+pub const SOL_HCI: u32 = 0;
+pub const SOL_L2CAP: u32 = 6;
+pub const SOL_SCO: u32 = 17;
+pub const SOL_RFCOMM: u32 = 18;
+pub const SOL_PACKET: u32 = 19;
+pub const __SO_PROTOCOL: u32 = 16;
+pub const SHUT_RD: u32 = 1;
+pub const SHUT_WR: u32 = 2;
+pub const SHUT_RDWR: u32 = 3;
+pub const SOMAXCONN: u32 = 8;
+pub const SCM_RIGHTS: u32 = 1;
+pub const SCM_CREDENTIALS: u32 = 2;
+pub const SCM_SECURITY: u32 = 3;
+pub const SCM_TIMESTAMP: u32 = 16;
+pub const SS_MAXSIZE: u32 = 128;
+pub const DENY_INET_SOCK_ENABLE: u32 = 1;
+pub const DENY_INET_SOCK_DISABLE: u32 = 2;
+pub const LITTLE_ENDIAN: u32 = 1234;
+pub const __LITTLE_ENDIAN: u32 = 1234;
+pub const BIG_ENDIAN: u32 = 4321;
+pub const __BIG_ENDIAN: u32 = 4321;
+pub const BYTE_ORDER: u32 = 1234;
+pub const __BYTE_ORDER: u32 = 1234;
+pub const IPPROTO_IP: u32 = 0;
+pub const IPPROTO_HOPOPTS: u32 = 0;
+pub const IPPROTO_ICMP: u32 = 1;
+pub const IPPROTO_IGMP: u32 = 2;
+pub const IPPROTO_IPIP: u32 = 4;
+pub const IPPROTO_TCP: u32 = 6;
+pub const IPPROTO_EGP: u32 = 8;
+pub const IPPROTO_PUP: u32 = 12;
+pub const IPPROTO_UDP: u32 = 17;
+pub const IPPROTO_IDP: u32 = 22;
+pub const IPPROTO_TP: u32 = 29;
+pub const IPPROTO_DCCP: u32 = 33;
+pub const IPPROTO_IPV6: u32 = 41;
+pub const IPPROTO_ROUTING: u32 = 43;
+pub const IPPROTO_FRAGMENT: u32 = 44;
+pub const IPPROTO_RSVP: u32 = 46;
+pub const IPPROTO_GRE: u32 = 47;
+pub const IPPROTO_ESP: u32 = 50;
+pub const IPPROTO_AH: u32 = 51;
+pub const IPPROTO_ICMP6: u32 = 58;
+pub const IPPROTO_ICMPV6: u32 = 58;
+pub const IPPROTO_NONE: u32 = 59;
+pub const IPPROTO_DSTOPTS: u32 = 60;
+pub const IPPROTO_MTP: u32 = 92;
+pub const IPPROTO_ENCAP: u32 = 98;
+pub const IPPROTO_BEETPH: u32 = 94;
+pub const IPPROTO_PIM: u32 = 103;
+pub const IPPROTO_COMP: u32 = 108;
+pub const IPPROTO_SCTP: u32 = 132;
+pub const IPPROTO_UDPLITE: u32 = 136;
+pub const IPPROTO_MPLS: u32 = 137;
+pub const IPPROTO_RAW: u32 = 255;
+pub const IP_MULTICAST_IF: u32 = 17;
+pub const IP_MULTICAST_TTL: u32 = 18;
+pub const IP_MULTICAST_LOOP: u32 = 19;
+pub const IP_ADD_MEMBERSHIP: u32 = 20;
+pub const IP_DROP_MEMBERSHIP: u32 = 21;
+pub const IP_UNBLOCK_SOURCE: u32 = 22;
+pub const IP_BLOCK_SOURCE: u32 = 23;
+pub const IP_ADD_SOURCE_MEMBERSHIP: u32 = 24;
+pub const IP_DROP_SOURCE_MEMBERSHIP: u32 = 25;
+pub const IP_MSFILTER: u32 = 26;
+pub const IP_MULTICAST_ALL: u32 = 27;
+pub const IP_PKTINFO: u32 = 28;
+pub const IP_TOS: u32 = 29;
+pub const IP_TTL: u32 = 30;
+pub const IPV6_JOIN_GROUP: u32 = 17;
+pub const IPV6_LEAVE_GROUP: u32 = 18;
+pub const IPV6_MULTICAST_HOPS: u32 = 19;
+pub const IPV6_MULTICAST_IF: u32 = 20;
+pub const IPV6_MULTICAST_LOOP: u32 = 21;
+pub const IPV6_UNICAST_HOPS: u32 = 22;
+pub const IPV6_V6ONLY: u32 = 23;
+pub const IPV6_PKTINFO: u32 = 24;
+pub const IPV6_RECVPKTINFO: u32 = 25;
+pub const IPV6_TCLASS: u32 = 26;
+pub const IPV6_RECVHOPLIMIT: u32 = 27;
+pub const IPV6_HOPLIMIT: u32 = 28;
+pub const MCAST_EXCLUDE: u32 = 0;
+pub const MCAST_INCLUDE: u32 = 1;
+pub const IN_CLASSA_NET: u32 = 4278190080;
+pub const IN_CLASSA_NSHIFT: u32 = 24;
+pub const IN_CLASSA_HOST: u32 = 16777215;
+pub const IN_CLASSA_MAX: u32 = 128;
+pub const IN_CLASSB_NET: u32 = 4294901760;
+pub const IN_CLASSB_NSHIFT: u32 = 16;
+pub const IN_CLASSB_HOST: u32 = 65535;
+pub const IN_CLASSB_MAX: u32 = 65536;
+pub const IN_CLASSC_NET: u32 = 4294967040;
+pub const IN_CLASSC_NSHIFT: u32 = 8;
+pub const IN_CLASSC_HOST: u32 = 255;
+pub const INET_ADDRSTRLEN: u32 = 16;
+pub const INET6_ADDRSTRLEN: u32 = 46;
+pub const TCP_NODELAY: u32 = 16;
+pub const TCP_KEEPIDLE: u32 = 17;
+pub const TCP_KEEPINTVL: u32 = 18;
+pub const TCP_KEEPCNT: u32 = 19;
+pub const TCP_MAXSEG: u32 = 20;
+pub const TCP_CORK: u32 = 21;
+pub const IPPORT_RESERVED: u32 = 65535;
+pub const AI_PASSIVE: u32 = 1;
+pub const AI_CANONNAME: u32 = 2;
+pub const AI_NUMERICHOST: u32 = 4;
+pub const AI_NUMERICSERV: u32 = 8;
+pub const AI_V4MAPPED: u32 = 16;
+pub const AI_ALL: u32 = 32;
+pub const AI_ADDRCONFIG: u32 = 64;
+pub const NI_NOFQDN: u32 = 1;
+pub const NI_NUMERICHOST: u32 = 2;
+pub const NI_NAMEREQD: u32 = 4;
+pub const NI_NUMERICSERV: u32 = 8;
+pub const NI_NUMERICSCOPE: u32 = 16;
+pub const NI_DGRAM: u32 = 32;
+pub const EAI_AGAIN: u32 = 1;
+pub const EAI_BADFLAGS: u32 = 2;
+pub const EAI_FAIL: u32 = 3;
+pub const EAI_FAMILY: u32 = 4;
+pub const EAI_MEMORY: u32 = 5;
+pub const EAI_NONAME: u32 = 6;
+pub const EAI_SERVICE: u32 = 7;
+pub const EAI_SOCKTYPE: u32 = 8;
+pub const EAI_SYSTEM: u32 = 9;
+pub const EAI_OVERFLOW: u32 = 10;
+pub const EAI_NODATA: u32 = 11;
+pub const HOST_NOT_FOUND: u32 = 1;
+pub const NO_DATA: u32 = 2;
+pub const NO_ADDRESS: u32 = 2;
+pub const NO_RECOVERY: u32 = 3;
+pub const TRY_AGAIN: u32 = 4;
+pub const _INET_ADDRSTRLEN: u32 = 46;
+pub const NI_MAXHOST: u32 = 513;
+pub const NI_MAXSERV: u32 = 16;
+pub const IGNBRK: u32 = 1;
+pub const BRKINT: u32 = 2;
+pub const IGNPAR: u32 = 4;
+pub const PARMRK: u32 = 8;
+pub const INPCK: u32 = 16;
+pub const ISTRIP: u32 = 32;
+pub const INLCR: u32 = 64;
+pub const IGNCR: u32 = 128;
+pub const ICRNL: u32 = 256;
+pub const IUCLC: u32 = 512;
+pub const IXON: u32 = 1024;
+pub const IXANY: u32 = 2048;
+pub const IXOFF: u32 = 4096;
+pub const IMAXBEL: u32 = 8192;
+pub const OPOST: u32 = 1;
+pub const OLCUC: u32 = 2;
+pub const ONLCR: u32 = 4;
+pub const OCRNL: u32 = 8;
+pub const ONOCR: u32 = 16;
+pub const ONLRET: u32 = 32;
+pub const OFILL: u32 = 64;
+pub const NLDLY: u32 = 256;
+pub const NL0: u32 = 0;
+pub const NL1: u32 = 256;
+pub const CRDLY: u32 = 1536;
+pub const CR0: u32 = 0;
+pub const CR1: u32 = 512;
+pub const CR2: u32 = 1024;
+pub const CR3: u32 = 1536;
+pub const TABDLY: u32 = 6144;
+pub const TAB0: u32 = 0;
+pub const TAB1: u32 = 2048;
+pub const TAB2: u32 = 4096;
+pub const TAB3: u32 = 6144;
+pub const BSDLY: u32 = 8192;
+pub const BS0: u32 = 0;
+pub const BS1: u32 = 8192;
+pub const VTDLY: u32 = 16384;
+pub const VT0: u32 = 0;
+pub const VT1: u32 = 16384;
+pub const FFDLY: u32 = 32768;
+pub const FF0: u32 = 0;
+pub const FF1: u32 = 32768;
+pub const CSIZE: u32 = 48;
+pub const CS5: u32 = 0;
+pub const CS6: u32 = 16;
+pub const CS7: u32 = 32;
+pub const CS8: u32 = 48;
+pub const CSTOPB: u32 = 64;
+pub const CREAD: u32 = 128;
+pub const PARENB: u32 = 256;
+pub const PARODD: u32 = 512;
+pub const HUPCL: u32 = 1024;
+pub const CLOCAL: u32 = 2048;
+pub const CCTS_OFLOW: u32 = 536870912;
+pub const CRTS_IFLOW: u32 = 2147483648;
+pub const CRTSCTS: u32 = 2684354560;
+pub const ISIG: u32 = 1;
+pub const ICANON: u32 = 2;
+pub const XCASE: u32 = 4;
+pub const ECHO: u32 = 8;
+pub const ECHOE: u32 = 16;
+pub const ECHOK: u32 = 32;
+pub const ECHONL: u32 = 64;
+pub const NOFLSH: u32 = 128;
+pub const TOSTOP: u32 = 256;
+pub const ECHOCTL: u32 = 512;
+pub const ECHOKE: u32 = 2048;
+pub const FLUSHO: u32 = 4096;
+pub const IEXTEN: u32 = 32768;
+pub const VINTR: u32 = 0;
+pub const VQUIT: u32 = 1;
+pub const VERASE: u32 = 2;
+pub const VKILL: u32 = 3;
+pub const VEOF: u32 = 4;
+pub const VTIME: u32 = 5;
+pub const VMIN: u32 = 6;
+pub const VSTART: u32 = 8;
+pub const VSTOP: u32 = 9;
+pub const VSUSP: u32 = 10;
+pub const VEOL: u32 = 11;
+pub const NCCS: u32 = 12;
+pub const VLNEXT: u32 = 15;
+pub const VEOL2: u32 = 16;
+pub const B0: u32 = 0;
+pub const B50: u32 = 1;
+pub const B75: u32 = 2;
+pub const B110: u32 = 3;
+pub const B134: u32 = 4;
+pub const B150: u32 = 5;
+pub const B200: u32 = 6;
+pub const B300: u32 = 7;
+pub const B600: u32 = 8;
+pub const B1200: u32 = 9;
+pub const B1800: u32 = 10;
+pub const B2400: u32 = 11;
+pub const B4800: u32 = 12;
+pub const B9600: u32 = 13;
+pub const B19200: u32 = 14;
+pub const B38400: u32 = 15;
+pub const B57600: u32 = 4097;
+pub const B115200: u32 = 4098;
+pub const B230400: u32 = 4099;
+pub const B460800: u32 = 4100;
+pub const B500000: u32 = 4101;
+pub const B576000: u32 = 4102;
+pub const B921600: u32 = 4103;
+pub const B1000000: u32 = 4104;
+pub const B1152000: u32 = 4105;
+pub const B1500000: u32 = 4106;
+pub const B2000000: u32 = 4107;
+pub const B2500000: u32 = 4108;
+pub const B3000000: u32 = 4109;
+pub const B3500000: u32 = 4110;
+pub const B4000000: u32 = 4111;
+pub const TCSANOW: u32 = 0;
+pub const TCSADRAIN: u32 = 1;
+pub const TCSAFLUSH: u32 = 2;
+pub const TCIFLUSH: u32 = 0;
+pub const TCOFLUSH: u32 = 1;
+pub const TCIOFLUSH: u32 = 2;
+pub const TCOOFF: u32 = 0;
+pub const TCOON: u32 = 1;
+pub const TCIOFF: u32 = 2;
+pub const TCION: u32 = 3;
+pub const NSS_BUFLEN_PASSWD: u32 = 256;
+pub const MAXHOSTNAMELEN: u32 = 32;
 pub const F_OK: u32 = 0;
 pub const X_OK: u32 = 1;
 pub const W_OK: u32 = 2;
@@ -1414,581 +1925,15 @@ pub const __PTHREAD_CONDATTR_T_DEFINED: u32 = 1;
 pub const __PTHREAD_COND_T_DEFINED: u32 = 1;
 pub const __PTHREAD_MUTEXATTR_T_DEFINED: u32 = 1;
 pub const __PTHREAD_MUTEX_T_DEFINED: u32 = 1;
-pub const __PTHREAD_MUTEX_DEFAULT_FLAGS: u32 = 1;
+pub const __PTHREAD_MUTEX_DEFAULT_FLAGS: u32 = 0;
+pub const PTHREAD_MUTEX_DEFAULT_PRIO_INHERIT: u32 = 0;
+pub const PTHREAD_MUTEX_DEFAULT_PRIO_PROTECT: u32 = 0;
+pub const PTHREAD_MUTEX_DEFAULT_PRIO_FLAGS: u32 = 0;
 pub const __PTHREAD_BARRIERATTR_T_DEFINED: u32 = 1;
 pub const __PTHREAD_BARRIER_T_DEFINED: u32 = 1;
 pub const __PTHREAD_ONCE_T_DEFINED: u32 = 1;
 pub const __PTHREAD_RWLOCKATTR_T_DEFINED: u32 = 1;
 pub const __PTHREAD_RWLOCK_T_DEFINED: u32 = 1;
-pub const M_TRIM_THRESHOLD: i32 = -1;
-pub const M_TOP_PAD: i32 = -2;
-pub const M_MMAP_THRESHOLD: i32 = -3;
-pub const M_MMAP_MAX: i32 = -4;
-pub const M_CHECK_ACTION: i32 = -5;
-pub const M_PERTURB: i32 = -6;
-pub const M_ARENA_TEST: i32 = -7;
-pub const M_ARENA_MAX: i32 = -8;
-pub const MM_INIT_MAGIC: u32 = 204;
-pub const MM_ALLOC_MAGIC: u32 = 170;
-pub const MM_FREE_MAGIC: u32 = 85;
-pub const FILENAME_MAX: u32 = 96;
-pub const FOPEN_MAX: u32 = 16;
-pub const BUFSIZ: u32 = 128;
-pub const _IOFBF: u32 = 0;
-pub const _IOLBF: u32 = 1;
-pub const _IONBF: u32 = 2;
-pub const EOF: i32 = -1;
-pub const P_tmpdir: &[u8; 5] = b"/tmp\0";
-pub const L_tmpnam: u32 = 32;
-pub const TMP_MAX: u64 = 56800235584;
-pub const PERMISSION_BITMAP_SIZE: u32 = 2;
-pub const PROTOBUF_C__SERVICE_DESCRIPTOR_MAGIC: u32 = 336960451;
-pub const PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC: u32 = 682290937;
-pub const PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC: u32 = 289609135;
-pub const PROTOBUF_C_VERSION: &[u8; 6] = b"1.4.1\0";
-pub const PROTOBUF_C_VERSION_NUMBER: u32 = 1004001;
-pub const PROTOBUF_C_MIN_COMPILER_VERSION: u32 = 1000000;
-pub const FT_PARAM_END: u32 = 0;
-pub const MEMORY_REF_COUNT_ONLY: u32 = 0;
-pub const MEMORY_FEATURE_TYPE: u32 = 1;
-pub const MEMORY_PROTOBUF: u32 = 2;
-pub const JS_PROP_CONFIGURABLE: u32 = 1;
-pub const JS_PROP_WRITABLE: u32 = 2;
-pub const JS_PROP_ENUMERABLE: u32 = 4;
-pub const JS_PROP_C_W_E: u32 = 7;
-pub const JS_PROP_LENGTH: u32 = 8;
-pub const JS_PROP_TMASK: u32 = 48;
-pub const JS_PROP_NORMAL: u32 = 0;
-pub const JS_PROP_GETSET: u32 = 16;
-pub const JS_PROP_VARREF: u32 = 32;
-pub const JS_PROP_AUTOINIT: u32 = 48;
-pub const JS_PROP_HAS_SHIFT: u32 = 8;
-pub const JS_PROP_HAS_CONFIGURABLE: u32 = 256;
-pub const JS_PROP_HAS_WRITABLE: u32 = 512;
-pub const JS_PROP_HAS_ENUMERABLE: u32 = 1024;
-pub const JS_PROP_HAS_GET: u32 = 2048;
-pub const JS_PROP_HAS_SET: u32 = 4096;
-pub const JS_PROP_HAS_VALUE: u32 = 8192;
-pub const JS_PROP_THROW: u32 = 16384;
-pub const JS_PROP_THROW_STRICT: u32 = 32768;
-pub const JS_PROP_NO_ADD: u32 = 65536;
-pub const JS_PROP_NO_EXOTIC: u32 = 131072;
-pub const JS_DEFAULT_STACK_SIZE: u32 = 262144;
-pub const JS_EVAL_TYPE_GLOBAL: u32 = 0;
-pub const JS_EVAL_TYPE_MODULE: u32 = 1;
-pub const JS_EVAL_TYPE_DIRECT: u32 = 2;
-pub const JS_EVAL_TYPE_INDIRECT: u32 = 3;
-pub const JS_EVAL_TYPE_MASK: u32 = 3;
-pub const JS_EVAL_FLAG_STRICT: u32 = 8;
-pub const JS_EVAL_FLAG_STRIP: u32 = 16;
-pub const JS_EVAL_FLAG_COMPILE_ONLY: u32 = 32;
-pub const JS_EVAL_FLAG_BACKTRACE_BARRIER: u32 = 64;
-pub const JS_ATOM_NULL: u32 = 0;
-pub const JS_CALL_FLAG_CONSTRUCTOR: u32 = 1;
-pub const JS_GPN_STRING_MASK: u32 = 1;
-pub const JS_GPN_SYMBOL_MASK: u32 = 2;
-pub const JS_GPN_PRIVATE_MASK: u32 = 4;
-pub const JS_GPN_ENUM_ONLY: u32 = 16;
-pub const JS_GPN_SET_ENUM: u32 = 32;
-pub const JS_PARSE_JSON_EXT: u32 = 1;
-pub const JS_WRITE_OBJ_BYTECODE: u32 = 1;
-pub const JS_WRITE_OBJ_BSWAP: u32 = 2;
-pub const JS_WRITE_OBJ_SAB: u32 = 4;
-pub const JS_WRITE_OBJ_REFERENCE: u32 = 8;
-pub const JS_WRITE_OBJ_BYTECODE_OPTIMIZED: u32 = 16;
-pub const JS_READ_OBJ_BYTECODE: u32 = 1;
-pub const JS_READ_OBJ_ROM_DATA: u32 = 2;
-pub const JS_READ_OBJ_SAB: u32 = 4;
-pub const JS_READ_OBJ_REFERENCE: u32 = 8;
-pub const JS_READ_OBJ_BYTECODE_OPTIMIZED: u32 = 16;
-pub const JS_DEF_CFUNC: u32 = 0;
-pub const JS_DEF_CGETSET: u32 = 1;
-pub const JS_DEF_CGETSET_MAGIC: u32 = 2;
-pub const JS_DEF_PROP_STRING: u32 = 3;
-pub const JS_DEF_PROP_INT32: u32 = 4;
-pub const JS_DEF_PROP_INT64: u32 = 5;
-pub const JS_DEF_PROP_DOUBLE: u32 = 6;
-pub const JS_DEF_PROP_UNDEFINED: u32 = 7;
-pub const JS_DEF_OBJECT: u32 = 8;
-pub const JS_DEF_ALIAS: u32 = 9;
-pub const UV__EOF: i32 = -4095;
-pub const UV__UNKNOWN: i32 = -4094;
-pub const UV__EAI_ADDRFAMILY: i32 = -3000;
-pub const UV__EAI_AGAIN: i32 = -3001;
-pub const UV__EAI_BADFLAGS: i32 = -3002;
-pub const UV__EAI_CANCELED: i32 = -3003;
-pub const UV__EAI_FAIL: i32 = -3004;
-pub const UV__EAI_FAMILY: i32 = -3005;
-pub const UV__EAI_MEMORY: i32 = -3006;
-pub const UV__EAI_NODATA: i32 = -3007;
-pub const UV__EAI_NONAME: i32 = -3008;
-pub const UV__EAI_OVERFLOW: i32 = -3009;
-pub const UV__EAI_SERVICE: i32 = -3010;
-pub const UV__EAI_SOCKTYPE: i32 = -3011;
-pub const UV__EAI_BADHINTS: i32 = -3013;
-pub const UV__EAI_PROTOCOL: i32 = -3014;
-pub const UV__ECHARSET: i32 = -4080;
-pub const UV_VERSION_MAJOR: u32 = 1;
-pub const UV_VERSION_MINOR: u32 = 46;
-pub const UV_VERSION_PATCH: u32 = 0;
-pub const UV_VERSION_IS_RELEASE: u32 = 1;
-pub const UV_VERSION_SUFFIX: &[u8; 1] = b"\0";
-pub const UV_VERSION_HEX: u32 = 77312;
-pub const S_IXOTH: u32 = 1;
-pub const S_IWOTH: u32 = 2;
-pub const S_IROTH: u32 = 4;
-pub const S_IRWXO: u32 = 7;
-pub const S_IXGRP: u32 = 8;
-pub const S_IWGRP: u32 = 16;
-pub const S_IRGRP: u32 = 32;
-pub const S_IRWXG: u32 = 56;
-pub const S_IXUSR: u32 = 64;
-pub const S_IWUSR: u32 = 128;
-pub const S_IRUSR: u32 = 256;
-pub const S_IRWXU: u32 = 448;
-pub const S_IREAD: u32 = 256;
-pub const S_IWRITE: u32 = 128;
-pub const S_IEXEC: u32 = 64;
-pub const S_ISVTX: u32 = 512;
-pub const S_ISGID: u32 = 1024;
-pub const S_ISUID: u32 = 2048;
-pub const S_IFIFO: u32 = 4096;
-pub const S_IFCHR: u32 = 8192;
-pub const S_IFSEM: u32 = 12288;
-pub const S_IFDIR: u32 = 16384;
-pub const S_IFMQ: u32 = 20480;
-pub const S_IFBLK: u32 = 24576;
-pub const S_IFSHM: u32 = 28672;
-pub const S_IFREG: u32 = 32768;
-pub const S_IFMTD: u32 = 36864;
-pub const S_IFLNK: u32 = 40960;
-pub const S_IFSOCK: u32 = 49152;
-pub const S_IFMT: u32 = 61440;
-pub const UTIME_NOW: u32 = 1073741823;
-pub const UTIME_OMIT: u32 = 1073741822;
-pub const O_RDONLY: u32 = 1;
-pub const O_RDOK: u32 = 1;
-pub const O_WRONLY: u32 = 2;
-pub const O_WROK: u32 = 2;
-pub const O_RDWR: u32 = 3;
-pub const O_CREAT: u32 = 4;
-pub const O_EXCL: u32 = 8;
-pub const O_APPEND: u32 = 16;
-pub const O_TRUNC: u32 = 32;
-pub const O_NONBLOCK: u32 = 64;
-pub const O_NDELAY: u32 = 64;
-pub const O_SYNC: u32 = 128;
-pub const O_DSYNC: u32 = 128;
-pub const O_TEXT: u32 = 256;
-pub const O_DIRECT: u32 = 512;
-pub const O_CLOEXEC: u32 = 1024;
-pub const O_DIRECTORY: u32 = 2048;
-pub const O_NOFOLLOW: u32 = 4096;
-pub const O_LARGEFILE: u32 = 8192;
-pub const O_NOATIME: u32 = 262144;
-pub const O_RSYNC: u32 = 0;
-pub const O_ACCMODE: u32 = 3;
-pub const O_NOCTTY: u32 = 0;
-pub const O_BINARY: u32 = 0;
-pub const _O_MAXBIT: u32 = 8;
-pub const FNDELAY: u32 = 64;
-pub const FNONBLOCK: u32 = 64;
-pub const FAPPEND: u32 = 16;
-pub const FSYNC: u32 = 128;
-pub const FASYNC: u32 = 0;
-pub const FFCNTL: u32 = 208;
-pub const F_DUPFD: u32 = 0;
-pub const F_GETFD: u32 = 1;
-pub const F_GETFL: u32 = 2;
-pub const F_GETLEASE: u32 = 3;
-pub const F_GETLK: u32 = 4;
-pub const F_GETOWN: u32 = 5;
-pub const F_GETSIG: u32 = 6;
-pub const F_NOTIFY: u32 = 7;
-pub const F_SETFD: u32 = 8;
-pub const F_SETFL: u32 = 9;
-pub const F_SETLEASE: u32 = 10;
-pub const F_SETLK: u32 = 11;
-pub const F_SETLKW: u32 = 12;
-pub const F_SETOWN: u32 = 13;
-pub const F_SETSIG: u32 = 14;
-pub const F_GETPATH: u32 = 15;
-pub const F_ADD_SEALS: u32 = 16;
-pub const F_GET_SEALS: u32 = 17;
-pub const F_DUPFD_CLOEXEC: u32 = 18;
-pub const F_SETPIPE_SZ: u32 = 19;
-pub const F_GETPIPE_SZ: u32 = 20;
-pub const F_RDLCK: u32 = 0;
-pub const F_WRLCK: u32 = 1;
-pub const F_UNLCK: u32 = 2;
-pub const LOCK_SH: u32 = 1;
-pub const LOCK_EX: u32 = 2;
-pub const LOCK_NB: u32 = 4;
-pub const LOCK_UN: u32 = 8;
-pub const FD_CLOEXEC: u32 = 1;
-pub const AT_FDCWD: i32 = -100;
-pub const AT_SYMLINK_NOFOLLOW: u32 = 256;
-pub const AT_EACCESS: u32 = 512;
-pub const AT_REMOVEDIR: u32 = 512;
-pub const AT_SYMLINK_FOLLOW: u32 = 1024;
-pub const AT_NO_AUTOMOUNT: u32 = 2048;
-pub const AT_EMPTY_PATH: u32 = 4096;
-pub const DN_ACCESS: u32 = 0;
-pub const DN_MODIFY: u32 = 1;
-pub const DN_CREATE: u32 = 2;
-pub const DN_DELETE: u32 = 3;
-pub const DN_RENAME: u32 = 4;
-pub const DN_ATTRIB: u32 = 5;
-pub const F_SEAL_SEAL: u32 = 1;
-pub const F_SEAL_SHRINK: u32 = 2;
-pub const F_SEAL_GROW: u32 = 4;
-pub const F_SEAL_WRITE: u32 = 8;
-pub const F_SEAL_FUTURE_WRITE: u32 = 16;
-pub const F_GETLK64: u32 = 4;
-pub const F_SETLK64: u32 = 11;
-pub const F_SETLKW64: u32 = 12;
-pub const PF_UNSPEC: u32 = 0;
-pub const PF_UNIX: u32 = 1;
-pub const PF_LOCAL: u32 = 1;
-pub const PF_INET: u32 = 2;
-pub const PF_INET6: u32 = 10;
-pub const PF_NETLINK: u32 = 16;
-pub const PF_ROUTE: u32 = 16;
-pub const PF_PACKET: u32 = 17;
-pub const PF_CAN: u32 = 29;
-pub const PF_BLUETOOTH: u32 = 31;
-pub const PF_IEEE802154: u32 = 36;
-pub const PF_VSOCK: u32 = 40;
-pub const PF_PKTRADIO: u32 = 64;
-pub const PF_RPMSG: u32 = 65;
-pub const AF_UNSPEC: u32 = 0;
-pub const AF_UNIX: u32 = 1;
-pub const AF_LOCAL: u32 = 1;
-pub const AF_INET: u32 = 2;
-pub const AF_INET6: u32 = 10;
-pub const AF_NETLINK: u32 = 16;
-pub const AF_ROUTE: u32 = 16;
-pub const AF_PACKET: u32 = 17;
-pub const AF_CAN: u32 = 29;
-pub const AF_BLUETOOTH: u32 = 31;
-pub const AF_IEEE802154: u32 = 36;
-pub const AF_VSOCK: u32 = 40;
-pub const AF_PKTRADIO: u32 = 64;
-pub const AF_RPMSG: u32 = 65;
-pub const SOCK_UNSPEC: u32 = 0;
-pub const SOCK_STREAM: u32 = 1;
-pub const SOCK_DGRAM: u32 = 2;
-pub const SOCK_RAW: u32 = 3;
-pub const SOCK_RDM: u32 = 4;
-pub const SOCK_SEQPACKET: u32 = 5;
-pub const SOCK_CTRL: u32 = 6;
-pub const SOCK_SMS: u32 = 7;
-pub const SOCK_PACKET: u32 = 10;
-pub const SOCK_CLOEXEC: u32 = 524288;
-pub const SOCK_NONBLOCK: u32 = 2048;
-pub const SOCK_MAX: u32 = 11;
-pub const SOCK_TYPE_MASK: u32 = 15;
-pub const MSG_OOB: u32 = 1;
-pub const MSG_PEEK: u32 = 2;
-pub const MSG_DONTROUTE: u32 = 4;
-pub const MSG_CTRUNC: u32 = 8;
-pub const MSG_PROXY: u32 = 16;
-pub const MSG_TRUNC: u32 = 32;
-pub const MSG_DONTWAIT: u32 = 64;
-pub const MSG_EOR: u32 = 128;
-pub const MSG_WAITALL: u32 = 256;
-pub const MSG_FIN: u32 = 512;
-pub const MSG_SYN: u32 = 1024;
-pub const MSG_CONFIRM: u32 = 2048;
-pub const MSG_RST: u32 = 4096;
-pub const MSG_ERRQUEUE: u32 = 8192;
-pub const MSG_NOSIGNAL: u32 = 16384;
-pub const MSG_MORE: u32 = 32768;
-pub const MSG_CMSG_CLOEXEC: u32 = 1048576;
-pub const SOL_SOCKET: u32 = 1;
-pub const SO_ACCEPTCONN: u32 = 0;
-pub const SO_BROADCAST: u32 = 1;
-pub const SO_DEBUG: u32 = 2;
-pub const SO_DONTROUTE: u32 = 3;
-pub const SO_ERROR: u32 = 4;
-pub const SO_KEEPALIVE: u32 = 5;
-pub const SO_LINGER: u32 = 6;
-pub const SO_OOBINLINE: u32 = 7;
-pub const SO_RCVBUF: u32 = 8;
-pub const SO_RCVLOWAT: u32 = 9;
-pub const SO_RCVTIMEO: u32 = 10;
-pub const SO_REUSEADDR: u32 = 11;
-pub const SO_SNDBUF: u32 = 12;
-pub const SO_SNDLOWAT: u32 = 13;
-pub const SO_SNDTIMEO: u32 = 14;
-pub const SO_TYPE: u32 = 15;
-pub const SO_TIMESTAMP: u32 = 16;
-pub const SO_BINDTODEVICE: u32 = 17;
-pub const SO_PEERCRED: u32 = 18;
-pub const SO_SNDBUFFORCE: u32 = 32;
-pub const SO_RCVBUFFORCE: u32 = 33;
-pub const SO_RXQ_OVFL: u32 = 40;
-pub const SOL_HCI: u32 = 0;
-pub const SOL_L2CAP: u32 = 6;
-pub const SOL_SCO: u32 = 17;
-pub const SOL_RFCOMM: u32 = 18;
-pub const SOL_PACKET: u32 = 19;
-pub const __SO_PROTOCOL: u32 = 16;
-pub const SHUT_RD: u32 = 1;
-pub const SHUT_WR: u32 = 2;
-pub const SHUT_RDWR: u32 = 3;
-pub const SOMAXCONN: u32 = 8;
-pub const SCM_RIGHTS: u32 = 1;
-pub const SCM_CREDENTIALS: u32 = 2;
-pub const SCM_SECURITY: u32 = 3;
-pub const SCM_TIMESTAMP: u32 = 16;
-pub const SS_MAXSIZE: u32 = 128;
-pub const DENY_INET_SOCK_ENABLE: u32 = 1;
-pub const DENY_INET_SOCK_DISABLE: u32 = 2;
-pub const LITTLE_ENDIAN: u32 = 1234;
-pub const __LITTLE_ENDIAN: u32 = 1234;
-pub const BIG_ENDIAN: u32 = 4321;
-pub const __BIG_ENDIAN: u32 = 4321;
-pub const BYTE_ORDER: u32 = 1234;
-pub const __BYTE_ORDER: u32 = 1234;
-pub const IPPROTO_IP: u32 = 0;
-pub const IPPROTO_HOPOPTS: u32 = 0;
-pub const IPPROTO_ICMP: u32 = 1;
-pub const IPPROTO_IGMP: u32 = 2;
-pub const IPPROTO_IPIP: u32 = 4;
-pub const IPPROTO_TCP: u32 = 6;
-pub const IPPROTO_EGP: u32 = 8;
-pub const IPPROTO_PUP: u32 = 12;
-pub const IPPROTO_UDP: u32 = 17;
-pub const IPPROTO_IDP: u32 = 22;
-pub const IPPROTO_TP: u32 = 29;
-pub const IPPROTO_DCCP: u32 = 33;
-pub const IPPROTO_IPV6: u32 = 41;
-pub const IPPROTO_ROUTING: u32 = 43;
-pub const IPPROTO_FRAGMENT: u32 = 44;
-pub const IPPROTO_RSVP: u32 = 46;
-pub const IPPROTO_GRE: u32 = 47;
-pub const IPPROTO_ESP: u32 = 50;
-pub const IPPROTO_AH: u32 = 51;
-pub const IPPROTO_ICMP6: u32 = 58;
-pub const IPPROTO_ICMPV6: u32 = 58;
-pub const IPPROTO_NONE: u32 = 59;
-pub const IPPROTO_DSTOPTS: u32 = 60;
-pub const IPPROTO_MTP: u32 = 92;
-pub const IPPROTO_ENCAP: u32 = 98;
-pub const IPPROTO_BEETPH: u32 = 94;
-pub const IPPROTO_PIM: u32 = 103;
-pub const IPPROTO_COMP: u32 = 108;
-pub const IPPROTO_SCTP: u32 = 132;
-pub const IPPROTO_UDPLITE: u32 = 136;
-pub const IPPROTO_MPLS: u32 = 137;
-pub const IPPROTO_RAW: u32 = 255;
-pub const IP_MULTICAST_IF: u32 = 17;
-pub const IP_MULTICAST_TTL: u32 = 18;
-pub const IP_MULTICAST_LOOP: u32 = 19;
-pub const IP_ADD_MEMBERSHIP: u32 = 20;
-pub const IP_DROP_MEMBERSHIP: u32 = 21;
-pub const IP_UNBLOCK_SOURCE: u32 = 22;
-pub const IP_BLOCK_SOURCE: u32 = 23;
-pub const IP_ADD_SOURCE_MEMBERSHIP: u32 = 24;
-pub const IP_DROP_SOURCE_MEMBERSHIP: u32 = 25;
-pub const IP_MSFILTER: u32 = 26;
-pub const IP_MULTICAST_ALL: u32 = 27;
-pub const IP_PKTINFO: u32 = 28;
-pub const IP_TOS: u32 = 29;
-pub const IP_TTL: u32 = 30;
-pub const IPV6_JOIN_GROUP: u32 = 17;
-pub const IPV6_LEAVE_GROUP: u32 = 18;
-pub const IPV6_MULTICAST_HOPS: u32 = 19;
-pub const IPV6_MULTICAST_IF: u32 = 20;
-pub const IPV6_MULTICAST_LOOP: u32 = 21;
-pub const IPV6_UNICAST_HOPS: u32 = 22;
-pub const IPV6_V6ONLY: u32 = 23;
-pub const IPV6_PKTINFO: u32 = 24;
-pub const IPV6_RECVPKTINFO: u32 = 25;
-pub const IPV6_TCLASS: u32 = 26;
-pub const IPV6_RECVHOPLIMIT: u32 = 27;
-pub const IPV6_HOPLIMIT: u32 = 28;
-pub const MCAST_EXCLUDE: u32 = 0;
-pub const MCAST_INCLUDE: u32 = 1;
-pub const IN_CLASSA_NET: u32 = 4278190080;
-pub const IN_CLASSA_NSHIFT: u32 = 24;
-pub const IN_CLASSA_HOST: u32 = 16777215;
-pub const IN_CLASSA_MAX: u32 = 128;
-pub const IN_CLASSB_NET: u32 = 4294901760;
-pub const IN_CLASSB_NSHIFT: u32 = 16;
-pub const IN_CLASSB_HOST: u32 = 65535;
-pub const IN_CLASSB_MAX: u32 = 65536;
-pub const IN_CLASSC_NET: u32 = 4294967040;
-pub const IN_CLASSC_NSHIFT: u32 = 8;
-pub const IN_CLASSC_HOST: u32 = 255;
-pub const INET_ADDRSTRLEN: u32 = 16;
-pub const INET6_ADDRSTRLEN: u32 = 46;
-pub const TCP_NODELAY: u32 = 16;
-pub const TCP_KEEPIDLE: u32 = 17;
-pub const TCP_KEEPINTVL: u32 = 18;
-pub const TCP_KEEPCNT: u32 = 19;
-pub const TCP_MAXSEG: u32 = 20;
-pub const IPPORT_RESERVED: u32 = 65535;
-pub const AI_PASSIVE: u32 = 1;
-pub const AI_CANONNAME: u32 = 2;
-pub const AI_NUMERICHOST: u32 = 4;
-pub const AI_NUMERICSERV: u32 = 8;
-pub const AI_V4MAPPED: u32 = 16;
-pub const AI_ALL: u32 = 32;
-pub const AI_ADDRCONFIG: u32 = 64;
-pub const NI_NOFQDN: u32 = 1;
-pub const NI_NUMERICHOST: u32 = 2;
-pub const NI_NAMEREQD: u32 = 4;
-pub const NI_NUMERICSERV: u32 = 8;
-pub const NI_NUMERICSCOPE: u32 = 16;
-pub const NI_DGRAM: u32 = 32;
-pub const EAI_AGAIN: u32 = 1;
-pub const EAI_BADFLAGS: u32 = 2;
-pub const EAI_FAIL: u32 = 3;
-pub const EAI_FAMILY: u32 = 4;
-pub const EAI_MEMORY: u32 = 5;
-pub const EAI_NONAME: u32 = 6;
-pub const EAI_SERVICE: u32 = 7;
-pub const EAI_SOCKTYPE: u32 = 8;
-pub const EAI_SYSTEM: u32 = 9;
-pub const EAI_OVERFLOW: u32 = 10;
-pub const EAI_NODATA: u32 = 11;
-pub const HOST_NOT_FOUND: u32 = 1;
-pub const NO_DATA: u32 = 2;
-pub const NO_ADDRESS: u32 = 2;
-pub const NO_RECOVERY: u32 = 3;
-pub const TRY_AGAIN: u32 = 4;
-pub const _INET_ADDRSTRLEN: u32 = 46;
-pub const NI_MAXHOST: u32 = 513;
-pub const NI_MAXSERV: u32 = 16;
-pub const IGNBRK: u32 = 1;
-pub const BRKINT: u32 = 2;
-pub const IGNPAR: u32 = 4;
-pub const PARMRK: u32 = 8;
-pub const INPCK: u32 = 16;
-pub const ISTRIP: u32 = 32;
-pub const INLCR: u32 = 64;
-pub const IGNCR: u32 = 128;
-pub const ICRNL: u32 = 256;
-pub const IUCLC: u32 = 512;
-pub const IXON: u32 = 1024;
-pub const IXANY: u32 = 2048;
-pub const IXOFF: u32 = 4096;
-pub const IMAXBEL: u32 = 8192;
-pub const OPOST: u32 = 1;
-pub const OLCUC: u32 = 2;
-pub const ONLCR: u32 = 4;
-pub const OCRNL: u32 = 8;
-pub const ONOCR: u32 = 16;
-pub const ONLRET: u32 = 32;
-pub const OFILL: u32 = 64;
-pub const NLDLY: u32 = 256;
-pub const NL0: u32 = 0;
-pub const NL1: u32 = 256;
-pub const CRDLY: u32 = 1536;
-pub const CR0: u32 = 0;
-pub const CR1: u32 = 512;
-pub const CR2: u32 = 1024;
-pub const CR3: u32 = 1536;
-pub const TABDLY: u32 = 6144;
-pub const TAB0: u32 = 0;
-pub const TAB1: u32 = 2048;
-pub const TAB2: u32 = 4096;
-pub const TAB3: u32 = 6144;
-pub const BSDLY: u32 = 8192;
-pub const BS0: u32 = 0;
-pub const BS1: u32 = 8192;
-pub const VTDLY: u32 = 16384;
-pub const VT0: u32 = 0;
-pub const VT1: u32 = 16384;
-pub const FFDLY: u32 = 32768;
-pub const FF0: u32 = 0;
-pub const FF1: u32 = 32768;
-pub const CSIZE: u32 = 48;
-pub const CS5: u32 = 0;
-pub const CS6: u32 = 16;
-pub const CS7: u32 = 32;
-pub const CS8: u32 = 48;
-pub const CSTOPB: u32 = 64;
-pub const CREAD: u32 = 128;
-pub const PARENB: u32 = 256;
-pub const PARODD: u32 = 512;
-pub const HUPCL: u32 = 1024;
-pub const CLOCAL: u32 = 2048;
-pub const CCTS_OFLOW: u32 = 536870912;
-pub const CRTS_IFLOW: u32 = 2147483648;
-pub const CRTSCTS: u32 = 2684354560;
-pub const ISIG: u32 = 1;
-pub const ICANON: u32 = 2;
-pub const XCASE: u32 = 4;
-pub const ECHO: u32 = 8;
-pub const ECHOE: u32 = 16;
-pub const ECHOK: u32 = 32;
-pub const ECHONL: u32 = 64;
-pub const NOFLSH: u32 = 128;
-pub const TOSTOP: u32 = 256;
-pub const ECHOCTL: u32 = 512;
-pub const ECHOKE: u32 = 2048;
-pub const FLUSHO: u32 = 4096;
-pub const IEXTEN: u32 = 32768;
-pub const VINTR: u32 = 0;
-pub const VQUIT: u32 = 1;
-pub const VERASE: u32 = 2;
-pub const VKILL: u32 = 3;
-pub const VEOF: u32 = 4;
-pub const VTIME: u32 = 5;
-pub const VMIN: u32 = 6;
-pub const VSTART: u32 = 8;
-pub const VSTOP: u32 = 9;
-pub const VSUSP: u32 = 10;
-pub const VEOL: u32 = 11;
-pub const NCCS: u32 = 12;
-pub const VLNEXT: u32 = 15;
-pub const VEOL2: u32 = 16;
-pub const B0: u32 = 0;
-pub const B50: u32 = 1;
-pub const B75: u32 = 2;
-pub const B110: u32 = 3;
-pub const B134: u32 = 4;
-pub const B150: u32 = 5;
-pub const B200: u32 = 6;
-pub const B300: u32 = 7;
-pub const B600: u32 = 8;
-pub const B1200: u32 = 9;
-pub const B1800: u32 = 10;
-pub const B2400: u32 = 11;
-pub const B4800: u32 = 12;
-pub const B9600: u32 = 13;
-pub const B19200: u32 = 14;
-pub const B38400: u32 = 15;
-pub const B57600: u32 = 4097;
-pub const B115200: u32 = 4098;
-pub const B230400: u32 = 4099;
-pub const B460800: u32 = 4100;
-pub const B500000: u32 = 4101;
-pub const B576000: u32 = 4102;
-pub const B921600: u32 = 4103;
-pub const B1000000: u32 = 4104;
-pub const B1152000: u32 = 4105;
-pub const B1500000: u32 = 4106;
-pub const B2000000: u32 = 4107;
-pub const B2500000: u32 = 4108;
-pub const B3000000: u32 = 4109;
-pub const B3500000: u32 = 4110;
-pub const B4000000: u32 = 4111;
-pub const TCSANOW: u32 = 0;
-pub const TCSADRAIN: u32 = 1;
-pub const TCSAFLUSH: u32 = 2;
-pub const TCIFLUSH: u32 = 0;
-pub const TCOFLUSH: u32 = 1;
-pub const TCIOFLUSH: u32 = 2;
-pub const TCOOFF: u32 = 0;
-pub const TCOON: u32 = 1;
-pub const TCIOFF: u32 = 2;
-pub const TCION: u32 = 3;
-pub const NSS_BUFLEN_PASSWD: u32 = 256;
-pub const MAXHOSTNAMELEN: u32 = 32;
 pub const UV__DT_FILE: u32 = 8;
 pub const UV__DT_DIR: u32 = 4;
 pub const UV__DT_LINK: u32 = 10;
@@ -2117,6 +2062,8 @@ pub type u_int64_t = u64;
 pub struct fsid_s {
     pub val: [cty::c_int; 2usize],
 }
+pub type atomic_t = i32;
+pub type atomic64_t = i64;
 pub type main_t = ::core::option::Option<
     unsafe extern "C" fn(argc: cty::c_int, argv: *mut *mut cty::c_char) -> cty::c_int,
 >;
@@ -2425,8 +2372,71 @@ unsafe extern "C" {
 unsafe extern "C" {
     pub fn dirfd(dirp: *mut DIR) -> cty::c_int;
 }
+pub type __int8_t = cty::c_schar;
+pub type __uint8_t = cty::c_uchar;
+pub type __int16_t = cty::c_short;
+pub type __uint16_t = cty::c_ushort;
+pub type __int32_t = cty::c_int;
+pub type __uint32_t = cty::c_uint;
+pub type __int64_t = cty::c_longlong;
+pub type __uint64_t = cty::c_ulonglong;
+pub type __int_least8_t = cty::c_schar;
+pub type __uint_least8_t = cty::c_uchar;
+pub type __int_least16_t = cty::c_short;
+pub type __uint_least16_t = cty::c_ushort;
+pub type __int_least32_t = cty::c_int;
+pub type __uint_least32_t = cty::c_uint;
+pub type __int_least64_t = cty::c_longlong;
+pub type __uint_least64_t = cty::c_ulonglong;
+pub type __intmax_t = cty::c_longlong;
+pub type __uintmax_t = cty::c_ulonglong;
+pub type __intptr_t = cty::c_int;
+pub type __uintptr_t = cty::c_uint;
+pub type __blkcnt_t = cty::c_long;
+pub type __blksize_t = cty::c_long;
+pub type __fsblkcnt_t = __uint64_t;
+pub type __fsfilcnt_t = __uint32_t;
+pub type _off_t = cty::c_long;
+pub type __pid_t = cty::c_int;
+pub type __dev_t = cty::c_short;
+pub type __uid_t = cty::c_ushort;
+pub type __gid_t = cty::c_ushort;
+pub type __id_t = __uint32_t;
+pub type __ino_t = cty::c_ushort;
+pub type __mode_t = __uint32_t;
+pub type _off64_t = cty::c_longlong;
+pub type __off_t = _off_t;
+pub type __loff_t = _off64_t;
+pub type __key_t = cty::c_long;
+pub type _fpos_t = cty::c_long;
+pub type __size_t = cty::c_uint;
+pub type __ssize_t = _ssize_t;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct _mbstate_t {
+    pub __count: cty::c_int,
+    pub __value: _mbstate_t__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union _mbstate_t__bindgen_ty_1 {
+    pub __wch: wint_t,
+    pub __wchb: [cty::c_uchar; 4usize],
+}
+pub type _iconv_t = *mut cty::c_void;
+pub type __clock_t = cty::c_ulong;
+pub type __time_t = __int_least64_t;
+pub type __clockid_t = cty::c_ulong;
+pub type __daddr_t = cty::c_long;
+pub type __timer_t = cty::c_ulong;
+pub type __sa_family_t = __uint8_t;
+pub type __socklen_t = __uint32_t;
+pub type __nl_item = cty::c_int;
+pub type __nlink_t = cty::c_ushort;
+pub type __suseconds_t = cty::c_long;
+pub type __useconds_t = cty::c_ulong;
+pub type __va_list = u32;
 #[repr(u32)]
-#[doc = " Public Types"]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum memory_order {
     memory_order_relaxed = 0,
@@ -2436,7 +2446,6 @@ pub enum memory_order {
     memory_order_acq_rel = 4,
     memory_order_seq_cst = 5,
 }
-pub type atomic_flag = cty::c_int;
 pub type atomic_bool = bool;
 pub type atomic_char = cty::c_char;
 pub type atomic_schar = cty::c_schar;
@@ -2450,68 +2459,56 @@ pub type atomic_ulong = cty::c_ulong;
 pub type atomic_llong = cty::c_longlong;
 pub type atomic_ullong = cty::c_ulonglong;
 pub type atomic_wchar_t = wchar_t;
-unsafe extern "C" {
-    #[doc = " Public Function Prototypes"]
-    pub fn nx_atomic_store_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int);
+pub type atomic_int_least8_t = int_least8_t;
+pub type atomic_uint_least8_t = uint_least8_t;
+pub type atomic_int_least16_t = int_least16_t;
+pub type atomic_uint_least16_t = uint_least16_t;
+pub type atomic_int_least32_t = int_least32_t;
+pub type atomic_uint_least32_t = uint_least32_t;
+pub type atomic_int_least64_t = int_least64_t;
+pub type atomic_uint_least64_t = uint_least64_t;
+pub type atomic_int_fast8_t = int_fast8_t;
+pub type atomic_uint_fast8_t = uint_fast8_t;
+pub type atomic_int_fast16_t = int_fast16_t;
+pub type atomic_uint_fast16_t = uint_fast16_t;
+pub type atomic_int_fast32_t = int_fast32_t;
+pub type atomic_uint_fast32_t = uint_fast32_t;
+pub type atomic_int_fast64_t = int_fast64_t;
+pub type atomic_uint_fast64_t = uint_fast64_t;
+pub type atomic_intptr_t = isize;
+pub type atomic_uintptr_t = usize;
+pub type atomic_size_t = usize;
+pub type atomic_ptrdiff_t = isize;
+pub type atomic_intmax_t = intmax_t;
+pub type atomic_uintmax_t = uintmax_t;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct atomic_flag {
+    pub __flag: atomic_bool,
 }
 unsafe extern "C" {
-    pub fn nx_atomic_store_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int);
+    pub fn nx_atomic_store_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int);
 }
 unsafe extern "C" {
-    pub fn nx_atomic_store_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int);
+    pub fn nx_atomic_store_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int);
 }
 unsafe extern "C" {
-    pub fn nx_atomic_store_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int);
+    pub fn nx_atomic_load_4(ptr: *const cty::c_void, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_load_1(ptr: *const cty::c_void, memorder: cty::c_int) -> u8;
+    pub fn nx_atomic_load_8(ptr: *const cty::c_void, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_load_2(ptr: *const cty::c_void, memorder: cty::c_int) -> u16;
+    pub fn nx_atomic_exchange_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_load_4(ptr: *const cty::c_void, memorder: cty::c_int) -> u32;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_load_8(ptr: *const cty::c_void, memorder: cty::c_int) -> u64;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_exchange_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int) -> u8;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_exchange_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int) -> u16;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_exchange_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int) -> u32;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_exchange_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int) -> u64;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_compare_exchange_1(
-        mem: *mut cty::c_void,
-        expect: *mut cty::c_void,
-        desired: u8,
-        weak: bool,
-        success: cty::c_int,
-        failure: cty::c_int,
-    ) -> bool;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_compare_exchange_2(
-        mem: *mut cty::c_void,
-        expect: *mut cty::c_void,
-        desired: u16,
-        weak: bool,
-        success: cty::c_int,
-        failure: cty::c_int,
-    ) -> bool;
+    pub fn nx_atomic_exchange_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
     pub fn nx_atomic_compare_exchange_4(
-        mem: *mut cty::c_void,
+        ptr: *mut cty::c_void,
         expect: *mut cty::c_void,
-        desired: u32,
+        desired: i32,
         weak: bool,
         success: cty::c_int,
         failure: cty::c_int,
@@ -2519,85 +2516,43 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn nx_atomic_compare_exchange_8(
-        mem: *mut cty::c_void,
+        ptr: *mut cty::c_void,
         expect: *mut cty::c_void,
-        desired: u64,
+        desired: i64,
         weak: bool,
         success: cty::c_int,
         failure: cty::c_int,
     ) -> bool;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_flag_test_and_set_1(ptr: *const cty::c_void, memorder: cty::c_int) -> u8;
+    pub fn nx_atomic_fetch_add_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_flag_test_and_set_2(ptr: *const cty::c_void, memorder: cty::c_int) -> u16;
+    pub fn nx_atomic_fetch_add_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_flag_test_and_set_4(ptr: *const cty::c_void, memorder: cty::c_int) -> u32;
+    pub fn nx_atomic_fetch_sub_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_flag_test_and_set_8(ptr: *const cty::c_void, memorder: cty::c_int) -> u64;
+    pub fn nx_atomic_fetch_sub_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_fetch_add_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int) -> u8;
+    pub fn nx_atomic_fetch_and_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_fetch_add_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int) -> u16;
+    pub fn nx_atomic_fetch_and_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_fetch_add_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int) -> u32;
+    pub fn nx_atomic_fetch_or_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_fetch_add_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int) -> u64;
+    pub fn nx_atomic_fetch_or_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_fetch_sub_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int) -> u8;
+    pub fn nx_atomic_fetch_xor_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int) -> i32;
 }
 unsafe extern "C" {
-    pub fn nx_atomic_fetch_sub_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int) -> u16;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_sub_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int) -> u32;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_sub_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int) -> u64;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_and_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int) -> u8;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_and_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int) -> u16;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_and_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int) -> u32;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_and_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int) -> u64;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_or_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int) -> u8;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_or_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int) -> u16;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_or_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int) -> u32;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_or_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int) -> u64;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_xor_1(ptr: *mut cty::c_void, value: u8, memorder: cty::c_int) -> u8;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_xor_2(ptr: *mut cty::c_void, value: u16, memorder: cty::c_int) -> u16;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_xor_4(ptr: *mut cty::c_void, value: u32, memorder: cty::c_int) -> u32;
-}
-unsafe extern "C" {
-    pub fn nx_atomic_fetch_xor_8(ptr: *mut cty::c_void, value: u64, memorder: cty::c_int) -> u64;
+    pub fn nx_atomic_fetch_xor_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
     pub fn _assert(
@@ -2605,6 +2560,7 @@ unsafe extern "C" {
         linenum: cty::c_int,
         msg: *const cty::c_char,
         regs: *mut cty::c_void,
+        irq: bool,
     );
 }
 unsafe extern "C" {
@@ -2647,11 +2603,17 @@ pub struct dq_queue_s {
 }
 pub type dq_queue_t = dq_queue_s;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct sem_s {
-    pub semcount: i16,
+    pub val: sem_s__bindgen_ty_1,
     pub flags: u8,
     pub waitlist: dq_queue_t,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union sem_s__bindgen_ty_1 {
+    pub semcount: i32,
+    pub mholder: u32,
 }
 pub type sem_t = sem_s;
 unsafe extern "C" {
@@ -2700,45 +2662,189 @@ unsafe extern "C" {
     #[doc = " Name: sem_getprotocol\n\n Description:\n    Return the value of the semaphore protocol attribute.\n\n Input Parameters:\n    sem      - A pointer to the semaphore whose attributes are to be\n               queried.\n    protocol - The user provided location in which to store the protocol\n               value.\n\n Returned Value:\n   This function is exposed as a non-standard application interface.  It\n   returns zero (OK) if successful.  Otherwise, -1 (ERROR) is returned and\n   the errno value is set appropriately.\n"]
     pub fn sem_getprotocol(sem: *mut sem_t, protocol: *mut cty::c_int) -> cty::c_int;
 }
-#[doc = " Type Definitions"]
+#[doc = " Public Types"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct imaxdiv_s {
-    pub quot: intmax_t,
-    pub rem: intmax_t,
+pub struct sigset_s {
+    pub _elem: [u32; 2usize],
 }
-#[doc = " Type Definitions"]
-pub type imaxdiv_t = imaxdiv_s;
+#[doc = " Public Types"]
+pub type sigset_t = sigset_s;
+pub type sig_atomic_t = cty::c_int;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union sigval {
+    pub sival_int: cty::c_int,
+    pub sival_ptr: *mut cty::c_void,
+}
+pub type sigev_notify_function_t = ::core::option::Option<unsafe extern "C" fn(value: sigval)>;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct sigevent {
+    pub sigev_notify: u8,
+    pub sigev_signo: u8,
+    pub sigev_value: sigval,
+    pub _sigev_un: sigevent__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union sigevent__bindgen_ty_1 {
+    pub _sigev_thread: sigevent__bindgen_ty_1__bindgen_ty_1,
+    pub _tid: pid_t,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct sigevent__bindgen_ty_1__bindgen_ty_1 {
+    pub _function: sigev_notify_function_t,
+    pub _attribute: *mut pthread_attr_s,
+}
+pub type sigevent_t = sigevent;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct siginfo {
+    pub si_signo: u8,
+    pub si_code: u8,
+    pub si_errno: u8,
+    pub si_value: sigval,
+    pub si_pid: pid_t,
+    pub si_status: cty::c_int,
+    pub si_user: *mut cty::c_void,
+}
+pub type siginfo_t = siginfo;
+pub type _sa_handler_t = ::core::option::Option<unsafe extern "C" fn(signo: cty::c_int)>;
+pub type _sa_sigaction_t = ::core::option::Option<
+    unsafe extern "C" fn(signo: cty::c_int, siginfo: *mut siginfo_t, context: *mut cty::c_void),
+>;
+pub type sighandler_t = _sa_handler_t;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct sigaction {
+    pub sa_u: sigaction__bindgen_ty_1,
+    pub sa_mask: sigset_t,
+    pub sa_flags: cty::c_int,
+    pub __bindgen_anon_1: sigaction__bindgen_ty_2,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union sigaction__bindgen_ty_1 {
+    pub _sa_handler: _sa_handler_t,
+    pub _sa_sigaction: _sa_sigaction_t,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union sigaction__bindgen_ty_2 {
+    pub sa_restorer: ::core::option::Option<unsafe extern "C" fn()>,
+    pub sa_user: *mut cty::c_void,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct stack_t {
+    pub ss_sp: *mut cty::c_void,
+    pub ss_flags: cty::c_int,
+    pub ss_size: usize,
+}
+pub type sig_t = ::core::option::Option<unsafe extern "C" fn(arg1: cty::c_int)>;
 unsafe extern "C" {
-    pub fn imaxabs(j: intmax_t) -> intmax_t;
+    pub fn kill(pid: pid_t, signo: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
-    pub fn imaxdiv(number: intmax_t, denom: intmax_t) -> imaxdiv_t;
+    pub fn killpg(pgrp: pid_t, signo: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
-    pub fn strtoimax(
-        nptr: *const cty::c_char,
-        endptr: *mut *mut cty::c_char,
-        base: cty::c_int,
-    ) -> intmax_t;
+    pub fn tgkill(pid: pid_t, tid: pid_t, signo: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
-    pub fn strtoumax(
-        nptr: *const cty::c_char,
-        endptr: *mut *mut cty::c_char,
-        base: cty::c_int,
-    ) -> uintmax_t;
+    pub fn psignal(signum: cty::c_int, message: *const cty::c_char);
 }
 unsafe extern "C" {
-    pub fn wcstoimax(nptr: *const wchar_t, endptr: *mut *mut wchar_t, base: cty::c_int)
-        -> intmax_t;
+    pub fn psiginfo(pinfo: *const siginfo_t, message: *const cty::c_char);
 }
 unsafe extern "C" {
-    pub fn wcstoumax(
-        nptr: *const wchar_t,
-        endptr: *mut *mut wchar_t,
-        base: cty::c_int,
-    ) -> uintmax_t;
+    pub fn raise(signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigaction(signo: cty::c_int, act: *const sigaction, oact: *mut sigaction) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigaddset(set: *mut sigset_t, signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigandset(
+        dest: *mut sigset_t,
+        left: *const sigset_t,
+        right: *const sigset_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigdelset(set: *mut sigset_t, signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigemptyset(set: *mut sigset_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigfillset(set: *mut sigset_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sighold(signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigisemptyset(set: *mut sigset_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigismember(set: *const sigset_t, signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigignore(signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn signal(signo: cty::c_int, func: _sa_handler_t) -> _sa_handler_t;
+}
+unsafe extern "C" {
+    pub fn sigorset(
+        dest: *mut sigset_t,
+        left: *const sigset_t,
+        right: *const sigset_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigpause(signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigpending(set: *mut sigset_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigprocmask(how: cty::c_int, set: *const sigset_t, oset: *mut sigset_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigqueue(pid: cty::c_int, signo: cty::c_int, value: sigval) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigrelse(signo: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigset(signo: cty::c_int, func: _sa_handler_t) -> _sa_handler_t;
+}
+unsafe extern "C" {
+    pub fn sigwait(set: *const sigset_t, sig: *mut cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigtimedwait(
+        set: *const sigset_t,
+        value: *mut siginfo,
+        timeout: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigsuspend(sigmask: *const sigset_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigwaitinfo(set: *const sigset_t, value: *mut siginfo) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sigaltstack(ss: *const stack_t, oss: *mut stack_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn siginterrupt(signo: cty::c_int, flag: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
     pub fn strdup(s: *const cty::c_char) -> *mut cty::c_char;
@@ -2935,6 +3041,179 @@ unsafe extern "C" {
     #[link_name = "\u{1}explicit_bzero"]
     pub fn __real_explicit_bzero(arg1: *mut cty::c_void, arg2: usize);
 }
+#[doc = " Type Definitions"]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fd_set_s {
+    pub arr: [u32; 8usize],
+}
+#[doc = " Type Definitions"]
+pub type fd_set = fd_set_s;
+unsafe extern "C" {
+    pub fn select(
+        nfds: cty::c_int,
+        readfds: *mut fd_set,
+        writefds: *mut fd_set,
+        exceptfds: *mut fd_set,
+        timeout: *mut timeval,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pselect(
+        nfds: cty::c_int,
+        readfds: *mut fd_set,
+        writefds: *mut fd_set,
+        exceptfds: *mut fd_set,
+        timeout: *const timespec,
+        sigmask: *const sigset_t,
+    ) -> cty::c_int;
+}
+#[doc = " Public Type Definitions"]
+pub type hrtime_t = clock_t;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct timeval {
+    pub tv_sec: time_t,
+    pub tv_usec: cty::c_long,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct itimerval {
+    pub it_interval: timeval,
+    pub it_value: timeval,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct timezone {
+    pub tz_minuteswest: cty::c_int,
+    pub tz_dsttime: cty::c_int,
+}
+unsafe extern "C" {
+    #[doc = " Name: gettimeofday\n\n Description:\n   Get the current time\n\n   Conforming to SVr4, 4.3BSD. POSIX.1-2001 describes gettimeofday().\n   POSIX.1-2008 marks gettimeofday() as obsolete, recommending the use of\n   clock_gettime(2) instead.\n\n   NuttX implements gettimeofday() as a thin layer around clock_gettime();\n\n Input Parameters:\n   tv - The location to return the current time\n   tz - Ignored\n\n Returned Value:\n   Zero (OK) on success;  -1 is returned on failure with the errno variable\n   set appropriately.\n"]
+    pub fn gettimeofday(tv: *mut timeval, tz: *mut timezone) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: settimeofday\n\n Description:\n   Set the current time\n\n   Conforming to SVr4, 4.3BSD. POSIX.1-2001 describes gettimeofday() but\n   not settimeofday().\n\n   NuttX implements settimeofday() as a thin layer around clock_settime();\n\n Input Parameters:\n   tv - The net to time to be set\n   tz - Ignored\n\n Returned Value:\n   Zero (OK) on success;  -1 is returned on failure with the errno variable\n   set appropriately.\n"]
+    pub fn settimeofday(tv: *const timeval, tz: *const timezone) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: getitimer\n\n Description:\n   The getitimer() function will store the amount of time until the\n   specified timer, which, expires and the reload value of the timer\n   into the space pointed to by the value argument. The it_value member\n   of this structure will contain the amount of time before the timer\n   expires, or zero if the timer is disarmed. This value is returned as\n   the interval until timer expiration. The it_interval member of value\n   will contain the reload value last set by setitime().\n\n Input Parameters:\n   which - The predefined timer id\n   value - The current timer value\n\n Returned Value:\n   If the getitimer() succeeds, a value of 0 (OK) will be returned.\n   If an error occurs, the value -1 (ERROR) will be returned, and errno\n   set to indicate the error.\n\n   EINVAL - The which argument does not correspond to an predefined ID.\n\n Assumptions/Limitations:\n   Due to the asynchronous operation of this function, the time reported\n   by this function could be significantly more than that actual time\n   remaining on the timer at any time.\n"]
+    pub fn getitimer(which: cty::c_int, value: *mut itimerval) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: setitimer\n\n Description:\n   The setitimer() function sets the time until the next expiration of\n   the timer specified by which from the it_value member of the value\n   argument and arm the timer if the it_value member of value is non-zero.\n   If the specified timer was already armed when setitimer() is\n   called, this call will reset the time until next expiration to the\n   value specified. If the it_value member of value is zero, the timer\n   will be disarmed. The effect of disarming or resetting a timer with\n   pending expiration notifications is unspecified.\n\n   The reload value of the timer will be set to the value specified by the\n   it_interval member of value.  When a timer is armed with a non-zero\n   it_interval, a periodic (or repetitive) timer is specified.\n\n   Time values that are between two consecutive non-negative integer\n   multiples of the resolution of the specified timer will be rounded up\n   to the larger multiple of the resolution. Quantization error will not\n   cause the timer to expire earlier than the rounded time value.\n\n   If the argument ovalue is not NULL, the setitimer() function will\n   store, in the location referenced by ovalue, a value representing the\n   previous amount of time before the timer would have expired, or zero if\n   the timer was disarmed, together with the previous timer reload value.\n   Timers will not expire before their scheduled time.\n\n Input Parameters:\n   which - The predefined timer id\n   value - Specifies the timer value to set\n   ovalue - A location in which to return the time remaining from the\n     previous timer setting.\n\n Returned Value:\n   If the setitimer() succeeds, a value of 0 (OK) will be returned.\n   If an error occurs, the value -1 (ERROR) will be returned, and errno set\n   to indicate the error.\n\n   EINVAL - The which argument does not correspond to an predefined ID.\n   EINVAL - A value structure specified a microsecond value less than zero\n     or greater than or equal to 1000 million, and the it_value member of\n     that structure did not specify zero seconds and nanoseconds.\n\n Assumptions:\n"]
+    pub fn setitimer(
+        which: cty::c_int,
+        value: *const itimerval,
+        ovalue: *mut itimerval,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: utimes\n\n Description:\n   The utimes() function shall set the access and modification times of\n   the file pointed to by the path argument to the value of the times\n   argument. utimes() function allows time specifications accurate to\n   the microsecond.\n\n   For utimes(), the times argument is an array of timeval structures.\n   The first array member represents the date and time of last access,\n   and the second member represents the date and time of last\n   modification. The times in the timeval structure are measured in\n   seconds and microseconds since the Epoch, although rounding toward\n   the nearest second may occur.\n\n   If the times argument is a null pointer, the access and modification\n   times of the file shall be set to the current time. The effective\n   user ID of the process shall match the owner of the file, has write\n   access to the file or appropriate privileges to use this call in this\n   manner. Upon completion, utimes() shall mark the time of the last\n   file status change, st_ctime, for update.\n\n Input Parameters:\n   path  - Specifies the file to be modified\n   times - Specifies the time value to set\n\n Returned Value:\n   Upon successful completion, 0 shall be returned. Otherwise, -1 shall\n   be returned and errno shall be set to indicate the error, and the file\n   times shall not be affected.\n"]
+    pub fn utimes(path: *const cty::c_char, times: *const timeval) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn lutimes(path: *const cty::c_char, times: *const timeval) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn futimesat(
+        dirfd: cty::c_int,
+        path: *const cty::c_char,
+        times: *const timeval,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: futimes\n\n Description:\n   futimes() update the timestamps of a file with microsecond precision.\n   With futimes() the file whose timestamps are to be updated is specified\n   via an open file descriptor, fd.\n\n Input Parameters:\n   fd  - Specifies the fd to be modified\n   times - Specifies the time value to set\n\n Returned Value:\n   On success, futimes() return 0.\n   On error, -1 is returned and errno is set to indicate the error.\n"]
+    pub fn futimes(fd: cty::c_int, tv: *const timeval) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: gethrtime\n\n Description:\n   Get the current time\n\n Returned Value:\n   The current value of the system time in ns\n"]
+    pub fn gethrtime() -> hrtime_t;
+}
+#[doc = " Public Types"]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct timex {
+    pub modes: cty::c_uint,
+    pub offset: cty::c_long,
+    pub freq: cty::c_long,
+    pub maxerror: cty::c_long,
+    pub esterror: cty::c_long,
+    pub status: cty::c_int,
+    pub constant: cty::c_long,
+    pub precision: cty::c_long,
+    pub tolerance: cty::c_long,
+    pub time: timeval,
+    pub tick: cty::c_long,
+    pub ppsfreq: cty::c_long,
+    pub jitter: cty::c_long,
+    pub shift: cty::c_int,
+    pub stabil: cty::c_long,
+    pub jitcnt: cty::c_long,
+    pub calcnt: cty::c_long,
+    pub errcnt: cty::c_long,
+    pub stbcnt: cty::c_long,
+    pub tai: cty::c_int,
+}
+#[doc = " Type Definitions"]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct imaxdiv_s {
+    pub quot: intmax_t,
+    pub rem: intmax_t,
+}
+#[doc = " Type Definitions"]
+pub type imaxdiv_t = imaxdiv_s;
+unsafe extern "C" {
+    pub fn imaxabs(j: intmax_t) -> intmax_t;
+}
+unsafe extern "C" {
+    pub fn imaxdiv(number: intmax_t, denom: intmax_t) -> imaxdiv_t;
+}
+unsafe extern "C" {
+    pub fn strtoimax(
+        nptr: *const cty::c_char,
+        endptr: *mut *mut cty::c_char,
+        base: cty::c_int,
+    ) -> intmax_t;
+}
+unsafe extern "C" {
+    pub fn strtoumax(
+        nptr: *const cty::c_char,
+        endptr: *mut *mut cty::c_char,
+        base: cty::c_int,
+    ) -> uintmax_t;
+}
+unsafe extern "C" {
+    pub fn wcstoimax(nptr: *const wchar_t, endptr: *mut *mut wchar_t, base: cty::c_int)
+        -> intmax_t;
+}
+unsafe extern "C" {
+    pub fn wcstoumax(
+        nptr: *const wchar_t,
+        endptr: *mut *mut wchar_t,
+        base: cty::c_int,
+    ) -> uintmax_t;
+}
+unsafe extern "C" {
+    #[doc = " Public Function Prototypes"]
+    pub fn ffs(j: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn ffsl(j: cty::c_long) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn ffsll(j: cty::c_longlong) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn fls(j: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn flsl(j: cty::c_long) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn flsll(j: cty::c_longlong) -> cty::c_int;
+}
 unsafe extern "C" {
     pub fn popcount(j: cty::c_uint) -> cty::c_uint;
 }
@@ -2977,6 +3256,20 @@ pub struct uint64_s {
     pub ls: u32,
     pub ms: u32,
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct invdiv_param32_s {
+    pub mult: u32,
+    pub shift: u8,
+}
+pub type invdiv_param32_t = invdiv_param32_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct invdiv_param64_s {
+    pub mult: u64,
+    pub shift: u8,
+}
+pub type invdiv_param64_t = invdiv_param64_s;
 unsafe extern "C" {
     #[doc = " Name: uadd32x64\n\n Description:\n   Add a 32-bit value to a 64-bit values and return the truncated 64-bit\n   sum.\n\n Input Parameters:\n   term1 and term2 - The values to be added\n   sum - The location to return the product of the two values.  sum may\n     be one of term1 or term2\n"]
     pub fn uadd32x64(term1: u32, term2: *const uint64_s, sum: *mut uint64_s);
@@ -3005,6 +3298,12 @@ unsafe extern "C" {
     #[doc = " Name: umul64\n\n Description:\n   Multiply two 64-bit values, factor1 and factor2, and return the\n   truncated 64-bit product.\n\n Input Parameters:\n   factor1 and factor2 - The values to be multiplied\n   product - The location to return the product of the two values.\n"]
     pub fn umul64(factor1: *const uint64_s, factor2: *const uint64_s, product: *mut uint64_s);
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cpuload_s {
+    pub total: clock_t,
+    pub active: clock_t,
+}
 pub type sclock_t = i64;
 unsafe extern "C" {
     #[doc = " Name: clock_realtime2absticks\n\n Description:\n   Convert real time to monotonic ticks.\n\n Input Parameters:\n   mono - Return the converted time here.\n   abstime - Convert this absolute time to ticks\n\n Returned Value:\n   OK (0) on success; a negated errno value on failure.\n\n Assumptions:\n   Interrupts should be disabled so that the time is not changing during\n   the calculation\n"]
@@ -3016,7 +3315,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     #[doc = " Name:  clock_daysbeforemonth\n\n Description:\n    Get the number of days that occurred before the beginning of the month.\n"]
-    pub fn clock_daysbeforemonth(month: cty::c_int, leapyear: bool) -> cty::c_int;
+    pub fn clock_daysbeforemonth(month: cty::c_int, leap_year: bool) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name:  clock_dayoftheweek\n\n Description:\n    Get the day of the week\n\n Input Parameters:\n   mday  - The day of the month 1 - 31\n   month - The month of the year 1 - 12\n   year  - the year including the 1900\n\n Returned Value:\n   Zero based day of the week 0-6, 0 = Sunday, 1 = Monday... 6 = Saturday\n"]
@@ -3030,11 +3329,18 @@ unsafe extern "C" {
     pub fn clock_synchronize(tp: *const timespec);
 }
 unsafe extern "C" {
+    pub fn clock_synchronize_monotonic(tp: *const timespec);
+}
+unsafe extern "C" {
+    #[doc = " Name: clock_systime_ticks\n\n Description:\n   Return the current value of the 32/64-bit system timer counter.\n\n   Indirect access to the system timer counter is required through this\n   function if the execution environment does not have direct access to\n   kernel global data.\n\n   Use of this function is also required to assure atomic access to the\n   64-bit system timer.\n\n   NOTE:  This is an internal OS interface and should not be called from\n   application code.  Rather, the functionally equivalent, standard\n   interface clock() should be used.\n\n Input Parameters:\n   None\n\n Returned Value:\n   The current value of the system timer counter\n"]
     pub fn clock_systime_ticks() -> clock_t;
 }
 unsafe extern "C" {
     #[doc = " Name: clock_systime_timespec\n\n Description:\n   Return the current value of the system timer counter as a struct\n   timespec.\n\n Input Parameters:\n   ts - Location to return the time\n\n Returned Value:\n   OK (0) on success; a negated errno value on failure.\n\n Assumptions:\n"]
     pub fn clock_systime_timespec(ts: *mut timespec) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn clock_cpuload(pid: cty::c_int, cpuload: *mut cpuload_s) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " perf_gettime"]
@@ -3050,33 +3356,39 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     #[doc = " Name: nxclock_settime\n\n Description:\n   Clock Functions based on POSIX APIs\n\n   CLOCK_REALTIME - POSIX demands this to be present. This is the wall\n   time clock.\n"]
-    pub fn nxclock_settime(clock_id: clockid_t, tp: *const timespec);
+    pub fn nxclock_settime(clock_id: clockid_t, tp: *const timespec) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxclock_gettime\n\n Description:\n   Get the current value of the specified time clock.\n"]
-    pub fn nxclock_gettime(clock_id: clockid_t, tp: *mut timespec);
+    pub fn nxclock_gettime(clock_id: clockid_t, tp: *mut timespec) -> cty::c_int;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct nsem_inode_s {
     pub ns_sem: sem_t,
     pub ns_inode: *mut inode,
 }
 unsafe extern "C" {
     #[doc = " Name: nxsem_init\n\n Description:\n   This function initializes the UNNAMED semaphore sem. Following a\n   successful call to nxsem_init(), the semaphore may be used in subsequent\n   calls to nxsem_wait(), nxsem_post(), and nxsem_trywait().  The semaphore\n   remains usable until it is destroyed.\n\n   Only sem itself may be used for performing synchronization. The result\n   of referring to copies of sem in calls to sem_wait(), sem_trywait(),\n   sem_post(), and sem_destroy() is undefined.\n\n Input Parameters:\n   sem - Semaphore to be initialized\n   pshared - Process sharing (not used)\n   value - Semaphore initialization value\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n"]
-    pub fn nxsem_init(sem: *mut sem_t, pshared: cty::c_int, value: cty::c_uint) -> cty::c_int;
+    pub fn nxsem_init(sem: *mut sem_t, pshared: cty::c_int, value: u32) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxsem_destroy\n\n Description:\n   This function is used to destroy the un-named semaphore indicated by\n   'sem'.  Only a semaphore that was created using nxsem_init() may be\n   destroyed using nxsem_destroy(); the effect of calling nxsem_destroy()\n   with a named semaphore is undefined.  The effect of subsequent use of\n   the semaphore sem is undefined until sem is re-initialized by another\n   call to nxsem_init().\n\n   The effect of destroying a semaphore upon which other processes are\n   currently blocked is undefined.\n\n Input Parameters:\n   sem - Semaphore to be destroyed.\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n"]
     pub fn nxsem_destroy(sem: *mut sem_t) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nxsem_wait\n\n Description:\n   This function attempts to lock the semaphore referenced by 'sem'.  If\n   the semaphore value is (<=) zero, then the calling task will not return\n   until it successfully acquires the lock.\n\n   This is an internal OS interface.  It is functionally equivalent to\n   sem_wait except that:\n\n   - It is not a cancellation point, and\n   - It does not modify the errno value.\n\n Input Parameters:\n   sem - Semaphore descriptor.\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n     EINVAL - Invalid attempt to get the semaphore\n     EINTR  - The wait was interrupted by the receipt of a signal.\n"]
+    #[doc = " Name: nxsem_wait / nxsem_wait_slow\n\n Description:\n   This function attempts to lock the semaphore referenced by 'sem'.  If\n   the semaphore value is (<=) zero, then the calling task will not return\n   until it successfully acquires the lock.\n\n   This is an internal OS interface.  It is functionally equivalent to\n   sem_wait except that:\n\n   - It is not a cancellation point, and\n   - It does not modify the errno value.\n\n Input Parameters:\n   sem - Semaphore descriptor.\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n     EINVAL - Invalid attempt to get the semaphore\n     EINTR  - The wait was interrupted by the receipt of a signal.\n"]
     pub fn nxsem_wait(sem: *mut sem_t) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nxsem_trywait\n\n Description:\n   This function locks the specified semaphore only if the semaphore is\n   currently not locked.  Otherwise, it locks the semaphore.  In either\n   case, the call returns without blocking.\n\n Input Parameters:\n   sem - the semaphore descriptor\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n     EINVAL - Invalid attempt to get the semaphore\n     EAGAIN - The semaphore is not available.\n\n Assumptions:\n"]
+    pub fn nxsem_wait_slow(sem: *mut sem_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: nxsem_trywait / nxsem_trywait_slow\n\n Description:\n   This function locks the specified semaphore only if the semaphore is\n   currently not locked.  Otherwise, it locks the semaphore.  In either\n   case, the call returns without blocking.\n\n Input Parameters:\n   sem - the semaphore descriptor\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n     EINVAL - Invalid attempt to get the semaphore\n     EAGAIN - The semaphore is not available.\n\n Assumptions:\n"]
     pub fn nxsem_trywait(sem: *mut sem_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn nxsem_trywait_slow(sem: *mut sem_t) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxsem_timedwait\n\n Description:\n   This function will lock the semaphore referenced by sem as in the\n   sem_wait() function. However, if the semaphore cannot be locked without\n   waiting for another process or thread to unlock the semaphore by\n   performing a sem_post() function, this wait will be terminated when the\n   specified timeout expires.\n\n   The timeout will expire when the absolute time specified by abstime\n   passes, as measured by the clock on which timeouts are based (that is,\n   when the value of that clock equals or exceeds abstime), or if the\n   absolute time specified by abstime has already been passed at the\n   time of the call.\n\n   This is an internal OS interface.  It is functionally equivalent to\n   sem_wait except that:\n\n   - It is not a cancellation point, and\n   - It does not modify the errno value.\n\n Input Parameters:\n   sem     - Semaphore object\n   abstime - The absolute time to wait until a timeout is declared.\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   That may be one of:\n\n   EINVAL    The sem argument does not refer to a valid semaphore.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The semaphore could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n   EINTR     A signal interrupted this function.\n   ECANCELED May be returned if the thread is canceled while waiting.\n"]
@@ -3095,8 +3407,11 @@ unsafe extern "C" {
     pub fn nxsem_tickwait(sem: *mut sem_t, delay: u32) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nxsem_post\n\n Description:\n   When a kernel thread has finished with a semaphore, it will call\n   nxsem_post().  This function unlocks the semaphore referenced by sem\n   by performing the semaphore unlock operation on that semaphore.\n\n   If the semaphore value resulting from this operation is positive, then\n   no tasks were blocked waiting for the semaphore to become unlocked; the\n   semaphore is simply incremented.\n\n   If the value of the semaphore resulting from this operation is zero,\n   then one of the tasks blocked waiting for the semaphore shall be\n   allowed to return successfully from its call to sem_wait().\n\n Input Parameters:\n   sem - Semaphore descriptor\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n\n Assumptions:\n   This function may be called from an interrupt handler.\n"]
+    #[doc = " Name: nxsem_post / nxsem_post_slow\n\n Description:\n   When a kernel thread has finished with a semaphore, it will call\n   nxsem_post().  This function unlocks the semaphore referenced by sem\n   by performing the semaphore unlock operation on that semaphore.\n\n   If the semaphore value resulting from this operation is positive, then\n   no tasks were blocked waiting for the semaphore to become unlocked; the\n   semaphore is simply incremented.\n\n   If the value of the semaphore resulting from this operation is zero,\n   then one of the tasks blocked waiting for the semaphore shall be\n   allowed to return successfully from its call to sem_wait().\n\n Input Parameters:\n   sem - Semaphore descriptor\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n\n Assumptions:\n   This function may be called from an interrupt handler.\n"]
     pub fn nxsem_post(sem: *mut sem_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn nxsem_post_slow(sem: *mut sem_t) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name:  nxsem_get_value\n\n Description:\n   This function updates the location referenced by 'sval' argument to\n   have the value of the semaphore referenced by 'sem' without effecting\n   the state of the semaphore.  The updated value represents the actual\n   semaphore value that occurred at some unspecified time during the call,\n   but may not reflect the actual value of the semaphore when it is\n   returned to the calling task.\n\n   If 'sem' is locked, the value return by nxsem_get_value() will either be\n   zero or a negative number whose absolute value represents the number\n   of tasks waiting for the semaphore.\n\n Input Parameters:\n   sem - Semaphore descriptor\n   sval - Buffer by which the value is returned\n\n Returned Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n"]
@@ -3162,15 +3477,14 @@ unsafe extern "C" {
 }
 #[doc = " Public Type Definitions"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct mutex_s {
     pub sem: sem_t,
-    pub holder: pid_t,
 }
 #[doc = " Public Type Definitions"]
 pub type mutex_t = mutex_s;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct rmutex_s {
     pub mutex: mutex_t,
     pub count: cty::c_uint,
@@ -3181,28 +3495,12 @@ unsafe extern "C" {
     pub fn nxmutex_init(mutex: *mut mutex_t) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nxmutex_destroy\n\n Description:\n   This function initializes the UNNAMED mutex. Following a\n   successful call to nxmutex_init(), the mutex may be used in subsequent\n   calls to nxmutex_lock(), nxmutex_unlock(), and nxmutex_trylock().  The\n   mutex remains usable until it is destroyed.\n\n Parameters:\n   mutex - Semaphore to be destroyed\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n"]
-    pub fn nxmutex_destroy(mutex: *mut mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_is_hold\n\n Description:\n   This function check whether the caller hold the mutex\n   referenced by 'mutex'.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n"]
+    #[doc = " Name: nxmutex_is_hold\n\n Description:\n   This function check whether the calling thread hold the mutex\n   referenced by 'mutex'.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n"]
     pub fn nxmutex_is_hold(mutex: *mut mutex_t) -> bool;
 }
 unsafe extern "C" {
-    #[doc = " Name: nxmutex_get_holder\n\n Description:\n   This function get the holder of the mutex referenced by 'mutex'.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n"]
-    pub fn nxmutex_get_holder(mutex: *mut mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_is_locked\n\n Description:\n   This function get the lock state the mutex referenced by 'mutex'.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n"]
-    pub fn nxmutex_is_locked(mutex: *mut mutex_t) -> bool;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_lock\n\n Description:\n   This function attempts to lock the mutex referenced by 'mutex'.  The\n   mutex is implemented with a semaphore, so if the semaphore value is\n   (<=) zero, then the calling task will not return until it successfully\n   acquires the lock.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n"]
-    pub fn nxmutex_lock(mutex: *mut mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_trylock\n\n Description:\n   This function locks the mutex only if the mutex is currently not locked.\n   If the mutex has been locked already, the call returns without blocking.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n     -EINVAL - Invalid attempt to lock the mutex\n     -EAGAIN - The mutex is not available.\n"]
-    pub fn nxmutex_trylock(mutex: *mut mutex_t) -> cty::c_int;
+    #[doc = " Name: nxmutex_ticklock\n\n Description:\n   This function attempts to lock the mutex referenced by 'mutex'.  If the\n   mutex value is (<=) zero, then the calling task will not return until it\n   successfully acquires the lock or timed out\n\n Input Parameters:\n   mutex   - Mutex object\n   delay   - Ticks to wait from the start time until the semaphore is\n             posted.  If ticks is zero, then this function is equivalent\n             to nxmutex_trylock().\n\n Returned Value:\n   OK        The mutex successfully acquires\n   EINVAL    The mutex argument does not refer to a valid mutex.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The mutex could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n"]
+    pub fn nxmutex_ticklock(mutex: *mut mutex_t, delay: u32) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxmutex_clocklock\n\n Description:\n   This function attempts to lock the mutex referenced by 'mutex'.  If the\n   mutex value is (<=) zero, then the calling task will not return until it\n   successfully acquires the lock or timed out\n\n Input Parameters:\n   mutex   - Mutex object\n   clockid - The clock to be used as the time base\n   abstime - The absolute time when the mutex lock timed out\n\n Returned Value:\n   OK        The mutex successfully acquires\n   EINVAL    The mutex argument does not refer to a valid mutex.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The mutex could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n"]
@@ -3217,70 +3515,16 @@ unsafe extern "C" {
     pub fn nxmutex_timedlock(mutex: *mut mutex_t, timeout: cty::c_uint) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nxmutex_unlock\n\n Description:\n   This function attempts to unlock the mutex referenced by 'mutex'.\n\n Parameters:\n   mutex - mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n Assumptions:\n   This function may be called from an interrupt handler.\n"]
-    pub fn nxmutex_unlock(mutex: *mut mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn nxmutex_reset(mutex: *mut mutex_t);
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_breaklock\n\n Description:\n   This function attempts to break the mutex\n\n Parameters:\n   mutex   - Mutex descriptor.\n   locked  - Is the mutex break success\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n"]
-    pub fn nxmutex_breaklock(mutex: *mut mutex_t, locked: *mut cty::c_uint) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_restorelock\n\n Description:\n   This function attempts to restore the mutex.\n\n Parameters:\n   mutex   - mutex descriptor.\n   locked  - true: it's mean that the mutex is broke success\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure\n"]
-    pub fn nxmutex_restorelock(mutex: *mut mutex_t, locked: cty::c_uint) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_set_protocol\n\n Description:\n   This function attempts to set the priority protocol of a mutex.\n\n Parameters:\n   mutex        - mutex descriptor.\n   protocol     - mutex protocol value to set.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure\n"]
-    pub fn nxmutex_set_protocol(mutex: *mut mutex_t, protocol: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_getprioceiling\n\n Description:\n   This function attempts to get the priority ceiling of a mutex.\n\n Parameters:\n   mutex        - mutex descriptor.\n   prioceiling  - location to return the mutex priority ceiling.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure\n"]
-    pub fn nxmutex_getprioceiling(
-        mutex: *const mutex_t,
-        prioceiling: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxmutex_setprioceiling\n\n Description:\n   This function attempts to set the priority ceiling of a mutex.\n\n Parameters:\n   mutex        - mutex descriptor.\n   prioceiling  - mutex priority ceiling value to set.\n   old_ceiling  - location to return the mutex ceiling priority set before.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure\n"]
-    pub fn nxmutex_setprioceiling(
-        mutex: *mut mutex_t,
-        prioceiling: cty::c_int,
-        old_ceiling: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxrmutex_init\n\n Description:\n   This function initializes the UNNAMED recursive mutex. Following a\n   successful call to nxrmutex_init(), the recursive mutex may be used in\n   subsequent calls to nxrmutex_lock(), nxrmutex_unlock(),\n   and nxrmutex_trylock(). The recursive mutex remains usable\n   until it is destroyed.\n\n Parameters:\n   rmutex - Recursive mutex to be initialized\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n"]
-    pub fn nxrmutex_init(rmutex: *mut rmutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxrmutex_destroy\n\n Description:\n   This function destroy the UNNAMED recursive mutex.\n\n Parameters:\n   rmutex - Recursive mutex to be destroyed\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n"]
-    pub fn nxrmutex_destroy(rmutex: *mut rmutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxrmutex_is_hold\n\n Description:\n   This function check whether the caller hold the recursive mutex\n   referenced by 'rmutex'.\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n"]
-    pub fn nxrmutex_is_hold(rmutex: *mut rmutex_t) -> bool;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxrmutex_is_recursive\n\n Description:\n   This function check whether the recursive mutex is recursive\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n  If rmutex has returned to True recursively, otherwise returns false.\n"]
-    pub fn nxrmutex_is_recursive(rmutex: *mut rmutex_t) -> bool;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxrmutex_get_holder\n\n Description:\n   This function get the holder of the mutex referenced by 'mutex'.\n\n Parameters:\n   rmutex - Rmutex descriptor.\n\n Return Value:\n"]
-    pub fn nxrmutex_get_holder(rmutex: *mut rmutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nxrmutex_is_locked\n\n Description:\n   This function get the lock state the recursive mutex\n   referenced by 'rmutex'.\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n"]
-    pub fn nxrmutex_is_locked(rmutex: *mut rmutex_t) -> bool;
-}
-unsafe extern "C" {
     #[doc = " Name: nrxmutex_lock\n\n Description:\n   This function attempts to lock the recursive mutex referenced by\n   'rmutex'.The recursive mutex can be locked multiple times in the same\n   thread.\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n"]
     pub fn nxrmutex_lock(rmutex: *mut rmutex_t) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxrmutex_trylock\n\n Description:\n   This function locks the recursive mutex if the recursive mutex is\n   currently not locked or the same thread call.\n   If the recursive mutex is locked and other thread call it,\n   the call returns without blocking.\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n     -EINVAL - Invalid attempt to lock the recursive mutex\n     -EAGAIN - The recursive mutex is not available.\n"]
     pub fn nxrmutex_trylock(rmutex: *mut rmutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: nxrmutex_ticklock\n\n Description:\n   This function attempts to lock the mutex referenced by 'mutex'.  If the\n   mutex value is (<=) zero, then the calling task will not return until it\n   successfully acquires the lock or timed out\n\n Input Parameters:\n   rmutex  - Rmutex object\n   delay   - Ticks to wait from the start time until the semaphore is\n             posted.  If ticks is zero, then this function is equivalent\n             to nxrmutex_trylock().\n\n Returned Value:\n   OK        The mutex successfully acquires\n   EINVAL    The mutex argument does not refer to a valid mutex.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The mutex could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n"]
+    pub fn nxrmutex_ticklock(rmutex: *mut rmutex_t, delay: u32) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxrmutex_clocklock\n\n Description:\n   This function attempts to lock the mutex referenced by 'mutex'.  If the\n   mutex value is (<=) zero, then the calling task will not return until it\n   successfully acquires the lock or timed out\n\n Input Parameters:\n   rmutex  - Rmutex object\n   clockid - The clock to be used as the time base\n   abstime - The absolute time when the mutex lock timed out\n\n Returned Value:\n   OK        The mutex successfully acquires\n   EINVAL    The mutex argument does not refer to a valid mutex.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The mutex could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n"]
@@ -3297,9 +3541,6 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Name: nxrmutex_unlock\n\n Description:\n   This function attempts to unlock the recursive mutex\n   referenced by 'rmutex'.\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n\n Assumptions:\n   This function may be called from an interrupt handler.\n"]
     pub fn nxrmutex_unlock(rmutex: *mut rmutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn nxrmutex_reset(rmutex: *mut rmutex_t);
 }
 unsafe extern "C" {
     #[doc = " Name: nrxmutex_breaklock\n\n Description:\n   This function attempts to break the recursive mutex\n\n Parameters:\n   rmutex - Recursive mutex descriptor.\n\n Return Value:\n   This is an internal OS interface and should not be used by applications.\n   It follows the NuttX internal error return policy:  Zero (OK) is\n   returned on success.  A negated errno value is returned on failure.\n   Possible returned errors:\n"]
@@ -3350,7 +3591,7 @@ pub union mm_map_entry_s__bindgen_ty_1 {
     pub i: cty::c_int,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct mm_map_s {
     pub mm_map_sq: sq_queue_t,
     pub map_count: usize,
@@ -3464,10 +3705,10 @@ unsafe extern "C" {
     pub fn sched_rr_get_interval(pid: pid_t, interval: *mut timespec) -> cty::c_int;
 }
 unsafe extern "C" {
-    pub fn sched_lock() -> cty::c_int;
+    pub fn sched_lock();
 }
 unsafe extern "C" {
-    pub fn sched_unlock() -> cty::c_int;
+    pub fn sched_unlock();
 }
 unsafe extern "C" {
     pub fn sched_lockcount() -> cty::c_int;
@@ -3485,190 +3726,6 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn sched_dumpstack(tid: pid_t);
-}
-#[doc = " Public Types"]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct sigset_s {
-    pub _elem: [u32; 2usize],
-}
-#[doc = " Public Types"]
-pub type sigset_t = sigset_s;
-pub type sig_atomic_t = cty::c_int;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union sigval {
-    pub sival_int: cty::c_int,
-    pub sival_ptr: *mut cty::c_void,
-}
-pub type sigev_notify_function_t = ::core::option::Option<unsafe extern "C" fn(value: sigval)>;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct sigevent {
-    pub sigev_notify: u8,
-    pub sigev_signo: u8,
-    pub sigev_value: sigval,
-    pub _sigev_un: sigevent__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union sigevent__bindgen_ty_1 {
-    pub _sigev_thread: sigevent__bindgen_ty_1__bindgen_ty_1,
-    pub _tid: pid_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct sigevent__bindgen_ty_1__bindgen_ty_1 {
-    pub _function: sigev_notify_function_t,
-    pub _attribute: *mut pthread_attr_s,
-}
-pub type sigevent_t = sigevent;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct siginfo {
-    pub si_signo: u8,
-    pub si_code: u8,
-    pub si_errno: u8,
-    pub si_value: sigval,
-    pub si_pid: pid_t,
-    pub si_status: cty::c_int,
-    pub si_user: *mut cty::c_void,
-}
-pub type siginfo_t = siginfo;
-pub type _sa_handler_t = ::core::option::Option<unsafe extern "C" fn(signo: cty::c_int)>;
-pub type _sa_sigaction_t = ::core::option::Option<
-    unsafe extern "C" fn(signo: cty::c_int, siginfo: *mut siginfo_t, context: *mut cty::c_void),
->;
-pub type sighandler_t = _sa_handler_t;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct sigaction {
-    pub sa_u: sigaction__bindgen_ty_1,
-    pub sa_mask: sigset_t,
-    pub sa_flags: cty::c_int,
-    pub __bindgen_anon_1: sigaction__bindgen_ty_2,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union sigaction__bindgen_ty_1 {
-    pub _sa_handler: _sa_handler_t,
-    pub _sa_sigaction: _sa_sigaction_t,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union sigaction__bindgen_ty_2 {
-    pub sa_restorer: ::core::option::Option<unsafe extern "C" fn()>,
-    pub sa_user: *mut cty::c_void,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct stack_t {
-    pub ss_sp: *mut cty::c_void,
-    pub ss_flags: cty::c_int,
-    pub ss_size: usize,
-}
-pub type sig_t = ::core::option::Option<unsafe extern "C" fn(arg1: cty::c_int)>;
-unsafe extern "C" {
-    pub fn kill(pid: pid_t, signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn killpg(pgrp: pid_t, signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn tgkill(pid: pid_t, tid: pid_t, signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn psignal(signum: cty::c_int, message: *const cty::c_char);
-}
-unsafe extern "C" {
-    pub fn psiginfo(pinfo: *const siginfo_t, message: *const cty::c_char);
-}
-unsafe extern "C" {
-    pub fn raise(signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigaction(signo: cty::c_int, act: *const sigaction, oact: *mut sigaction) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigaddset(set: *mut sigset_t, signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigandset(
-        dest: *mut sigset_t,
-        left: *const sigset_t,
-        right: *const sigset_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigdelset(set: *mut sigset_t, signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigemptyset(set: *mut sigset_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigfillset(set: *mut sigset_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sighold(signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigisemptyset(set: *mut sigset_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigismember(set: *const sigset_t, signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigignore(signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn signal(signo: cty::c_int, func: _sa_handler_t) -> _sa_handler_t;
-}
-unsafe extern "C" {
-    pub fn sigorset(
-        dest: *mut sigset_t,
-        left: *const sigset_t,
-        right: *const sigset_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigpause(signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigpending(set: *mut sigset_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigprocmask(how: cty::c_int, set: *const sigset_t, oset: *mut sigset_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigqueue(pid: cty::c_int, signo: cty::c_int, value: sigval) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigrelse(signo: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigset(signo: cty::c_int, func: _sa_handler_t) -> _sa_handler_t;
-}
-unsafe extern "C" {
-    pub fn sigwait(set: *const sigset_t, sig: *mut cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigtimedwait(
-        set: *const sigset_t,
-        value: *mut siginfo,
-        timeout: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigsuspend(sigmask: *const sigset_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigwaitinfo(set: *const sigset_t, value: *mut siginfo) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sigaltstack(ss: *const stack_t, oss: *mut stack_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn siginterrupt(signo: cty::c_int, flag: cty::c_int) -> cty::c_int;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -3801,6 +3858,12 @@ unsafe extern "C" {
     ) -> cty::c_int;
 }
 unsafe extern "C" {
+    pub fn posix_spawnattr_setpriority(attr: *mut posix_spawnattr_t, priority: u8) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn posix_spawnattr_getpriority(attr: *mut posix_spawnattr_t) -> u8;
+}
+unsafe extern "C" {
     pub fn posix_spawnattr_getstackaddr(
         attr: *const posix_spawnattr_t,
         stackaddr: *mut *mut cty::c_void,
@@ -3921,6 +3984,20 @@ unsafe extern "C" {
         priority: cty::c_int,
     ) -> cty::c_int;
 }
+pub type spinlock_t = atomic_t;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union rspinlock_u {
+    pub val: atomic_t,
+    pub __bindgen_anon_1: rspinlock_u__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rspinlock_u__bindgen_ty_1 {
+    pub owner: u16,
+    pub count: u16,
+}
+pub type rspinlock_t = rspinlock_u;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct statfs {
@@ -4138,7 +4215,7 @@ pub struct inode {
     pub i_parent: *mut inode,
     pub i_peer: *mut inode,
     pub i_child: *mut inode,
-    pub i_crefs: atomic_short,
+    pub i_crefs: atomic_t,
     pub i_flags: u16,
     pub u: inode_ops_u,
     pub i_ino: ino_t,
@@ -4169,23 +4246,29 @@ pub struct cookie_io_functions_t {
 #[derive(Debug, Copy, Clone)]
 pub struct file {
     pub f_oflags: cty::c_int,
-    pub f_refs: cty::c_int,
+    pub f_refs: atomic_t,
     pub f_pos: off_t,
     pub f_inode: *mut inode,
     pub f_priv: *mut cty::c_void,
-    pub locked: bool,
+    pub f_locked: bool,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct filelist {
+pub struct fd {
+    pub f_file: *mut file,
+    pub f_cloexec: bool,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fdlist {
+    pub fl_lock: spinlock_t,
     pub fl_rows: u8,
-    pub fl_crefs: u8,
-    pub fl_files: *mut *mut file,
-    pub fl_prefile: *mut file,
-    pub fl_prefiles: [file; 8usize],
+    pub fl_fds: *mut *mut fd,
+    pub fl_prefd: *mut fd,
+    pub fl_prefds: [fd; 8usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct file_struct {
     pub fs_entry: sq_entry_t,
     pub fs_lock: rmutex_t,
@@ -4202,7 +4285,7 @@ pub struct file_struct {
     pub fs_ungotten: [cty::c_char; 2usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct streamlist {
     pub sl_lock: mutex_t,
     pub sl_std: [file_struct; 3usize],
@@ -4275,55 +4358,52 @@ unsafe extern "C" {
     pub fn nx_umount2(target: *const cty::c_char, flags: cty::c_uint) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: files_initlist\n\n Description:\n   Initializes the list of files for a new task\n"]
-    pub fn files_initlist(list: *mut filelist);
+    #[doc = " Name: fdlist_init\n\n Description:\n   Initializes the list of file descriptors for a new task.\n"]
+    pub fn fdlist_init(list: *mut fdlist);
 }
 unsafe extern "C" {
-    #[doc = " Name: files_getlist\n\n Description:\n   Get the list of files by tcb.\n"]
-    pub fn files_getlist(tcb: *mut tcb_s) -> *mut filelist;
+    #[doc = " Name: fdlist_free\n\n Description:\n   Release the list of file descriptors.\n\n Assumptions:\n   Called during task deletion in a safe context.\n"]
+    pub fn fdlist_free(list: *mut fdlist);
 }
 unsafe extern "C" {
-    #[doc = " Name: files_putlist\n\n Description:\n   Release the list of files.\n"]
-    pub fn files_putlist(list: *mut filelist);
+    #[doc = " Name: fdlist_count\n\n Description:\n   Get file descriptor count from file list.\n\n Input Parameters:\n   list - Pointer to the file descriptor list structure.\n\n Returned Value:\n   file descriptor count of file list.\n"]
+    pub fn fdlist_count(list: *mut fdlist) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: files_countlist\n\n Description:\n   Get file count from file list\n\n Returned Value:\n   file count of file list\n"]
-    pub fn files_countlist(list: *mut filelist) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: files_duplist\n\n Description:\n   Duplicate parent task's file descriptors.\n\n Returned Value:\n   Zero (OK) is returned on success; a negated errno value is returned on\n   any failure.\n"]
-    pub fn files_duplist(
-        plist: *mut filelist,
-        clist: *mut filelist,
+    #[doc = " Name: fdlist_copy\n\n Description:\n   Copy parent task's file descriptors to child task.\n\n Returned Value:\n   Zero (OK) is returned on success; a negated errno value is returned on\n   any failure.\n"]
+    pub fn fdlist_copy(
+        plist: *mut fdlist,
+        clist: *mut fdlist,
         actions: *const posix_spawn_file_actions_t,
         cloexec: bool,
     ) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: files_fget\n\n Description:\n   Get the instance of struct file from file list by file descriptor.\n\n Input Parameters:\n   list - The list of files for a task.\n   fd   - A valid descriptor between 0 and files_countlist(list).\n\n Returned Value:\n   Pointer to file structure of list[fd].\n"]
-    pub fn files_fget(list: *mut filelist, fd: cty::c_int) -> *mut file;
-}
-unsafe extern "C" {
-    #[doc = " Name: file_allocate_from_tcb\n\n Description:\n   Allocate a struct files instance and associate it with an inode\n   instance.\n\n Returned Value:\n     Returns the file descriptor == index into the files array on success;\n     a negated errno value is returned on any failure.\n"]
-    pub fn file_allocate_from_tcb(
-        tcb: *mut tcb_s,
-        inode: *mut inode,
-        oflags: cty::c_int,
-        pos: off_t,
-        priv_: *mut cty::c_void,
-        minfd: cty::c_int,
-        addref: bool,
+    #[doc = " Name: fdlist_get2\n\n Description:\n   Given a file descriptor, return the corresponding instance of struct\n   fd and filep.\n\n Input Parameters:\n   list - Pointer to the file descriptor list structure.\n   fd    - The file descriptor\n   filep - The location to return the struct file instance\n   fdp   - The location to return the struct fd instance\n\n Returned Value:\n   Return the pointer to file structure of list[fd] when list[fd].f_file\n   is valid, othersize, a null pointer is returned.\n"]
+    pub fn fdlist_get2(
+        list: *mut fdlist,
+        fd: cty::c_int,
+        filep: *mut *mut file,
+        fdp: *mut *mut fd,
     ) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: file_allocate\n\n Description:\n   Allocate a struct files instance and associate it with an inode\n   instance.\n\n Returned Value:\n     Returns the file descriptor == index into the files array on success;\n     a negated errno value is returned on any failure.\n"]
-    pub fn file_allocate(
+    #[doc = " Name: fdlist_dupfile\n\n Description:\n   Allocate a struct fd instance and bind it to the corresponding file\n   handle.\n\n Returned Value:\n   Returns the file descriptor == index into the files array on success;\n   a negated errno value is returned on any failure.\n"]
+    pub fn fdlist_dupfile(
+        list: *mut fdlist,
+        oflags: cty::c_int,
+        minfd: cty::c_int,
+        filep: *mut file,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: file_allocate_from_inode\n\n Description:\n   Allocate a struct fd instance and associate it with an file instance.\n   And initialize them with inode, oflags, pos and priv.\n\n Returned Value:\n   Returns the file descriptor == index into the files array on success;\n   a negated errno value is returned on any failure.\n"]
+    pub fn file_allocate_from_inode(
         inode: *mut inode,
         oflags: cty::c_int,
         pos: off_t,
         priv_: *mut cty::c_void,
         minfd: cty::c_int,
-        addref: bool,
     ) -> cty::c_int;
 }
 unsafe extern "C" {
@@ -4335,16 +4415,21 @@ unsafe extern "C" {
     pub fn file_dup2(filep1: *mut file, filep2: *mut file) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nx_dup2_from_tcb\n\n Description:\n   nx_dup2_from_tcb() is similar to the standard 'dup2' interface\n   except that is not a cancellation point and it does not modify the\n   errno variable.\n\n   nx_dup2_from_tcb() is an internal NuttX interface and should not be\n   called from applications.\n\n   Clone a file descriptor to a specific descriptor number.\n\n Returned Value:\n   fd2 is returned on success; a negated errno value is return on\n   any failure.\n"]
-    pub fn nx_dup2_from_tcb(tcb: *mut tcb_s, fd1: cty::c_int, fd2: cty::c_int) -> cty::c_int;
+    #[doc = " Name: fdlist_dup3\n\n Description:\n   fdlist_dup3() is similar to the standard 'dup3' interface\n   except that is not a cancellation point and it does not modify the\n   errno variable.\n\n   fdlist_dup3() is an internal NuttX interface and should not be\n   called from applications.\n\n   Clone a file descriptor to a specific descriptor number.\n\n Returned Value:\n   fd2 is returned on success; a negated errno value is return on\n   any failure.\n"]
+    pub fn fdlist_dup3(
+        list: *mut fdlist,
+        fd1: cty::c_int,
+        fd2: cty::c_int,
+        flags: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: fdlist_dup2\n\n Description:\n   fdlist_dup2() is similar to the standard 'dup2' interface\n   except that is not a cancellation point and it does not modify the\n   errno variable.\n\n   fdlist_dup2() is an internal NuttX interface and should not be\n   called from applications.\n\n   Clone a file descriptor to a specific descriptor number.\n\n Returned Value:\n   fd2 is returned on success; a negated errno value is return on\n   any failure.\n"]
+    pub fn fdlist_dup2(list: *mut fdlist, fd1: cty::c_int, fd2: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nx_dup2\n\n Description:\n   nx_dup2() is similar to the standard 'dup2' interface except that is\n   not a cancellation point and it does not modify the errno variable.\n\n   nx_dup2() is an internal NuttX interface and should not be called from\n   applications.\n\n Returned Value:\n   fd2 is returned on success; a negated errno value is return on\n   any failure.\n"]
     pub fn nx_dup2(fd1: cty::c_int, fd2: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: file_dup3\n\n Description:\n   Assign an inode to a specific files structure.  This is the heart of\n   dup3.\n\n   Equivalent to the non-standard dup3() function except that it\n   accepts struct file instances instead of file descriptors.\n\n Returned Value:\n   Zero (OK) is returned on success; a negated errno value is return on\n   any failure.\n"]
-    pub fn file_dup3(filep1: *mut file, filep2: *mut file, flags: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: file_open\n\n Description:\n   file_open() is similar to the standard 'open' interface except that it\n   returns an instance of 'struct file' rather than a file descriptor.  It\n   also is not a cancellation point and does not modify the errno variable.\n\n Input Parameters:\n   filep  - The caller provided location in which to return the 'struct\n            file' instance.\n   path   - The full path to the file to be open.\n   oflags - open flags\n   ...    - Variable number of arguments, may include 'mode_t mode'\n\n Returned Value:\n   Zero (OK) is returned on success.  On failure, a negated errno value is\n   returned.\n"]
@@ -4356,9 +4441,9 @@ unsafe extern "C" {
     ) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: nx_open_from_tcb\n\n Description:\n   nx_open_from_tcb() is similar to the standard 'open' interface except\n   that it is not a cancellation point and it does not modify the errno\n   variable.\n\n   nx_open_from_tcb() is an internal NuttX interface and should not be\n   called from applications.\n\n Input Parameters:\n   tcb    - Address of the task's TCB\n   path   - The full path to the file to be opened.\n   oflags - open flags.\n   ...    - Variable number of arguments, may include 'mode_t mode'\n\n Returned Value:\n   The new file descriptor is returned on success; a negated errno value is\n   returned on any failure.\n"]
-    pub fn nx_open_from_tcb(
-        tcb: *mut tcb_s,
+    #[doc = " Name: fdlist_open\n\n Description:\n   fdlist_open() is similar to the standard 'open' interface except\n   that it is not a cancellation point and it does not modify the errno\n   variable.\n\n   fdlist_open() is an internal NuttX interface and should not be\n   called from applications.\n\n Input Parameters:\n   list   - Pointer to the file descriptor list structure.\n   path   - The full path to the file to be opened.\n   oflags - open flags.\n   ...    - Variable number of arguments, may include 'mode_t mode'\n\n Returned Value:\n   The new file descriptor is returned on success; a negated errno value is\n   returned on any failure.\n"]
+    pub fn fdlist_open(
+        list: *mut fdlist,
         path: *const cty::c_char,
         oflags: cty::c_int,
         ...
@@ -4369,27 +4454,32 @@ unsafe extern "C" {
     pub fn nx_open(path: *const cty::c_char, oflags: cty::c_int, ...) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: fs_getfilep\n\n Description:\n   Given a file descriptor, return the corresponding instance of struct\n   file.  NOTE that this function will currently fail if it is provided\n   with a socket descriptor.\n\n Input Parameters:\n   fd    - The file descriptor\n   filep - The location to return the struct file instance\n\n Returned Value:\n   Zero (OK) is returned on success; a negated errno value is returned on\n   any failure.\n"]
-    pub fn fs_getfilep(fd: cty::c_int, filep: *mut *mut file) -> cty::c_int;
+    #[doc = " Name: file_allocate\n\n Description:\n   Allocate a file instance and return\n"]
+    pub fn file_allocate() -> *mut file;
 }
 unsafe extern "C" {
-    #[doc = " Name: fs_reffilep\n\n Description:\n   To specify filep increase the reference count.\n\n Input Parameters:\n   None.\n\n Returned Value:\n   None.\n"]
-    pub fn fs_reffilep(filep: *mut file);
+    #[doc = " Name: file_free\n\n Description:\n   Free a file instance.\n"]
+    pub fn file_free(filep: *mut file);
 }
 unsafe extern "C" {
-    pub fn fs_putfilep(filep: *mut file) -> cty::c_int;
+    #[doc = " Name: file_get2\n\n Description:\n   Given a file descriptor, return the corresponding instance of struct\n   fd and filep\n\n Input Parameters:\n   fd    - The file descriptor\n   filep - The location to return the struct file instance\n   fdp   - The location to return the struct fd instance\n\n Returned Value:\n   Zero (OK) is returned on success; a negated errno value is returned on\n   any failure.\n"]
+    pub fn file_get2(fd: cty::c_int, filep: *mut *mut file, fdp: *mut *mut fd) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Name: file_ref\n\n Description:\n   To specify filep increase the reference count.\n\n Input Parameters:\n   None.\n\n Returned Value:\n   None.\n"]
+    pub fn file_ref(filep: *mut file);
+}
+unsafe extern "C" {
+    #[doc = " Name: file_put\n\n Description:\n   Release reference counts for files, less than or equal to 0 and close\n   the file\n\n Input Parameters:\n   filep  - The caller provided location in which to return the 'struct\n            file' instance.\n"]
+    pub fn file_put(filep: *mut file) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: file_close\n\n Description:\n   Close a file that was previously opened with file_open().\n\n Input Parameters:\n   filep - A pointer to a user provided memory location containing the\n           open file data returned by file_open().\n\n Returned Value:\n   Zero (OK) is returned on success; A negated errno value is returned on\n   any failure to indicate the nature of the failure.\n"]
     pub fn file_close(filep: *mut file) -> cty::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Name: file_close_without_clear\n\n Description:\n   Close a file that was previously opened with file_open(), but without\n   clear filep.\n\n Input Parameters:\n   filep - A pointer to a user provided memory location containing the\n           open file data returned by file_open().\n\n Returned Value:\n   Zero (OK) is returned on success; A negated errno value is returned on\n   any failure to indicate the nature of the failure.\n"]
-    pub fn file_close_without_clear(filep: *mut file) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[doc = " Name: nx_close_from_tcb\n\n Description:\n   nx_close_from_tcb() is similar to the standard 'close' interface\n   except that is not a cancellation point and it does not modify the\n   errno variable.\n\n   nx_close_from_tcb() is an internal NuttX interface and should not\n   be called from applications.\n\n   Close an inode (if open)\n\n Returned Value:\n   Zero (OK) is returned on success; A negated errno value is returned on\n   on any failure.\n\n Assumptions:\n   Caller holds the list mutex because the file descriptor will be\n   freed.\n"]
-    pub fn nx_close_from_tcb(tcb: *mut tcb_s, fd: cty::c_int) -> cty::c_int;
+    #[doc = " Name: fdlist_close\n\n Description:\n   fdlist_close() is similar to the standard 'close' interface\n   except that is not a cancellation point and it does not modify the\n   errno variable.\n\n   fdlist_close() is an internal NuttX interface and should not\n   be called from applications.\n\n   Close an inode (if open)\n\n Returned Value:\n   Zero (OK) is returned on success; A negated errno value is returned on\n   on any failure.\n\n Assumptions:\n   Caller holds the list mutex because the file descriptor will be\n   freed.\n"]
+    pub fn fdlist_close(list: *mut fdlist, fd: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nx_close\n\n Description:\n   nx_close() is similar to the standard 'close' interface except that is\n   not a cancellation point and it does not modify the errno variable.\n\n   nx_close() is an internal NuttX interface and should not be called from\n   applications.\n\n Returned Value:\n   The new file descriptor is returned on success; a negated errno value is\n   returned on any failure.\n"]
@@ -4843,1119 +4933,6 @@ unsafe extern "C" {
     pub fn __real_realpath(arg1: *const cty::c_char, arg2: *mut cty::c_char) -> *mut cty::c_char;
 }
 unsafe extern "C" {
-    #[doc = " Public Function Prototypes"]
-    pub fn fork() -> pid_t;
-}
-unsafe extern "C" {
-    pub fn vfork() -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getpid() -> pid_t;
-}
-unsafe extern "C" {
-    pub fn getpgid(pid: pid_t) -> pid_t;
-}
-unsafe extern "C" {
-    pub fn getpgrp() -> pid_t;
-}
-unsafe extern "C" {
-    pub fn gettid() -> pid_t;
-}
-unsafe extern "C" {
-    pub fn getppid() -> pid_t;
-}
-unsafe extern "C" {
-    pub fn _exit(status: cty::c_int) -> !;
-}
-unsafe extern "C" {
-    pub fn sleep(seconds: cty::c_uint) -> cty::c_uint;
-}
-unsafe extern "C" {
-    pub fn usleep(usec: useconds_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pause() -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn nice(inc: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn daemon(nochdir: cty::c_int, noclose: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn close(fd: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn dup(fd: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn dup2(fd1: cty::c_int, fd2: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn dup3(fd1: cty::c_int, fd2: cty::c_int, flags: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn fsync(fd: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn lseek(fd: cty::c_int, offset: off_t, whence: cty::c_int) -> off_t;
-}
-unsafe extern "C" {
-    pub fn ftruncate(fd: cty::c_int, length: off_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn fchown(fd: cty::c_int, owner: uid_t, group: gid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn lockf(fd: cty::c_int, cmd: cty::c_int, len: off_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn isatty(fd: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn ttyname(fd: cty::c_int) -> *mut cty::c_char;
-}
-unsafe extern "C" {
-    pub fn pipe2(pipefd: *mut cty::c_int, flags: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn alarm(seconds: cty::c_uint) -> cty::c_uint;
-}
-unsafe extern "C" {
-    pub fn chdir(path: *const cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn fchdir(fd: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn get_current_dir_name() -> *mut cty::c_char;
-}
-unsafe extern "C" {
-    pub fn access(path: *const cty::c_char, amode: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn faccessat(
-        dirfd: cty::c_int,
-        path: *const cty::c_char,
-        mode: cty::c_int,
-        flags: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn rmdir(pathname: *const cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn unlink(pathname: *const cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn unlinkat(
-        dirfd: cty::c_int,
-        pathname: *const cty::c_char,
-        flags: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn truncate(path: *const cty::c_char, length: off_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn link(path1: *const cty::c_char, path2: *const cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn linkat(
-        olddirfd: cty::c_int,
-        path1: *const cty::c_char,
-        newdirfd: cty::c_int,
-        path2: *const cty::c_char,
-        flags: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn symlink(path1: *const cty::c_char, path2: *const cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn symlinkat(
-        path1: *const cty::c_char,
-        dirfd: cty::c_int,
-        path2: *const cty::c_char,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn chown(path: *const cty::c_char, owner: uid_t, group: gid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn lchown(path: *const cty::c_char, owner: uid_t, group: gid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn fchownat(
-        dirfd: cty::c_int,
-        path: *const cty::c_char,
-        owner: uid_t,
-        group: gid_t,
-        flags: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn execl(path: *const cty::c_char, arg0: *const cty::c_char, ...) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn execle(path: *const cty::c_char, arg0: *const cty::c_char, ...) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn execv(path: *const cty::c_char, argv: *const *mut cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn execve(
-        path: *const cty::c_char,
-        argv: *const *mut cty::c_char,
-        envp: *const *mut cty::c_char,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn swab(src: *const cty::c_void, dest: *mut cty::c_void, nbytes: isize);
-}
-unsafe extern "C" {
-    pub fn getopt(
-        argc: cty::c_int,
-        argv: *const *mut cty::c_char,
-        optstring: *const cty::c_char,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getoptargp() -> *mut *mut cty::c_char;
-}
-unsafe extern "C" {
-    pub fn getopterrp() -> *mut cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getoptindp() -> *mut cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getoptoptp() -> *mut cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sethostname(name: *const cty::c_char, namelen: usize) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sysconf(name: cty::c_int) -> cty::c_long;
-}
-unsafe extern "C" {
-    pub fn fpathconf(fildes: cty::c_int, name: cty::c_int) -> cty::c_long;
-}
-unsafe extern "C" {
-    pub fn pathconf(path: *const cty::c_char, name: cty::c_int) -> cty::c_long;
-}
-unsafe extern "C" {
-    pub fn setuid(uid: uid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getuid() -> uid_t;
-}
-unsafe extern "C" {
-    pub fn setgid(gid: gid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getgid() -> gid_t;
-}
-unsafe extern "C" {
-    pub fn seteuid(uid: uid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn geteuid() -> uid_t;
-}
-unsafe extern "C" {
-    pub fn setegid(gid: gid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getegid() -> gid_t;
-}
-unsafe extern "C" {
-    pub fn setreuid(ruid: uid_t, euid: uid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn setregid(rgid: gid_t, egid: gid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getentropy(buffer: *mut cty::c_void, length: usize) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn sync();
-}
-unsafe extern "C" {
-    pub fn syncfs(fd: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn profil(
-        buf: *mut cty::c_ushort,
-        bufsiz: usize,
-        offset: usize,
-        scale: cty::c_uint,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn getpass(prompt: *const cty::c_char) -> *mut cty::c_char;
-}
-unsafe extern "C" {
-    pub fn crypt(key: *const cty::c_char, salt: *const cty::c_char) -> *mut cty::c_char;
-}
-unsafe extern "C" {
-    pub fn crypt_r(
-        key: *const cty::c_char,
-        salt: *const cty::c_char,
-        output: *mut cty::c_char,
-    ) -> *mut cty::c_char;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}getcwd"]
-    pub fn __real_getcwd(arg1: *mut cty::c_char, arg2: usize) -> *mut cty::c_char;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}gethostname"]
-    pub fn __real_gethostname(arg1: *mut cty::c_char, arg2: usize) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}pread"]
-    pub fn __real_pread(
-        arg1: cty::c_int,
-        arg2: *mut cty::c_void,
-        arg3: usize,
-        arg4: off_t,
-    ) -> isize;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}read"]
-    pub fn __real_read(arg1: cty::c_int, arg2: *mut cty::c_void, arg3: usize) -> isize;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}readlink"]
-    pub fn __real_readlink(arg1: *const cty::c_char, arg2: *mut cty::c_char, arg3: usize) -> isize;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}readlinkat"]
-    pub fn __real_readlinkat(
-        arg1: cty::c_int,
-        arg2: *const cty::c_char,
-        arg3: *mut cty::c_char,
-        arg4: usize,
-    ) -> isize;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}ttyname_r"]
-    pub fn __real_ttyname_r(arg1: cty::c_int, arg2: *mut cty::c_char, arg3: usize) -> cty::c_int;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}pwrite"]
-    pub fn __real_pwrite(
-        arg1: cty::c_int,
-        arg2: *const cty::c_void,
-        arg3: usize,
-        arg4: off_t,
-    ) -> isize;
-}
-unsafe extern "C" {
-    #[link_name = "\u{1}write"]
-    pub fn __real_write(arg1: cty::c_int, arg2: *const cty::c_void, arg3: usize) -> isize;
-}
-pub type pthread_key_t = cty::c_int;
-pub type pthread_addr_t = *mut cty::c_void;
-pub type pthread_startroutine_t =
-    ::core::option::Option<unsafe extern "C" fn(arg1: pthread_addr_t) -> pthread_addr_t>;
-pub type pthread_func_t = pthread_startroutine_t;
-pub type pthread_trampoline_t = ::core::option::Option<
-    unsafe extern "C" fn(arg1: pthread_startroutine_t, arg2: pthread_addr_t),
->;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_attr_s {
-    pub priority: u8,
-    pub policy: u8,
-    pub inheritsched: u8,
-    pub detachstate: u8,
-    pub stackaddr: *mut cty::c_void,
-    pub stacksize: usize,
-}
-pub type pthread_attr_t = pthread_attr_s;
-pub type pthread_t = pid_t;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_condattr_s {
-    pub pshared: cty::c_int,
-    pub clockid: clockid_t,
-}
-pub type pthread_condattr_t = pthread_condattr_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_cond_s {
-    pub sem: sem_t,
-    pub clockid: clockid_t,
-    pub wait_count: u16,
-}
-pub type pthread_cond_t = pthread_cond_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_mutexattr_s {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl pthread_mutexattr_s {
-    #[inline]
-    pub fn pshared(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pshared(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn pshared_raw(this: *const Self) -> u8 {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_pshared_raw(this: *mut Self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn type_(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_type(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn type__raw(this: *const Self) -> u8 {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                1usize,
-                2u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_type_raw(this: *mut Self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                1usize,
-                2u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(pshared: u8, type_: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let pshared: u8 = unsafe { ::core::mem::transmute(pshared) };
-            pshared as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 2u8, {
-            let type_: u8 = unsafe { ::core::mem::transmute(type_) };
-            type_ as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-pub type pthread_mutexattr_t = pthread_mutexattr_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_mutex_s {
-    pub flink: *mut pthread_mutex_s,
-    pub flags: u8,
-    pub type_: u8,
-    pub mutex: rmutex_t,
-}
-pub type pthread_mutex_t = pthread_mutex_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_barrierattr_s {
-    pub pshared: cty::c_int,
-}
-pub type pthread_barrierattr_t = pthread_barrierattr_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_barrier_s {
-    pub sem: sem_t,
-    pub count: cty::c_uint,
-    pub wait_count: cty::c_uint,
-    pub mutex: mutex_t,
-}
-pub type pthread_barrier_t = pthread_barrier_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_once_s {
-    pub done: bool,
-    pub mutex: pthread_mutex_t,
-}
-pub type pthread_once_t = pthread_once_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_rwlockattr_s {
-    pub pshared: cty::c_int,
-}
-pub type pthread_rwlockattr_t = pthread_rwlockattr_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_rwlock_s {
-    pub lock: pthread_mutex_t,
-    pub cv: pthread_cond_t,
-    pub num_readers: cty::c_uint,
-    pub num_writers: cty::c_uint,
-    pub write_in_progress: bool,
-}
-pub type pthread_rwlock_t = pthread_rwlock_s;
-pub type pthread_cleanup_t = ::core::option::Option<unsafe extern "C" fn(arg: *mut cty::c_void)>;
-unsafe extern "C" {
-    #[doc = " Public Function Prototypes"]
-    pub fn pthread_attr_init(attr: *mut pthread_attr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_destroy(attr: *mut pthread_attr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setschedpolicy(attr: *mut pthread_attr_t, policy: cty::c_int)
-        -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getschedpolicy(
-        attr: *const pthread_attr_t,
-        policy: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setschedparam(
-        attr: *mut pthread_attr_t,
-        param: *const sched_param,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getschedparam(
-        attr: *const pthread_attr_t,
-        param: *mut sched_param,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setinheritsched(
-        attr: *mut pthread_attr_t,
-        inheritsched: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getinheritsched(
-        attr: *const pthread_attr_t,
-        inheritsched: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getdetachstate(
-        attr: *const pthread_attr_t,
-        detachstate: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setdetachstate(
-        attr: *mut pthread_attr_t,
-        detachstate: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setstackaddr(
-        attr: *mut pthread_attr_t,
-        stackaddr: *mut cty::c_void,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getstackaddr(
-        attr: *const pthread_attr_t,
-        stackaddr: *mut *mut cty::c_void,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setstacksize(attr: *mut pthread_attr_t, stacksize: usize) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getstacksize(
-        attr: *const pthread_attr_t,
-        stacksize: *mut usize,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setstack(
-        attr: *mut pthread_attr_t,
-        stackaddr: *mut cty::c_void,
-        stacksize: usize,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getstack(
-        attr: *const pthread_attr_t,
-        stackaddr: *mut *mut cty::c_void,
-        stacksize: *mut usize,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_setscope(attr: *mut pthread_attr_t, scope: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_attr_getscope(attr: *const pthread_attr_t, scope: *mut cty::c_int)
-        -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_setname_np(thread: pthread_t, name: *const cty::c_char) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_getname_np(thread: pthread_t, name: *mut cty::c_char, len: usize) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_get_stackaddr_np(thread: pthread_t) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn pthread_get_stacksize_np(thread: pthread_t) -> isize;
-}
-unsafe extern "C" {
-    pub fn pthread_create(
-        thread: *mut pthread_t,
-        attr: *const pthread_attr_t,
-        startroutine: pthread_startroutine_t,
-        arg: pthread_addr_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_detach(thread: pthread_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_exit(value: pthread_addr_t) -> !;
-}
-unsafe extern "C" {
-    pub fn pthread_cancel(thread: pthread_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_setcancelstate(state: cty::c_int, oldstate: *mut cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_setcanceltype(type_: cty::c_int, oldtype: *mut cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_testcancel();
-}
-unsafe extern "C" {
-    pub fn pthread_join(thread: pthread_t, value: *mut pthread_addr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_yield();
-}
-unsafe extern "C" {
-    pub fn pthread_self() -> pthread_t;
-}
-unsafe extern "C" {
-    pub fn pthread_gettid_np(thread: pthread_t) -> pid_t;
-}
-unsafe extern "C" {
-    pub fn pthread_getschedparam(
-        thread: pthread_t,
-        policy: *mut cty::c_int,
-        param: *mut sched_param,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_setschedparam(
-        thread: pthread_t,
-        policy: cty::c_int,
-        param: *const sched_param,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_setschedprio(thread: pthread_t, prio: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_key_create(
-        key: *mut pthread_key_t,
-        destructor: ::core::option::Option<unsafe extern "C" fn(arg1: *mut cty::c_void)>,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_setspecific(key: pthread_key_t, value: *const cty::c_void) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_getspecific(key: pthread_key_t) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn pthread_key_delete(key: pthread_key_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_init(attr: *mut pthread_mutexattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_destroy(attr: *mut pthread_mutexattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_getpshared(
-        attr: *const pthread_mutexattr_t,
-        pshared: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_setpshared(
-        attr: *mut pthread_mutexattr_t,
-        pshared: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_gettype(
-        attr: *const pthread_mutexattr_t,
-        type_: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_settype(
-        attr: *mut pthread_mutexattr_t,
-        type_: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_getprotocol(
-        attr: *const pthread_mutexattr_t,
-        protocol: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_setprotocol(
-        attr: *mut pthread_mutexattr_t,
-        protocol: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_getrobust(
-        attr: *const pthread_mutexattr_t,
-        robust: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_setrobust(
-        attr: *mut pthread_mutexattr_t,
-        robust: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_getprioceiling(
-        attr: *const pthread_mutexattr_t,
-        prioceiling: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutexattr_setprioceiling(
-        attr: *mut pthread_mutexattr_t,
-        prioceiling: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_getprioceiling(
-        mutex: *const pthread_mutex_t,
-        prioceiling: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_setprioceiling(
-        mutex: *mut pthread_mutex_t,
-        prioceiling: cty::c_int,
-        old_ceiling: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_init(
-        mutex: *mut pthread_mutex_t,
-        attr: *const pthread_mutexattr_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_destroy(mutex: *mut pthread_mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_lock(mutex: *mut pthread_mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_timedlock(
-        mutex: *mut pthread_mutex_t,
-        abs_timeout: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_trylock(mutex: *mut pthread_mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_unlock(mutex: *mut pthread_mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_mutex_consistent(mutex: *mut pthread_mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_condattr_init(attr: *mut pthread_condattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_condattr_destroy(attr: *mut pthread_condattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_condattr_getpshared(
-        attr: *const pthread_condattr_t,
-        pshared: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_condattr_setpshared(
-        attr: *mut pthread_condattr_t,
-        pshared: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_condattr_getclock(
-        attr: *const pthread_condattr_t,
-        clock_id: *mut clockid_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_condattr_setclock(
-        attr: *mut pthread_condattr_t,
-        clock_id: clockid_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_init(
-        cond: *mut pthread_cond_t,
-        attr: *const pthread_condattr_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_destroy(cond: *mut pthread_cond_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_broadcast(cond: *mut pthread_cond_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_signal(cond: *mut pthread_cond_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_wait(cond: *mut pthread_cond_t, mutex: *mut pthread_mutex_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_timedwait(
-        cond: *mut pthread_cond_t,
-        mutex: *mut pthread_mutex_t,
-        abstime: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_cond_clockwait(
-        cond: *mut pthread_cond_t,
-        mutex: *mut pthread_mutex_t,
-        clockid: clockid_t,
-        abstime: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrierattr_destroy(attr: *mut pthread_barrierattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrierattr_init(attr: *mut pthread_barrierattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrierattr_getpshared(
-        attr: *const pthread_barrierattr_t,
-        pshared: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrierattr_setpshared(
-        attr: *mut pthread_barrierattr_t,
-        pshared: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrier_destroy(barrier: *mut pthread_barrier_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrier_init(
-        barrier: *mut pthread_barrier_t,
-        attr: *const pthread_barrierattr_t,
-        count: cty::c_uint,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_barrier_wait(barrier: *mut pthread_barrier_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_once(
-        once_control: *mut pthread_once_t,
-        init_routine: ::core::option::Option<unsafe extern "C" fn()>,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlockattr_init(attr: *mut pthread_rwlockattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlockattr_destroy(attr: *mut pthread_rwlockattr_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlockattr_getpshared(
-        attr: *const pthread_rwlockattr_t,
-        pshared: *mut cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlockattr_setpshared(
-        attr: *mut pthread_rwlockattr_t,
-        pshared: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_destroy(rw_lock: *mut pthread_rwlock_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_init(
-        rw_lock: *mut pthread_rwlock_t,
-        attr: *const pthread_rwlockattr_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_rdlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_timedrdlock(
-        lock: *mut pthread_rwlock_t,
-        abstime: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_clockrdlock(
-        lock: *mut pthread_rwlock_t,
-        clockid: clockid_t,
-        abstime: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_tryrdlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_wrlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_timedwrlock(
-        lock: *mut pthread_rwlock_t,
-        abstime: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_clockwrlock(
-        lock: *mut pthread_rwlock_t,
-        clockid: clockid_t,
-        abstime: *const timespec,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_trywrlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_rwlock_unlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_kill(thread: pthread_t, sig: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_sigmask(
-        how: cty::c_int,
-        set: *const sigset_t,
-        oset: *mut sigset_t,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_getcpuclockid(thread_id: pthread_t, clock_id: *mut clockid_t) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn pthread_atfork(
-        prepare: ::core::option::Option<unsafe extern "C" fn()>,
-        parent: ::core::option::Option<unsafe extern "C" fn()>,
-        child: ::core::option::Option<unsafe extern "C" fn()>,
-    ) -> cty::c_int;
-}
-#[doc = " Public Type Definitions"]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct mallinfo {
-    pub arena: cty::c_int,
-    pub ordblks: cty::c_int,
-    pub aordblks: cty::c_int,
-    pub mxordblk: cty::c_int,
-    pub uordblks: cty::c_int,
-    pub fordblks: cty::c_int,
-    pub usmblks: cty::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct malltask {
-    pub pid: pid_t,
-    pub seqmin: cty::c_ulong,
-    pub seqmax: cty::c_ulong,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct mallinfo_task {
-    pub aordblks: cty::c_int,
-    pub uordblks: cty::c_int,
-}
-unsafe extern "C" {
-    pub fn mallopt(param: cty::c_int, value: cty::c_int) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub fn mallinfo() -> mallinfo;
-}
-unsafe extern "C" {
-    pub fn malloc_size(ptr: *mut cty::c_void) -> usize;
-}
-unsafe extern "C" {
-    pub fn mallinfo_task(task: *const malltask) -> mallinfo_task;
-}
-#[doc = " Public Types"]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct mm_heap_s {
-    _unused: [u8; 0],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct mempool_init_s {
-    pub poolsize: *const usize,
-    pub npools: usize,
-    pub threshold: usize,
-    pub chunksize: usize,
-    pub init_chunksize: usize,
-    pub expandsize: usize,
-    pub dict_expendsize: usize,
-}
-unsafe extern "C" {
-    pub static mut g_mm_seqno: cty::c_ulong;
-}
-unsafe extern "C" {
-    pub static mut g_mmheap: *mut mm_heap_s;
-}
-unsafe extern "C" {
-    #[doc = " Public Function Prototypes"]
-    pub fn mm_initialize(
-        name: *const cty::c_char,
-        heap_start: *mut cty::c_void,
-        heap_size: usize,
-    ) -> *mut mm_heap_s;
-}
-unsafe extern "C" {
-    pub fn mm_initialize_pool(
-        name: *const cty::c_char,
-        heap_start: *mut cty::c_void,
-        heap_size: usize,
-        init: *const mempool_init_s,
-    ) -> *mut mm_heap_s;
-}
-unsafe extern "C" {
-    pub fn mm_addregion(heap: *mut mm_heap_s, heapstart: *mut cty::c_void, heapsize: usize);
-}
-unsafe extern "C" {
-    pub fn mm_uninitialize(heap: *mut mm_heap_s);
-}
-unsafe extern "C" {
-    pub fn umm_initialize(heap_start: *mut cty::c_void, heap_size: usize);
-}
-unsafe extern "C" {
-    pub fn umm_addregion(heapstart: *mut cty::c_void, heapsize: usize);
-}
-unsafe extern "C" {
-    pub fn mm_malloc(heap: *mut mm_heap_s, size: usize) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn mm_free_delaylist(heap: *mut mm_heap_s);
-}
-unsafe extern "C" {
-    pub fn mm_malloc_size(heap: *mut mm_heap_s, mem: *mut cty::c_void) -> usize;
-}
-unsafe extern "C" {
-    pub fn mm_free(heap: *mut mm_heap_s, mem: *mut cty::c_void);
-}
-unsafe extern "C" {
-    pub fn mm_realloc(
-        heap: *mut mm_heap_s,
-        oldmem: *mut cty::c_void,
-        size: usize,
-    ) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn mm_calloc(heap: *mut mm_heap_s, n: usize, elem_size: usize) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn mm_zalloc(heap: *mut mm_heap_s, size: usize) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn mm_memalign(heap: *mut mm_heap_s, alignment: usize, size: usize) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn mm_heapmember(heap: *mut mm_heap_s, mem: *mut cty::c_void) -> bool;
-}
-unsafe extern "C" {
-    pub fn umm_heapmember(mem: *mut cty::c_void) -> bool;
-}
-unsafe extern "C" {
-    pub fn mm_brkaddr(heap: *mut mm_heap_s, region: cty::c_int) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn umm_brkaddr(region: cty::c_int) -> *mut cty::c_void;
-}
-unsafe extern "C" {
-    pub fn mm_extend(heap: *mut mm_heap_s, mem: *mut cty::c_void, size: usize, region: cty::c_int);
-}
-unsafe extern "C" {
-    pub fn umm_extend(mem: *mut cty::c_void, size: usize, region: cty::c_int);
-}
-unsafe extern "C" {
-    pub fn mm_mallinfo(heap: *mut mm_heap_s) -> mallinfo;
-}
-unsafe extern "C" {
-    pub fn mm_mallinfo_task(heap: *mut mm_heap_s, task: *const malltask) -> mallinfo_task;
-}
-unsafe extern "C" {
-    pub fn mm_heapfree(heap: *mut mm_heap_s) -> usize;
-}
-unsafe extern "C" {
-    pub fn mm_heapfree_largest(heap: *mut mm_heap_s) -> usize;
-}
-unsafe extern "C" {
-    pub fn mm_memdump(heap: *mut mm_heap_s, dump: *const malltask);
-}
-unsafe extern "C" {
-    pub fn umm_memdump(dump: *const malltask);
-}
-unsafe extern "C" {
-    pub fn mm_checkcorruption(heap: *mut mm_heap_s);
-}
-unsafe extern "C" {
-    pub fn umm_checkcorruption();
-}
-unsafe extern "C" {
     pub fn lib_get_streams() -> *mut streamlist;
 }
 unsafe extern "C" {
@@ -5976,6 +4953,9 @@ unsafe extern "C" {
         resolved: *mut cty::c_char,
         notfollow: bool,
     ) -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    pub fn lib_cxx_initialize();
 }
 #[doc = " Public Type Definitions"]
 pub type FILE = file_struct;
@@ -6599,6 +5579,15 @@ pub struct _FtJsonObject {
 }
 #[doc = " FtJsonObject"]
 pub type FtJsonObject = *mut _FtJsonObject;
+#[doc = " FtArrayBuffer"]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _FtArrayBuffer {
+    #[doc = "< opaque"]
+    pub opaque: *mut cty::c_void,
+}
+#[doc = " FtArrayBuffer"]
+pub type FtArrayBuffer = *mut _FtArrayBuffer;
 #[repr(u32)]
 #[doc = " FeatureTaskMode"]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -6703,6 +5692,8 @@ pub enum FeaturePrimitiveTypeBase {
     FT_ANY_REF_BASE = 14,
     #[doc = "< 15"]
     FT_JSON_OBJ_BASE = 15,
+    #[doc = "< 16"]
+    FT_ARRAY_BUFFER_BASE = 16,
 }
 impl FeaturePrimitiveType {
     pub const FT_CHAR: FeaturePrimitiveType = FeaturePrimitiveType::FT_STRING;
@@ -6743,6 +5734,8 @@ pub enum FeaturePrimitiveType {
     FT_ANY_REF = 58,
     #[doc = "< 62: json_object* defination"]
     FT_JSON_OBJ = 62,
+    #[doc = "< 62: array_buffer* defination"]
+    FT_ARRAY_BUFFER = 66,
 }
 #[repr(u32)]
 #[doc = " FeatureErrorCode"]
@@ -6752,8 +5745,12 @@ pub enum FeatureErrorCode {
     FT_ERR_GENERAL = 200,
     #[doc = "< args errors"]
     FT_ERR_ARGS = 202,
+    #[doc = "< not supported"]
+    FT_ERR_NOT_SUPPORTED = 203,
     #[doc = "< timeout"]
     FT_ERR_TIMEOUT = 204,
+    #[doc = "< duplicate submission"]
+    FT_ERR_DUPLICATE_SUBMISSION = 205,
     #[doc = "< IO error"]
     FT_ERR_IOERROR = 300,
     #[doc = "< custom errors, starting from 400"]
@@ -9096,7 +8093,7 @@ unsafe extern "C" {
     pub fn recvmsg(sockfd: cty::c_int, msg: *mut msghdr, flags: cty::c_int) -> isize;
 }
 unsafe extern "C" {
-    pub fn sendmsg(sockfd: cty::c_int, msg: *mut msghdr, flags: cty::c_int) -> isize;
+    pub fn sendmsg(sockfd: cty::c_int, msg: *const msghdr, flags: cty::c_int) -> isize;
 }
 unsafe extern "C" {
     #[link_name = "\u{1}send"]
@@ -9164,7 +8161,7 @@ pub struct ip_mreq {
 #[derive(Debug, Copy, Clone)]
 pub struct ip_mreqn {
     pub imr_multiaddr: in_addr,
-    pub imr_interface: in_addr,
+    pub imr_address: in_addr,
     pub imr_ifindex: cty::c_uint,
 }
 #[repr(C)]
@@ -9597,6 +8594,1002 @@ unsafe extern "C" {
         buf: *mut cty::c_char,
         buflen: usize,
         result: *mut *mut passwd,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Public Function Prototypes"]
+    pub fn fork() -> pid_t;
+}
+unsafe extern "C" {
+    pub fn vfork() -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getpid() -> pid_t;
+}
+unsafe extern "C" {
+    pub fn getpgid(pid: pid_t) -> pid_t;
+}
+unsafe extern "C" {
+    pub fn getpgrp() -> pid_t;
+}
+unsafe extern "C" {
+    pub fn gettid() -> pid_t;
+}
+unsafe extern "C" {
+    pub fn getppid() -> pid_t;
+}
+unsafe extern "C" {
+    pub fn _exit(status: cty::c_int) -> !;
+}
+unsafe extern "C" {
+    pub fn sleep(seconds: cty::c_uint) -> cty::c_uint;
+}
+unsafe extern "C" {
+    pub fn usleep(usec: useconds_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pause() -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn nice(inc: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn daemon(nochdir: cty::c_int, noclose: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn close(fd: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn dup(fd: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn dup2(fd1: cty::c_int, fd2: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn dup3(fd1: cty::c_int, fd2: cty::c_int, flags: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn fsync(fd: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn lseek(fd: cty::c_int, offset: off_t, whence: cty::c_int) -> off_t;
+}
+unsafe extern "C" {
+    pub fn ftruncate(fd: cty::c_int, length: off_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn fchown(fd: cty::c_int, owner: uid_t, group: gid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn lockf(fd: cty::c_int, cmd: cty::c_int, len: off_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn isatty(fd: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn ttyname(fd: cty::c_int) -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    pub fn pipe2(pipefd: *mut cty::c_int, flags: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn alarm(seconds: cty::c_uint) -> cty::c_uint;
+}
+unsafe extern "C" {
+    pub fn chdir(path: *const cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn fchdir(fd: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn get_current_dir_name() -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    pub fn access(path: *const cty::c_char, amode: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn faccessat(
+        dirfd: cty::c_int,
+        path: *const cty::c_char,
+        mode: cty::c_int,
+        flags: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn rmdir(pathname: *const cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn unlink(pathname: *const cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn unlinkat(
+        dirfd: cty::c_int,
+        pathname: *const cty::c_char,
+        flags: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn truncate(path: *const cty::c_char, length: off_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn link(path1: *const cty::c_char, path2: *const cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn linkat(
+        olddirfd: cty::c_int,
+        path1: *const cty::c_char,
+        newdirfd: cty::c_int,
+        path2: *const cty::c_char,
+        flags: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn symlink(path1: *const cty::c_char, path2: *const cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn symlinkat(
+        path1: *const cty::c_char,
+        dirfd: cty::c_int,
+        path2: *const cty::c_char,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn chown(path: *const cty::c_char, owner: uid_t, group: gid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn lchown(path: *const cty::c_char, owner: uid_t, group: gid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn fchownat(
+        dirfd: cty::c_int,
+        path: *const cty::c_char,
+        owner: uid_t,
+        group: gid_t,
+        flags: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn execl(path: *const cty::c_char, arg0: *const cty::c_char, ...) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn execle(path: *const cty::c_char, arg0: *const cty::c_char, ...) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn execv(path: *const cty::c_char, argv: *const *mut cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn execve(
+        path: *const cty::c_char,
+        argv: *const *mut cty::c_char,
+        envp: *const *mut cty::c_char,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn swab(src: *const cty::c_void, dest: *mut cty::c_void, nbytes: isize);
+}
+unsafe extern "C" {
+    pub fn getopt(
+        argc: cty::c_int,
+        argv: *const *mut cty::c_char,
+        optstring: *const cty::c_char,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getoptargp() -> *mut *mut cty::c_char;
+}
+unsafe extern "C" {
+    pub fn getopterrp() -> *mut cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getoptindp() -> *mut cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getoptoptp() -> *mut cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sethostname(name: *const cty::c_char, namelen: usize) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sysconf(name: cty::c_int) -> cty::c_long;
+}
+unsafe extern "C" {
+    pub fn fpathconf(fildes: cty::c_int, name: cty::c_int) -> cty::c_long;
+}
+unsafe extern "C" {
+    pub fn pathconf(path: *const cty::c_char, name: cty::c_int) -> cty::c_long;
+}
+unsafe extern "C" {
+    pub fn setuid(uid: uid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getuid() -> uid_t;
+}
+unsafe extern "C" {
+    pub fn setgid(gid: gid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getgid() -> gid_t;
+}
+unsafe extern "C" {
+    pub fn seteuid(uid: uid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn geteuid() -> uid_t;
+}
+unsafe extern "C" {
+    pub fn setegid(gid: gid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getegid() -> gid_t;
+}
+unsafe extern "C" {
+    pub fn setreuid(ruid: uid_t, euid: uid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn setregid(rgid: gid_t, egid: gid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getentropy(buffer: *mut cty::c_void, length: usize) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn sync();
+}
+unsafe extern "C" {
+    pub fn syncfs(fd: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn profil(
+        buf: *mut cty::c_ushort,
+        bufsiz: usize,
+        offset: usize,
+        scale: cty::c_uint,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn getpass(prompt: *const cty::c_char) -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    pub fn crypt(key: *const cty::c_char, salt: *const cty::c_char) -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    pub fn crypt_r(
+        key: *const cty::c_char,
+        salt: *const cty::c_char,
+        output: *mut cty::c_char,
+    ) -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}getcwd"]
+    pub fn __real_getcwd(arg1: *mut cty::c_char, arg2: usize) -> *mut cty::c_char;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}gethostname"]
+    pub fn __real_gethostname(arg1: *mut cty::c_char, arg2: usize) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}pread"]
+    pub fn __real_pread(
+        arg1: cty::c_int,
+        arg2: *mut cty::c_void,
+        arg3: usize,
+        arg4: off_t,
+    ) -> isize;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}read"]
+    pub fn __real_read(arg1: cty::c_int, arg2: *mut cty::c_void, arg3: usize) -> isize;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}readlink"]
+    pub fn __real_readlink(arg1: *const cty::c_char, arg2: *mut cty::c_char, arg3: usize) -> isize;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}readlinkat"]
+    pub fn __real_readlinkat(
+        arg1: cty::c_int,
+        arg2: *const cty::c_char,
+        arg3: *mut cty::c_char,
+        arg4: usize,
+    ) -> isize;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}ttyname_r"]
+    pub fn __real_ttyname_r(arg1: cty::c_int, arg2: *mut cty::c_char, arg3: usize) -> cty::c_int;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}pwrite"]
+    pub fn __real_pwrite(
+        arg1: cty::c_int,
+        arg2: *const cty::c_void,
+        arg3: usize,
+        arg4: off_t,
+    ) -> isize;
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}write"]
+    pub fn __real_write(arg1: cty::c_int, arg2: *const cty::c_void, arg3: usize) -> isize;
+}
+pub type pthread_key_t = cty::c_int;
+pub type pthread_addr_t = *mut cty::c_void;
+pub type pthread_startroutine_t =
+    ::core::option::Option<unsafe extern "C" fn(arg1: pthread_addr_t) -> pthread_addr_t>;
+pub type pthread_func_t = pthread_startroutine_t;
+pub type pthread_trampoline_t = ::core::option::Option<
+    unsafe extern "C" fn(arg1: pthread_startroutine_t, arg2: pthread_addr_t),
+>;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pthread_attr_s {
+    pub priority: u8,
+    pub policy: u8,
+    pub inheritsched: u8,
+    pub detachstate: u8,
+    pub stackaddr: *mut cty::c_void,
+    pub stacksize: usize,
+}
+pub type pthread_attr_t = pthread_attr_s;
+pub type pthread_t = pid_t;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pthread_condattr_s {
+    pub pshared: cty::c_int,
+    pub clockid: clockid_t,
+}
+pub type pthread_condattr_t = pthread_condattr_s;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pthread_cond_s {
+    pub sem: sem_t,
+    pub clockid: clockid_t,
+    pub wait_count: u16,
+}
+pub type pthread_cond_t = pthread_cond_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pthread_mutexattr_s {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl pthread_mutexattr_s {
+    #[inline]
+    pub fn pshared(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pshared(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn pshared_raw(this: *const Self) -> u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_pshared_raw(this: *mut Self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn type_(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_type(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn type__raw(this: *const Self) -> u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                1usize,
+                2u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_type_raw(this: *mut Self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                1usize,
+                2u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn robust(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_robust(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn robust_raw(this: *const Self) -> u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                3usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_robust_raw(this: *mut Self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                3usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        pshared: u8,
+        type_: u8,
+        robust: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let pshared: u8 = unsafe { ::core::mem::transmute(pshared) };
+            pshared as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 2u8, {
+            let type_: u8 = unsafe { ::core::mem::transmute(type_) };
+            type_ as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let robust: u8 = unsafe { ::core::mem::transmute(robust) };
+            robust as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+pub type pthread_mutexattr_t = pthread_mutexattr_s;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pthread_mutex_s {
+    pub flink: *mut pthread_mutex_s,
+    pub flags: u8,
+    pub type_: u8,
+    pub mutex: rmutex_t,
+}
+pub type pthread_mutex_t = pthread_mutex_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pthread_barrierattr_s {
+    pub pshared: cty::c_int,
+}
+pub type pthread_barrierattr_t = pthread_barrierattr_s;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pthread_barrier_s {
+    pub sem: sem_t,
+    pub count: cty::c_uint,
+    pub wait_count: cty::c_uint,
+    pub mutex: mutex_t,
+}
+pub type pthread_barrier_t = pthread_barrier_s;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pthread_once_s {
+    pub done: bool,
+    pub mutex: pthread_mutex_t,
+}
+pub type pthread_once_t = pthread_once_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pthread_rwlockattr_s {
+    pub pshared: cty::c_int,
+}
+pub type pthread_rwlockattr_t = pthread_rwlockattr_s;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pthread_rwlock_s {
+    pub lock: pthread_mutex_t,
+    pub cv: pthread_cond_t,
+    pub num_readers: cty::c_uint,
+    pub num_writers: cty::c_uint,
+    pub write_in_progress: bool,
+}
+pub type pthread_rwlock_t = pthread_rwlock_s;
+pub type pthread_cleanup_t = ::core::option::Option<unsafe extern "C" fn(arg: *mut cty::c_void)>;
+unsafe extern "C" {
+    #[doc = " Public Function Prototypes"]
+    pub fn pthread_attr_init(attr: *mut pthread_attr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_destroy(attr: *mut pthread_attr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setschedpolicy(attr: *mut pthread_attr_t, policy: cty::c_int)
+        -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getschedpolicy(
+        attr: *const pthread_attr_t,
+        policy: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setschedparam(
+        attr: *mut pthread_attr_t,
+        param: *const sched_param,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getschedparam(
+        attr: *const pthread_attr_t,
+        param: *mut sched_param,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setinheritsched(
+        attr: *mut pthread_attr_t,
+        inheritsched: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getinheritsched(
+        attr: *const pthread_attr_t,
+        inheritsched: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getdetachstate(
+        attr: *const pthread_attr_t,
+        detachstate: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setdetachstate(
+        attr: *mut pthread_attr_t,
+        detachstate: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setstackaddr(
+        attr: *mut pthread_attr_t,
+        stackaddr: *mut cty::c_void,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getstackaddr(
+        attr: *const pthread_attr_t,
+        stackaddr: *mut *mut cty::c_void,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setstacksize(attr: *mut pthread_attr_t, stacksize: usize) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getstacksize(
+        attr: *const pthread_attr_t,
+        stacksize: *mut usize,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setstack(
+        attr: *mut pthread_attr_t,
+        stackaddr: *mut cty::c_void,
+        stacksize: usize,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getstack(
+        attr: *const pthread_attr_t,
+        stackaddr: *mut *mut cty::c_void,
+        stacksize: *mut usize,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_setscope(attr: *mut pthread_attr_t, scope: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_attr_getscope(attr: *const pthread_attr_t, scope: *mut cty::c_int)
+        -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_setname_np(thread: pthread_t, name: *const cty::c_char) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_getname_np(thread: pthread_t, name: *mut cty::c_char, len: usize) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_get_stackaddr_np(thread: pthread_t) -> *mut cty::c_void;
+}
+unsafe extern "C" {
+    pub fn pthread_get_stacksize_np(thread: pthread_t) -> isize;
+}
+unsafe extern "C" {
+    pub fn pthread_create(
+        thread: *mut pthread_t,
+        attr: *const pthread_attr_t,
+        startroutine: pthread_startroutine_t,
+        arg: pthread_addr_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_detach(thread: pthread_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_exit(value: pthread_addr_t) -> !;
+}
+unsafe extern "C" {
+    pub fn pthread_cancel(thread: pthread_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_setcancelstate(state: cty::c_int, oldstate: *mut cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_setcanceltype(type_: cty::c_int, oldtype: *mut cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_testcancel();
+}
+unsafe extern "C" {
+    pub fn pthread_join(thread: pthread_t, value: *mut pthread_addr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_yield();
+}
+unsafe extern "C" {
+    pub fn pthread_self() -> pthread_t;
+}
+unsafe extern "C" {
+    pub fn pthread_gettid_np(thread: pthread_t) -> pid_t;
+}
+unsafe extern "C" {
+    pub fn pthread_getschedparam(
+        thread: pthread_t,
+        policy: *mut cty::c_int,
+        param: *mut sched_param,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_setschedparam(
+        thread: pthread_t,
+        policy: cty::c_int,
+        param: *const sched_param,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_setschedprio(thread: pthread_t, prio: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_key_create(
+        key: *mut pthread_key_t,
+        destructor: ::core::option::Option<unsafe extern "C" fn(arg1: *mut cty::c_void)>,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_setspecific(key: pthread_key_t, value: *const cty::c_void) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_getspecific(key: pthread_key_t) -> *mut cty::c_void;
+}
+unsafe extern "C" {
+    pub fn pthread_key_delete(key: pthread_key_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_init(attr: *mut pthread_mutexattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_destroy(attr: *mut pthread_mutexattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_getpshared(
+        attr: *const pthread_mutexattr_t,
+        pshared: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_setpshared(
+        attr: *mut pthread_mutexattr_t,
+        pshared: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_gettype(
+        attr: *const pthread_mutexattr_t,
+        type_: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_settype(
+        attr: *mut pthread_mutexattr_t,
+        type_: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_getprotocol(
+        attr: *const pthread_mutexattr_t,
+        protocol: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_setprotocol(
+        attr: *mut pthread_mutexattr_t,
+        protocol: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_getrobust(
+        attr: *const pthread_mutexattr_t,
+        robust: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_setrobust(
+        attr: *mut pthread_mutexattr_t,
+        robust: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_getprioceiling(
+        attr: *const pthread_mutexattr_t,
+        prioceiling: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutexattr_setprioceiling(
+        attr: *mut pthread_mutexattr_t,
+        prioceiling: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_getprioceiling(
+        mutex: *const pthread_mutex_t,
+        prioceiling: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_setprioceiling(
+        mutex: *mut pthread_mutex_t,
+        prioceiling: cty::c_int,
+        old_ceiling: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_init(
+        mutex: *mut pthread_mutex_t,
+        attr: *const pthread_mutexattr_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_destroy(mutex: *mut pthread_mutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_lock(mutex: *mut pthread_mutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_timedlock(
+        mutex: *mut pthread_mutex_t,
+        abs_timeout: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_trylock(mutex: *mut pthread_mutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_unlock(mutex: *mut pthread_mutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_mutex_consistent(mutex: *mut pthread_mutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_condattr_init(attr: *mut pthread_condattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_condattr_destroy(attr: *mut pthread_condattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_condattr_getpshared(
+        attr: *const pthread_condattr_t,
+        pshared: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_condattr_setpshared(
+        attr: *mut pthread_condattr_t,
+        pshared: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_condattr_getclock(
+        attr: *const pthread_condattr_t,
+        clock_id: *mut clockid_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_condattr_setclock(
+        attr: *mut pthread_condattr_t,
+        clock_id: clockid_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_init(
+        cond: *mut pthread_cond_t,
+        attr: *const pthread_condattr_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_destroy(cond: *mut pthread_cond_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_broadcast(cond: *mut pthread_cond_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_signal(cond: *mut pthread_cond_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_wait(cond: *mut pthread_cond_t, mutex: *mut pthread_mutex_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_timedwait(
+        cond: *mut pthread_cond_t,
+        mutex: *mut pthread_mutex_t,
+        abstime: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_cond_clockwait(
+        cond: *mut pthread_cond_t,
+        mutex: *mut pthread_mutex_t,
+        clockid: clockid_t,
+        abstime: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrierattr_destroy(attr: *mut pthread_barrierattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrierattr_init(attr: *mut pthread_barrierattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrierattr_getpshared(
+        attr: *const pthread_barrierattr_t,
+        pshared: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrierattr_setpshared(
+        attr: *mut pthread_barrierattr_t,
+        pshared: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrier_destroy(barrier: *mut pthread_barrier_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrier_init(
+        barrier: *mut pthread_barrier_t,
+        attr: *const pthread_barrierattr_t,
+        count: cty::c_uint,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_barrier_wait(barrier: *mut pthread_barrier_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_once(
+        once_control: *mut pthread_once_t,
+        init_routine: ::core::option::Option<unsafe extern "C" fn()>,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlockattr_init(attr: *mut pthread_rwlockattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlockattr_destroy(attr: *mut pthread_rwlockattr_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlockattr_getpshared(
+        attr: *const pthread_rwlockattr_t,
+        pshared: *mut cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlockattr_setpshared(
+        attr: *mut pthread_rwlockattr_t,
+        pshared: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_destroy(rw_lock: *mut pthread_rwlock_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_init(
+        rw_lock: *mut pthread_rwlock_t,
+        attr: *const pthread_rwlockattr_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_rdlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_timedrdlock(
+        lock: *mut pthread_rwlock_t,
+        abstime: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_clockrdlock(
+        lock: *mut pthread_rwlock_t,
+        clockid: clockid_t,
+        abstime: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_tryrdlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_wrlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_timedwrlock(
+        lock: *mut pthread_rwlock_t,
+        abstime: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_clockwrlock(
+        lock: *mut pthread_rwlock_t,
+        clockid: clockid_t,
+        abstime: *const timespec,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_trywrlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_rwlock_unlock(lock: *mut pthread_rwlock_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_kill(thread: pthread_t, sig: cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_sigmask(
+        how: cty::c_int,
+        set: *const sigset_t,
+        oset: *mut sigset_t,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_getcpuclockid(thread_id: pthread_t, clock_id: *mut clockid_t) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub fn pthread_atfork(
+        prepare: ::core::option::Option<unsafe extern "C" fn()>,
+        parent: ::core::option::Option<unsafe extern "C" fn()>,
+        child: ::core::option::Option<unsafe extern "C" fn()>,
     ) -> cty::c_int;
 }
 #[repr(C)]
@@ -12746,6 +12739,30 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " @brief create a json object with a string\n\n @param json_str\n @return FtJsonObject"]
     pub fn FeatureNewJsonObject(str_: *const cty::c_char) -> FtJsonObject;
+}
+#[doc = " FeatureArrayBufferFreeFunc"]
+pub type FeatureArrayBufferFreeFunc =
+    ::core::option::Option<unsafe extern "C" fn(opaque: *mut cty::c_void, buff: *mut cty::c_void)>;
+unsafe extern "C" {
+    #[doc = " @brief create an array buffer from a data pointer\n\n @param data\n @param len\n @param free_func\n @param opaque\n @return FtArrayBuffer"]
+    pub fn FeatureNewArrayBufferFromData(
+        data: *mut u8,
+        len: usize,
+        free_func: FeatureArrayBufferFreeFunc,
+        opaque: *mut cty::c_void,
+    ) -> FtArrayBuffer;
+}
+unsafe extern "C" {
+    #[doc = " @brief create an array buffer and copy data from a data pointer\n\n @param data\n @param len\n @return FtArrayBuffer"]
+    pub fn FeatureNewArrayBufferCopyData(data: *mut u8, len: usize) -> FtArrayBuffer;
+}
+unsafe extern "C" {
+    #[doc = " @brief get data from an array buffer\n\n @param buff\n @param psize\n @return data"]
+    pub fn FeatureArrayBufferGetData(buff: FtArrayBuffer, psize: *mut usize) -> *mut u8;
+}
+unsafe extern "C" {
+    #[doc = " @brief attach an array buffer to FeatureManagerHandle\n\n @param[in] handle FeatureManagerHandle\n @param buff FtArrayBuffer\n @return bool"]
+    pub fn FeatureAttachArrayBuffer(hmanager: FeatureManagerHandle, buff: FtArrayBuffer) -> bool;
 }
 unsafe extern "C" {
     pub fn FeatureFtStringPromiseResolve(

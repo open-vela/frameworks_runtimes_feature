@@ -312,6 +312,12 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn create_cat(&self) -> Option<FeatureInstance>;
     fn set_animal(&self, animal: FeatureInstance);
     fn invoke_event(&self, event_name: &FeatureString);
+    fn set_buffer(&self, buffer: FeatureArrayBuffer);
+    fn get_buffer_copy(&self) -> FeatureArrayBuffer;
+    fn get_buffer_no_copy(&self) -> FeatureArrayBuffer;
+    fn set_buffer_array(&self, ab_array: FeatureReferenceArray<FeatureArrayBuffer>);
+    fn get_buffer_array_copy(&self) -> Option<FeatureReferenceArray<FeatureArrayBuffer>>;
+    fn get_buffer_array_no_copy(&self) -> Option<FeatureReferenceArray<FeatureArrayBuffer>>;
 }
 
 // Interface trait
@@ -646,6 +652,76 @@ pub extern "C" fn simple_wrap_invoke_event(
     let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let name = unsafe { FeatureString::from_raw(event_name) };
     simple.invoke_event(&name);
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_set_buffer(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+    buff: FtArrayBuffer,
+) {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let abuf = unsafe { FeatureArrayBuffer::from_raw(buff) };
+    simple.set_buffer(abuf);
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_get_buffer_copy(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+) -> FtArrayBuffer {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let abuf = simple.get_buffer_copy();
+    abuf.into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_get_buffer_no_copy(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+) -> FtArrayBuffer {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let abuf = simple.get_buffer_no_copy();
+    abuf.into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_set_buffer_array(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+    buff_array: *mut FtArray,
+) {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let ab_array = unsafe { FeatureReferenceArray::<FeatureArrayBuffer>::from_raw(buff_array) };
+    simple.set_buffer_array(ab_array);
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_get_buffer_array_copy(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+) -> *mut FtArray {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let ret = simple.get_buffer_array_copy();
+    if let Some(wrapper) = ret {
+        wrapper.into_raw()
+    } else {
+        ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn simple_wrap_get_buffer_array_no_copy(
+    feature: FeatureInstanceHandle,
+    _adata: AppendData,
+) -> *mut FtArray {
+    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let ret = simple.get_buffer_array_no_copy();
+    if let Some(wrapper) = ret {
+        wrapper.into_raw()
+    } else {
+        ptr::null_mut()
+    }
 }
 
 // Animal interface dog vtable functions

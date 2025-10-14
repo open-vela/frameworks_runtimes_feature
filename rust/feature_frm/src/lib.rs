@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(vec_into_raw_parts)]
 
 extern crate alloc;
 
@@ -23,6 +24,7 @@ pub use feature_sys::FeatureRuntimeContext as FeatureRuntimeContextHandle;
 pub use feature_sys::FeatureType;
 pub use feature_sys::FtAny;
 pub use feature_sys::FtArray;
+pub use feature_sys::FtArrayBuffer;
 pub use feature_sys::FtBool;
 pub use feature_sys::FtCallbackId;
 pub use feature_sys::FtDouble;

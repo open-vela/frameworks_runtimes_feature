@@ -266,6 +266,49 @@ test.invoke_event('invalid_event')
 console.log('\n\n')
 console.log('test events end ====================');
 
+
+console.log('test arraybuffer begin ====================')
+let buffer_1 = new Uint8Array([10, 9, 8, 7, 6]);
+console.log('test.set_buffer(buffer_1) first time');
+test.set_buffer(buffer_1.buffer);
+console.log('test.set_buffer(buffer_1) second time');
+test.set_buffer(buffer_1.buffer);
+console.log('test.set_buffer(buffer_1) third time');
+test.set_buffer(buffer_1.buffer);
+
+let test_2 = require('simple');
+
+let buff_copy = test.get_buffer_copy();
+const buff_copy_view = new Int8Array(buff_copy);
+console.log("test.get_buffer_copy(), view: ", buff_copy_view.toString());
+console.log('test_2.set_buffer(buff_copy)');
+test_2.set_buffer(buff_copy);
+
+let buff_no_copy = test.get_buffer_no_copy();
+const buff_no_copy_view = new Int32Array(buff_no_copy);
+console.log("test.get_buffer_no_copy(), view: ", buff_no_copy_view.toString());
+console.log('test_2.set_buffer(buff_no_copy)');
+test_2.set_buffer(buff_no_copy);
+
+
+let buff_0 = new Uint8Array([1, 2, 3, 4, 5]);
+let buff_1 = new Uint8Array([5, 4, 3, 2, 1]);
+let buff_2 = new Uint8Array([2, 1, 5, 4, 3]);
+let buff_array = [ buff_0.buffer, buff_1.buffer, buff_2.buffer ]
+console.log('test.set_buffer_array(buff_array)');
+test.set_buffer_array(buff_array);
+
+console.log("test.get_buffer_array_copy()");
+let buff_array_copy = test.get_buffer_array_copy();
+console.log('test_2.set_buffer_array(buff_array_copy)');
+test_2.set_buffer_array(buff_array_copy);
+
+console.log("test.get_buffer_array_no_copy()");
+let buff_array_no_copy = test.get_buffer_array_no_copy();
+console.log('test_2.set_buffer_array(buff_array_no_copy)');
+test_2.set_buffer_array(buff_array_no_copy);
+console.log('test arraybuffer end ====================')
+
 // Interface has bugs, disable for now
 /*
 console.log('test interfaces begin ====================');

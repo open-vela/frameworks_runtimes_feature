@@ -1,5 +1,5 @@
 use crate::simple::*;
-use alloc::{boxed::Box, string::String};
+use alloc::{boxed::Box, string::String, vec};
 use async_trait::async_trait;
 use core::time::Duration;
 use feature_frm::*;
@@ -271,6 +271,61 @@ impl Simple for SimpleImpl {
                 event.emit(50);
             }
         }
+    }
+
+    fn set_buffer(&self, buffer: FeatureArrayBuffer) {
+        info!("wjf set_buffer Called from C");
+        if let Some(vec) = buffer.as_slice::<u8>() {
+            info!("wjf u8 arraybuffer length: {}, buff: {:#?}", vec.len(), vec);
+        }
+    }
+
+    fn get_buffer_copy(&self) -> FeatureArrayBuffer {
+        info!("wjf get_buffer_copy Called from C");
+        let vec = vec![-1i8, 2, 3, 4, 5];
+        let ret = FeatureArrayBuffer::from_slice_copy(&self.instance, &vec);
+        ret
+    }
+
+    fn get_buffer_no_copy(&self) -> FeatureArrayBuffer {
+        info!("wjf get_buffer_no_copy Called from C");
+        let ret = FeatureArrayBuffer::from_vec(&self.instance, vec![-5i32, 4, 3, 2, 1]);
+        ret
+    }
+
+    fn set_buffer_array(&self, ab_array: FeatureReferenceArray<FeatureArrayBuffer>) {
+        info!("wjf set_buffer_array Called from C");
+        for i in 0..ab_array.len() {
+            let ab: FeatureArrayBuffer = ab_array.get(i).unwrap();
+            if let Some(vec) = ab.as_slice::<u8>() {
+                info!("ab_array[{}]: {:#?}", i, vec);
+            }
+        }
+    }
+
+    fn get_buffer_array_copy(&self) -> Option<FeatureReferenceArray<FeatureArrayBuffer>> {
+        info!("wjf get_buffer_array_copy Called from C");
+        let mut ret = FeatureReferenceArray::<FeatureArrayBuffer>::new(3);
+        let vec1 = &[-1i32, -2, 3, 4, 5];
+        let ab1 = FeatureArrayBuffer::from_slice_copy(&self.instance, vec1);
+        let vec2 = &[5i32, 4, 3, 2, 1];
+        let ab2 = FeatureArrayBuffer::from_slice_copy(&self.instance, vec2);
+        let vec3 = &[6i32, 7, 8];
+        let ab3 = FeatureArrayBuffer::from_slice_copy(&self.instance, vec3);
+        ret.append(ab1);
+        ret.append(ab2);
+        ret.append(ab3);
+        Some(ret)
+    }
+
+    fn get_buffer_array_no_copy(&self) -> Option<FeatureReferenceArray<FeatureArrayBuffer>> {
+        info!("wjf get_buffer_array_no_copy Called from C");
+        let mut ret = FeatureReferenceArray::<FeatureArrayBuffer>::new(2);
+        let ab1 = FeatureArrayBuffer::from_vec(&self.instance, vec![-6i8, 7, 8, 9, 10]);
+        let ab2 = FeatureArrayBuffer::from_vec(&self.instance, vec![10, 9, 8, 7, 6]);
+        ret.append(ab1);
+        ret.append(ab2);
+        Some(ret)
     }
 }
 
