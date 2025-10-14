@@ -27,7 +27,7 @@ include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/const_obj
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/interface_test/Makefile
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/promise_callback/Makefile
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/callback_test/Makefile
-include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/simple/Makefile
+include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/simple_test/Makefile
 include $(APPDIR)/frameworks/runtimes/feature/tests/jidl/test_features/permissions_test/Makefile
 
 distclean::

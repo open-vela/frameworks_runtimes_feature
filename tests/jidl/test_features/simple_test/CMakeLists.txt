@@ -1,6 +1,6 @@
 if(CONFIG_FEATURE_TEST_FEATURES)
-    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/simple_impl.cpp)
-    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/simple.jidl)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/simple_test_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/simple_test.jidl)
 
     nuttx_add_jidl(
         TARGET
@@ -10,5 +10,5 @@ if(CONFIG_FEATURE_TEST_FEATURES)
         JIDLS
         ${JIDL_PATHS}
         FEATURE_NAMES
-        simple)
+        simple_test)
 endif()

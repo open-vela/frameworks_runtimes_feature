@@ -1,4 +1,4 @@
-module simple@1.0
+module simple_test@1.0
 
 void printStr(string c)
 int foo(int a, string c, double b=1.0)

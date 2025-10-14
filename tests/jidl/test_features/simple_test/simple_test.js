@@ -1,4 +1,4 @@
-let test = require('simple');
+let test = require('simple_test');
 
 function show_args(pre, args) {
   console.log(pre, 'args: ')

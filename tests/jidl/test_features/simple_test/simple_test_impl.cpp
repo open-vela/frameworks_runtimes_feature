@@ -1,9 +1,9 @@
 // Copyright 2023 Xiaomi, Inc. All rights reserved.
 
-#include "simple.h"
+#include "simple_test.h"
 #include <inttypes.h>
 
-static const char* file_tag = "[jidl_feature] simple_impl";
+static const char* file_tag = "[jidl_feature] simple_test_impl";
 
 template <typename T>
 class FTArrayHelper {
@@ -28,40 +28,40 @@ public:
     int32_t size() const { return _data->_size; }
 };
 
-typedef struct simple_property_data {
+typedef struct property_data {
     FtString name;
     FtString version;
-} simple_property_data;
+} property_data;
 
-static simple_property_data* create_property_data()
+static property_data* create_property_data()
 {
-    simple_property_data* ret = (simple_property_data*)malloc(sizeof(simple_property_data));
-    memset(ret, 0, sizeof(simple_property_data));
+    property_data* ret = (property_data*)malloc(sizeof(property_data));
+    memset(ret, 0, sizeof(property_data));
     return ret;
 }
 
 // FeatureCallbacks to be implemented
-void simple_onRegister(const char* feature_name)
+void simple_test_onRegister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-void simple_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void simple_test_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-void simple_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void simple_test_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
     void* prop_data = (void*)create_property_data();
     FeatureSetObjectData(handle, prop_data);
 }
 
-void simple_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
+void simple_test_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
-    simple_property_data* prop_data = (simple_property_data*)FeatureGetObjectData(handle);
+    property_data* prop_data = (property_data*)FeatureGetObjectData(handle);
     if (prop_data == NULL)
         return;
 
@@ -75,34 +75,34 @@ void simple_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
     FeatureSetObjectData(handle, NULL);
 }
 
-void simple_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
+void simple_test_onDestroy(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-void simple_onUnregister(const char* feature_name)
+void simple_test_onUnregister(const char* feature_name)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-void simple_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtString str)
+void simple_test_wrap_printStr(FeatureInstanceHandle feature, AppendData data, FtString str)
 {
     FEATURE_LOG_INFO("%s, str: %s", file_tag, str);
 }
 
 // Function wrappers to be implemented
-int simple_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b)
+int simple_test_wrap_foo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtString c, FtDouble b)
 {
     FEATURE_LOG_INFO("%s, a: %d, c: %s, b: %f", file_tag, a, c, b);
     return 0;
 }
 
-void simple_wrap_bar(FeatureInstanceHandle feature, AppendData data)
+void simple_test_wrap_bar(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-void simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariParams vari_params)
+void simple_test_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, FtVariParams vari_params)
 {
     FEATURE_LOG_INFO("%s, a: %d", file_tag, a);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
@@ -157,7 +157,7 @@ void simple_wrap_bar5(FeatureInstanceHandle feature, AppendData data, FtInt a, F
     printf("\n");
 }
 
-FtString simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
+FtString simple_test_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt a, FtFloat b, FtBool c)
 {
     FEATURE_LOG_INFO("%s, a: %d, b: %f, c: %d", file_tag, a, b, c);
     char* buf = (char*)FeatureMalloc(128, FT_STRING);
@@ -165,23 +165,23 @@ FtString simple_wrap_bar6(FeatureInstanceHandle feature, AppendData data, FtInt 
     return buf;
 }
 
-void simple_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FtCallbackId cb)
+void simple_test_wrap_goo(FeatureInstanceHandle feature, AppendData data, FtInt a, FtInt b, FtCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
     FEATURE_LOG_INFO("%s, a: %d, b: %d, will invoke cb1", file_tag, a, b);
-    if (!simple_cb1_invoke(feature, cb, a, "hello", (double)b)) {
+    if (!simple_test_cb1_invoke(feature, cb, a, "hello", (double)b)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
     FeatureRemoveCallback(feature, cb);
 }
 
-void simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallbackId cb, FtCallbackId cb3, FtCallbackId cb4)
+void simple_test_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallbackId cb, FtCallbackId cb3, FtCallbackId cb4)
 {
 
     // callback cb3()
     FEATURE_LOG_INFO("%s, will invoke cb3", file_tag);
-    if (!simple_cb3_invoke(feature, cb3)) {
+    if (!simple_test_cb3_invoke(feature, cb3)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -223,11 +223,11 @@ void simple_wrap_goo2(FeatureInstanceHandle feature, AppendData data, FtCallback
     FeatureRemoveCallback(feature, cb);
 }
 
-void simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb, FtCallbackId cb2)
+void simple_test_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb, FtCallbackId cb2)
 {
     // callback cb1(int x, string y, double z)
     FEATURE_LOG_INFO("%s, x: %d, y: %f, will invoke cb1", file_tag, x, y);
-    if (!simple_cb1_invoke(feature, cb, x, "greeting", y)) {
+    if (!simple_test_cb1_invoke(feature, cb, x, "greeting", y)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
@@ -247,28 +247,28 @@ void simple_wrap_foo2(FeatureInstanceHandle feature, AppendData data, FtInt x, F
     FeatureRemoveCallback(feature, cb2);
 }
 
-void simple_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb)
+void simple_test_wrap_foo3(FeatureInstanceHandle feature, AppendData data, FtInt x, FtDouble y, FtCallbackId cb)
 {
     // callback cb1(int x, string y, double z)
     FEATURE_LOG_INFO("%s, x: %d, y: %f, will invoke cb1", file_tag, x, y);
-    if (!simple_cb1_invoke(feature, cb, x, "greeting", y)) {
+    if (!simple_test_cb1_invoke(feature, cb, x, "greeting", y)) {
         FEATURE_LOG_ERROR("invoke failed !");
         return;
     }
     FeatureRemoveCallback(feature, cb);
 }
 
-void simple_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData data)
+void simple_test_wrap_justTestNeverCall1(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-void simple_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData data)
+void simple_test_wrap_justTestNeverCall2(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
 }
 
-FtInt simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray* values)
+FtInt simple_test_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray* values)
 {
     FTArrayHelper<int> int_array(values);
     printf("%s::%s(), int_array size: %" PRIi32 "\n", file_tag, __FUNCTION__, int_array.size());
@@ -280,10 +280,10 @@ FtInt simple_wrap_bar2(FeatureInstanceHandle feature, AppendData data, FtArray* 
     return -1;
 }
 
-FtArray* simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
+FtArray* simple_test_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
-    FtArray* strArray = simple_malloc_string_array();
+    FtArray* strArray = simple_test_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {
@@ -295,10 +295,10 @@ FtArray* simple_wrap_bar3(FeatureInstanceHandle feature, AppendData data)
 }
 
 // Property getters and setters to be implemented
-const char* simple_get_name(FeatureInstanceHandle feature, AppendData data)
+const char* simple_test_get_name(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s, feature: %p", file_tag, feature);
-    simple_property_data* prop_data = (simple_property_data*)FeatureGetObjectData(feature);
+    property_data* prop_data = (property_data*)FeatureGetObjectData(feature);
     if (prop_data == NULL) {
         FEATURE_LOG_ERROR("%s: prop_data is NULL!", file_tag);
         return NULL;
@@ -314,10 +314,10 @@ const char* simple_get_name(FeatureInstanceHandle feature, AppendData data)
     return prop_data->name;
 }
 
-void simple_set_name(FeatureInstanceHandle feature, AppendData data, FtString name)
+void simple_test_set_name(FeatureInstanceHandle feature, AppendData data, FtString name)
 {
     FEATURE_LOG_INFO("%s, feature: %p, set name: %s", file_tag, feature, name);
-    simple_property_data* prop_data = (simple_property_data*)FeatureGetObjectData(feature);
+    property_data* prop_data = (property_data*)FeatureGetObjectData(feature);
     if (prop_data == NULL) {
         FEATURE_LOG_ERROR("%s: prop_data is NULL!", file_tag);
         return;
@@ -330,10 +330,10 @@ void simple_set_name(FeatureInstanceHandle feature, AppendData data, FtString na
     prop_data->name = name;
 }
 
-const char* simple_get_version(FeatureInstanceHandle feature, AppendData data)
+const char* simple_test_get_version(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s, feature: %p", file_tag, feature);
-    simple_property_data* prop_data = (simple_property_data*)FeatureGetObjectData(feature);
+    property_data* prop_data = (property_data*)FeatureGetObjectData(feature);
     if (prop_data == NULL) {
         FEATURE_LOG_ERROR("%s: prop_data is NULL!", file_tag);
         return NULL;
@@ -348,10 +348,10 @@ const char* simple_get_version(FeatureInstanceHandle feature, AppendData data)
     return prop_data->version;
 }
 
-FtArray* simple_get_args(FeatureInstanceHandle feature, AppendData data)
+FtArray* simple_test_get_args(FeatureInstanceHandle feature, AppendData data)
 {
     FEATURE_LOG_INFO("%s,", file_tag);
-    FtArray* strArray = simple_malloc_string_array();
+    FtArray* strArray = simple_test_malloc_string_array();
     strArray->_size = 4;
     strArray->_element = malloc(sizeof(char*) * 4);
     for (int i = 0; i < 4; i++) {

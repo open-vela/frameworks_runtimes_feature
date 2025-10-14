@@ -153,7 +153,7 @@ ifeq ($(CONFIG_FEATURE_TEST_FEATURES), y)
 	FEATURELIST += jsonobject_test
 	FEATURELIST += permissions_test
 	FEATURELIST += promise_callback
-	FEATURELIST += simple
+	FEATURELIST += simple_test
 endif
 
 ifeq ($(CONFIG_FEATURE_TEST_JSFILE), y)
