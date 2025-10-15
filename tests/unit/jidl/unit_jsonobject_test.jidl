@@ -1,0 +1,22 @@
+module unit_jsonobject_test@1.0
+
+boolean set_data(jsonobject data = null);
+jsonobject get_data();
+
+boolean set_data_array(jsonobject[] data_array = null)
+jsonobject[] get_data_array()
+
+struct Book {
+  string title = "hello world"
+  jsonobject  meta = null
+  jsonobject[] chapters = null
+}
+boolean set_book(Book book = null)
+
+struct Chapter {
+    int val = 0;
+    jsonobject meta = null
+}
+
+promise<jsonobject> json_promise(Chapter chapter)
+promise<jsonobject[]> json_array_promise(Chapter chapter)

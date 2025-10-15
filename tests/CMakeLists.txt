@@ -48,14 +48,18 @@ if(CONFIG_FEATURE_UNIT_TEST)
     list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_function.cpp)
     list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_const.cpp)
     list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_interface.cpp)
+    list(APPEND FEAT_TEST_FEATURE_SRCS ${FEATURE_TEST_DIR}/unit/unit_test_jidl_jsonobject.cpp)
+
     # set featuree jidl path
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/struct_test.jidl)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/any_test.jidl)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/function_test.jidl)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/unit_const_test.jidl)
     list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/unit_interface_test.jidl)
+    list(APPEND FEAT_TEST_JIDL_PATHS ${FEATURE_TEST_DIR}/unit/jidl/unit_jsonobject_test.jidl)
     # set feature name
     list(APPEND TEST_FEATURE_NAMES struct_test any_test function_test unit_const_test unit_interface_test)
+    list(APPEND TEST_FEATURE_NAMES unit_jsonobject_test)
 endif()
 
     nuttx_add_jidl(
