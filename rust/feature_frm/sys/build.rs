@@ -50,8 +50,6 @@ fn main() {
         .layout_tests(false)
         .use_core()
         .ctypes_prefix("cty")
-        .clang_arg("D__cplusplus")
-        .clang_arg("std=c11")
         .clang_args(nuttx_inc_dirs.iter().map(|d| format!("-I{}", d.display())))
         .clang_arg(format!("-I{}", feature_include.display()))
         .clang_arg(format!("-I{}", feature_include.parent().unwrap().display()))
