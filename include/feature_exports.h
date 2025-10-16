@@ -686,6 +686,14 @@ FtJsonObject FeatureAllocJsonObject(size_t str_len);
  */
 FtJsonObject FeatureNewJsonObject(const char* str);
 
+/**
+ * @brief throw error in feature
+ *
+ * @param handle FeatureInstanceHandle
+ * @param msg error message
+ */
+void FeatureThrowError(FeatureInstanceHandle handle, const char* msg);
+
 // basic promise resolve functions
 FtBool FeatureFtVoidPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid);
 

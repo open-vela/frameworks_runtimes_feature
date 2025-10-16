@@ -62,6 +62,10 @@ public:
 
     virtual int getPromiseType(FtPromiseId pid) { return -1; }
 
+    virtual bool hasException() { return false; }
+
+    virtual void throwError(const char* msg) {};
+
     int instanceId() { return instance_id_; }
 
     void setInstanceId(int instance_id) { instance_id_ = instance_id; }

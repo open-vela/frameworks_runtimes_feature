@@ -1078,6 +1078,14 @@ FtJsonObject FeatureNewJsonObject(const char* str)
     return json_obj;
 }
 
+void FeatureThrowError(FeatureInstanceHandle handle, const char* msg)
+{
+    FEATURE_CHECK_PTR(handle, ;, "handle is null !")
+    FEATURE_CHECK_PTR(msg, ;, "msg is null !")
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    instance->throwError(msg);
+}
+
 // some promise resolve functions
 FtBool FeatureFtVoidPromiseResolve(
     FeatureInstanceHandle hInstance,

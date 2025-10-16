@@ -80,6 +80,10 @@ public:
 
     virtual int getEventCallbackCount(FtEventId eid);
 
+    virtual bool hasException();
+
+    virtual void throwError(const char* msg);
+
     bool checkCallback(FtCallbackId cid);
 
     void markValues(feature_runtime_ref rt, feature_mark_func mark_func);
