@@ -8,5 +8,6 @@ name = "feature_frm"
 
 [dependencies]
 libc = { workspace = true }
+feature_macros = { workspace = true }
 feature_sys = { workspace = true }
 vdk = { workspace = true }

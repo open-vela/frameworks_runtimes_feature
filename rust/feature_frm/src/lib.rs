@@ -42,9 +42,5 @@ pub use feature_sys::FtUint64;
 pub use feature_sys::FtUint8;
 pub use feature_sys::NativeFunc;
 
-pub use feature_sys::FeatureFtIntPromiseResolve;
-pub use feature_sys::FeatureFtStringPromiseResolve;
-pub use feature_sys::FeatureFtVoidPromiseResolve;
-
 pub use feature_sys::FeatureFreeValue;
 pub use feature_sys::FeatureInstanceFreeValue;

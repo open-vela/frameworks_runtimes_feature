@@ -280,6 +280,54 @@ pub fn feature_struct(attr: TokenStream, item: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+#[proc_macro_attribute]
+pub fn feature_promise(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as syn::ItemStruct);
+    let st_name = &input.ident;
+
+    let c_type = parse_proc_macro_param(attr.clone(), "c_type").unwrap();
+    if c_type.is_empty() {
+        abort!(st_name.span(), "c_type is empty");
+    }
+    let mut out_type = parse_proc_macro_param(attr.clone(), "out_type").unwrap_or_default();
+    if out_type.is_empty() {
+        out_type = c_type.clone();
+    }
+    let c_type = Ident::new(&c_type, st_name.span());
+    let out_type = Ident::new(&out_type, st_name.span());
+    let resolve_fn_name = Ident::new(&format!("Feature{}PromiseResolve", c_type), st_name.span());
+    let needs_ptr = out_type != c_type;
+
+    let resolve_body = if needs_ptr {
+        quote! {
+            let ptr = value.as_ptr();
+            unsafe {
+                #resolve_fn_name(instance.as_handle(), id, ptr);
+            }
+        }
+    } else {
+        quote! {
+            unsafe {
+                #resolve_fn_name(instance.as_handle(), id, value);
+            }
+        }
+    };
+
+    let expanded = quote! {
+        #input
+
+        impl Promise for #st_name {
+            type Output = #out_type;
+
+            fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
+                #resolve_body
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
 fn get_feature_async(attrs: &[FeatureAttr]) -> bool {
     for a in attrs {
         if let FeatureAttr::Async(b) = a {

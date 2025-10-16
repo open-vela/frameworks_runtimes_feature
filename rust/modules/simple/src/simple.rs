@@ -289,35 +289,6 @@ impl StateChangedEvent {
     }
 }
 
-#[derive(Default)]
-pub struct FtIntPromise;
-
-impl Promise for FtIntPromise {
-    type Output = FtInt; // 指定关联类型
-
-    fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
-        info!("Resolved with: {}", value);
-        unsafe {
-            FeatureFtIntPromiseResolve(instance.as_handle(), id, value);
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct FeatureStringPromise;
-
-impl Promise for FeatureStringPromise {
-    type Output = FeatureString;
-
-    fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
-        info!("Resolved with: {}", value.as_str());
-        let ptr = value.as_ptr();
-        unsafe {
-            FeatureFtStringPromiseResolve(instance.as_handle(), id, ptr);
-        }
-    }
-}
-
 // Simple trait for FeatureInstance
 #[async_trait]
 pub trait Simple: FeatureInstanceTrait + Send + Sync {
@@ -600,7 +571,7 @@ pub unsafe extern "C" fn simple_wrap_poo(
 ) {
     let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
     let simple = unsafe { &mut *simple };
-    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(id, feature) };
+    let promise = unsafe { FeaturePromise::<FtStringPromise>::new(id, feature) };
     runtime::spawn(async move {
         match simple.poo(resolve).await {
             Ok(v) => promise.resolve(v),

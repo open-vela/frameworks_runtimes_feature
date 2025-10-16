@@ -190,20 +190,6 @@ impl Promise for GetRetPromise {
     }
 }
 
-#[derive(Clone, Default)]
-pub(crate) struct FeatureStringPromise;
-
-impl Promise for FeatureStringPromise {
-    type Output = FeatureString;
-
-    fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
-        let ptr = value.as_ptr();
-        unsafe {
-            FeatureFtStringPromiseResolve(instance.as_handle(), id, ptr);
-        }
-    }
-}
-
 #[async_trait]
 pub(crate) trait Exchange: FeatureInstanceTrait + Send + Sync {
     async fn set(&mut self, info: SetInfo) -> Result<FeatureString, PromiseError>;
@@ -287,7 +273,7 @@ pub(crate) extern "C" fn system_exchange_wrap_set(
     let system_exchange =
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
+    let promise = unsafe { FeaturePromise::<FtStringPromise>::new(pid, handle) };
     let info = unsafe { SetInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.set(info).await {
@@ -327,7 +313,7 @@ pub(crate) extern "C" fn system_exchange_wrap_remove(
     let system_exchange =
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
+    let promise = unsafe { FeaturePromise::<FtStringPromise>::new(pid, handle) };
     let info = unsafe { RemoveInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.remove(info).await {
@@ -347,7 +333,7 @@ pub(crate) extern "C" fn system_exchange_wrap_clear(
     let system_exchange =
         unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
     let system_exchange = unsafe { &mut *system_exchange };
-    let promise = unsafe { FeaturePromise::<FeatureStringPromise>::new(pid, handle) };
+    let promise = unsafe { FeaturePromise::<FtStringPromise>::new(pid, handle) };
     let info = unsafe { ClearInfo::from_raw(info) };
     runtime::spawn(async move {
         match system_exchange.clear(info).await {

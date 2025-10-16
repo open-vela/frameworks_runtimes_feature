@@ -133,20 +133,6 @@ impl Promise for SuccessInfoPromise {
     }
 }
 
-// for JIDL promise 'void'
-#[derive(Clone, Default)]
-pub(crate) struct FtVoidPromise;
-
-impl Promise for FtVoidPromise {
-    type Output = ();
-
-    fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, _value: Self::Output) {
-        unsafe {
-            FeatureFtVoidPromiseResolve(instance.as_handle(), id);
-        }
-    }
-}
-
 #[async_trait]
 pub(crate) trait Schedule: FeatureInstanceTrait + Send + Sync {
     async fn schedule_job(&mut self, info: Job) -> Result<SuccessInfo, PromiseError>;
