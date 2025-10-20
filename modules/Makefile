@@ -70,7 +70,7 @@ ifeq ($(CONFIG_ACCOUNT_FEATURE),y)
 endif
 
 ifeq ($(CONFIG_MIJIA_CAMERA_CLIENT),y)
-	CFEATURELIST += system_internal_micamera
+	FEATURELIST += system_internal_micamera
 endif
 
 ifeq ($(CONFIG_MEDIA),y)
