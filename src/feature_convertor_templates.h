@@ -474,22 +474,20 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
             *(FtCallbackId*)pnative = id; // write callback id to pointer.
         } break;
         case COMPLEX_ARRAY: {
+            if (value_translator::isUndefined(ctx, target) || value_translator::isNull(ctx, target)) {
+                FEATURE_LOG_WARN("js array is null or undefined!");
+                *(FtArray**)pnative = NULL;
+                break;
+            } else if (!value_translator::isArray(ctx, target)) {
+                FEATURE_LOG_ERROR("arg type mismatch, need array!");
+                return false;
+            }
             // FtArray must be a pointer
             if (!*(FtArray**)pnative) {
                 // malloc FtArray struct
                 *(FtArray**)pnative = (FtArray*)FeatureMalloc(sizeof(FtArray), ftype);
             }
             FtArray* array = *(FtArray**)pnative;
-
-            if (value_translator::isUndefined(ctx, target) || value_translator::isNull(ctx, target)) {
-                FEATURE_LOG_WARN("js array is null or undefined!");
-                array->_size = 0;
-                array->_element = NULL;
-                break;
-            } else if (!value_translator::isArray(ctx, target)) {
-                FEATURE_LOG_ERROR("arg type mismatch, need array!");
-                return false;
-            }
             auto elem_type = ((ArrayType*)complex_type)->element_type;
             auto asize = value_translator::arraySize(ctx, target);
             array->_size = asize;
