@@ -207,6 +207,9 @@ bool convertOptional(OptionalType* opt, void* out)
         case FT_ANY_REF: {
             *((void**)out) = opt->ptr;
         } break;
+        case FT_JSON_OBJ: {
+            *((void**)out) = opt->ptr;
+        } break;
         default: {
             FEATURE_LOG_WARN("unsupported type detected !");
             return false;
