@@ -15,3 +15,4 @@
 #
 
 CONFIGURED_APPS += $(APPDIR)/frameworks/runtimes/feature/modules
+CLEANDIRS += $(APPDIR)/frameworks/runtimes/feature/modules
