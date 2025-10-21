@@ -443,7 +443,8 @@ void system_request_wrap_download(FeatureInstanceHandle feature, AppendData appe
     REQUEST_DEBUG("info->filename = %s", info->filename);
 
     if (!check_disk_limit()) {
-        notify_disk_space_insufficient(feature, param->url);
+        // TODO cannot call at this place!
+        // notify_disk_space_insufficient(feature, param->url);
         REQUEST_ERROR("insufficient memory to download file");
         code = FT_ERR_GENERAL;
         msg = "no space to download file";

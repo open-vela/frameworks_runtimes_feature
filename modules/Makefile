@@ -188,7 +188,7 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_FILE),y)
 	FEATURELIST += system_file
 endif
 
-ifeq ($(CONFIG_FEATURE_SYSTEM_MEDIA),y)
+ifeq (0,y) # TODO reconstruct system_media
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/media_impl.cpp
 	CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/graphics/animengine/include
 	CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/quickapp/src/gui

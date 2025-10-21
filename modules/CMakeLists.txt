@@ -69,7 +69,7 @@ if(CONFIG_FEATURE_SYSTEM_FILE)
         system_file)
 endif()
 
-if(CONFIG_FEATURE_SYSTEM_MEDIA)
+if(0) #CONFIG_FEATURE_SYSTEM_MEDIA) TODO change
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/media_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/media.jidl)
     target_include_directories(

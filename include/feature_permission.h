@@ -50,10 +50,12 @@ typedef struct FeaturePermissions {
 // max FeaturePermissionId must less than 128
 typedef enum FeaturePermissionId {
     FEATURE_PERMISSION_LIST(DEF_PERMISSION_ENUM)
-        FEATURE_PERMISSION_MAX
+    FEATURE_PERMISSION_MAX
 } FeaturePermissionId;
 
 const char* FeatureGetPermissionName(FeaturePermissionId perm_enum);
+
+FeaturePermissionId FeatureGetPermissionId(const char* permission);
 
 #ifdef __cplusplus
 }

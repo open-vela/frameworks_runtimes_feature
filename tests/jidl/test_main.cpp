@@ -42,7 +42,7 @@ public:
     int getRouteInfoFromUri(RouteInfo* info, const char* uri) { return 0; }
 };
 
-class TestApplication : public IApplication {
+class TestApplication {
 public:
     TestApplication()
     {
@@ -70,7 +70,8 @@ public:
     uv_thread_t& threadId() { return thread_; }
     int state() { return 0; }
     void setState(int state) { }
-    AIOTJS::WidgetContextHandle widgetContext() { return nullptr; }
+    // TODO
+    //AIOTJS::WidgetContextHandle widgetContext() { return nullptr; }
     void clearRuntime() { }
     void postAppNotify(ApplicationNotifyType type) { }
     bool isExitRequest() { return true; }
@@ -83,7 +84,8 @@ public:
     void* getXmsContext() const { return nullptr; }
     void setXmsContext(void* xms_context) { }
     std::chrono::steady_clock::time_point getHideTime() { return std::chrono::steady_clock::time_point(); }
-    ProcessStatus getProcessStatus() { return UNKNOWN; };
+    // TODO
+    //ProcessStatus getProcessStatus() { return UNKNOWN; };
     void setThreadMemory(int mem) { }
     int getThreadMemory() { return 0; }
     void initMemoryStatusTimer() { }

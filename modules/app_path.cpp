@@ -30,10 +30,6 @@
 #include "ajs_porting.h"
 #include "feature_exports.h"
 #include "feature_log.h"
-#include "framework/application.h"
-
-using ferry::IApplication;
-using namespace AIOTJS;
 
 #ifdef CONFIG_HAP_APP_PATH
 #define ABS_PATH_PREFIX CONFIG_HAP_APP_PATH
@@ -247,10 +243,12 @@ bool check_disk_limit(void)
 
 void notify_disk_space_insufficient(FeatureInstanceHandle feature, const char* pkg)
 {
+#if 0  // TODO Cannot notify the application, remove this function, use uorb or a global topic to notify the message
 #if CONFIG_QUICKAPP_DISK_RESERVED > 0
     IApplication* app = static_cast<IApplication*>(FeatureInstanceGetManagerUserData(feature, "app"));
     app->notifyEvent(FRMEVT_APP_ENOSPC);
     FEATURE_LOG_WARN("[%s] No space left on device", pkg);
+#endif
 #endif
 }
 

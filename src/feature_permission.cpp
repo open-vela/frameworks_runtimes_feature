@@ -33,3 +33,14 @@ const char* FeatureGetPermissionName(FeaturePermissionId perm_enum)
 {
     return perm_name_array[perm_enum];
 }
+
+FeaturePermissionId FeatureGetPermissionId(const char* permission) {
+    for (size_t i = 0; i < FEATURE_PERMISSION_MAX; i ++) {
+      if (strcmp(perm_name_array[i], permission) == 0) {
+        return (FeaturePermissionId)i;
+      }
+    }
+
+    return FEATURE_PERMISSION_MAX;
+}
+
