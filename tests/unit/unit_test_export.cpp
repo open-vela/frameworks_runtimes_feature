@@ -1740,4 +1740,29 @@ TEST_F(FeatureExportTestQjs, FeatureSetManagerUserDataWithFree1)
     EXPECT_TRUE(FeatureManagerHasUserData(manager_handle_qjs, "test"));
 }
 
+// =============================================================================
+// FeatureThrowError Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureThrowError1)
+{
+    const char* msg = "test error";
+    FeatureThrowError(instance_handle, msg);
+    FeatureInstanceQjs* instance_qjs = static_cast<FeatureInstanceQjs*>(instance_handle);
+    EXPECT_TRUE(instance_qjs->hasException());
+}
+
+TEST_F(FeatureExportTestQjs, FeatureThrowError_HandleNullptr)
+{
+    const char* msg = "test error";
+    // 异常情况： handle 为 nullptr
+    FeatureThrowError(nullptr, msg);
+    // 期望不会崩溃或抛出异常
+}
+
+TEST_F(FeatureExportTestQjs, FeatureThrowError_MsgNullptr)
+{
+    // 异常情况： msg 为 nullptr
+    FeatureThrowError(instance_handle, nullptr);
+    // 期望不会崩溃或抛出异常
+}
 } // namespace feature_framework_test
