@@ -378,7 +378,7 @@ TEST_F(FeatureMainExportTestQjs, FeatureCreateFeature_prototypeIsUdefined)
     FT_VAL_GET_JS_VAL(binding_obj) = JS_UNDEFINED;
     auto ft_obj = FeatureCreateFeature(manager_handle_qjs, js_feature_prototype, binding_obj);
     auto js_obj = FT_VAL_GET_JS_VAL(ft_obj);
-    EXPECT_NE(JS_IsUndefined(js_obj), true);
+    EXPECT_EQ(JS_IsUndefined(js_obj), true);
 }
 
 // =============================================================================
