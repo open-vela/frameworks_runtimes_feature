@@ -103,6 +103,7 @@ void service_wechat_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle 
 void service_wechat_onDetached(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
     FEATURE_LOG_INFO("%s::%s()\n", file_tag, __FUNCTION__);
+    wechat_handle->feature = NULL;
     wechat_handle = NULL; // clear global pointer
 }
 
