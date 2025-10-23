@@ -111,6 +111,9 @@ FeatureInterfaceHandle unit_interface_test_wrap_createDog(FeatureInstanceHandle 
     // test for null ret
     if (type == 0) {
         return nullptr;
+    } else if (type == -1) {
+        FeatureThrowError(feature, "createDog error");
+        return nullptr;
     }
     FeatureInterfaceHandle handle = unit_interface_test_createDog_instance(feature);
     void* data = create_animal_data("dog");

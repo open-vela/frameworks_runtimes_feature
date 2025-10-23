@@ -20,3 +20,6 @@ boolean optionTest3(int a, uint u = 100, float f);
 
 boolean variableTest(...);
 boolean variableTest1(int a, string b, ...);
+
+string throwErrorTest(bool flag);
+void throwErrorTest1(bool flag);

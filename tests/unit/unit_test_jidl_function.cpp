@@ -214,3 +214,22 @@ FtBool function_test_wrap_variableTest1(FeatureInstanceHandle feature, AppendDat
     }
     return true;
 }
+
+FtString function_test_wrap_throwErrorTest(FeatureInstanceHandle feature, AppendData append_data, FtBool flag)
+{
+    if (flag) {
+        FeatureThrowError(feature, "test error");
+        return NULL;
+    }
+    char* ret = (char*)FeatureMalloc(5, FT_STRING);
+    sprintf(ret, "%s", "test");
+    return ret;
+}
+
+void function_test_wrap_throwErrorTest1(FeatureInstanceHandle feature, AppendData append_data, FtBool flag)
+{
+    if (flag) {
+        FeatureThrowError(feature, "test error");
+    }
+    return;
+}

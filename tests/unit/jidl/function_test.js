@@ -144,3 +144,31 @@ feat_test("functionTest", "variableTest1", () => {
     data = func.variableTest1(1, [1, 1.1234, "hello"]);
     feat_expect_true(data instanceof Error, "variableTest1 case 2 error!");
 })
+
+feat_test("functionTest", "throwErrorTest", () => {
+    let data = func.throwErrorTest(false);
+    feat_expect_true(data === "test", "throwErrorTest case 1 error!");
+
+    try {
+        data = func.throwErrorTest(true);
+  	    feat_expect_true(false, "Expected an error to be thrown, but none was thrown");
+    } catch (error) {
+        feat_expect_true(true, "throwErrorTest case 2 error!");
+    }
+})
+
+feat_test("functionTest", "throwErrorTest1", () => {
+    try {
+        func.throwErrorTest1(false);
+        feat_expect_true(true, "Expected an error to be thrown, but none was thrown");
+    } catch (error) {
+        feat_expect_true(false, "throwErrorTest1 case 1 error!");
+    }
+
+    try {
+        data = func.throwErrorTest1(true);
+  	    feat_expect_true(false, "Expected an error to be thrown, but none was thrown");
+    } catch (error) {
+        feat_expect_true(, "throwErrorTest1 case 2 error!");
+    }
+})

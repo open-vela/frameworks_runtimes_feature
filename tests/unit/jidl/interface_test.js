@@ -17,6 +17,13 @@ feat_test("interfaceTest", "dogTest", () => {
     feat_expect_true(dog.eatFood() instanceof Error, "dogTest case 8 error!");
     feat_expect_true(dog.run() instanceof Error, "dogTest case 9 error!");
     feat_expect_true(dog.eatFood(100) instanceof Error, "dogTest case 9 error!");
+
+    try {
+        dog = test.createDog(-1);
+        feat_expect_true(false, "dogTest case 10 error!");
+    } catch (error) {
+        feat_expect_true(true, "dogTest case 10 error!");
+    }
 })
 
 // no ctor test
