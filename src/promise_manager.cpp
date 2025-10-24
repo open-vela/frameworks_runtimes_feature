@@ -168,7 +168,7 @@ int PromiseManager::PromiseData::reject(int code, const char* msg)
         if (promise_type == kPromise) {
             feature_value_t js_data = feature_object(js_ctx);
             feature_set_object_property(js_ctx, js_data, "code", js_code);
-            feature_set_object_property(js_ctx, js_data, "msg", js_msg);
+            feature_set_object_property(js_ctx, js_data, "data", js_msg);
             feature_value_t argv[] = { js_data };
             ret = invoke_js_Callback(js_ctx, reject_func, 1, argv);
             feature_free_value(js_ctx, js_data);
