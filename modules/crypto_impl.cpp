@@ -438,6 +438,10 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
 void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append_data,
     system_crypto_CryptParam* options)
 {
+    if (!options) {
+        FEATURE_LOG_ERROR("%s options is null!", file_tag);
+        return;
+    }
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -487,11 +491,15 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
                 }
                 // deal with transformation param
                 prase_transformation(ft_ctx, transformation, &mode, &padding);
-
-                result = aes_encrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
-                if (!result) {
-                    msg = crypto_err ? crypto_err : "aes encrypt error";
-                    code = FT_ERR_GENERAL;
+                if (ivOffset < 0 || (size_t)ivOffset > strlen(iv)) {
+                    msg = "invalid iv param";
+                    code = FT_ERR_ARGS;
+                } else {
+                    result = aes_encrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
+                    if (!result) {
+                        msg = crypto_err ? crypto_err : "aes encrypt error";
+                        code = FT_ERR_GENERAL;
+                    }
                 }
             } else {
                 msg = "invalid algo param";
@@ -523,6 +531,10 @@ void system_crypto_wrap_encrypt(FeatureInstanceHandle feature, AppendData append
 void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append_data,
     system_crypto_CryptParam* options)
 {
+    if (!options) {
+        FEATURE_LOG_ERROR("%s options is null!", file_tag);
+        return;
+    }
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
@@ -568,10 +580,15 @@ void system_crypto_wrap_decrypt(FeatureInstanceHandle feature, AppendData append
                 }
                 // deal with transformation param
                 prase_transformation(ft_ctx, transformation, &mode, &padding);
-                result = aes_decrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
-                if (!result) {
-                    msg = crypto_err ? crypto_err : "aes encrypt error";
-                    code = FT_ERR_GENERAL;
+                if (ivOffset < 0 || (size_t)ivOffset > strlen(iv)) {
+                    msg = "invalid iv param";
+                    code = FT_ERR_ARGS;
+                } else {
+                    result = aes_decrypt(mode, padding, options->key, iv, ivOffset, ivLen, buff, &size, &is_text);
+                    if (!result) {
+                        msg = crypto_err ? crypto_err : "aes decrypt error";
+                        code = FT_ERR_GENERAL;
+                    }
                 }
             }
             FEATURE_LOG_DEBUG("%s, result: %p", file_tag, result);
