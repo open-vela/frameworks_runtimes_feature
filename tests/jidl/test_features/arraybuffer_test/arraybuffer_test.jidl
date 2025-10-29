@@ -1,0 +1,9 @@
+module arraybuffer_test@1.0
+
+void set_buffer(arraybuffer buff);
+arraybuffer get_buffer_copy();
+arraybuffer get_buffer_no_copy();
+
+void set_buffer_array(arraybuffer[] buff_array);
+arraybuffer[] get_buffer_array_copy();
+arraybuffer[] get_buffer_array_no_copy();
