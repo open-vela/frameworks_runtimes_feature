@@ -76,6 +76,23 @@ feat_test("structTest", "testComplex_异常", () => {
     struct.testComplex(params);
     feat_expect_true(errorFlag == false, "Complex异常测试 case 1 string_array数组类型错误 error!")
     errorFlag = true;
+
+    params = {
+        fail: errorCheckCb,
+        object_test1: 1,
+        object_test1: 'hello world',
+        simple: [],
+        string_array: ['hello world'],
+        double_array: [5.2364, 5.2364],
+        test_cb: function (data) {
+            feat_expect_true(data, "Complex测试回调 2 error!")
+        }
+    };
+
+    struct.testComplex(params);
+    feat_expect_true(errorFlag == false, "Complex异常测试 case 2 simple数组类型错误 error!")
+    errorFlag = true;
+
 });
 
 feat_test("structTest", "testComplex1", () => {
