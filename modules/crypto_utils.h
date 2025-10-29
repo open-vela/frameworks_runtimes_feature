@@ -39,8 +39,7 @@
 
 #define INVOKE_FAIL_CB(cb, msg, code) \
     do { \
-        ft_value_t ret_data = ft_from_string(ft_ctx, msg); \
-        if (!FeatureInvokeCallback(feature, cb, ret_data, code)) { \
+        if (!FeatureInvokeCallback(feature, cb, msg, code)) { \
             FEATURE_LOG_ERROR("invoke fail callback failed !"); \
         } \
     } while (0)

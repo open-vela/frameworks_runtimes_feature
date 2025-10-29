@@ -52,7 +52,7 @@ callback success_cb_bool_opt(boolean data) // ? boolean
 callback success_cb_obj_str_opt(object res) // ? string
 callback success_cb_obj_str_u8a_opt(object res) // ? string | Uint8Array
 
-callback fail_cb(object data, int code)
+callback fail_cb(string data, int code)
 callback complete_cb()
 
 /**
