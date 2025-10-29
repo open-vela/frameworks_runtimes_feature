@@ -1,0 +1,18 @@
+cargo-features = ["path-bases"]
+
+[package]
+name = "system_media_audio"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "system_media_audio"
+
+[dependencies]
+libc = { workspace = true }
+feature_macros = { workspace = true }
+feature_frm = { workspace = true }
+feature_sys = { workspace = true }
+async-trait = { workspace = true }
+vdk = { workspace = true }
+log = "0.4.27"

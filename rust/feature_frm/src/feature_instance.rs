@@ -3,6 +3,7 @@ use alloc::boxed::Box;
 use alloc::ffi::CString;
 use alloc::string::{String, ToString};
 use core::ffi::CStr;
+use core::mem;
 use core::ptr::{self, NonNull};
 use core::str::FromStr;
 use feature_sys::{
@@ -142,6 +143,12 @@ impl FeatureInstance {
 
     fn as_ptr(&self) -> *mut c_void {
         self.0.as_ptr()
+    }
+
+    pub fn into_raw(self) -> FeatureInstanceHandle {
+        let ptr = self.as_ptr();
+        mem::forget(self);
+        ptr
     }
 
     // feature instance functions

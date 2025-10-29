@@ -1,0 +1,125 @@
+/*
+ * Copyright (C) 2023 Xiaomi Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	 http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+module system.media.audio @1.0
+
+const STEAM_TYPE = {
+    MUSIC = "music"
+}
+
+struct interruptAction {
+    int interruptHint
+    int actionType
+}
+
+// AudioPlayer
+
+struct PlayerSeekParams {
+    int currentTime;
+}
+
+interface AudioPlayer {
+  property string src; // = ""
+  property double duration readonly;
+  property string state; // = "stopped"
+  property long currentTime; // = -1
+  property int playcount; // = 0
+  void play();
+  void pause();
+  void stop();
+  void release();
+  promise<void> seek(PlayerSeekParams params);
+  event onplay();
+  event onpause();
+  event onstop();
+  event onended();
+  event onerror(string data, int code);
+  event ontimeupdate();
+  event ondurationchange();
+  event onloadeddata();
+  event oninterrupt(interruptAction action);
+}
+
+struct CreatePlayerParams {
+    string streamType = "music";
+}
+
+[ctor="true", target="native_player"]
+AudioPlayer createAudioPlayer(CreatePlayerParams params)
+
+
+// AudioTrack
+
+struct TrackWriteParams {
+    arraybuffer buffer;
+}
+
+interface AudioTrack {
+  property string state; // = "stopped"
+  void play();
+  promise<long> write(TrackWriteParams params);
+  void pause();
+  void stop();
+  void release();
+  event onplay();
+  event onpause();
+  event onstop();
+  event onerror(string data, int code);
+  event oninterrupt(interruptAction action);
+}
+
+struct CreateTrackParams {
+    string streamType = "music";
+    int sampleRateInHz = 16000;
+    int channelConfig = 1;
+    int audioFormat = 16;
+}
+
+[ctor="true", target="native_track"]
+AudioTrack createAudioTrack(CreateTrackParams params)
+
+
+// AudioRecorder
+
+struct RecorderStartParams {
+    string uri = "";
+}
+
+interface AudioRecorder {
+  [permissions="blueos.permission.RECORD"]
+  promise<string> start(RecorderStartParams params);
+  void pause();
+  void resume();
+  void stop();
+  void release();
+  event onreaddata(arraybuffer buffer);
+  event onerror(string data, int code);
+  event onstart();
+  event onpause();
+  event onresume();
+  event onstop();
+  event oninterrupt(interruptAction action);
+}
+
+struct CreateRecorderParams {
+    string outputFormat = "pcm";
+    int sampleRateInHz = 8000;
+    int numberOfChannels = 1;
+    int audioFormat = 16;
+}
+
+[ctor="true", target="native_recorder"]
+AudioRecorder createAudioRecorder(CreateRecorderParams params)

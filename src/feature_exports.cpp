@@ -1132,11 +1132,9 @@ uint8_t* FeatureArrayBufferGetData(FtArrayBuffer buff, size_t* psize)
 }
 
 // some promise resolve functions
-FtBool FeatureFtVoidPromiseResolve(
-    FeatureInstanceHandle hInstance,
-    FtPromiseId pid)
+FtBool FeatureFtVoidPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid)
 {
-    return FeaturePromiseResolve(hInstance, pid);
+    return FeaturePromiseResolve(handle, pid);
 }
 
 FtBool FeatureFtStringPromiseResolve(
