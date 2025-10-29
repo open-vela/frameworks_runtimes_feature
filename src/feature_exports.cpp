@@ -15,6 +15,7 @@
  */
 
 #include "feature_exports.h"
+#include "array_buffer.h"
 #include "backend/qjs/feature_instance_qjs.h"
 #include "backend/qjs/feature_manager_qjs.h"
 #include "feature_common.h"
@@ -518,6 +519,10 @@ void FeatureFreeValue(void* ptr)
                 FEATURE_LOG_ERROR("unsupported type !");
             } break;
             }
+        } else if (featureType == FT_ARRAY_BUFFER) {
+            ArrayBuffer* fab = (ArrayBuffer*)ptr;
+            fab->destroy();
+            FeatureFreeValue(fab);
         }
 
         // finally, free header
@@ -1088,6 +1093,42 @@ void FeatureThrowError(FeatureInstanceHandle handle, const char* msg)
     }
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     instance->throwError(msg);
+}
+
+static FtArrayBuffer createArrayBuffer(FeatureInstanceHandle handle, uint8_t* data, size_t size,
+    FeatureArrayBufferFreeFunc free_func, void* opaque, bool copy)
+{
+    FEATURE_INSTANCE_CHECK(handle, nullptr)
+    FEATURE_CHECK_PTR(data, nullptr, "data is null !")
+    FeatureManager* manager = manager_from_instance(handle);
+    ArrayBufferCreateParams params;
+    if (copy) {
+        params.type = ArrayBufferCreateParams::kNativeCopy;
+        params.copy = { data, size };
+    } else {
+        params.type = ArrayBufferCreateParams::kNative;
+        params.native = { data, size, free_func, opaque };
+    }
+    return (FtArrayBuffer)(manager->createArrayBuffer(params));
+}
+
+FtArrayBuffer FeatureNewArrayBufferFromData(FeatureInstanceHandle handle, uint8_t* data, size_t size,
+    FeatureArrayBufferFreeFunc free_func, void* opaque)
+{
+    return createArrayBuffer(handle, data, size, free_func, opaque, false);
+}
+
+FtArrayBuffer FeatureNewArrayBufferCopyData(FeatureInstanceHandle handle, uint8_t* data, size_t size)
+{
+    return createArrayBuffer(handle, data, size, NULL, NULL, true);
+}
+
+uint8_t* FeatureArrayBufferGetData(FtArrayBuffer buff, size_t* psize)
+{
+    FEATURE_CHECK_PTR(buff, nullptr, "FtArrayBuffer is null !")
+    ArrayBuffer* array_buffer = (ArrayBuffer*)buff;
+    FEATURE_CHECK_PTR(array_buffer, nullptr, "arraybuffer is null !")
+    return array_buffer->getData(psize);
 }
 
 // some promise resolve functions

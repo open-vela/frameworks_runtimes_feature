@@ -26,11 +26,15 @@
 #include "permissions_manager.h"
 #include "thread_checker.h"
 
+#include <list>
 #include <map>
 #include <queue>
 #include <string>
 
 namespace feature_framework {
+
+class ArrayBuffer;
+class ArrayBufferCreateParams;
 
 struct TaskData {
     FeatureInstanceHandle instance;
@@ -68,6 +72,8 @@ public:
     }
 
     virtual void uninit() { }
+
+    virtual ArrayBuffer* createArrayBuffer(ArrayBufferCreateParams& params) { return nullptr; }
 
     FeatureRegistry* getFeatureRegistry() { return registry_; }
 

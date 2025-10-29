@@ -73,6 +73,9 @@ typedef struct _FtJsonObject {
     char str[0]; /**< inner string */
 } * FtJsonObject;
 
+/** FtArrayBuffer */
+typedef struct _FtArrayBuffer* FtArrayBuffer;
+
 /** FeatureTaskMode */
 enum FeatureTaskMode {
     FEATURE_TASK_MODE_FREE = 0, /**< feature asynchronous task has ended */
@@ -140,6 +143,7 @@ enum FeaturePrimitiveTypeBase {
     FT_STRING_BASE, /**< 13 */
     FT_ANY_REF_BASE, /**< 14 */
     FT_JSON_OBJ_BASE, /**< 15 */
+    FT_ARRAY_BUFFER_BASE, /**< 16 */
 };
 
 /** set FeaturePrimitiveType */
@@ -164,6 +168,7 @@ enum FeaturePrimitiveType {
     FT_CHAR = FT_STRING, /**< 54: const char* defination */
     FT_ANY_REF = FT_SET_PRIMITIVE_TYPE(FT_ANY_REF_BASE, TYPE_FLAGS_POINTER), /**< 58: ft_value_t* defination */
     FT_JSON_OBJ = FT_SET_PRIMITIVE_TYPE(FT_JSON_OBJ_BASE, TYPE_FLAGS_POINTER), /**< 62: json_object* defination */
+    FT_ARRAY_BUFFER = FT_SET_PRIMITIVE_TYPE(FT_ARRAY_BUFFER_BASE, TYPE_FLAGS_POINTER), /**< 62: array_buffer* defination */
 };
 
 /** FeatureErrorCode */

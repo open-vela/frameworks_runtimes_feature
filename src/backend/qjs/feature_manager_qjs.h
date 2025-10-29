@@ -17,11 +17,13 @@
 #define __FEATURE_MANAGER_QJS_H__
 
 #include "feature.h"
+#include "feature_common.h"
 #include "feature_manager.h"
 #include <chrono>
 
 namespace feature_framework {
 
+class ArrayBuffer;
 class FeatureRegistry;
 class FeatureInstance;
 class FeaturePrototypeQjs;
@@ -47,6 +49,8 @@ public:
 
     virtual ft_value_t createFeature(ft_value_t prototype, ft_value_t binding_obj);
 
+    virtual ArrayBuffer* createArrayBuffer(ArrayBufferCreateParams& params);
+
     /**
      * @brief featureRequire, return feature object by name
      *
@@ -64,6 +68,16 @@ public:
 
     feature_value_t createTargetInterface(FeatureInstance* instance);
 
+    std::list<Clearable*>::iterator insertClearable(Clearable* clearable)
+    {
+        return clearables_.insert(clearables_.end(), clearable);
+    }
+
+    void removeClearable(std::list<Clearable*>::iterator& clb_iter)
+    {
+        clearables_.erase(clb_iter);
+    }
+
     static feature_classid_t jsClassId() { return js_class_id_; }
 
 private:
@@ -71,9 +85,13 @@ private:
 
     static bool ensureJsClass(feature_context_ref ctx);
 
+    void clearClearables();
+
     static feature_classid_t js_class_id_;
     static feature_classdef_t js_class_def_;
     static uv_mutex_t js_class_mutex_;
+
+    std::list<Clearable*> clearables_;
 };
 
 }

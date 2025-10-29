@@ -80,6 +80,8 @@ bool toNative(JSContext* ctx, const JSValue& target, char** pnative);
 
 bool toNative(JSContext* ctx, const JSValue& target, FtJsonObject* pnative);
 
+bool toTarget(JSContext* ctx, FtArrayBuffer native, JSValue* ptarget);
+
 static inline bool toNative(JSContext* ctx, const JSValue& target, ft_value_t* pnative)
 {
     qjs_val_t* q_val = (qjs_val_t*)pnative;
@@ -253,6 +255,8 @@ static inline bool isFunction(JSContext* ctx, const JSValue& target)
 {
     return !!JS_IsFunction(ctx, target);
 }
+
+bool isArrayBuffer(JSContext* ctx, const JSValue& target);
 
 static inline void freeValue(JSContext* ctx, JSValue target)
 {

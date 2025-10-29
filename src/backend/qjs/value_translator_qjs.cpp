@@ -15,6 +15,7 @@
  */
 
 #include "value_translator_qjs.h"
+#include "array_buffer_qjs.h"
 #include "feature_exports.h"
 #include "feature_instance_qjs.h"
 #include "feature_manager_qjs.h"
@@ -79,6 +80,23 @@ bool toNative(JSContext* ctx, const JSValue& target, FtJsonObject* pnative)
     JS_FreeCString(ctx, cstr);
     JS_FreeValue(ctx, json);
     *pnative = json_obj;
+    return true;
+}
+
+bool toTarget(JSContext* ctx, FtArrayBuffer native, JSValue* ptarget)
+{
+    if (!native) {
+        return false;
+    }
+
+    ArrayBufferQjs* array_buffer = (ArrayBufferQjs*)native;
+    if (!array_buffer) {
+        FEATURE_LOG_ERROR("invalid array buffer");
+        return false;
+    }
+
+    *ptarget = array_buffer->getTarget();
+    JS_DupValue(ctx, *ptarget);
     return true;
 }
 
@@ -245,6 +263,15 @@ bool arraySet(JSContext* ctx, const JSValue& array, int32_t idx, JSValue val)
         return false;
 
     return JS_SetPropertyUint32(ctx, array, (uint32_t)idx, val) == 1;
+}
+
+bool isArrayBuffer(JSContext* ctx, const JSValue& target)
+{
+    size_t size = 0;
+    if (JS_GetArrayBuffer(ctx, &size, target)) {
+        return true;
+    }
+    return false;
 }
 
 JSValue parseJson(JSContext* ctx, const char* buf, size_t buf_len, const char* file_name)

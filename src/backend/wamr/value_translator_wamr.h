@@ -43,6 +43,7 @@ bool toTarget(wasm_exec_env_t exec_env, double native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, bool native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, const char* native, uint64_t* ptarget);
 bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget);
+bool toTarget(wasm_exec_env_t exec_env, FtArrayBuffer native, uint64_t* ptarget);
 
 static inline bool toTargetJson(wasm_exec_env_t exec_env, FtJsonObject native, uint64_t* ptarget)
 {
@@ -70,6 +71,7 @@ bool isArray(wasm_exec_env_t exec_env, uint64_t& target);
 bool isObject(wasm_exec_env_t exec_env, uint64_t& target);
 bool isPlainObject(wasm_exec_env_t exec_env, uint64_t& target);
 bool isFunction(wasm_exec_env_t exec_env, uint64_t& target);
+bool isArrayBuffer(wasm_exec_env_t exec_env, uint64_t& target);
 uint32_t arraySize(wasm_exec_env_t exec_env, const uint64_t& array);
 uint64_t arrayGet(wasm_exec_env_t exec_env, const uint64_t& array, uint32_t idx);
 bool arraySet(wasm_exec_env_t exec_env, const uint64_t& array, int32_t idx, uint64_t val);

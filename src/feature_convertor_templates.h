@@ -16,6 +16,7 @@
 
 #ifndef __FEATURE_CONVERTOR_TEMPLATES_H__
 #define __FEATURE_CONVERTOR_TEMPLATES_H__
+#include "array_buffer.h"
 #include "feature_common.h"
 #include "feature_description.h"
 #include "feature_exports.h"
@@ -30,10 +31,11 @@
 #include <stdalign.h>
 
 namespace feature_framework {
+
 template <typename TNative, typename TCtx, typename TTarget>
-void nativeToTarget(TCtx ctx, void* ptr, TTarget& target)
+bool nativeToTarget(TCtx ctx, void* ptr, TTarget& target)
 {
-    value_translator::toTarget(ctx, *((TNative*)ptr), &target);
+    return value_translator::toTarget(ctx, *((TNative*)ptr), &target);
 }
 
 template <typename TCtx, typename TTarget>
@@ -105,6 +107,17 @@ bool convertValueToTarget(FeatureType ftype,
             } else {
                 if (!value_translator::toTargetJson(ctx, *(FtJsonObject*)pnative, &target)) {
                     FEATURE_LOG_WARN("toTargetJson failed, json string: %s", (*(FtJsonObject*)pnative)->str);
+                }
+            }
+        } break;
+        case FT_ARRAY_BUFFER: {
+            FtArrayBuffer fab = *(FtArrayBuffer*)pnative;
+            if (!fab) {
+                target = value_translator::nullValue(ctx);
+            } else {
+                if (!nativeToTarget<FtArrayBuffer>(ctx, pnative, target)) {
+                    FEATURE_LOG_WARN("convert arraybuffer failed!");
+                    return false;
                 }
             }
         } break;
@@ -371,6 +384,20 @@ bool convertValueToNative(TInstance* instance, FeatureType ftype,
                     FEATURE_LOG_ERROR("convert to FtJSONValue* failed !");
                     return false;
                 }
+            }
+            break;
+        case FT_ARRAY_BUFFER:
+            *(FtArrayBuffer*)pnative = NULL;
+            if (value_translator::isNull(ctx, target) || value_translator::isUndefined(ctx, target)) {
+                FEATURE_LOG_ERROR("arraybuffer arg is null or undefined!");
+            } else if (!value_translator::isArrayBuffer(ctx, target)) {
+                FEATURE_LOG_ERROR("arg type mismatch, need arraybuffer !");
+                return false;
+            } else {
+                ft_value_t f_val;
+                argToNativePtr<ft_value_t>(ctx, target, &f_val);
+                ArrayBufferCreateParams params { .type = ArrayBufferCreateParams::kTarget, .target = f_val };
+                *(FtArrayBuffer*)pnative = (FtArrayBuffer)instance->featureManager()->createArrayBuffer(params);
             }
             break;
         default: {

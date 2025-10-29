@@ -15,6 +15,7 @@
  */
 
 #include "feature_manager_qjs.h"
+#include "array_buffer_qjs.h"
 #include "feature.h"
 #include "feature_context.h"
 #include "feature_context_qjs.h"
@@ -666,6 +667,7 @@ void FeatureManagerQjs::uninit()
         return;
     }
 
+    clearClearables();
     detachFeatureInstances();
 
     JSContext* js_ctx = (JSContext*)ft_context_get_data(ft_ctx);
@@ -800,4 +802,22 @@ ft_value_t FeatureManagerQjs::createFeature(ft_value_t proto, ft_value_t binding
     return ret;
 }
 
+ArrayBuffer* FeatureManagerQjs::createArrayBuffer(ArrayBufferCreateParams& params)
+{
+    void* mem = FeatureMalloc(sizeof(ArrayBufferQjs), FT_ARRAY_BUFFER);
+    auto array_buffer = new (mem) ArrayBufferQjs(this, params);
+    return array_buffer;
+}
+
+void FeatureManagerQjs::clearClearables()
+{
+    std::vector<Clearable*> vec;
+    for (auto clb : clearables_) {
+        vec.push_back(clb);
+    }
+    for (auto clb : vec) {
+        clb->clear();
+    }
+    clearables_.clear();
+}
 }

@@ -15,8 +15,8 @@
  */
 
 #include "feature_qjs_exports.h"
-#include "feature_manager_qjs.h"
 #include "feature_context_qjs.h"
+#include "feature_manager_qjs.h"
 
 using namespace feature_framework;
 

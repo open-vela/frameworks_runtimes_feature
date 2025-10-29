@@ -219,6 +219,11 @@ bool toTarget(wasm_exec_env_t exec_env, ft_value_t native, uint64_t* ptarget)
     return true;
 }
 
+bool toTarget(wasm_exec_env_t exec_env, FtArrayBuffer native, uint64_t* ptarget)
+{
+    return false;
+}
+
 bool isNull(wasm_exec_env_t exec_env, const uint64_t& value)
 {
     if (value == 0)
@@ -300,6 +305,11 @@ bool isFunction(wasm_exec_env_t exec_env, uint64_t& target)
     if (wasm_obj_is_func_obj(func_obj))
         return true;
 
+    return false;
+}
+
+bool isArrayBuffer(wasm_exec_env_t exec_env, uint64_t& target)
+{
     return false;
 }
 

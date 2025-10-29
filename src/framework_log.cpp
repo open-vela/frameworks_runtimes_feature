@@ -81,7 +81,7 @@ struct ProfileBufferWrapper {
                 g_profile_buffer.fd = open("/data/sys.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
             }
 
-            if (g_profile_buffer.fd > 0){
+            if (g_profile_buffer.fd > 0) {
                 size_t len = strlen(buffer_->framework_buf);
                 write(g_profile_buffer.fd, buffer_->framework_buf, len);
                 // 重置缓冲区位置

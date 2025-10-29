@@ -45,6 +45,11 @@ void freeFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative);
 
 void dupFtValue(ft_context_ref ft_ctx, FeatureType ftype, void* pnative);
 
+class Clearable {
+public:
+    virtual void clear() = 0;
+};
+
 template <typename TPtr>
 class AutoPtr {
 public:

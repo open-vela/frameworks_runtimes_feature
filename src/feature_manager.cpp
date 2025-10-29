@@ -23,6 +23,7 @@
 #include "feature_utils.h"
 
 #include <string.h>
+#include <vector>
 
 namespace feature_framework {
 
@@ -240,5 +241,4 @@ void FeatureManager::onDumpMemory(FeatureMemoryDump* dump, void* userdata)
         }
     }
 }
-
 }

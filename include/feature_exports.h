@@ -694,6 +694,41 @@ FtJsonObject FeatureNewJsonObject(const char* str);
  */
 void FeatureThrowError(FeatureInstanceHandle handle, const char* msg);
 
+/** FeatureArrayBufferFreeFunc */
+typedef void (*FeatureArrayBufferFreeFunc)(void* opaque, void* buff);
+
+/**
+ * @brief create an array buffer from a data pointer
+ *
+ * @param handle FeatureInstanceHandle
+ * @param data
+ * @param len
+ * @param free_func
+ * @param opaque
+ * @return FtArrayBuffer
+ */
+FtArrayBuffer FeatureNewArrayBufferFromData(FeatureInstanceHandle handle, uint8_t* data, size_t len,
+    FeatureArrayBufferFreeFunc free_func, void* opaque);
+
+/**
+ * @brief create an array buffer and copy data from a data pointer
+ *
+ * @param handle FeatureInstanceHandle
+ * @param data
+ * @param len
+ * @return FtArrayBuffer
+ */
+FtArrayBuffer FeatureNewArrayBufferCopyData(FeatureInstanceHandle handle, uint8_t* data, size_t len);
+
+/**
+ * @brief get data from an array buffer
+ *
+ * @param buff
+ * @param psize
+ * @return data
+ */
+uint8_t* FeatureArrayBufferGetData(FtArrayBuffer buff, size_t* psize);
+
 // basic promise resolve functions
 FtBool FeatureFtVoidPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid);
 
