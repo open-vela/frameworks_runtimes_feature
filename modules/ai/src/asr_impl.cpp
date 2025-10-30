@@ -69,7 +69,7 @@ Asr::~Asr()
 }
 bool Asr::CheckLang(const char* lang)
 {
-    static const char* valid_langs[] = { "auto", "zh", "en" };
+    static const char* valid_langs[] = { "auto", "zh", "en", "ja" };
     static const int valid_langs_count = sizeof(valid_langs) / sizeof(valid_langs[0]);
 
     if (lang == nullptr) {
