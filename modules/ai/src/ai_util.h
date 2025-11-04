@@ -16,8 +16,8 @@ inline bool whitelistVerifi(const std::string& str)
 inline bool setupAuthFromConfig(const cJSON* root, const std::string& engine_type, ai_auth_t& ai_auth)
 {
     if (engine_type == "volcengine") {
-        cJSON* app_id = cJSON_GetObjectItem(root, "accessKey");
-        cJSON* app_key = cJSON_GetObjectItem(root, "appKey");
+        cJSON* app_key = cJSON_GetObjectItem(root, "accessKey");
+        cJSON* app_id = cJSON_GetObjectItem(root, "appKey");
         if (!app_key || !cJSON_IsString(app_key) || !app_id || !cJSON_IsString(app_id)) {
             return false;
         }
