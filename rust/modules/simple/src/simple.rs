@@ -348,13 +348,6 @@ pub extern "C" fn simple_onCreate(
     proto_handle: FeatureProtoHandle,
 ) {
     let proto = FeaturePrototype::new(proto_handle);
-    let manager = proto.get_manager();
-    let uv_loop = manager.get_loop().expect("FeatureGetUVLoop failed");
-    // libuv definition is different between vdk_rs and rust framework, so we need to use unsafe to transmute it.
-    // TODO: make them compatible.
-    #[allow(clippy::missing_transmute_annotations)]
-    runtime::init_from_uv_loop(unsafe { core::mem::transmute(uv_loop) });
-
     let ctx = FeatureRuntimeContext::new(ctx);
     let boxed = Box::new(SimplePrototype::new(proto.clone()));
     proto.attach(boxed);

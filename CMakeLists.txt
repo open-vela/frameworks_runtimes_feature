@@ -23,6 +23,7 @@ set(BINARY_MODULES_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules)
 set(BINARY_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 if(CONFIG_FEATURE_FRAMEWORK)
+
   if(CONFIG_FEATURE_RUST_MODULES)
     # include rust subdirectories
     add_subdirectory(rust)
@@ -67,21 +68,19 @@ if(CONFIG_FEATURE_FRAMEWORK)
     ${FEATURE_SRC_DIR}/protobuf/proto_reflection.cpp
     ${FEATURE_SRC_DIR}/protobuf/proto_utils.cpp
     ${FEATURE_SRC_DIR}/worker_manager.cpp
-    ${FEATURE_SRC_DIR}/framework_log.cpp
-    )
+    ${FEATURE_SRC_DIR}/framework_log.cpp)
 
-    list(
-      APPEND
-      FEATURE_SRCS
-      ${FEATURE_SRC_DIR}/backend/qjs/feature_context_qjs.cpp
-      ${FEATURE_SRC_DIR}/backend/qjs/feature_ffi_qjs.cpp
-      ${FEATURE_SRC_DIR}/backend/qjs/feature_instance_qjs.cpp
-      ${FEATURE_SRC_DIR}/backend/qjs/feature_manager_qjs.cpp
-      ${FEATURE_SRC_DIR}/backend/qjs/feature_prototype_qjs.cpp
-      ${FEATURE_SRC_DIR}/backend/qjs/value_translator_qjs.cpp
-    )
+  list(
+    APPEND
+    FEATURE_SRCS
+    ${FEATURE_SRC_DIR}/backend/qjs/feature_context_qjs.cpp
+    ${FEATURE_SRC_DIR}/backend/qjs/feature_ffi_qjs.cpp
+    ${FEATURE_SRC_DIR}/backend/qjs/feature_instance_qjs.cpp
+    ${FEATURE_SRC_DIR}/backend/qjs/feature_manager_qjs.cpp
+    ${FEATURE_SRC_DIR}/backend/qjs/feature_prototype_qjs.cpp
+    ${FEATURE_SRC_DIR}/backend/qjs/value_translator_qjs.cpp)
 
-  if (CONFIG_FEATURE_ENABLE_TRACKER)
+  if(CONFIG_FEATURE_ENABLE_TRACKER)
     list(APPEND FEATURE_SRCS ${FEATURE_SRC_DIR}/feature_tracker.cpp)
   endif(CONFIG_FEATURE_ENABLE_TRACKER)
 
@@ -167,19 +166,24 @@ if(CONFIG_FEATURE_FRAMEWORK)
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${FEATURE_TOP} ${FEATURE_TOP}/include)
 
   if(CONFIG_FEATURE_TEST_JSFILE)
-    list(APPEND FEATURE_TEST_SRCS ${FEATURE_TEST_DIR}/jidl/test_main.cpp ${FEATURE_TEST_DIR}/jidl/builtin/builtin_console.cpp)
-    list(APPEND FEATURE_TEST_INC_DIRS ${FEATURE_TOP}/include ${FEATURE_SRC_DIR}
-         ${GTEST_DIR}/include
-         ${QUICKAPP_DIR}/src
-         ${QUICKAPP_DIR}/src/framework
-         ${QUICKAPP_DIR}/src/jse
-         ${QUICKAPP_DIR}/src/jse/quickjs
-         ${QUICKAPP_DIR}/src/jse/modules
-         ${QUICKAPP_DIR}/src/jse/modules/system
-         ${CMAKE_BINARY_DIR}
-         ${NUTTX_APPS_DIR}/external/protobuf-c/protobuf-c/
-         ${NUTTX_APPS_DIR}/external/rapidjson/rapidjson/include/
-         ${NUTTX_APPS_DIR}/frameworks/runtimes/ash/include)
+    list(APPEND FEATURE_TEST_SRCS ${FEATURE_TEST_DIR}/jidl/test_main.cpp
+         ${FEATURE_TEST_DIR}/jidl/builtin/builtin_console.cpp)
+    list(
+      APPEND
+      FEATURE_TEST_INC_DIRS
+      ${FEATURE_TOP}/include
+      ${FEATURE_SRC_DIR}
+      ${GTEST_DIR}/include
+      ${QUICKAPP_DIR}/src
+      ${QUICKAPP_DIR}/src/framework
+      ${QUICKAPP_DIR}/src/jse
+      ${QUICKAPP_DIR}/src/jse/quickjs
+      ${QUICKAPP_DIR}/src/jse/modules
+      ${QUICKAPP_DIR}/src/jse/modules/system
+      ${CMAKE_BINARY_DIR}
+      ${NUTTX_APPS_DIR}/external/protobuf-c/protobuf-c/
+      ${NUTTX_APPS_DIR}/external/rapidjson/rapidjson/include/
+      ${NUTTX_APPS_DIR}/frameworks/runtimes/ash/include)
 
     nuttx_add_application(
       NAME

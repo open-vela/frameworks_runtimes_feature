@@ -32,6 +32,10 @@
 #include "feature_registry.h"
 #include "feature_utils.h"
 
+#ifdef CONFIG_FEATURE_RUST_MODULES
+#include "internal/feature_rust.h"
+#endif
+
 #define CLI_TIME_LIMIT 2 // 异步限时 2000ms
 using namespace feature_framework;
 
@@ -370,6 +374,10 @@ extern "C" int main(int argc, char** argv)
     uv_loop_t* main_loop = (uv_loop_t*)malloc(sizeof(uv_loop_t));
     uv_loop_init(main_loop);
 
+#ifdef CONFIG_FEATURE_RUST_MODULES
+    init_vdk_async_runtime(main_loop);
+#endif
+
     uv_timer_t timer;
     uv_timer_init(main_loop, &timer);
 
@@ -479,6 +487,9 @@ extern "C" int main(int argc, char** argv)
     FeatureFreeManager(g_manager);
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
+#ifdef CONFIG_FEATURE_RUST_MODULES
+    close_vdk_async_runtime();
+#endif
 
     int closed = 0;
     for (int j = 0; j < 200; j++) {

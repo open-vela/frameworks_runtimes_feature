@@ -44,3 +44,26 @@ pub use feature_sys::NativeFunc;
 
 pub use feature_sys::FeatureFreeValue;
 pub use feature_sys::FeatureInstanceFreeValue;
+
+use vdk::async_runtime::runtime;
+
+#[no_mangle]
+pub extern "C" fn init_vdk_async_runtime(uvloop_ptr: *mut core::ffi::c_void) {
+    if uvloop_ptr.is_null() {
+        vdk::log::warn!("UV loop pointer is null, skipping VDK async runtime initialization");
+        return;
+    }
+
+    vdk::log::debug!(
+        "Initializing VDK async runtime from UV loop pointer: {:p}",
+        uvloop_ptr
+    );
+
+    runtime::init_from_uv_loop(unsafe { core::mem::transmute(uvloop_ptr) });
+}
+
+#[no_mangle]
+pub extern "C" fn close_vdk_async_runtime() {
+    vdk::log::debug!("Deinitializing VDK async runtime");
+    runtime::close();
+}

@@ -152,11 +152,6 @@ pub(crate) extern "C" fn system_schedule_onCreate(
     handle: FeatureProtoHandle,
 ) {
     let proto = FeaturePrototype::new(handle);
-    let manager = proto.get_manager();
-    let uv_loop = manager.get_loop().expect("FeatureGetUVLoop failed");
-    #[allow(clippy::missing_transmute_annotations)]
-    runtime::init_from_uv_loop(unsafe { core::mem::transmute(uv_loop) });
-
     let ctx = FeatureRuntimeContext::new(ctx);
     let boxed = Box::new(SchedulePrototype::new(proto.clone()));
     proto.attach(boxed);
@@ -195,7 +190,6 @@ pub(crate) extern "C" fn system_schedule_onDestroy(
     let ctx = FeatureRuntimeContext::new(ctx);
     system_schedule_on_destroy(ctx, proto.clone());
     let _: Option<Box<SchedulePrototype>> = proto.detach();
-    runtime::close();
 }
 
 #[no_mangle]
