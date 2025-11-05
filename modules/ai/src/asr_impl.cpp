@@ -251,10 +251,12 @@ FeatureInterfaceHandle system_ai_speech_wrap_createAsr(FeatureInstanceHandle han
 {
     if (!para) {
         ASR_LOG_ERROR("para is null");
+        FeatureThrowError(handle, "param error");
         return nullptr;
     }
     if (!para->auth || !para->auth->config) {
-        ASR_LOG_ERROR("config is null");
+        ASR_LOG_ERROR("auth or config is null");
+        FeatureThrowError(handle, "auth error");
         return nullptr;
     }
 
