@@ -252,11 +252,6 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
         FeatureFreeValue(*(void**)ffi_ret_value);
     }
 
-    if (instance->hasException()) {
-        value_translator::freeValue(ctx, ret_val);
-        return RET_INTERNAL_ERR;
-    }
-
     return RET_OK;
 }
 
