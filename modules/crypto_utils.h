@@ -28,6 +28,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum Cipher_ErrorCode {
+    GOOD = 0,
+    GENERAL = 200,
+    ARGSERROR = 202,
+    UNSUPPORTED = 203,
+    TIMEOUT = 204,
+    IOERROR = 300
+} Cipher_ErrorCode;
+
 #define arrayof(array) sizeof(array) / sizeof(array[0])
 
 #define INVOKE_SUCCESS_CB_INTERFACE(cb, ...) \

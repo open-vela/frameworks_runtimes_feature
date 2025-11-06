@@ -32,15 +32,6 @@ static const char* file_tag = "[system_crypto_impl]";
 static const char* pkg_name = NULL;
 
 typedef enum {
-    GOOD = 0,
-    GENERAL = 200,
-    ARGSERROR = 202,
-    UNSUPPORTED = 203,
-    TIMEOUT = 204,
-    IOERROR = 300
-} ErrorCode;
-
-typedef enum {
     RSA,
     AES
 } AlgoType;
@@ -252,7 +243,7 @@ static ft_value_t from_buff(ft_context_ref ft_ctx, const char* data, size_t size
     if (is_text)
         return ft_from_string(ft_ctx, data);
 
-    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, 1);
+    return ft_from_typed_buffer(ft_ctx, (uint8_t*)data, size, FT_Uint8Array);
 }
 
 // FeatureCallbacks
@@ -854,7 +845,7 @@ static int system_crypto_operation_handle(FeatureInstanceHandle feature, system_
     size_t ivLen = 0;
     uint8_t* aad = NULL;
     size_t aadLen = 0;
-    ErrorCode ret = GOOD;
+    Cipher_ErrorCode ret = GOOD;
 
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -1658,7 +1649,7 @@ void system_crypto_ECDH_interface_ECDH_imp_setPrivateKey(FeatureInterfaceHandle 
     size_t pubkey_outsize = 0;
     bool is_text = false;
     const char* msg = "";
-    ErrorCode ret = GOOD;
+    Cipher_ErrorCode ret = GOOD;
     CryptoECDH* ecdh = NULL;
 
     ft_context_ref ft_ctx = FeatureGetContext(handle);

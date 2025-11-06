@@ -30,13 +30,6 @@ static const char* file_tag = "[system_cipher_impl]";
 
 static const char* pkg_name = NULL;
 
-typedef enum ErrorCode {
-    GENERAL = 200,
-    ARGSERROR = 202,
-    IOERROR = 300,
-    TIMEOUT = 204
-} ErrorCode;
-
 // FeatureCallbacks
 void system_cipher_onRegister(const char* feature_name)
 {
