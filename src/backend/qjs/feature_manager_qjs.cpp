@@ -245,6 +245,10 @@ static feature_value_t method_call(feature_context_ref ctx, feature_value_t this
     if (ret_code != RET_OK) {
         std::ostringstream oss;
         oss << "feature: " << description->name << ", method:" << member->name;
+        if (instance->hasException()) {
+            oss << ", exception: " << instance->getErrorMsg();
+            instance->setErrorMsg("");
+        }
         std::string msg = oss.str();
         return reportArgsError(instance, ctx, ret_code, msg, (void*)argv, argc);
     }

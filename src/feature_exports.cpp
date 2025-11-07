@@ -1082,6 +1082,10 @@ void FeatureThrowError(FeatureInstanceHandle handle, const char* msg)
 {
     FEATURE_CHECK_PTR(handle, ;, "handle is null !")
     FEATURE_CHECK_PTR(msg, ;, "msg is null !")
+    if (strlen(msg) == 0) {
+        FEATURE_LOG_ERROR("msg is empty !");
+        return;
+    }
     FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
     instance->throwError(msg);
 }

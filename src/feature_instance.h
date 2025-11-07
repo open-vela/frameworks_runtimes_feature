@@ -62,9 +62,13 @@ public:
 
     virtual int getPromiseType(FtPromiseId pid) { return -1; }
 
-    virtual bool hasException() { return false; }
+    virtual bool hasException() { return !error_msg_.empty(); }
 
-    virtual void throwError(const char* msg) {};
+    virtual void setErrorMsg(const char* msg) { error_msg_ = msg; }
+
+    virtual void throwError(const char* msg) { }
+
+    virtual const char* getErrorMsg() { return error_msg_.c_str(); }
 
     int instanceId() { return instance_id_; }
 
@@ -123,6 +127,7 @@ private:
     FeaturePrototype* proto_;
     WorkerManager* worker_manager_;
     const FeatureDescription* description_;
+    std::string error_msg_;
 };
 
 }

@@ -310,21 +310,10 @@ int FeatureInstanceQjs::getEventCallbackCount(FtEventId eid)
     return doGetEventCallbackCount(eid);
 }
 
-bool FeatureInstanceQjs::hasException()
-{
-    JSContext* ctx = getContext();
-    JSValue exception_val = JS_GetException(ctx);
-    bool is_exception = JS_IsError(ctx, exception_val);
-    JS_FreeValue(ctx, exception_val);
-    return is_exception;
-}
-
 void FeatureInstanceQjs::throwError(const char* msg)
 {
     THREAD_CHECK(featureManager()->getFeatureContext()->thread_checker);
-
-    JSContext* js_ctx = getContext();
-    FEATURE_THROW_INTERNAL_ERROR(js_ctx, "error: %s", msg);
+    setErrorMsg(msg);
 }
 
 int FeatureInstanceQjs::doInvokeCallback(const FeatureType* param_types, feature_value_t callback, va_list& ap, int fixed_argc, int rest_argc)

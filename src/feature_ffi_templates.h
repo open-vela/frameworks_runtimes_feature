@@ -227,6 +227,7 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
     // invoke method
     StubFunc func_stub = method->func_stub;
     FEATURE_CHECK_NE(func_stub, nullptr);
+    instance->setErrorMsg("");
     func_stub(instance, method->data, ffi_arg_buf, total_argc, ffi_ret_value);
     // process return value, do not handle promise, it is handled before we invoke ffi_call.
     if (!is_promise && ret_type != FT_VOID) {
@@ -250,6 +251,10 @@ RetCode methodCall(TInstance* instance, TCtx ctx, JSContext* js_ctx,
 
     if (ffi_ret_value && FT_NEED_FREE(ret_type)) {
         FeatureFreeValue(*(void**)ffi_ret_value);
+    }
+    if (instance->hasException()) {
+        value_translator::freeValue(ctx, ret_val);
+        return RET_INTERNAL_ERR;
     }
 
     return RET_OK;

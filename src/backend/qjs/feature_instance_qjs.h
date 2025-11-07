@@ -80,8 +80,6 @@ public:
 
     virtual int getEventCallbackCount(FtEventId eid);
 
-    virtual bool hasException();
-
     virtual void throwError(const char* msg);
 
     bool checkCallback(FtCallbackId cid);
