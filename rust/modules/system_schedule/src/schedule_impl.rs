@@ -4,6 +4,7 @@ use alloc::boxed::Box;
 use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
+use vdk::async_runtime::runtime;
 use vdk::log::{error, info};
 use vdk::qapp_rpc;
 use vdk::qapp_rpc::schedule;
@@ -43,8 +44,8 @@ pub(crate) struct ScheduleImpl {
 
 impl ScheduleImpl {
     pub(crate) fn new(instance: FeatureInstance) -> Self {
-        let dc =
-            qapp_rpc::client::Client::try_new_blocking().expect("new SchedulePrototype failed");
+        let dc = runtime::block_on(async { qapp_rpc::client::Client::try_new().await })
+            .expect("new ScheduleImpl failed");
         let sc = schedule::ScheduleClient::new(dc);
         Self { instance, sc }
     }
