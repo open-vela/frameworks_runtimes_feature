@@ -13,8 +13,12 @@ function errorCheckCb(msg, code) {
 }
 
 feat_test("structTest", "testSimpleDefault", () => {
-    feat_expect_true(struct.testSimpleDefault({fail: failCb}), "Simple默认值测试 case1 参数全不填 error!");
-    feat_expect_true(struct.testSimpleDefault({fail: failCb, testxxsx: 1}), "Simple默认值测试 case2 参数多填 error!");
+    try {
+        feat_expect_true(struct.testSimpleDefault({fail: failCb}), "Simple默认值测试 case1 参数全不填 error!");
+        feat_expect_true(struct.testSimpleDefault({fail: failCb, testxxsx: 1}), "Simple默认值测试 case2 参数多填 error!");
+    } catch (e) {
+        feat_expect_true(false, "Simple默认值测试 case error!");
+    }
 });
 
 feat_test("structTest", "testSimpleDefault_异常", () => {
