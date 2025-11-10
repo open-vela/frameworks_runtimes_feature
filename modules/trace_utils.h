@@ -12,7 +12,7 @@
 #define PROFILE_FEATURE_MODULE_LOG_MEM(name, size, count, dsc)     QuickProfileLogMemory(QUICK_PROFILE_FEATURE_MODULE, name, size, count, dsc)
 #define PROFILE_FEATURE_MODULE_LOG_ASYNC_BEGIN(name, dsc)          QuickProfileLogAsyncBegin(QUICK_PROFILE_FEATURE_MODULE, name, dsc)
 #define PROFILE_FEATURE_MODULE_LOG_ASYNC_END(name, dsc)            QuickProfileLogAsyncEnd(QUICK_PROFILE_FEATURE_MODULE, name, dsc)
-#define PROFILE_FEATURE_MODULE_LOG_FLUSH()                         QuickProfileLogFlush()
+#define PROFILE_FEATURE_MODULE_LOG_CLOSE()                         QuickProfileLogClose()
 #define PROFILE_FEATURE_MODULE_JS_MEMORY_USAGE(rt, reason)         profile_js_usage(rt, reason)
 /* clang-format on */
 #else
@@ -23,7 +23,7 @@
 #define PROFILE_FEATURE_MODULE_LOG_MEM(name, size, count, dsc)
 #define PROFILE_FEATURE_MODULE_LOG_ASYNC_BEGIN(name, dsc)
 #define PROFILE_FEATURE_MODULE_LOG_ASYNC_END(name, dsc)
-#define PROFILE_FEATURE_MODULE_LOG_FLUSH()
+#define PROFILE_FEATURE_MODULE_LOG_CLOSE()
 #define PROFILE_FEATURE_MODULE_JS_MEMORY_USAGE(rt, reason)
 #endif
 

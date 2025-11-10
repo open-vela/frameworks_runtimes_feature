@@ -34,9 +34,10 @@ enum QUICK_PROFILE_MOUDLE {
 typedef struct profile_buffer_ {
     int pos;
     char* framework_buf;
+    int fd;
 } profile_buffer_t;
 
-void QuickProfileLogFlush();
+void QuickProfileLogClose();
 
 void QuickProfileLogTimeStamp(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);
 void QuickProfileLogBegin(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc);

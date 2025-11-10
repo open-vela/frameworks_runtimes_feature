@@ -18,6 +18,7 @@
 #ifdef CONFIG_FRAMEWORK_ENABLE_LOG
 #include <chrono>
 #include <cstdio>
+#include <fcntl.h>
 #include <inttypes.h>
 #include <syslog.h>
 #endif
@@ -56,7 +57,7 @@ inline int64_t GetTimeStamp()
         .count();
 }
 
-static profile_buffer_t g_profile_buffer { 0, nullptr };
+static profile_buffer_t g_profile_buffer { 0, nullptr, -1 };
 
 struct ProfileBufferWrapper {
     profile_buffer_t* buffer_;
@@ -75,8 +76,17 @@ struct ProfileBufferWrapper {
     void flush()
     {
         if (buffer_->pos > 0) {
-            syslog(LOG_ERR, "%s", buffer_->framework_buf);
-            buffer_->pos = 0;
+            if (g_profile_buffer.fd < 0) {
+                // 打开文件：只写模式 | 不存在则创建 | 追加模式
+                g_profile_buffer.fd = open("/data/sys.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            } 
+
+            if (g_profile_buffer.fd > 0){
+                size_t len = strlen(buffer_->framework_buf);
+                write(g_profile_buffer.fd, buffer_->framework_buf, len);
+                // 重置缓冲区位置
+                buffer_->pos = 0;
+            }
         }
     }
 
@@ -86,8 +96,7 @@ struct ProfileBufferWrapper {
         buffer_->pos += len;
         if (buffer_->pos >= BUFFER_SIZE) {
             // dump it
-            syslog(LOG_ERR, "%s", buffer_->framework_buf);
-            buffer_->pos = 0;
+            flush();
         }
         return len;
     }
@@ -97,8 +106,7 @@ struct ProfileBufferWrapper {
         int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TDB|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
         buffer_->pos += len;
         if (buffer_->pos >= BUFFER_SIZE) {
-            syslog(LOG_ERR, "%s", buffer_->framework_buf);
-            buffer_->pos = 0;
+            flush();
         }
         return len;
     }
@@ -108,18 +116,19 @@ struct ProfileBufferWrapper {
         int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TDE|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
         buffer_->pos += len;
         if (buffer_->pos >= BUFFER_SIZE) {
-            syslog(LOG_ERR, "%s", buffer_->framework_buf);
-            buffer_->pos = 0;
+            flush();
         }
         return len;
     }
 };
 #endif
 
-void QuickProfileLogFlush()
+void QuickProfileLogClose()
 {
 #ifdef CONFIG_FRAMEWORK_ENABLE_LOG
     ProfileBufferWrapper(&g_profile_buffer).flush();
+    close(g_profile_buffer.fd);
+    g_profile_buffer.fd = -1;
 #endif
 }
 
