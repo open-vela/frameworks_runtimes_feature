@@ -121,6 +121,13 @@ void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, vo
     manager->setUserData(name, data);
 }
 
+void FeatureSetUriConvertCb(FeatureManagerHandle handle, UriConvertCb cb)
+{
+    FEATURE_CHECK_PTR(handle, ;, "manager handle is null !")
+    FeatureManager* manager = static_cast<FeatureManager*>(handle);
+    manager->setUriConvertCb(cb);
+}
+
 bool FeatureHasFeature(FeatureManagerHandle handle, FtString feature_method)
 {
     FEATURE_CHECK_PTR(handle, false, "manager handle is null !")

@@ -41,6 +41,8 @@ typedef struct {
 /** ArgsErrorCb ptr */
 typedef bool (*ArgsErrorCb)(void* data, ArgsErrorInfo* args_info);
 
+typedef char* (*UriConvertCb)(const char* package_name, const char* uri);
+
 /** FeatureManagerType */
 typedef enum FeatureManagerType {
     FEATURE_MANAGER_JS, /**< js feature manager */
@@ -164,6 +166,14 @@ ft_value_t FeatureCreateFeature(FeatureManagerHandle handle,
  * @param[in] data userdata
  */
 void FeatureSetManagerUserData(FeatureManagerHandle handle, const char* name, void* data);
+
+/**
+ * @brief set path operation callback to FeatureManagerHandle
+ *
+ * @param[in] handle FeatureManagerHandle
+ * @param[in] cb UriConvertCb
+ */
+void FeatureSetUriConvertCb(FeatureManagerHandle handle, UriConvertCb cb);
 
 /**
  * @brief Determine whether the feature exists in the registration list

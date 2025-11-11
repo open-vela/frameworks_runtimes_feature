@@ -729,6 +729,15 @@ FtArrayBuffer FeatureNewArrayBufferCopyData(FeatureInstanceHandle handle, uint8_
  */
 uint8_t* FeatureArrayBufferGetData(FtArrayBuffer buff, size_t* psize);
 
+/**
+ * @brief invoke path operation callback
+ *
+ * @param handle FeatureInstanceHandle
+ * @param uri uri string
+ * @return char* path string
+ */
+char* FeatureGetPathFromUri(FeatureInstanceHandle handle, const char* uri);
+
 // basic promise resolve functions
 FtBool FeatureFtVoidPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid);
 

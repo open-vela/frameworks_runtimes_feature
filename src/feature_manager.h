@@ -135,6 +135,8 @@ public:
     }
     ArgsErrorCb argsErrorCb() { return args_error_cb_; }
     void* argsErrorData() { return args_error_data_; }
+    void setUriConvertCb(UriConvertCb cb) { uri_convert_cb_ = cb; }
+    UriConvertCb uriConvertCb() { return uri_convert_cb_; }
 
     bool hasFeature(const std::string& feature_method);
 
@@ -162,6 +164,7 @@ private:
     std::queue<TaskData> task_queue_;
     ArgsErrorCb args_error_cb_ = nullptr;
     void* args_error_data_ = nullptr;
+    UriConvertCb uri_convert_cb_ = nullptr;
     ThreadChecker thread_checker_;
     PermissionsManager perms_manager_;
 };

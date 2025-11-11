@@ -1131,6 +1131,19 @@ uint8_t* FeatureArrayBufferGetData(FtArrayBuffer buff, size_t* psize)
     return array_buffer->getData(psize);
 }
 
+char* FeatureGetPathFromUri(FeatureInstanceHandle handle, const char* uri)
+{
+    FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
+    FEATURE_CHECK_PTR(uri, nullptr, "uri is null !")
+    FeatureInstance* instance = static_cast<FeatureInstance*>(handle);
+    FeatureManager* manager = instance->featureManager();
+    if (!manager->uriConvertCb()) {
+        FEATURE_LOG_ERROR("uri convert callback is null !");
+        return nullptr; // return null
+    }
+    return manager->uriConvertCb()(manager->packageName(), uri);
+}
+
 // some promise resolve functions
 FtBool FeatureFtVoidPromiseResolve(FeatureInstanceHandle handle, FtPromiseId pid)
 {
