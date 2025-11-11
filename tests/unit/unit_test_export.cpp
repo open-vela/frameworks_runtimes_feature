@@ -154,6 +154,15 @@ static void test_userdata_free(void* data)
     free(data);
 }
 
+static char* test_uri_convert_cb(const char* package_name, const char* uri)
+{
+    if (!uri || !package_name) {
+        FEATURE_LOG_ERROR("%s: uri or package_name is null!", __func__);
+        return nullptr;
+    }
+    return strdup(uri);
+}
+
 class FeatureExportTestQjs : public ::testing::Test {
 protected:
     FeatureInstanceHandle instance_handle;
@@ -186,12 +195,14 @@ protected:
         loop = uv_default_loop();
         FeatureSetUVLoop(manager_handle_qjs, loop);
         FeatureSetEventChangeListener(instance_handle, test_eventChange);
+        FeatureSetUriConvertCb(manager_handle_qjs, test_uri_convert_cb);
     }
 
     void TearDown() override
     {
         FeatureUnsetUVLoop(manager_handle_qjs);
         FeatureSetEventChangeListener(instance_handle, NULL);
+        FeatureSetUriConvertCb(manager_handle_qjs, NULL);
         int closed = 0;
         for (int i = 0; i < 200; i++) {
             if (uv_loop_close(loop) == 0) {
@@ -1765,4 +1776,30 @@ TEST_F(FeatureExportTestQjs, FeatureThrowError_MsgNullptr)
     FeatureThrowError(instance_handle, nullptr);
     // 期望不会崩溃或抛出异常
 }
+
+// =============================================================================
+// FeatureGetPathFromUri Tests
+// =============================================================================
+TEST_F(FeatureExportTestQjs, FeatureGetPathFromUri1)
+{
+    const char* path = "/data/local/tmp/test.txt";
+    char* out_path = FeatureGetPathFromUri(instance_handle, path);
+    EXPECT_NE(out_path, nullptr);
+    EXPECT_STREQ(out_path, "/data/local/tmp/test.txt");
+    free(out_path);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetPathFromUri_HandleNullptr)
+{
+    const char* path = "/data/local/tmp/test.txt";
+    // 异常情况： handle 为 nullptr
+    EXPECT_EQ(FeatureGetPathFromUri(nullptr, path), nullptr);
+}
+
+TEST_F(FeatureExportTestQjs, FeatureGetPathFromUri_PathNullptr)
+{
+    // 异常情况： path 为 nullptr
+    EXPECT_EQ(FeatureGetPathFromUri(instance_handle, nullptr), nullptr);
+}
+
 } // namespace feature_framework_test

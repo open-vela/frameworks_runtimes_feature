@@ -54,6 +54,11 @@ static bool test_args_error_cb(void* data, ArgsErrorInfo* error_info)
     return true;
 }
 
+static char* test_set_uri_convert_cb(const char* package_name, const char* uri)
+{
+    return strdup(uri);
+}
+
 static char* FTStringCopy(const char* str)
 {
     char* ret = (char*)FeatureMalloc(strlen(str) + 1, FT_STRING);
@@ -405,5 +410,29 @@ TEST_F(FeatureMainExportTestQjs, FeatureHasFeature_nameIsNull)
 {
     auto res = FeatureHasFeature(manager_handle_qjs, nullptr);
     EXPECT_EQ(res, false);
+}
+
+// =============================================================================
+// FeatureSetUriConvertCb Tests
+// =============================================================================
+TEST_F(FeatureMainExportTestQjs, FeatureSetUriConvertCb1)
+{
+    FeatureSetUriConvertCb(manager_handle_qjs, test_set_uri_convert_cb);
+    FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
+    EXPECT_EQ(manager->uriConvertCb(), test_set_uri_convert_cb);
+    FeatureSetUriConvertCb(manager_handle_qjs, nullptr);
+    EXPECT_EQ(manager->uriConvertCb(), nullptr);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureSetUriConvertCb_handleIsNull)
+{
+    FeatureSetUriConvertCb(nullptr, test_set_uri_convert_cb);
+    FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
+    EXPECT_EQ(manager->uriConvertCb(), nullptr);
+}
+TEST_F(FeatureMainExportTestQjs, FeatureSetUriConvertCb_cbIsNull)
+{
+    FeatureSetUriConvertCb(manager_handle_qjs, nullptr);
+    FeatureManager* manager = static_cast<FeatureManager*>(manager_handle_qjs);
+    EXPECT_EQ(manager->uriConvertCb(), nullptr);
 }
 } // namespace feature_framework
