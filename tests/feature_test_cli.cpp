@@ -276,6 +276,15 @@ static bool on_feature_args_error(void* data, ArgsErrorInfo* error_info)
     return false;
 }
 
+static char* on_uri_convert_cb(const char* package_name, const char* uri)
+{
+    if (!uri || !package_name) {
+        FEATURE_LOG_ERROR("%s: uri or package_name is null!", __func__);
+        return nullptr;
+    }
+    return strdup(uri);
+}
+
 /** FeaturePermissionsCb ptr */
 static void permissions_cb(FeaturePermissionsHandle handle, const FeaturePermissionsInfo* info, void* data)
 {
@@ -409,6 +418,7 @@ extern "C" int main(int argc, char** argv)
     FeatureRegistryHandle hRegistry = FeatureGetRegistryFromManager(g_manager);
     FeatureRegisterFeatures(hRegistry, g_ajs_features_registry);
     FeatureSetArgsErrorCb(g_manager, on_feature_args_error, &js_env);
+    FeatureSetUriConvertCb(g_manager, on_uri_convert_cb);
     // FeatureSetManagerUserData(g_manager, "app", app);
     FeatureSetUVLoop(g_manager, main_loop);
     FeatureSetPermissionsCallback(g_manager, permissions_cb, NULL);
