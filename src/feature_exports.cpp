@@ -669,13 +669,6 @@ ft_context_ref FeatureGetContext(FeatureInstanceHandle handle)
     return manager_from_instance(handle)->getFeatureContext();
 }
 
-JSValue FeatureGetBindingObject(FeatureInstanceHandle handle)
-{
-    FEATURE_INSTANCE_CHECK(handle, JS_UNDEFINED)
-    FeatureInstanceQjs* instance = static_cast<FeatureInstanceQjs*>(handle);
-    return (JSValue)instance->getVmObject();
-}
-
 const char* FeatureGetPackageName(FeatureProtoHandle handle)
 {
     FEATURE_CHECK_PTR(handle, nullptr, "handle is null !")
