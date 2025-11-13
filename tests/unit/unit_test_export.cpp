@@ -456,22 +456,6 @@ TEST_F(FeatureExportTestQjs, FeatureGetContext_handleIsNull)
 }
 
 // =============================================================================
-// FeatureGetBindingObject Tests
-// =============================================================================
-TEST_F(FeatureExportTestQjs, FeatureGetBindingObject1)
-{
-    //测试是否能正确获取绑定对象
-    auto binding_obj = FeatureGetBindingObject(instance_handle);
-    EXPECT_EQ(JS_VALUE_GET_TAG(binding_obj), JS_VALUE_GET_TAG(FT_VAL_GET_JS_VAL(param)));
-    EXPECT_EQ(JS_VALUE_GET_PTR(binding_obj), JS_VALUE_GET_PTR(FT_VAL_GET_JS_VAL(param)));
-}
-TEST_F(FeatureExportTestQjs, FeatureGetBindingObject_handleIsNull)
-{
-    auto binding_obj = FeatureGetBindingObject(nullptr);
-    EXPECT_EQ(JS_IsUndefined(binding_obj), true);
-}
-
-// =============================================================================
 // FeatureGetEnvironmentName Tests
 // =============================================================================
 TEST_F(FeatureExportTestQjs, FeatureGetEnvironmentName1)

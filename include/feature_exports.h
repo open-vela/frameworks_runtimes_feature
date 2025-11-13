@@ -25,7 +25,6 @@
 extern "C" {
 #endif
 #include "feature_types.h"
-#include "quickjs/quickjs.h"
 #include "uv.h"
 #include <protobuf-c/protobuf-c.h>
 #include <stdbool.h>
@@ -303,14 +302,6 @@ void FeatureSetObjectData(FeatureInstanceHandle handle, void* data);
  * @return ft_context_ref
  */
 ft_context_ref FeatureGetContext(FeatureInstanceHandle handle);
-
-/**
- * @brief get feature binding object value from FeatureInstanceHandle
- *
- * @param[in] handle FeatureInstanceHandle
- * @return JSValue
- */
-JSValue FeatureGetBindingObject(FeatureInstanceHandle handle);
 
 /**
  * @brief get feature environment name from FeatureProtoHandle
