@@ -40,21 +40,21 @@ unsafe extern "C" {
 pub fn create_dog_instance(instance: &FeatureInstance) -> FeatureInstance {
     let dog = unsafe { simple_createDog_instance(instance.as_handle()) };
     let ret = FeatureInstance::new(dog);
-    unsafe { FeatureInstanceFreeValue(dog) };
+    unsafe { FeatureFreeInstanceHandle(dog) };
     ret
 }
 
 pub fn create_airplane_instance(instance: &FeatureInstance) -> FeatureInstance {
     let airplane = unsafe { simple_createAirplane_instance(instance.as_handle()) };
     let ret = FeatureInstance::new(airplane);
-    unsafe { FeatureInstanceFreeValue(airplane) };
+    unsafe { FeatureFreeInstanceHandle(airplane) };
     ret
 }
 
 pub fn create_pigeon_instance(instance: &FeatureInstance) -> FeatureInstance {
     let pigeon = unsafe { simple_createPigeon_instance(instance.as_handle()) };
     let ret = FeatureInstance::new(pigeon);
-    unsafe { FeatureInstanceFreeValue(pigeon) };
+    unsafe { FeatureFreeInstanceHandle(pigeon) };
     ret
 }
 
@@ -325,7 +325,7 @@ pub trait Animal: FeatureInstanceTrait {
     fn get_name(&self) -> FeatureString;
     fn set_name(&mut self, name: FeatureString);
     fn get_leg_count(&self) -> FtInt;
-    fn eat_food(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt;
+    fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt;
     fn run(&self, distance: FtInt, destination: &FeatureString) -> FeatureString;
 }
 
@@ -726,7 +726,10 @@ pub unsafe extern "C" fn simple_wrap_get_buffer_array_no_copy(
 
 // Animal interface dog vtable functions
 #[no_mangle]
-pub extern "C" fn simple_Animal_interface_dog_finalize(_feature: FeatureInstanceHandle) {}
+pub extern "C" fn simple_Animal_interface_dog_finalize(feature: FeatureInstanceHandle) {
+    let instance = FeatureInstance::new(feature);
+    let _: Option<Box<dyn Animal>> = instance.detach();
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_Animal_interface_dog_get_name(
@@ -759,14 +762,14 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_get_legCount(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn simple_Animal_interface_dog_eatFood(
+pub unsafe extern "C" fn simple_Animal_interface_dog_eatFoods(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     foods: *mut FtArray,
 ) -> FtInt {
     let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
     let foods = unsafe { FeaturePrimitiveArray::<FeatureString>::from_raw(foods) };
-    dog.eat_food(&foods)
+    dog.eat_foods(&foods)
 }
 
 #[no_mangle]
@@ -784,7 +787,10 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_run(
 
 // Flyable interface airplane vtable functions
 #[no_mangle]
-pub extern "C" fn simple_Flyable_interface_airplane_finalize(_feature: FeatureInstanceHandle) {}
+pub extern "C" fn simple_Flyable_interface_airplane_finalize(feature: FeatureInstanceHandle) {
+    let instance = FeatureInstance::new(feature);
+    let _: Option<Box<dyn Flyable>> = instance.detach();
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_Flyable_interface_airplane_fly(
@@ -819,7 +825,10 @@ pub unsafe extern "C" fn simple_Flyable_interface_airplane_set_breed(
 
 // Bird interface pigeon vtable functions
 #[no_mangle]
-pub extern "C" fn simple_Bird_interface_pigeon_finalize(_feature: FeatureInstanceHandle) {}
+pub extern "C" fn simple_Bird_interface_pigeon_finalize(feature: FeatureInstanceHandle) {
+    let instance = FeatureInstance::new(feature);
+    let _: Option<Box<dyn Bird>> = instance.detach();
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_name(
@@ -852,14 +861,14 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_legCount(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn simple_Bird_interface_pigeon_eatFood(
+pub unsafe extern "C" fn simple_Bird_interface_pigeon_eatFoods(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     foods: *mut FtArray,
 ) -> FtInt {
     let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
     let foods = unsafe { FeaturePrimitiveArray::<FeatureString>::from_raw(foods) };
-    pigeon.eat_food(&foods)
+    pigeon.eat_foods(&foods)
 }
 
 #[no_mangle]

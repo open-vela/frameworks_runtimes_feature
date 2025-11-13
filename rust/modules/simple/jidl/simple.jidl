@@ -37,7 +37,7 @@ promise<string> poo(boolean resolve)
 interface Animal {
   property string name;
   property int legCount readonly;
-  int eatFood(string[] foods);
+  int eatFoods(string[] foods);
   string run(int distance, string destination);
 }
 [ctor="true", target="dog"] Animal createDog(int type);

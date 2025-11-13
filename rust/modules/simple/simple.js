@@ -318,7 +318,7 @@ console.log("dog.name: ", dog.name, ", dog.legCount: ", dog.legCount)
 dog.name = "dog2"
 console.log("dog.name: ", dog.name, ", dog.legCount: ", dog.legCount)
 dog.run(100, "xiaomi")
-dog.eatFood([
+dog.eatFoods([
     "meet",
     "bone",
     "fish"
@@ -337,7 +337,7 @@ pigeon.name = "pigeon2";
 pigeon.breed = "pigeon2";
 pigeon.weight = pigeon.weight * 2;
 console.log("after set, pigeon.name:", pigeon.name, ", legCount:", pigeon.legCount, ", breed:", pigeon.breed, ", weight:", pigeon.weight);
-pigeon.eatFood([
+pigeon.eatFoods([
     "bug",
     "earthworm",
     "rice"

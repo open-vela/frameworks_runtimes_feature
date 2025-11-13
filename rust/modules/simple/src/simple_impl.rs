@@ -369,8 +369,8 @@ impl Animal for Dog {
         self.leg_count
     }
 
-    fn eat_food(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
-        info!("wjf dog eat_food Called from C");
+    fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
+        info!("wjf dog eat_foods Called from C");
         for i in 0..foods.len() {
             let item = foods.get(i).unwrap();
             info!("{} dog food: {}", i, *item);
@@ -472,8 +472,8 @@ impl Animal for Pigeon {
         self.leg_count
     }
 
-    fn eat_food(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
-        info!("wjf pigeon eat_food Called from C");
+    fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
+        info!("wjf pigeon eat_foods Called from C");
         for i in 0..foods.len() {
             let item = foods.get(i).unwrap();
             info!("{} pigeon food: {}", i, *item);

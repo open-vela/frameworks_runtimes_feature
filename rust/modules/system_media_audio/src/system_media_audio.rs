@@ -109,19 +109,19 @@ unsafe extern "C" {
 pub(crate) fn create_audio_player_instance(instance: &FeatureInstance) -> FeatureInstance {
     let handle = unsafe { system_media_audio_createAudioPlayer_instance(instance.as_handle()) };
     let ret = FeatureInstance::new(handle);
-    unsafe { FeatureInstanceFreeValue(handle) };
+    unsafe { FeatureFreeInstanceHandle(handle) };
     ret
 }
 pub(crate) fn create_audio_track_instance(instance: &FeatureInstance) -> FeatureInstance {
     let handle = unsafe { system_media_audio_createAudioTrack_instance(instance.as_handle()) };
     let ret = FeatureInstance::new(handle);
-    unsafe { FeatureInstanceFreeValue(handle) };
+    unsafe { FeatureFreeInstanceHandle(handle) };
     ret
 }
 pub(crate) fn create_audio_recorder_instance(instance: &FeatureInstance) -> FeatureInstance {
     let handle = unsafe { system_media_audio_createAudioRecorder_instance(instance.as_handle()) };
     let ret = FeatureInstance::new(handle);
-    unsafe { FeatureInstanceFreeValue(handle) };
+    unsafe { FeatureFreeInstanceHandle(handle) };
     ret
 }
 

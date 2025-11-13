@@ -45,8 +45,8 @@ pub use feature_sys::FtUint8;
 pub use feature_sys::NativeFunc;
 
 pub use feature_sys::FeatureErrorCode;
+pub use feature_sys::FeatureFreeInstanceHandle;
 pub use feature_sys::FeatureFreeValue;
-pub use feature_sys::FeatureInstanceFreeValue;
 
 use alloc::boxed::Box;
 use vdk::async_runtime::runtime::{self, Runtime};
