@@ -45,13 +45,16 @@ pub use feature_sys::NativeFunc;
 pub use feature_sys::FeatureFreeValue;
 pub use feature_sys::FeatureInstanceFreeValue;
 
-use vdk::async_runtime::runtime;
+use alloc::boxed::Box;
+use vdk::async_runtime::runtime::{self, Runtime};
 
 #[no_mangle]
-pub extern "C" fn init_vdk_async_runtime(uvloop_ptr: *mut core::ffi::c_void) {
+pub extern "C" fn init_vdk_async_runtime(
+    uvloop_ptr: *mut core::ffi::c_void,
+) -> *mut core::ffi::c_void {
     if uvloop_ptr.is_null() {
         vdk::log::warn!("UV loop pointer is null, skipping VDK async runtime initialization");
-        return;
+        return core::ptr::null_mut();
     }
 
     vdk::log::debug!(
@@ -59,11 +62,15 @@ pub extern "C" fn init_vdk_async_runtime(uvloop_ptr: *mut core::ffi::c_void) {
         uvloop_ptr
     );
 
-    runtime::init_from_uv_loop(unsafe { core::mem::transmute(uvloop_ptr) });
+    let rt = runtime::new_from_uv_loop(unsafe { core::mem::transmute(uvloop_ptr) })
+        .expect("Failed to initialize VDK async runtime");
+    Box::into_raw(rt) as *mut core::ffi::c_void
 }
 
 #[no_mangle]
-pub extern "C" fn close_vdk_async_runtime() {
+pub extern "C" fn close_vdk_async_runtime(runtime: *mut core::ffi::c_void) {
     vdk::log::debug!("Deinitializing VDK async runtime");
-    runtime::close();
+    if !runtime.is_null() {
+        let _ = unsafe { Box::from_raw(runtime as *mut Runtime) };
+    }
 }

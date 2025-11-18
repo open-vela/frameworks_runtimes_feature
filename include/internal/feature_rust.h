@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-void init_vdk_async_runtime(void* uvloop_ptr);
-void close_vdk_async_runtime();
+void* init_vdk_async_runtime(void* uvloop_ptr);
+void close_vdk_async_runtime(void* runtime_ptr);
 
 #ifdef __cplusplus
 }

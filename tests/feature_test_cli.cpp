@@ -375,7 +375,7 @@ extern "C" int main(int argc, char** argv)
     uv_loop_init(main_loop);
 
 #ifdef CONFIG_FEATURE_RUST_MODULES
-    init_vdk_async_runtime(main_loop);
+    auto vdk_runtime = init_vdk_async_runtime(main_loop);
 #endif
 
     uv_timer_t timer;
@@ -488,7 +488,7 @@ extern "C" int main(int argc, char** argv)
     JS_FreeContext(js_env.ctx);
     JS_FreeRuntime(js_env.rt);
 #ifdef CONFIG_FEATURE_RUST_MODULES
-    close_vdk_async_runtime();
+    close_vdk_async_runtime(vdk_runtime);
 #endif
 
     int closed = 0;
