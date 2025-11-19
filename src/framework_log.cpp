@@ -79,7 +79,7 @@ struct ProfileBufferWrapper {
             if (g_profile_buffer.fd < 0) {
                 // 打开文件：只写模式 | 不存在则创建 | 追加模式
                 g_profile_buffer.fd = open("/data/sys.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            } 
+            }
 
             if (g_profile_buffer.fd > 0){
                 size_t len = strlen(buffer_->framework_buf);
@@ -92,32 +92,36 @@ struct ProfileBufferWrapper {
 
     int addLogTimeStamp(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc)
     {
-        int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TS|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
-        buffer_->pos += len;
-        if (buffer_->pos >= BUFFER_SIZE) {
-            // dump it
+        // 预计算所需长度
+        int needed_len = snprintf(nullptr, 0, "|%s|TS|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
+        if (buffer_->pos + needed_len >= BUFFER_SIZE) {
             flush();
         }
+        // 应不存在单条日志超过缓冲区大小
+        int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TS|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
+        buffer_->pos += len;
         return len;
     }
 
     int addLogBegin(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc)
     {
-        int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TDB|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
-        buffer_->pos += len;
-        if (buffer_->pos >= BUFFER_SIZE) {
+        int needed_len = snprintf(nullptr, 0, "|%s|TDB|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
+        if (buffer_->pos + needed_len >= BUFFER_SIZE) {
             flush();
         }
+        int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TDB|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
+        buffer_->pos += len;
         return len;
     }
 
     int addLogEnd(QUICK_PROFILE_MOUDLE module, const char* name, const char* dsc)
     {
-        int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TDE|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
-        buffer_->pos += len;
-        if (buffer_->pos >= BUFFER_SIZE) {
+        int needed_len = snprintf(nullptr, 0, "|%s|TDE|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
+        if (buffer_->pos + needed_len >= BUFFER_SIZE) {
             flush();
         }
+        int len = sprintf(buffer_->framework_buf + buffer_->pos, "|%s|TDE|%" PRId64 "|%s|%s|\n", GetModuleName(module), GetTimeStamp(), name, dsc ? dsc : "");
+        buffer_->pos += len;
         return len;
     }
 };
