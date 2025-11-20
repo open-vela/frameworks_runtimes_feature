@@ -26,6 +26,24 @@
 #define GET_MESSAGE_CHANNEL(ft_instance) \
     (MessageChannel*)FeatureGetObjectData(ft_instance)
 
+typedef struct CallData {
+    CallData(FeatureInstanceHandle handle,
+        const std::string& action,
+        const std::string& message,
+        const std::vector<FtCallbackId>& vector_id)
+        : handle_(handle)
+        , action_(action)
+        , message_(message)
+        , vector_id_(vector_id)
+    {
+    }
+
+    FeatureInstanceHandle handle_;
+    std::string action_;
+    std::string message_;
+    std::vector<FtCallbackId> vector_id_;
+} CallData;
+
 //////////////////// class MessageChannel
 MessageChannel::MessageChannel()
     : ft_instance_(nullptr)
@@ -220,6 +238,33 @@ void MessageChannel::onReceive(const std::string& target,
 
     std::vector<FtCallbackId> vec = iter->second;
     if (ft_instance_ != nullptr) {
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+        if (isFeatureLoopValid()) {
+            CallData* call_data = new CallData(ft_instance_, iter->first, data, vec);
+            FeaturePost(
+                ft_instance_, [](int mode, void* callback_data) {
+                    CallData* data_ptr = (CallData*)callback_data;
+                    for (auto& id : data_ptr->vector_id_) {
+                        bool ret = FeatureInvokeCallback(data_ptr->handle_, id, data_ptr->action_.c_str(), data_ptr->message_.c_str());
+                        if (!ret) {
+                            FEATURE_LOG_ERROR("broadcast recv invoke failed !");
+                            break;
+                        }
+                    }
+                    delete data_ptr;
+                },
+                call_data);
+        } else { // systemui是没有为FeatureManager设置loop的，且systemui并不会创建js线程而出现跨线程调用feature的callback，所以直接调用FeatureInvokeCallback
+            for (auto& id : vec) {
+                bool ret = FeatureInvokeCallback(ft_instance_, id,
+                    (iter->first).c_str(), data.c_str());
+                if (!ret) {
+                    FEATURE_LOG_ERROR("broadcast recv invoke failed !");
+                    return;
+                }
+            }
+        }
+#else
         for (auto& id : vec) {
             bool ret = FeatureInvokeCallback(ft_instance_, id,
                 (iter->first).c_str(), data.c_str());
@@ -228,7 +273,7 @@ void MessageChannel::onReceive(const std::string& target,
                 return;
             }
         }
-
+#endif
     } else {
         for (auto& id : vec) {
             auto pair = subscribe_map_[id];
@@ -406,6 +451,17 @@ void MessageChannel::unregisterReceiverForC(const std::string& action)
     for (auto& id : action_cb_map_[action]) {
         subscribe_map_.erase(id);
     }
+}
+
+bool MessageChannel::isFeatureLoopValid()
+{
+    FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(ft_instance_);
+    uv_loop_t* loop = FeatureGetUVLoop(manager);
+    if (!loop) {
+        FEATURE_LOG_ERROR("loop is null !");
+        return false;
+    }
+    return true;
 }
 
 ///////////////////////// jidl feature implement

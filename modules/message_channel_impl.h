@@ -96,6 +96,9 @@ public:
     void registerReceiverForC(const std::string& action, SubscribeCb cb, UserDataHandle user_data);
     void unregisterReceiverForC(const std::string& action);
 
+    // 用于判断在初始化feature环境时,是否传入了loop
+    bool isFeatureLoopValid();
+
 private:
     FeatureInstanceHandle ft_instance_;
     BroadcastChannel* broadcast_channel_;

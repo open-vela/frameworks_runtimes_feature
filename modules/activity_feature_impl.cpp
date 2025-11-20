@@ -26,6 +26,11 @@ using os::app::Intent;
 
 static const char* file_tag = "[jidl_feature] activity_feature_impl";
 
+typedef struct CallData {
+    FeatureInstanceHandle mHandle;
+    FtCallbackId mId;
+} CallData;
+
 class FtServiceConnection : public os::app::ServiceConnection {
 public:
     FtServiceConnection(FeatureInstanceHandle handler, FtCallbackId onConnectedCb,
@@ -53,15 +58,61 @@ public:
     void onConnected(const sp<android::IBinder>& server)
     {
         if (mHandler && !FeatureInstanceIsDetached(mHandler)) {
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+            if (isFeatureLoopValid()) {
+                CallData* data = new CallData;
+                data->mHandle = mHandler;
+                data->mId = mOnConnectedCb;
+                FeaturePost(
+                    mHandler, [](int mode, void* callbackData) {
+                        CallData* dataPtr = (CallData*)callbackData;
+                        FeatureInvokeCallback(dataPtr->mHandle, dataPtr->mId);
+                        delete dataPtr;
+                    },
+                    data);
+            } else {
+                FeatureInvokeCallback(mHandler, mOnConnectedCb);
+            }
+#else
             FeatureInvokeCallback(mHandler, mOnConnectedCb);
+#endif
         }
     }
 
     void onDisconnected(const sp<android::IBinder>& server)
     {
         if (mHandler && !FeatureInstanceIsDetached(mHandler)) {
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+            if (isFeatureLoopValid()) {
+                CallData* data = new CallData;
+                data->mHandle = mHandler;
+                data->mId = mOnDisConnectedCb;
+                FeaturePost(
+                    mHandler, [](int mode, void* callbackData) {
+                        CallData* dataPtr = (CallData*)callbackData;
+                        FeatureInvokeCallback(dataPtr->mHandle, dataPtr->mId);
+                        delete dataPtr;
+                    },
+                    data);
+            } else {
+                FeatureInvokeCallback(mHandler, mOnDisConnectedCb);
+            }
+#else
             FeatureInvokeCallback(mHandler, mOnDisConnectedCb);
+#endif
         }
+    }
+
+    // 用于判断在初始化feature环境时,是否传入了loop
+    bool isFeatureLoopValid()
+    {
+        FeatureManagerHandle manager = FeatureGetManagerHandleFromInstance(mHandler);
+        uv_loop_t* loop = FeatureGetUVLoop(manager);
+        if (!loop) {
+            FEATURE_LOG_ERROR("loop is null !");
+            return false;
+        }
+        return true;
     }
 
 private:
