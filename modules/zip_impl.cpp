@@ -383,7 +383,7 @@ static void _do_extract_zip_work_cb(uv_work_t* wk)
     zipReq* zr = static_cast<zipReq*>(wk->data);
     if (!zr)
         return;
-    FEATURE_LOG_DEBUG("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
+    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, zr->src_path, zr->dst_path);
     char filename_try[MAXFILENAME + 16] = "";
     /* if Unzip encrypted zip file */
     const char* password = NULL;
@@ -447,7 +447,7 @@ void system_zip_wrap_decompress(FeatureInstanceHandle feature, AppendData append
 {
     if (info == NULL)
         return;
-    FEATURE_LOG_DEBUG("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, info->srcUri, info->dstUri);
+    FEATURE_LOG_INFO("%s: srcUri=%s,dstUri=%s \n", __FUNCTION__, info->srcUri, info->dstUri);
 
     char *src_path = NULL, *dst_path = NULL;
     const char* msg;
