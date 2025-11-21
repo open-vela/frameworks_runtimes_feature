@@ -299,6 +299,7 @@ endif
 
 ifeq ($(CONFIG_FEATURE_SYSTEM_PROMPT), y)
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/prompt_impl.cpp
+	CXXSRCS 	+= $(wildcard $(APPDIR)/frameworks/runtimes/feature/modules/prompt/*.cpp)
 	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/prompt.jidl
 	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
 	FEATURELIST += system_prompt

@@ -300,8 +300,21 @@ if(CONFIG_FEATURE_SYSTEM_FETCH)
 endif()
 
 if(CONFIG_FEATURE_SYSTEM_PROMPT)
-    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/prompt_impl.cpp)
+    set(FEATURE_SRCS
+        ${CMAKE_CURRENT_LIST_DIR}/prompt_impl.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/prompt/font.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/prompt/prompt.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/prompt/prompt_dialog.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/prompt/prompt_toast.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/prompt/prompt_server.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/prompt/prompt_utils.cpp
+    )
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/prompt.jidl)
+    target_include_directories(
+        feature_impls
+        PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/prompt
+    )
 
     nuttx_add_jidl(
         TARGET
