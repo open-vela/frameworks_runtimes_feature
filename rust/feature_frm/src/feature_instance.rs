@@ -12,8 +12,8 @@ use feature_sys::{
     FeatureGetManagerHandleFromInstance, FeatureGetManagerHandleFromProto, FeatureGetObjectData,
     FeatureGetPackageName, FeatureGetPackageVersion, FeatureGetProtoData, FeatureGetProtoHandle,
     FeatureGetUVLoop, FeatureInstanceHandle, FeatureInstanceIsDetached, FeatureManagerHandle,
-    FeaturePromiseReject, FeatureProtoHandle, FeatureSetObjectData, FeatureSetProtoData, FtEventId,
-    FtInt, FtPromiseId, FtString,
+    FeaturePromiseReject, FeatureSetObjectData, FeatureSetProtoData, FeatureGetPathFromUri,
+    FtEventId, FtInt, FtPromiseId, FtString,
 };
 use libc::c_void;
 
@@ -210,6 +210,20 @@ impl FeatureInstance {
         let proto_handle = unsafe { FeatureGetProtoHandle(self.as_ptr()) };
         get_environment_name(proto_handle)
     }
+
+    pub fn get_path_from_uri(&self, uri: &str) -> Option<String> {
+        if let Ok(uri) = CString::from_str(uri).to_owned() {
+            let result_ptr = unsafe { FeatureGetPathFromUri(self.as_ptr(), uri.into_raw()) };
+            if result_ptr.is_null() {
+                None
+            } else {
+                Some(unsafe { CStr::from_ptr(result_ptr) }.to_str().expect("must be utf8 string").to_string())
+            }
+        } else {
+            None
+        }
+    }
+
 }
 
 impl Drop for FeatureInstance {
