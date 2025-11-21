@@ -23,12 +23,33 @@
 #include <utils/Log.h>
 #include <utils/String8.h>
 
+#include "app/Activity.h"
+#include "feature_exports.h"
+
 using android::defaultServiceManager;
 using android::IBinder;
 using android::interface_cast;
 using android::IServiceManager;
 using android::String16;
 using os::app::ActivityManager;
+
+/* TODO：
+    由于dev-framework分支中frameworks/runtimes/services仓库目前未添加XMSConfig.h,所以只能把xmsLiteMode的实现暂时先放到这里
+    后续dev-framework分支包含了XMSConfig.h后，可以选择使用该头文件
+    #include "XMSConfig.h"
+*/
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+
+static inline bool xmsLiteMode(void)
+{
+#ifdef CONFIG_SYSTEM_SERVER_LITE
+    return true;
+#else
+    return false;
+#endif
+}
+
+#endif
 
 namespace message_transport {
 Status SessionMessageReply::onReply(const ::std::string& reply)
@@ -184,12 +205,31 @@ int ClientConnection::sendMessage(const std::string& target,
     return 0;
 }
 
+inline os::app::Context* getAmsContext(ChannelDataHandle channel_data_handle)
+{
+    FeatureInstanceHandle ft_instance = static_cast<FeatureInstanceHandle>(channel_data_handle);
+    return static_cast<os::app::Context*>(FeatureInstanceGetManagerUserData(ft_instance, "nativeContext"));
+}
+
 void ClientConnection::registerReceiver(const std::string& action)
 {
     sp<NotifyBroadcastReceiver> receiver(new NotifyBroadcastReceiver());
     receiver->setBroadcastChannelCallback(broadcast_cb_);
     ActivityManager am;
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+    if (xmsLiteMode() && channel_data_handle_) { // lite模式下如果使用的feature调用到这的，需要post
+        auto nativeContext = getAmsContext(channel_data_handle_);
+        if (nativeContext) {
+            nativeContext->registerReceiver(action, receiver);
+        } else {
+            ALOGE("Can't get nativeContext in Feature user data");
+        }
+    } else { // lite模式下如果不是使用的feature调用到这的，以及非lite模式，直接使用ActivityManager
+        am.registerReceiver(action, receiver);
+    }
+#else
     am.registerReceiver(action, receiver);
+#endif
     broadcast_reply_.insert(std::make_pair(action, receiver));
 }
 
@@ -200,7 +240,20 @@ void ClientConnection::unregisterReceiver(const std::string& action)
         // VELAPLATFO-39723::由于ams的unregisterReceiver的接口是异步调用的，可能没有立即生效,
         // 因此将broadcastCallback置空，避免后续的onReceive回调导致崩溃
         broadcast_reply_[action]->setBroadcastChannelCallback(nullptr);
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+        if (xmsLiteMode() && channel_data_handle_) { // lite模式下如果使用的feature调用到这的，需要post
+            auto nativeContext = getAmsContext(channel_data_handle_);
+            if (nativeContext) {
+                nativeContext->unregisterReceiver(broadcast_reply_[action]);
+            } else {
+                ALOGE("Can't get nativeContext in Feature user data");
+            }
+        } else { // lite模式下如果不是使用的feature调用到这的，以及非lite模式，直接使用ActivityManager
+            am.unregisterReceiver(broadcast_reply_[action]);
+        }
+#else
         am.unregisterReceiver(broadcast_reply_[action]);
+#endif
         broadcast_reply_.erase(action);
     }
 }
@@ -212,7 +265,20 @@ void ClientConnection::sendBroadcast(const std::string& action,
     Intent intent;
     intent.setAction(action);
     intent.setData(data);
+#ifdef CONFIG_QUICKAPP_ACTIVITY_ASYNC
+    if (xmsLiteMode() && channel_data_handle_) { // lite模式下如果使用的feature调用到这的，需要post
+        auto nativeContext = getAmsContext(channel_data_handle_);
+        if (nativeContext) {
+            nativeContext->sendBroadcast(intent);
+        } else {
+            ALOGE("Can't get nativeContext in Feature user data");
+        }
+    } else { // lite模式下如果不是使用的feature调用到这的，以及非lite模式，直接使用ActivityManager
+        am.sendBroadcast(intent);
+    }
+#else
     am.sendBroadcast(intent);
+#endif
 }
 
 void ClientConnection::eraseSessionReply(SessionId id)
@@ -227,6 +293,11 @@ void ClientConnection::eraseSessionClient(SessionId id)
     if (session_client_map_.find(id) != session_client_map_.end()) {
         session_client_map_.erase(id);
     }
+}
+
+void ClientConnection::setUserData(ChannelDataHandle channel_data_handle)
+{
+    channel_data_handle_ = channel_data_handle;
 }
 
 const TaskBoard& ClientConnection::getTaskBoard() const

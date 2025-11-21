@@ -121,6 +121,9 @@ MessageChannel::~MessageChannel()
 void MessageChannel::setFeatureInstanceHandle(FeatureInstanceHandle ft_instance)
 {
     ft_instance_ = ft_instance;
+    if (broadcast_channel_) {
+        broadcast_channel_->setUserData(ft_instance);
+    }
 }
 
 void MessageChannel::serverOnMessage(ReplyId reply_id, const std::string& message)

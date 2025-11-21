@@ -21,6 +21,8 @@
 
 typedef int32_t ReplyId;
 typedef int32_t SessionId;
+typedef void* ChannelDataHandle;
+
 class MessageServerChannelCallback {
 public:
     virtual void serverOnMessage(ReplyId reply_id, const std::string& message) = 0;
@@ -108,6 +110,7 @@ public:
     {
         broadcast_cb_ = cb;
     }
+    virtual void setUserData(ChannelDataHandle channel_data_handle) = 0;
 
 protected:
     BroadcastChannelCallback* broadcast_cb_;

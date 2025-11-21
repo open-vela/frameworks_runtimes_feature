@@ -168,7 +168,10 @@ private:
 
 class ClientConnection : public ClientChannel, public BroadcastChannel {
 public:
-    ClientConnection() { }
+    ClientConnection()
+        : channel_data_handle_(nullptr)
+    {
+    }
     virtual ~ClientConnection();
 
     void attachLoop(uv_loop_t* loop) override;
@@ -195,6 +198,7 @@ public:
     void eraseSessionClient(SessionId id);
     // for MessageReply
     const TaskBoard& getTaskBoard() const;
+    void setUserData(ChannelDataHandle channel_data_handle) override;
 
 private:
     std::map<SessionId, sp<message_transport::IMessageTransport>>
@@ -202,6 +206,7 @@ private:
     std::map<SessionId, sp<SessionMessageReply>> session_reply_map_;
     std::map<std::string, sp<NotifyBroadcastReceiver>> broadcast_reply_;
     TaskBoard task_board_;
+    ChannelDataHandle channel_data_handle_;
 };
 
 ////////////////////////////////////// for server
