@@ -49,11 +49,7 @@ where
             index % 8
         };
         let mask = 1 << bit_index;
-        if val {
-            byte | mask
-        } else {
-            byte & !mask
-        }
+        if val { byte | mask } else { byte & !mask }
     }
     #[inline]
     pub fn set_bit(&mut self, index: usize, val: bool) {
@@ -170,6 +166,9 @@ impl<T> ::core::fmt::Debug for __IncompleteArrayField<T> {
         fmt.write_str("__IncompleteArrayField")
     }
 }
+pub const true_: u32 = 1;
+pub const false_: u32 = 0;
+pub const __bool_true_false_are_defined: u32 = 1;
 pub const PRId8: &[u8; 2] = b"d\0";
 pub const PRId16: &[u8; 2] = b"d\0";
 pub const PRId32: &[u8; 2] = b"d\0";
@@ -311,9 +310,13 @@ pub const SEM_VALUE_MAX: u32 = 2147483647;
 pub const IOV_MAX: u32 = 2147483647;
 pub const HOST_NAME_MAX: u32 = 32;
 pub const PTRDIFF_MAX: u32 = 2147483647;
+pub const SCHAR_MIN: i32 = -128;
+pub const SHRT_MIN: i32 = -32768;
+pub const INT_MIN: i32 = -2147483648;
+pub const LONG_MIN: i32 = -2147483648;
+pub const LLONG_MIN: i64 = -9223372036854775808;
 pub const INTPTR_MAX: u32 = 2147483647;
 pub const UINTPTR_MAX: u32 = 4294967295;
-pub const __bool_true_false_are_defined: u32 = 1;
 pub const TRUE: u32 = 1;
 pub const FALSE: u32 = 0;
 pub const SEEK_SET: u32 = 0;
@@ -460,51 +463,6 @@ pub const DTYPE_FILE: u32 = 8;
 pub const DTYPE_MTD: u32 = 9;
 pub const DTYPE_LINK: u32 = 10;
 pub const DTYPE_SOCK: u32 = 12;
-pub const _DEFAULT_SOURCE: u32 = 1;
-pub const _POSIX_SOURCE: u32 = 1;
-pub const _POSIX_C_SOURCE: u32 = 200809;
-pub const _ATFILE_SOURCE: u32 = 1;
-pub const __ATFILE_VISIBLE: u32 = 1;
-pub const __BSD_VISIBLE: u32 = 1;
-pub const __GNU_VISIBLE: u32 = 0;
-pub const __ISO_C_VISIBLE: u32 = 2011;
-pub const __LARGEFILE_VISIBLE: u32 = 0;
-pub const __MISC_VISIBLE: u32 = 1;
-pub const __POSIX_VISIBLE: u32 = 200809;
-pub const __SVID_VISIBLE: u32 = 1;
-pub const __XSI_VISIBLE: u32 = 0;
-pub const __SSP_FORTIFY_LEVEL: u32 = 0;
-pub const __have_longlong64: u32 = 1;
-pub const __have_long32: u32 = 1;
-pub const ___int8_t_defined: u32 = 1;
-pub const ___int16_t_defined: u32 = 1;
-pub const ___int32_t_defined: u32 = 1;
-pub const ___int64_t_defined: u32 = 1;
-pub const ___int_least8_t_defined: u32 = 1;
-pub const ___int_least16_t_defined: u32 = 1;
-pub const ___int_least32_t_defined: u32 = 1;
-pub const ___int_least64_t_defined: u32 = 1;
-pub const __GNUCLIKE_ASM: u32 = 3;
-pub const __GNUCLIKE___TYPEOF: u32 = 1;
-pub const __GNUCLIKE___SECTION: u32 = 1;
-pub const __GNUCLIKE_CTOR_SECTION_HANDLING: u32 = 1;
-pub const __GNUCLIKE_BUILTIN_CONSTANT_P: u32 = 1;
-pub const __GNUCLIKE_BUILTIN_VARARGS: u32 = 1;
-pub const __GNUCLIKE_BUILTIN_STDARG: u32 = 1;
-pub const __GNUCLIKE_BUILTIN_VAALIST: u32 = 1;
-pub const __GNUC_VA_LIST_COMPATIBILITY: u32 = 1;
-pub const __GNUCLIKE_BUILTIN_NEXT_ARG: u32 = 1;
-pub const __GNUCLIKE_BUILTIN_MEMCPY: u32 = 1;
-pub const __CC_SUPPORTS_INLINE: u32 = 1;
-pub const __CC_SUPPORTS___INLINE: u32 = 1;
-pub const __CC_SUPPORTS___INLINE__: u32 = 1;
-pub const __CC_SUPPORTS___FUNC__: u32 = 1;
-pub const __CC_SUPPORTS_WARNING: u32 = 1;
-pub const __CC_SUPPORTS_VARADIC_XXX: u32 = 1;
-pub const __CC_SUPPORTS_DYNAMIC_ARRAY_INIT: u32 = 1;
-pub const __OBSOLETE_MATH_DEFAULT: u32 = 0;
-pub const __OBSOLETE_MATH: u32 = 0;
-pub const __RAND_MAX: u32 = 2147483647;
 pub const EPERM: u32 = 1;
 pub const ENOENT: u32 = 2;
 pub const ESRCH: u32 = 3;
@@ -2078,8 +2036,8 @@ pub enum _bindgen_ty_1 {
 unsafe extern "C" {
     pub fn nsh_main(argc: cty::c_int, argv: *mut *mut cty::c_char) -> cty::c_int;
 }
-#[doc = " Public Types"]
-pub type va_list = u32;
+pub type __gnuc_va_list = u32;
+pub type va_list = __gnuc_va_list;
 #[doc = " Public Types"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -2372,70 +2330,6 @@ unsafe extern "C" {
 unsafe extern "C" {
     pub fn dirfd(dirp: *mut DIR) -> cty::c_int;
 }
-pub type __int8_t = cty::c_schar;
-pub type __uint8_t = cty::c_uchar;
-pub type __int16_t = cty::c_short;
-pub type __uint16_t = cty::c_ushort;
-pub type __int32_t = cty::c_int;
-pub type __uint32_t = cty::c_uint;
-pub type __int64_t = cty::c_longlong;
-pub type __uint64_t = cty::c_ulonglong;
-pub type __int_least8_t = cty::c_schar;
-pub type __uint_least8_t = cty::c_uchar;
-pub type __int_least16_t = cty::c_short;
-pub type __uint_least16_t = cty::c_ushort;
-pub type __int_least32_t = cty::c_int;
-pub type __uint_least32_t = cty::c_uint;
-pub type __int_least64_t = cty::c_longlong;
-pub type __uint_least64_t = cty::c_ulonglong;
-pub type __intmax_t = cty::c_longlong;
-pub type __uintmax_t = cty::c_ulonglong;
-pub type __intptr_t = cty::c_int;
-pub type __uintptr_t = cty::c_uint;
-pub type __blkcnt_t = cty::c_long;
-pub type __blksize_t = cty::c_long;
-pub type __fsblkcnt_t = __uint64_t;
-pub type __fsfilcnt_t = __uint32_t;
-pub type _off_t = cty::c_long;
-pub type __pid_t = cty::c_int;
-pub type __dev_t = cty::c_short;
-pub type __uid_t = cty::c_ushort;
-pub type __gid_t = cty::c_ushort;
-pub type __id_t = __uint32_t;
-pub type __ino_t = cty::c_ushort;
-pub type __mode_t = __uint32_t;
-pub type _off64_t = cty::c_longlong;
-pub type __off_t = _off_t;
-pub type __loff_t = _off64_t;
-pub type __key_t = cty::c_long;
-pub type _fpos_t = cty::c_long;
-pub type __size_t = cty::c_uint;
-pub type __ssize_t = _ssize_t;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct _mbstate_t {
-    pub __count: cty::c_int,
-    pub __value: _mbstate_t__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union _mbstate_t__bindgen_ty_1 {
-    pub __wch: wint_t,
-    pub __wchb: [cty::c_uchar; 4usize],
-}
-pub type _iconv_t = *mut cty::c_void;
-pub type __clock_t = cty::c_ulong;
-pub type __time_t = __int_least64_t;
-pub type __clockid_t = cty::c_ulong;
-pub type __daddr_t = cty::c_long;
-pub type __timer_t = cty::c_ulong;
-pub type __sa_family_t = __uint8_t;
-pub type __socklen_t = __uint32_t;
-pub type __nl_item = cty::c_int;
-pub type __nlink_t = cty::c_ushort;
-pub type __suseconds_t = cty::c_long;
-pub type __useconds_t = cty::c_ulong;
-pub type __va_list = u32;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum memory_order {
@@ -2458,33 +2352,54 @@ pub type atomic_long = cty::c_long;
 pub type atomic_ulong = cty::c_ulong;
 pub type atomic_llong = cty::c_longlong;
 pub type atomic_ullong = cty::c_ulonglong;
-pub type atomic_wchar_t = wchar_t;
-pub type atomic_int_least8_t = int_least8_t;
-pub type atomic_uint_least8_t = uint_least8_t;
-pub type atomic_int_least16_t = int_least16_t;
-pub type atomic_uint_least16_t = uint_least16_t;
-pub type atomic_int_least32_t = int_least32_t;
-pub type atomic_uint_least32_t = uint_least32_t;
-pub type atomic_int_least64_t = int_least64_t;
-pub type atomic_uint_least64_t = uint_least64_t;
-pub type atomic_int_fast8_t = int_fast8_t;
-pub type atomic_uint_fast8_t = uint_fast8_t;
-pub type atomic_int_fast16_t = int_fast16_t;
-pub type atomic_uint_fast16_t = uint_fast16_t;
-pub type atomic_int_fast32_t = int_fast32_t;
-pub type atomic_uint_fast32_t = uint_fast32_t;
-pub type atomic_int_fast64_t = int_fast64_t;
-pub type atomic_uint_fast64_t = uint_fast64_t;
-pub type atomic_intptr_t = isize;
-pub type atomic_uintptr_t = usize;
-pub type atomic_size_t = usize;
-pub type atomic_ptrdiff_t = isize;
-pub type atomic_intmax_t = intmax_t;
-pub type atomic_uintmax_t = uintmax_t;
+pub type atomic_char16_t = cty::c_ushort;
+pub type atomic_char32_t = cty::c_uint;
+pub type atomic_wchar_t = cty::c_uint;
+pub type atomic_int_least8_t = cty::c_schar;
+pub type atomic_uint_least8_t = cty::c_uchar;
+pub type atomic_int_least16_t = cty::c_short;
+pub type atomic_uint_least16_t = cty::c_ushort;
+pub type atomic_int_least32_t = cty::c_int;
+pub type atomic_uint_least32_t = cty::c_uint;
+pub type atomic_int_least64_t = cty::c_longlong;
+pub type atomic_uint_least64_t = cty::c_ulonglong;
+pub type atomic_int_fast8_t = cty::c_schar;
+pub type atomic_uint_fast8_t = cty::c_uchar;
+pub type atomic_int_fast16_t = cty::c_short;
+pub type atomic_uint_fast16_t = cty::c_ushort;
+pub type atomic_int_fast32_t = cty::c_int;
+pub type atomic_uint_fast32_t = cty::c_uint;
+pub type atomic_int_fast64_t = cty::c_longlong;
+pub type atomic_uint_fast64_t = cty::c_ulonglong;
+pub type atomic_intptr_t = cty::c_int;
+pub type atomic_uintptr_t = cty::c_uint;
+pub type atomic_size_t = cty::c_uint;
+pub type atomic_ptrdiff_t = cty::c_int;
+pub type atomic_intmax_t = cty::c_longlong;
+pub type atomic_uintmax_t = cty::c_ulonglong;
+unsafe extern "C" {
+    pub fn atomic_thread_fence(arg1: memory_order);
+}
+unsafe extern "C" {
+    pub fn atomic_signal_fence(arg1: memory_order);
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct atomic_flag {
-    pub __flag: atomic_bool,
+pub struct _bindgen_ty_2 {
+    pub __val: bool,
+}
+pub type atomic_flag = _bindgen_ty_2;
+unsafe extern "C" {
+    pub fn atomic_flag_test_and_set(arg1: *mut atomic_flag) -> bool;
+}
+unsafe extern "C" {
+    pub fn atomic_flag_test_and_set_explicit(arg1: *mut atomic_flag, arg2: memory_order) -> bool;
+}
+unsafe extern "C" {
+    pub fn atomic_flag_clear(arg1: *mut atomic_flag);
+}
+unsafe extern "C" {
+    pub fn atomic_flag_clear_explicit(arg1: *mut atomic_flag, arg2: memory_order);
 }
 unsafe extern "C" {
     pub fn nx_atomic_store_4(ptr: *mut cty::c_void, value: i32, memorder: cty::c_int);
@@ -2555,6 +2470,7 @@ unsafe extern "C" {
     pub fn nx_atomic_fetch_xor_8(ptr: *mut cty::c_void, value: i64, memorder: cty::c_int) -> i64;
 }
 unsafe extern "C" {
+    #[doc = " Name: _assert\n\n Description:\n   This is the assert system call that performs the core dump etc. Function\n   might not return if it is not safe to do so (in IRQ or in IDLE task).\n"]
     pub fn _assert(
         filename: *const cty::c_char,
         linenum: cty::c_int,
@@ -2564,6 +2480,7 @@ unsafe extern "C" {
     );
 }
 unsafe extern "C" {
+    #[doc = " Name: __assert\n\n Description:\n   This is the user space assert procedure.\n"]
     pub fn __assert(
         filename: *const cty::c_char,
         linenum: cty::c_int,
@@ -2919,7 +2836,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn strxfrm(arg1: *mut cty::c_char, arg2: *const cty::c_char, n: cty::c_uint)
-        -> cty::c_uint;
+    -> cty::c_uint;
 }
 unsafe extern "C" {
     pub fn strverscmp(s1: *const cty::c_char, s2: *const cty::c_char) -> cty::c_int;
@@ -3186,7 +3103,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn wcstoimax(nptr: *const wchar_t, endptr: *mut *mut wchar_t, base: cty::c_int)
-        -> intmax_t;
+    -> intmax_t;
 }
 unsafe extern "C" {
     pub fn wcstoumax(
@@ -3449,7 +3366,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Name: nxsem_timedwait_uninterruptible\n\n Description:\n   This function is wrapped version of nxsem_timedwait(), which is\n   uninterruptible and convenient for use.\n\n Input Parameters:\n   sem     - Semaphore object\n   abstime - The absolute time to wait until a timeout is declared.\n\n Returned Value:\n   EINVAL    The sem argument does not refer to a valid semaphore.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The semaphore could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n   ECANCELED May be returned if the thread is canceled while waiting.\n\n NOTE:  It is essential that callers of this function handle the\n ECANCELED error.  Correct handling is that the function should return the\n error and the error should propagate back up the calling tree to the\n cancellation point interface function where the thread termination will\n be handled gracefully\n"]
     pub fn nxsem_timedwait_uninterruptible(sem: *mut sem_t, abstime: *const timespec)
-        -> cty::c_int;
+    -> cty::c_int;
 }
 unsafe extern "C" {
     #[doc = " Name: nxsem_clockwait_uninterruptible\n\n Description:\n   This function is wrapped version of nxsem_clockwait(), which is\n   uninterruptible and convenient for use.\n\n Input Parameters:\n   sem     - Semaphore object\n   clockid - The timing source to use in the conversion\n   abstime - The absolute time to wait until a timeout is declared.\n\n Returned Value:\n   EINVAL    The sem argument does not refer to a valid semaphore.  Or the\n             thread would have blocked, and the abstime parameter specified\n             a nanoseconds field value less than zero or greater than or\n             equal to 1000 million.\n   ETIMEDOUT The semaphore could not be locked before the specified timeout\n             expired.\n   EDEADLK   A deadlock condition was detected.\n   ECANCELED May be returned if the thread is canceled while waiting.\n\n NOTE:  It is essential that callers of this function handle the\n ECANCELED error.  Correct handling is that the function should return the\n error and the error should propagate back up the calling tree to the\n cancellation point interface function where the thread termination will\n be handled gracefully\n"]
@@ -5579,12 +5496,10 @@ pub struct _FtJsonObject {
 }
 #[doc = " FtJsonObject"]
 pub type FtJsonObject = *mut _FtJsonObject;
-#[doc = " FtArrayBuffer"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _FtArrayBuffer {
-    #[doc = "< opaque"]
-    pub opaque: *mut cty::c_void,
+    _unused: [u8; 0],
 }
 #[doc = " FtArrayBuffer"]
 pub type FtArrayBuffer = *mut _FtArrayBuffer;
@@ -6591,26 +6506,26 @@ pub struct JSClass {
 }
 pub type JSClassID = u32;
 pub type JSAtom = u32;
-pub const JS_TAG_FIRST: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_FIRST;
-pub const JS_TAG_BIG_DECIMAL: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_FIRST;
-pub const JS_TAG_BIG_INT: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_BIG_INT;
-pub const JS_TAG_BIG_FLOAT: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_BIG_FLOAT;
-pub const JS_TAG_SYMBOL: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_SYMBOL;
-pub const JS_TAG_STRING: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_STRING;
-pub const JS_TAG_MODULE: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_MODULE;
-pub const JS_TAG_FUNCTION_BYTECODE: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_FUNCTION_BYTECODE;
-pub const JS_TAG_OBJECT: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_OBJECT;
-pub const JS_TAG_INT: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_INT;
-pub const JS_TAG_BOOL: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_BOOL;
-pub const JS_TAG_NULL: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_NULL;
-pub const JS_TAG_UNDEFINED: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_UNDEFINED;
-pub const JS_TAG_UNINITIALIZED: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_UNINITIALIZED;
-pub const JS_TAG_CATCH_OFFSET: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_CATCH_OFFSET;
-pub const JS_TAG_EXCEPTION: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_EXCEPTION;
-pub const JS_TAG_FLOAT64: _bindgen_ty_2 = _bindgen_ty_2::JS_TAG_FLOAT64;
+pub const JS_TAG_FIRST: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_FIRST;
+pub const JS_TAG_BIG_DECIMAL: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_FIRST;
+pub const JS_TAG_BIG_INT: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_BIG_INT;
+pub const JS_TAG_BIG_FLOAT: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_BIG_FLOAT;
+pub const JS_TAG_SYMBOL: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_SYMBOL;
+pub const JS_TAG_STRING: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_STRING;
+pub const JS_TAG_MODULE: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_MODULE;
+pub const JS_TAG_FUNCTION_BYTECODE: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_FUNCTION_BYTECODE;
+pub const JS_TAG_OBJECT: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_OBJECT;
+pub const JS_TAG_INT: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_INT;
+pub const JS_TAG_BOOL: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_BOOL;
+pub const JS_TAG_NULL: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_NULL;
+pub const JS_TAG_UNDEFINED: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_UNDEFINED;
+pub const JS_TAG_UNINITIALIZED: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_UNINITIALIZED;
+pub const JS_TAG_CATCH_OFFSET: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_CATCH_OFFSET;
+pub const JS_TAG_EXCEPTION: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_EXCEPTION;
+pub const JS_TAG_FLOAT64: _bindgen_ty_3 = _bindgen_ty_3::JS_TAG_FLOAT64;
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum _bindgen_ty_2 {
+pub enum _bindgen_ty_3 {
     JS_TAG_FIRST = -11,
     JS_TAG_BIG_INT = -10,
     JS_TAG_BIG_FLOAT = -9,
@@ -6721,7 +6636,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn JS_NewRuntime2(mf: *const JSMallocFunctions, opaque: *mut cty::c_void)
-        -> *mut JSRuntime;
+    -> *mut JSRuntime;
 }
 unsafe extern "C" {
     pub fn JS_FreeRuntime(rt: *mut JSRuntime);
@@ -8670,6 +8585,9 @@ unsafe extern "C" {
     pub fn ttyname(fd: cty::c_int) -> *mut cty::c_char;
 }
 unsafe extern "C" {
+    pub fn pipe(pipefd: *mut cty::c_int) -> cty::c_int;
+}
+unsafe extern "C" {
     pub fn pipe2(pipefd: *mut cty::c_int, flags: cty::c_int) -> cty::c_int;
 }
 unsafe extern "C" {
@@ -9130,7 +9048,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn pthread_attr_setschedpolicy(attr: *mut pthread_attr_t, policy: cty::c_int)
-        -> cty::c_int;
+    -> cty::c_int;
 }
 unsafe extern "C" {
     pub fn pthread_attr_getschedpolicy(
@@ -9214,7 +9132,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn pthread_attr_getscope(attr: *const pthread_attr_t, scope: *mut cty::c_int)
-        -> cty::c_int;
+    -> cty::c_int;
 }
 unsafe extern "C" {
     pub fn pthread_setname_np(thread: pthread_t, name: *const cty::c_char) -> cty::c_int;
@@ -10035,14 +9953,14 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn uv_strerror_r(err: cty::c_int, buf: *mut cty::c_char, buflen: usize)
-        -> *mut cty::c_char;
+    -> *mut cty::c_char;
 }
 unsafe extern "C" {
     pub fn uv_err_name(err: cty::c_int) -> *const cty::c_char;
 }
 unsafe extern "C" {
     pub fn uv_err_name_r(err: cty::c_int, buf: *mut cty::c_char, buflen: usize)
-        -> *mut cty::c_char;
+    -> *mut cty::c_char;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -10626,10 +10544,10 @@ unsafe extern "C" {
 unsafe extern "C" {
     pub fn uv_guess_handle(file: uv_file) -> uv_handle_type;
 }
-pub const UV_PIPE_NO_TRUNCATE: _bindgen_ty_3 = _bindgen_ty_3::UV_PIPE_NO_TRUNCATE;
+pub const UV_PIPE_NO_TRUNCATE: _bindgen_ty_4 = _bindgen_ty_4::UV_PIPE_NO_TRUNCATE;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum _bindgen_ty_3 {
+pub enum _bindgen_ty_4 {
     UV_PIPE_NO_TRUNCATE = 1,
 }
 #[repr(C)]
@@ -12634,7 +12552,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " @brief get event name from event id\n\n @param[in] handle FeatureInstanceHandle\n @param[in] eid event id\n @return const char*, NULL if event is not exist"]
     pub fn FeatureGetEventName(handle: FeatureInstanceHandle, eid: FtEventId)
-        -> *const cty::c_char;
+    -> *const cty::c_char;
 }
 unsafe extern "C" {
     #[doc = " @brief emit an event with variadic parameters\n\n @param[in] handle FeatureInstanceHandle\n @param[in] eid event id\n @param[in] ... Variable-length argument\n @return bool"]
@@ -12683,7 +12601,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " @brief commit and start worker\n\n @param hworker\n @return bool if commit success"]
     pub fn FeatureWorkerCommit(handle: FeatureInstanceHandle, hworker: FeatureWorkerHandle)
-        -> bool;
+    -> bool;
 }
 unsafe extern "C" {
     #[doc = " @brief resolve worker, called by user\n\n @param hworker\n @param result"]
@@ -12740,12 +12658,17 @@ unsafe extern "C" {
     #[doc = " @brief create a json object with a string\n\n @param json_str\n @return FtJsonObject"]
     pub fn FeatureNewJsonObject(str_: *const cty::c_char) -> FtJsonObject;
 }
+unsafe extern "C" {
+    #[doc = " @brief throw error in feature\n\n @param handle FeatureInstanceHandle\n @param msg error message"]
+    pub fn FeatureThrowError(handle: FeatureInstanceHandle, msg: *const cty::c_char);
+}
 #[doc = " FeatureArrayBufferFreeFunc"]
 pub type FeatureArrayBufferFreeFunc =
     ::core::option::Option<unsafe extern "C" fn(opaque: *mut cty::c_void, buff: *mut cty::c_void)>;
 unsafe extern "C" {
-    #[doc = " @brief create an array buffer from a data pointer\n\n @param data\n @param len\n @param free_func\n @param opaque\n @return FtArrayBuffer"]
+    #[doc = " @brief create an array buffer from a data pointer\n\n @param handle FeatureInstanceHandle\n @param data\n @param len\n @param free_func\n @param opaque\n @return FtArrayBuffer"]
     pub fn FeatureNewArrayBufferFromData(
+        handle: FeatureInstanceHandle,
         data: *mut u8,
         len: usize,
         free_func: FeatureArrayBufferFreeFunc,
@@ -12753,16 +12676,19 @@ unsafe extern "C" {
     ) -> FtArrayBuffer;
 }
 unsafe extern "C" {
-    #[doc = " @brief create an array buffer and copy data from a data pointer\n\n @param data\n @param len\n @return FtArrayBuffer"]
-    pub fn FeatureNewArrayBufferCopyData(data: *mut u8, len: usize) -> FtArrayBuffer;
+    #[doc = " @brief create an array buffer and copy data from a data pointer\n\n @param handle FeatureInstanceHandle\n @param data\n @param len\n @return FtArrayBuffer"]
+    pub fn FeatureNewArrayBufferCopyData(
+        handle: FeatureInstanceHandle,
+        data: *mut u8,
+        len: usize,
+    ) -> FtArrayBuffer;
 }
 unsafe extern "C" {
     #[doc = " @brief get data from an array buffer\n\n @param buff\n @param psize\n @return data"]
     pub fn FeatureArrayBufferGetData(buff: FtArrayBuffer, psize: *mut usize) -> *mut u8;
 }
 unsafe extern "C" {
-    #[doc = " @brief attach an array buffer to FeatureManagerHandle\n\n @param[in] handle FeatureManagerHandle\n @param buff FtArrayBuffer\n @return bool"]
-    pub fn FeatureAttachArrayBuffer(hmanager: FeatureManagerHandle, buff: FtArrayBuffer) -> bool;
+    pub fn FeatureFtVoidPromiseResolve(handle: FeatureInstanceHandle, pid: FtPromiseId) -> FtBool;
 }
 unsafe extern "C" {
     pub fn FeatureFtStringPromiseResolve(
@@ -12956,7 +12882,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " @brief find a feature with feature name\n\n @param[in] handle FeatureManagerHandle\n @param[in] name feature name\n @return ft_value_t"]
     pub fn FeatureFindFeature(handle: FeatureManagerHandle, name: *const cty::c_char)
-        -> ft_value_t;
+    -> ft_value_t;
 }
 unsafe extern "C" {
     #[doc = " @brief create a feature with prototype\n\n @param[in] handle FeatureManagerHandle\n @param[in] prototype feature prototype\n @param[in] binding_obj binding_obj\n @return ft_value_t"]

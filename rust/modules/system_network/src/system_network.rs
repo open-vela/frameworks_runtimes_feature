@@ -269,7 +269,7 @@ pub(crate) extern "C" fn system_network_wrap_getType(
     handle: FeatureInstanceHandle,
     _adata: AppendData,
     promise_id: FtPromiseId,
-) -> () {
+) {
     let system_network =
         unsafe { feature_glue::get_instance_data::<dyn SystemNetwork>(handle).unwrap() };
     let system_network = unsafe { &mut *system_network };
@@ -290,7 +290,7 @@ pub(crate) extern "C" fn system_network_wrap_subscribe(
     _adata: AppendData,
     promise_id: FtPromiseId,
     p: *mut system_network_param,
-) -> () {
+) {
     let system_network =
         unsafe { feature_glue::get_instance_data::<dyn SystemNetwork>(handle).unwrap() };
     let system_network = unsafe { &mut *system_network };
@@ -310,7 +310,7 @@ pub(crate) extern "C" fn system_network_wrap_subscribe(
 pub(crate) extern "C" fn system_network_wrap_unsubscribe(
     handle: FeatureInstanceHandle,
     _adata: AppendData,
-) -> () {
+) {
     let system_network =
         unsafe { feature_glue::get_instance_data::<dyn SystemNetwork>(handle).unwrap() };
     let system_network = unsafe { &mut *system_network };

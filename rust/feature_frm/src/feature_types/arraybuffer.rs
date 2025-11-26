@@ -121,7 +121,7 @@ impl FeatureArrayBuffer {
     where
         T: NumberType,
     {
-        let bytes = slice.len() * mem::size_of::<T>();
+        let bytes = core::mem::size_of_val(slice);
         let buff = slice.as_ptr() as *mut u8;
         let abuff = unsafe { FeatureNewArrayBufferCopyData(instance.as_handle(), buff, bytes) };
         let ret = Self::from_raw_with_len(abuff, bytes);
@@ -183,14 +183,14 @@ impl FeatureArrayBuffer {
             return None;
         }
         // Check alignment
-        if (data as usize) % mem::align_of::<T>() != 0 {
+        if !(data as usize).is_multiple_of(mem::align_of::<T>()) {
             error!(
                 "arraybuffer buff not aligned, align_size: {}",
                 mem::align_of::<T>()
             );
             return None;
         }
-        if bytes % mem::size_of::<T>() != 0 {
+        if !bytes.is_multiple_of(mem::size_of::<T>()) {
             error!(
                 "arraybuffer bytes not aligned, bytes: {}, type_size: {}",
                 bytes,
@@ -203,6 +203,10 @@ impl FeatureArrayBuffer {
 
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     fn from_raw_with_len(abuff: FtArrayBuffer, len: usize) -> Self {

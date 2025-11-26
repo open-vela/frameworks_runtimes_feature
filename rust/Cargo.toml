@@ -27,7 +27,7 @@ opt-level = 'z'
 feature_sys = { path = "feature_frm/sys" }
 feature_macros = { path = "macros" }
 feature_frm = { path = "feature_frm" }
-vdk = { path = "../../rust/vdk-rs/vdk" }
+vdk = { base = "runtime", path = "vdk-rs/vdk" }
 libc = {version = "0.2", default-features = false}
 proc-macro-error = "1.0"
 proc-macro2 = "1.0"

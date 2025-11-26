@@ -644,7 +644,7 @@ pub unsafe extern "C" fn simple_wrap_setAnimal(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_invoke_event(
+pub unsafe extern "C" fn simple_wrap_invoke_event(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     event_name: FtString,
@@ -655,7 +655,7 @@ pub extern "C" fn simple_wrap_invoke_event(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_set_buffer(
+pub unsafe extern "C" fn simple_wrap_set_buffer(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     buff: FtArrayBuffer,
@@ -666,7 +666,7 @@ pub extern "C" fn simple_wrap_set_buffer(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_buffer_copy(
+pub unsafe extern "C" fn simple_wrap_get_buffer_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtArrayBuffer {
@@ -676,7 +676,7 @@ pub extern "C" fn simple_wrap_get_buffer_copy(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_buffer_no_copy(
+pub unsafe extern "C" fn simple_wrap_get_buffer_no_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtArrayBuffer {
@@ -686,7 +686,7 @@ pub extern "C" fn simple_wrap_get_buffer_no_copy(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_set_buffer_array(
+pub unsafe extern "C" fn simple_wrap_set_buffer_array(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
     buff_array: *mut FtArray,
@@ -697,7 +697,7 @@ pub extern "C" fn simple_wrap_set_buffer_array(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_buffer_array_copy(
+pub unsafe extern "C" fn simple_wrap_get_buffer_array_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
@@ -711,7 +711,7 @@ pub extern "C" fn simple_wrap_get_buffer_array_copy(
 }
 
 #[no_mangle]
-pub extern "C" fn simple_wrap_get_buffer_array_no_copy(
+pub unsafe extern "C" fn simple_wrap_get_buffer_array_no_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {

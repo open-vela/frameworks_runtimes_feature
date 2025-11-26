@@ -283,14 +283,14 @@ impl Simple for SimpleImpl {
     fn get_buffer_copy(&self) -> FeatureArrayBuffer {
         info!("wjf get_buffer_copy Called from C");
         let vec = vec![-1i8, 2, 3, 4, 5];
-        let ret = FeatureArrayBuffer::from_slice_copy(&self.instance, &vec);
-        ret
+
+        FeatureArrayBuffer::from_slice_copy(&self.instance, &vec)
     }
 
     fn get_buffer_no_copy(&self) -> FeatureArrayBuffer {
         info!("wjf get_buffer_no_copy Called from C");
-        let ret = FeatureArrayBuffer::from_vec(&self.instance, vec![-5i32, 4, 3, 2, 1]);
-        ret
+
+        FeatureArrayBuffer::from_vec(&self.instance, vec![-5i32, 4, 3, 2, 1])
     }
 
     fn set_buffer_array(&self, ab_array: FeatureReferenceArray<FeatureArrayBuffer>) {

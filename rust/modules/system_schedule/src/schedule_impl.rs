@@ -69,7 +69,7 @@ impl Schedule for ScheduleImpl {
             job.get_timeout(),
             self.get_package_name().unwrap(),
             job.get_trigger_method().as_str().to_owned(),
-            job.get_interval().into(),
+            job.get_interval(),
             job.get_params().as_str().to_owned(),
         );
         match self.sc.add_task(task).await {

@@ -3,8 +3,8 @@ use alloc::format;
 use alloc::{boxed::Box, string::String};
 use async_trait::async_trait;
 use core::convert::TryFrom;
-use feature_frm::*;
 use feature_frm::FeatureErrorCode::{FT_ERR_ARGS, FT_ERR_GENERAL};
+use feature_frm::*;
 use feature_macros::feature_instance;
 use futures::channel::oneshot;
 use futures::future::{self, Either};
@@ -146,12 +146,11 @@ impl SystemNetwork for SystemNetworkImpl {
         }
 
         // Convert type value to enum
-        let net_type = Self::network_type_from_value(type_value)
-            .map_err(|e| {
-                let error_msg = format!("Unknown network type value: {}", e);
-                error!("SystemNetwork::get_type failed: {}", error_msg);
-                PromiseError::new(FT_ERR_GENERAL as i32, error_msg)
-            })?;
+        let net_type = Self::network_type_from_value(type_value).map_err(|e| {
+            let error_msg = format!("Unknown network type value: {}", e);
+            error!("SystemNetwork::get_type failed: {}", error_msg);
+            PromiseError::new(FT_ERR_GENERAL as i32, error_msg)
+        })?;
         let type_str = net_type.as_str();
         let network_type = FeatureString::new(type_str);
 
@@ -277,7 +276,7 @@ impl NetType {
             NetType::None => "none",
             NetType::Ethernet => "ethernet",
             NetType::Cellular => "cellular",
-            NetType::Tun => "tun"
+            NetType::Tun => "tun",
         }
     }
 }

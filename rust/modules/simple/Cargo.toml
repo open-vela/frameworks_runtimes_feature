@@ -1,3 +1,5 @@
+cargo-features = ["path-bases"]
+
 [package]
 name = "simple"
 version.workspace = true

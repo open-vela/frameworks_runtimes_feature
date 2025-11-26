@@ -52,7 +52,7 @@ use alloc::boxed::Box;
 use vdk::async_runtime::runtime::{self, Runtime};
 
 #[no_mangle]
-pub extern "C" fn init_vdk_async_runtime(
+pub unsafe extern "C" fn init_vdk_async_runtime(
     uvloop_ptr: *mut core::ffi::c_void,
 ) -> *mut core::ffi::c_void {
     if uvloop_ptr.is_null() {
@@ -65,6 +65,7 @@ pub extern "C" fn init_vdk_async_runtime(
         uvloop_ptr
     );
 
+    #[allow(clippy::missing_transmute_annotations)]
     let rt = runtime::new_from_uv_loop(unsafe { core::mem::transmute(uvloop_ptr) })
         .expect("Failed to initialize VDK async runtime");
     Box::into_raw(rt) as *mut core::ffi::c_void

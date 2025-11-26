@@ -77,6 +77,7 @@ impl Promise for FtVoidPromise {
 pub struct FtArrayPromise;
 impl Promise for FtArrayPromise {
     type Output = *mut FtArray;
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     fn resolve(&self, id: FtPromiseId, instance: &FeatureInstance, value: Self::Output) {
         unsafe {
             FeatureFtArrayPromiseResolve(instance.as_handle(), id, value);

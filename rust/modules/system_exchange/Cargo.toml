@@ -1,3 +1,5 @@
+cargo-features = ["path-bases"]
+
 [package]
 name = "system_exchange"
 version.workspace = true
