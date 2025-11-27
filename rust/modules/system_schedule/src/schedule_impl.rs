@@ -54,12 +54,15 @@ impl ScheduleImpl {
 #[async_trait]
 impl Schedule for ScheduleImpl {
     async fn schedule_job(&mut self, job: Job) -> Result<SuccessInfo, PromiseError> {
+        let pkg_name = self
+            .get_package_name()
+            .ok_or(PromiseError::new(-27, "schedule_job failed!"))?;
         info!(
             "{} schedule.schedule_job, type: {}, timeout: {}, pkgname: {}, interval: {}, triggerMethod: {}, params: {}",
             FILE_TAG,
             job.get_type(),
             job.get_timeout(),
-            self.get_package_name().unwrap(),
+            pkg_name.clone(),
             job.get_interval(),
             job.get_trigger_method(),
             job.get_params().as_str()
@@ -67,7 +70,7 @@ impl Schedule for ScheduleImpl {
         let task = schedule::AddRequest::new(
             job.get_type().into(),
             job.get_timeout(),
-            self.get_package_name().unwrap(),
+            pkg_name,
             job.get_trigger_method().as_str().to_owned(),
             job.get_interval(),
             job.get_params().as_str().to_owned(),

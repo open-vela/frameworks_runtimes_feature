@@ -201,7 +201,7 @@ pub(crate) trait Exchange: FeatureInstanceTrait + Send + Sync {
 #[no_mangle]
 pub(crate) extern "C" fn system_exchange_onRegister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_exchange_on_register(&fname);
 }
 
@@ -254,7 +254,7 @@ pub(crate) extern "C" fn system_exchange_onDestroy(
 #[no_mangle]
 pub(crate) extern "C" fn system_exchange_onUnregister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_exchange_on_unregister(&fname);
 }
 
@@ -265,8 +265,10 @@ pub(crate) extern "C" fn system_exchange_wrap_set(
     pid: FtPromiseId,
     info: *mut system_exchange_SetInfo,
 ) {
-    let system_exchange =
-        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
+    let system_exchange = unsafe {
+        feature_glue::get_instance_data::<dyn Exchange>(handle)
+            .expect("Failed to get impl for 'Exchange' trait")
+    };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<FtStringPromise>::new(pid, handle) };
     let info = unsafe { SetInfo::from_raw(info) };
@@ -285,8 +287,10 @@ pub(crate) extern "C" fn system_exchange_wrap_get(
     pid: FtPromiseId,
     info: *mut system_exchange_GetInfo,
 ) {
-    let system_exchange =
-        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
+    let system_exchange = unsafe {
+        feature_glue::get_instance_data::<dyn Exchange>(handle)
+            .expect("Failed to get impl for 'Exchange' trait")
+    };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<GetRetPromise>::new(pid, handle) };
     let info = unsafe { GetInfo::from_raw(info) };
@@ -305,8 +309,10 @@ pub(crate) extern "C" fn system_exchange_wrap_remove(
     pid: FtPromiseId,
     info: *mut system_exchange_RemoveInfo,
 ) {
-    let system_exchange =
-        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
+    let system_exchange = unsafe {
+        feature_glue::get_instance_data::<dyn Exchange>(handle)
+            .expect("Failed to get impl for 'Exchange' trait")
+    };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<FtStringPromise>::new(pid, handle) };
     let info = unsafe { RemoveInfo::from_raw(info) };
@@ -325,8 +331,10 @@ pub(crate) extern "C" fn system_exchange_wrap_clear(
     pid: FtPromiseId,
     info: *mut system_exchange_ClearInfo,
 ) {
-    let system_exchange =
-        unsafe { feature_glue::get_instance_data::<dyn Exchange>(handle).unwrap() };
+    let system_exchange = unsafe {
+        feature_glue::get_instance_data::<dyn Exchange>(handle)
+            .expect("Failed to get impl for 'Exchange' trait")
+    };
     let system_exchange = unsafe { &mut *system_exchange };
     let promise = unsafe { FeaturePromise::<FtStringPromise>::new(pid, handle) };
     let info = unsafe { ClearInfo::from_raw(info) };

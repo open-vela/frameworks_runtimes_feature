@@ -204,7 +204,7 @@ pub(crate) trait SystemNetwork: FeatureInstanceTrait + Send + Sync {
 #[no_mangle]
 pub(crate) extern "C" fn system_network_onRegister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_network_on_register(&fname);
 }
 
@@ -257,7 +257,7 @@ pub(crate) extern "C" fn system_network_onDestroy(
 #[no_mangle]
 pub(crate) extern "C" fn system_network_onUnregister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_network_on_unregister(&fname);
 }
 
@@ -270,8 +270,10 @@ pub(crate) extern "C" fn system_network_wrap_getType(
     _adata: AppendData,
     promise_id: FtPromiseId,
 ) {
-    let system_network =
-        unsafe { feature_glue::get_instance_data::<dyn SystemNetwork>(handle).unwrap() };
+    let system_network = unsafe {
+        feature_glue::get_instance_data::<dyn SystemNetwork>(handle)
+            .expect("Failed to get impl for 'SystemNetwork' trait")
+    };
     let system_network = unsafe { &mut *system_network };
 
     let promise = unsafe { FeaturePromise::<TypeResultPromise>::new(promise_id, handle) };
@@ -291,8 +293,10 @@ pub(crate) extern "C" fn system_network_wrap_subscribe(
     promise_id: FtPromiseId,
     p: *mut system_network_param,
 ) {
-    let system_network =
-        unsafe { feature_glue::get_instance_data::<dyn SystemNetwork>(handle).unwrap() };
+    let system_network = unsafe {
+        feature_glue::get_instance_data::<dyn SystemNetwork>(handle)
+            .expect("Failed to get impl for 'SystemNetwork' trait")
+    };
     let system_network = unsafe { &mut *system_network };
 
     let p = unsafe { Param::new(FeaturePtr::from_raw(p), FeatureInstance::new(handle)) };
@@ -311,8 +315,10 @@ pub(crate) extern "C" fn system_network_wrap_unsubscribe(
     handle: FeatureInstanceHandle,
     _adata: AppendData,
 ) {
-    let system_network =
-        unsafe { feature_glue::get_instance_data::<dyn SystemNetwork>(handle).unwrap() };
+    let system_network = unsafe {
+        feature_glue::get_instance_data::<dyn SystemNetwork>(handle)
+            .expect("Failed to get impl for 'SystemNetwork' trait")
+    };
     let system_network = unsafe { &mut *system_network };
 
     system_network.unsubscribe();

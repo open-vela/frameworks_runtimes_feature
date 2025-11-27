@@ -1092,7 +1092,7 @@ pub(crate) trait AudioPlayer: FeatureInstanceTrait + Send + Sync {
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_onRegister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_media_audio_on_register(&fname);
 }
 
@@ -1133,7 +1133,7 @@ pub(crate) extern "C" fn system_media_audio_onDestroy(ctx: FeatureRuntimeContext
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_onUnregister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_media_audio_on_unregister(&fname);
 }
 
@@ -1143,7 +1143,10 @@ pub(crate) extern "C" fn system_media_audio_onUnregister(feature_name: FtString)
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_wrap_createAudioPlayer(handle: FeatureInstanceHandle,
     _adata: AppendData, params: *mut system_media_audio_CreatePlayerParams) -> FeatureInterfaceHandle {
-    let system_media_audio = unsafe { feature_glue::get_instance_data::<dyn SystemMediaAudio>(handle).unwrap() };
+    let system_media_audio = unsafe {
+        feature_glue::get_instance_data::<dyn SystemMediaAudio>(handle)
+            .expect("Failed to get impl for 'SystemMediaAudio' trait")
+    };
     let system_media_audio = unsafe {  &mut *system_media_audio };
 
     let params = unsafe { CreatePlayerParams::from_raw(params) };
@@ -1165,7 +1168,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_get_src(
         handle: FeatureInstanceHandle, _adata: AppendData) -> FtString {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let ret = native_player.get_src();
     if let Some(wrapper) = ret {
@@ -1178,7 +1184,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_set_src(
         handle: FeatureInstanceHandle, _adata: AppendData, src: FtString) {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let src = unsafe { FeatureString::from_raw(src) };
     native_player.set_src(src);
@@ -1187,7 +1196,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_get_duration(
         handle: FeatureInstanceHandle, _adata: AppendData) -> FtDouble {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let ret = native_player.get_duration();
     ret
@@ -1196,7 +1208,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_get_state(
         handle: FeatureInstanceHandle, _adata: AppendData) -> FtString {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let ret = native_player.get_state();
     if let Some(wrapper) = ret {
@@ -1209,7 +1224,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_set_state(
         handle: FeatureInstanceHandle, _adata: AppendData, state: FtString) {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let state = unsafe { FeatureString::from_raw(state) };
     native_player.set_state(state);
@@ -1218,7 +1236,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_get_currentTime(
         handle: FeatureInstanceHandle, _adata: AppendData) -> FtInt64 {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let ret = native_player.get_current_time();
     ret
@@ -1227,7 +1248,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_set_currentTime(
         handle: FeatureInstanceHandle, _adata: AppendData, current_time: FtInt64) {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     native_player.set_current_time(current_time);
 }
@@ -1235,7 +1259,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_get_playcount(
         handle: FeatureInstanceHandle, _adata: AppendData) -> FtInt {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let ret = native_player.get_playcount();
     ret
@@ -1244,7 +1271,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_set_playcount(
         handle: FeatureInstanceHandle, _adata: AppendData, playcount: FtInt) {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     native_player.set_playcount(playcount);
 }
@@ -1253,7 +1283,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_play(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     native_player.play();
 }
@@ -1262,7 +1295,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_pause(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     native_player.pause();
 }
@@ -1271,7 +1307,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_stop(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     native_player.stop();
 }
@@ -1280,7 +1319,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_release(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     native_player.release();
 }
@@ -1289,7 +1331,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_seek(
         handle: FeatureInterfaceHandle, _adata: AppendData, promise_id: FtPromiseId, params: *mut system_media_audio_PlayerSeekParams
 ) -> () {
-    let native_player = unsafe { feature_glue::get_instance_data::<dyn AudioPlayer>(handle).unwrap() };
+    let native_player = unsafe {
+        feature_glue::get_instance_data::<dyn AudioPlayer>(handle)
+            .expect("Failed to get impl for 'AudioPlayer' trait")
+    };
     let native_player = unsafe {  &mut *native_player };
     let params = unsafe { PlayerSeekParams::from_raw(params) };
     let promise = unsafe { FeaturePromise::<FtVoidPromise>::new(promise_id, handle) };
@@ -1306,7 +1351,10 @@ pub(crate) extern "C" fn system_media_audio_AudioPlayer_interface_native_player_
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_wrap_createAudioTrack(handle: FeatureInstanceHandle,
     _adata: AppendData, params: *mut system_media_audio_CreateTrackParams) -> FeatureInterfaceHandle {
-    let system_media_audio = unsafe { feature_glue::get_instance_data::<dyn SystemMediaAudio>(handle).unwrap() };
+    let system_media_audio = unsafe {
+        feature_glue::get_instance_data::<dyn SystemMediaAudio>(handle)
+            .expect("Failed to get impl for 'SystemMediaAudio' trait")
+    };
     let system_media_audio = unsafe {  &mut *system_media_audio };
     let params = unsafe { CreateTrackParams::from_raw(params) };
     let ret = system_media_audio.create_audio_track(params,);
@@ -1327,7 +1375,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_fi
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_get_state(
         handle: FeatureInstanceHandle, _adata: AppendData) -> FtString {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     let ret = native_track.get_state();
     if let Some(wrapper) = ret {
@@ -1340,7 +1391,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_ge
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_set_state(
         handle: FeatureInstanceHandle, _adata: AppendData, state: FtString) {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     let state = unsafe { FeatureString::from_raw(state) };
     native_track.set_state(state);
@@ -1350,7 +1404,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_se
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_play(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     native_track.play();
 }
@@ -1359,7 +1416,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_pl
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_write(
         handle: FeatureInterfaceHandle, _adata: AppendData, promise_id: FtPromiseId, params: *mut system_media_audio_TrackWriteParams
 ) -> () {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     let params = unsafe { TrackWriteParams::from_raw(params) };
     let promise = unsafe { FeaturePromise::<FtInt64Promise>::new(promise_id, handle) };
@@ -1376,7 +1436,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_wr
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_pause(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     native_track.pause();
 }
@@ -1385,7 +1448,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_pa
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_stop(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     native_track.stop();
 }
@@ -1394,7 +1460,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_st
 pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_release(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_track = unsafe { feature_glue::get_instance_data::<dyn AudioTrack>(handle).unwrap() };
+    let native_track = unsafe {
+        feature_glue::get_instance_data::<dyn AudioTrack>(handle)
+            .expect("Failed to get impl for 'AudioTrack' trait")
+    };
     let native_track = unsafe {  &mut *native_track };
     native_track.release();
 }
@@ -1403,7 +1472,10 @@ pub(crate) extern "C" fn system_media_audio_AudioTrack_interface_native_track_re
 #[no_mangle]
 pub(crate) extern "C" fn system_media_audio_wrap_createAudioRecorder(handle: FeatureInstanceHandle,
     _adata: AppendData, params: *mut system_media_audio_CreateRecorderParams) -> FeatureInterfaceHandle {
-    let system_media_audio = unsafe { feature_glue::get_instance_data::<dyn SystemMediaAudio>(handle).unwrap() };
+    let system_media_audio = unsafe {
+        feature_glue::get_instance_data::<dyn SystemMediaAudio>(handle)
+            .expect("Failed to get impl for 'SystemMediaAudio' trait")
+    };
     let system_media_audio = unsafe {  &mut *system_media_audio };
     let params = unsafe { CreateRecorderParams::from_raw(params) };
     let ret = system_media_audio.create_audio_recorder(params,);
@@ -1425,7 +1497,10 @@ pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recor
 pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recorder_start(
         handle: FeatureInterfaceHandle, _adata: AppendData, promise_id: FtPromiseId, params: *mut system_media_audio_RecorderStartParams
 ) -> () {
-    let native_recorder = unsafe { feature_glue::get_instance_data::<dyn AudioRecorder>(handle).unwrap() };
+    let native_recorder = unsafe {
+        feature_glue::get_instance_data::<dyn AudioRecorder>(handle)
+            .expect("Failed to get impl for 'AudioRecorder' trait")
+    };
     let native_recorder = unsafe {  &mut *native_recorder };
     let params = unsafe { RecorderStartParams::from_raw(params) };
     let promise = unsafe { FeaturePromise::<FtStringPromise>::new(promise_id, handle) };
@@ -1442,7 +1517,10 @@ pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recor
 pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recorder_pause(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_recorder = unsafe { feature_glue::get_instance_data::<dyn AudioRecorder>(handle).unwrap() };
+    let native_recorder = unsafe {
+        feature_glue::get_instance_data::<dyn AudioRecorder>(handle)
+            .expect("Failed to get impl for 'AudioRecorder' trait")
+    };
     let native_recorder = unsafe {  &mut *native_recorder };
     native_recorder.pause();
 }
@@ -1451,7 +1529,10 @@ pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recor
 pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recorder_resume(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_recorder = unsafe { feature_glue::get_instance_data::<dyn AudioRecorder>(handle).unwrap() };
+    let native_recorder = unsafe {
+        feature_glue::get_instance_data::<dyn AudioRecorder>(handle)
+            .expect("Failed to get impl for 'AudioRecorder' trait")
+    };
     let native_recorder = unsafe {  &mut *native_recorder };
     native_recorder.resume();
 }
@@ -1460,7 +1541,10 @@ pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recor
 pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recorder_stop(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_recorder = unsafe { feature_glue::get_instance_data::<dyn AudioRecorder>(handle).unwrap() };
+    let native_recorder = unsafe {
+        feature_glue::get_instance_data::<dyn AudioRecorder>(handle)
+            .expect("Failed to get impl for 'AudioRecorder' trait")
+    };
     let native_recorder = unsafe {  &mut *native_recorder };
     native_recorder.stop();
 }
@@ -1469,7 +1553,10 @@ pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recor
 pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recorder_release(
         handle: FeatureInterfaceHandle, _adata: AppendData
 ) -> () {
-    let native_recorder = unsafe { feature_glue::get_instance_data::<dyn AudioRecorder>(handle).unwrap() };
+    let native_recorder = unsafe {
+        feature_glue::get_instance_data::<dyn AudioRecorder>(handle)
+            .expect("Failed to get impl for 'AudioRecorder' trait")
+    };
     let native_recorder = unsafe {  &mut *native_recorder };
     native_recorder.release();
 }

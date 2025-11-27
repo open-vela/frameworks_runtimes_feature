@@ -68,30 +68,25 @@ pub(crate) fn process_properties(
     value: &Option<FeatureString>,
     scope: &Option<FeatureString>,
 ) -> Result<String, PromiseError> {
-    let key = key.as_ref();
-    let value = value.as_ref();
-    let scope = scope.as_ref();
+    let key = key
+        .as_ref()
+        .filter(|k| !k.is_empty())
+        .ok_or_else(|| PromiseError::new(-1, "key is null or empty"))?;
 
-    if key.is_none() || key.unwrap().is_empty() {
-        return Err(PromiseError::new(-1, "key is null"));
+    let scope = scope
+        .as_ref()
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| PromiseError::new(-1, "scope is null or empty"))?;
+
+    if op == ExchangeOp::Set {
+        let _ = value
+            .as_ref()
+            .filter(|v| !v.is_empty() && v.len() <= PROP_VALUE_MAX)
+            .ok_or_else(|| PromiseError::new(-1, "invalid value"))?;
     }
 
-    if scope.is_none() || scope.unwrap().is_empty() {
-        return Err(PromiseError::new(-1, "scope is null"));
-    }
-
-    if op == ExchangeOp::Set
-        && (value.as_ref().is_none()
-            || value.as_ref().unwrap().is_empty()
-            || value.as_ref().unwrap().len() > PROP_VALUE_MAX)
-    {
-        return Err(PromiseError::new(-1, "invalid value"));
-    }
-
-    let scope = scope.unwrap();
-    let key = key.unwrap();
     if !(scope.as_str() == "vendor" || scope.as_str() == "global") {
-        return Err(PromiseError::new(-1, "scope {scope} not support"));
+        return Err(PromiseError::new(-1, format!("scope {scope} not support")));
     }
 
     let scope_len = scope.len();
@@ -120,7 +115,11 @@ impl Exchange for ExchangeImpl {
             &info.get_value(),
             &info.get_scope(),
         )?;
-        let value = info.get_value().as_ref().unwrap().to_string();
+        let value = info
+            .get_value()
+            .as_ref()
+            .expect("Failed to get value!")
+            .to_string();
 
         match self.prop.set(&key, &value).await {
             Ok(_) => Ok(FeatureString::from("set success")),

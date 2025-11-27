@@ -9,11 +9,15 @@ fn main() {
         println!("cargo:rustc-cfg=static_binding");
         return;
     }
-    let apps_dir = PathBuf::from(env::var("NUTTX_APPS_DIR").unwrap());
+    let apps_dir = PathBuf::from(
+        env::var("NUTTX_APPS_DIR").expect("Failed to get the 'NUTTX_APPS_DIR' env value!"),
+    );
     // pass apps dir and vela dir from env
-    let vela_root = apps_dir.parent().unwrap();
+    let vela_root = apps_dir
+        .parent()
+        .expect("Failed to get the app dir parent!");
     let nuttx_inc_dirs: Vec<PathBuf> = env::var("NUTTX_INCLUDE_DIR")
-        .unwrap()
+        .expect("Failed to get the 'NUTTX_INCLUDE_DIR' env value!")
         .split(':')
         .map(PathBuf::from)
         .collect();
@@ -38,7 +42,7 @@ fn main() {
     let bindings = header_files
         .iter()
         .fold(bindgen::Builder::default(), |builder, header_file| {
-            builder.header(header_file.to_str().unwrap())
+            builder.header(header_file.to_str().expect("Failed to get header file!"))
         })
         .size_t_is_usize(false)
         .blocklist_type("max_align_t")
@@ -52,7 +56,13 @@ fn main() {
         .ctypes_prefix("cty")
         .clang_args(nuttx_inc_dirs.iter().map(|d| format!("-I{}", d.display())))
         .clang_arg(format!("-I{}", feature_include.display()))
-        .clang_arg(format!("-I{}", feature_include.parent().unwrap().display()))
+        .clang_arg(format!(
+            "-I{}",
+            feature_include
+                .parent()
+                .expect("Failed to get include dir parent!")
+                .display()
+        ))
         .clang_arg(format!("-I{}", quickjs_include.display()))
         .clang_arg(format!("-I{}", uv_include.display()))
         .clang_arg(format!("-I{}", uv_dir.display()))
@@ -62,7 +72,9 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings");
 
-    let output_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("feature_framework.rs");
+    let output_path =
+        PathBuf::from(env::var("OUT_DIR").expect("Failed to get 'OUT_DIR' env value!"))
+            .join("feature_framework.rs");
     bindings
         .write_to_file(&output_path)
         .expect("Couldn't write bindings!");

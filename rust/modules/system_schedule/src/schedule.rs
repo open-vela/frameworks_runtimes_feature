@@ -142,7 +142,7 @@ pub(crate) trait Schedule: FeatureInstanceTrait + Send + Sync {
 #[no_mangle]
 pub(crate) extern "C" fn system_schedule_onRegister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_schedule_on_register(&fname);
 }
 
@@ -195,7 +195,7 @@ pub(crate) extern "C" fn system_schedule_onDestroy(
 #[no_mangle]
 pub(crate) extern "C" fn system_schedule_onUnregister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().unwrap_or(""));
     system_schedule_on_unregister(&fname);
 }
 
@@ -206,7 +206,10 @@ pub(crate) extern "C" fn system_schedule_wrap_scheduleJob(
     pid: FtPromiseId,
     job: *mut system_schedule_Job,
 ) {
-    let schedule = unsafe { feature_glue::get_instance_data::<dyn Schedule>(handle).unwrap() };
+    let schedule = unsafe {
+        feature_glue::get_instance_data::<dyn Schedule>(handle)
+            .expect("Failed to get impl for 'Schedule' trait")
+    };
     let schedule = unsafe { &mut *schedule };
     let promise = unsafe { FeaturePromise::<SuccessInfoPromise>::new(pid, handle) };
     let job = unsafe { Job::from_raw(job) };
@@ -225,7 +228,10 @@ pub(crate) extern "C" fn system_schedule_wrap_cancel(
     pid: FtPromiseId,
     id: FtInt,
 ) {
-    let schedule = unsafe { feature_glue::get_instance_data::<dyn Schedule>(handle).unwrap() };
+    let schedule = unsafe {
+        feature_glue::get_instance_data::<dyn Schedule>(handle)
+            .expect("Failed to get impl for 'Schedule' trait")
+    };
     let schedule = unsafe { &mut *schedule };
     let promise = unsafe { FeaturePromise::<FtVoidPromise>::new(pid, handle) };
     runtime::spawn(async move {

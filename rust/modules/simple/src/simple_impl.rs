@@ -80,20 +80,18 @@ impl Simple for SimpleImpl {
 
     fn hoo(&mut self, a: &FeatureString) {
         info!("wjf hoo Called from C, a: \"{}\"", a.as_str());
-        let proto = self.get_prototype().unwrap();
-        info!("proto.str: {}", proto.str);
-        let _mgr = self.instance.get_manager();
-
-        if let Some(version) = proto.proto.get_package_version() {
-            info!("package version: {}", version);
-        } else {
-            info!("No package version available");
-        }
-
-        if let Some(name) = proto.proto.get_package_name() {
-            info!("package name: {}", name);
-        } else {
-            info!("No package name available");
+        if let Some(proto) = self.get_prototype() {
+            info!("proto.str: {}", proto.str);
+            if let Some(version) = proto.proto.get_package_version() {
+                info!("package version: {}", version);
+            } else {
+                info!("No package version available");
+            }
+            if let Some(name) = proto.proto.get_package_name() {
+                info!("package name: {}", name);
+            } else {
+                info!("No package name available");
+            }
         }
     }
 
@@ -111,13 +109,14 @@ impl Simple for SimpleImpl {
 
         // get and set chaps_1
         let chap1 = book.get_chap_1();
-        let chap1_title = chap1.get_title().unwrap();
+        let chap1_title = chap1.get_title().unwrap_or("".into());
         info!(
             "wjf chap1 title: {}, page_count: {}, is_end: {}",
             chap1_title,
             chap1.get_page_count(),
             chap1.get_is_end()
         );
+
         let mut new_chap1 = Chapter::new();
         new_chap1.set_title(FeatureString::new("chap ten"));
         new_chap1.set_page_count(150);
@@ -127,8 +126,9 @@ impl Simple for SimpleImpl {
         // get and set chaps_info
         let chaps_info = book.get_chaps_info();
         for i in 0..chaps_info.len() {
-            let chap_info = chaps_info.get(i).unwrap();
-            info!("wjf chap_info[{}]: {}", i, chap_info.as_str());
+            if let Some(chap_info) = chaps_info.get(i) {
+                info!("wjf chap_info[{}]: {}", i, chap_info.as_str());
+            }
         }
         let mut new_chaps_info = FeatureReferenceArray::<FeatureJsonObject>::new(2);
         let chap1_info =
@@ -155,9 +155,10 @@ impl Simple for SimpleImpl {
             chap.get_page_count()
         );
         if let Some(cb) = &self.chap_changed {
-            let chap_title = chap.get_title().unwrap();
-            // invoke callback
-            cb.invoke(1, chap_title);
+            if let Some(title) = chap.get_title() {
+                // invoke callback
+                cb.invoke(1, title);
+            }
         } else {
             info!("No chap_changed callback available");
         }
@@ -171,14 +172,15 @@ impl Simple for SimpleImpl {
     fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<Chapter>) {
         info!("wjf set_chapter_array Called from C");
         for i in 0..chap_array.len() {
-            let item: Chapter = chap_array.get(i).unwrap();
-            info!(
-                "wjf i: {}, chap.page_count: {}, chap.title: {}, chap.is_end: {}",
-                i,
-                item.get_page_count(),
-                item.get_title().unwrap(),
-                item.get_is_end()
-            );
+            if let Some(item) = chap_array.get(i) {
+                info!(
+                    "wjf i: {}, chap.page_count: {}, chap.title: {}, chap.is_end: {}",
+                    i,
+                    item.get_page_count(),
+                    item.get_title().unwrap_or("".into()),
+                    item.get_is_end()
+                );
+            };
         }
     }
 
@@ -296,9 +298,10 @@ impl Simple for SimpleImpl {
     fn set_buffer_array(&self, ab_array: FeatureReferenceArray<FeatureArrayBuffer>) {
         info!("wjf set_buffer_array Called from C");
         for i in 0..ab_array.len() {
-            let ab: FeatureArrayBuffer = ab_array.get(i).unwrap();
-            if let Some(vec) = ab.as_slice::<u8>() {
-                info!("ab_array[{}]: {:#?}", i, vec);
+            if let Some(ab) = ab_array.get(i) {
+                if let Some(vec) = ab.as_slice::<u8>() {
+                    info!("ab_array[{}]: {:#?}", i, vec);
+                }
             }
         }
     }
@@ -372,8 +375,9 @@ impl Animal for Dog {
     fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
         info!("wjf dog eat_foods Called from C");
         for i in 0..foods.len() {
-            let item = foods.get(i).unwrap();
-            info!("{} dog food: {}", i, *item);
+            if let Some(item) = foods.get(i) {
+                info!("{} dog food: {}", i, *item);
+            }
         }
         foods.len() as i32
     }
@@ -475,8 +479,9 @@ impl Animal for Pigeon {
     fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
         info!("wjf pigeon eat_foods Called from C");
         for i in 0..foods.len() {
-            let item = foods.get(i).unwrap();
-            info!("{} pigeon food: {}", i, *item);
+            if let Some(item) = foods.get(i) {
+                info!("{} pigeon food: {}", i, *item);
+            }
         }
         foods.len() as i32
     }
@@ -529,28 +534,3 @@ impl Drop for Pigeon {
         info!("wjf Pigeon droped");
     }
 }
-
-/*
-#[feature_method_async("simple_wrap_foo")]
-pub async fn foo(_feature: *mut c_void) -> *const i8 {
-    info!("wjf foo Called from C");
-    b"world\0".as_ptr() as *const i8
-}
-
-#[feature_method_async("simple_wrap_bar")]
-pub async fn bar(_feature: *mut c_void, a: c_int, b: c_float) -> c_int {
-    info!("wjf bar Called from C, a: {}, b: {}", a.to_string(), b);
-    a + 1
-}
-
-#[feature_method_async("simple_wrap_goo")]
-pub async fn goo(_feature: *mut c_void, a: c_double) -> c_double {
-    info!("wjf goo Called from C, a: {}", a);
-    a + 5.0
-}
-
-#[feature_method_async("simple_wrap_doo")]
-pub async fn doo(_feature: *mut c_void) {
-    info!("wjf doo Called from C")
-}
-*/

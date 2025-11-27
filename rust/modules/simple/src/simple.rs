@@ -344,7 +344,7 @@ pub trait Bird: Animal + Flyable + FeatureInstanceTrait {
 #[no_mangle]
 pub unsafe extern "C" fn simple_onRegister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().expect("Failed to get feature name"));
     simple_on_register(&fname);
 }
 
@@ -397,13 +397,16 @@ pub extern "C" fn simple_onDestroy(
 #[no_mangle]
 pub unsafe extern "C" fn simple_onUnregister(feature_name: FtString) {
     let name = unsafe { CStr::from_ptr(feature_name) };
-    let fname = FeatureString::new(name.to_str().unwrap());
+    let fname = FeatureString::new(name.to_str().expect("Failed to get feature name"));
     simple_on_unregister(&fname);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_wrap_foo(feature: *mut c_void, _adata: AppendData) -> FtString {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let ret = unsafe { (*simple).foo() };
     FeatureString::into_raw(ret)
 }
@@ -415,7 +418,10 @@ pub unsafe extern "C" fn simple_wrap_bar(
     a: FtInt,
     b: FtFloat,
 ) -> FtInt {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     unsafe { (*simple).bar(a, b) }
 }
 
@@ -425,13 +431,19 @@ pub unsafe extern "C" fn simple_wrap_goo(
     _adata: AppendData,
     a: FtDouble,
 ) -> FtDouble {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     unsafe { (*simple).goo(a) }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_wrap_doo(feature: *mut c_void, _adata: AppendData) {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     unsafe { (*simple).doo() }
 }
 
@@ -441,7 +453,10 @@ pub unsafe extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendDat
         info!("Error: Received null pointer!");
         return;
     }
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let fs = unsafe { FeatureString::from_raw(a) };
     unsafe {
         (*simple).hoo(&fs);
@@ -457,7 +472,10 @@ pub unsafe extern "C" fn simple_wrap_set_chapter(
     if chap.is_null() {
         info!("wjf set_chapter() Received null pointer!");
     }
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     unsafe { (*simple).set_chapter(Chapter::from_raw(chap)) }
 }
 
@@ -466,7 +484,10 @@ pub unsafe extern "C" fn simple_wrap_get_chapter(
     feature: *mut c_void,
     _adata: AppendData,
 ) -> *mut simple_Chapter {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let simple = unsafe { &*simple };
     let chap = simple.get_chapter();
     chap.map_or(ptr::null::<simple_Chapter>() as *mut _, |v| {
@@ -484,7 +505,10 @@ pub unsafe extern "C" fn simple_wrap_set_chapter_array(
         info!("wjf set_chapter_array() Received null pointer!");
     }
 
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let simple = unsafe { &mut *simple };
     unsafe {
         let chaps = FeatureReferenceArray::<Chapter>::from_raw(chap_array);
@@ -497,7 +521,10 @@ pub unsafe extern "C" fn simple_wrap_get_chapter_array(
     feature: *mut c_void,
     _adata: AppendData,
 ) -> *mut FtArray {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let chaps = unsafe { (*simple).get_chapter_array() };
     chaps.map_or(ptr::null::<FtArray>() as *mut _, |b| b.into_raw())
 }
@@ -511,7 +538,10 @@ pub unsafe extern "C" fn simple_wrap_set_book(
     if book.is_null() {
         info!("wjf set_book() Received null pointer!");
     } else {
-        let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+        let simple = unsafe {
+            feature_glue::get_instance_data::<dyn Simple>(feature)
+                .expect("Failed to get impl for 'Simple' trait")
+        };
         unsafe {
             let book = Book::new(FeaturePtr::from_raw(book), FeatureInstance::new(feature));
             (*simple).set_book(book);
@@ -524,7 +554,10 @@ pub unsafe extern "C" fn simple_wrap_get_book(
     feature: *mut c_void,
     _adata: AppendData,
 ) -> *mut simple_Book {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let book = unsafe { (*simple).get_book() };
     book.map_or(ptr::null::<Book>() as *mut _, |b| {
         b.inner.clone().into_raw()
@@ -538,7 +571,10 @@ pub unsafe extern "C" fn simple_wrap_moo(
     a: FtInt,
     id: FtCallbackId,
 ) {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let cb = MooCb::new(id, FeatureInstance::new(feature));
     unsafe { (*simple).moo(a, cb) }
 }
@@ -550,7 +586,10 @@ pub unsafe extern "C" fn simple_wrap_noo(
     resolve: FtBool,
     id: FtPromiseId,
 ) {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let simple = unsafe { &mut *simple };
     let promise = unsafe { FeaturePromise::<FtIntPromise>::new(id, feature) };
     runtime::spawn(async move {
@@ -568,7 +607,10 @@ pub unsafe extern "C" fn simple_wrap_poo(
     resolve: FtBool,
     id: FtPromiseId,
 ) {
-    let simple = unsafe { feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let simple = unsafe { &mut *simple };
     let promise = unsafe { FeaturePromise::<FtStringPromise>::new(id, feature) };
     runtime::spawn(async move {
@@ -586,7 +628,10 @@ pub unsafe extern "C" fn simple_wrap_createDog(
     _adata: AppendData,
     _type: FtInt,
 ) -> FeatureInterfaceHandle {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     if let Some(dog) = simple.create_dog() {
         dog.as_handle()
     } else {
@@ -599,7 +644,10 @@ pub unsafe extern "C" fn simple_wrap_createAirplane(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     if let Some(airplane) = simple.create_airplane() {
         airplane.as_handle()
     } else {
@@ -612,7 +660,10 @@ pub unsafe extern "C" fn simple_wrap_createPigeon(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     if let Some(pigeon) = simple.create_pigeon() {
         pigeon.as_handle()
     } else {
@@ -625,7 +676,10 @@ pub unsafe extern "C" fn simple_wrap_createCat(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FeatureInterfaceHandle {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     if let Some(cat) = simple.create_cat() {
         cat.as_handle()
     } else {
@@ -639,7 +693,10 @@ pub unsafe extern "C" fn simple_wrap_setAnimal(
     _adata: AppendData,
     animal: FeatureInterfaceHandle,
 ) {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     simple.set_animal(FeatureInstance::new(animal))
 }
 
@@ -649,7 +706,10 @@ pub unsafe extern "C" fn simple_wrap_invoke_event(
     _adata: AppendData,
     event_name: FtString,
 ) {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let name = unsafe { FeatureString::from_raw(event_name) };
     simple.invoke_event(&name);
 }
@@ -660,7 +720,10 @@ pub unsafe extern "C" fn simple_wrap_set_buffer(
     _adata: AppendData,
     buff: FtArrayBuffer,
 ) {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let abuf = unsafe { FeatureArrayBuffer::from_raw(buff) };
     simple.set_buffer(abuf);
 }
@@ -670,7 +733,10 @@ pub unsafe extern "C" fn simple_wrap_get_buffer_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtArrayBuffer {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let abuf = simple.get_buffer_copy();
     abuf.into_raw()
 }
@@ -680,7 +746,10 @@ pub unsafe extern "C" fn simple_wrap_get_buffer_no_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtArrayBuffer {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let abuf = simple.get_buffer_no_copy();
     abuf.into_raw()
 }
@@ -691,7 +760,10 @@ pub unsafe extern "C" fn simple_wrap_set_buffer_array(
     _adata: AppendData,
     buff_array: *mut FtArray,
 ) {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let ab_array = unsafe { FeatureReferenceArray::<FeatureArrayBuffer>::from_raw(buff_array) };
     simple.set_buffer_array(ab_array);
 }
@@ -701,7 +773,10 @@ pub unsafe extern "C" fn simple_wrap_get_buffer_array_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let ret = simple.get_buffer_array_copy();
     if let Some(wrapper) = ret {
         wrapper.into_raw()
@@ -715,7 +790,10 @@ pub unsafe extern "C" fn simple_wrap_get_buffer_array_no_copy(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
-    let simple = unsafe { &*feature_glue::get_instance_data::<dyn Simple>(feature).unwrap() };
+    let simple = unsafe {
+        &*feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
     let ret = simple.get_buffer_array_no_copy();
     if let Some(wrapper) = ret {
         wrapper.into_raw()
@@ -736,7 +814,10 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_get_name(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
-    let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
+    let dog = unsafe {
+        &*feature_glue::get_instance_data::<dyn Animal>(feature)
+            .expect("Failed to get impl for 'Animal' trait")
+    };
     let ret = dog.get_name();
     FeatureString::into_raw(ret)
 }
@@ -747,7 +828,10 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_set_name(
     _adata: AppendData,
     name: FtString,
 ) {
-    let dog = unsafe { feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
+    let dog = unsafe {
+        feature_glue::get_instance_data::<dyn Animal>(feature)
+            .expect("Failed to get impl for 'Animal' trait")
+    };
     let fname = unsafe { FeatureString::from_raw(name) };
     (*dog).set_name(fname);
 }
@@ -757,7 +841,10 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_get_legCount(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtInt {
-    let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
+    let dog = unsafe {
+        &*feature_glue::get_instance_data::<dyn Animal>(feature)
+            .expect("Failed to get impl for 'Animal' trait")
+    };
     dog.get_leg_count()
 }
 
@@ -767,7 +854,10 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_eatFoods(
     _adata: AppendData,
     foods: *mut FtArray,
 ) -> FtInt {
-    let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
+    let dog = unsafe {
+        &*feature_glue::get_instance_data::<dyn Animal>(feature)
+            .expect("Failed to get impl for 'Animal' trait")
+    };
     let foods = unsafe { FeaturePrimitiveArray::<FeatureString>::from_raw(foods) };
     dog.eat_foods(&foods)
 }
@@ -779,7 +869,10 @@ pub unsafe extern "C" fn simple_Animal_interface_dog_run(
     distance: FtInt,
     destination: FtString,
 ) -> FtString {
-    let dog = unsafe { &*feature_glue::get_instance_data::<dyn Animal>(feature).unwrap() };
+    let dog = unsafe {
+        &*feature_glue::get_instance_data::<dyn Animal>(feature)
+            .expect("Failed to get impl for 'Animal' trait")
+    };
     let destination = unsafe { FeatureString::from_raw(destination) };
     let ret = dog.run(distance, &destination);
     FeatureString::into_raw(ret)
@@ -797,7 +890,10 @@ pub unsafe extern "C" fn simple_Flyable_interface_airplane_fly(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
-    let airplane = unsafe { &*feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
+    let airplane = unsafe {
+        &*feature_glue::get_instance_data::<dyn Flyable>(feature)
+            .expect("Failed to get impl for 'Flyable' trait")
+    };
     let ret = airplane.fly();
     FeaturePrimitiveArray::into_raw(ret)
 }
@@ -807,7 +903,10 @@ pub unsafe extern "C" fn simple_Flyable_interface_airplane_get_breed(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
-    let airplane = unsafe { &*feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
+    let airplane = unsafe {
+        &*feature_glue::get_instance_data::<dyn Flyable>(feature)
+            .expect("Failed to get impl for 'Flyable' trait")
+    };
     let ret = airplane.get_breed();
     FeatureString::into_raw(ret)
 }
@@ -818,7 +917,10 @@ pub unsafe extern "C" fn simple_Flyable_interface_airplane_set_breed(
     _adata: AppendData,
     breed: FtString,
 ) {
-    let airplane = unsafe { feature_glue::get_instance_data::<dyn Flyable>(feature).unwrap() };
+    let airplane = unsafe {
+        feature_glue::get_instance_data::<dyn Flyable>(feature)
+            .expect("Failed to get impl for 'Flyable' trait")
+    };
     let fbreed = unsafe { FeatureString::from_raw(breed) };
     (*airplane).set_breed(fbreed);
 }
@@ -835,7 +937,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_name(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let ret = pigeon.get_name();
     FeatureString::into_raw(ret)
 }
@@ -846,7 +951,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_name(
     _adata: AppendData,
     name: FtString,
 ) {
-    let pigeon = unsafe { feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let fname = unsafe { FeatureString::from_raw(name) };
     (*pigeon).set_name(fname);
 }
@@ -856,7 +964,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_legCount(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtInt {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     pigeon.get_leg_count()
 }
 
@@ -866,7 +977,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_eatFoods(
     _adata: AppendData,
     foods: *mut FtArray,
 ) -> FtInt {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let foods = unsafe { FeaturePrimitiveArray::<FeatureString>::from_raw(foods) };
     pigeon.eat_foods(&foods)
 }
@@ -878,7 +992,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_run(
     distance: FtInt,
     destination: FtString,
 ) -> FtString {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let fdestination = unsafe { FeatureString::from_raw(destination) };
     let ret = pigeon.run(distance, &fdestination);
     FeatureString::into_raw(ret)
@@ -889,7 +1006,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_fly(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> *mut FtArray {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let ret = pigeon.fly();
     FeaturePrimitiveArray::into_raw(ret)
 }
@@ -899,7 +1019,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_breed(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtString {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let ret = pigeon.get_breed();
     FeatureString::into_raw(ret)
 }
@@ -910,7 +1033,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_breed(
     _adata: AppendData,
     breed: FtString,
 ) {
-    let pigeon = unsafe { feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     let fbreed = unsafe { FeatureString::from_raw(breed) };
     (*pigeon).set_breed(fbreed);
 }
@@ -920,7 +1046,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_get_weight(
     feature: FeatureInstanceHandle,
     _adata: AppendData,
 ) -> FtInt {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     pigeon.get_weight()
 }
 
@@ -930,7 +1059,10 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_set_weight(
     _adata: AppendData,
     weight: FtInt,
 ) {
-    let pigeon = unsafe { feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     (*pigeon).set_weight(weight);
 }
 
@@ -940,6 +1072,9 @@ pub unsafe extern "C" fn simple_Bird_interface_pigeon_walk(
     _adata: AppendData,
     pid: FtPromiseId,
 ) {
-    let pigeon = unsafe { &*feature_glue::get_instance_data::<dyn Bird>(feature).unwrap() };
+    let pigeon = unsafe {
+        &*feature_glue::get_instance_data::<dyn Bird>(feature)
+            .expect("Failed to get impl for 'Bird' trait")
+    };
     pigeon.walk(pid)
 }
