@@ -25,6 +25,9 @@ echo "Setting up vela-nightly Rust toolchain..."
 SYSTEM=$(uname | tr '[:upper:]' '[:lower:]')
 if [ -d $T/prebuilts/rust/${SYSTEM}/nightly/rustc/bin ]; then
     RUST_TOOLCHAIN_PATH=$T/prebuilts/rust/${SYSTEM}/nightly/rustc/bin
+else
+    echo "no rust toolchain found, exit..."
+    exit 0
 fi
 export PATH=$RUST_TOOLCHAIN_PATH:$PATH
 export RUST_SRC_PATH=$T/prebuilts/rust/${SYSTEM}/nightly/rustc/lib/rustlib/src/rust/library
