@@ -6,7 +6,7 @@
 
 namespace ai {
 static const std::string kWhitelistPrefixes = "com.vela.system";
-static const char* valid_engine_types[] = { "volcengine", "gummy" };
+static const char* valid_engine_types[] = { "volcengine", "aliyun" };
 static const int valid_engine_types_count = sizeof(valid_engine_types) / sizeof(valid_engine_types[0]);
 inline bool whitelistVerifi(const std::string& str)
 {
@@ -18,7 +18,11 @@ inline bool setupAuthFromConfig(const cJSON* root, const std::string& engine_typ
     if (engine_type == "volcengine") {
         cJSON* app_key = cJSON_GetObjectItem(root, "accessKey");
         cJSON* app_id = cJSON_GetObjectItem(root, "appKey");
+        cJSON* module_name = cJSON_GetObjectItem(root, "model");
         if (!app_key || !cJSON_IsString(app_key) || !app_id || !cJSON_IsString(app_id)) {
+            return false;
+        }
+        if (!module_name || !cJSON_IsString(module_name)) {
             return false;
         }
 
@@ -29,15 +33,17 @@ inline bool setupAuthFromConfig(const cJSON* root, const std::string& engine_typ
         auth->version = 1;
         auth->app_id = app_id->valuestring;
         auth->app_key = app_key->valuestring;
+        auth->model = module_name->valuestring;
 
         ai_auth.version = 1;
         ai_auth.engine_type = 0;
         ai_auth.auth = auth;
         return true;
-    } else if (engine_type == "gummy") {
+    } else if (engine_type == "aliyun") {
         // TODO: 实现阿里云相关赋值逻辑
         cJSON* api_key = cJSON_GetObjectItem(root, "apiKey");
-        if (!api_key || !cJSON_IsString(api_key)) {
+        cJSON* module_name = cJSON_GetObjectItem(root, "model");
+        if (!api_key || !cJSON_IsString(api_key) || !module_name || !cJSON_IsString(module_name)) {
             return false;
         }
 
@@ -47,6 +53,7 @@ inline bool setupAuthFromConfig(const cJSON* root, const std::string& engine_typ
         }
         auth->version = 1;
         auth->API_Key = api_key->valuestring;
+        auth->model = module_name->valuestring;
 
         ai_auth.version = 1;
         ai_auth.engine_type = 1;
