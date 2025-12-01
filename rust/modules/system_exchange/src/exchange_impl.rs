@@ -5,7 +5,7 @@ use alloc::{boxed::Box, string::String};
 use async_trait::async_trait;
 use feature_frm::*;
 use feature_macros::feature_instance;
-use vdk::log::info;
+use vdk::log::{error, info};
 use vdk::property::Property;
 
 const FILE_TAG: &str = "[jidl_feature] exchange_impl";
@@ -106,7 +106,13 @@ pub(crate) fn process_properties(
 
 #[async_trait]
 impl Exchange for ExchangeImpl {
-    async fn set(&mut self, info: SetInfo) -> Result<FeatureString, PromiseError> {
+    async fn set(&mut self, info: Option<SetInfo>) -> Result<FeatureString, PromiseError> {
+        let info = if let Some(info) = info {
+            info
+        } else {
+            error!("system_exchange set: info is none");
+            return Err(PromiseError::new(-2, "info is none"));
+        };
         info!("{} exchange.set called", FILE_TAG);
 
         let key = process_properties(
@@ -127,7 +133,13 @@ impl Exchange for ExchangeImpl {
         }
     }
 
-    async fn get(&mut self, info: GetInfo) -> Result<GetRet, PromiseError> {
+    async fn get(&mut self, info: Option<GetInfo>) -> Result<GetRet, PromiseError> {
+        let info = if let Some(info) = info {
+            info
+        } else {
+            error!("system_exchange get: info is none");
+            return Err(PromiseError::new(-2, "info is none"));
+        };
         info!("{} exchange.get called", FILE_TAG);
 
         let key = process_properties(ExchangeOp::Get, &info.get_key(), &None, &info.get_scope())?;
@@ -142,7 +154,13 @@ impl Exchange for ExchangeImpl {
         }
     }
 
-    async fn remove(&mut self, info: RemoveInfo) -> Result<FeatureString, PromiseError> {
+    async fn remove(&mut self, info: Option<RemoveInfo>) -> Result<FeatureString, PromiseError> {
+        let info = if let Some(info) = info {
+            info
+        } else {
+            error!("system_exchange remove: info is none");
+            return Err(PromiseError::new(-2, "info is none"));
+        };
         info!("{} exchange.remove called", FILE_TAG);
 
         let key = process_properties(
@@ -158,7 +176,7 @@ impl Exchange for ExchangeImpl {
         }
     }
 
-    async fn clear(&mut self, _info: ClearInfo) -> Result<FeatureString, PromiseError> {
+    async fn clear(&mut self, _info: Option<ClearInfo>) -> Result<FeatureString, PromiseError> {
         info!("{} exchange.clear called", FILE_TAG);
 
         Ok(FeatureString::from("clear success"))

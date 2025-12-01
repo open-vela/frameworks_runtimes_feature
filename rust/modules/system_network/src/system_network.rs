@@ -124,11 +124,7 @@ impl TypeResult {
     // member getters and setters
     #[allow(dead_code)]
     pub(crate) fn get_type(&self) -> Option<FeatureString> {
-        if self._type.is_null() {
-            return None;
-        }
-        let ret = unsafe { FeatureString::from_raw(self._type) };
-        Some(ret)
+        unsafe { FeatureString::from_raw(self._type) }
     }
 
     #[allow(dead_code)]
@@ -193,7 +189,7 @@ impl Promise for TypeResultPromise {
 #[async_trait]
 pub(crate) trait SystemNetwork: FeatureInstanceTrait + Send + Sync {
     async fn get_type(&mut self) -> Result<TypeResult, PromiseError>;
-    async fn subscribe(&mut self, p: Param) -> Result<(), PromiseError>;
+    async fn subscribe(&mut self, p: Option<Param>) -> Result<(), PromiseError>;
     fn unsubscribe(&mut self) -> ();
 }
 
@@ -298,8 +294,8 @@ pub(crate) extern "C" fn system_network_wrap_subscribe(
             .expect("Failed to get impl for 'SystemNetwork' trait")
     };
     let system_network = unsafe { &mut *system_network };
-
-    let p = unsafe { Param::new(FeaturePtr::from_raw(p), FeatureInstance::new(handle)) };
+    let p =
+        unsafe { FeaturePtr::from_raw(p) }.map(|ptr| Param::new(ptr, FeatureInstance::new(handle)));
     let promise = unsafe { FeaturePromise::<FtVoidPromise>::new(promise_id, handle) };
     runtime::spawn(async move {
         match system_network.subscribe(p).await {

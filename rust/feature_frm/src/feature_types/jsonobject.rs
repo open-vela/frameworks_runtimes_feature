@@ -21,7 +21,7 @@ pub struct FeatureJsonObject(FeaturePtr<_FtJsonObject>, usize);
 impl FeatureReferenceType for FeatureJsonObject {
     type Target = _FtJsonObject;
 
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
+    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Option<Self> {
         Self::from_raw(raw_ptr)
     }
 
@@ -35,7 +35,8 @@ impl FeatureJsonObject {
         let str = s.as_ref();
         let c_str = CString::new(str).expect("CString::new failed");
         let obj = unsafe { FeatureNewJsonObject(c_str.as_ptr()) };
-        let ret = Self::from_raw_with_len(obj, str.len());
+        let ret =
+            Self::from_raw_with_len(obj, str.len()).expect("FeatureNewJsonObject return null");
         unsafe {
             FeatureFreeValue(obj as *mut c_void);
         }
@@ -43,19 +44,25 @@ impl FeatureJsonObject {
     }
 
     /// Creates a `FeatureJsonObject` from a raw pointer.
-    /// It will increment the reference count of the underlying FtJsonObject.
-    pub unsafe fn from_raw(obj: FtJsonObject) -> Self {
-        assert!(!obj.is_null());
+    /// It increments the reference count of the underlying FtJsonObject.
+    pub unsafe fn from_raw(obj: FtJsonObject) -> Option<Self> {
+        if obj.is_null() {
+            return None;
+        }
         let json_str = unsafe { FeatureGetJsonString(obj) };
-        assert!(!json_str.is_null());
+        if json_str.is_null() {
+            return None;
+        }
         let len = unsafe { strlen(json_str) };
         Self::from_raw_with_len(obj, len)
     }
 
-    fn from_raw_with_len(obj: FtJsonObject, len: usize) -> Self {
-        assert!(!obj.is_null());
-        let ptr = unsafe { FeaturePtr::from_raw(obj as *mut _) };
-        Self(ptr, len)
+    fn from_raw_with_len(obj: FtJsonObject, len: usize) -> Option<Self> {
+        if obj.is_null() {
+            return None;
+        }
+        let ptr = unsafe { FeaturePtr::from_raw(obj as *mut _).expect("already checked above") };
+        Some(Self(ptr, len))
     }
 
     pub fn into_raw(self) -> FtJsonObject {

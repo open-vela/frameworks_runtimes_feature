@@ -4,6 +4,13 @@ console.log('simple test begin ====================');
 let foo_ret = test.foo();
 console.log('foo_ret:', foo_ret);
 
+try {
+    console.log("testing passing null as number...")
+    test.bar(null);
+} catch (err) {
+    console.log(`error happened as expected: ${err}`);
+}
+
 let bar_ret = test.bar(1);
 console.log('bar_ret:', bar_ret);
 test.bar(2, 1.234);
@@ -13,6 +20,9 @@ console.log('goo_ret:', goo_ret);
 test.goo();
 
 test.doo();
+
+console.log("testing passing null as string...")
+test.hoo(null);
 
 test.hoo("hello world");
 
@@ -33,7 +43,7 @@ test.set_book({
         title: "chap one",
         is_end: false
     },
-    chap_changed: function(index, title) {
+    chap_changed: function (index, title) {
         console.log('chap_changed, index=', index, ', title=', title, '\n');
     },
     book_info: {
@@ -73,7 +83,7 @@ test.set_chapter({
 let chap_ret_2 = test.get_chapter();
 console.log(`got chapter 100: ${JSON.stringify(chap_ret_2)}`);
 
-test.moo(5, function(x, y, z) {
+test.moo(5, function (x, y, z) {
     console.log('moo:x=', x, ', y=', y, ',z=', z, '\n');
 });
 
@@ -99,12 +109,12 @@ test.noo(true, {
     success: (a) => { console.log("noo callback success, a:", a); },
     fail: (msg, code) => { console.log("noo callback fail, code:", code, ", msg:", msg); },
     complete: () => { console.log("noo callback complete"); }
-  })
+})
 test.noo(false, {
     success: (a) => { console.log("noo callback success, a:", a); },
     fail: (msg, code) => { console.log("noo callback fail, code:", code, ", msg:", msg); },
     complete: () => { console.log("noo callback complete"); }
-  })
+})
 console.log("did call noo() as callbacks\n\n");
 
 console.log("will call poo() as promise");
@@ -145,13 +155,13 @@ function on_data_changed_4(data) {
 };
 
 let data_changed_array_1 = [
-   on_data_changed_2,
-   on_data_changed_3
+    on_data_changed_2,
+    on_data_changed_3
 ]
 
 let data_changed_array_2 = [
-   on_data_changed_1,
-   on_data_changed_4
+    on_data_changed_1,
+    on_data_changed_4
 ]
 
 console.log("testing event data_changed = on_data_changed_1")
@@ -206,13 +216,13 @@ function on_state_changed_4(state) {
 };
 
 let state_changed_array_1 = [
-   on_state_changed_2,
-   on_state_changed_3
+    on_state_changed_2,
+    on_state_changed_3
 ]
 
 let state_changed_array_2 = [
-   on_state_changed_1,
-   on_state_changed_4
+    on_state_changed_1,
+    on_state_changed_4
 ]
 
 console.log("testing event state_changed = on_state_changed_1")
@@ -294,7 +304,7 @@ test_2.set_buffer(buff_no_copy);
 let buff_0 = new Uint8Array([1, 2, 3, 4, 5]);
 let buff_1 = new Uint8Array([5, 4, 3, 2, 1]);
 let buff_2 = new Uint8Array([2, 1, 5, 4, 3]);
-let buff_array = [ buff_0.buffer, buff_1.buffer, buff_2.buffer ]
+let buff_array = [buff_0.buffer, buff_1.buffer, buff_2.buffer]
 console.log('test.set_buffer_array(buff_array)');
 test.set_buffer_array(buff_array);
 

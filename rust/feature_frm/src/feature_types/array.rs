@@ -28,14 +28,18 @@ impl FeatureRawArray {
         let array = unsafe {
             let raw_ptr = FeatureCreateArray(ptr::null_mut(), capacity, elem_type);
             assert!(!raw_ptr.is_null());
-            FeaturePtr::<FtArray>::from_raw(raw_ptr)
+            FeaturePtr::<FtArray>::from_raw(raw_ptr).expect("already checked above")
         };
         Self(array)
     }
 
-    unsafe fn from_raw(ptr: *mut FtArray) -> Self {
-        assert!(!ptr.is_null());
-        Self(FeaturePtr::from_raw(ptr))
+    unsafe fn from_raw(ptr: *mut FtArray) -> Option<Self> {
+        if ptr.is_null() {
+            return None;
+        }
+        Some(Self(
+            FeaturePtr::from_raw(ptr).expect("already checked above"),
+        ))
     }
 
     fn into_raw(self) -> *mut FtArray {
@@ -108,11 +112,14 @@ impl<T: FeatureValueType> FeaturePrimitiveArray<T> {
         }
     }
 
-    pub unsafe fn from_raw(ptr: *mut FtArray) -> Self {
-        Self {
-            inner: FeatureRawArray::from_raw(ptr),
-            elem_type: PhantomData,
+    pub unsafe fn from_raw(ptr: *mut FtArray) -> Option<Self> {
+        if ptr.is_null() {
+            return None;
         }
+        Some(Self {
+            inner: FeatureRawArray::from_raw(ptr).expect("already checked above"),
+            elem_type: PhantomData,
+        })
     }
 
     pub fn into_raw(self) -> *mut FtArray {
@@ -208,11 +215,14 @@ impl<T: FeatureReferenceType> FeatureReferenceArray<T> {
         }
     }
 
-    pub unsafe fn from_raw(ptr: *mut FtArray) -> Self {
-        Self {
-            inner: FeatureRawArray::from_raw(ptr),
-            elem_type: PhantomData,
+    pub unsafe fn from_raw(ptr: *mut FtArray) -> Option<Self> {
+        if ptr.is_null() {
+            return None;
         }
+        Some(Self {
+            inner: FeatureRawArray::from_raw(ptr).expect("already checked above"),
+            elem_type: PhantomData,
+        })
     }
 
     pub fn into_raw(self) -> *mut FtArray {
@@ -242,7 +252,10 @@ impl<T: FeatureReferenceType> FeatureReferenceArray<T> {
             *((buf as *mut u8).add(idx * elem_size) as *mut *mut T::Target)
         };
 
-        Some(unsafe { T::from_raw(elem_ptr) })
+        if elem_ptr.is_null() {
+            return None;
+        }
+        Some(unsafe { T::from_raw(elem_ptr).expect("already checked above") })
     }
 
     pub fn enlarge(&mut self, new_size: usize) -> bool {

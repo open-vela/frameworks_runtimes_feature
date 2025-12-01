@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use core::time::Duration;
 use feature_frm::*;
 use feature_macros::feature_instance;
-use vdk::log::info;
+use vdk::log::{error, info};
 use vdk::async_runtime::time;
 
 // const FILE_TAG: &str = "[jidl_feature] system_media_audio_impl";
@@ -47,21 +47,21 @@ impl SystemMediaAudioImpl {
 
 #[async_trait]
 impl SystemMediaAudio for SystemMediaAudioImpl {
-    fn create_audio_player(&mut self, _params: CreatePlayerParams) -> Option<FeatureInstance> {
+    fn create_audio_player(&mut self, _params: Option<CreatePlayerParams>) -> Option<FeatureInstance> {
         info!("SystemMediaAudio create_audio_player");
         let instance = create_audio_player_instance(&self.instance);
         instance.attach(Box::new(AudioPlayerImpl::new(instance.clone())) as Box<dyn AudioPlayer>);
         Some(instance)
     }
 
-    fn create_audio_track(&mut self, _params: CreateTrackParams) -> Option<FeatureInstance> {
+    fn create_audio_track(&mut self, _params: Option<CreateTrackParams>) -> Option<FeatureInstance> {
         info!("SystemMediaAudio create_audio_track");
         let instance = create_audio_track_instance(&self.instance);
         instance.attach(Box::new(AudioTrackImpl::new(instance.clone())) as Box<dyn AudioTrack>);
         Some(instance)
     }
 
-    fn create_audio_recorder(&mut self, _params: CreateRecorderParams) -> Option<FeatureInstance> {
+    fn create_audio_recorder(&mut self, _params: Option<CreateRecorderParams>) -> Option<FeatureInstance> {
         info!("SystemMediaAudio create_audio_recorder");
         let instance = create_audio_recorder_instance(&self.instance);
         instance.attach(Box::new(AudioRecorderImpl::new(instance.clone())) as Box<dyn AudioRecorder>);
@@ -96,7 +96,13 @@ impl AudioPlayer for AudioPlayerImpl {
         Some(FeatureString::new("http://www.baidu.com"))
     }
 
-    fn set_src(&mut self, src: FeatureString) {
+    fn set_src(&mut self, src: Option<FeatureString>) {
+        let src = if let Some(src) = src {
+            src
+        } else {
+            error!("AudioPlayer set_src: src is none");
+            return;
+        };
         info!("AudioPlayerImpl set_src, src: {}", src);
     }
 
@@ -110,7 +116,13 @@ impl AudioPlayer for AudioPlayerImpl {
         Some(FeatureString::new("ready"))
     }
 
-    fn set_state(&mut self, state: FeatureString) {
+    fn set_state(&mut self, state: Option<FeatureString>) {
+        let state = if let Some(state) = state {
+            state
+        } else {
+            error!("AudioPlayer set_state: state is none");
+            return;
+        };
         info!("AudioPlayerImpl set_state, state: {}", state);
     }
 
@@ -148,7 +160,14 @@ impl AudioPlayer for AudioPlayerImpl {
         info!("AudioPlayerImpl release");
     }
 
-    async fn seek(&mut self, params: PlayerSeekParams) -> Result<(), PromiseError> {
+    async fn seek(&mut self, params: Option<PlayerSeekParams>) -> Result<(), PromiseError> {
+        let params = if let Some(params) = params {
+            params
+        } else {
+            error!("AudioPlayer seek: params is none");
+            return Err(PromiseError::new(400, "params is none"));
+        };
+
         info!("AudioPlayerImpl seek");
         time::sleep(Duration::from_millis(100)).await;
         let cur_time = params.get_current_time();
@@ -187,7 +206,13 @@ impl AudioTrack for AudioTrackImpl {
         Some(FeatureString::new("playing"))
     }
 
-    fn set_state(&mut self, state: FeatureString) {
+    fn set_state(&mut self, state: Option<FeatureString>) {
+        let state = if let Some(state) = state {
+            state
+        } else {
+            error!("AudioTrack set_state: state is none");
+            return;
+        };
         info!("AudioTrackImpl set_state, state: {}", state);
     }
 
@@ -195,7 +220,7 @@ impl AudioTrack for AudioTrackImpl {
         info!("AudioTrackImpl play");
     }
 
-    async fn write(&mut self, _params: TrackWriteParams) -> Result<FtInt64, PromiseError> {
+    async fn write(&mut self, _params: Option<TrackWriteParams>) -> Result<FtInt64, PromiseError> {
         info!("AudioTrackImpl write");
         time::sleep(Duration::from_millis(100)).await;
         Ok(100)
@@ -236,7 +261,13 @@ impl AudioRecorderImpl {
 
 #[async_trait]
 impl AudioRecorder for AudioRecorderImpl {
-    async fn start(&mut self, params: RecorderStartParams) -> Result<FeatureString, PromiseError> {
+    async fn start(&mut self, params: Option<RecorderStartParams>) -> Result<FeatureString, PromiseError> {
+        let params = if let Some(params) = params {
+            params
+        } else {
+            error!("AudioRecorder start: params is none");
+            return Err(PromiseError::new(400, "params is none"));
+        };
         info!("AudioRecorderImpl start");
         time::sleep(Duration::from_millis(100)).await;
         if let Some(_uri) = params.get_uri() {

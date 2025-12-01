@@ -199,8 +199,11 @@ pub fn feature_struct(attr: TokenStream, item: TokenStream) -> TokenStream {
             impl FeatureReferenceType for #wrapper_struct {
                 type Target = #st_name;
 
-                unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
-                    Self { inner: FeaturePtr::from_raw(raw_ptr) }
+                unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Option<Self> {
+                    if raw_ptr.is_null() {
+                        return None;
+                    }
+                    Some(Self { inner: FeaturePtr::from_raw(raw_ptr).expect("already checked above") })
                 }
 
                 fn into_raw(self) -> *mut Self::Target {

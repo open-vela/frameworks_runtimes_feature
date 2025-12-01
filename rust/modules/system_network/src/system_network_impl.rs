@@ -162,7 +162,13 @@ impl SystemNetwork for SystemNetworkImpl {
         Ok(type_result)
     }
 
-    async fn subscribe(&mut self, mut p: Param) -> Result<(), PromiseError> {
+    async fn subscribe(&mut self, p: Option<Param>) -> Result<(), PromiseError> {
+        let mut p = if let Some(p) = p {
+            p
+        } else {
+            error!("system_network subscribe: param is none");
+            return Err(PromiseError::new(FT_ERR_GENERAL as i32, "param is none"));
+        };
         let cb = match p.take_callback() {
             Some(callback) => callback,
             None => {

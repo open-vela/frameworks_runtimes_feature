@@ -11,8 +11,8 @@ use libc::c_void;
 /// It ensures that the memory is properly allocated and deallocated. It's designed
 /// to be clone-friendly, allowing multiple references to the same underlying feature type.
 ///
-/// It will increment the reference count of the underlying feature type when create,
-/// and will decrement the reference count when dropped.
+/// It increments the reference count of the underlying feature type when create,
+/// and decrements the reference count when dropped.
 #[repr(transparent)]
 pub struct FeaturePtr<T: FeatureManagedType> {
     ptr: NonNull<T>,
@@ -34,12 +34,14 @@ impl<T: FeatureManagedType> FeaturePtr<T> {
     }
 
     /// Creates a `FeaturePtr` from an existing raw pointer.
-    /// It will increment the reference count of the underlying feature type.
-    pub unsafe fn from_raw(ptr: *mut T) -> Self {
-        assert!(!ptr.is_null());
+    /// It increments the reference count of the underlying feature type.
+    pub unsafe fn from_raw(ptr: *mut T) -> Option<Self> {
+        if ptr.is_null() {
+            return None;
+        }
         FeatureDupValue(ptr as *mut c_void);
-        let ptr = NonNull::new_unchecked(ptr);
-        Self { ptr }
+        let ptr = NonNull::new(ptr).expect("already checked above");
+        Some(Self { ptr })
     }
 
     /// Consumes the `FeaturePtr` and returns the raw pointer.
@@ -69,7 +71,8 @@ impl<T: FeatureManagedType> Clone for FeaturePtr<T> {
     fn clone(&self) -> Self {
         unsafe {
             FeatureDupValue(self.ptr.as_ptr() as *mut c_void);
-            Self::from_raw(self.ptr.as_ptr())
+            // safety: self.ptr is non-null, so we directly unwrap here
+            Self::from_raw(self.ptr.as_ptr()).expect("get null ptr from NonNull")
         }
     }
 }

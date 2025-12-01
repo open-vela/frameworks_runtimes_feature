@@ -64,7 +64,7 @@ impl Job {
         self.interval
     }
 
-    pub fn get_trigger_method(&self) -> FeatureString {
+    pub fn get_trigger_method(&self) -> Option<FeatureString> {
         unsafe { FeatureString::from_raw(self.trigger_method) }
     }
 
@@ -78,7 +78,7 @@ impl Job {
         self.trigger_method = FeatureString::into_raw(method);
     }
 
-    pub fn get_params(&self) -> FeatureJsonObject {
+    pub fn get_params(&self) -> Option<FeatureJsonObject> {
         unsafe { FeatureJsonObject::from_raw(self.params) }
     }
 
@@ -135,7 +135,7 @@ impl Promise for SuccessInfoPromise {
 
 #[async_trait]
 pub(crate) trait Schedule: FeatureInstanceTrait + Send + Sync {
-    async fn schedule_job(&mut self, info: Job) -> Result<SuccessInfo, PromiseError>;
+    async fn schedule_job(&mut self, info: Option<Job>) -> Result<SuccessInfo, PromiseError>;
     async fn cancel(&mut self, id: FtInt) -> Result<(), PromiseError>;
 }
 

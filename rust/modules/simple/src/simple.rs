@@ -6,7 +6,6 @@ use core::{ffi::CStr, ptr};
 use feature_frm::*;
 use feature_macros::feature_struct;
 use vdk::async_runtime::runtime;
-use vdk::log::info;
 
 use crate::simple_impl::{
     simple_on_create, simple_on_destroy, simple_on_detached, simple_on_register,
@@ -83,10 +82,7 @@ impl Chapter {
     }
 
     pub fn get_title(&self) -> Option<FeatureString> {
-        if self.title.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.title) })
+        unsafe { FeatureString::from_raw(self.title) }
     }
 
     pub fn set_title(&mut self, title: FeatureString) {
@@ -147,7 +143,7 @@ impl Book {
         Self { inner, instance }
     }
 
-    pub fn get_book_name(&self) -> FeatureString {
+    pub fn get_book_name(&self) -> Option<FeatureString> {
         unsafe { FeatureString::from_raw(self.book_name) }
     }
 
@@ -161,7 +157,7 @@ impl Book {
         self.book_name = FeatureString::into_raw(name);
     }
 
-    pub fn get_chap_1(&self) -> Chapter {
+    pub fn get_chap_1(&self) -> Option<Chapter> {
         unsafe { Chapter::from_raw(self.chap_1) }
     }
 
@@ -186,7 +182,7 @@ impl Book {
         }
     }
 
-    pub fn get_book_info(&self) -> FeatureJsonObject {
+    pub fn get_book_info(&self) -> Option<FeatureJsonObject> {
         unsafe { FeatureJsonObject::from_raw(self.book_info) }
     }
 
@@ -200,7 +196,7 @@ impl Book {
         self.book_info = FeatureJsonObject::into_raw(book_info);
     }
 
-    pub fn get_chaps_info(&self) -> FeatureReferenceArray<FeatureJsonObject> {
+    pub fn get_chaps_info(&self) -> Option<FeatureReferenceArray<FeatureJsonObject>> {
         unsafe { FeatureReferenceArray::<FeatureJsonObject>::from_raw(self.chaps_info) }
     }
 
@@ -296,12 +292,12 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn bar(&mut self, a: FtInt, b: FtFloat) -> FtInt;
     fn goo(&mut self, a: FtDouble) -> FtDouble;
     fn doo(&mut self);
-    fn hoo(&mut self, a: &FeatureString);
-    fn set_book(&mut self, book: Book);
+    fn hoo(&mut self, a: &Option<FeatureString>);
+    fn set_book(&mut self, book: Option<Book>);
     fn get_book(&mut self) -> Option<Book>;
-    fn set_chapter(&mut self, chap: Chapter);
+    fn set_chapter(&mut self, chap: Option<Chapter>);
     fn get_chapter(&self) -> Option<Chapter>;
-    fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<Chapter>);
+    fn set_chapter_array(&mut self, chap_array: Option<FeatureReferenceArray<Chapter>>);
     fn get_chapter_array(&mut self) -> Option<FeatureReferenceArray<Chapter>>;
     fn moo(&mut self, a: i32, cb: MooCb);
     async fn noo(&mut self, resolve: FtBool) -> Result<FtInt, PromiseError>;
@@ -311,11 +307,11 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
     fn create_pigeon(&self) -> Option<FeatureInstance>;
     fn create_cat(&self) -> Option<FeatureInstance>;
     fn set_animal(&self, animal: FeatureInstance);
-    fn invoke_event(&self, event_name: &FeatureString);
-    fn set_buffer(&self, buffer: FeatureArrayBuffer);
+    fn invoke_event(&self, event_name: &Option<FeatureString>);
+    fn set_buffer(&self, buffer: Option<FeatureArrayBuffer>);
     fn get_buffer_copy(&self) -> FeatureArrayBuffer;
     fn get_buffer_no_copy(&self) -> FeatureArrayBuffer;
-    fn set_buffer_array(&self, ab_array: FeatureReferenceArray<FeatureArrayBuffer>);
+    fn set_buffer_array(&self, ab_array: Option<FeatureReferenceArray<FeatureArrayBuffer>>);
     fn get_buffer_array_copy(&self) -> Option<FeatureReferenceArray<FeatureArrayBuffer>>;
     fn get_buffer_array_no_copy(&self) -> Option<FeatureReferenceArray<FeatureArrayBuffer>>;
 }
@@ -323,16 +319,16 @@ pub trait Simple: FeatureInstanceTrait + Send + Sync {
 // Interface trait
 pub trait Animal: FeatureInstanceTrait {
     fn get_name(&self) -> FeatureString;
-    fn set_name(&mut self, name: FeatureString);
+    fn set_name(&mut self, name: Option<FeatureString>);
     fn get_leg_count(&self) -> FtInt;
-    fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt;
-    fn run(&self, distance: FtInt, destination: &FeatureString) -> FeatureString;
+    fn eat_foods(&self, foods: &Option<FeaturePrimitiveArray<FeatureString>>) -> FtInt;
+    fn run(&self, distance: FtInt, destination: &Option<FeatureString>) -> FeatureString;
 }
 
 pub trait Flyable: FeatureInstanceTrait {
     fn fly(&self) -> FeaturePrimitiveArray<FeatureString>;
     fn get_breed(&self) -> FeatureString;
-    fn set_breed(&mut self, breed: FeatureString);
+    fn set_breed(&mut self, breed: Option<FeatureString>);
 }
 
 pub trait Bird: Animal + Flyable + FeatureInstanceTrait {
@@ -449,10 +445,6 @@ pub unsafe extern "C" fn simple_wrap_doo(feature: *mut c_void, _adata: AppendDat
 
 #[no_mangle]
 pub unsafe extern "C" fn simple_wrap_hoo(feature: *mut c_void, _adata: AppendData, a: FtString) {
-    if a.is_null() {
-        info!("Error: Received null pointer!");
-        return;
-    }
     let simple = unsafe {
         feature_glue::get_instance_data::<dyn Simple>(feature)
             .expect("Failed to get impl for 'Simple' trait")
@@ -469,9 +461,6 @@ pub unsafe extern "C" fn simple_wrap_set_chapter(
     _adata: AppendData,
     chap: *mut simple_Chapter,
 ) {
-    if chap.is_null() {
-        info!("wjf set_chapter() Received null pointer!");
-    }
     let simple = unsafe {
         feature_glue::get_instance_data::<dyn Simple>(feature)
             .expect("Failed to get impl for 'Simple' trait")
@@ -501,10 +490,6 @@ pub unsafe extern "C" fn simple_wrap_set_chapter_array(
     _adata: AppendData,
     chap_array: *mut FtArray,
 ) {
-    if chap_array.is_null() {
-        info!("wjf set_chapter_array() Received null pointer!");
-    }
-
     let simple = unsafe {
         feature_glue::get_instance_data::<dyn Simple>(feature)
             .expect("Failed to get impl for 'Simple' trait")
@@ -535,18 +520,13 @@ pub unsafe extern "C" fn simple_wrap_set_book(
     _adata: AppendData,
     book: *mut simple_Book,
 ) {
-    if book.is_null() {
-        info!("wjf set_book() Received null pointer!");
-    } else {
-        let simple = unsafe {
-            feature_glue::get_instance_data::<dyn Simple>(feature)
-                .expect("Failed to get impl for 'Simple' trait")
-        };
-        unsafe {
-            let book = Book::new(FeaturePtr::from_raw(book), FeatureInstance::new(feature));
-            (*simple).set_book(book);
-        };
-    }
+    let simple = unsafe {
+        feature_glue::get_instance_data::<dyn Simple>(feature)
+            .expect("Failed to get impl for 'Simple' trait")
+    };
+    let book = unsafe { FeaturePtr::from_raw(book) }
+        .map(|ptr| Book::new(ptr, FeatureInstance::new(feature)));
+    (*simple).set_book(book);
 }
 
 #[no_mangle]

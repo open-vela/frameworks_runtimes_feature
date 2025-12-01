@@ -33,7 +33,8 @@ impl FeatureString {
     pub fn new<T: AsRef<str>>(s: T) -> Self {
         let str = s.as_ref();
         let ft_str = Self::create_ft_string(str);
-        let feature_string = Self::from_raw_with_len(ft_str, str.len());
+        let feature_string =
+            Self::from_raw_with_len(ft_str, str.len()).expect("create_ft_string return null");
         unsafe {
             FeatureFreeValue(ft_str as *mut c_void);
         }
@@ -54,19 +55,23 @@ impl FeatureString {
     }
 
     /// Creates a `FeatureString` from a raw pointer.
-    /// It will increment the reference count of the underlying FtString.
-    pub unsafe fn from_raw(ptr: FtString) -> Self {
-        assert!(!ptr.is_null());
+    /// It increments the reference count of the underlying FtString.
+    pub unsafe fn from_raw(ptr: FtString) -> Option<Self> {
+        if ptr.is_null() {
+            return None;
+        }
         let length = unsafe { strlen(ptr) };
         Self::from_raw_with_len(ptr, length as usize)
     }
 
     /// Creates a `FeatureString` from a raw pointer.
-    /// It will increment the reference count of the underlying FtString.
-    pub fn from_raw_with_len(ptr: FtString, len: usize) -> Self {
-        assert!(!ptr.is_null());
-        let ptr = unsafe { FeaturePtr::from_raw(ptr as *mut _) };
-        Self(ptr, len)
+    /// It increments the reference count of the underlying FtString.
+    fn from_raw_with_len(ptr: FtString, len: usize) -> Option<Self> {
+        if ptr.is_null() {
+            return None;
+        }
+        let ptr = unsafe { FeaturePtr::from_raw(ptr as *mut _).expect("already checked above") };
+        Some(Self(ptr, len))
     }
 
     pub fn into_raw(self) -> FtString {
@@ -130,7 +135,8 @@ impl From<CString> for FeatureString {
         };
         slice.copy_from_slice(bytes);
         let feature_string =
-            Self::from_raw_with_len(slice.as_mut_ptr() as FtString, bytes.len() - 1);
+            Self::from_raw_with_len(slice.as_mut_ptr() as FtString, bytes.len() - 1)
+                .expect("slice is null");
 
         unsafe {
             FeatureFreeValue(slice.as_mut_ptr() as *mut c_void);

@@ -10,10 +10,10 @@ use feature_sys::{
     uv_loop_t, FeatureDupInstanceHandle, FeatureFreeInstanceHandle, FeatureGetEnvironmentName,
     FeatureGetEventCallbackCount, FeatureGetEventId, FeatureGetEventName,
     FeatureGetManagerHandleFromInstance, FeatureGetManagerHandleFromProto, FeatureGetObjectData,
-    FeatureGetPackageName, FeatureGetPackageVersion, FeatureGetProtoData, FeatureGetProtoHandle,
-    FeatureGetUVLoop, FeatureInstanceHandle, FeatureInstanceIsDetached, FeatureManagerHandle,
-    FeaturePromiseReject, FeatureSetObjectData, FeatureSetProtoData, FeatureGetPathFromUri,
-    FtEventId, FtInt, FtPromiseId, FtString,
+    FeatureGetPackageName, FeatureGetPackageVersion, FeatureGetPathFromUri, FeatureGetProtoData,
+    FeatureGetProtoHandle, FeatureGetUVLoop, FeatureInstanceHandle, FeatureInstanceIsDetached,
+    FeatureManagerHandle, FeaturePromiseReject, FeatureProtoHandle, FeatureSetObjectData,
+    FeatureSetProtoData, FtEventId, FtInt, FtPromiseId, FtString,
 };
 use libc::c_void;
 
@@ -217,13 +217,17 @@ impl FeatureInstance {
             if result_ptr.is_null() {
                 None
             } else {
-                Some(unsafe { CStr::from_ptr(result_ptr) }.to_str().expect("must be utf8 string").to_string())
+                Some(
+                    unsafe { CStr::from_ptr(result_ptr) }
+                        .to_str()
+                        .expect("must be utf8 string")
+                        .to_string(),
+                )
             }
         } else {
             None
         }
     }
-
 }
 
 impl Drop for FeatureInstance {

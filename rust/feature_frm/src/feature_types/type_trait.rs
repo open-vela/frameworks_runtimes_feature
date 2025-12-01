@@ -17,6 +17,6 @@ pub trait FeatureValueType: Clone + FeatureTypeDescription {}
 /// It usually represents a pointer to a managed type, and can be converted to and from a raw pointer.
 pub trait FeatureReferenceType: Clone {
     type Target: FeatureManagedType;
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self;
+    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Option<Self>;
     fn into_raw(self) -> *mut Self::Target;
 }

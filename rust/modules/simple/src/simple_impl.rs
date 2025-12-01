@@ -5,7 +5,7 @@ use core::time::Duration;
 use feature_frm::*;
 use feature_macros::feature_instance;
 use vdk::async_runtime::time;
-use vdk::log::info;
+use vdk::log::{error, info};
 
 pub fn simple_on_register(_name: &FeatureString) {}
 
@@ -78,7 +78,13 @@ impl Simple for SimpleImpl {
         info!("wjf doo Called from C");
     }
 
-    fn hoo(&mut self, a: &FeatureString) {
+    fn hoo(&mut self, a: &Option<FeatureString>) {
+        let a = if let Some(a) = a {
+            a
+        } else {
+            error!("simple hoo: a is none");
+            return;
+        };
         info!("wjf hoo Called from C, a: \"{}\"", a.as_str());
         if let Some(proto) = self.get_prototype() {
             info!("proto.str: {}", proto.str);
@@ -95,28 +101,34 @@ impl Simple for SimpleImpl {
         }
     }
 
-    fn set_book(&mut self, mut book: Book) {
-        info!(
-            "set_book called from C, book_name: {}",
-            book.get_book_name()
-        );
+    fn set_book(&mut self, book: Option<Book>) {
+        let mut book = if let Some(book) = book {
+            book
+        } else {
+            error!("simple set_book: book is none");
+            return;
+        };
+        if let Some(book_name) = book.get_book_name() {
+            info!("set_book called from C, book_name: {}", book_name);
+        }
 
         // get and set book_info
-        let book_info = book.get_book_info();
-        info!("wjf book_info: {}", book_info.as_str());
+        if let Some(book_info) = book.get_book_info() {
+            info!("wjf book_info: {}", book_info.as_str());
+        }
         let new_book_info = FeatureJsonObject::new("{\"author\": \"caoxueqin\", \"dynasty\": \"Tang dynasty\", \"class\": \"political novel\"}");
         book.set_book_info(new_book_info);
 
         // get and set chaps_1
-        let chap1 = book.get_chap_1();
-        let chap1_title = chap1.get_title().unwrap_or("".into());
-        info!(
-            "wjf chap1 title: {}, page_count: {}, is_end: {}",
-            chap1_title,
-            chap1.get_page_count(),
-            chap1.get_is_end()
-        );
-
+        if let Some(chap1) = book.get_chap_1() {
+            let chap1_title = chap1.get_title().unwrap_or("".into());
+            info!(
+                "wjf chap1 title: {}, page_count: {}, is_end: {}",
+                chap1_title,
+                chap1.get_page_count(),
+                chap1.get_is_end()
+            );
+        }
         let mut new_chap1 = Chapter::new();
         new_chap1.set_title(FeatureString::new("chap ten"));
         new_chap1.set_page_count(150);
@@ -124,10 +136,11 @@ impl Simple for SimpleImpl {
         book.set_chap_1(new_chap1);
 
         // get and set chaps_info
-        let chaps_info = book.get_chaps_info();
-        for i in 0..chaps_info.len() {
-            if let Some(chap_info) = chaps_info.get(i) {
-                info!("wjf chap_info[{}]: {}", i, chap_info.as_str());
+        if let Some(chaps_info) = book.get_chaps_info() {
+            for i in 0..chaps_info.len() {
+                if let Some(chap_info) = chaps_info.get(i) {
+                    info!("wjf chap_info[{}]: {}", i, chap_info.as_str());
+                }
             }
         }
         let mut new_chaps_info = FeatureReferenceArray::<FeatureJsonObject>::new(2);
@@ -149,7 +162,13 @@ impl Simple for SimpleImpl {
         self.book.clone()
     }
 
-    fn set_chapter(&mut self, chap: Chapter) {
+    fn set_chapter(&mut self, chap: Option<Chapter>) {
+        let chap = if let Some(chap) = chap {
+            chap
+        } else {
+            error!("simple set_chapter: chap is none");
+            return;
+        };
         info!(
             "set_chapter called from C, page_count:{}",
             chap.get_page_count()
@@ -169,7 +188,13 @@ impl Simple for SimpleImpl {
         self.chapter.clone()
     }
 
-    fn set_chapter_array(&mut self, chap_array: FeatureReferenceArray<Chapter>) {
+    fn set_chapter_array(&mut self, chap_array: Option<FeatureReferenceArray<Chapter>>) {
+        let chap_array = if let Some(chap_array) = chap_array {
+            chap_array
+        } else {
+            error!("simple set_chapter_array: chap_array is none");
+            return;
+        };
         info!("wjf set_chapter_array Called from C");
         for i in 0..chap_array.len() {
             if let Some(item) = chap_array.get(i) {
@@ -260,7 +285,13 @@ impl Simple for SimpleImpl {
         info!("wjf set_animal Called from C");
     }
 
-    fn invoke_event(&self, name: &FeatureString) {
+    fn invoke_event(&self, name: &Option<FeatureString>) {
+        let name = if let Some(name) = name.as_ref() {
+            name
+        } else {
+            error!("simple invoke_event: name is none");
+            return;
+        };
         info!("wjf invoke_event Called from C, event_name: {}", name);
         if let Some(eid) = self.get_event_id(name.as_str()) {
             let cb_count = self.get_event_callback_count(eid);
@@ -275,7 +306,13 @@ impl Simple for SimpleImpl {
         }
     }
 
-    fn set_buffer(&self, buffer: FeatureArrayBuffer) {
+    fn set_buffer(&self, buffer: Option<FeatureArrayBuffer>) {
+        let buffer = if let Some(buffer) = buffer {
+            buffer
+        } else {
+            error!("simple set_buffer: buffer is none");
+            return;
+        };
         info!("wjf set_buffer Called from C");
         if let Some(vec) = buffer.as_slice::<u8>() {
             info!("wjf u8 arraybuffer length: {}, buff: {:#?}", vec.len(), vec);
@@ -295,7 +332,13 @@ impl Simple for SimpleImpl {
         FeatureArrayBuffer::from_vec(&self.instance, vec![-5i32, 4, 3, 2, 1])
     }
 
-    fn set_buffer_array(&self, ab_array: FeatureReferenceArray<FeatureArrayBuffer>) {
+    fn set_buffer_array(&self, ab_array: Option<FeatureReferenceArray<FeatureArrayBuffer>>) {
+        let ab_array = if let Some(ab_array) = ab_array {
+            ab_array
+        } else {
+            error!("simple set_buffer_array: ab_array is none");
+            return;
+        };
         info!("wjf set_buffer_array Called from C");
         for i in 0..ab_array.len() {
             if let Some(ab) = ab_array.get(i) {
@@ -362,7 +405,13 @@ impl Animal for Dog {
         self.name.clone()
     }
 
-    fn set_name(&mut self, name: FeatureString) {
+    fn set_name(&mut self, name: Option<FeatureString>) {
+        let name = if let Some(name) = name {
+            name
+        } else {
+            error!("simple Dog set_name: name is none");
+            return;
+        };
         info!("wjf dog set_name Called from C, name: {}", name);
         self.name = name;
     }
@@ -372,8 +421,14 @@ impl Animal for Dog {
         self.leg_count
     }
 
-    fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
-        info!("wjf dog eat_foods Called from C");
+    fn eat_foods(&self, foods: &Option<FeaturePrimitiveArray<FeatureString>>) -> FtInt {
+        let foods = if let Some(foods) = foods.as_ref() {
+            foods
+        } else {
+            error!("simple Dog eat_food: foods is none");
+            return -1;
+        };
+        info!("wjf dog eat_food Called from C");
         for i in 0..foods.len() {
             if let Some(item) = foods.get(i) {
                 info!("{} dog food: {}", i, *item);
@@ -382,7 +437,7 @@ impl Animal for Dog {
         foods.len() as i32
     }
 
-    fn run(&self, _distance: FtInt, _destination: &FeatureString) -> FeatureString {
+    fn run(&self, _distance: FtInt, _destination: &Option<FeatureString>) -> FeatureString {
         info!("wjf dog run Called from C");
         FeatureString::new("dog_run")
     }
@@ -426,7 +481,13 @@ impl Flyable for Airplane {
         self.breed.clone()
     }
 
-    fn set_breed(&mut self, breed: FeatureString) {
+    fn set_breed(&mut self, breed: Option<FeatureString>) {
+        let breed = if let Some(breed) = breed {
+            breed
+        } else {
+            error!("simple Airplane set_breed: breed is none");
+            return;
+        };
         info!("wjf airplane set_breed Called from C, breed: {}", breed);
         self.breed = breed;
     }
@@ -466,7 +527,13 @@ impl Animal for Pigeon {
         self.name.clone()
     }
 
-    fn set_name(&mut self, name: FeatureString) {
+    fn set_name(&mut self, name: Option<FeatureString>) {
+        let name = if let Some(name) = name {
+            name
+        } else {
+            error!("simple Pigeon: name is none");
+            return;
+        };
         info!("wjf pigeon set_name Called from C, _name: {}", name);
         self.name = name;
     }
@@ -476,8 +543,14 @@ impl Animal for Pigeon {
         self.leg_count
     }
 
-    fn eat_foods(&self, foods: &FeaturePrimitiveArray<FeatureString>) -> FtInt {
-        info!("wjf pigeon eat_foods Called from C");
+    fn eat_foods(&self, foods: &Option<FeaturePrimitiveArray<FeatureString>>) -> FtInt {
+        let foods = if let Some(foods) = foods.as_ref() {
+            foods
+        } else {
+            error!("simple Pigeon eat_food: foods is none");
+            return -1;
+        };
+        info!("wjf pigeon eat_food Called from C");
         for i in 0..foods.len() {
             if let Some(item) = foods.get(i) {
                 info!("{} pigeon food: {}", i, *item);
@@ -486,7 +559,7 @@ impl Animal for Pigeon {
         foods.len() as i32
     }
 
-    fn run(&self, _distance: FtInt, _destination: &FeatureString) -> FeatureString {
+    fn run(&self, _distance: FtInt, _destination: &Option<FeatureString>) -> FeatureString {
         info!("wjf pigeon run Called from C");
         FeatureString::new("pigeon_run")
     }
@@ -507,7 +580,13 @@ impl Flyable for Pigeon {
         self.breed.clone()
     }
 
-    fn set_breed(&mut self, breed: FeatureString) {
+    fn set_breed(&mut self, breed: Option<FeatureString>) {
+        let breed = if let Some(breed) = breed {
+            breed
+        } else {
+            error!("simple Pigeon set_breed: breed is none");
+            return;
+        };
         info!("wjf pigeon set_breed Called from C, breed: {}", breed);
         self.breed = breed;
     }

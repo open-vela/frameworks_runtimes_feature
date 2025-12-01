@@ -42,10 +42,7 @@ impl ClearInfo {
 
     #[allow(dead_code)]
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
-        if self.scope.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.scope) })
+        unsafe { FeatureString::from_raw(self.scope) }
     }
 }
 
@@ -94,17 +91,11 @@ impl RemoveInfo {
     }
 
     pub(crate) fn get_key(&self) -> Option<FeatureString> {
-        if self.key.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.key) })
+        unsafe { FeatureString::from_raw(self.key) }
     }
 
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
-        if self.scope.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.scope) })
+        unsafe { FeatureString::from_raw(self.scope) }
     }
 }
 
@@ -125,24 +116,15 @@ impl SetInfo {
     }
 
     pub(crate) fn get_key(&self) -> Option<FeatureString> {
-        if self.key.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.key) })
+        unsafe { FeatureString::from_raw(self.key) }
     }
 
     pub(crate) fn get_value(&self) -> Option<FeatureString> {
-        if self.value.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.value) })
+        unsafe { FeatureString::from_raw(self.value) }
     }
 
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
-        if self.scope.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.scope) })
+        unsafe { FeatureString::from_raw(self.scope) }
     }
 }
 
@@ -162,17 +144,11 @@ impl GetInfo {
     }
 
     pub(crate) fn get_key(&self) -> Option<FeatureString> {
-        if self.key.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.key) })
+        unsafe { FeatureString::from_raw(self.key) }
     }
 
     pub(crate) fn get_scope(&self) -> Option<FeatureString> {
-        if self.scope.is_null() {
-            return None;
-        }
-        Some(unsafe { FeatureString::from_raw(self.scope) })
+        unsafe { FeatureString::from_raw(self.scope) }
     }
 }
 
@@ -192,10 +168,10 @@ impl Promise for GetRetPromise {
 
 #[async_trait]
 pub(crate) trait Exchange: FeatureInstanceTrait + Send + Sync {
-    async fn set(&mut self, info: SetInfo) -> Result<FeatureString, PromiseError>;
-    async fn get(&mut self, info: GetInfo) -> Result<GetRet, PromiseError>;
-    async fn remove(&mut self, info: RemoveInfo) -> Result<FeatureString, PromiseError>;
-    async fn clear(&mut self, info: ClearInfo) -> Result<FeatureString, PromiseError>;
+    async fn set(&mut self, info: Option<SetInfo>) -> Result<FeatureString, PromiseError>;
+    async fn get(&mut self, info: Option<GetInfo>) -> Result<GetRet, PromiseError>;
+    async fn remove(&mut self, info: Option<RemoveInfo>) -> Result<FeatureString, PromiseError>;
+    async fn clear(&mut self, info: Option<ClearInfo>) -> Result<FeatureString, PromiseError>;
 }
 
 #[no_mangle]

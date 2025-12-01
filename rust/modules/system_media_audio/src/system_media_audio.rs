@@ -150,11 +150,7 @@ impl CreatePlayerParams {
     // member getters and setters
     #[allow(dead_code)]
     pub(crate) fn get_stream_type(&self) -> Option<FeatureString> {
-        if self.stream_type.is_null() {
-            return None;
-        }
-        let ret = unsafe { FeatureString::from_raw(self.stream_type) };
-        Some(ret)
+        unsafe { FeatureString::from_raw(self.stream_type) }
     }
 
     #[allow(dead_code)]
@@ -196,11 +192,7 @@ impl CreateTrackParams {
     // member getters and setters
     #[allow(dead_code)]
     pub(crate) fn get_stream_type(&self) -> Option<FeatureString> {
-        if self.stream_type.is_null() {
-            return None;
-        }
-        let ret = unsafe { FeatureString::from_raw(self.stream_type) };
-        Some(ret)
+        unsafe { FeatureString::from_raw(self.stream_type) }
     }
 
     #[allow(dead_code)]
@@ -346,11 +338,7 @@ impl RecorderStartParams {
     // member getters and setters
     #[allow(dead_code)]
     pub(crate) fn get_uri(&self) -> Option<FeatureString> {
-        if self.uri.is_null() {
-            return None;
-        }
-        let ret = unsafe { FeatureString::from_raw(self.uri) };
-        Some(ret)
+        unsafe { FeatureString::from_raw(self.uri) }
     }
 
     #[allow(dead_code)]
@@ -392,11 +380,7 @@ impl CreateRecorderParams {
     // member getters and setters
     #[allow(dead_code)]
     pub(crate) fn get_output_format(&self) -> Option<FeatureString> {
-        if self.output_format.is_null() {
-            return None;
-        }
-        let ret = unsafe { FeatureString::from_raw(self.output_format) };
-        Some(ret)
+        unsafe { FeatureString::from_raw(self.output_format) }
     }
 
     #[allow(dead_code)]
@@ -465,11 +449,7 @@ impl TrackWriteParams {
     // member getters and setters
     #[allow(dead_code)]
     pub(crate) fn get_buffer(&self) -> Option<FeatureArrayBuffer> {
-        if self.buffer.is_null() {
-            return None;
-        }
-        let ret = unsafe { FeatureArrayBuffer::from_raw(self.buffer) };
-        Some(ret)
+        unsafe { FeatureArrayBuffer::from_raw(self.buffer) }
     }
 
     #[allow(dead_code)]
@@ -1041,16 +1021,16 @@ impl AudioPlayerOninterruptEvent {
 
 pub(crate) trait SystemMediaAudio: FeatureInstanceTrait {
 
-    fn create_audio_player(&mut self, params: CreatePlayerParams) -> Option<FeatureInstance>;
-    fn create_audio_track(&mut self, params: CreateTrackParams) -> Option<FeatureInstance>;
-    fn create_audio_recorder(&mut self, params: CreateRecorderParams) -> Option<FeatureInstance>;
+    fn create_audio_player(&mut self, params: Option<CreatePlayerParams>) -> Option<FeatureInstance>;
+    fn create_audio_track(&mut self, params: Option<CreateTrackParams>) -> Option<FeatureInstance>;
+    fn create_audio_recorder(&mut self, params: Option<CreateRecorderParams>) -> Option<FeatureInstance>;
 }
 
 
 // interface traits
 #[async_trait]
 pub(crate) trait AudioRecorder: FeatureInstanceTrait + Send + Sync {
-    async fn start(&mut self, params: RecorderStartParams) -> Result<FeatureString, PromiseError>;
+    async fn start(&mut self, params: Option<RecorderStartParams>) -> Result<FeatureString, PromiseError>;
     fn pause(&mut self) -> ();
     fn resume(&mut self) -> ();
     fn stop(&mut self) -> ();
@@ -1060,9 +1040,9 @@ pub(crate) trait AudioRecorder: FeatureInstanceTrait + Send + Sync {
 #[async_trait]
 pub(crate) trait AudioTrack: FeatureInstanceTrait + Send + Sync {
     fn get_state(&mut self) -> Option<FeatureString>;
-    fn set_state(&mut self, state: FeatureString);
+    fn set_state(&mut self, state: Option<FeatureString>);
     fn play(&mut self) -> ();
-    async fn write(&mut self, params: TrackWriteParams) -> Result<FtInt64, PromiseError>;
+    async fn write(&mut self, params: Option<TrackWriteParams>) -> Result<FtInt64, PromiseError>;
     fn pause(&mut self) -> ();
     fn stop(&mut self) -> ();
     fn release(&mut self) -> ();
@@ -1071,10 +1051,10 @@ pub(crate) trait AudioTrack: FeatureInstanceTrait + Send + Sync {
 #[async_trait]
 pub(crate) trait AudioPlayer: FeatureInstanceTrait + Send + Sync {
     fn get_src(&mut self) -> Option<FeatureString>;
-    fn set_src(&mut self, src: FeatureString);
+    fn set_src(&mut self, src: Option<FeatureString>);
     fn get_duration(&mut self) -> FtDouble;
     fn get_state(&mut self) -> Option<FeatureString>;
-    fn set_state(&mut self, state: FeatureString);
+    fn set_state(&mut self, state: Option<FeatureString>);
     fn get_current_time(&mut self) -> FtInt64;
     fn set_current_time(&mut self, current_time: FtInt64);
     fn get_playcount(&mut self) -> FtInt;
@@ -1083,7 +1063,7 @@ pub(crate) trait AudioPlayer: FeatureInstanceTrait + Send + Sync {
     fn pause(&mut self) -> ();
     fn stop(&mut self) -> ();
     fn release(&mut self) -> ();
-    async fn seek(&mut self, params: PlayerSeekParams) -> Result<(), PromiseError>;
+    async fn seek(&mut self, params: Option<PlayerSeekParams>) -> Result<(), PromiseError>;
 }
 
 
@@ -1506,7 +1486,7 @@ pub(crate) extern "C" fn system_media_audio_AudioRecorder_interface_native_recor
     let promise = unsafe { FeaturePromise::<FtStringPromise>::new(promise_id, handle) };
 
     runtime::spawn(async move {
-        match native_recorder.start(params,).await {
+        match native_recorder.start(params).await {
             Ok(v) => promise.resolve(v),
             Err(e) => promise.reject(e),
         }

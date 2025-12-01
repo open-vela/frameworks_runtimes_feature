@@ -59,13 +59,12 @@ impl FeatureTypeDescription for _FtArrayBuffer {
 #[derive(Clone)]
 pub struct FeatureArrayBuffer {
     abuf_ptr: FeaturePtr<_FtArrayBuffer>,
-    len: usize,
 }
 
 impl FeatureReferenceType for FeatureArrayBuffer {
     type Target = _FtArrayBuffer;
 
-    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Self {
+    unsafe fn from_raw(raw_ptr: *mut Self::Target) -> Option<Self> {
         Self::from_raw(raw_ptr)
     }
 
@@ -108,7 +107,8 @@ impl FeatureArrayBuffer {
             )
         };
 
-        let ret = Self::from_raw_with_len(abuff, bytes);
+        let ret =
+            unsafe { Self::from_raw(abuff) }.expect("FeatureNewArrayBufferFromData return null");
         unsafe {
             FeatureFreeValue(abuff as *mut c_void);
         }
@@ -124,7 +124,8 @@ impl FeatureArrayBuffer {
         let bytes = core::mem::size_of_val(slice);
         let buff = slice.as_ptr() as *mut u8;
         let abuff = unsafe { FeatureNewArrayBufferCopyData(instance.as_handle(), buff, bytes) };
-        let ret = Self::from_raw_with_len(abuff, bytes);
+        let ret =
+            unsafe { Self::from_raw(abuff) }.expect("FeatureNewArrayBufferCopyData reutrn null");
         unsafe {
             FeatureFreeValue(abuff as *mut c_void);
         }
@@ -132,13 +133,14 @@ impl FeatureArrayBuffer {
     }
 
     /// Creates a `FeatureArrayBuffer` from a c side FtArrayBuffer.
-    /// It will increment the reference count of the underlying FtArrayBuffer.
-    pub unsafe fn from_raw(abuff: FtArrayBuffer) -> Self {
-        assert!(!abuff.is_null());
-        let mut len: usize = 0;
-        let data = unsafe { FeatureArrayBufferGetData(abuff, &mut len as *mut usize) };
-        assert!(!data.is_null());
-        Self::from_raw_with_len(abuff, len)
+    /// It increments the reference count of the underlying FtArrayBuffer.
+    pub unsafe fn from_raw(abuff: FtArrayBuffer) -> Option<Self> {
+        if abuff.is_null() {
+            return None;
+        }
+        let abuf_ptr =
+            unsafe { FeaturePtr::from_raw(abuff as *mut _).expect("already checked above") };
+        Some(Self { abuf_ptr })
     }
 
     pub fn into_raw(self) -> FtArrayBuffer {
@@ -156,7 +158,7 @@ impl FeatureArrayBuffer {
     where
         T: NumberType,
     {
-        let (data, bytes) = self.get_data();
+        let (data, bytes) = self.get_data_and_len();
         Self::check_slice::<T>(data, bytes)
             .map(|len| unsafe { slice::from_raw_parts(data as *const T, len) })
     }
@@ -168,7 +170,7 @@ impl FeatureArrayBuffer {
     where
         T: NumberType,
     {
-        let (data, bytes) = self.get_data();
+        let (data, bytes) = self.get_data_and_len();
         Self::check_slice::<T>(data, bytes)
             .map(|len| unsafe { slice::from_raw_parts_mut(data as *mut T, len) })
     }
@@ -202,20 +204,15 @@ impl FeatureArrayBuffer {
     }
 
     pub fn len(&self) -> usize {
-        self.len
+        let (_, len) = self.get_data_and_len();
+        len
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len == 0
+        self.len() == 0
     }
 
-    fn from_raw_with_len(abuff: FtArrayBuffer, len: usize) -> Self {
-        assert!(!abuff.is_null());
-        let abuf_ptr = unsafe { FeaturePtr::from_raw(abuff as *mut _) };
-        Self { abuf_ptr, len }
-    }
-
-    fn get_data(&self) -> (*mut u8, usize) {
+    fn get_data_and_len(&self) -> (*mut u8, usize) {
         let mut len: usize = 0;
         let data =
             unsafe { FeatureArrayBufferGetData(self.abuf_ptr.as_ptr(), &mut len as *mut usize) };

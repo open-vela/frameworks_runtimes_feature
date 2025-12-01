@@ -12688,6 +12688,13 @@ unsafe extern "C" {
     pub fn FeatureArrayBufferGetData(buff: FtArrayBuffer, psize: *mut usize) -> *mut u8;
 }
 unsafe extern "C" {
+    #[doc = " @brief invoke path operation callback\n\n @param handle FeatureInstanceHandle\n @param uri uri string\n @return char* path string"]
+    pub fn FeatureGetPathFromUri(
+        handle: FeatureInstanceHandle,
+        uri: *const cty::c_char,
+    ) -> *mut cty::c_char;
+}
+unsafe extern "C" {
     pub fn FeatureFtVoidPromiseResolve(handle: FeatureInstanceHandle, pid: FtPromiseId) -> FtBool;
 }
 unsafe extern "C" {
@@ -12805,6 +12812,12 @@ pub struct ArgsErrorInfo {
 pub type ArgsErrorCb = ::core::option::Option<
     unsafe extern "C" fn(data: *mut cty::c_void, args_info: *mut ArgsErrorInfo) -> bool,
 >;
+pub type UriConvertCb = ::core::option::Option<
+    unsafe extern "C" fn(
+        package_name: *const cty::c_char,
+        uri: *const cty::c_char,
+    ) -> *mut cty::c_char,
+>;
 #[repr(u32)]
 #[doc = " FeatureManagerType"]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -12891,6 +12904,10 @@ unsafe extern "C" {
         prototype: ft_value_t,
         binding_obj: ft_value_t,
     ) -> ft_value_t;
+}
+unsafe extern "C" {
+    #[doc = " @brief set path operation callback to FeatureManagerHandle\n\n @param[in] handle FeatureManagerHandle\n @param[in] cb UriConvertCb"]
+    pub fn FeatureSetUriConvertCb(handle: FeatureManagerHandle, cb: UriConvertCb);
 }
 unsafe extern "C" {
     #[doc = " @brief Determine whether the feature exists in the registration list\n @param[in] handle FeatureManagerHandle\n @param[in] feature_method feature_method\n @return bool"]

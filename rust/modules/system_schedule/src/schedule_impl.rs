@@ -53,7 +53,13 @@ impl ScheduleImpl {
 
 #[async_trait]
 impl Schedule for ScheduleImpl {
-    async fn schedule_job(&mut self, job: Job) -> Result<SuccessInfo, PromiseError> {
+    async fn schedule_job(&mut self, job: Option<Job>) -> Result<SuccessInfo, PromiseError> {
+        let job = if let Some(job) = job {
+            job
+        } else {
+            error!("system_schedule shcedule_job: job is none");
+            return Err(PromiseError::new(-28, "job is none"));
+        };
         let pkg_name = self
             .get_package_name()
             .ok_or(PromiseError::new(-27, "schedule_job failed!"))?;
@@ -64,16 +70,23 @@ impl Schedule for ScheduleImpl {
             job.get_timeout(),
             pkg_name.clone(),
             job.get_interval(),
-            job.get_trigger_method(),
-            job.get_params().as_str()
-        );
+            job.get_trigger_method().as_ref().map(|s| s.as_str()).unwrap_or("none"),
+            job.get_params().as_ref().map(|s| s.as_str()).unwrap_or("none"));
         let task = schedule::AddRequest::new(
             job.get_type().into(),
             job.get_timeout(),
             pkg_name,
-            job.get_trigger_method().as_str().to_owned(),
+            job.get_trigger_method()
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or("none")
+                .to_owned(),
             job.get_interval(),
-            job.get_params().as_str().to_owned(),
+            job.get_params()
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or("none")
+                .to_owned(),
         );
         match self.sc.add_task(task).await {
             Ok(id) => {
