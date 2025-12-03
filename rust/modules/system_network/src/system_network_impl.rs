@@ -9,7 +9,7 @@ use feature_macros::feature_instance;
 use futures::channel::oneshot;
 use futures::future::{self, Either};
 use vdk::async_runtime::io::{AsyncSocket, SockAddr};
-use vdk::async_runtime::runtime::spawn;
+use vdk::async_runtime::runtime::{block_on, spawn, JoinHandle};
 use vdk::log::{debug, error, info, warn};
 
 // extern C functions
@@ -65,6 +65,7 @@ impl SystemNetworkPrototype {
 pub struct SystemNetworkImpl {
     instance: FeatureInstance,
     monitoring_stop: Option<oneshot::Sender<()>>,
+    monitoring_handle: Option<JoinHandle<()>>,
 }
 
 impl SystemNetworkImpl {
@@ -72,6 +73,7 @@ impl SystemNetworkImpl {
         SystemNetworkImpl {
             instance,
             monitoring_stop: None,
+            monitoring_handle: None,
         }
     }
 
@@ -121,10 +123,23 @@ impl SystemNetworkImpl {
         NetType::try_from(type_value)
     }
 
-    fn try_stop_monitoring(&mut self) {
+    fn try_stop_monitoring(&mut self) -> Option<JoinHandle<()>> {
         if let Some(stop_tx) = self.monitoring_stop.take() {
             if let Err(e) = stop_tx.send(()) {
                 warn!("Monitoring send stop failed, err:{e:?}");
+            }
+        }
+        self.monitoring_handle.take()
+    }
+
+    async fn wait_for_monitoring_task(handle: JoinHandle<()>) {
+        info!("Waiting for monitoring task to exit...");
+        match handle.await {
+            Ok(_) => {
+                info!("Monitoring task has exited successfully");
+            }
+            Err(e) => {
+                warn!("Monitoring task was canceled: {:?}", e);
             }
         }
     }
@@ -186,8 +201,10 @@ impl SystemNetwork for SystemNetworkImpl {
             }
         };
 
-        // Stop any existing monitoring
-        self.try_stop_monitoring();
+        // Stop any existing monitoring and wait for it to exit
+        if let Some(old_handle) = self.try_stop_monitoring() {
+            Self::wait_for_monitoring_task(old_handle).await;
+        }
 
         let (stop_tx, stop_rx) = oneshot::channel();
         self.monitoring_stop = Some(stop_tx);
@@ -227,7 +244,7 @@ impl SystemNetwork for SystemNetworkImpl {
             }
         };
 
-        spawn(async move {
+        let handle = spawn(async move {
             futures::pin_mut!(monitoring_future);
             match future::select(monitoring_future, stop_rx).await {
                 Either::Left(_) => {
@@ -239,12 +256,16 @@ impl SystemNetwork for SystemNetworkImpl {
             }
         });
 
+        self.monitoring_handle = Some(handle);
+
         info!("SystemNetwork::subscribe success");
         Ok(())
     }
 
     fn unsubscribe(&mut self) {
-        self.try_stop_monitoring();
+        if let Some(handle) = self.try_stop_monitoring() {
+            block_on(Self::wait_for_monitoring_task(handle));
+        }
     }
 }
 

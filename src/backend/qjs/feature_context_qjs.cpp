@@ -125,8 +125,3 @@ bool InitFeatureContextQjs(ft_context_ref rt_ctx, void* data)
 }
 
 void UninitFeatureContextQjs(ft_context_ref context) { }
-
-JSContext* ft_ctx_to_js_ctx(ft_context_ref rt_ctx)
-{
-    return (JSContext*)rt_ctx->data;
-}
