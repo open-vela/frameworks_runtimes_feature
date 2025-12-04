@@ -28,7 +28,7 @@
 
 static const char* kFileTag = "[jidl_feature] packagemanager_impl";
 
-using namespace os::pm;
+using namespace ::os::pm;
 using android::binder::Status;
 
 namespace {
@@ -330,9 +330,10 @@ void system_packagemanager_wrap_getInstalledPackages(FeatureInstanceHandle featu
     PackageManager* pm = static_cast<PackageManager*>(FeatureGetProtoData(protoHandle));
 
     std::vector<PackageInfo> pkgInfos;
-    int status = pm->getAllPackageInfo(&pkgInfos);
+    const int kSliceSize = 20;
+    int status = pm->getAllPackageInfoEx(&pkgInfos, kSliceSize);
     if (status) {
-        FEATURE_LOG_ERROR("%s::getAllPackageInfo failed, status:%d\n", kFileTag, status);
+        FEATURE_LOG_ERROR("%s::getAllPackageInfoEx failed, status:%d\n", kFileTag, status);
         FeaturePromiseReject(feature, pid, 202, "parameter error");
         return;
     }
