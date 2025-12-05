@@ -12,26 +12,33 @@
 # ##############################################################################
 
 if(CONFIG_FEATURE_RUST_MODULES)
-include(nuttx_add_rust)
+  nuttx_add_library(rust_features_impl)
 
-nuttx_add_library(rust_features_impl)
+  if(CONFIG_RUST_FEATURE_SYSTEM_EXCHANGE)
+    list(APPEND MODULES ${CMAKE_CURRENT_LIST_DIR}/modules/system_exchange)
+  endif()
 
-file(GLOB MODULES "modules/*")
-# 遍历所有模块目录
-foreach(MODULE ${MODULES})
+  if(CONFIG_RUST_FEATURE_SYSTEM_NETWORK)
+    list(APPEND MODULES ${CMAKE_CURRENT_LIST_DIR}/modules/system_network)
+  endif()
+
+  if(CONFIG_FEATURE_RUST_MODULES_UNSTABLE)
+    list(APPEND MODULES ${CMAKE_CURRENT_LIST_DIR}/modules/system_schedule
+         ${CMAKE_CURRENT_LIST_DIR}/modules/system_media_audio)
+  endif()
+
+  foreach(MODULE ${MODULES})
     get_filename_component(MODULE_NAME ${MODULE} NAME)
     set(JIDL_PATH ${MODULE}/jidl/${MODULE_NAME}.jidl)
-    # 为每个模块配置 Cargo 构建
     nuttx_add_jidl_rust(
-        TARGET
-        rust_features_impl
-        JIDLS
-        ${JIDL_PATH}
-        FEATURE_CRATE
-        ${MODULE}
-        FEATURE_NAMES
-        ${MODULE_NAME}
-    )
-endforeach()
+      TARGET
+      rust_features_impl
+      JIDLS
+      ${JIDL_PATH}
+      FEATURE_CRATE
+      ${MODULE}
+      FEATURE_NAMES
+      ${MODULE_NAME})
+  endforeach()
 
 endif(CONFIG_FEATURE_RUST_MODULES)

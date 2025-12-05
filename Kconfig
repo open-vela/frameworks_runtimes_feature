@@ -103,6 +103,11 @@ config FEATURE_RUST_MODULES
 	bool "Enable Feature Framework Rust modules support"
 	default n
 
+config FEATURE_RUST_MODULES_UNSTABLE
+	bool "Enable currently unstable rust features"
+	depends on FEATURE_RUST_MODULES
+	default n
+
 menu "feature modules"
 source "$APPSDIR/frameworks/runtimes/feature/modules/Kconfig"
 endmenu

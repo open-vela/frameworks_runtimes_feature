@@ -27,3 +27,6 @@ CFLAGS   += ${INCDIR_PREFIX}$(APPDIR)/external/protobuf-c/protobuf-c
 ifeq ($(CONFIG_FEATURE_FRAMEWORK),y)
 include $(APPDIR)/frameworks/runtimes/feature/modules/Make.defs
 endif
+ifeq ($(CONFIG_FEATURE_RUST_MODULES),y)
+include $(APPDIR)/frameworks/runtimes/feature/rust/Make.defs
+endif

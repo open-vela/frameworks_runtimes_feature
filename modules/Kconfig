@@ -114,12 +114,29 @@ config FEATURE_SYSTEM_MESSAGECHANNEL
     --help--
         enable system.messageChannel feature
 
+choice
+prompt "select the implementation of system.exchange"
+default FEATURE_SYSTEM_EXCHANGE
+
 config FEATURE_SYSTEM_EXCHANGE
-    bool "system.exchange"
-    default y
+    bool "cpp implementation of system.exchange"
     depends on LIBUV_EXTENSION && KVDB
     --help--
         enable system.exchange feature
+
+config RUST_FEATURE_SYSTEM_EXCHANGE
+    bool "rust implementation of system.exchange"
+    depends on KVDB && FEATURE_RUST_MODULES
+    --help--
+        enable system.exchange feature
+endchoice
+
+config RUST_FEATURE_SYSTEM_NETWORK
+    bool "system.network"
+    default n
+    depends on FEATURE_RUST_MODULES
+    --help--
+        enable system.network rust feature
 
 config FEATURE_SYSTEM_CONFIGURATION
     bool "system.configuration"

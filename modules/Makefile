@@ -323,6 +323,18 @@ ifeq ($(CONFIG_FEATURE_SYSTEM_EXCHANGE),y)
 	FEATURELIST += system_exchange
 endif
 
+ifeq ($(CONFIG_RUST_FEATURE_SYSTEM_EXCHANGE),y)
+	JIDL_C_PATH 	:= $(JIDL_C_PATH) $(APPDIR)/frameworks/runtimes/feature/rust/modules/system_exchange/jidl/system_exchange.jidl
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+	CFEATURELIST += system_exchange
+endif
+
+ifeq ($(CONFIG_FEATURE_SYSTEM_NETWORK),y)
+	JIDL_C_PATH 	:= $(JIDL_C_PATH) $(APPDIR)/frameworks/runtimes/feature/rust/modules/system_network/jidl/system_network.jidl
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+	CFEATURELIST += system_network
+endif
+
 ifeq ($(CONFIG_FEATURE_SYSTEM_CONFIGURATION),y)
 	CXXSRCS 	:= $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/configuration_impl.cpp
 	JIDL_PATH 	:= $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/configuration.jidl

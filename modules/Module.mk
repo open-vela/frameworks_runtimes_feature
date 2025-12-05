@@ -43,7 +43,7 @@ depend::
 		$(eval jidl_path=$(word $(i),$(JIDL_C_PATH))) \
 		$(eval out_path=$(word $(i),$(OUT_PATH))) \
 		$(eval file_name=$(strip $(basename $(notdir $(word $(i),$(JIDL_C_PATH))) .jidl))) \
-		python3 $(APPDIR)/frameworks/runtimes/feature/tools/jidl/jsongensource.py $(jidl_path) -out-dir $(out_path) -lang c -header $(file_name).h -source $(file_name).c; \
+		$(APPDIR)/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp $(jidl_path) --out-dir $(out_path) --header $(file_name).h --source $(file_name).c; \
 	)
 
 ifeq ($(wildcard $(AJS_FEATURES_REGISTRY_LIST)),)

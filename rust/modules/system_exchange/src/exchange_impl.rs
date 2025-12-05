@@ -13,6 +13,7 @@ const EXCHANGE_PERSIST: &str = "persist.";
 const EXCHANGE_PERSIST_LEN: usize = EXCHANGE_PERSIST.len();
 const PROP_KEY_MAX: usize = 127;
 const PROP_VALUE_MAX: usize = 255;
+const SYSTEM_EXCHANGE_ERROR_CODE: i32 = 202;
 
 pub(crate) fn system_exchange_on_register(_name: &FeatureString) {}
 
@@ -71,22 +72,25 @@ pub(crate) fn process_properties(
     let key = key
         .as_ref()
         .filter(|k| !k.is_empty())
-        .ok_or_else(|| PromiseError::new(-1, "key is null or empty"))?;
+        .ok_or_else(|| PromiseError::new(SYSTEM_EXCHANGE_ERROR_CODE, "key is null or empty"))?;
 
     let scope = scope
         .as_ref()
         .filter(|s| !s.is_empty())
-        .ok_or_else(|| PromiseError::new(-1, "scope is null or empty"))?;
+        .ok_or_else(|| PromiseError::new(SYSTEM_EXCHANGE_ERROR_CODE, "scope is null or empty"))?;
 
     if op == ExchangeOp::Set {
         let _ = value
             .as_ref()
             .filter(|v| !v.is_empty() && v.len() <= PROP_VALUE_MAX)
-            .ok_or_else(|| PromiseError::new(-1, "invalid value"))?;
+            .ok_or_else(|| PromiseError::new(SYSTEM_EXCHANGE_ERROR_CODE, "invalid value"))?;
     }
 
     if !(scope.as_str() == "vendor" || scope.as_str() == "global") {
-        return Err(PromiseError::new(-1, format!("scope {scope} not support")));
+        return Err(PromiseError::new(
+            SYSTEM_EXCHANGE_ERROR_CODE,
+            format!("scope {scope} not support"),
+        ));
     }
 
     let scope_len = scope.len();
@@ -96,7 +100,7 @@ pub(crate) fn process_properties(
         ;
     if key_len > PROP_KEY_MAX {
         return Err(PromiseError::new(
-            -1,
+            SYSTEM_EXCHANGE_ERROR_CODE,
             format!("key length too long, max:{PROP_KEY_MAX}, current:{key_len}"),
         ));
     }
@@ -111,7 +115,10 @@ impl Exchange for ExchangeImpl {
             info
         } else {
             error!("system_exchange set: info is none");
-            return Err(PromiseError::new(-2, "info is none"));
+            return Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                "info is none",
+            ));
         };
         info!("{} exchange.set called", FILE_TAG);
 
@@ -128,8 +135,11 @@ impl Exchange for ExchangeImpl {
             .to_string();
 
         match self.prop.set(&key, &value).await {
-            Ok(_) => Ok(FeatureString::from("set success")),
-            Err(e) => Err(PromiseError::new(-1, format!("set failed: {e}"))),
+            Ok(_) => Ok(FeatureString::from(value)),
+            Err(e) => Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                format!("set failed: {e}"),
+            )),
         }
     }
 
@@ -138,7 +148,10 @@ impl Exchange for ExchangeImpl {
             info
         } else {
             error!("system_exchange get: info is none");
-            return Err(PromiseError::new(-2, "info is none"));
+            return Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                "info is none",
+            ));
         };
         info!("{} exchange.get called", FILE_TAG);
 
@@ -150,7 +163,10 @@ impl Exchange for ExchangeImpl {
                 get_ret.set_value(FeatureString::new(String::from_utf8_lossy(&value)));
                 Ok(get_ret)
             }
-            Err(e) => Err(PromiseError::new(-1, format!("get failed: {e}"))),
+            Err(e) => Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                format!("get failed: {e}"),
+            )),
         }
     }
 
@@ -159,7 +175,10 @@ impl Exchange for ExchangeImpl {
             info
         } else {
             error!("system_exchange remove: info is none");
-            return Err(PromiseError::new(-2, "info is none"));
+            return Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                "info is none",
+            ));
         };
         info!("{} exchange.remove called", FILE_TAG);
 
@@ -171,15 +190,44 @@ impl Exchange for ExchangeImpl {
         )?;
 
         match self.prop.delete(&key).await {
-            Ok(_) => Ok(FeatureString::from("remove success")),
-            Err(e) => Err(PromiseError::new(-1, format!("remove failed: {e}"))),
+            Ok(_) => Ok(FeatureString::from("success")),
+            Err(e) => Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                format!("remove failed: {e}"),
+            )),
         }
     }
 
-    async fn clear(&mut self, _info: Option<ClearInfo>) -> Result<FeatureString, PromiseError> {
+    async fn clear(&mut self, info: Option<ClearInfo>) -> Result<FeatureString, PromiseError> {
+        let info = if let Some(info) = info {
+            info
+        } else {
+            error!("system_exchange clear: info is none");
+            return Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                "info is none",
+            ));
+        };
         info!("{} exchange.clear called", FILE_TAG);
 
-        Ok(FeatureString::from("clear success"))
+        let scope = if let Some(scope) = info.get_scope() {
+            scope
+        } else {
+            error!("system_exchange clear: scope is none");
+            return Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                "scope is none",
+            ));
+        };
+
+        if !(scope.as_str() == "vendor" || scope.as_str() == "global") {
+            return Err(PromiseError::new(
+                SYSTEM_EXCHANGE_ERROR_CODE,
+                format!("scope {scope} not support"),
+            ));
+        }
+
+        Ok(FeatureString::from("success"))
     }
 }
 
