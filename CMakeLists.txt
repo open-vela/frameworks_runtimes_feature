@@ -48,7 +48,7 @@ if(CONFIG_FEATURE_FRAMEWORK)
   if(CONFIG_FEATURE_LOG_LEVEL)
     list(APPEND FEATURE_DEFS -DFEATURE_LOG_LEVEL=${CONFIG_FEATURE_LOG_LEVEL})
   endif()
-
+  nuttx_include_directories_for_all_apps(${CMAKE_CURRENT_SOURCE_DIR}/include)
   list(
     APPEND
     FEATURE_SRCS
