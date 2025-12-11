@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "ajs_porting.h"
 #include "feature_exports.h"
 #include "feature_log.h"
 
