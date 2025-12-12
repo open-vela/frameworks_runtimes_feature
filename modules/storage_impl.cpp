@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "inspector_host_storage.h"
+#include "quickapp_inspector.h"
 #include "storage.h"
 #include "unqlite.h"
 #include "uv_ext.h"

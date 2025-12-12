@@ -30,8 +30,7 @@
 
 #include "feature_trace.h"
 #include "fetch.h"
-#include "framework/app_interface.h"
-#include "inspector_host_net.h"
+#include "quickapp_inspector.h"
 #include "net_utils.h"
 #include "uv_ext.h"
 #include "trace_utils.h"

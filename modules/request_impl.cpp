@@ -20,8 +20,8 @@
 #include "feature_description.h"
 #include "feature_exports.h"
 #include "feature_types.h"
-#include "inspector_host_net.h"
 #include "net_utils.h"
+#include "quickapp_inspector.h"
 #include "request.h"
 #include "uv_ext.h"
 #include <cassert>
