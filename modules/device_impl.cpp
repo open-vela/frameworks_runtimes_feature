@@ -20,8 +20,7 @@
 #include "uv_ext.h"
 #include <sys/statfs.h>
 #ifdef CONFIG_QUICKAPP
-#include "ajs_utils.h"
-#include "ajs_version.h"
+#include "quickapp.h"
 #endif
 #define USERSPACE_PATH "/data"
 static const char* file_tag = "[jidl_feature] Device_impl";
@@ -130,9 +129,9 @@ void system_device_wrap_getInfo(FeatureInstanceHandle feature, AppendData append
     STRCPY(device->language, devinfo.language);
     STRCPY(device->region, devinfo.region);
 #ifdef CONFIG_QUICKAPP
-    STRCPY(device->platformVersionName, AIOTJS::version());
-    device->platformVersionCode = AIOTJS::versionCode();
-    device->APILevel = AIOTJS::APILevel();
+    STRCPY(device->platformVersionName, QAppVersion());
+    device->platformVersionCode = QAppVersionCode();
+    device->APILevel = QAppAPILevel();
 #else
     STRCPY(device->platformVersionName, "unknown");
 #endif
