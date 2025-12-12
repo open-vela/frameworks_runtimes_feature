@@ -263,9 +263,9 @@ ifeq ($(CONFIG_QUICKAPP_TEST_FRAMEWORK), y)
 endif
 
 ifeq ($(CONFIG_GRAPHICS_INPUT_TOOL),y)
-	CXXSRCS += $(APPDIR)/frameworks/runtimes/feature/modules/input_impl.cpp
-	JIDL_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/jidl/input.jidl
-	OUT_PATH += $(APPDIR)/frameworks/runtimes/feature/modules/src/
+	CXXSRCS     := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/input_impl.cpp
+	JIDL_PATH   := $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/input.jidl
+	OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl/
 	FEATURELIST += system_test_input
 endif
 
