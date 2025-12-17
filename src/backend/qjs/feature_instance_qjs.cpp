@@ -403,6 +403,7 @@ void FeatureInstanceQjs::onDetached()
 
     // release all callback
     clearCallbacks();
+    clearAllEvents();
     FeatureInstance::onDetached();
 }
 
