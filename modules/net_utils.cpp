@@ -20,6 +20,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef CONFIG_LIB_CURL
+#include <curl/curl.h>
+#endif
+
 #include <cassert>
 #include <iostream>
 #include <map>
@@ -251,3 +255,37 @@ bool check_file_path(const char* pkg, FtString filename,
     ASSERT_RET_NULL(access(dest_filename.c_str(), F_OK) != -1);
     return true;
 }
+
+#ifdef CONFIG_LIB_CURL
+ErrorCode map_curl_to_custom_error(long curl_code)
+{
+    switch (curl_code) {
+    // System initialization failure or insufficient memory, mapped to system
+    // general error
+    case CURLE_FAILED_INIT:
+    case CURLE_OUT_OF_MEMORY:
+    case CURLE_WRITE_ERROR:
+        return ErrorCode::GENERAL;
+
+    // Parameter-related errors, mapped to parameter error
+    case CURLE_BAD_FUNCTION_ARGUMENT:
+    case CURLE_UNKNOWN_OPTION:
+    case CURLE_SETOPT_OPTION_SYNTAX:
+        return ErrorCode::ARGSERROR;
+
+    // Operation timed out, mapped to request timeout
+    case CURLE_OPERATION_TIMEDOUT:
+        return ErrorCode::TIMEOUT;
+
+    // Various read/write related errors, mapped to I/O error
+    case CURLE_READ_ERROR:
+    case CURLE_RECV_ERROR:
+    case CURLE_SEND_ERROR:
+        return ErrorCode::IOERROR;
+
+    // Other uncategorized errors, mapped to system general error
+    default:
+        return ErrorCode::GENERAL;
+    }
+}
+#endif

@@ -108,6 +108,16 @@ typedef enum ErrorCode {
 #define HTTP_BAD_REQUES 400
 #define CONTENT_TYPE "Content-Type"
 
+#ifdef CONFIG_LIB_CURL
+/**
+ * Map curl error code to custom ErrorCode
+ *
+ * @param curl_code The curl error code (CURLcode)
+ * @return The corresponding ErrorCode
+ */
+ErrorCode map_curl_to_custom_error(long curl_code);
+#endif
+
 #define arrayof(array) sizeof(array) / sizeof(array[0])
 
 #define INVOKE_SUCCESS_CB(cb, ...)                                 \
