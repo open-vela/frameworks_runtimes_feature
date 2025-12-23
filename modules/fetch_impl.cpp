@@ -392,7 +392,11 @@ static void fetch_request_cb(int state, uv_response_t* response)
         FETCH_ERROR("upload err, error code: %d,msg: %s", response->httpcode,
             response->body);
         InspectHostNetLoadingFailed(true);
-        FeaturePromiseReject(p->feature, p->pid, response->httpcode, response->body);
+        ErrorCode error_code = ErrorCode::GENERAL;
+#ifdef CONFIG_LIB_CURL
+        error_code = map_curl_to_custom_error(response->httpcode);
+#endif
+        FeaturePromiseReject(p->feature, p->pid, error_code, response->body);
     }
 
 exit:
