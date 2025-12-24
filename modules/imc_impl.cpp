@@ -20,16 +20,21 @@
 #include "ash/logging/logging.h"
 #include "ash/memory/weak_ptr.h"
 #include "ash/message_loop/message_loop.h"
-#include "framework/application.h"
 #include "framework/input_method/input_method_manager.h"
+#include "quickapp.h"
 #include <functional>
 #include <memory>
 
 class ImcOnUI;
 
+struct ImcTaskData {
+    ImcOnUI* imc_on_ui;
+    std::string text;
+};
+
 class Imc : public ash::SupportsWeakPtr<Imc> {
 public:
-    Imc(FeatureInstanceHandle feature, std::shared_ptr<ash::TaskRunner> ui_runner);
+    Imc(FeatureInstanceHandle feature, QApplicationHandle app_handle);
     ~Imc();
 
     void UpdateInputText(const std::string& text);
@@ -41,7 +46,7 @@ public:
 private:
     FeatureInstanceHandle feature_;
     std::unique_ptr<ImcOnUI> imc_on_ui_;
-    std::shared_ptr<ash::TaskRunner> ui_runner_;
+    QApplicationHandle app_handle_;
     std::function<void(const std::string&)> on_extracted_text_changed_;
 };
 
@@ -64,31 +69,38 @@ private:
     bool bound_;
 };
 
-Imc::Imc(FeatureInstanceHandle feature, std::shared_ptr<ash::TaskRunner> ui_runner)
+Imc::Imc(FeatureInstanceHandle feature, QApplicationHandle app_handle)
     : SupportsWeakPtr(this)
     , feature_(feature)
     , imc_on_ui_(std::make_unique<ImcOnUI>(AsWeakPtr(),
           ash::MessageLoop::Current()->GetTaskRunner()))
-    , ui_runner_(std::move(ui_runner))
+    , app_handle_(app_handle)
 {
     ASH_LOG("IMC", INFO) << "Imc::Imc";
-    ui_runner_->PostTask([imc_on_ui = imc_on_ui_.get()]() {
-        imc_on_ui->Init();
-    });
+    QApplicationPostUITask(app_handle_, [](void* user_data) {
+        static_cast<ImcOnUI*>(user_data)->Init();
+    }, nullptr, imc_on_ui_.get());
 }
 
 Imc::~Imc()
 {
     ASH_LOG("IMC", INFO) << "Imc::~Imc";
-    ui_runner_->PostTask([imc_on_ui = std::move(imc_on_ui_)]() {});
 }
 
 void Imc::UpdateInputText(const std::string& text)
 {
     ASH_LOG("IMC", INFO) << "Imc::UpdateInputText";
-    ui_runner_->PostTask([imc_on_ui = imc_on_ui_.get(), text]() {
-        imc_on_ui->UpdateInputText(text);
-    });
+    auto data = std::make_unique<ImcTaskData>();
+    data->imc_on_ui = imc_on_ui_.get();
+    data->text = text;
+
+    QApplicationPostUITask(app_handle_, [](void* user_data) {
+        ImcTaskData* task_data = static_cast<ImcTaskData*>(user_data);
+        task_data->imc_on_ui->UpdateInputText(task_data->text);
+    }, [](void* user_data) {
+        ImcTaskData* ptr = static_cast<ImcTaskData*>(user_data);
+        std::unique_ptr<ImcTaskData> del(ptr);
+    }, data.release());
 }
 
 void Imc::SetOnExtractedTextChanged(std::function<void(const std::string&)> cb)
@@ -100,9 +112,9 @@ void Imc::SetOnExtractedTextChanged(std::function<void(const std::string&)> cb)
 void Imc::Close()
 {
     ASH_LOG("IMC", INFO) << "Imc::Close";
-    ui_runner_->PostTask([imc_on_ui = imc_on_ui_.get()]() {
-        imc_on_ui->Close();
-    });
+    QApplicationPostUITask(app_handle_, [](void* user_data) {
+        static_cast<ImcOnUI*>(user_data)->Close();
+    }, nullptr, imc_on_ui_.get());
 }
 
 void Imc::UpdateInitialText(const std::string& text)
@@ -187,10 +199,8 @@ void system_imc_onCreate(FeatureRuntimeContext ctx, FeatureProtoHandle handle)
 
 void system_imc_onRequired(FeatureRuntimeContext ctx, FeatureInstanceHandle handle)
 {
-    // TODO(xuyan): Find a better way to get ui task runner.
-    Application* app = static_cast<Application*>(FeatureInstanceGetManagerUserData(handle, "app"));
-    std::shared_ptr<ash::TaskRunner> ui_runner = app->getUITaskRunner();
-    std::unique_ptr<Imc> imc = std::make_unique<Imc>(handle, std::move(ui_runner));
+    QApplicationHandle app_handle = static_cast<QApplicationHandle>(FeatureInstanceGetManagerUserData(handle, "app"));
+    std::unique_ptr<Imc> imc = std::make_unique<Imc>(handle, app_handle);
     FeatureSetObjectData(handle, imc.release());
 }
 
