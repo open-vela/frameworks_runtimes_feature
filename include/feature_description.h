@@ -17,10 +17,6 @@
 #ifndef FEATURE_DESCRIPTION_H
 #define FEATURE_DESCRIPTION_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "feature_permission.h"
 #include "feature_types.h"
 #include <inttypes.h>
@@ -32,6 +28,10 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define FT_PRIMITIVE_BIT ((uintptr_t)3)
 
