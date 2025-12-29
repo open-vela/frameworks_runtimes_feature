@@ -100,7 +100,7 @@ bool PromptToast::timeout(uint32_t tick)
 void PromptToast::close()
 {
     if (obj_) {
-        lv_obj_del_async(obj_);
+        lv_obj_del(obj_);
         obj_ = nullptr;
     }
 }

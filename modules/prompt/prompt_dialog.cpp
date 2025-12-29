@@ -111,7 +111,7 @@ bool PromptDialog::setAttr(ID attrId, int32_t value)
 void PromptDialog::close()
 {
     if (obj_) {
-        lv_obj_del_async(obj_);
+        lv_obj_del(obj_);
         obj_ = nullptr;
         objOk_ = nullptr;
         objCancel_ = nullptr;
