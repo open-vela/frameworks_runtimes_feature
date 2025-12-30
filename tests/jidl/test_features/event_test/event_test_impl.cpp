@@ -14,9 +14,11 @@ static void on_event_status_change(FeatureInstanceHandle handle, FtEventId eid, 
 {
     printf("%s::%s(), event_id: %" PRIi32 ", status: %d\n", file_tag, __FUNCTION__, eid, status);
     const char* event_name = FeatureGetEventName(handle, eid);
-    if (event_name) {
-        printf("%s::%s(), event_name: %s\n", file_tag, __FUNCTION__, event_name);
+    if (!event_name) {
+        printf("%s::%s(), error: event name is null\n", file_tag, __FUNCTION__);
+        return;
     }
+    printf("%s::%s(), event_name: %s\n", file_tag, __FUNCTION__, event_name);
     EventTestData* data = (EventTestData*)FeatureGetObjectData(handle);
     if (!data) {
         printf("%s::%s(), error, event test_data ptr is null\n", file_tag, __FUNCTION__);
