@@ -396,7 +396,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     } else if (check_any(options->data) && !check_str(options->uri)) {
         // judge data type
         uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
-        if (!buff || size == 0) {
+        if (!buff || size == 0 || !algo) {
             msg = "invalid data type!";
             code = ARGSERROR;
         } else {
@@ -493,7 +493,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         }
     } else if (!check_any(options->data) && check_str(options->uri)) {
         // deal with data type of signature
-        if (!check_any(options->signature)) {
+        if (!check_any(options->signature) || !algo) {
             msg = "signature: invalid data type!";
             code = ARGSERROR;
         } else {
