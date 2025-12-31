@@ -446,6 +446,7 @@ if ((CONFIG_APP_CAR_CONTROL AND CONFIG_CAR_APP_SETTINGS) OR CONFIG_APP_CAR_SETTI
     nuttx_add_jidl(
         TARGET
         feature_impls
+        FEATURE_SRCS
         ${FEATURE_SRCS}
         JIDLS
         ${JIDL_PATHS}
