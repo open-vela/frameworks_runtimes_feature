@@ -206,11 +206,23 @@ impl SystemNetwork for SystemNetworkImpl {
             Self::wait_for_monitoring_task(old_handle).await;
         }
 
+        let mut last_type: Option<NetType> = None;
+
+        // Trigger initial callback with current network type
+        match Self::fetch_current_network_type() {
+            Ok(net_type) => {
+                cb.invoke(FeatureString::new(net_type.as_str()));
+                last_type = Some(net_type);
+            }
+            Err(e) => {
+                error!("Failed to fetch current network type on subscribe: {}", e);
+            }
+        }
+
         let (stop_tx, stop_rx) = oneshot::channel();
         self.monitoring_stop = Some(stop_tx);
 
         let monitoring_future = async move {
-            let mut last_type: Option<NetType> = None;
             loop {
                 let mut buf: [u8; 128] = [0; 128];
                 match socket.recv(&mut buf).await {
@@ -230,7 +242,7 @@ impl SystemNetwork for SystemNetworkImpl {
                                         }
                                     }
                                     Err(e) => {
-                                        info!("Failed to fetch current network type: {}", e);
+                                        error!("Failed to fetch current network type: {}", e);
                                     }
                                 }
                             }
