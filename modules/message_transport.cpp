@@ -343,6 +343,8 @@ void TaskBoard::clearTimer()
 {
     for (auto iter = task_list_.begin(); iter != task_list_.end();) {
         (*iter)->stopTimer();
+        (*iter)->getIReply()->setClientConnection(nullptr);
+        (*iter)->getIReply()->setClientChannelCallback(nullptr);
         iter = task_list_.erase(iter);
     }
 }
