@@ -9,7 +9,7 @@ use feature_macros::feature_instance;
 use futures::channel::oneshot;
 use futures::future::{self, Either};
 use vdk::async_runtime::io::{AsyncSocket, SockAddr};
-use vdk::async_runtime::runtime::{block_on, spawn, JoinHandle};
+use vdk::async_runtime::runtime::{spawn, JoinHandle};
 use vdk::log::{debug, error, info, warn};
 
 // extern C functions
@@ -275,9 +275,7 @@ impl SystemNetwork for SystemNetworkImpl {
     }
 
     fn unsubscribe(&mut self) {
-        if let Some(handle) = self.try_stop_monitoring() {
-            block_on(Self::wait_for_monitoring_task(handle));
-        }
+        let _handle = self.try_stop_monitoring();
     }
 }
 
