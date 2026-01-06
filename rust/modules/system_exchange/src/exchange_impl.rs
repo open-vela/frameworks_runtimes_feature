@@ -134,7 +134,7 @@ impl Exchange for ExchangeImpl {
             .expect("Failed to get value!")
             .to_string();
 
-        match self.prop.set(&key, &value).await {
+        match self.prop.set_worker(&key, &value).await {
             Ok(_) => Ok(FeatureString::from(value)),
             Err(e) => Err(PromiseError::new(
                 SYSTEM_EXCHANGE_ERROR_CODE,
@@ -157,7 +157,7 @@ impl Exchange for ExchangeImpl {
 
         let key = process_properties(ExchangeOp::Get, &info.get_key(), &None, &info.get_scope())?;
 
-        match self.prop.get(&key).await {
+        match self.prop.get_worker(&key).await {
             Ok(value) => {
                 let mut get_ret = GetRet::new();
                 get_ret.set_value(FeatureString::new(String::from_utf8_lossy(&value)));
@@ -189,7 +189,7 @@ impl Exchange for ExchangeImpl {
             &info.get_scope(),
         )?;
 
-        match self.prop.delete(&key).await {
+        match self.prop.delete_worker(&key).await {
             Ok(_) => Ok(FeatureString::from("success")),
             Err(e) => Err(PromiseError::new(
                 SYSTEM_EXCHANGE_ERROR_CODE,
