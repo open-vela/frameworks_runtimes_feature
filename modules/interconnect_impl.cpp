@@ -213,6 +213,7 @@ public:
         , status_(0) // 0 -> connecting
     {
         miwear_ = static_cast<uv_miwear_t*>(malloc(sizeof(uv_miwear_t)));
+        memset(miwear_, 0, sizeof(uv_miwear_t));
         miwear_->data = this;
     }
 
