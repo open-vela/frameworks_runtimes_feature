@@ -21,7 +21,10 @@
 
 namespace prompt {
 class DialogStyle;
-;
+
+const int32_t kPromptDialogMsgSize = 34;
+const int32_t kPromptDialogTitleSize = 36;
+
 class PromptDialog : public Prompt {
 public:
     PromptDialog(lv_obj_t* parent);

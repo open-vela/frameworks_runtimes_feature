@@ -184,6 +184,7 @@ public:
         data->dialog_id = dialog_id;
         data->root_view = QApplicationGetGUIRoot(app_handle_);
         data->prompt_server = prompt_server_.get();
+        data->feature_handle = feature;
         data->prompt_manager = AsWeakPtr();
 
         QApplicationPostUITask(

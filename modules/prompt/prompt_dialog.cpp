@@ -27,8 +27,8 @@ namespace prompt {
 class DialogStyle {
 public:
     DialogStyle()
-        : fontMsg(PROMPT_DIALOG_MSG_FONT_SIZE)
-        , fontTitle(PROMPT_DIALOG_TITLE_FONT_SIZE)
+        : fontMsg(kPromptDialogMsgSize)
+        , fontTitle(kPromptDialogTitleSize)
     {
         lv_style_init(&styleMsg);
         lv_style_set_text_color(&styleMsg, lv_color_white());
@@ -115,6 +115,7 @@ void PromptDialog::close()
         obj_ = nullptr;
         objOk_ = nullptr;
         objCancel_ = nullptr;
+        delete this;
     }
 }
 
@@ -125,7 +126,7 @@ void PromptDialog::draw()
 
     if (obj_)
         return;
-
+    lv_obj_create_info_t info = { false };
     lv_obj_set_size(getParent(), LV_HOR_RES, LV_VER_RES);
     lv_obj_center(getParent());
     lv_obj_set_style_bg_opa(getParent(), LV_OPA_COVER, LV_PART_MAIN);
@@ -133,7 +134,8 @@ void PromptDialog::draw()
 
     obj_ = lv_obj_create(getParent());
     lv_obj_set_size(obj_, LV_HOR_RES, LV_VER_RES);
-    lv_obj_set_style_bg_opa(obj_, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(obj_, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(obj_, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_border_width(obj_, 0, LV_PART_MAIN);
     lv_obj_center(obj_);
 
@@ -153,34 +155,35 @@ void PromptDialog::draw()
     lv_image_set_src(imgOk, &prompt_ok);
     lv_obj_center(imgOk);
 
-    lv_obj_t* objtitle_ = lv_label_create(obj_);
+    lv_obj_t* objtitle_ = lv_spangroup_create(obj_);
     lv_obj_align(objtitle_, LV_ALIGN_TOP_MID, 0, ofstitleY);
+    lv_spangroup_set_align(objtitle_, LV_TEXT_ALIGN_CENTER);
+    lv_spangroup_set_overflow(objtitle_, LV_SPAN_OVERFLOW_ELLIPSIS);
     lv_obj_add_style(objtitle_, &style_->styleTitle, LV_PART_MAIN);
-    lv_label_set_text(objtitle_, title_.c_str());
-    lv_label_set_long_mode(objtitle_, LV_LABEL_LONG_DOT);
-    lv_obj_set_width(objtitle_, LV_HOR_RES - 40);
-    lv_obj_set_style_text_align(objtitle_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_span_t* titleSpan = lv_spangroup_new_span(objtitle_);
+    lv_span_set_text_static(titleSpan, title_.c_str());
 
-    int32_t btnHeight = lv_obj_get_height(objOk_);
-    int32_t titleHeight = lv_obj_get_height(objtitle_);
-    int32_t msg_height = LV_VER_RES - ofstitleY - titleHeight - ofsbtnY - btnHeight - 20;
+    int32_t btnHeight = lv_obj_get_style_height(objOk_, LV_PART_MAIN);
+    int32_t titleHeight = lv_obj_get_style_text_font(objtitle_, LV_PART_MAIN)->line_height;
+    int32_t pad = lv_obj_get_style_pad_bottom(obj_, LV_PART_MAIN) + lv_obj_get_style_pad_top(obj_, LV_PART_MAIN);
+    int32_t msg_height = height_ - pad - ofstitleY - titleHeight - ofsbtnY - btnHeight - 10;
 
-    lv_obj_t* msgContainer = lv_obj_create(obj_);
-    lv_obj_set_style_bg_opa(msgContainer, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(msgContainer, 0, LV_PART_MAIN);
-    lv_obj_align_to(msgContainer, objtitle_, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-    lv_obj_set_size(msgContainer, LV_PCT(90), msg_height);
+    lv_obj_t* msgContainer = lv_obj_create_ex(obj_, &info);
+    lv_obj_set_y(msgContainer, ofstitleY + titleHeight + 5);
+    lv_obj_set_size(msgContainer, LV_PCT(100), msg_height);
 
-    lv_obj_t* objmsg_ = lv_label_create(msgContainer);
-    lv_obj_set_width(objmsg_, LV_PCT(100));
+    lv_obj_t* objmsg_ = lv_spangroup_create(msgContainer);
+    lv_obj_set_width(objmsg_, LV_PCT(90));
     lv_obj_center(objmsg_);
-    lv_label_set_long_mode(objmsg_, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_align(objmsg_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_spangroup_set_mode(objmsg_, LV_SPAN_MODE_BREAK);
+    lv_spangroup_set_align(objmsg_, LV_TEXT_ALIGN_CENTER);
+    lv_spangroup_set_overflow(objmsg_, LV_SPAN_OVERFLOW_ELLIPSIS);
     lv_obj_add_style(objmsg_, &style_->styleMsg, LV_PART_MAIN);
-    lv_label_set_text(objmsg_, msg_.c_str());
+    lv_span_t* span_ = lv_spangroup_new_span(objmsg_);
+    lv_span_set_text_static(span_, msg_.c_str());
 
     // Attach generic prompt_event_cb to all relevant objects
-    lv_obj_add_event_cb(obj_, prompt_event_cb, LV_EVENT_ALL, this);
+    lv_obj_add_event_cb(obj_, prompt_event_cb, LV_EVENT_DELETE, this);
     lv_obj_add_event_cb(objOk_, prompt_event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(objCancel_, prompt_event_cb, LV_EVENT_CLICKED, this);
 }

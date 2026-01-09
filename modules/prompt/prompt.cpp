@@ -15,6 +15,8 @@
  */
 #include "prompt.h"
 
+#include "feature_log.h"
+
 namespace prompt {
 
 // Generic LVGL event handler for Prompt objects
@@ -28,7 +30,6 @@ extern "C" void prompt_event_cb(lv_event_t* e)
 
     if (code == LV_EVENT_DELETE) {
         prompt->sendEvent(Prompt::EVENT_ID_COMPLETE);
-        delete prompt; // Deleting the prompt C++ object
     } else {
         // Delegate other events to the specific prompt implementation
         prompt->handleLvglEvent(e);
@@ -41,6 +42,12 @@ Prompt::Prompt(lv_obj_t* root)
     , user_data_(nullptr)
     , eventCB_(nullptr)
 {
+    if (!root) {
+        FEATURE_LOG_ERROR("root object is null");
+        return;
+    }
+    width_ = lv_obj_get_style_width(parent_, LV_PART_MAIN);
+    height_ = lv_obj_get_style_height(parent_, LV_PART_MAIN);
 }
 
 Prompt::~Prompt()
