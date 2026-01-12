@@ -134,6 +134,7 @@ public:
             INTERCONNECT_INFO("conn is null, miwear connection has closed");
             if (msg->header.type == MIWEAR_MESSAGE_TYPE_STATUS) {
                 auto miwear_status = static_cast<const uv_miwear_status_t*>(msg->data);
+                INTERCONNECT_INFO("connect status: %d", miwear_status->status);
                 if (miwear_status->status == MIWEAR_STATUS_CONNECTION_CLOSED) {
                     free(miwear);
                 }
