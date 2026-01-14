@@ -41,7 +41,7 @@
 extern const char* crypto_err;
 
 // no need to free the return char* because it is FeatureMalloced
-char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str);
+char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str, size_t key_len);
 
 // no need to free the return char* because it is FeatureMalloced
 char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str);

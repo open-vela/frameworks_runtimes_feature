@@ -287,12 +287,14 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
 
+    const char* algo = options->algo;
     FtString result = NULL;
     // set default value SHA256
-    if (!check_str(options->algo)) {
-        options->algo = hash_types[SHA256];
-    } else if (!has_type(hash_types, arrayof(hash_types), options->algo)) {
-        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, options->algo);
+    if (!check_str(algo)) {
+        algo = hash_types[SHA256];
+    } else if (!has_type(hash_types, arrayof(hash_types), algo)) {
+        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, algo);
+        return NULL;
     }
 
     if (!(check_any(options->data) || check_str(options->uri))) {
@@ -304,14 +306,19 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
         if (!buff) {
             FEATURE_LOG_ERROR("%s %s", file_tag, "invalid data type!");
         } else {
-            result = digest(options->algo, buff, size, NULL);
+            result = digest(algo, buff, size, NULL, 0);
             if (!result && crypto_err) {
                 FEATURE_LOG_ERROR("%s, native digest error: %s", file_tag, crypto_err);
             }
-            FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+            FEATURE_LOG_DEBUG("%s, result: %s", file_tag, result);
+            // Note: Do not free buff here!
+            // When data is Uint8Array/ArrayBuffer, buff points to JS engine's internal memory
+            // which is managed by JS GC, not by malloc/free.
+            // Only string data might need special handling, but ft_to_string returns
+            // a pointer managed by JS engine as well, so no manual free is needed.
         }
     } else if (!check_any(options->data) && check_str(options->uri)) {
-        result = digest_file(options->algo, options->uri, pkg_name);
+        result = digest_file(algo, options->uri, pkg_name);
         if (!result && crypto_err) {
             FEATURE_LOG_ERROR("%s, native digest_file error: %s", file_tag, crypto_err);
         }
@@ -325,6 +332,11 @@ FtString system_crypto_wrap_hashDigest(FeatureInstanceHandle feature, AppendData
 void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData append_data,
     system_crypto_HmacDigestParam* options)
 {
+    if (options == NULL) {
+        FEATURE_LOG_ERROR("%s options is NULL", file_tag);
+        return;
+    }
+
     FEATURE_LOG_INFO("%s, options: %p", file_tag, options);
     ft_context_ref ft_ctx = FeatureGetContext(feature);
     FEATURE_CHECK_NE(ft_ctx, NULL);
@@ -332,16 +344,32 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    if (!(check_str(options->data) && check_str(options->key))) {
-        msg = "arguments data and key are needed";
+    const char* algo = options->algo;
+
+    // set default value SHA256
+    bool algo_valid = true;
+    if (!check_str(algo)) {
+        algo = hash_types[SHA256];
+    } else if (!has_type(hash_types, arrayof(hash_types), algo)) {
+        FEATURE_LOG_ERROR("%s invalid algo param: %s", file_tag, algo);
+        msg = "invalid algo param";
         code = ARGSERROR;
-    } else {
-        result = digest(options->algo, (uint8_t*)(options->data), strlen(options->data), options->key);
-        if (!result) {
-            msg = crypto_err ? crypto_err : "digest error";
-            code = GENERAL;
+        algo_valid = false;
+    }
+
+    if (algo_valid) {
+        if (!(check_str(options->data) && check_str(options->key))) {
+            msg = "arguments data and key are needed";
+            code = ARGSERROR;
+        } else {
+            result = digest(algo, (uint8_t*)(options->data), strlen(options->data), options->key, strlen(options->key));
+            if (!result) {
+                msg = crypto_err ? crypto_err : "digest error";
+                code = GENERAL;
+            } else {
+                FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
+            }
         }
-        FEATURE_LOG_INFO("%s, result: %s", file_tag, result);
     }
 
     if (result && options->success) {
@@ -357,6 +385,7 @@ void system_crypto_wrap_hmacDigest(FeatureInstanceHandle feature, AppendData app
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     if (result)
         FeatureFreeValue(result);
@@ -371,7 +400,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     const char* msg = "";
     int code = 0;
     char* result = NULL;
-    const char* algo = NULL;
+    const char* algo = options->algo;
     int seg_count;
     char** algo_segs = split_str(options->algo, "-", &seg_count);
     // set default value for algo and deal with value
@@ -396,7 +425,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     } else if (check_any(options->data) && !check_str(options->uri)) {
         // judge data type
         uint8_t* buff = get_buff(ft_ctx, *(options->data), &size, &is_text);
-        if (!buff || size == 0 || !algo) {
+        if (!buff || size == 0) {
             msg = "invalid data type!";
             code = ARGSERROR;
         } else {
@@ -433,6 +462,7 @@ void system_crypto_wrap_sign(FeatureInstanceHandle feature, AppendData append_da
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     free_str_array(algo_segs, seg_count);
     if (result)
@@ -448,7 +478,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     const char* msg = "";
     int code = 0;
     bool result = false;
-    const char* algo = NULL;
+    const char* algo = options->algo;
     int seg_count;
     char** algo_segs = split_str(options->algo, "-", &seg_count);
     // set default value for algo and deal with value
@@ -493,7 +523,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
         }
     } else if (!check_any(options->data) && check_str(options->uri)) {
         // deal with data type of signature
-        if (!check_any(options->signature) || !algo) {
+        if (!check_any(options->signature)) {
             msg = "signature: invalid data type!";
             code = ARGSERROR;
         } else {
@@ -522,6 +552,7 @@ void system_crypto_wrap_verify(FeatureInstanceHandle feature, AppendData append_
     if (options->complete) {
         INVOKE_COMPLET_CB(options->complete);
     }
+    REMOVE_ALL_CBS(options);
 
     free_str_array(algo_segs, seg_count);
 }
@@ -650,7 +681,7 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
     // iv provided: must be a string (base64 encoded)
     if (check_str(opts->iv)) {
         // ensure ivLen if provided is not negative
-        if ((int)opts->ivLen < 0) {
+        if (opts->ivLen < 0) {
             FEATURE_LOG_ERROR("ivLen must be non-negative");
             is_process_ok = false;
             goto free;

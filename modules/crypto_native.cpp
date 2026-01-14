@@ -566,7 +566,7 @@ char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_s
     return NULL;
 }
 
-char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str)
+char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str, size_t key_len)
 {
     crypto_err = NULL;
     uv_buf_t type = { 0 };
@@ -591,7 +591,7 @@ char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const ch
                 CHECK_ERR_BREAK(NULL, "crypto.digest calculate failed");
             }
         } else {
-            key.len = strlen(key_str);
+            key.len = key_len;
             res = uv_md_hmac(type.base, text, &out, &key);
             if (res != 0) {
                 CHECK_ERR_BREAK(NULL, "crypto.digest hmac calculate failed");

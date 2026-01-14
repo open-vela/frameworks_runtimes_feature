@@ -31,37 +31,37 @@ static const char* file_tag = "[crypto_native]";
 
 const char* crypto_err = NULL;
 
-char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str)
+char* digest(const char* type_str, uint8_t* text_str, size_t text_size, const char* key_str, size_t key_len)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, text_str: %p, text_size: %d, key_str: %s", file_tag, type_str, text_str, text_size, key_str);
+    FEATURE_LOG_DEBUG("%s, type_str: %s, text_str: %p, text_size: %zu, key_str: %s, key_len: %zu", file_tag, type_str ? type_str : "NULL", text_str, text_size, key_str ? key_str : "NULL", key_len);
     crypto_err = NULL;
     return NULL;
 }
 
 char* digest_file(const char* type_str, const char* uri_str, const char* pkg_str)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, uri_str: %s, pkg_str: %s", file_tag, type_str, uri_str, pkg_str);
+    FEATURE_LOG_DEBUG("%s, type_str: %s, uri_str: %s, pkg_str: %s", file_tag, type_str, uri_str, pkg_str);
     crypto_err = NULL;
     return NULL;
 }
 
 char* rsa_encrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text)
 {
-    FEATURE_LOG_INFO("%s, key_str: %s, buff: %p, buff_size: %d, is_text: %d", file_tag, key_str, buff, *buff_size, *is_text);
+    FEATURE_LOG_DEBUG("%s, key_str: %s, buff: %p, buff_size: %d, is_text: %d", file_tag, key_str, buff, *buff_size, *is_text);
     crypto_err = NULL;
     return NULL;
 }
 
 char* rsa_decrypt(const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text)
 {
-    FEATURE_LOG_INFO("%s, key_str: %s, buff: %p, buff_size: %d, is_text: %d", file_tag, key_str, buff, *buff_size, *is_text);
+    FEATURE_LOG_DEBUG("%s, key_str: %s, buff: %p, buff_size: %d, is_text: %d", file_tag, key_str, buff, *buff_size, *is_text);
     crypto_err = NULL;
     return NULL;
 }
 
 char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text)
 {
-    FEATURE_LOG_INFO("%s, mode: %d, padding: %d, key_str: %s, iv_str: %s, ivOffset: %d, ivLen: %d, buff: %p, buff_size: %d, is_text: %d", file_tag,
+    FEATURE_LOG_DEBUG("%s, mode: %d, padding: %d, key_str: %s, iv_str: %s, ivOffset: %d, ivLen: %d, buff: %p, buff_size: %d, is_text: %d", file_tag,
         mode, padding, key_str, iv_str, ivOffset, ivLen, buff, *size, *is_text);
     crypto_err = NULL;
     return NULL;
@@ -69,7 +69,7 @@ char* aes_encrypt(int mode, int padding, const char* key_str, const char* iv_str
 
 char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str, int ivOffset, int ivLen, uint8_t* buff, size_t* size, bool* is_text)
 {
-    FEATURE_LOG_INFO("%s, mode: %d, padding: %d, key_str: %s, iv_str: %s, ivOffset: %d, ivLen: %d, buff: %p, buff_size: %d, is_text: %d", file_tag,
+    FEATURE_LOG_DEBUG("%s, mode: %d, padding: %d, key_str: %s, iv_str: %s, ivOffset: %d, ivLen: %d, buff: %p, buff_size: %d, is_text: %d", file_tag,
         mode, padding, key_str, iv_str, ivOffset, ivLen, buff, *size, *is_text);
     crypto_err = NULL;
     return NULL;
@@ -77,21 +77,21 @@ char* aes_decrypt(int mode, int padding, const char* key_str, const char* iv_str
 
 char* rsa_sign(const char* type_str, const char* key_str, uint8_t* buff, size_t* buff_size, bool* is_text)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, key_str: %s, buff: %p, buff_size: %d, is_text: %d", file_tag, type_str, key_str, buff, *buff_size, *is_text);
+    FEATURE_LOG_DEBUG("%s, type_str: %s, key_str: %s, buff: %p, buff_size: %d, is_text: %d", file_tag, type_str, key_str, buff, *buff_size, *is_text);
     crypto_err = NULL;
     return NULL;
 }
 
 char* rsa_sign_file(const char* type_str, const char* key_str, const char* uri_str, const char* pkg_str)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, key_str: %s, uri_str: %s, pkg_str: %s", file_tag, type_str, key_str, uri_str, pkg_str);
+    FEATURE_LOG_DEBUG("%s, type_str: %s, key_str: %s, uri_str: %s, pkg_str: %s", file_tag, type_str, key_str, uri_str, pkg_str);
     crypto_err = NULL;
     return NULL;
 }
 
 bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t buff_size, uint8_t* sig_buff, size_t seg_size, bool sig_text)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, key_str: %s, buff: %p, buff_size: %d, sig_buff: %p, seg_size: %d, sig_text: %d", file_tag,
+    FEATURE_LOG_DEBUG("%s, type_str: %s, key_str: %s, buff: %p, buff_size: %d, sig_buff: %p, seg_size: %d, sig_text: %d", file_tag,
         type_str, key_str, buff, buff_size, sig_buff, seg_size, sig_text);
     crypto_err = NULL;
     return true;
@@ -99,14 +99,14 @@ bool rsa_verify(const char* type_str, const char* key_str, uint8_t* buff, size_t
 
 bool rsa_verify_file(const char* type_str, const char* key_str, const char* uri_str, const char* sig_str, const char* pkg_str)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, key_str: %s, uri_str: %s, sig_str: %s, pkg_str: %s", file_tag, type_str, key_str, uri_str, sig_str, pkg_str);
+    FEATURE_LOG_DEBUG("%s, type_str: %s, key_str: %s, uri_str: %s, sig_str: %s, pkg_str: %s", file_tag, type_str, key_str, uri_str, sig_str, pkg_str);
     crypto_err = NULL;
     return true;
 }
 
 char* base64(const char* type_str, const char* text_str)
 {
-    FEATURE_LOG_INFO("%s, type_str: %s, text_str: %s", file_tag, type_str, text_str);
+    FEATURE_LOG_DEBUG("%s, type_str: %s, text_str: %s", file_tag, type_str, text_str);
     crypto_err = NULL;
     return NULL;
 }
