@@ -270,7 +270,7 @@ void system_cipher_wrap_digest(FeatureInstanceHandle feature, AppendData append_
         msg = "arguments hashtype or text are needed";
         code = ARGSERROR;
     } else {
-        result = digest(opts->hashType, (uint8_t*)(opts->text), strlen(opts->text), NULL);
+        result = digest(opts->hashType, (uint8_t*)(opts->text), strlen(opts->text), NULL, 0);
         if (!result && crypto_err) {
             msg = crypto_err;
             code = GENERAL;
@@ -309,7 +309,7 @@ void system_cipher_wrap_md5(FeatureInstanceHandle feature, AppendData append_dat
         msg = "argument text is needed";
         code = ARGSERROR;
     } else {
-        result = digest("MD5", (uint8_t*)(opts->text), strlen(opts->text), NULL);
+        result = digest("MD5", (uint8_t*)(opts->text), strlen(opts->text), NULL, 0);
         if (!result && crypto_err) {
             msg = crypto_err;
             code = GENERAL;

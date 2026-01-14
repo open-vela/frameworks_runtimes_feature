@@ -216,7 +216,7 @@ cipher_aes_default_value aes_default_values = {
     PKCS7Padding,
     NULL,
     0,
-    0,
+    16,
     NULL,
     0,
     4
@@ -654,7 +654,7 @@ static bool parse_transformation(CipherSupported entry[], int entry_count, char*
 
 static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptParam* options,
     int mode,
-    uint8_t* key,
+    uint8_t* key, size_t key_len,
     const unsigned char** iv, int* ivOffset, size_t* ivLen,
     uint8_t** aad, size_t* aadLen,
     uint8_t** tag_input, size_t* tagLen,
@@ -737,7 +737,13 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
                 is_process_ok = false;
                 goto free;
             }
-            size_t default_iv_len = opts->ivLen ? (size_t)opts->ivLen : 16;
+            size_t default_iv_len = opts->ivLen ? (size_t)opts->ivLen : aes_default_values.ivLen;
+
+            if (default_iv_len > key_len) {
+                FEATURE_LOG_ERROR("ivLen %zu exceeds key length %zu", default_iv_len, key_len);
+                is_process_ok = false;
+                goto free;
+            }
 
             *iv = (const unsigned char*)malloc(default_iv_len);
             if (*iv == NULL) {
@@ -757,6 +763,22 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
 
     // get ivOffset
     *ivOffset = opts->ivOffset ? opts->ivOffset : aes_default_values.ivOffset;
+
+    if (*iv != NULL) {
+        if (*ivOffset < 0) {
+            FEATURE_LOG_ERROR("ivOffset must be non-negative");
+            is_process_ok = false;
+            goto free;
+        }
+        // allocated buffer size is *ivLen
+        // read range is [*ivOffset, *ivOffset + *ivLen)
+        // so we need *ivOffset + *ivLen <= *ivLen, which implies *ivOffset <= 0
+        if ((size_t)*ivOffset > 0) {
+            FEATURE_LOG_ERROR("ivOffset %d causes OOB read (buffer size: %zu)", *ivOffset, *ivLen);
+            is_process_ok = false;
+            goto free;
+        }
+    }
 
     // get aad, aadLen
     if (opts->aad && !translate_string_and_uint8array_to_byte(ft_ctx, *(opts->aad), aad, aadLen)) {
@@ -971,16 +993,15 @@ static int system_crypto_operation_handle(FeatureInstanceHandle feature, system_
             ret = GENERAL;
             goto free;
         }
+
         ret = GOOD;
     } else if (strcmp(algo, "AES") == 0) {
-        // get mode and padding
-        mode = aes_default_values.mode;
-        padding = aes_default_values.padding;
-
-        // if transformation is not null, parse it to update mode and padding
-        // check the result since transformation represents what the caller expects.
+        // if internal options is exist, parse transformation
         if (options->options) {
+            // transformation is exist
             if (check_str(options->options->transformation)) {
+                // if transformation is not null, parse it to update mode and padding
+                // check the result since transformation represents what the caller expects.
                 if (!parse_transformation(AESCipherSupported, AES_SUPPORTED_COUNT, (char*)options->options->transformation, key_size, &mode, &padding)) {
                     FEATURE_LOG_ERROR("unsupported AES cipher");
                     *msg = "unsupported algorithm cipher, please check transformation";
@@ -988,20 +1009,64 @@ static int system_crypto_operation_handle(FeatureInstanceHandle feature, system_
                     goto free;
                 }
             }
+        } else {
+            // internal options is null, so must be non-auth AES, use default  iv / iv_offset / ivLen
+            ivLen = aes_default_values.ivLen;
+
+            if (ivLen > key_size) {
+                FEATURE_LOG_ERROR("ivLen %zu exceeds key length %zu", ivLen, key_size);
+                *msg = "ivLen exceeds key length";
+                ret = ARGSERROR;
+                goto free;
+            }
+
+            iv = (const unsigned char*)malloc(ivLen);
+            if (iv == NULL) {
+                FEATURE_LOG_ERROR("malloc iv failed");
+                *msg = "malloc iv failed";
+                ret = GENERAL;
+                goto free;
+            }
+            ivOffset = aes_default_values.ivOffset;
+            memcpy((void*)iv, key, ivLen);
         }
 
+        // if transformation is empty string or not exist , use default transformation, must be AES/CBC/PKCS7Padding
+        // get mode and padding
+        if ((options->options && options->options->transformation && strlen((const char*)options->options->transformation) == 0) ||
+            (!options->options)) {
+            FEATURE_LOG_INFO("use default transformation : AES/CBC/PKCS7Padding");
+            // set default mode and padding, very ugly hack but no other choice for compatibility
+            padding = aes_default_values.padding;
+            if (key_size == 16) {
+                mode = AES_128_CBC;
+            } else if (key_size == 24) {
+                mode = AES_192_CBC;
+            } else if (key_size == 32) {
+                mode = AES_256_CBC;
+            } else {
+                FEATURE_LOG_ERROR("unsupported AES key size(%d) for default transformation", key_size);
+                *msg = "unsupported AES key size for default transformation";
+                ret = UNSUPPORTED;
+                goto free;
+            }
+        }
+
+        // check if mode is aes ccm
         if (mode == AES_128_CCM || mode == AES_192_CCM || mode == AES_256_CCM) {
             *is_auth_crypto = true;
         } else {
             *is_auth_crypto = false;
         }
 
-        // parse internal options to choose if use default value or not.
-        if (!parse_internal_options(ft_ctx, options, mode, key, &iv, &ivOffset, &ivLen, &aad, &aadLen, &tag_input, &tagLen_input, *is_auth_crypto)) {
-            FEATURE_LOG_ERROR("wrong internal options, please check arguments");
-            *msg = "wrong internal options, please check arguments";
-            ret = ARGSERROR;
-            goto free;
+        if (options->options) {
+            // parse internal options to choose if use default value or not.
+            if (!parse_internal_options(ft_ctx, options, mode, key, key_size, &iv, &ivOffset, &ivLen, &aad, &aadLen, &tag_input, &tagLen_input, *is_auth_crypto)) {
+                FEATURE_LOG_ERROR("wrong internal options, please check arguments");
+                *msg = "wrong internal options, please check arguments";
+                ret = ARGSERROR;
+                goto free;
+            }
         }
 
         // excute native function
@@ -1175,6 +1240,13 @@ free:
             tag_input = NULL;
         }
         if (check_str(options->options->iv) && options->options->ivLen) {
+            free((void*)iv);
+            iv = NULL;
+        }
+    } else {
+        // When options->options is NULL, we allocated iv in the else branch above (line ~1021)
+        // Must free it to avoid memory leak
+        if (iv) {
             free((void*)iv);
             iv = NULL;
         }
