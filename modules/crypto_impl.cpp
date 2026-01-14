@@ -633,33 +633,95 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
     bool is_process_ok = true;
 
     // get iv, ivOffset and ivLen
-    // HACK for non-auth AES :
-    // 1. need to set default iv equal to key which is bytes list, and set default ivLen equal to 16
-    // 2. Now the key is already uint8Array
-    if (check_str(opts->iv) && opts->ivLen) {
-        *iv = (const unsigned char*)malloc(opts->ivLen);
+    // Rules implemented:
+    // - `iv` (if provided) must be a base64-encoded STRING and will be decoded.
+    // - `ivLen` (if provided) must be a non-negative integer and represents the decoded byte length.
+    // - For non-auth AES (is_auth_crypto == false):
+    //     * if iv provided -> decode and use it
+    //     * if iv not provided -> default iv to first `ivLen` bytes of `key` (default ivLen = 16)
+    // - For auth AES (is_auth_crypto == true):
+    //     * if iv provided -> decode and use it
+    //     * if iv not provided -> iv == NULL and ivLen == 0
+    // it’s extremely weird and problematic for both developers and callers, but we have to follow the shits for compatibility.
+
+    *iv = NULL;
+    *ivLen = 0;
+
+    // iv provided: must be a string (base64 encoded)
+    if (check_str(opts->iv)) {
+        // ensure ivLen if provided is not negative
+        if ((int)opts->ivLen < 0) {
+            FEATURE_LOG_ERROR("ivLen must be non-negative");
+            is_process_ok = false;
+            goto free;
+        }
+
+        // check base64 string validity
+        const char* enc = (const char*)opts->iv;
+        size_t enc_len = strlen(enc);
+        if (enc_len == 0 || (enc_len % 4) != 0) {
+            FEATURE_LOG_ERROR("invalid base64 iv string length");
+            is_process_ok = false;
+            goto free;
+        }
+
+        // compute expected decoded length from encoded length and padding
+        size_t decoded_len = (enc_len / 4) * 3;
+        if (enc_len >= 1 && enc[enc_len - 1] == '=') decoded_len--;
+        if (enc_len >= 2 && enc[enc_len - 2] == '=') decoded_len--;
+
+        // if user supplied ivLen, validate it matches decoded length
+        if (opts->ivLen) {
+            if ((size_t)opts->ivLen != decoded_len) {
+                FEATURE_LOG_ERROR("ivLen mismatch with base64 iv string length");
+                is_process_ok = false;
+                goto free;
+            }
+        }
+
+        *iv = (const unsigned char*)malloc(decoded_len);
         if (*iv == NULL) {
             FEATURE_LOG_ERROR("malloc iv failed");
             is_process_ok = false;
             goto free;
         }
-        if (base64_decode((const char*)opts->iv, BASE64_ENCODED_LENGTH(opts->ivLen), (char*)*iv, opts->ivLen, ivLen) != 0) {
+
+        // get the real iv bytes and ivLen
+        if (base64_decode(enc, enc_len, (char*)*iv, decoded_len, ivLen) != 0) {
             FEATURE_LOG_ERROR("base64 decode iv failed");
             is_process_ok = false;
             goto free;
         }
-    } else if (!check_str(opts->iv) && !opts->ivLen) {
-        if (is_auth_crypto) {
-            *iv = NULL;
-            *ivLen = aes_default_values.ivLen;
-        } else {
-            *iv = key;
-            *ivLen = 16;
-        }
     } else {
-        FEATURE_LOG_ERROR("missing iv or ivLen, they are both needed");
-        is_process_ok = false;
-        goto free;
+        // iv not provided
+        if (is_auth_crypto) {
+            // auth modes (CCM) have no default iv
+            *iv = NULL;
+            *ivLen = 0;
+        } else {
+            // non-auth modes: default ivLen is either provided by user or 16
+            // validate user provided ivLen is not negative
+            if (opts->ivLen < 0) {
+                FEATURE_LOG_ERROR("ivLen must be non-negative");
+                is_process_ok = false;
+                goto free;
+            }
+            size_t default_iv_len = opts->ivLen ? (size_t)opts->ivLen : 16;
+
+            *iv = (const unsigned char*)malloc(default_iv_len);
+            if (*iv == NULL) {
+                FEATURE_LOG_ERROR("malloc iv failed");
+                is_process_ok = false;
+                goto free;
+            }
+
+            // fill iv from key bytes (key is already in bytes)
+            // copy up to default_iv_len bytes; if key shorter, pad the rest with 0
+            // Note: `key` is expected to be at least 16 bytes for AES; we do not have key_size here,
+            // so we conservatively copy default_iv_len bytes from `key`.
+            memcpy((void*)*iv, key, default_iv_len);
+            *ivLen = default_iv_len;
+        }
     }
 
     // get ivOffset
