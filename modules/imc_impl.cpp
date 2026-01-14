@@ -20,7 +20,7 @@
 #include "ash/logging/logging.h"
 #include "ash/memory/weak_ptr.h"
 #include "ash/message_loop/message_loop.h"
-#include "framework/input_method/input_method_manager.h"
+#include "common/input_method/input_method_manager.h"
 #include "quickapp.h"
 #include <functional>
 #include <memory>
@@ -50,7 +50,7 @@ private:
     std::function<void(const std::string&)> on_extracted_text_changed_;
 };
 
-class ImcOnUI : ferry::InputMethodController {
+class ImcOnUI : shell::InputMethodController {
 public:
     ImcOnUI(ash::WeakPtr<Imc> owner, std::shared_ptr<ash::TaskRunner> owner_runner);
     ~ImcOnUI();
@@ -85,6 +85,9 @@ Imc::Imc(FeatureInstanceHandle feature, QApplicationHandle app_handle)
 Imc::~Imc()
 {
     ASH_LOG("IMC", INFO) << "Imc::~Imc";
+    QApplicationPostUITask(app_handle_, nullptr, [](void* user_data) {
+        std::unique_ptr<ImcOnUI> del(static_cast<ImcOnUI*>(user_data));
+    },imc_on_ui_.release());
 }
 
 void Imc::UpdateInputText(const std::string& text)
@@ -142,7 +145,7 @@ ImcOnUI::~ImcOnUI()
 void ImcOnUI::Init()
 {
     ASH_LOG("IMC", INFO) << "ImcOnUI::Init";
-    ferry::InputMethodManager* imm = ferry::InputMethodManager::GetInstance();
+    shell::InputMethodManager* imm = shell::InputMethodManager::GetInstance();
     if (imm && !bound_) {
         imm->BindController(this);
     }
@@ -151,7 +154,7 @@ void ImcOnUI::Init()
 void ImcOnUI::UpdateInputText(const std::string& text)
 {
     ASH_LOG("IMC", INFO) << "ImcOnUI::UpdateInputText";
-    ferry::InputMethodManager* imm = ferry::InputMethodManager::GetInstance();
+    shell::InputMethodManager* imm = shell::InputMethodManager::GetInstance();
     if (imm && bound_) {
         imm->UpdateInputText(text);
     }
@@ -160,7 +163,7 @@ void ImcOnUI::UpdateInputText(const std::string& text)
 void ImcOnUI::Close()
 {
     ASH_LOG("IMC", INFO) << "ImcOnUI::Close";
-    ferry::InputMethodManager* imm = ferry::InputMethodManager::GetInstance();
+    shell::InputMethodManager* imm = shell::InputMethodManager::GetInstance();
     if (imm && bound_) {
         imm->UnbindController(this);
     }

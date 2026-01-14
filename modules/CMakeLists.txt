@@ -630,7 +630,7 @@ endif()
 if(CONFIG_FEATURE_INPUT_METHOD_CONTROLLER)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/imc_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/imc.jidl)
-
+    target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/shell/)
     nuttx_add_jidl(
         TARGET
         feature_impls
