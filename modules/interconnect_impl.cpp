@@ -841,6 +841,7 @@ void system_interconnect_onCreate(FeatureRuntimeContext ctx,
 void system_interconnect_onDestroy(FeatureRuntimeContext ctx,
     FeatureProtoHandle handle)
 {
+    INTERCONNECT_INFO("onDestroy");
     auto conn = static_cast<system_interconnect::InterconnectContext*>(
         FeatureGetProtoData(handle));
 
