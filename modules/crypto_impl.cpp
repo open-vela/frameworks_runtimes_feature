@@ -726,9 +726,32 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
     } else {
         // iv not provided
         if (is_auth_crypto) {
-            // auth modes (CCM) have no default iv
-            *iv = NULL;
-            *ivLen = 0;
+            // CCM requires a nonce of length 7..13 bytes; ivLen must be provided if iv is missing.
+            if (opts->ivLen < 0) {
+                FEATURE_LOG_ERROR("ivLen must be non-negative");
+                is_process_ok = false;
+                goto free;
+            }
+            size_t default_iv_len = (size_t)opts->ivLen;
+            if (default_iv_len == 0) {
+                FEATURE_LOG_ERROR("ccm ivLen is required when iv is not provided");
+                is_process_ok = false;
+                goto free;
+            }
+            if (default_iv_len < 7 || default_iv_len > 13) {
+                FEATURE_LOG_ERROR("invalid CCM ivLen %zu, expect 7..13", default_iv_len);
+                is_process_ok = false;
+                goto free;
+            }
+
+            *iv = (const unsigned char*)malloc(default_iv_len);
+            if (*iv == NULL) {
+                FEATURE_LOG_ERROR("malloc iv failed");
+                is_process_ok = false;
+                goto free;
+            }
+            memcpy((void*)*iv, key, default_iv_len);
+            *ivLen = default_iv_len;
         } else {
             // non-auth modes: default ivLen is either provided by user or 16
             // validate user provided ivLen is not negative
@@ -788,8 +811,8 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
     }
 
     // get tagLen, only encrypt need tagLen, so tagLen won't be update by following codes.
-    if (opts->tagLen == 0) {
-        FEATURE_LOG_ERROR(" tagLen can not be 0");
+    if (opts->tagLen < 0) {
+        FEATURE_LOG_ERROR(" tagLen can not be negative");
         is_process_ok = false;
         goto free;
     } else {
@@ -1072,6 +1095,12 @@ static int system_crypto_operation_handle(FeatureInstanceHandle feature, system_
         // excute native function
         // if aes ccm
         if (*is_auth_crypto) {
+            if (operation == DECRYPT_OPERATION && (tag_input == NULL || tagLen_input == 0)) {
+                FEATURE_LOG_ERROR("aes-ccm decrypt requires tag input");
+                *msg = "aes-ccm decrypt requires tag input";
+                ret = ARGSERROR;
+                goto free;
+            }
             // NOTE : 'output_size' is the size of the 'output'
             //        'output' should be big enough to hold the encrypted data with padding data.
             //        'out_size' is less than or equal to 'output_size'
