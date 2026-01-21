@@ -99,6 +99,7 @@ bool PromptToast::timeout(uint32_t tick)
 
 void PromptToast::close()
 {
+    FEATURE_LOG_INFO("PromptToast::close() BEGIN, this=%p, obj_=%p", this, obj_);
     if (obj_) {
         lv_obj_del(obj_);
         obj_ = nullptr;
@@ -111,15 +112,19 @@ void PromptToast::close()
  */
 void PromptToast::draw()
 {
+    FEATURE_LOG_INFO("PromptToast::draw() BEGIN, this=%p", this);
     // 如果对象已经存在，则直接返回
-    if (obj_)
+    if (obj_) {
+        FEATURE_LOG_INFO("PromptToast::draw() obj_ exists, returning. this=%p", this);
         return;
+    }
 
     // Use a simple label for toast message, which is more appropriate.
     obj_ = lv_spangroup_create(getParent());
     if (!obj_) {
         counter_ = duration_; // ensure timeout happens immediately
         FEATURE_LOG_WARN("Failed to create toast object");
+        FEATURE_LOG_INFO("PromptToast::draw() Failed to create obj_, returning. this=%p", this);
         return;
     }
 
@@ -158,6 +163,7 @@ void PromptToast::draw()
     lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
     lv_anim_set_path_cb(&a, lv_anim_path_linear);
     lv_anim_start(&a);
+    FEATURE_LOG_INFO("PromptToast::draw() END, this=%p", this);
 }
 
 }

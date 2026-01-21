@@ -16,6 +16,8 @@
 
 #include "prompt_server.h"
 
+#include "feature_log.h"
+
 #define PROMPT_LOOP_PERIOD 100
 
 namespace prompt {
@@ -62,7 +64,9 @@ void PromptServer::init()
 
 void PromptServer::uninit()
 {
+    FEATURE_LOG_INFO("PromptServer::uninit() BEGIN, this=%p", this);
     if (timer_) {
+        FEATURE_LOG_INFO("PromptServer::uninit() - deleting timer, this=%p", this);
         lv_timer_del(timer_);
         timer_ = nullptr;
     }
@@ -73,6 +77,7 @@ void PromptServer::uninit()
     }
     toast_.queue_.clear();
     if (toast_.cur_) {
+        FEATURE_LOG_INFO("PromptServer::uninit() - deleting cur_ toast %p, this=%p", toast_.cur_, this);
         delete toast_.cur_;
         toast_.cur_ = nullptr;
     }

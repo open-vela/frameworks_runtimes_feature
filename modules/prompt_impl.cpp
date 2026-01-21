@@ -148,6 +148,7 @@ public:
 
     ~PromptManager()
     {
+        FEATURE_LOG_INFO("~PromptManager() BEGIN, this=%p, prompt_server_=%p", this, prompt_server_.get());
         QApplicationPostUITask(app_handle_, nullptr, &PromptServer::DestroyServerTask, prompt_server_.release());
     }
 
