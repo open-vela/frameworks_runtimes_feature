@@ -10,3 +10,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE={path_to_vcpkg}/scripts/buildsystems/vcpkg.cmake -B
 ````shell
 git clone https://github.com/Microsoft/vcpkg.git
 ````
+
+## 环境变量配置
+对于 upload.js 测试文件，可通过设置环境变量来配置上传服务器地址：
+- `UPLOAD_URL` - 设置文件上传的目标URL

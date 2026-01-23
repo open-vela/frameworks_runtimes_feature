@@ -16,7 +16,7 @@ function cb2(res) {
 feat_async_test("Uploadtask", "uploadFile", (done) => {
   return new Promise(function (resolve, reject) {
     upload = uploadtask.uploadFile({
-      'url': process.env.UPLOAD_URL || "SET_UPLOAD_URL_ENV_VAR",
+      'url': process.env.UPLOAD_URL || "SET_UPLOAD_URL_ENV_VAR", // Please set UPLOAD_URL environment variable to your upload server
       'filePath': "hiktest.md",
       'name': "file",
       'header': { 'Content-Type': 'multipart/form-data' },
