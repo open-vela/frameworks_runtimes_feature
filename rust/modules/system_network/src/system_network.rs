@@ -46,7 +46,7 @@ unsafe extern "C" {
     pub(crate) fn system_network_network_subscribe_cb_invoke(
         handle: FeatureInstanceHandle,
         cid: FtCallbackId,
-        _type: FtString,
+        _type: *mut system_network_typeResult,
     ) -> FtBool;
     // for JIDL promise resolve type 'typeResult'
     pub(crate) fn system_network_typeResult_ptr_promise_resolve(
@@ -154,7 +154,7 @@ impl NetworkSubscribeCbCallback {
     }
 
     #[allow(dead_code)]
-    pub fn invoke(&self, _type: FeatureString) {
+    pub fn invoke(&self, result: TypeResult) {
         // must clone the Arc<FeatureCallback> and move it to the closure
         // to prevent the FeatureCallback from being dropped before the closure is called.
         let cb = self.cb.clone();
@@ -164,7 +164,7 @@ impl NetworkSubscribeCbCallback {
                 let _ = system_network_network_subscribe_cb_invoke(
                     cb.handle(),
                     cb.id(),
-                    _type.as_ptr(),
+                    result.as_ptr(),
                 );
             });
         }

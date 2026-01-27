@@ -50,9 +50,11 @@ const network = require("system.network");
         console.log("\n--- Test 3: subscribe() to network changes ---");
         try {
             await network.subscribe({
-                callback: (type) => {
+                callback: (result) => {
+                    // callback 现在返回对象 {type: "wifi"} 或 {data: {type: "wifi"}}
+                    const type = result?.data?.type || result?.type || result;
                     console.log(
-                        `*** Network type changed callback: ${type} ***`,
+                        `*** Network type changed callback: ${type} (result: ${JSON.stringify(result)}) ***`,
                     );
                 },
             });
@@ -84,9 +86,11 @@ const network = require("system.network");
         console.log("\n--- Test 5: Subscribe again after unsubscribe ---");
         try {
             await network.subscribe({
-                callback: (type) => {
+                callback: (result) => {
+                    // callback 现在返回对象 {type: "wifi"} 或 {data: {type: "wifi"}}
+                    const type = result?.data?.type || result?.type || result;
                     console.log(
-                        `*** Second subscription callback: ${type} ***`,
+                        `*** Second subscription callback: ${type} (result: ${JSON.stringify(result)}) ***`,
                     );
                 },
             });

@@ -211,7 +211,11 @@ impl SystemNetwork for SystemNetworkImpl {
         // Trigger initial callback with current network type
         match Self::fetch_current_network_type() {
             Ok(net_type) => {
-                cb.invoke(FeatureString::new(net_type.as_str()));
+                let type_str = net_type.as_str();
+                let network_type = FeatureString::new(type_str);
+                let mut type_result = TypeResult::new();
+                type_result.set_type(network_type);
+                cb.invoke(type_result);
                 last_type = Some(net_type);
             }
             Err(e) => {
@@ -237,7 +241,11 @@ impl SystemNetwork for SystemNetworkImpl {
                                 match SystemNetworkImpl::fetch_current_network_type() {
                                     Ok(net_type) => {
                                         if last_type != Some(net_type) {
-                                            cb.invoke(FeatureString::new(net_type.as_str()));
+                                            let type_str = net_type.as_str();
+                                            let network_type = FeatureString::new(type_str);
+                                            let mut type_result = TypeResult::new();
+                                            type_result.set_type(network_type);
+                                            cb.invoke(type_result);
                                             last_type = Some(net_type);
                                         }
                                     }

@@ -22,7 +22,7 @@ struct typeResult {
 
 promise<typeResult> getType()
 
-callback network_subscribe_cb(string type)
+callback network_subscribe_cb(typeResult type)
 
 struct param {
   network_subscribe_cb callback
