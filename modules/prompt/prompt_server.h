@@ -21,11 +21,12 @@
 #include <list>
 #include <memory>
 
+#define TOAST_QUEUE_LIMIT 10
 namespace prompt {
 
 class PromptServer {
 public:
-    typedef std::list<Prompt*> promptList_t;
+    typedef std::list<Prompt*> PromptList;
 
     PromptServer();
     virtual ~PromptServer();
@@ -39,17 +40,19 @@ public:
         void run(uint32_t tick);
 
         Prompt* cur_;
-        promptList_t queue_;
+        PromptList queue_;
     };
 
     struct Dialogs {
         Prompt* pop();
         void run(uint32_t tick);
-        promptList_t queue_;
+        PromptList queue_;
     };
 
     static void InitServerTask(void* user_data);
     static void DestroyServerTask(void* user_data);
+
+    static Prompt* popPrompt(PromptList& queue);
 
     void init();
     void uninit();

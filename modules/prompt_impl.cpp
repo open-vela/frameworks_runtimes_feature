@@ -217,7 +217,10 @@ private:
         auto toast = prompt::CreatePrompt(prompt::Prompt::TYPE_TOAST, reinterpret_cast<lv_obj_t*>(data->root_view));
         toast->setAttr(Prompt::ID_MESSAGE, data->msg.c_str());
         toast->setAttr(Prompt::ID_DURATION, data->duration);
-        data->prompt_server->push(toast.release());
+        auto toast_ptr = toast.release();
+        if (!data->prompt_server->push(toast_ptr)) {
+            toast.reset(toast_ptr); // for auto delete
+        }
     }
 
     static void ShowDialogTask(void* user_data)

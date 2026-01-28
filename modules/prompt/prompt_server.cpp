@@ -57,9 +57,19 @@ void PromptServer::init()
     };
     timer_ = lv_timer_create(cb, PROMPT_LOOP_PERIOD, this);
     if (!timer_) {
-        printf("ERROR: PromptServer lv_timer_create failed\n");
+        FEATURE_LOG_ERROR("ERROR: PromptServer lv_timer_create failed");
         return;
     }
+}
+
+Prompt* PromptServer::popPrompt(PromptList& queue)
+{
+    Prompt* handle = nullptr;
+    if (!queue.empty()) {
+        handle = queue.front();
+        queue.pop_front();
+    }
+    return handle;
 }
 
 void PromptServer::uninit()
@@ -94,7 +104,7 @@ bool PromptServer::push(Prompt* prompt)
     if (!prompt)
         return false;
 
-    promptList_t* queueIs = nullptr;
+    PromptList* queueIs = nullptr;
     if (prompt->type() == Prompt::TYPE_TOAST) {
         queueIs = &toast_.queue_;
     } else if (prompt->type() == Prompt::TYPE_DIALOG) {
@@ -106,6 +116,13 @@ bool PromptServer::push(Prompt* prompt)
     }
 
     queueIs->push_back(prompt);
+
+    // delete the oldest toast if the queue is full
+    if (queueIs->size() >= TOAST_QUEUE_LIMIT) {
+        auto prompt_ptr = popPrompt(*queueIs);
+        delete prompt_ptr;
+    }
+
     return true;
 }
 
@@ -114,7 +131,7 @@ void PromptServer::remove(Prompt* prompt)
     if (!prompt)
         return;
 
-    promptList_t* queueIs = nullptr;
+    PromptList* queueIs = nullptr;
     if (prompt->type() == Prompt::TYPE_TOAST) {
         queueIs = &toast_.queue_;
         if (prompt == toast_.cur_) {
@@ -138,12 +155,7 @@ void PromptServer::run(uint32_t tick)
 
 Prompt* PromptServer::Toasts::pop()
 {
-    Prompt* handle = nullptr;
-    if (!queue_.empty()) {
-        handle = queue_.front();
-        queue_.pop_front();
-    }
-    return handle;
+    return popPrompt(queue_);
 }
 
 void PromptServer::Toasts::run(uint32_t tick)
@@ -163,12 +175,7 @@ void PromptServer::Toasts::run(uint32_t tick)
 
 Prompt* PromptServer::Dialogs::pop()
 {
-    Prompt* handle = nullptr;
-    if (!queue_.empty()) {
-        handle = queue_.front();
-        queue_.pop_front();
-    }
-    return handle;
+    return popPrompt(queue_);
 }
 
 void PromptServer::Dialogs::run(uint32_t tick)
