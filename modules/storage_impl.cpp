@@ -20,7 +20,12 @@
 #include "uv_ext.h"
 
 static const char* file_tag = "[jidl_feature] storage_impl";
+
+#ifdef CONFIG_HAP_APP_PATH
+#define DB_PATH_PREFIX CONFIG_HAP_APP_PATH
+#else
 #define DB_PATH_PREFIX "/data/quickapp"
+#endif
 
 typedef struct {
     uv_db_t* db;
