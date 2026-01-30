@@ -1652,6 +1652,7 @@ static int ecdh_get_encoding_data(const char* encoding,
         } else if (strcmp(encoding, "buffer") == 0 || strcmp(encoding, "") == 0) {
             memcpy(output, input, input_size);
             *exact_size = input_size;
+            *is_text = false;
             return 0;
         } else {
             FEATURE_LOG_ERROR("crypto.ecdh_get_encoding_data wrong encoding type");
