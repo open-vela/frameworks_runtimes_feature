@@ -723,35 +723,21 @@ static bool parse_internal_options(ft_context_ref ft_ctx, system_crypto_CryptPar
             is_process_ok = false;
             goto free;
         }
+
+        if (is_auth_crypto) {
+            if (*ivLen < 7 || *ivLen > 13) {
+                FEATURE_LOG_ERROR("invalid CCM ivLen %zu, expect 7..13", *ivLen);
+                is_process_ok = false;
+                goto free;
+            }
+        }
     } else {
         // iv not provided
         if (is_auth_crypto) {
-            // CCM requires a nonce of length 7..13 bytes; ivLen must be provided if iv is missing.
-            if (opts->ivLen < 0) {
-                FEATURE_LOG_ERROR("ivLen must be non-negative");
-                is_process_ok = false;
-                goto free;
-            }
-            size_t default_iv_len = (size_t)opts->ivLen;
-            if (default_iv_len == 0) {
-                FEATURE_LOG_ERROR("ccm ivLen is required when iv is not provided");
-                is_process_ok = false;
-                goto free;
-            }
-            if (default_iv_len < 7 || default_iv_len > 13) {
-                FEATURE_LOG_ERROR("invalid CCM ivLen %zu, expect 7..13", default_iv_len);
-                is_process_ok = false;
-                goto free;
-            }
-
-            *iv = (const unsigned char*)malloc(default_iv_len);
-            if (*iv == NULL) {
-                FEATURE_LOG_ERROR("malloc iv failed");
-                is_process_ok = false;
-                goto free;
-            }
-            memcpy((void*)*iv, key, default_iv_len);
-            *ivLen = default_iv_len;
+            // For auth crypto, iv is mandatory.
+            FEATURE_LOG_ERROR("iv is required for authenticated encryption (GCM/CCM)");
+            is_process_ok = false;
+            goto free;
         } else {
             // non-auth modes: default ivLen is either provided by user or 16
             // validate user provided ivLen is not negative
