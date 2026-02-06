@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "error.h"
+#include "jidl/error.h"
 #include "uv_ext.h"
 
 static const char* file_tag = "[jidl_feature] Error_impl";

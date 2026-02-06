@@ -101,6 +101,7 @@ if(CONFIG_FEATURE_SYSTEM_REQUEST)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/request.jidl)
     target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/system/libuv/libuv/include)
     target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/../external/rapidjson/rapidjson/include)
+    target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/include)
 
     nuttx_add_jidl(
         TARGET
@@ -287,6 +288,7 @@ if(CONFIG_FEATURE_SYSTEM_FETCH)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/fetch_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/fetch.jidl)
     target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/src)
+    target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/include)
 
     nuttx_add_jidl(
         TARGET
@@ -525,6 +527,7 @@ if(CONFIG_FEATURE_SYSTEM_STORAGE)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/storage_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/storage.jidl)
     target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/external/unqlite/unqlite)
+    target_include_directories(feature_impls PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/include)
 
     nuttx_add_jidl(
         TARGET
