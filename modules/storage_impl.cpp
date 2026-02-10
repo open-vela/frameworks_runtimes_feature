@@ -290,6 +290,62 @@ static void storage_cb(int status, const char* key, uv_buf_t value,
     free(const_cast<char*>(key));
 }
 
+void system_storage_wrap_get_sync(FeatureInstanceHandle feature, AppendData data,
+    system_storage_GetInfo* info)
+{
+    FEATURE_LOG_INFO("[STORAGE_GET_SYNC] key=%s,default=%s", info->key,
+        info->_default);
+    FeatureProtoHandle proto_handle = FeatureGetProtoHandle(feature);
+    StorageContext* th = static_cast<StorageContext*>(FeatureGetProtoData(proto_handle));
+
+    if (th == NULL) {
+        FEATURE_LOG_ERROR("[STORAGE_GET_SYNC] FeatureGetObjectData fail");
+        if (!FeatureInstanceIsDetached(feature)) {
+            INVOKE_FAIL_CB(info->fail, "FeatureGetObjectData fail", -1);
+            INVOKE_COMPLET_CB(info->complete, "fail");
+            REMOVE_ALL_CBS(info->success, info->fail, info->complete);
+        }
+        return;
+    }
+
+    if ((info->key == NULL) || strcmp(info->key, "") == 0) {
+        FEATURE_LOG_ERROR("[STORAGE_GET_SYNC] key is empty");
+        if (!FeatureInstanceIsDetached(feature)) {
+            INVOKE_FAIL_CB(info->fail, "key is empty", 202);
+            INVOKE_COMPLET_CB(info->complete, "fail");
+            REMOVE_ALL_CBS(info->success, info->fail, info->complete);
+        }
+        return;
+    }
+
+    uv_buf_t value = { .base = NULL, .len = 0 };
+    int status = uv_db_get(th->db, info->key, &value, NULL, NULL);
+
+    if (FeatureInstanceIsDetached(feature)) {
+        if (value.base) {
+            free(value.base);
+        }
+        return;
+    }
+
+    if (status == 0) {
+        INVOKE_SUCCESS_CB(info->success, value.base);
+        INVOKE_COMPLET_CB(info->complete, "success");
+    } else if (status == UNQLITE_NOTFOUND) {
+        const char* ret = (info->_default != NULL) ? info->_default : "";
+        INVOKE_SUCCESS_CB(info->success, ret);
+        INVOKE_COMPLET_CB(info->complete, "success");
+    } else {
+        INVOKE_FAIL_CB(info->fail, uv_strerror(status), status);
+        INVOKE_COMPLET_CB(info->complete, "fail");
+    }
+    REMOVE_ALL_CBS(info->success, info->fail, info->complete);
+
+    if (value.base) {
+        free(value.base);
+    }
+}
+
 void system_storage_wrap_get(FeatureInstanceHandle feature, AppendData data,
     system_storage_GetInfo* info)
 {

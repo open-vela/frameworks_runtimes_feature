@@ -57,6 +57,7 @@ struct KeyInfo {
 }
 
 void get(GetInfo info)
+void get_sync(GetInfo info)
 void set(SetInfo info)
 void clear(ClearInfo info)
 void delete(DeleteInfo info)
