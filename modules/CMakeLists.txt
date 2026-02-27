@@ -73,8 +73,8 @@ if(0) #CONFIG_FEATURE_SYSTEM_MEDIA) TODO change
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/media_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/media.jidl)
     target_include_directories(
-        feature_impls 
-        PRIVATE 
+        feature_impls
+        PRIVATE
         ${NUTTX_APPS_DIR}/frameworks/graphics/animengine/include
         ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/include
         ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/shell/miwear
@@ -118,8 +118,8 @@ if(CONFIG_FEATURE_SYSTEM_ZIP)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/zip_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/zip.jidl)
     target_include_directories(
-        feature_impls 
-        PRIVATE 
+        feature_impls
+        PRIVATE
         ${NUTTX_APPS_DIR}/system/zlib/zlib
         ${NUTTX_APPS_DIR}/system/zlib/zlib/contrib/)
 
@@ -399,8 +399,8 @@ if(CONFIG_FEATURE_SYSTEM_DEVICE)
 
     if(CONFIG_QUICKAPP)
         target_include_directories(
-            feature_impls 
-            PRIVATE 
+            feature_impls
+            PRIVATE
             ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/src
             ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/src/jse/quickjs
             ${NUTTX_APPS_DIR}/frameworks/runtimes/quickapp/src/jse)
@@ -440,6 +440,7 @@ if ((CONFIG_APP_CAR_CONTROL AND CONFIG_CAR_APP_SETTINGS) OR CONFIG_APP_CAR_SETTI
             feature_impls
             PRIVATE
             ${NUTTX_APPS_DIR}/vendor/xiaomi/miwear/apps/applications/car_control/car_app_settings/
+            ${NUTTX_APPS_DIR}/vendor/xiaomi/miwear/apps/applications/car_control/model/car_app/settings/
         )
     else() # CONFIG_APP_CAR_SETTINGS_MOCK
         list(APPEND FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/miwear_settings_mock.cpp)
