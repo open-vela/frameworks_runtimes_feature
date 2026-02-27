@@ -154,7 +154,7 @@ config FEATURE_SYSTEM_DEVICE
 config FEATURE_SYSTEM_BRIGHTNESS
 	bool "system.brightness"
 	default y
-	depends on SYSTEM_BRIGHTNESS_SERVICE || MIWEAR_ALGORITHM
+	depends on SYSTEM_BRIGHTNESS_SERVICE || LIBUV_EXTENSION
 	---help---
 		enable system.brightness feature
 
