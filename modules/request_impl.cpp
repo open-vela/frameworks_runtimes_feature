@@ -25,6 +25,7 @@
 #include "request.h"
 #include "uv_ext.h"
 #include <cassert>
+#include <cctype>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -35,7 +36,6 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <regex>
 #include <string>
 #include <time.h>
 #include <type_traits>
@@ -332,12 +332,33 @@ void initInfo(ReqInfo* info)
     info->feature_handle = NULL;
 }
 
+// 校验 URI 是否合法：必须以 http:// 或 https:// 开头，且不含空白字符。
+// 原实现使用 std::regex("^https?://[\\S]*$") 进行匹配，语义等价，
+// 但 std::regex 内部基于回溯的 NFA 引擎在处理长 URL 时会产生大量栈递归，
+// 在 NuttX 等栈空间有限的嵌入式环境下容易导致栈溢出（stack overflow）。
+// 改用简单的字符串遍历，栈开销几乎为零。
 bool __is_valid_uri(const char* uri)
 {
-    std::string uri_str(uri);
-    // Needs to start with `http://` or `https://`
-    std::regex uri_regex("^https?://[\\S]*$");
-    return std::regex_match(uri_str, uri_regex);
+    if (uri == NULL)
+        return false;
+
+    // 检查协议头：http:// 或 https://
+    if (strncmp(uri, "https://", 8) == 0) {
+        uri += 8;
+    } else if (strncmp(uri, "http://", 7) == 0) {
+        uri += 7;
+    } else {
+        return false;
+    }
+
+    // 协议头后面必须有内容，且不能包含空白字符
+    if (*uri == '\0')
+        return false;
+    for (const char* p = uri; *p != '\0'; ++p) {
+        if (isspace((unsigned char)*p))
+            return false;
+    }
+    return true;
 }
 
 void __remove_trailing_slash(char* url)
