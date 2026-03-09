@@ -108,6 +108,61 @@ void system_packagemanager_onUnregister(const char* feature_name)
     FEATURE_LOG_INFO("%s::%s()\n", kFileTag, __FUNCTION__);
 }
 
+struct PmResultPostData {
+    FeatureInstanceHandle handle;
+    FtPromiseId pid;
+    std::string packageName;
+    std::string operation;
+    int32_t code;
+    std::string msg;
+    int promiseCode;
+    int resultCode;
+};
+
+static void HandlePmResultOnJsThread(int status, void* user_data)
+{
+    PmResultPostData* data = static_cast<PmResultPostData*>(user_data);
+    if (!data)
+        return;
+
+    std::unique_ptr<PmResultPostData> guard(data);
+    if (status == FEATURE_TASK_MODE_FREE) {
+        FEATURE_LOG_WARN("%s::HandlePmResultOnJsThread: FeaturePost free mode", kFileTag);
+        FeatureFreeInstanceHandle(data->handle);
+        return;
+    }
+
+    if (FeatureInstanceIsDetached(data->handle)) {
+        FEATURE_LOG_ERROR("%s::FeatureInstanceHandle is detached !", kFileTag);
+        FeatureFreeInstanceHandle(data->handle);
+        return;
+    }
+
+    if (data->code == 0) {
+        system_packagemanager_SucessObj sucessObj;
+        sucessObj.result = true;
+        FeaturePromiseResolve(data->handle, data->pid, &sucessObj);
+    } else {
+        FEATURE_LOG_ERROR("%s::reject promise, msg: %s", kFileTag, data->msg.c_str());
+        FeaturePromiseReject(data->handle, data->pid, data->promiseCode, data->msg.c_str());
+    }
+
+    system_packagemanager_StatusChangeEvent result { 0 };
+    result.package = data->packageName.c_str();
+    result.operation = data->operation.c_str();
+    result.code = data->resultCode;
+    if (data->code == 0) {
+        result.status = "success";
+        result.msg = "";
+    } else {
+        result.status = "fail";
+        result.msg = data->msg.c_str();
+    }
+    FeatureEmitEventByName(data->handle, "onstatuschange", &result);
+
+    FeatureFreeInstanceHandle(data->handle);
+}
+
 class FeatureInstallListener : public BnInstallObserver {
 public:
     FeatureInstallListener(FeatureInstanceHandle handle, FtPromiseId pid)
@@ -128,24 +183,16 @@ public:
     {
         FEATURE_LOG_INFO("%s::onInstallResult: %s(%s %" PRIi32 ")\n", kFileTag, packageName.c_str(), msg.c_str(), code);
 
-        if (FeatureInstanceIsDetached(handle_)) {
-            FEATURE_LOG_ERROR("%s::FeatureInstanceHandle is detached !", kFileTag);
-            return Status::ok();
-        }
-        system_packagemanager_StatusChangeEvent result { 0 };
-        result.package = packageName.c_str();
-        result.operation = "install";
+        auto* postData = new PmResultPostData();
+        postData->handle = handle_;
+        FeatureDupInstanceHandle(postData->handle);
+        postData->pid = pid_;
+        postData->packageName = packageName;
+        postData->operation = "install";
+        postData->code = code;
+        postData->msg = msg;
 
-        if (code == 0) {
-            system_packagemanager_SucessObj sucessObj;
-            sucessObj.result = true;
-            FeaturePromiseResolve(handle_, pid_, &sucessObj);
-            result.status = "success";
-            result.msg = "";
-            result.code = 0;
-        } else {
-            FEATURE_LOG_ERROR("%s::reject promise, msg: %s", kFileTag, msg.c_str());
-            result.status = "fail";
+        if (code != 0) {
             const std::unordered_map<int32_t, std::tuple<int, int>> errorMap = {
                 { android::NAME_NOT_FOUND, { 1000, 202 } },
                 { android::ALREADY_EXISTS, { 1001, 202 } },
@@ -153,13 +200,18 @@ public:
                 { android::NO_MEMORY, { 200, 5101 } }
             };
             auto [promiseCode, resultCode] = errorMap.count(code) ? errorMap.at(code) : std::make_tuple(202, 202);
-
-            FeaturePromiseReject(handle_, pid_, promiseCode, msg.c_str());
-            result.code = resultCode;
-            result.msg = msg.c_str();
+            postData->promiseCode = promiseCode;
+            postData->resultCode = resultCode;
+        } else {
+            postData->promiseCode = 0;
+            postData->resultCode = 0;
         }
 
-        FeatureEmitEventByName(handle_, "onstatuschange", &result);
+        if (!FeaturePost(handle_, HandlePmResultOnJsThread, postData)) {
+            FEATURE_LOG_ERROR("%s::FeaturePost failed for install result!", kFileTag);
+            FeatureFreeInstanceHandle(postData->handle);
+            delete postData;
+        }
         return Status::ok();
     }
 
@@ -182,36 +234,33 @@ public:
     {
         FEATURE_LOG_INFO("%s::onUninstallResult: %s(%s %" PRIi32 ")\n", kFileTag, packageName.c_str(), msg.c_str(), code);
 
-        if (FeatureInstanceIsDetached(handle_)) {
-            FEATURE_LOG_ERROR("%s::FeatureInstanceHandle is detached !", kFileTag);
-            return Status::ok();
-        }
-        system_packagemanager_StatusChangeEvent result { 0 };
-        result.package = packageName.c_str();
-        result.operation = "uninstall";
+        auto* postData = new PmResultPostData();
+        postData->handle = handle_;
+        FeatureDupInstanceHandle(postData->handle);
+        postData->pid = pid_;
+        postData->packageName = packageName;
+        postData->operation = "uninstall";
+        postData->code = code;
+        postData->msg = msg;
 
-        if (code == 0) {
-            system_packagemanager_SucessObj sucessObj;
-            sucessObj.result = true;
-            FeaturePromiseResolve(handle_, pid_, &sucessObj);
-            result.status = "success";
-            result.msg = "";
-            result.code = 0;
-        } else {
-            FEATURE_LOG_ERROR("%s::reject promise, msg: %s", kFileTag, msg.c_str());
-            result.status = "fail";
+        if (code != 0) {
             const std::unordered_map<int32_t, std::tuple<int, int>> errorMap = {
                 { android::NAME_NOT_FOUND, { 1000, 202 } },
                 { android::ALREADY_EXISTS, { 1001, 202 } }
             };
             auto [promiseCode, resultCode] = errorMap.count(code) ? errorMap.at(code) : std::make_tuple(202, 202);
-
-            FeaturePromiseReject(handle_, pid_, promiseCode, msg.c_str());
-            result.code = resultCode;
-            result.msg = msg.c_str();
+            postData->promiseCode = promiseCode;
+            postData->resultCode = resultCode;
+        } else {
+            postData->promiseCode = 0;
+            postData->resultCode = 0;
         }
 
-        FeatureEmitEventByName(handle_, "onstatuschange", &result);
+        if (!FeaturePost(handle_, HandlePmResultOnJsThread, postData)) {
+            FEATURE_LOG_ERROR("%s::FeaturePost failed for uninstall result!", kFileTag);
+            FeatureFreeInstanceHandle(postData->handle);
+            delete postData;
+        }
         return Status::ok();
     }
 
