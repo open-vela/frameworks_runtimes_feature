@@ -462,8 +462,8 @@ if(CONFIG_FEATURE_SYSTEM_BRIGHTNESS)
     set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/brightness_impl.cpp)
     set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/brightness.jidl)
 
-    # 如果CONFIG_SYSTEM_BRIGHTNESS_SERVICE宏开启，则添加binder相关的头文件路径。
-    # 因为miwear的brighness相关的头文件不包含binder
+    # Add binder-related include paths when CONFIG_SYSTEM_BRIGHTNESS_SERVICE is enabled,
+    # since miwear brightness headers do not include binder.
     if(CONFIG_SYSTEM_BRIGHTNESS_SERVICE)
         target_include_directories(feature_impls PRIVATE
             ${NUTTX_APPS_DIR}/frameworks/runtimes/services/brightness/include
@@ -668,6 +668,28 @@ if(CONFIG_AI_MODULE)
         ${JIDL_PATHS}
         FEATURE_NAMES
         system_ai_speech)
+endif()
+
+if(CONFIG_FEATURE_SYSTEM_VELACLAW)
+    set(FEATURE_SRCS ${CMAKE_CURRENT_LIST_DIR}/velaclaw_impl.cpp)
+    set(JIDL_PATHS ${CMAKE_CURRENT_LIST_DIR}/jidl/velaclaw.jidl)
+    target_include_directories(feature_impls PRIVATE
+        ${NUTTX_APPS_DIR}/packages/ai_agent/include
+        ${NUTTX_APPS_DIR}/packages/ai_agent/src/quickapp)
+
+    # Bridge: mqueue-based IPC to AI agent process (pure POSIX, no external SDK)
+    target_sources(feature_impls PRIVATE
+        ${NUTTX_APPS_DIR}/packages/ai_agent/src/quickapp/velaclaw_quickapp_bridge.c)
+
+    nuttx_add_jidl(
+        TARGET
+        feature_impls
+        FEATURE_SRCS
+        ${FEATURE_SRCS}
+        JIDLS
+        ${JIDL_PATHS}
+        FEATURE_NAMES
+        system_velaclaw)
 endif()
 
 # for feature registry

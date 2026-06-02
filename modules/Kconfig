@@ -243,3 +243,10 @@ config FEATURE_INPUT_METHOD_CONTROLLER
     default y
     --help--
         enable system.imc feature
+
+config FEATURE_SYSTEM_VELACLAW
+    bool "system.velaclaw"
+    default y
+    depends on EXAMPLES_AI_AGENT_VELA
+    ---help---
+        enable system.velaclaw feature
