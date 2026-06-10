@@ -358,7 +358,7 @@ ifneq ($(CONFIG_FEATURE_SYSTEM_BRIGHTNESS), )
 
 	CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/android/system/core/libutils/include
 
-    # 如果CONFIG_SYSTEM_BRIGHTNESS_SERVICE宏开启,则添加binder相关的头文件路径
+    # If the CONFIG_SYSTEM_BRIGHTNESS_SERVICE macro is enabled, add the paths to the binder-related header files.
 	ifneq ($(CONFIG_SYSTEM_BRIGHTNESS_SERVICE),)
         CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/runtimes/services/brightness/include
         CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/android/frameworks/native/libs/binder/include
@@ -492,6 +492,19 @@ ASRCS := $(wildcard $(ASRCS))
 CSRCS := $(wildcard $(CSRCS))
 CXXSRCS := $(wildcard $(CXXSRCS))
 MAINSRC := $(wildcard $(MAINSRC))
+ifeq ($(CONFIG_FEATURE_SYSTEM_VELACLAW),y)
+    CXXSRCS         := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/velaclaw_impl.cpp
+    CXXSRCS         := $(CXXSRCS) $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl/velaclaw.cpp
+    CSRCS           := $(CSRCS) $(APPDIR)/packages/ai_agent/src/quickapp/velaclaw_quickapp_bridge.c
+    JIDL_PATH       := $(JIDL_PATH) $(APPDIR)/frameworks/runtimes/feature/modules/jidl/velaclaw.jidl
+    OUT_PATH    += $(APPDIR)/frameworks/runtimes/feature/modules/generated/jidl
+    CFLAGS          += ${INCDIR_PREFIX}$(APPDIR)/packages/ai_agent/include
+    CFLAGS          += ${INCDIR_PREFIX}$(APPDIR)/packages/ai_agent/src/quickapp
+    CXXFLAGS        += ${INCDIR_PREFIX}$(APPDIR)/packages/ai_agent/include
+    CXXFLAGS        += ${INCDIR_PREFIX}$(APPDIR)/packages/ai_agent/src/quickapp
+    FEATURELIST += system_velaclaw
+endif
+
 NOEXPORTSRCS = $(ASRCS)$(CSRCS)$(CXXSRCS)$(MAINSRC)
 
 ifneq ($(NOEXPORTSRCS),)
