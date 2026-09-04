@@ -209,7 +209,7 @@ public:
         p_ = FeatureInstanceDupValue(other.p_);
     }
 
-    FeatureArray(const FeatureArray&& other)
+    FeatureArray(FeatureArray&& other)
     {
         p_ = other.p_;
         other.p_ = nullptr;
@@ -431,7 +431,7 @@ public:
     template <typename T, class... Args>
     RefPtr<T> make(Args... args)
     {
-        // 针对任意对象的make函数
+        // Generic make function for any object
         return internal::make<T>(getHandle(), std::forward<Args>(args)...);
     }
 
